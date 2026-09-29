@@ -207,3 +207,44 @@ func TestTraversalRootRejectsUnownedExistingPaths(t *testing.T) {
 		})
 	}
 }
+
+func TestCaptureExitStatusIsDistinctFromOrdinaryExit(t *testing.T) {
+	for _, state := range []string{"active", "failed", "inactive", "deactivating"} {
+		values := map[string]string{"ActiveState": state, "MainPID": "0", "Result": "exit-code", "ExecMainCode": "1", "ExecMainStatus": "74"}
+		if !captureFailedExit(values) {
+			t.Fatal("lost worker capture failure", state)
+		}
+		values["ExecMainStatus"] = "1"
+		if captureFailedExit(values) {
+			t.Fatal("ordinary exit treated as capture failure")
+		}
+		values["ExecMainStatus"] = "74"
+		values["ExecMainCode"] = "2"
+		if captureFailedExit(values) {
+			t.Fatal("signal treated as worker exit")
+		}
+	}
+}
+
+func TestSystemdMainExitFactDoesNotRequireWholeTreeAbsence(t *testing.T) {
+	// RemainAfterExit keeps the unit active while background descendants retain
+	// its cgroup. ExecMainCode and MainPID describe the worker itself.
+	values := map[string]string{"ActiveState": "active", "SubState": "exited", "MainPID": "0", "ExecMainCode": "1", "ExecMainStatus": "0", "Result": "success"}
+	exited, code := mainExit(values)
+	if !exited || code == nil || *code != 0 {
+		t.Fatalf("lost active (exited) worker fact: %v %v", exited, code)
+	}
+	values["MainPID"] = "42"
+	if exited, _ := mainExit(values); exited {
+		t.Fatal("live main process treated as exited")
+	}
+	values["MainPID"] = "0"
+	values["ExecMainCode"] = "0"
+	if exited, _ := mainExit(values); exited {
+		t.Fatal("missing wait result treated as exit")
+	}
+	values["ExecMainCode"] = "2"
+	if exited, code := mainExit(values); !exited || code != nil {
+		t.Fatal("signal exit lost or misreported as numeric exit code")
+	}
+}

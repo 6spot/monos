@@ -409,6 +409,12 @@
         },
         "process_released": {
           "type": "boolean"
+        },
+        "log_mode": {
+          "type": "string",
+          "enum": [
+            "ordered_v1"
+          ]
         }
       }
     },
@@ -501,6 +507,7 @@
             "started",
             "output",
             "attention",
+            "capture_failed",
             "exited",
             "process_absent"
           ]
@@ -516,6 +523,16 @@
         },
         "boot_id": {
           "$ref": "#/definitions/Id"
+        },
+        "order_sequence": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "data_base64": {
+          "type": "string",
+          "maxLength": 65536,
+          "pattern": "^[A-Za-z0-9+/]*={0,2}$"
         }
       }
     },
@@ -658,6 +675,17 @@
             "$ref": "#/definitions/RuntimeInstallation"
           },
           "maxItems": 32
+        },
+        "log_modes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "ordered_v1"
+            ]
+          },
+          "maxItems": 1,
+          "uniqueItems": true
         }
       },
       "allOf": [
@@ -727,7 +755,8 @@
               "schema_version": {},
               "type": {},
               "incarnation": {},
-              "runtimes": {}
+              "runtimes": {},
+              "log_modes": {}
             },
             "additionalProperties": false
           }
@@ -2057,6 +2086,206 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 1000
+        }
+      }
+    },
+    "AttemptLogCursor": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 768,
+      "pattern": "^[A-Za-z0-9_-]+$"
+    },
+    "AttemptLogsQuery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "cursor": {
+          "$ref": "#/definitions/AttemptLogCursor"
+        }
+      }
+    },
+    "AttemptStatus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "task_id",
+        "attempt_id",
+        "kind",
+        "state",
+        "runner_id",
+        "started",
+        "process_absent",
+        "process_released",
+        "mutation_allowed",
+        "log_mode",
+        "visible_sequence",
+        "latest_sequence",
+        "created_at"
+      ],
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "task_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "attempt_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "node",
+            "planner"
+          ]
+        },
+        "node_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "QUEUED",
+            "RUNNING",
+            "SUCCEEDED",
+            "FAILED",
+            "CANCELLED"
+          ]
+        },
+        "runner_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "started": {
+          "type": "boolean"
+        },
+        "process_absent": {
+          "type": "boolean"
+        },
+        "process_released": {
+          "type": "boolean"
+        },
+        "mutation_allowed": {
+          "type": "boolean"
+        },
+        "log_mode": {
+          "type": "string",
+          "enum": [
+            "ordered_v1",
+            "legacy"
+          ]
+        },
+        "visible_sequence": {
+          "$ref": "#/definitions/Counter"
+        },
+        "latest_sequence": {
+          "$ref": "#/definitions/Counter"
+        },
+        "activity_at": {
+          "type": "string",
+          "minLength": 1
+        },
+        "created_at": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "end_reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        }
+      }
+    },
+    "AttemptLogPage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "task_id",
+        "attempt_id",
+        "events",
+        "cursor",
+        "has_more",
+        "gap_after"
+      ],
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "task_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "attempt_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "events": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/definitions/RuntimeEvent"
+          }
+        },
+        "cursor": {
+          "$ref": "#/definitions/AttemptLogCursor"
+        },
+        "has_more": {
+          "type": "boolean"
+        },
+        "gap_after": {
+          "$ref": "#/definitions/Counter"
+        }
+      }
+    },
+    "AttemptListCursor": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 768,
+      "pattern": "^[A-Za-z0-9_-]+$"
+    },
+    "AttemptListQuery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "cursor": {
+          "$ref": "#/definitions/AttemptListCursor"
+        }
+      }
+    },
+    "AttemptListPage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "task_id",
+        "attempts",
+        "cursor",
+        "has_more"
+      ],
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "task_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "attempts": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/definitions/AttemptStatus"
+          }
+        },
+        "cursor": {
+          "$ref": "#/definitions/AttemptListCursor"
+        },
+        "has_more": {
+          "type": "boolean"
         }
       }
     }

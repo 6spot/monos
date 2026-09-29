@@ -268,6 +268,33 @@ func prepare(d protocol.Dispatch) error {
 			return fmt.Errorf("execution directory lacks inherited service read access")
 		}
 	}
+	// Reserve one existing block for a capture failure marker before launch.
+	// Overwriting it remains possible when the output filesystem is full.
+	marker := Path(d.AttemptID, "scratch") + "/capture.failure"
+	if _, err = os.Lstat(marker); os.IsNotExist(err) {
+		f, e := os.OpenFile(marker, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0640)
+		if e != nil {
+			return e
+		}
+		if e = f.Chown(uid, gid); e == nil {
+			_, e = f.Write([]byte{'0'})
+		}
+		if e == nil {
+			e = f.Sync()
+		}
+		closeErr := f.Close()
+		if e != nil {
+			return e
+		}
+		if closeErr != nil {
+			return closeErr
+		}
+	} else if err != nil {
+		return err
+	}
+	if err = trustedFile(marker, uint32(uid)); err != nil {
+		return err
+	}
 	for _, stream := range []string{"stdout", "stderr"} {
 		p := filepath.Join(Root, "logs", d.AttemptID+"."+stream)
 		f, e := os.OpenFile(p, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0640)
@@ -372,7 +399,37 @@ func status(ctx context.Context, id string) (Status, error) {
 			return s, fmt.Errorf("main process escaped owned cgroup")
 		}
 	}
+	s.MainExited, s.ExitCode = mainExit(values)
+	s.CaptureFailed = captureFailedExit(values)
 	return s, nil
+}
+
+// ExecMainCode is systemd's retained wait result for this single-use unit.
+// A zero MainPID distinguishes a finished worker from a still-running one;
+// descendants may continue to populate its cgroup after that point.
+func mainExit(values map[string]string) (bool, *int64) {
+	if values["MainPID"] != "0" {
+		return false, nil
+	}
+	switch values["ExecMainCode"] {
+	case "1": // CLD_EXITED
+		code, err := strconv.ParseInt(values["ExecMainStatus"], 10, 64)
+		if err != nil || code < 0 || code > 255 {
+			return false, nil
+		}
+		return true, &code
+	case "2", "3": // CLD_KILLED, CLD_DUMPED
+		return true, nil
+	default:
+		return false, nil
+	}
+}
+
+// systemd owns this exit fact, unlike the execution-account marker. Only a
+// retained, validated Attempt unit with a completed worker exit can assert it.
+func captureFailedExit(values map[string]string) bool {
+	exited, code := mainExit(values)
+	return exited && code != nil && *code == CaptureFailureExitCode && values["Result"] == "exit-code"
 }
 func stop(ctx context.Context, id string) (Status, error) {
 	return stopWith(ctx, id, status, command)

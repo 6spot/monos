@@ -1,13 +1,16 @@
 package adapter
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync/atomic"
 
 	protocol "monos.local/protocol"
 	"monos.local/runner/internal/host"
@@ -104,11 +107,64 @@ func (w *BoundedWriter) Write(p []byte) (int, error) {
 	}
 	return n, nil
 }
+
+// DurableWriter keeps the Runtime's output in the supervised spool. The
+// io.Writer wrapper prevents os/exec from handing the append fd to OpenCode,
+// so a short write, ENOSPC or fsync error cancels the child immediately.
+type DurableWriter struct {
+	W    io.Writer
+	Sync func() error
+	Mark func()
+	Stop context.CancelFunc
+}
+
+var ErrCaptureFailure = errors.New("execution output capture failed")
+
+type outputSink struct {
+	stdout, stderr   io.Writer
+	syncOut, syncErr func() error
+	mark             func(string)
+}
+
+func (w DurableWriter) Write(p []byte) (int, error) {
+	n, err := w.W.Write(p)
+	if err == nil && n != len(p) {
+		err = io.ErrShortWrite
+	}
+	if err == nil && w.Sync != nil {
+		err = w.Sync()
+	}
+	if err != nil {
+		if w.Mark != nil {
+			w.Mark()
+		}
+		if w.Stop != nil {
+			w.Stop()
+		}
+	}
+	return n, err
+}
+
+func markCaptureFailure(attemptID string) {
+	marker := host.Path(attemptID, "scratch") + "/capture.failure"
+	f, err := os.OpenFile(marker, os.O_WRONLY, 0)
+	if err != nil {
+		return
+	}
+	_, _ = f.WriteAt([]byte{'1'}, 0)
+	_ = f.Sync()
+	_ = f.Close()
+}
+
 func Run(d protocol.Dispatch) error {
 	return run(d, func(cmd *exec.Cmd) error { return cmd.Run() })
 }
 
 func run(d protocol.Dispatch, execute func(*exec.Cmd) error) error {
+	return runWithSink(d, execute, outputSink{stdout: os.Stdout, stderr: os.Stderr, syncOut: os.Stdout.Sync, syncErr: os.Stderr.Sync, mark: markCaptureFailure})
+}
+
+func runWithSink(d protocol.Dispatch, execute func(*exec.Cmd) error, sink outputSink) error {
 	if d.RuntimeID != protocol.Opencode || string(d.Model) != host.FreeModel {
 		return fmt.Errorf("unapproved runtime/model")
 	}
@@ -119,13 +175,26 @@ func run(d protocol.Dispatch, execute func(*exec.Cmd) error) error {
 	if err = verifyModel(d, env, execute); err != nil {
 		return err
 	}
-	cmd := exec.Command(host.Runtime, Arguments(d)...)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	cmd := exec.CommandContext(ctx, host.Runtime, Arguments(d)...)
 	cmd.Env = env
 	cmd.Dir = host.Path(d.AttemptID, "scratch")
 	cmd.Stdin = strings.NewReader(d.Prompt)
-	cmd.Stdout = &BoundedWriter{W: os.Stdout, Remaining: 4 << 20}
-	cmd.Stderr = &BoundedWriter{W: os.Stderr, Remaining: 1 << 20}
-	return execute(cmd)
+	var failed atomic.Bool
+	mark := func() {
+		failed.Store(true)
+		if sink.mark != nil {
+			sink.mark(d.AttemptID)
+		}
+	}
+	cmd.Stdout = DurableWriter{W: sink.stdout, Sync: sink.syncOut, Mark: mark, Stop: cancel}
+	cmd.Stderr = DurableWriter{W: sink.stderr, Sync: sink.syncErr, Mark: mark, Stop: cancel}
+	err = execute(cmd)
+	if failed.Load() {
+		return fmt.Errorf("%w: %v", ErrCaptureFailure, err)
+	}
+	return err
 }
 
 func Arguments(d protocol.Dispatch) []string {

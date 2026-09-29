@@ -3,6 +3,7 @@ package daemon
 import (
 	"context"
 	"database/sql"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"io"
@@ -13,6 +14,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"unicode/utf8"
 
 	protocol "monos.local/protocol"
 	"monos.local/runner/internal/control"
@@ -99,11 +101,17 @@ func (d *Daemon) Reconcile(ctx context.Context, inventory protocol.RunnerInvento
 				return fmt.Errorf("retained launch manifest unavailable; ownership unresolved")
 			}
 		}
+		if status.CaptureFailed {
+			d.captureFailure(ctx, s, fmt.Errorf("supervised output writer failed"))
+		}
 		if !exists && status.Populated {
 			return fmt.Errorf("live local ownership absent from backend inventory")
 		}
 		if exists && remote.DispatchID != s.Dispatch.DispatchID {
 			return fmt.Errorf("dispatch lineage mismatch")
+		}
+		if err = d.observeMainExit(s, status); err != nil {
+			return err
 		}
 		if exists && !remote.MutationAllowed && status.Populated {
 			status, err = d.Host.Call(ctx, host.Request{Action: "stop", AttemptID: s.Dispatch.AttemptID})
@@ -211,8 +219,11 @@ func (d *Daemon) start(ctx context.Context, dispatch protocol.Dispatch) error {
 	if _, err = d.Control.Authorize(ctx, dispatch.DispatchID); err != nil {
 		return err
 	}
+	if err := reserveCaptureMarker(serviceCaptureMarker(dispatch.AttemptID)); err != nil {
+		return fmt.Errorf("cannot reserve capture failure evidence: %w", err)
+	}
 	retained = journal.Start{Dispatch: dispatch, BootID: d.Boot, Phase: "intent"}
-	if err = d.DB.SaveStart(retained); err != nil {
+	if err := d.DB.SaveStart(retained); err != nil {
 		return err
 	}
 	status, err := d.Host.Call(ctx, host.Request{Action: "start", AttemptID: dispatch.AttemptID, Dispatch: &dispatch})
@@ -222,6 +233,10 @@ func (d *Daemon) start(ctx context.Context, dispatch protocol.Dispatch) error {
 	if !status.Known || status.BootID != d.Boot {
 		return fmt.Errorf("unknown launch ownership")
 	}
+	return d.recordLaunch(ctx, retained, status)
+}
+
+func (d *Daemon) recordLaunch(ctx context.Context, retained journal.Start, status host.Status) error {
 	retained.PID = status.PID
 	retained.Birth = status.Birth
 	retained.Cgroup = status.Cgroup
@@ -229,11 +244,21 @@ func (d *Daemon) start(ctx context.Context, dispatch protocol.Dispatch) error {
 	if !status.Populated {
 		retained.Phase = "absent"
 	}
-	if err = d.DB.SaveStart(retained); err != nil {
+	if err := d.DB.SaveStart(retained); err != nil {
 		return err
 	}
-	if err = d.event(ctx, retained, protocol.Started, "supervised runtime launch"); err != nil {
+	startErr := d.event(ctx, retained, protocol.Started, "supervised runtime launch")
+	// A worker can fail output capture and exit before the helper returns its
+	// first status. Preserve that fact even when the Start send is interrupted;
+	// this path will no longer be polled as running once absence is recorded.
+	if status.CaptureFailed {
+		d.captureFailure(ctx, retained, fmt.Errorf("supervised output writer failed"))
+	}
+	if err := d.observeMainExit(retained, status); err != nil {
 		return err
+	}
+	if startErr != nil {
+		return startErr
 	}
 	if retained.Phase == "absent" {
 		return d.event(ctx, retained, protocol.ProcessAbsent, "verified no live descendants")
@@ -398,7 +423,18 @@ func (d *Daemon) Tick(ctx context.Context) {
 	defer d.mu.Unlock()
 	pending, err := d.DB.PendingEvents()
 	if err != nil {
-		log.Print("journal event recovery failed")
+		log.Printf("journal event recovery failed: %v", err)
+		// A failed journal scan cannot justify continuing execution while output
+		// may be accumulating without durable event identities.
+		if starts, startsErr := d.DB.Starts(); startsErr == nil {
+			for _, s := range starts {
+				if s.Phase == "running" {
+					d.captureFailure(ctx, s, err)
+				}
+			}
+		} else {
+			log.Printf("journal ownership scan failed: %v", startsErr)
+		}
 		return
 	}
 	for _, event := range pending {
@@ -411,30 +447,74 @@ func (d *Daemon) Tick(ctx context.Context) {
 		return
 	}
 	for _, s := range starts {
+		workerMarker := host.Path(s.Dispatch.AttemptID, "scratch") + "/capture.failure"
+		if captureMarkerSet(workerMarker) || captureMarkerSet(serviceCaptureMarker(s.Dispatch.AttemptID)) {
+			alerted, checkErr := d.DB.HasCaptureAlert(s.Dispatch.AttemptID)
+			// A prior alert does not prove the physical stop succeeded. Retry for
+			// live work, but do not stop historical Attempts on every tick.
+			if s.Phase == "running" || checkErr != nil || !alerted {
+				d.captureFailure(ctx, s, fmt.Errorf("supervised output writer failed"))
+			}
+		}
 		for _, stream := range []string{"stdout", "stderr"} {
 			offset, e := d.DB.LogOffset(s.Dispatch.AttemptID, stream)
 			if e != nil {
+				d.captureFailure(ctx, s, e)
 				continue
 			}
 			p := filepath.Join(host.Root, "logs", s.Dispatch.AttemptID+"."+stream)
 			file, e := os.Open(p)
 			if e != nil {
+				if !os.IsNotExist(e) || s.Phase == "running" || s.Phase == "absent" {
+					d.captureFailure(ctx, s, e)
+				}
+				continue
+			}
+			info, statErr := file.Stat()
+			if statErr != nil || info.Size() < offset {
+				file.Close()
+				if statErr == nil {
+					statErr = fmt.Errorf("log spool shrank below acknowledged offset")
+				}
+				d.captureFailure(ctx, s, statErr)
 				continue
 			}
 			_, e = file.Seek(offset, io.SeekStart)
+			if e != nil {
+				file.Close()
+				d.captureFailure(ctx, s, e)
+				continue
+			}
 			buf := make([]byte, 32768)
-			n, _ := file.Read(buf)
-			file.Close()
+			n, readErr := file.Read(buf)
+			closeErr := file.Close()
+			if readErr != nil && readErr != io.EOF {
+				d.captureFailure(ctx, s, readErr)
+				continue
+			}
+			if closeErr != nil {
+				d.captureFailure(ctx, s, closeErr)
+				continue
+			}
+			// Keep display text at a UTF-8 boundary. The exact source bytes are
+			// still retained in data_base64, including malformed byte sequences.
+			// An unfinished rune at the current EOF may be completed by a live
+			// writer; after exit, retain those bytes as a final replacement rune.
+			if end := completeUTF8Prefix(buf[:n]); end < n && (offset+int64(n) < info.Size() || s.Phase == "running") {
+				n = end
+			}
 			if e == nil && n > 0 {
 				kind := protocol.Output
 				text := strings.ToValidUTF8(string(buf[:n]), "?")
 				if stream == "stderr" && strings.Contains(text, "permission requested:") {
 					kind = protocol.Attention
 				}
-				event, err := d.DB.LogEvent(protocol.RuntimeEvent{AttemptID: s.Dispatch.AttemptID, DispatchID: s.Dispatch.DispatchID, StreamID: stream, Kind: kind, Text: text, BootID: &d.Boot}, offset, offset+int64(n))
-				if err == nil {
-					_ = d.Control.Send(ctx, protocol.Frame{Type: protocol.Event, Event: &event})
+				event, err := d.DB.LogEvent(protocol.RuntimeEvent{AttemptID: s.Dispatch.AttemptID, DispatchID: s.Dispatch.DispatchID, StreamID: stream, Kind: kind, Text: text, DataBase64: ptr(base64.StdEncoding.EncodeToString(buf[:n])), BootID: &d.Boot}, offset, offset+int64(n))
+				if err != nil {
+					d.captureFailure(ctx, s, err)
+					continue
 				}
+				_ = d.Control.Send(ctx, protocol.Frame{Type: protocol.Event, Event: &event})
 			}
 		}
 		if s.Phase == "running" {
@@ -442,18 +522,105 @@ func (d *Daemon) Tick(ctx context.Context) {
 			if e != nil {
 				continue
 			}
+			if status.CaptureFailed {
+				d.captureFailure(ctx, s, fmt.Errorf("supervised output writer failed"))
+			}
+			if err = d.observeMainExit(s, status); err != nil {
+				continue
+			}
 			if !status.Populated && status.Known {
 				if _, err = d.DB.Event(protocol.RuntimeEvent{AttemptID: s.Dispatch.AttemptID, DispatchID: s.Dispatch.DispatchID, StreamID: "runtime", Kind: protocol.ProcessAbsent, Text: "verified whole-tree absence", BootID: &d.Boot}); err != nil {
 					continue
 				}
 				s.Phase = "absent"
-				if d.DB.SaveStart(s) == nil {
-					_ = d.event(ctx, s, protocol.Exited, "runtime process exited; formal completion is independent")
-				}
+				_ = d.DB.SaveStart(s)
 			}
 		}
 	}
 }
+func ptr(value string) *string { return &value }
+
+func completeUTF8Prefix(data []byte) int {
+	for i := 0; i < len(data); {
+		_, size := utf8.DecodeRune(data[i:])
+		if size == 1 && !utf8.FullRune(data[i:]) {
+			return i
+		}
+		i += size
+	}
+	return len(data)
+}
+
+func serviceCaptureMarker(attemptID string) string {
+	return filepath.Join(host.Root, "service", "capture-"+attemptID)
+}
+
+func captureMarkerSet(path string) bool {
+	data, err := os.ReadFile(path)
+	return err == nil && len(data) > 0 && data[0] == '1'
+}
+
+func reserveCaptureMarker(path string) error {
+	file, err := os.OpenFile(path, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
+	if errors.Is(err, os.ErrExist) {
+		data, readErr := os.ReadFile(path)
+		if readErr != nil || len(data) != 1 || data[0] != '0' {
+			return fmt.Errorf("capture marker is not a clean reserved block: %w", errors.Join(readErr, err))
+		}
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	_, writeErr := file.Write([]byte{'0'})
+	syncErr := file.Sync()
+	return errors.Join(writeErr, syncErr, file.Close())
+}
+
+func persistCaptureMarker(path string) error {
+	file, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY, 0600)
+	if err != nil {
+		return err
+	}
+	_, writeErr := file.WriteAt([]byte{'1'}, 0)
+	syncErr := file.Sync()
+	return errors.Join(writeErr, syncErr, file.Close())
+}
+
+// A retained systemd wait result is a main-process exit fact even while
+// detached descendants still hold the Attempt cgroup. The journal identity
+// survives reconnect and prevents repeat terminal observations.
+func (d *Daemon) observeMainExit(s journal.Start, status host.Status) error {
+	if !status.Known || !status.MainExited {
+		return nil
+	}
+	found, err := d.DB.HasRuntimeEvent(s.Dispatch.AttemptID, protocol.Exited)
+	if err != nil || found {
+		return err
+	}
+	_, err = d.DB.Event(protocol.RuntimeEvent{AttemptID: s.Dispatch.AttemptID, DispatchID: s.Dispatch.DispatchID, StreamID: "runtime", Kind: protocol.Exited, Text: "runtime main process exited; formal completion is independent", ExitCode: status.ExitCode, BootID: &d.Boot})
+	return err
+}
+
+// A failed durable capture freezes this Attempt by asking the constrained host
+// to stop the whole process tree. The reservation remains until reconciliation.
+func (d *Daemon) captureFailure(ctx context.Context, s journal.Start, cause error) {
+	log.Printf("Attempt %s log capture requires recovery: %v", s.Dispatch.AttemptID, cause)
+	// The execution-account marker is read-only to this service. Record a
+	// separate service-owned fact before Stop so a SQLite outage followed by
+	// daemon restart cannot erase the need to publish Owner attention.
+	if err := persistCaptureMarker(serviceCaptureMarker(s.Dispatch.AttemptID)); err != nil {
+		log.Printf("Attempt %s capture marker failed: %v", s.Dispatch.AttemptID, err)
+	}
+	if _, err := d.Host.Call(ctx, host.Request{Action: "stop", AttemptID: s.Dispatch.AttemptID}); err != nil {
+		log.Printf("Attempt %s writer stop remains unresolved: %v", s.Dispatch.AttemptID, err)
+	}
+	if alerted, err := d.DB.HasCaptureAlert(s.Dispatch.AttemptID); err == nil && alerted {
+		return
+	}
+	_ = d.event(ctx, s, protocol.CaptureFailed, journal.CaptureAlertText)
+}
+
 func (d *Daemon) Run(ctx context.Context) error {
 	for {
 		if ctx.Err() != nil {

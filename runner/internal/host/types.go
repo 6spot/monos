@@ -22,6 +22,9 @@ const CLI = "/usr/local/bin/monos"
 const Runtime = "/home/linuxbrew/.linuxbrew/bin/opencode"
 const FreeModel = "opencode/longcat-2.5-preview-free"
 
+// Reserved worker exit status for a checked stdout/stderr write or sync failure.
+const CaptureFailureExitCode = 74
+
 var idPattern = regexp.MustCompile(`^[A-Za-z0-9_-]{1,128}$`)
 
 func ValidID(id string) bool       { return idPattern.MatchString(id) }
@@ -39,6 +42,9 @@ type Status struct {
 	Known               bool                           `json:"known"`
 	Exists              bool                           `json:"exists"`
 	Populated           bool                           `json:"populated"`
+	MainExited          bool                           `json:"main_exited,omitempty"`
+	ExitCode            *int64                         `json:"exit_code,omitempty"`
+	CaptureFailed       bool                           `json:"capture_failed,omitempty"`
 	BootID              string                         `json:"boot_id"`
 	PID                 int                            `json:"pid"`
 	Birth               string                         `json:"birth"`

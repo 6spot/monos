@@ -4,7 +4,7 @@ import { database, transaction } from '../../../packages/db/src/index.ts';
 import type { Database } from '../../../packages/db/src/index.ts';
 import { migrate } from '../../../packages/db/src/migrate.ts';
 import { MAX_BODY_BYTES, submission } from '../../../packages/protocol/src/index.ts';
-import { OwnerReads, taskEventCursor } from '../src/owner-reads.ts';
+import { OwnerReads, attemptListCursor, attemptLogCursor, taskEventCursor } from '../src/owner-reads.ts';
 import { issueOwnerSession, revokeOwnerSession } from '../src/owner-commands.ts';
 import { createAttemptFixture, enrollFixture } from '../src/fixtures.ts';
 import { BoundaryService } from '../src/service.ts';
@@ -105,6 +105,77 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('canonical Owner reads 
       expect((await app.inject({ method: 'GET', url: `/v1/owner/tasks/${f.launch.task_id}`, headers: { authorization: `Bearer ${f.session.token}` } })).statusCode).toBe(401);
       await expect(reads.events(f.session.token, f.launch.task_id)).rejects.toMatchObject({ detail: { code: 'unauthorized' } });
     } finally { await app.close(); }
+  });
+
+  it('pages ordered multi-stream output through gaps and reconnects with scoped cursors', async () => {
+    const f = await fixture(); const other = await fixture();
+    await db.pool.query("UPDATE attempts SET launch=launch||'{\"log_mode\":\"ordered_v1\"}'::jsonb WHERE id=$1", [f.launch.attempt_id]);
+    const event = (stream_id: string, sequence: number, order_sequence: number, text: string) => ({
+      attempt_id: f.launch.attempt_id, dispatch_id: f.launch.dispatch_id, stream_id, sequence, order_sequence,
+      kind: 'output' as const, text, data_base64: Buffer.from(text).toString('base64'),
+    });
+    const first = event('stdout', 1, 1, 'first'); const second = event('stderr', 1, 2, 'second'); const third = event('stdout', 2, 3, 'third');
+    await expect(f.service.event(f.runner, f.incarnation, { ...first, data_base64: 'Zmlyc3Q' })).rejects.toMatchObject({ detail: { code: 'invalid_input' } });
+    await f.service.event(f.runner, f.incarnation, third);
+    await f.service.event(f.runner, f.incarnation, second);
+    expect((await reads.logs(f.session.token, f.launch.task_id, f.launch.attempt_id)).events).toHaveLength(0);
+    expect((await reads.attempt(f.session.token, f.launch.task_id, f.launch.attempt_id)).latest_sequence).toBe(3);
+    expect((await reads.attempts(f.session.token, f.launch.task_id)).attempts.map((row) => row.attempt_id)).toEqual([f.launch.attempt_id]);
+    await f.service.event(f.runner, f.incarnation, first);
+    await f.service.event(f.runner, f.incarnation, first);
+    await expect(f.service.event(f.runner, f.incarnation, { ...first, text: 'conflict' })).rejects.toMatchObject({ detail: { code: 'payload_conflict' } });
+    await expect(f.service.event(f.runner, f.incarnation, { ...first, stream_id: 'other' })).rejects.toMatchObject({ detail: { code: 'payload_conflict' } });
+    const page = await new OwnerReads(db).logs(f.session.token, f.launch.task_id, f.launch.attempt_id);
+    expect(page.events.map((value) => value.text)).toEqual(['first', 'second', 'third']);
+    expect(page.events.map((value) => value.order_sequence)).toEqual([1, 2, 3]);
+    expect(page.has_more).toBe(false);
+    expect((await new OwnerReads(db).logs(f.session.token, f.launch.task_id, f.launch.attempt_id, page.cursor)).events).toHaveLength(0);
+    expect((await reads.events(f.session.token, f.launch.task_id)).events).toHaveLength(0);
+    await expect(reads.logs(f.session.token, f.launch.task_id, f.launch.attempt_id, attemptLogCursor(other.launch.task_id, other.launch.attempt_id, 0))).rejects.toMatchObject({ detail: { code: 'denied_scope' } });
+    await expect(reads.logs(f.session.token, f.launch.task_id, f.launch.attempt_id, attemptLogCursor(f.launch.task_id, f.launch.attempt_id, 99))).rejects.toMatchObject({ detail: { code: 'version_conflict' } });
+    const app = createApp(f.service);
+    try {
+      const path = `/v1/owner/tasks/${f.launch.task_id}/attempts/${f.launch.attempt_id}/logs`;
+      expect((await app.inject({ method: 'GET', url: path, headers: { authorization: `Bearer ${f.runnerToken}` } })).statusCode).toBe(401);
+      expect((await app.inject({ method: 'GET', url: path, headers: { authorization: `Bearer ${f.session.token}` } })).statusCode).toBe(200);
+      expect((await app.inject({ method: 'GET', url: `/v1/owner/tasks/${f.launch.task_id}/attempts`, headers: { authorization: `Bearer ${f.session.token}` } })).statusCode).toBe(200);
+    } finally { await app.close(); }
+  });
+
+  it('bounds encoded log pages and advances only across returned entries', async () => {
+    const f = await fixture();
+    await db.pool.query("UPDATE attempts SET launch=launch||'{\"log_mode\":\"ordered_v1\"}'::jsonb WHERE id=$1", [f.launch.attempt_id]);
+    const text = '界'.repeat(10000);
+    for (let sequence = 1; sequence <= 50; sequence++) {
+      await f.service.event(f.runner, f.incarnation, { attempt_id: f.launch.attempt_id, dispatch_id: f.launch.dispatch_id,
+        stream_id: 'stdout', sequence, order_sequence: sequence, kind: 'output', text, data_base64: Buffer.from(text).toString('base64') });
+    }
+    const first = await reads.logs(f.session.token, f.launch.task_id, f.launch.attempt_id);
+    expect(first.events.length).toBeGreaterThan(0); expect(first.events.length).toBeLessThan(50);
+    expect(first.has_more).toBe(true);
+    expect(Buffer.byteLength(JSON.stringify(first))).toBeLessThanOrEqual(MAX_BODY_BYTES);
+    const second = await new OwnerReads(db).logs(f.session.token, f.launch.task_id, f.launch.attempt_id, first.cursor);
+    expect(second.events[0]?.order_sequence).toBe(first.events.length + 1);
+    expect(first.events.length + second.events.length).toBe(50);
+  });
+
+  it('lists queued and historical Attempts by creation time with factual activity', async () => {
+    const f = await fixture();
+    const before = await reads.attempt(f.session.token, f.launch.task_id, f.launch.attempt_id);
+    expect(before).toHaveProperty('created_at');
+    expect(before).not.toHaveProperty('activity_at');
+    const historical = randomUUID(); const dispatch = randomUUID();
+    await db.pool.query(`INSERT INTO attempts(id,runner_id,task_id,node_id,owner_key,dispatch_id,kind,fencing_generation,node_activation,
+      mutation_allowed,process_released,process_absent,started,launch,created_at,state,end_reason)
+      SELECT $2,runner_id,task_id,node_id,owner_key,$3,kind,fencing_generation,node_activation,
+        false,true,true,true,launch,created_at+interval '1 second','FAILED','missing_formal_outcome'
+      FROM attempts WHERE id=$1`, [f.launch.attempt_id, historical, dispatch]);
+    const listed = await reads.attempts(f.session.token, f.launch.task_id);
+    expect(listed.attempts.map((row) => row.attempt_id)).toEqual([historical, f.launch.attempt_id]);
+    expect(listed.attempts[0]?.end_reason).toBe('missing_formal_outcome');
+    const afterFirst = await reads.attempts(f.session.token, f.launch.task_id, attemptListCursor(f.launch.task_id,
+      (await db.pool.query<{ created_cursor: string }>('SELECT created_at::text AS created_cursor FROM attempts WHERE id=$1', [historical])).rows[0]!.created_cursor, historical));
+    expect(afterFirst.attempts.map((row) => row.attempt_id)).toEqual([f.launch.attempt_id]);
   });
 
   it('returns a pre-start projection without inventing a Plan or runtime work', async () => {

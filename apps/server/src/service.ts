@@ -15,7 +15,7 @@ interface TaskRow { id: string; resource_id: string; control_version: string; pr
 interface AttemptRow {
   id: string; runner_id: string; task_id: string; node_id: string | null; dispatch_id: string;
   kind: 'node' | 'planner'; fencing_generation: string; node_activation: string;
-  mutation_allowed: boolean; process_released: boolean; process_absent: boolean; started: boolean; launch: Dispatch;
+  mutation_allowed: boolean; process_released: boolean; process_absent: boolean; started: boolean; exit_observed: boolean; launch: Dispatch;
   state: 'QUEUED' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'CANCELLED';
 }
 interface OperationRow { id: string; attempt_id: string; schema_version: number; kind: Operation['kind']; request_id: string; state: Operation['state']; resource_id: string; result: EffectResult | null; failure_kind: OperationResult['failure_kind'] | null }
@@ -57,6 +57,15 @@ function toOperation(row: OperationRow, attempt: Pick<AttemptRow, 'dispatch_id'>
 async function taskEvent(tx: Transaction, attempt: AttemptRow, kind: string, body: unknown, operationId: string | null = null): Promise<void> {
   const result = await tx.query<{ event_sequence: string }>('UPDATE tasks SET event_sequence=event_sequence+1 WHERE id=$1 RETURNING event_sequence', [attempt.task_id]);
   await tx.query('INSERT INTO task_events(task_id,sequence,kind,attempt_id,operation_id,body) VALUES($1,$2,$3,$4,$5,$6)', [attempt.task_id, result.rows[0]!.event_sequence, kind, attempt.id, operationId, body]);
+}
+
+async function missingFormalOutcome(tx: Transaction, attempt: AttemptRow, observation: string, exitCode?: number): Promise<void> {
+  if (!attempt.mutation_allowed) return;
+  await tx.query("UPDATE attempts SET mutation_allowed=false,state='FAILED',end_reason='missing_formal_outcome' WHERE id=$1", [attempt.id]);
+  if (attempt.node_id) await tx.query("UPDATE nodes SET state='BLOCKED' WHERE id=$1", [attempt.node_id]);
+  await tx.query("UPDATE tasks SET state=CASE WHEN $2::boolean THEN 'BLOCKED' ELSE state END,control_version=control_version+1 WHERE id=$1", [attempt.task_id, attempt.node_id !== null]);
+  await admitEffect(tx, attempt, 'stop', randomUUID());
+  await taskEvent(tx, attempt, 'missing_formal_outcome', { exit_code: exitCode ?? null, observation });
 }
 
 async function admitEffect(tx: Transaction, attempt: AttemptRow, kind: Operation['kind'], requestId: string): Promise<string> {
@@ -284,21 +293,56 @@ export class BoundaryService {
       checkChannel(runner, incarnation);
       if (attempt.dispatch_id !== event.dispatch_id) throw new CommandError('denied_scope', 'Event dispatch mismatch');
       if (attempt.state === 'QUEUED') throw new CommandError('unmet_precondition', 'Queued Attempt has not been dispatched');
+      if (attempt.launch.log_mode === 'ordered_v1' && event.order_sequence === undefined) throw new CommandError('invalid_input', 'Ordered Attempt requires an Attempt sequence');
+      if (event.data_base64 !== undefined && Buffer.from(event.data_base64, 'base64').toString('base64') !== event.data_base64) throw new CommandError('invalid_input', 'Output bytes must use canonical base64');
+      if (attempt.launch.log_mode === 'ordered_v1' && (event.stream_id === 'stdout' || event.stream_id === 'stderr') && event.data_base64 === undefined) throw new CommandError('invalid_input', 'Ordered output requires source bytes');
       const hash = digest(canonicalJSON(event));
       const prior = (await tx.query<{ digest: string }>('SELECT digest FROM runtime_events WHERE attempt_id=$1 AND stream_id=$2 AND sequence=$3', [attempt.id, event.stream_id, event.sequence])).rows[0];
       if (prior) { if (prior.digest !== hash) throw new CommandError('payload_conflict', 'Stream sequence already has different content'); return; }
       await tx.query('INSERT INTO runtime_events(attempt_id,stream_id,sequence,digest,body) VALUES($1,$2,$3,$4,$5)', [attempt.id, event.stream_id, event.sequence, hash, event]);
+      if (event.order_sequence !== undefined) {
+        const occupied = (await tx.query<{ stream_id: string; stream_sequence: string; body: RuntimeEvent }>('SELECT stream_id,stream_sequence,body FROM attempt_log_entries WHERE attempt_id=$1 AND order_sequence=$2', [attempt.id, event.order_sequence])).rows[0];
+        if (occupied) throw new CommandError('payload_conflict', 'Attempt sequence already belongs to another event');
+        await tx.query('INSERT INTO attempt_log_entries(attempt_id,order_sequence,stream_id,stream_sequence,body) VALUES($1,$2,$3,$4,$5)', [attempt.id, event.order_sequence, event.stream_id, event.sequence, event]);
+        const visible = (await tx.query<{ log_visible_sequence: string }>('SELECT log_visible_sequence FROM attempts WHERE id=$1', [attempt.id])).rows[0]!;
+        const watermark = Number(visible.log_visible_sequence);
+        const next = (await tx.query<{ next: string }>(`WITH numbered AS (SELECT order_sequence,row_number() OVER (ORDER BY order_sequence) AS ordinal FROM attempt_log_entries WHERE attempt_id=$1 AND order_sequence>$2),
+          gap AS (SELECT min(ordinal) AS first_gap_ordinal FROM numbered WHERE order_sequence<>$2+ordinal)
+          SELECT COALESCE((SELECT $2+first_gap_ordinal-1 FROM gap), (SELECT max(order_sequence) FROM numbered), $2)::text AS next`, [attempt.id, watermark])).rows[0]!;
+        await tx.query('UPDATE attempts SET log_visible_sequence=$2 WHERE id=$1', [attempt.id, Number(next.next)]);
+      }
+      await tx.query('UPDATE attempts SET activity_at=now() WHERE id=$1', [attempt.id]);
       if (event.kind === 'started') {
         await tx.query('UPDATE attempts SET started=true WHERE id=$1', [attempt.id]);
         await tx.query("UPDATE outbox SET done=true WHERE attempt_id=$1 AND kind='start'", [attempt.id]);
         // A late start after revocation retains the admitted stop operation and reservation.
       }
-      if ((event.kind === 'exited' || event.kind === 'process_absent') && attempt.mutation_allowed) {
-        await tx.query("UPDATE attempts SET mutation_allowed=false,state='FAILED',end_reason='missing_formal_outcome' WHERE id=$1", [attempt.id]);
-        await tx.query("UPDATE nodes SET state='BLOCKED' WHERE id=$1", [attempt.node_id]);
-        await tx.query("UPDATE tasks SET state=CASE WHEN $2::boolean THEN 'BLOCKED' ELSE state END,control_version=control_version+1 WHERE id=$1", [attempt.task_id, attempt.node_id !== null]);
-        await admitEffect(tx, attempt, 'stop', randomUUID());
-        await taskEvent(tx, attempt, 'missing_formal_outcome', { exit_code: event.exit_code ?? null, observation: event.kind });
+      if (event.kind === 'capture_failed' && !attempt.process_released) {
+        const completion = (await tx.query("SELECT 1 FROM operations WHERE attempt_id=$1 AND kind='complete_node'", [attempt.id])).rowCount;
+        if (!completion && attempt.mutation_allowed) {
+          await tx.query("UPDATE attempts SET mutation_allowed=false,state='FAILED',end_reason='capture_failed' WHERE id=$1", [attempt.id]);
+          if (attempt.node_id) await tx.query("UPDATE nodes SET state='BLOCKED' WHERE id=$1 AND activation=$2", [attempt.node_id, attempt.node_activation]);
+          await tx.query("UPDATE tasks SET state=CASE WHEN $2::boolean THEN 'BLOCKED' ELSE state END,control_version=control_version+1 WHERE id=$1", [attempt.task_id, attempt.node_id !== null]);
+          await admitEffect(tx, attempt, 'stop', randomUUID());
+          await taskEvent(tx, attempt, 'execution_capture_failed', { observation: 'capture_failed' });
+        }
+        // Admitted completion already revoked Agent authority and owns recovery.
+        await tx.query('UPDATE attempts SET mutation_allowed=false WHERE id=$1', [attempt.id]);
+      }
+      if (event.kind === 'exited' || event.kind === 'process_absent') {
+        await tx.query('UPDATE attempts SET exit_observed=true WHERE id=$1', [attempt.id]);
+        const pendingCompletion = (await tx.query("SELECT 1 FROM operations WHERE attempt_id=$1 AND kind='complete_node' AND state<>'succeeded'", [attempt.id])).rowCount;
+        if (!pendingCompletion) await missingFormalOutcome(tx, attempt, event.kind, event.exit_code);
+        if (event.kind === 'process_absent' && pendingCompletion) {
+          const recovering = (await tx.query("SELECT id FROM operations WHERE attempt_id=$1 AND kind='complete_node' AND state='recovery'", [attempt.id])).rows[0];
+          if (recovering) {
+            const changed = await tx.query("UPDATE nodes SET state='BLOCKED' WHERE id=$1 AND activation=$2 AND state='RUNNING'", [attempt.node_id, attempt.node_activation]);
+            if (changed.rowCount) {
+              await tx.query("UPDATE tasks SET state='BLOCKED',control_version=control_version+1 WHERE id=$1", [attempt.task_id]);
+              await taskEvent(tx, attempt, 'node_capture_blocked', { node_id: attempt.node_id, observation: 'completion_recovery_after_absence' }, recovering.id);
+            }
+          }
+        }
       }
       if (event.kind === 'process_absent') {
         await tx.query('UPDATE attempts SET process_absent=true WHERE id=$1', [attempt.id]);
@@ -332,7 +376,7 @@ export class BoundaryService {
         if (operation.kind === 'complete_node') {
           await assertCurrentNode(tx, { task_id: attempt.task_id, node_id: attempt.node_id!, node_activation: Number(attempt.node_activation) });
           const node = (await tx.query<{ activation: string; state: string }>('SELECT activation,state FROM nodes WHERE id=$1 FOR UPDATE', [attempt.node_id])).rows[0];
-          const blockedByThisOperation = node?.state === 'BLOCKED' && (operation.failure_kind === 'capture_hard_limit' || operation.failure_kind === 'invalid_finalization');
+          const blockedByThisOperation = node?.state === 'BLOCKED' && (operation.failure_kind === 'capture_hard_limit' || operation.failure_kind === 'invalid_finalization' || attempt.process_absent);
           const taskState = (await tx.query<{ state: string }>('SELECT state FROM tasks WHERE id=$1', [attempt.task_id])).rows[0]!.state;
           if (!node || Number(node.activation) !== Number(attempt.node_activation) || (node.state !== 'RUNNING' && !blockedByThisOperation) || !['RUNNING', 'BLOCKED'].includes(taskState) || attempt.process_released) throw new CommandError('stale_execution', 'Completion activation is no longer current');
           await tx.query('INSERT INTO node_completions(node_id,activation,attempt_id,operation_id,result) VALUES($1,$2,$3,$4,$5)', [attempt.node_id, attempt.node_activation, attempt.id, operation.id, message.result]);
@@ -345,8 +389,9 @@ export class BoundaryService {
           await taskEvent(tx, attempt, 'node_completed', { node_id: attempt.node_id, node_activation: Number(attempt.node_activation), ...message.result }, operation.id);
         }
       } else {
+        if (message.result.writer_absent === true) await tx.query('UPDATE attempts SET process_absent=true WHERE id=$1', [attempt.id]);
         await tx.query("UPDATE operations SET state='recovery',result=$2,failure_kind=CASE WHEN failure_kind IN ('capture_hard_limit','invalid_finalization') THEN failure_kind ELSE COALESCE($3,failure_kind) END WHERE id=$1", [operation.id, message.result, message.failure_kind ?? null]);
-        if (captureBlocked) {
+        if (captureBlocked || (operation.kind === 'complete_node' && (attempt.process_absent || message.result.writer_absent === true))) {
           const node = (await tx.query<{ activation: string; state: string }>('SELECT activation,state FROM nodes WHERE id=$1 FOR UPDATE', [attempt.node_id])).rows[0];
           if (!node || Number(node.activation) !== Number(attempt.node_activation) || !['RUNNING', 'BLOCKED'].includes(node.state) || attempt.process_released) throw new CommandError('stale_execution', 'Capture failure activation is no longer current');
           if (node.state === 'RUNNING') {

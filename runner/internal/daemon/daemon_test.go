@@ -139,3 +139,126 @@ func TestMissingManifestDoesNotReleaseClaim(t *testing.T) {
 		t.Fatal("unknown writer released")
 	}
 }
+
+func TestReconcileCaptureExitPublishesFailureBeforeAbsenceWithoutMarker(t *testing.T) {
+	db := testDB(t)
+	dispatch := protocol.Dispatch{AttemptID: "no-marker", DispatchID: "d", MutationAllowed: true}
+	if err := db.SaveStart(journal.Start{Dispatch: dispatch, Phase: "running", BootID: "boot"}); err != nil {
+		t.Fatal(err)
+	}
+	code := int64(host.CaptureFailureExitCode)
+	daemon := Daemon{DB: db, Host: &fakeSupervisor{Status: host.Status{Known: true, BootID: "boot", MainExited: true, ExitCode: &code, CaptureFailed: true}}, Control: &control.Client{}, Boot: "boot"}
+	if err := daemon.Reconcile(context.Background(), protocol.RunnerInventory{Dispatches: []protocol.Dispatch{dispatch}}); err != nil {
+		t.Fatal(err)
+	}
+	events, err := db.PendingEvents()
+	if err != nil || len(events) != 3 || events[0].Kind != protocol.CaptureFailed || events[1].Kind != protocol.Exited || events[2].Kind != protocol.ProcessAbsent {
+		t.Fatalf("capture failure missing before absence: %+v %v", events, err)
+	}
+}
+
+func TestFastCaptureExitRetainsFailureWhenStartSendFails(t *testing.T) {
+	db := testDB(t)
+	supervisor := &fakeSupervisor{Status: host.Status{Known: true, BootID: "boot"}}
+	daemon := Daemon{DB: db, Host: supervisor, Control: &control.Client{}, Boot: "boot"}
+	dispatch := protocol.Dispatch{AttemptID: "fast-exit", DispatchID: "d"}
+	code := int64(host.CaptureFailureExitCode)
+	err := daemon.recordLaunch(context.Background(), journal.Start{Dispatch: dispatch, BootID: "boot", Phase: "intent"}, host.Status{Known: true, BootID: "boot", MainExited: true, ExitCode: &code, CaptureFailed: true})
+	if err == nil {
+		t.Fatal("expected interrupted Start delivery")
+	}
+	events, err := db.PendingEvents()
+	if err != nil || len(events) != 3 || events[0].Kind != protocol.Started || events[1].Kind != protocol.CaptureFailed || events[2].Kind != protocol.Exited {
+		t.Fatalf("fast output failure lost: %+v %v", events, err)
+	}
+	if len(supervisor.Calls) != 1 || supervisor.Calls[0].Action != "stop" {
+		t.Fatalf("writer stop was not requested: %+v", supervisor.Calls)
+	}
+}
+
+func TestMainExitWithLiveDescendantsIsObservedOnceWithoutReleasingOwnership(t *testing.T) {
+	db := testDB(t)
+	dispatch := protocol.Dispatch{AttemptID: "detached", DispatchID: "d", MutationAllowed: true}
+	if err := db.SaveStart(journal.Start{Dispatch: dispatch, Phase: "running", BootID: "boot", Cgroup: "/system.slice/monos-probe-a-detached.service"}); err != nil {
+		t.Fatal(err)
+	}
+	code := int64(0)
+	supervisor := &fakeSupervisor{Status: host.Status{Known: true, BootID: "boot", Exists: true, MainExited: true, ExitCode: &code, Populated: true, Cgroup: "/system.slice/monos-probe-a-detached.service"}}
+	daemon := Daemon{DB: db, Host: supervisor, Control: &control.Client{}, Boot: "boot"}
+	inventory := protocol.RunnerInventory{Dispatches: []protocol.Dispatch{dispatch}}
+	for range 2 {
+		if err := daemon.Reconcile(context.Background(), inventory); err != nil {
+			t.Fatal(err)
+		}
+	}
+	events, err := db.PendingEvents()
+	if err != nil || len(events) != 1 || events[0].Kind != protocol.Exited || events[0].ExitCode == nil || *events[0].ExitCode != 0 {
+		t.Fatalf("main exit missing or repeated: %+v %v", events, err)
+	}
+	s, err := db.Start(dispatch.AttemptID)
+	if err != nil || s.Phase != "running" {
+		t.Fatalf("live descendants released: %+v %v", s, err)
+	}
+	dispatch.MutationAllowed = false // Backend revoked writes and admitted Stop.
+	if err := daemon.Reconcile(context.Background(), protocol.RunnerInventory{Dispatches: []protocol.Dispatch{dispatch}}); err != nil {
+		t.Fatal(err)
+	}
+	if len(supervisor.Calls) != 4 || supervisor.Calls[3].Action != "stop" {
+		t.Fatalf("revoked live cgroup did not request Stop: %+v", supervisor.Calls)
+	}
+	s, err = db.Start(dispatch.AttemptID)
+	if err != nil || s.Phase != "running" {
+		t.Fatalf("unverified writer absence released: %+v %v", s, err)
+	}
+}
+
+func TestCompleteUTF8PrefixPreservesFrameBoundaryAndMalformedBytes(t *testing.T) {
+	cases := []struct {
+		name  string
+		input []byte
+		want  int
+	}{
+		{"complete", []byte("before界after"), len([]byte("before界after"))},
+		{"split rune", []byte{'a', 0xe7, 0x95}, 1},
+		{"incomplete alone", []byte{0xf0, 0x9f}, 0},
+		{"malformed byte", []byte{'a', 0xff, 'b'}, 3},
+	}
+	for _, test := range cases {
+		t.Run(test.name, func(t *testing.T) {
+			if got := completeUTF8Prefix(test.input); got != test.want {
+				t.Fatalf("complete prefix = %d, want %d", got, test.want)
+			}
+		})
+	}
+}
+
+func TestServiceCaptureMarkerSurvivesRetry(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "capture-attempt")
+	if captureMarkerSet(path) {
+		t.Fatal("missing marker reported failure")
+	}
+	if err := reserveCaptureMarker(path); err != nil {
+		t.Fatal(err)
+	}
+	if err := reserveCaptureMarker(path); err != nil {
+		t.Fatal("reserved marker was not retryable:", err)
+	}
+	if captureMarkerSet(path) {
+		t.Fatal("clean reserved marker reported failure")
+	}
+	for range 2 {
+		if err := persistCaptureMarker(path); err != nil {
+			t.Fatal(err)
+		}
+		if !captureMarkerSet(path) {
+			t.Fatal("capture failure marker was not retained")
+		}
+	}
+	info, err := os.Stat(path)
+	if err != nil || info.Mode().Perm()&0077 != 0 {
+		t.Fatalf("marker is not service-private: %v %v", info, err)
+	}
+	if err := reserveCaptureMarker(path); err == nil {
+		t.Fatal("failed marker was accepted for a new launch")
+	}
+}

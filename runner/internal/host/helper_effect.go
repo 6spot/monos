@@ -12,7 +12,7 @@ import (
 )
 
 func unitProperties(ctx context.Context, unit string) (map[string]string, error) {
-	out, err := command(ctx, "/usr/bin/systemctl", "show", unit, "--property=LoadState,ActiveState,MainPID,ControlGroup,Transient,User,Group,Description")
+	out, err := command(ctx, "/usr/bin/systemctl", "show", unit, "--property=LoadState,ActiveState,MainPID,ControlGroup,Transient,User,Group,Description,Result,ExecMainCode,ExecMainStatus")
 	if err != nil {
 		return nil, err
 	}

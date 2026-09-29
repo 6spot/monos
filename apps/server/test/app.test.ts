@@ -63,7 +63,7 @@ it('bounds queued Runner frames and disconnects before a stalled request finishe
     const welcome = once(socket, 'message');
     socket.send(JSON.stringify({ schema_version: 1, type: 'hello', runner_id: 'runner-test', boot_id: 'boot-test' }));
     await welcome;
-    socket.send(JSON.stringify({ schema_version: 1, type: 'ready', incarnation: 1 }));
+    socket.send(JSON.stringify({ schema_version: 1, type: 'ready', incarnation: 1, log_modes: ['ordered_v1'] }));
     await expect.poll(() => touch.mock.calls.length).toBe(1);
     const closed = once(socket, 'close');
     for (let index = 0; index < 70; index++) socket.send(JSON.stringify({ schema_version: 1, type: 'heartbeat', incarnation: 1 }));
@@ -73,4 +73,29 @@ it('bounds queued Runner frames and disconnects before a stalled request finishe
     await expect.poll(() => disconnect.mock.calls.length).toBe(2);
     expect(touch).toHaveBeenCalledTimes(1);
   } finally { release(); socket.terminate(); await app.close(); await db.pool.end(); }
+});
+
+it('does not mark a legacy Runner ready for ordered-log dispatches', async () => {
+  const db = database('postgres://unused:unused@127.0.0.1:1/unused');
+  const service = new BoundaryService(db, { signingKey: 'test-only-signing-key-never-for-deployment' });
+  vi.spyOn(service, 'authenticateRunner').mockResolvedValue('runner-test');
+  vi.spyOn(service, 'connect').mockResolvedValue(1);
+  vi.spyOn(service, 'pending').mockResolvedValue([]);
+  vi.spyOn(service, 'disconnect').mockResolvedValue();
+  const touch = vi.spyOn(service, 'touch').mockResolvedValue();
+  const app = createApp(service);
+  await app.listen({ host: '127.0.0.1', port: 0 });
+  const socket = new WebSocket(`ws://127.0.0.1:${(app.server.address() as AddressInfo).port}/v1/runner`, { headers: { authorization: 'Bearer fixture-only' } });
+  socket.on('error', () => undefined);
+  try {
+    await once(socket, 'open');
+    const welcome = once(socket, 'message');
+    socket.send(JSON.stringify({ schema_version: 1, type: 'hello', runner_id: 'runner-test', boot_id: 'boot-test' }));
+    await welcome;
+    const answer = once(socket, 'message');
+    socket.send(JSON.stringify({ schema_version: 1, type: 'ready', incarnation: 1 }));
+    const frame = JSON.parse((await answer)[0].toString());
+    expect(frame).toMatchObject({ type: 'error', error: { code: 'unmet_precondition' } });
+    expect(touch).not.toHaveBeenCalled();
+  } finally { socket.terminate(); await app.close(); await db.pool.end(); }
 });

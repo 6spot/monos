@@ -90,9 +90,9 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('durable selected Attem
   it('retains old physical ownership through exit, ignores late starts, then uses a newer fence', async () => {
     const r = await runner(2); const value = await input(r.id); await enqueue(value);
     const launch = (await queue.promoteNext(r.id, r.service.instanceId, r.incarnation))!;
-    const event = { attempt_id: launch.attempt_id, dispatch_id: launch.dispatch_id, stream_id: 'process', sequence: 2, kind: 'exited' as const, text: '', exit_code: 0 };
+    const event = { attempt_id: launch.attempt_id, dispatch_id: launch.dispatch_id, stream_id: 'process', sequence: 2, order_sequence: 1, kind: 'exited' as const, text: '', exit_code: 0 };
     await r.service.event(r.id, r.incarnation, event); await r.service.event(r.id, r.incarnation, event);
-    await r.service.event(r.id, r.incarnation, { ...event, sequence: 1, kind: 'started' });
+    await r.service.event(r.id, r.incarnation, { ...event, sequence: 1, order_sequence: 2, kind: 'started' });
     await expect(r.service.event(r.id, r.incarnation, { ...event, text: 'conflict' })).rejects.toMatchObject({ detail: { code: 'payload_conflict' } });
     expect((await db.pool.query('SELECT state,process_released FROM attempts WHERE id=$1', [launch.attempt_id])).rows[0]).toEqual({ state: 'FAILED', process_released: false });
     const next = { ...value, attempt_id: randomUUID(), expected: { ...value.expected, control_version: 2 } }; await enqueue(next);

@@ -18,6 +18,8 @@ import (
 var ErrConflict = errors.New("payload_conflict")
 var ErrUnknown = errors.New("unknown retained request")
 
+const CaptureAlertText = "execution output capture uncertain; process stop requested; ownership requires reconciliation"
+
 type DB struct{ db *sql.DB }
 type Start struct {
 	Dispatch protocol.Dispatch `json:"dispatch"`
@@ -53,9 +55,46 @@ func Open(path string) (*DB, error) {
 	_, err = handle.Exec(`CREATE TABLE IF NOT EXISTS starts(attempt TEXT PRIMARY KEY, dispatch TEXT UNIQUE NOT NULL, body BLOB NOT NULL);
  CREATE TABLE IF NOT EXISTS requests(attempt TEXT NOT NULL, id TEXT NOT NULL, envelope BLOB NOT NULL, digest TEXT NOT NULL, PRIMARY KEY(attempt,id));
  CREATE TABLE IF NOT EXISTS effects(id TEXT PRIMARY KEY, body BLOB NOT NULL, result BLOB);
- CREATE TABLE IF NOT EXISTS events(attempt TEXT NOT NULL, stream TEXT NOT NULL, seq INTEGER NOT NULL, body BLOB NOT NULL, acked INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(attempt,stream,seq));
+ CREATE TABLE IF NOT EXISTS events(attempt TEXT NOT NULL, stream TEXT NOT NULL, seq INTEGER NOT NULL, body BLOB NOT NULL, acked INTEGER NOT NULL DEFAULT 0, order_seq INTEGER, PRIMARY KEY(attempt,stream,seq));
  CREATE TABLE IF NOT EXISTS log_offsets(attempt TEXT NOT NULL, stream TEXT NOT NULL, position INTEGER NOT NULL, PRIMARY KEY(attempt,stream));`)
 	if err != nil {
+		handle.Close()
+		return nil, err
+	}
+	// Existing probe journals have no Attempt order. Keep those rows unnumbered;
+	// new observations start a durable order without claiming old interleaving.
+	columns, err := handle.Query("PRAGMA table_info(events)")
+	if err != nil {
+		handle.Close()
+		return nil, err
+	}
+	hasOrder := false
+	for columns.Next() {
+		var cid, notnull, pk int
+		var name, typ string
+		var defaultValue sql.NullString
+		if err = columns.Scan(&cid, &name, &typ, &notnull, &defaultValue, &pk); err != nil {
+			break
+		}
+		if name == "order_seq" {
+			hasOrder = true
+		}
+	}
+	if err == nil {
+		err = columns.Err()
+	}
+	columns.Close()
+	if err != nil {
+		handle.Close()
+		return nil, err
+	}
+	if !hasOrder {
+		if _, err = handle.Exec("ALTER TABLE events ADD COLUMN order_seq INTEGER"); err != nil {
+			handle.Close()
+			return nil, err
+		}
+	}
+	if _, err = handle.Exec("CREATE UNIQUE INDEX IF NOT EXISTS one_attempt_event_order ON events(attempt,order_seq) WHERE order_seq IS NOT NULL"); err != nil {
 		handle.Close()
 		return nil, err
 	}
@@ -206,11 +245,16 @@ func (d *DB) LogEvent(e protocol.RuntimeEvent, from, to int64) (protocol.Runtime
 	if err = tx.QueryRow("SELECT COALESCE(MAX(seq),0)+1 FROM events WHERE attempt=? AND stream=?", e.AttemptID, e.StreamID).Scan(&e.Sequence); err != nil {
 		return e, err
 	}
+	var order int64
+	if err = tx.QueryRow("SELECT COALESCE(MAX(order_seq),0)+1 FROM events WHERE attempt=?", e.AttemptID).Scan(&order); err != nil {
+		return e, err
+	}
+	e.OrderSequence = &order
 	raw, err := json.Marshal(e)
 	if err != nil {
 		return e, err
 	}
-	if _, err = tx.Exec("INSERT INTO events(attempt,stream,seq,body) VALUES(?,?,?,?)", e.AttemptID, e.StreamID, e.Sequence, raw); err != nil {
+	if _, err = tx.Exec("INSERT INTO events(attempt,stream,seq,body,order_seq) VALUES(?,?,?,?,?)", e.AttemptID, e.StreamID, e.Sequence, raw, order); err != nil {
 		return e, err
 	}
 	if _, err = tx.Exec("INSERT INTO log_offsets VALUES(?,?,?) ON CONFLICT(attempt,stream) DO UPDATE SET position=excluded.position", e.AttemptID, e.StreamID, to); err != nil {
@@ -248,11 +292,16 @@ func (d *DB) Event(e protocol.RuntimeEvent) (protocol.RuntimeEvent, error) {
 	if err = tx.QueryRow("SELECT COALESCE(MAX(seq),0)+1 FROM events WHERE attempt=? AND stream=?", e.AttemptID, e.StreamID).Scan(&e.Sequence); err != nil {
 		return e, err
 	}
+	var order int64
+	if err = tx.QueryRow("SELECT COALESCE(MAX(order_seq),0)+1 FROM events WHERE attempt=?", e.AttemptID).Scan(&order); err != nil {
+		return e, err
+	}
+	e.OrderSequence = &order
 	raw, err := json.Marshal(e)
 	if err != nil {
 		return e, err
 	}
-	_, err = tx.Exec("INSERT INTO events(attempt,stream,seq,body) VALUES(?,?,?,?)", e.AttemptID, e.StreamID, e.Sequence, raw)
+	_, err = tx.Exec("INSERT INTO events(attempt,stream,seq,body,order_seq) VALUES(?,?,?,?,?)", e.AttemptID, e.StreamID, e.Sequence, raw, order)
 	if err != nil {
 		return e, err
 	}
@@ -263,7 +312,7 @@ func (d *DB) Ack(attempt, stream string, seq int64) error {
 	return err
 }
 func (d *DB) PendingEvents() ([]protocol.RuntimeEvent, error) {
-	rows, err := d.db.Query("SELECT body FROM events WHERE acked=0 ORDER BY attempt,stream,seq LIMIT 256")
+	rows, err := d.db.Query("SELECT body FROM events WHERE acked=0 ORDER BY attempt,order_seq,stream,seq LIMIT 256")
 	if err != nil {
 		return nil, err
 	}
@@ -281,4 +330,14 @@ func (d *DB) PendingEvents() ([]protocol.RuntimeEvent, error) {
 		out = append(out, e)
 	}
 	return out, rows.Err()
+}
+
+func (d *DB) HasCaptureAlert(attempt string) (bool, error) {
+	return d.HasRuntimeEvent(attempt, protocol.CaptureFailed)
+}
+
+func (d *DB) HasRuntimeEvent(attempt string, kind protocol.RuntimeEventKind) (bool, error) {
+	var count int
+	err := d.db.QueryRow("SELECT count(*) FROM events WHERE attempt=? AND stream='runtime' AND json_extract(body,'$.kind')=?", attempt, kind).Scan(&count)
+	return count > 0, err
 }

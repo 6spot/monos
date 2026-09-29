@@ -3,6 +3,10 @@ type InventoryCursor = string;
 
 type TaskEventCursor = string;
 
+type AttemptLogCursor = string;
+
+type AttemptListCursor = string;
+
 export interface CommandEnvelope {
     expected_control_version: number;
     name:                     CommandEnvelopeName;
@@ -77,6 +81,7 @@ export interface Frame {
     event?:            RuntimeEvent;
     expires_at?:       string;
     incarnation?:      number;
+    log_modes?:        LogModeElement[];
     operation?:        Operation;
     operation_id?:     string;
     operation_result?: OperationResult;
@@ -94,6 +99,7 @@ export interface Dispatch {
     dispatch_id:        string;
     fencing_generation: number;
     kind:               DispatchKind;
+    log_mode?:          LogModeElement;
     model:              Model;
     mutation_allowed:   boolean;
     node_activation:    number;
@@ -109,22 +115,26 @@ export interface Dispatch {
 
 export type DispatchKind = "node" | "planner";
 
+export type LogModeElement = "ordered_v1";
+
 export type Model = "opencode/mimo-v2.6-flash-free" | "opencode/longcat-2.5-preview-free";
 
 export type RuntimeID = "opencode";
 
 export interface RuntimeEvent {
-    attempt_id:  string;
-    boot_id?:    string;
-    dispatch_id: string;
-    exit_code?:  number;
-    kind:        RuntimeEventKind;
-    sequence:    number;
-    stream_id:   string;
-    text:        string;
+    attempt_id:      string;
+    boot_id?:        string;
+    data_base64?:    string;
+    dispatch_id:     string;
+    exit_code?:      number;
+    kind:            RuntimeEventKind;
+    order_sequence?: number;
+    sequence:        number;
+    stream_id:       string;
+    text:            string;
 }
 
-export type RuntimeEventKind = "started" | "output" | "attention" | "exited" | "process_absent";
+export type RuntimeEventKind = "started" | "output" | "attention" | "capture_failed" | "exited" | "process_absent";
 
 export interface Operation {
     attempt_id:     string;
@@ -403,3 +413,53 @@ export interface GitHubRepository {
     provider_repo_id: string;
     remote_url:       string;
 }
+
+export interface AttemptLogsQuery {
+    cursor?: string;
+}
+
+export interface AttemptLogPage {
+    attempt_id:     string;
+    cursor:         string;
+    events:         RuntimeEvent[];
+    gap_after:      number;
+    has_more:       boolean;
+    schema_version: number;
+    task_id:        string;
+}
+
+export interface AttemptListQuery {
+    cursor?: string;
+}
+
+export interface AttemptListPage {
+    attempts:       AttemptStatus[];
+    cursor:         string;
+    has_more:       boolean;
+    schema_version: number;
+    task_id:        string;
+}
+
+export interface AttemptStatus {
+    activity_at?:     string;
+    attempt_id:       string;
+    created_at:       string;
+    end_reason?:      string;
+    kind:             DispatchKind;
+    latest_sequence:  number;
+    log_mode:         AttemptStatusLogMode;
+    mutation_allowed: boolean;
+    node_id?:         string;
+    process_absent:   boolean;
+    process_released: boolean;
+    runner_id:        string;
+    schema_version:   number;
+    started:          boolean;
+    state:            AttemptStatusState;
+    task_id:          string;
+    visible_sequence: number;
+}
+
+export type AttemptStatusLogMode = "ordered_v1" | "legacy";
+
+export type AttemptStatusState = "QUEUED" | "RUNNING" | "SUCCEEDED" | "FAILED" | "CANCELLED";

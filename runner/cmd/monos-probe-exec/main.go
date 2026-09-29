@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	protocol "monos.local/protocol"
 	"monos.local/runner/internal/adapter"
@@ -52,6 +53,9 @@ func run() error {
 func main() {
 	if err := run(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
+		if errors.Is(err, adapter.ErrCaptureFailure) {
+			os.Exit(host.CaptureFailureExitCode)
+		}
 		os.Exit(1)
 	}
 }

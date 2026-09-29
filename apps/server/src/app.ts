@@ -92,6 +92,15 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
     validate('TaskEventsQuery', request.query);
     return reads.events(ownerCredential(request), request.params.task_id, request.query.cursor);
   });
+  app.get<{ Params: { task_id: string }; Querystring: { cursor?: string } }>('/v1/owner/tasks/:task_id/attempts', async (request) => {
+    validate('AttemptListQuery', request.query);
+    return reads.attempts(ownerCredential(request), request.params.task_id, request.query.cursor);
+  });
+  app.get<{ Params: { task_id: string; attempt_id: string } }>('/v1/owner/tasks/:task_id/attempts/:attempt_id', async (request) => reads.attempt(ownerCredential(request), request.params.task_id, request.params.attempt_id));
+  app.get<{ Params: { task_id: string; attempt_id: string }; Querystring: { cursor?: string } }>('/v1/owner/tasks/:task_id/attempts/:attempt_id/logs', async (request) => {
+    validate('AttemptLogsQuery', request.query);
+    return reads.logs(ownerCredential(request), request.params.task_id, request.params.attempt_id, request.query.cursor);
+  });
   app.post('/v1/owner/commands', async (request) => owner.confirm(ownerCredential(request), request.body));
   app.get<{ Params: { scope_id: string; request_id: string } }>('/v1/owner/scopes/:scope_id/commands/:request_id', async (request) => owner.status(ownerCredential(request), request.params.scope_id, request.params.request_id));
   app.post('/v1/commands', async (request) => service.admit(bearer(request), request.body));
@@ -153,7 +162,9 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
         if (frame.incarnation !== incarnation) throw new CommandError('stale_execution', 'Wrong connection incarnation');
         try {
           switch (frame.type) {
-            case 'ready': await service.touch(runnerId, incarnation, true, frame.runtimes); break;
+            case 'ready':
+              if (!frame.log_modes?.includes('ordered_v1')) throw new CommandError('unmet_precondition', 'Runner does not support ordered execution logs');
+              await service.touch(runnerId, incarnation, true, frame.runtimes); break;
             case 'heartbeat': await service.touch(runnerId, incarnation); break;
             case 'authorize_dispatch': {
               const grant = await service.authorize(runnerId, incarnation, frame.dispatch_id!);

@@ -57,7 +57,7 @@ export class DispatchQueue {
       task_id: input.task_id, ...(input.node_id ? { node_id: input.node_id } : {}), kind: input.kind,
       fencing_generation: 1, node_activation: activation, control_version: input.expected.control_version,
       resource_id: input.resource_id, runtime_id: input.runtime_id, model: input.model,
-      prompt: input.prompt, source_watermark: input.source_watermark,
+      prompt: input.prompt, source_watermark: input.source_watermark, log_mode: 'ordered_v1',
       mutation_allowed: false, process_released: true,
     };
     validate('Dispatch', launch);

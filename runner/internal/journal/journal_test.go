@@ -117,3 +117,52 @@ func TestLogCursorAndEventCommitTogether(t *testing.T) {
 		t.Fatal("retained log lost")
 	}
 }
+
+func TestAttemptOrderSurvivesStreamsAndReopen(t *testing.T) {
+	root := t.TempDir()
+	if err := os.Chmod(root, 0700); err != nil {
+		t.Fatal(err)
+	}
+	path := filepath.Join(root, "journal.sqlite")
+	db, err := Open(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	stdout, err := db.LogEvent(protocol.RuntimeEvent{AttemptID: "a", DispatchID: "d", StreamID: "stdout", Kind: protocol.Output, Text: "first"}, 0, 5)
+	if err != nil {
+		t.Fatal(err)
+	}
+	stderr, err := db.LogEvent(protocol.RuntimeEvent{AttemptID: "a", DispatchID: "d", StreamID: "stderr", Kind: protocol.Output, Text: "second"}, 0, 6)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if stdout.OrderSequence == nil || stderr.OrderSequence == nil || *stdout.OrderSequence != 1 || *stderr.OrderSequence != 2 {
+		t.Fatal("streams have no stable Attempt order")
+	}
+	if err = db.Close(); err != nil {
+		t.Fatal(err)
+	}
+	db, err = Open(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+	pending, err := db.PendingEvents()
+	if err != nil || len(pending) != 2 || pending[0].Text != "first" || pending[1].Text != "second" {
+		t.Fatalf("reconnect changed Attempt order: %+v %v", pending, err)
+	}
+}
+
+func TestCaptureAttentionCanBeRecoveredWithoutDuplicateObservation(t *testing.T) {
+	db := openTest(t)
+	if found, err := db.HasCaptureAlert("a"); err != nil || found {
+		t.Fatalf("unexpected alert: %v %v", found, err)
+	}
+	_, err := db.Event(protocol.RuntimeEvent{AttemptID: "a", DispatchID: "d", StreamID: "runtime", Kind: protocol.CaptureFailed, Text: CaptureAlertText})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if found, err := db.HasCaptureAlert("a"); err != nil || !found {
+		t.Fatalf("lost retained alert: %v %v", found, err)
+	}
+}

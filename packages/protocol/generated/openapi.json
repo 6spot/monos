@@ -412,6 +412,170 @@
         }
       }
     },
+    "/v1/owner/tasks/{task_id}/attempts": {
+      "get": {
+        "security": [
+          {
+            "OwnerAuth": []
+          },
+          {
+            "OwnerCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/AttemptListCursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authenticated response; admission is distinct from completed effects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttemptListPage"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Deterministic protocol error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/owner/tasks/{task_id}/attempts/{attempt_id}": {
+      "get": {
+        "security": [
+          {
+            "OwnerAuth": []
+          },
+          {
+            "OwnerCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "attempt_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authenticated response; admission is distinct from completed effects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttemptStatus"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Deterministic protocol error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/owner/tasks/{task_id}/attempts/{attempt_id}/logs": {
+      "get": {
+        "security": [
+          {
+            "OwnerAuth": []
+          },
+          {
+            "OwnerCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "attempt_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/AttemptLogCursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authenticated response; admission is distinct from completed effects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttemptLogPage"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Deterministic protocol error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/owner/commands": {
       "post": {
         "security": [
@@ -1141,6 +1305,12 @@
           },
           "process_released": {
             "type": "boolean"
+          },
+          "log_mode": {
+            "type": "string",
+            "enum": [
+              "ordered_v1"
+            ]
           }
         }
       },
@@ -1233,6 +1403,7 @@
               "started",
               "output",
               "attention",
+              "capture_failed",
               "exited",
               "process_absent"
             ]
@@ -1248,6 +1419,16 @@
           },
           "boot_id": {
             "$ref": "#/components/schemas/Id"
+          },
+          "order_sequence": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "data_base64": {
+            "type": "string",
+            "maxLength": 65536,
+            "pattern": "^[A-Za-z0-9+/]*={0,2}$"
           }
         }
       },
@@ -1390,6 +1571,17 @@
               "$ref": "#/components/schemas/RuntimeInstallation"
             },
             "maxItems": 32
+          },
+          "log_modes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "ordered_v1"
+              ]
+            },
+            "maxItems": 1,
+            "uniqueItems": true
           }
         },
         "allOf": [
@@ -1459,7 +1651,8 @@
                 "schema_version": {},
                 "type": {},
                 "incarnation": {},
-                "runtimes": {}
+                "runtimes": {},
+                "log_modes": {}
               },
               "additionalProperties": false
             }
@@ -2789,6 +2982,206 @@
             "type": "integer",
             "minimum": 1,
             "maximum": 1000
+          }
+        }
+      },
+      "AttemptLogCursor": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 768,
+        "pattern": "^[A-Za-z0-9_-]+$"
+      },
+      "AttemptLogsQuery": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [],
+        "properties": {
+          "cursor": {
+            "$ref": "#/components/schemas/AttemptLogCursor"
+          }
+        }
+      },
+      "AttemptStatus": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "schema_version",
+          "task_id",
+          "attempt_id",
+          "kind",
+          "state",
+          "runner_id",
+          "started",
+          "process_absent",
+          "process_released",
+          "mutation_allowed",
+          "log_mode",
+          "visible_sequence",
+          "latest_sequence",
+          "created_at"
+        ],
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "task_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "attempt_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "node",
+              "planner"
+            ]
+          },
+          "node_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "QUEUED",
+              "RUNNING",
+              "SUCCEEDED",
+              "FAILED",
+              "CANCELLED"
+            ]
+          },
+          "runner_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "started": {
+            "type": "boolean"
+          },
+          "process_absent": {
+            "type": "boolean"
+          },
+          "process_released": {
+            "type": "boolean"
+          },
+          "mutation_allowed": {
+            "type": "boolean"
+          },
+          "log_mode": {
+            "type": "string",
+            "enum": [
+              "ordered_v1",
+              "legacy"
+            ]
+          },
+          "visible_sequence": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "latest_sequence": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "activity_at": {
+            "type": "string",
+            "minLength": 1
+          },
+          "created_at": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "end_reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        }
+      },
+      "AttemptLogPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "schema_version",
+          "task_id",
+          "attempt_id",
+          "events",
+          "cursor",
+          "has_more",
+          "gap_after"
+        ],
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "task_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "attempt_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "events": {
+            "type": "array",
+            "maxItems": 64,
+            "items": {
+              "$ref": "#/components/schemas/RuntimeEvent"
+            }
+          },
+          "cursor": {
+            "$ref": "#/components/schemas/AttemptLogCursor"
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "gap_after": {
+            "$ref": "#/components/schemas/Counter"
+          }
+        }
+      },
+      "AttemptListCursor": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 768,
+        "pattern": "^[A-Za-z0-9_-]+$"
+      },
+      "AttemptListQuery": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [],
+        "properties": {
+          "cursor": {
+            "$ref": "#/components/schemas/AttemptListCursor"
+          }
+        }
+      },
+      "AttemptListPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "schema_version",
+          "task_id",
+          "attempts",
+          "cursor",
+          "has_more"
+        ],
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "task_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "attempts": {
+            "type": "array",
+            "maxItems": 64,
+            "items": {
+              "$ref": "#/components/schemas/AttemptStatus"
+            }
+          },
+          "cursor": {
+            "$ref": "#/components/schemas/AttemptListCursor"
+          },
+          "has_more": {
+            "type": "boolean"
           }
         }
       }

@@ -5,6 +5,10 @@ type InventoryCursor string
 
 type TaskEventCursor string
 
+type AttemptLogCursor string
+
+type AttemptListCursor string
+
 type CommandEnvelope struct {
 	ExpectedControlVersion int64               `json:"expected_control_version"`
 	Name                   CommandEnvelopeName `json:"name"`
@@ -71,6 +75,7 @@ type Frame struct {
 	Event           *RuntimeEvent         `json:"event,omitempty"`
 	ExpiresAt       *string               `json:"expires_at,omitempty"`
 	Incarnation     *int64                `json:"incarnation,omitempty"`
+	LogModes        []LogModeElement      `json:"log_modes,omitempty"`
 	Operation       *Operation            `json:"operation,omitempty"`
 	OperationID     *string               `json:"operation_id,omitempty"`
 	OperationResult *OperationResult      `json:"operation_result,omitempty"`
@@ -83,33 +88,36 @@ type Frame struct {
 }
 
 type Dispatch struct {
-	AttemptID         string       `json:"attempt_id"`
-	ControlVersion    int64        `json:"control_version"`
-	DispatchID        string       `json:"dispatch_id"`
-	FencingGeneration int64        `json:"fencing_generation"`
-	Kind              DispatchKind `json:"kind"`
-	Model             Model        `json:"model"`
-	MutationAllowed   bool         `json:"mutation_allowed"`
-	NodeActivation    int64        `json:"node_activation"`
-	NodeID            *string      `json:"node_id,omitempty"`
-	ProcessReleased   bool         `json:"process_released"`
-	Prompt            string       `json:"prompt"`
-	ResourceID        string       `json:"resource_id"`
-	RunnerID          string       `json:"runner_id"`
-	RuntimeID         RuntimeID    `json:"runtime_id"`
-	SourceWatermark   int64        `json:"source_watermark"`
-	TaskID            string       `json:"task_id"`
+	AttemptID         string          `json:"attempt_id"`
+	ControlVersion    int64           `json:"control_version"`
+	DispatchID        string          `json:"dispatch_id"`
+	FencingGeneration int64           `json:"fencing_generation"`
+	Kind              DispatchKind    `json:"kind"`
+	LogMode           *LogModeElement `json:"log_mode,omitempty"`
+	Model             Model           `json:"model"`
+	MutationAllowed   bool            `json:"mutation_allowed"`
+	NodeActivation    int64           `json:"node_activation"`
+	NodeID            *string         `json:"node_id,omitempty"`
+	ProcessReleased   bool            `json:"process_released"`
+	Prompt            string          `json:"prompt"`
+	ResourceID        string          `json:"resource_id"`
+	RunnerID          string          `json:"runner_id"`
+	RuntimeID         RuntimeID       `json:"runtime_id"`
+	SourceWatermark   int64           `json:"source_watermark"`
+	TaskID            string          `json:"task_id"`
 }
 
 type RuntimeEvent struct {
-	AttemptID  string           `json:"attempt_id"`
-	BootID     *string          `json:"boot_id,omitempty"`
-	DispatchID string           `json:"dispatch_id"`
-	ExitCode   *int64           `json:"exit_code,omitempty"`
-	Kind       RuntimeEventKind `json:"kind"`
-	Sequence   int64            `json:"sequence"`
-	StreamID   string           `json:"stream_id"`
-	Text       string           `json:"text"`
+	AttemptID     string           `json:"attempt_id"`
+	BootID        *string          `json:"boot_id,omitempty"`
+	DataBase64    *string          `json:"data_base64,omitempty"`
+	DispatchID    string           `json:"dispatch_id"`
+	ExitCode      *int64           `json:"exit_code,omitempty"`
+	Kind          RuntimeEventKind `json:"kind"`
+	OrderSequence *int64           `json:"order_sequence,omitempty"`
+	Sequence      int64            `json:"sequence"`
+	StreamID      string           `json:"stream_id"`
+	Text          string           `json:"text"`
 }
 
 type Operation struct {
@@ -364,6 +372,52 @@ type GitHubRepository struct {
 	RemoteURL      string `json:"remote_url"`
 }
 
+type AttemptLogsQuery struct {
+	Cursor *string `json:"cursor,omitempty"`
+}
+
+type AttemptLogPage struct {
+	AttemptID     string         `json:"attempt_id"`
+	Cursor        string         `json:"cursor"`
+	Events        []RuntimeEvent `json:"events"`
+	GapAfter      int64          `json:"gap_after"`
+	HasMore       bool           `json:"has_more"`
+	SchemaVersion int64          `json:"schema_version"`
+	TaskID        string         `json:"task_id"`
+}
+
+type AttemptListQuery struct {
+	Cursor *string `json:"cursor,omitempty"`
+}
+
+type AttemptListPage struct {
+	Attempts      []AttemptStatus `json:"attempts"`
+	Cursor        string          `json:"cursor"`
+	HasMore       bool            `json:"has_more"`
+	SchemaVersion int64           `json:"schema_version"`
+	TaskID        string          `json:"task_id"`
+}
+
+type AttemptStatus struct {
+	ActivityAt      *string              `json:"activity_at,omitempty"`
+	AttemptID       string               `json:"attempt_id"`
+	CreatedAt       string               `json:"created_at"`
+	EndReason       *string              `json:"end_reason,omitempty"`
+	Kind            DispatchKind         `json:"kind"`
+	LatestSequence  int64                `json:"latest_sequence"`
+	LogMode         AttemptStatusLogMode `json:"log_mode"`
+	MutationAllowed bool                 `json:"mutation_allowed"`
+	NodeID          *string              `json:"node_id,omitempty"`
+	ProcessAbsent   bool                 `json:"process_absent"`
+	ProcessReleased bool                 `json:"process_released"`
+	RunnerID        string               `json:"runner_id"`
+	SchemaVersion   int64                `json:"schema_version"`
+	Started         bool                 `json:"started"`
+	State           AttemptStatusState   `json:"state"`
+	TaskID          string               `json:"task_id"`
+	VisibleSequence int64                `json:"visible_sequence"`
+}
+
 type CommandEnvelopeName string
 
 const (
@@ -411,6 +465,12 @@ const (
 	Planner DispatchKind = "planner"
 )
 
+type LogModeElement string
+
+const (
+	PurpleOrderedV1 LogModeElement = "ordered_v1"
+)
+
 type Model string
 
 const (
@@ -428,6 +488,7 @@ type RuntimeEventKind string
 
 const (
 	Attention     RuntimeEventKind = "attention"
+	CaptureFailed RuntimeEventKind = "capture_failed"
 	Exited        RuntimeEventKind = "exited"
 	Output        RuntimeEventKind = "output"
 	ProcessAbsent RuntimeEventKind = "process_absent"
@@ -509,13 +570,13 @@ const (
 type TaskOverviewState string
 
 const (
-	Blocked        TaskOverviewState = "BLOCKED"
-	Cancelled      TaskOverviewState = "CANCELLED"
-	Completed      TaskOverviewState = "COMPLETED"
-	Planning       TaskOverviewState = "PLANNING"
-	ReplanRequired TaskOverviewState = "REPLAN_REQUIRED"
-	Review         TaskOverviewState = "REVIEW"
-	Running        TaskOverviewState = "RUNNING"
+	Blocked         TaskOverviewState = "BLOCKED"
+	Completed       TaskOverviewState = "COMPLETED"
+	Planning        TaskOverviewState = "PLANNING"
+	PurpleCANCELLED TaskOverviewState = "CANCELLED"
+	PurpleRUNNING   TaskOverviewState = "RUNNING"
+	ReplanRequired  TaskOverviewState = "REPLAN_REQUIRED"
+	Review          TaskOverviewState = "REVIEW"
 )
 
 type ConfigurationCommandName string
@@ -546,4 +607,21 @@ type RemotePreparation string
 const (
 	AfterAcceptance RemotePreparation = "after_acceptance"
 	Automatic       RemotePreparation = "automatic"
+)
+
+type AttemptStatusLogMode string
+
+const (
+	FluffyOrderedV1 AttemptStatusLogMode = "ordered_v1"
+	Legacy          AttemptStatusLogMode = "legacy"
+)
+
+type AttemptStatusState string
+
+const (
+	Failed          AttemptStatusState = "FAILED"
+	FluffyCANCELLED AttemptStatusState = "CANCELLED"
+	FluffyRUNNING   AttemptStatusState = "RUNNING"
+	Queued          AttemptStatusState = "QUEUED"
+	StateSUCCEEDED  AttemptStatusState = "SUCCEEDED"
 )

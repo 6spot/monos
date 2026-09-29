@@ -64,6 +64,47 @@ describe.skipIf(!enabled)('real PostgreSQL boundary admission', () => {
     expect((await db.pool.query('SELECT state FROM tasks WHERE id=$1', [f.launch.task_id])).rows[0].state).toBe('REVIEW');
   });
 
+  it('lets an admitted completion settle after an exit observation without inventing failure', async () => {
+    const f = await fixture();
+    const admitted = await f.service.admit(f.token, submission(complete(f.launch)));
+    await f.service.event(f.runnerId, f.incarnation, { attempt_id: f.launch.attempt_id, dispatch_id: f.launch.dispatch_id,
+      stream_id: 'runtime', sequence: 1, kind: 'process_absent', text: 'verified whole-tree absence' });
+    expect((await db.pool.query('SELECT state,exit_observed FROM attempts WHERE id=$1', [f.launch.attempt_id])).rows[0]).toEqual({ state: 'RUNNING', exit_observed: true });
+    await f.service.finishOperation(f.runnerId, f.incarnation, { operation_id: admitted.operation_id!, attempt_id: f.launch.attempt_id,
+      success: true, result: { writer_absent: true, git_commit: 'a'.repeat(40), git_tree: 'b'.repeat(40) } });
+    expect((await db.pool.query('SELECT state FROM nodes WHERE id=$1', [f.launch.node_id])).rows[0].state).toBe('COMPLETED');
+    expect((await db.pool.query("SELECT count(*) FROM task_events WHERE attempt_id=$1 AND kind='missing_formal_outcome'", [f.launch.attempt_id])).rows[0].count).toBe('0');
+  });
+
+  it('capture failure revokes authority while Stop is unresolved and preserves reservations', async () => {
+    const f = await fixture();
+    const fact: RuntimeEvent = { attempt_id: f.launch.attempt_id, dispatch_id: f.launch.dispatch_id, stream_id: 'runtime', sequence: 1, kind: 'capture_failed', text: 'spool write failed' };
+    await f.service.event(f.runnerId, f.incarnation, fact);
+    await f.service.event(f.runnerId, f.incarnation, fact);
+    await expect(f.service.admit(f.token, submission(complete(f.launch)))).rejects.toMatchObject({ detail: { code: 'stale_execution' } });
+    expect((await db.pool.query('SELECT state,mutation_allowed,process_released FROM attempts WHERE id=$1', [f.launch.attempt_id])).rows[0]).toEqual({ state: 'FAILED', mutation_allowed: false, process_released: false });
+    const stop = (await db.pool.query("SELECT id FROM operations WHERE attempt_id=$1 AND kind='stop'", [f.launch.attempt_id])).rows;
+    expect(stop).toHaveLength(1);
+    await f.service.finishOperation(f.runnerId, f.incarnation, { attempt_id: f.launch.attempt_id, operation_id: stop[0].id, success: false, failure_kind: 'recoverable', result: { message: 'writer remains' } });
+    expect((await db.pool.query('SELECT process_released FROM attempts WHERE id=$1', [f.launch.attempt_id])).rows[0].process_released).toBe(false);
+    expect((await db.pool.query('SELECT state FROM nodes WHERE id=$1', [f.launch.node_id])).rows[0].state).toBe('BLOCKED');
+  });
+
+  for (const failureFirst of [true, false]) it(`retains completion recovery after capture failure and absence (failure first: ${failureFirst})`, async () => {
+    const f = await fixture();
+    const admitted = await f.service.admit(f.token, submission(complete(f.launch)));
+    await f.service.event(f.runnerId, f.incarnation, { attempt_id: f.launch.attempt_id, dispatch_id: f.launch.dispatch_id, stream_id: 'runtime', sequence: 1, kind: 'capture_failed', text: 'spool failed' });
+    expect((await db.pool.query("SELECT count(*) FROM operations WHERE attempt_id=$1 AND kind='stop'", [f.launch.attempt_id])).rows[0].count).toBe('0');
+    const failure = () => f.service.finishOperation(f.runnerId, f.incarnation, { attempt_id: f.launch.attempt_id, operation_id: admitted.operation_id!, success: false, failure_kind: 'recoverable', result: { message: 'Git repair required' } });
+    const absence = () => f.service.event(f.runnerId, f.incarnation, { attempt_id: f.launch.attempt_id, dispatch_id: f.launch.dispatch_id, stream_id: 'runtime', sequence: 2, kind: 'process_absent', text: 'verified absence' });
+    if (failureFirst) { await failure(); await absence(); } else { await absence(); await failure(); }
+    expect((await db.pool.query('SELECT state FROM nodes WHERE id=$1', [f.launch.node_id])).rows[0].state).toBe('BLOCKED');
+    expect((await db.pool.query('SELECT process_released FROM attempts WHERE id=$1', [f.launch.attempt_id])).rows[0].process_released).toBe(false);
+    await retryOperationFixture(db, admitted.operation_id!);
+    await f.service.finishOperation(f.runnerId, f.incarnation, { attempt_id: f.launch.attempt_id, operation_id: admitted.operation_id!, success: true, result: { writer_absent: true, git_commit: 'a'.repeat(40), git_tree: 'b'.repeat(40) } });
+    expect((await db.pool.query('SELECT state FROM nodes WHERE id=$1', [f.launch.node_id])).rows[0].state).toBe('COMPLETED');
+  });
+
   it('rolls back a crash before commit and recovers admission after a lost reply/restart', async () => {
     const f = await fixture(); const command = complete(f.launch);
     const before = new BoundaryService(db, { signingKey, beforeAdmissionCommit: () => { throw new Error('injected before commit'); } });
@@ -304,7 +345,7 @@ describe.skipIf(!enabled)('real PostgreSQL boundary admission', () => {
       await once(socket, 'open');
       socket.send(JSON.stringify({ schema_version: 1, type: 'hello', runner_id: f.runnerId, boot_id: 'boot-test' }));
       const welcome = await next('welcome');
-      socket.send(JSON.stringify({ schema_version: 1, type: 'ready', incarnation: welcome.incarnation }));
+      socket.send(JSON.stringify({ schema_version: 1, type: 'ready', incarnation: welcome.incarnation, log_modes: ['ordered_v1'] }));
       socket.send(JSON.stringify({ schema_version: 1, type: 'authorize_dispatch', incarnation: welcome.incarnation, dispatch_id: f.launch.dispatch_id, correlation_id: 'rpc-1' }));
       const authorization = await next('authorization');
       expect(authorization.allowed).toBe(true); expect(authorization.credential).toMatch(/^attempt\.v1\./);

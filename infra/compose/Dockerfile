@@ -9,6 +9,7 @@ COPY scripts ./scripts
 COPY infra/compose/test-db.mjs ./infra/compose/test-db.mjs
 
 FROM source AS test
+COPY infra/probe/selected-attempt.ts ./infra/probe/selected-attempt.ts
 RUN pnpm install --frozen-lockfile
 RUN pnpm --filter @monos/web build
 CMD ["node", "infra/compose/test-db.mjs"]
