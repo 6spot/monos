@@ -210,3 +210,26 @@ Implemented policy-selected canonical Attempts, two shared Runner slots, Planner
 ### Status
 
 [OK] **Completed**
+
+
+## Session 10: Production Runner execution logs
+<!-- trellis-session: v=2 fp=74a7ab573e569de1 -->
+
+**Date**: 2026-09-29
+**Task**: Production Runner execution logs
+**Branch**: `feat/stage-a-boundary-probe`
+
+### Summary
+
+Implemented ordered Runner Attempt logs and authenticated Owner cursor reads; verified selected Node and Planner CLI dispatch, backend restart resume, missing-result Stop, Go race/vet and 88 PostgreSQL tests on the authorized Linux host; archived the task.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `4e63ff1` | feat: capture and serve ordered attempt execution logs |
+| `34a3f0e` | docs: record execution log contracts and acceptance |
+
+### Status
+
+[OK] **Completed**

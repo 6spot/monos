@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 9
+- **Total Sessions**: 10
 - **Last Active**: 2026-09-29
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~212 | Active |
+| `journal-1.md` | ~235 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 10 | 2026-09-29 | Production Runner execution logs | `4e63ff1`, `34a3f0e` | `feat/stage-a-boundary-probe` |
 | 9 | 2026-09-29 | Runtime target selection and shared slots | `d7dd589`, `0a44f27` | `feat/stage-a-boundary-probe` |
 | 8 | 2026-09-29 | Rename product, CLI and repositories to monos | `b6ca132` | `feat/stage-a-boundary-probe` |
 | 7 | 2026-09-29 | Runtime acceptance and authorized host reboot | `5b940b0`, `348cbdb` | `feat/stage-a-boundary-probe` |
