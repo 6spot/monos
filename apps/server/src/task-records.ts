@@ -121,7 +121,7 @@ export async function reactivateSettledNodes(tx: Transaction, input: { task_id: 
   }
   const ids = [...affected].sort();
   const owners = await tx.query(`SELECT a.id FROM attempts a WHERE a.task_id=$1 AND a.node_id=ANY($2::text[])
-    AND (NOT a.process_released OR EXISTS (SELECT 1 FROM operations o WHERE o.attempt_id=a.id AND o.state<>'succeeded'))`, [input.task_id, ids]);
+    AND (NOT a.process_released OR EXISTS (SELECT 1 FROM operations o WHERE o.attempt_id=a.id AND o.state NOT IN ('succeeded','cancelled')))`, [input.task_id, ids]);
   if (owners.rowCount) throw new CommandError('unmet_precondition', 'Old writers and admitted operations must settle before reactivation');
   for (const id of ids) {
     const node = (await tx.query<{ activation: string }>("UPDATE nodes SET activation=activation+1,state='PENDING',result=NULL WHERE id=$1 RETURNING activation", [id])).rows[0]!;

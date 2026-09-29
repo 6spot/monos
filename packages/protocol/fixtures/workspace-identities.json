@@ -1,0 +1,20 @@
+[
+  {
+    "task_id": "task-a",
+    "resource_id": "resource-a",
+    "canonical": "[\"task-a\",\"resource-a\"]",
+    "workspace_id": "ws_702578eed3beaf1fe112f67bc840185dbeffa4c8976dd6385ba6b75d0795fdd9"
+  },
+  {
+    "task_id": "task-ab",
+    "resource_id": "resource-c",
+    "canonical": "[\"task-ab\",\"resource-c\"]",
+    "workspace_id": "ws_ef1b16ce8b757a5aa483e34e5640bc399d3003077cf3d9d5e3a8c68ef2f8ca75"
+  },
+  {
+    "task_id": "task-a",
+    "resource_id": "resource-bc",
+    "canonical": "[\"task-a\",\"resource-bc\"]",
+    "workspace_id": "ws_3341895bd23d37a941083efd1cf5bf2eaa2ca9c17eea8398ae29260cf293ed90"
+  }
+]

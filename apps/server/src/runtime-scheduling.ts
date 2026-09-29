@@ -111,6 +111,7 @@ export class RuntimeScheduling {
       attempt_id: request.attempt_id, task_id: request.task_id, node_id: request.node_id,
       todo_id: request.todo_id, discussion_context: request.discussion_context,
       kind: request.kind, expected: request.expected, resource_id: request.resource_id,
+      ...(request.legacy_probe ? { legacy_probe: true as const } : {}),
       prompt: request.prompt, source_watermark: request.source_watermark,
       runner_id: chosen.id, runtime_id: 'opencode', model: supportedModel, selection_context,
     });

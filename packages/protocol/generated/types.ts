@@ -13,6 +13,12 @@ type TodoCaptureText = string;
 
 type DiscussionText = string;
 
+type Sha256 = string;
+
+type GitOID = string;
+
+type PositiveCounter = number;
+
 export interface CommandEnvelope {
     expected_control_version: number;
     name:                     CommandEnvelopeName;
@@ -76,18 +82,21 @@ export interface ErrorInfo {
 export type Code = "invalid_input" | "denied_scope" | "unauthorized" | "stale_execution" | "version_conflict" | "payload_conflict" | "unmet_precondition" | "unsupported_version" | "control_unavailable" | "internal_error" | "rate_limited";
 
 export interface EffectResult {
-    cache_updated?:      boolean;
-    discussion_page?:    DiscussionPage;
-    git_commit?:         string;
-    git_tree?:           string;
-    message?:            string;
-    message_id?:         string;
-    path?:               string;
-    reply?:              string;
-    resolved_watermark?: number;
-    source_watermark?:   number;
-    workspace_id?:       string;
-    writer_absent?:      boolean;
+    cache_updated?:                boolean;
+    discussion_page?:              DiscussionPage;
+    git_commit?:                   string;
+    git_tree?:                     string;
+    instruction_files?:            InstructionFile[];
+    message?:                      string;
+    message_id?:                   string;
+    path?:                         string;
+    reply?:                        string;
+    resolved_watermark?:           number;
+    source_watermark?:             number;
+    workspace_id?:                 string;
+    workspace_metadata?:           WorkspaceMetadata;
+    workspace_unavailable_reason?: WorkspaceUnavailableReason;
+    writer_absent?:                boolean;
 }
 
 export interface DiscussionPage {
@@ -115,6 +124,40 @@ export interface DiscussionMessage {
 export type Author = "owner" | "assistant";
 
 export type Disposition = "withdrawn";
+
+export type InstructionFile = "AGENTS.md" | "CLAUDE.md";
+
+export interface WorkspaceMetadata {
+    base_commit:                     string;
+    checkpoint?:                     WorkspaceCheckpoint;
+    finalized_commit:                string;
+    generation:                      number;
+    lease_id:                        string;
+    provider_metadata?:              RepositoryProviderMetadata;
+    recovered_by_stop_operation_id?: string;
+    repository_identity:             string;
+    storage_id:                      string;
+    target_branch:                   string;
+    target_commit:                   string;
+    target_observation_lease_id?:    string;
+}
+
+export interface WorkspaceCheckpoint {
+    commit_id:    string;
+    head_commit:  string;
+    operation_id: string;
+    tree_id:      string;
+}
+
+export interface RepositoryProviderMetadata {
+    github?: RepositoryProviderMetadataGithub;
+}
+
+export interface RepositoryProviderMetadataGithub {
+    repository_id: string;
+}
+
+export type WorkspaceUnavailableReason = "unsupported_remote" | "unsupported_multiple_workspaces" | "credentials_missing" | "repository_denied" | "ref_unavailable" | "storage_unavailable" | "ownership_unresolved";
 
 export type CommandResultStatus = "admitted" | "committed" | "error" | "unknown";
 
@@ -164,6 +207,7 @@ export interface Dispatch {
     source_watermark:         number;
     task_id?:                 string;
     todo_id?:                 string;
+    workspace_reservations?:  WorkspaceReservations;
 }
 
 export type DispatchKind = "node" | "planner";
@@ -173,6 +217,17 @@ export type LogModeElement = "ordered_v1";
 export type Model = "opencode/mimo-v2.6-flash-free" | "opencode/longcat-2.5-preview-free";
 
 export type RuntimeID = "opencode";
+
+export interface WorkspaceReservations {
+    configuration_version: number;
+    project_id:            string;
+    resources:             WorkspaceReservation[];
+}
+
+export interface WorkspaceReservation {
+    resource_id:  string;
+    workspace_id: string;
+}
 
 export interface RuntimeEvent {
     attempt_id:      string;
@@ -190,27 +245,65 @@ export interface RuntimeEvent {
 export type RuntimeEventKind = "started" | "output" | "attention" | "capture_failed" | "exited" | "process_absent";
 
 export interface Operation {
-    attempt_id:     string;
-    dispatch_id:    string;
-    kind:           OperationKind;
-    operation_id:   string;
-    request_id:     string;
-    resource_id?:   string;
-    result?:        EffectResult;
-    schema_version: number;
-    state:          OperationState;
+    attempt_id:                 string;
+    cancelled_by_operation_id?: string;
+    dispatch_id:                string;
+    kind:                       OperationKind;
+    operation_id:               string;
+    request_id:                 string;
+    resource_id?:               string;
+    result?:                    EffectResult;
+    schema_version:             number;
+    state:                      OperationState;
+    workspace?:                 WorkspaceDescriptor;
+    workspace_digest?:          string;
 }
 
 export type OperationKind = "open_workspace" | "inspect_repository" | "complete_node" | "stop";
 
-export type OperationState = "admitted" | "succeeded" | "recovery";
+export type OperationState = "admitted" | "succeeded" | "recovery" | "cancelled";
+
+export interface WorkspaceDescriptor {
+    basis?:            WorkspaceBasis;
+    generation:        number;
+    lease_id:          string;
+    node_activation:   number;
+    node_id:           string;
+    open_operation_id: string;
+    project_id:        string;
+    resource:          WorkspaceResource;
+    resource_id:       string;
+    runner_id:         string;
+    schema_version:    number;
+    task_id:           string;
+    workspace_id:      string;
+}
+
+export interface WorkspaceBasis {
+    base_commit:         string;
+    finalized_commit:    string;
+    provider_metadata?:  RepositoryProviderMetadata;
+    repository_identity: string;
+    storage_id:          string;
+    target_branch:       string;
+}
+
+export interface WorkspaceResource {
+    default_branch?:     string;
+    default_ref?:        string;
+    provider_metadata?:  RepositoryProviderMetadata;
+    remote_url:          string;
+    repository_identity: string;
+    resource_id:         string;
+}
 
 export interface OperationResult {
-    attempt_id:    string;
-    failure_kind?: FailureKind;
-    operation_id:  string;
-    result:        EffectResult;
-    success:       boolean;
+    attempt_id:                 string;
+    cancelled_by_operation_id?: string;
+    failure_kind?:              FailureKind;
+    operation_id:               string;
+    result:                     EffectResult;
+    success:                    boolean;
 }
 
 export type FailureKind = "recoverable" | "capture_hard_limit" | "invalid_finalization";
@@ -603,17 +696,18 @@ export interface OwnerRetryInitialPlanningCommandPayload {
 }
 
 export interface OwnerOperationStatus {
-    attempt_id:       string;
-    attention:        boolean;
-    end_reason?:      string;
-    failure_kind?:    string;
-    kind:             OperationKind;
-    operation_id:     string;
-    process_absent:   boolean;
-    process_released: boolean;
-    schema_version:   number;
-    state:            OperationState;
-    task_id:          string;
+    attempt_id:                 string;
+    attention:                  boolean;
+    cancelled_by_operation_id?: string;
+    end_reason?:                string;
+    failure_kind?:              string;
+    kind:                       OperationKind;
+    operation_id:               string;
+    process_absent:             boolean;
+    process_released:           boolean;
+    schema_version:             number;
+    state:                      OperationState;
+    task_id:                    string;
 }
 
 export interface TodoListQuery {
@@ -867,17 +961,18 @@ export interface TodoAttemptLogPage {
 }
 
 export interface TodoOperationStatus {
-    attempt_id:       string;
-    attention:        boolean;
-    end_reason?:      string;
-    failure_kind?:    string;
-    kind:             OperationKind;
-    operation_id:     string;
-    process_absent:   boolean;
-    process_released: boolean;
-    schema_version:   number;
-    state:            OperationState;
-    todo_id:          string;
+    attempt_id:                 string;
+    attention:                  boolean;
+    cancelled_by_operation_id?: string;
+    end_reason?:                string;
+    failure_kind?:              string;
+    kind:                       OperationKind;
+    operation_id:               string;
+    process_absent:             boolean;
+    process_released:           boolean;
+    schema_version:             number;
+    state:                      OperationState;
+    todo_id:                    string;
 }
 
 export interface PlannerGuidance {
@@ -1016,3 +1111,40 @@ export interface NodeCounts {
 }
 
 export type TaskOverviewState = "PLANNING" | "RUNNING" | "BLOCKED" | "REPLAN_REQUIRED" | "REVIEW" | "COMPLETED" | "CANCELLED";
+
+export interface RepositoryAccessRequest {
+    incarnation:      number;
+    schema_version:   number;
+    workspace_digest: string;
+}
+
+export interface GitHubRepositoryAccessResult {
+    authentication:    RepositoryAuthentication;
+    default_branch:    string;
+    operation_id:      string;
+    provider_metadata: ProviderMetadata;
+    remote_url:        string;
+    schema_version:    number;
+    workspace_digest:  string;
+}
+
+export interface RepositoryAuthentication {
+    expires_at?: string;
+    kind:        RepositoryAuthenticationKind;
+    token?:      string;
+}
+
+export type RepositoryAuthenticationKind = "anonymous" | "github_installation";
+
+export interface ProviderMetadata {
+    github: PurpleGithub;
+}
+
+export interface PurpleGithub {
+    repository_id: string;
+}
+
+export interface RepositoryAccessError {
+    reason:         WorkspaceUnavailableReason;
+    schema_version: number;
+}

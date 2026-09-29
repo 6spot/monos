@@ -17,6 +17,12 @@ func run() error {
 		return fmt.Errorf("invalid worker arguments")
 	}
 	switch os.Args[1] {
+	case "workspace":
+		if len(os.Args) != 3 {
+			return fmt.Errorf("invalid workspace worker arguments")
+		}
+		r, err := host.WorkspaceWorker(os.Args[2], os.Stdin)
+		return host.WriteStatus(os.Stdout, host.Status{Known: true, Result: &r}, err)
 	case "attempt":
 		if len(os.Args) != 3 {
 			return fmt.Errorf("invalid attempt arguments")

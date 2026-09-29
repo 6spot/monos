@@ -1,0 +1,29 @@
+{
+  "id": "a-serial-workspaces",
+  "name": "a-serial-workspaces",
+  "title": "Authorized Project repositories and serial Task workspaces",
+  "description": "Open real Project repositories lazily through stable serial Task workspaces with scoped read access and recoverable physical ownership.",
+  "status": "in_progress",
+  "dev_type": "backend",
+  "scope": null,
+  "package": null,
+  "priority": "P2",
+  "creator": "me",
+  "assignee": "me",
+  "createdAt": "2026-09-30",
+  "completedAt": null,
+  "branch": "feat/stage-a-boundary-probe",
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "09-28-a-task-execution",
+  "relatedFiles": [],
+  "notes": "",
+  "meta": {
+    "roadmap_level": "leaf",
+    "planning_maturity": "ready"
+  }
+}

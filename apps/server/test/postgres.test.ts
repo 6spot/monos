@@ -208,11 +208,13 @@ describe.skipIf(!enabled)('real PostgreSQL boundary admission', () => {
     await f.service.event(f.runnerId, f.incarnation, { attempt_id: f.launch.attempt_id, dispatch_id: f.launch.dispatch_id, stream_id: 'runtime', sequence: 1, kind: 'started', text: 'started' });
     const command: CommandEnvelope = { schema_version: 1, request_id: 'workspace', scope_id: f.launch.task_id, expected_control_version: 1, name: 'open_workspace', payload: { resource_id: 'fixture-repo' } };
     for (let index = 0; index < 16; index++) {
+      if (index % 4 === 0) await f.service.touch(f.runnerId, f.incarnation);
       const admitted = await f.service.admit(f.token, submission({ ...command, request_id: `recovery-${index}` }));
       await f.service.finishOperation(f.runnerId, f.incarnation, { attempt_id: f.launch.attempt_id, operation_id: admitted.operation_id!, success: false, result: { message: 'repair needed' } });
       // Stable early ordering reproduces the LIMIT-before-filter starvation.
       await db.pool.query('UPDATE outbox SET id=$2 WHERE operation_id=$1', [admitted.operation_id, `a-${f.launch.attempt_id}-${index}`]);
     }
+    await f.service.touch(f.runnerId, f.incarnation);
     const next = await f.service.admit(f.token, submission(command));
     await db.pool.query('UPDATE outbox SET id=$2 WHERE operation_id=$1', [next.operation_id, `z-${f.launch.attempt_id}`]);
     const frames = await f.service.pending(f.runnerId, f.incarnation);
@@ -245,7 +247,11 @@ describe.skipIf(!enabled)('real PostgreSQL boundary admission', () => {
 
   it('splits operation pages and excludes settled history while retaining scoped receipt reads', async () => {
     const f = await fixture();
-    for (let index = 0; index < 70; index++) await f.service.admit(f.token, submission({ schema_version: 1, request_id: `workspace-${index}`, scope_id: f.launch.task_id, expected_control_version: 1, name: 'open_workspace', payload: { resource_id: 'fixture-repo' } }));
+    for (let index = 0; index < 70; index++) {
+      // Integration databases may be remote; model the connected Runner's heartbeat.
+      if (index % 10 === 0) await f.service.touch(f.runnerId, f.incarnation);
+      await f.service.admit(f.token, submission({ schema_version: 1, request_id: `workspace-${index}`, scope_id: f.launch.task_id, expected_control_version: 1, name: 'open_workspace', payload: { resource_id: 'fixture-repo' } }));
+    }
     const first = await f.service.inventory(f.runnerId);
     expect(first.next_cursor).toBeDefined();
     const second = await f.service.inventory(f.runnerId, first.next_cursor, first.snapshot_id);
@@ -253,6 +259,7 @@ describe.skipIf(!enabled)('real PostgreSQL boundary admission', () => {
     const operations = [...first.operations, ...second.operations];
     expect(new Set(operations.map((operation) => operation.operation_id)).size).toBe(70);
     for (const operation of operations) await f.service.finishOperation(f.runnerId, f.incarnation, { attempt_id: f.launch.attempt_id, operation_id: operation.operation_id, success: true, result: { workspace_id: 'workspace', path: '/runner-only/workspace' } });
+    await f.service.touch(f.runnerId, f.incarnation);
     const command = complete(f.launch);
     const receipt = await f.service.admit(f.token, submission(command));
     await f.service.finishOperation(f.runnerId, f.incarnation, { attempt_id: f.launch.attempt_id, operation_id: receipt.operation_id!, success: true, result: { writer_absent: true, git_commit: 'a'.repeat(40), git_tree: 'b'.repeat(40) } });

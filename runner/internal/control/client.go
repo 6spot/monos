@@ -296,6 +296,9 @@ func (c *Client) Run(ctx context.Context, boot string, h Handler) error {
 	c.mu.Lock()
 	c.ready = true
 	c.mu.Unlock()
+	if recovery, ok := h.(interface{ ConnectionReady(context.Context) }); ok {
+		recovery.ConnectionReady(ctx)
+	}
 	heartbeatCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	go func() {

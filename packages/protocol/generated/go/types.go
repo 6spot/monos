@@ -15,6 +15,12 @@ type TodoCaptureText string
 
 type DiscussionText string
 
+type Sha256 string
+
+type GitOID string
+
+type PositiveCounter int64
+
 type CommandEnvelope struct {
 	ExpectedControlVersion int64               `json:"expected_control_version"`
 	Name                   CommandEnvelopeName `json:"name"`
@@ -72,18 +78,21 @@ type ErrorInfo struct {
 }
 
 type EffectResult struct {
-	CacheUpdated      *bool           `json:"cache_updated,omitempty"`
-	DiscussionPage    *DiscussionPage `json:"discussion_page,omitempty"`
-	GitCommit         *string         `json:"git_commit,omitempty"`
-	GitTree           *string         `json:"git_tree,omitempty"`
-	Message           *string         `json:"message,omitempty"`
-	MessageID         *string         `json:"message_id,omitempty"`
-	Path              *string         `json:"path,omitempty"`
-	Reply             *string         `json:"reply,omitempty"`
-	ResolvedWatermark *int64          `json:"resolved_watermark,omitempty"`
-	SourceWatermark   *int64          `json:"source_watermark,omitempty"`
-	WorkspaceID       *string         `json:"workspace_id,omitempty"`
-	WriterAbsent      *bool           `json:"writer_absent,omitempty"`
+	CacheUpdated               *bool                       `json:"cache_updated,omitempty"`
+	DiscussionPage             *DiscussionPage             `json:"discussion_page,omitempty"`
+	GitCommit                  *string                     `json:"git_commit,omitempty"`
+	GitTree                    *string                     `json:"git_tree,omitempty"`
+	InstructionFiles           []InstructionFile           `json:"instruction_files,omitempty"`
+	Message                    *string                     `json:"message,omitempty"`
+	MessageID                  *string                     `json:"message_id,omitempty"`
+	Path                       *string                     `json:"path,omitempty"`
+	Reply                      *string                     `json:"reply,omitempty"`
+	ResolvedWatermark          *int64                      `json:"resolved_watermark,omitempty"`
+	SourceWatermark            *int64                      `json:"source_watermark,omitempty"`
+	WorkspaceID                *string                     `json:"workspace_id,omitempty"`
+	WorkspaceMetadata          *WorkspaceMetadata          `json:"workspace_metadata,omitempty"`
+	WorkspaceUnavailableReason *WorkspaceUnavailableReason `json:"workspace_unavailable_reason,omitempty"`
+	WriterAbsent               *bool                       `json:"writer_absent,omitempty"`
 }
 
 type DiscussionPage struct {
@@ -106,6 +115,36 @@ type DiscussionMessage struct {
 	SourceMessageID       *string      `json:"source_message_id,omitempty"`
 	SourceWatermark       *int64       `json:"source_watermark,omitempty"`
 	TaskPreview           *TaskPreview `json:"task_preview,omitempty"`
+}
+
+type WorkspaceMetadata struct {
+	BaseCommit                 string                      `json:"base_commit"`
+	Checkpoint                 *WorkspaceCheckpoint        `json:"checkpoint,omitempty"`
+	FinalizedCommit            string                      `json:"finalized_commit"`
+	Generation                 int64                       `json:"generation"`
+	LeaseID                    string                      `json:"lease_id"`
+	ProviderMetadata           *RepositoryProviderMetadata `json:"provider_metadata,omitempty"`
+	RecoveredByStopOperationID *string                     `json:"recovered_by_stop_operation_id,omitempty"`
+	RepositoryIdentity         string                      `json:"repository_identity"`
+	StorageID                  string                      `json:"storage_id"`
+	TargetBranch               string                      `json:"target_branch"`
+	TargetCommit               string                      `json:"target_commit"`
+	TargetObservationLeaseID   *string                     `json:"target_observation_lease_id,omitempty"`
+}
+
+type WorkspaceCheckpoint struct {
+	CommitID    string `json:"commit_id"`
+	HeadCommit  string `json:"head_commit"`
+	OperationID string `json:"operation_id"`
+	TreeID      string `json:"tree_id"`
+}
+
+type RepositoryProviderMetadata struct {
+	Github *RepositoryProviderMetadataGithub `json:"github,omitempty"`
+}
+
+type RepositoryProviderMetadataGithub struct {
+	RepositoryID string `json:"repository_id"`
 }
 
 type Frame struct {
@@ -133,27 +172,39 @@ type Frame struct {
 }
 
 type Dispatch struct {
-	AttemptID             string          `json:"attempt_id"`
-	ControlVersion        int64           `json:"control_version"`
-	DispatchID            string          `json:"dispatch_id"`
-	FencingGeneration     int64           `json:"fencing_generation"`
-	Kind                  DispatchKind    `json:"kind"`
-	LogMode               *LogModeElement `json:"log_mode,omitempty"`
-	Model                 Model           `json:"model"`
-	MutationAllowed       bool            `json:"mutation_allowed"`
-	NodeActivation        int64           `json:"node_activation"`
-	NodeID                *string         `json:"node_id,omitempty"`
-	ProcessReleased       bool            `json:"process_released"`
-	ProjectContextDigest  *string         `json:"project_context_digest,omitempty"`
-	ProjectContextVersion *int64          `json:"project_context_version,omitempty"`
-	Prompt                string          `json:"prompt"`
-	ResourceID            *string         `json:"resource_id,omitempty"`
-	RunnerID              string          `json:"runner_id"`
-	RuntimeID             RuntimeID       `json:"runtime_id"`
-	SourceMessageID       *string         `json:"source_message_id,omitempty"`
-	SourceWatermark       int64           `json:"source_watermark"`
-	TaskID                *string         `json:"task_id,omitempty"`
-	TodoID                *string         `json:"todo_id,omitempty"`
+	AttemptID             string                 `json:"attempt_id"`
+	ControlVersion        int64                  `json:"control_version"`
+	DispatchID            string                 `json:"dispatch_id"`
+	FencingGeneration     int64                  `json:"fencing_generation"`
+	Kind                  DispatchKind           `json:"kind"`
+	LogMode               *LogModeElement        `json:"log_mode,omitempty"`
+	Model                 Model                  `json:"model"`
+	MutationAllowed       bool                   `json:"mutation_allowed"`
+	NodeActivation        int64                  `json:"node_activation"`
+	NodeID                *string                `json:"node_id,omitempty"`
+	ProcessReleased       bool                   `json:"process_released"`
+	ProjectContextDigest  *string                `json:"project_context_digest,omitempty"`
+	ProjectContextVersion *int64                 `json:"project_context_version,omitempty"`
+	Prompt                string                 `json:"prompt"`
+	ResourceID            *string                `json:"resource_id,omitempty"`
+	RunnerID              string                 `json:"runner_id"`
+	RuntimeID             RuntimeID              `json:"runtime_id"`
+	SourceMessageID       *string                `json:"source_message_id,omitempty"`
+	SourceWatermark       int64                  `json:"source_watermark"`
+	TaskID                *string                `json:"task_id,omitempty"`
+	TodoID                *string                `json:"todo_id,omitempty"`
+	WorkspaceReservations *WorkspaceReservations `json:"workspace_reservations,omitempty"`
+}
+
+type WorkspaceReservations struct {
+	ConfigurationVersion int64                  `json:"configuration_version"`
+	ProjectID            string                 `json:"project_id"`
+	Resources            []WorkspaceReservation `json:"resources"`
+}
+
+type WorkspaceReservation struct {
+	ResourceID  string `json:"resource_id"`
+	WorkspaceID string `json:"workspace_id"`
 }
 
 type RuntimeEvent struct {
@@ -170,23 +221,61 @@ type RuntimeEvent struct {
 }
 
 type Operation struct {
-	AttemptID     string         `json:"attempt_id"`
-	DispatchID    string         `json:"dispatch_id"`
-	Kind          OperationKind  `json:"kind"`
-	OperationID   string         `json:"operation_id"`
-	RequestID     string         `json:"request_id"`
-	ResourceID    *string        `json:"resource_id,omitempty"`
-	Result        *EffectResult  `json:"result,omitempty"`
-	SchemaVersion int64          `json:"schema_version"`
-	State         OperationState `json:"state"`
+	AttemptID              string               `json:"attempt_id"`
+	CancelledByOperationID *string              `json:"cancelled_by_operation_id,omitempty"`
+	DispatchID             string               `json:"dispatch_id"`
+	Kind                   OperationKind        `json:"kind"`
+	OperationID            string               `json:"operation_id"`
+	RequestID              string               `json:"request_id"`
+	ResourceID             *string              `json:"resource_id,omitempty"`
+	Result                 *EffectResult        `json:"result,omitempty"`
+	SchemaVersion          int64                `json:"schema_version"`
+	State                  OperationState       `json:"state"`
+	Workspace              *WorkspaceDescriptor `json:"workspace,omitempty"`
+	WorkspaceDigest        *string              `json:"workspace_digest,omitempty"`
+}
+
+type WorkspaceDescriptor struct {
+	Basis           *WorkspaceBasis   `json:"basis,omitempty"`
+	Generation      int64             `json:"generation"`
+	LeaseID         string            `json:"lease_id"`
+	NodeActivation  int64             `json:"node_activation"`
+	NodeID          string            `json:"node_id"`
+	OpenOperationID string            `json:"open_operation_id"`
+	ProjectID       string            `json:"project_id"`
+	Resource        WorkspaceResource `json:"resource"`
+	ResourceID      string            `json:"resource_id"`
+	RunnerID        string            `json:"runner_id"`
+	SchemaVersion   int64             `json:"schema_version"`
+	TaskID          string            `json:"task_id"`
+	WorkspaceID     string            `json:"workspace_id"`
+}
+
+type WorkspaceBasis struct {
+	BaseCommit         string                      `json:"base_commit"`
+	FinalizedCommit    string                      `json:"finalized_commit"`
+	ProviderMetadata   *RepositoryProviderMetadata `json:"provider_metadata,omitempty"`
+	RepositoryIdentity string                      `json:"repository_identity"`
+	StorageID          string                      `json:"storage_id"`
+	TargetBranch       string                      `json:"target_branch"`
+}
+
+type WorkspaceResource struct {
+	DefaultBranch      *string                     `json:"default_branch,omitempty"`
+	DefaultRef         *string                     `json:"default_ref,omitempty"`
+	ProviderMetadata   *RepositoryProviderMetadata `json:"provider_metadata,omitempty"`
+	RemoteURL          string                      `json:"remote_url"`
+	RepositoryIdentity string                      `json:"repository_identity"`
+	ResourceID         string                      `json:"resource_id"`
 }
 
 type OperationResult struct {
-	AttemptID   string       `json:"attempt_id"`
-	FailureKind *FailureKind `json:"failure_kind,omitempty"`
-	OperationID string       `json:"operation_id"`
-	Result      EffectResult `json:"result"`
-	Success     bool         `json:"success"`
+	AttemptID              string       `json:"attempt_id"`
+	CancelledByOperationID *string      `json:"cancelled_by_operation_id,omitempty"`
+	FailureKind            *FailureKind `json:"failure_kind,omitempty"`
+	OperationID            string       `json:"operation_id"`
+	Result                 EffectResult `json:"result"`
+	Success                bool         `json:"success"`
 }
 
 type RuntimeInstallation struct {
@@ -541,17 +630,18 @@ type OwnerRetryInitialPlanningCommandPayload struct {
 }
 
 type OwnerOperationStatus struct {
-	AttemptID       string         `json:"attempt_id"`
-	Attention       bool           `json:"attention"`
-	EndReason       *string        `json:"end_reason,omitempty"`
-	FailureKind     *string        `json:"failure_kind,omitempty"`
-	Kind            OperationKind  `json:"kind"`
-	OperationID     string         `json:"operation_id"`
-	ProcessAbsent   bool           `json:"process_absent"`
-	ProcessReleased bool           `json:"process_released"`
-	SchemaVersion   int64          `json:"schema_version"`
-	State           OperationState `json:"state"`
-	TaskID          string         `json:"task_id"`
+	AttemptID              string         `json:"attempt_id"`
+	Attention              bool           `json:"attention"`
+	CancelledByOperationID *string        `json:"cancelled_by_operation_id,omitempty"`
+	EndReason              *string        `json:"end_reason,omitempty"`
+	FailureKind            *string        `json:"failure_kind,omitempty"`
+	Kind                   OperationKind  `json:"kind"`
+	OperationID            string         `json:"operation_id"`
+	ProcessAbsent          bool           `json:"process_absent"`
+	ProcessReleased        bool           `json:"process_released"`
+	SchemaVersion          int64          `json:"schema_version"`
+	State                  OperationState `json:"state"`
+	TaskID                 string         `json:"task_id"`
 }
 
 type TodoListQuery struct {
@@ -781,17 +871,18 @@ type TodoAttemptLogPage struct {
 }
 
 type TodoOperationStatus struct {
-	AttemptID       string         `json:"attempt_id"`
-	Attention       bool           `json:"attention"`
-	EndReason       *string        `json:"end_reason,omitempty"`
-	FailureKind     *string        `json:"failure_kind,omitempty"`
-	Kind            OperationKind  `json:"kind"`
-	OperationID     string         `json:"operation_id"`
-	ProcessAbsent   bool           `json:"process_absent"`
-	ProcessReleased bool           `json:"process_released"`
-	SchemaVersion   int64          `json:"schema_version"`
-	State           OperationState `json:"state"`
-	TodoID          string         `json:"todo_id"`
+	AttemptID              string         `json:"attempt_id"`
+	Attention              bool           `json:"attention"`
+	CancelledByOperationID *string        `json:"cancelled_by_operation_id,omitempty"`
+	EndReason              *string        `json:"end_reason,omitempty"`
+	FailureKind            *string        `json:"failure_kind,omitempty"`
+	Kind                   OperationKind  `json:"kind"`
+	OperationID            string         `json:"operation_id"`
+	ProcessAbsent          bool           `json:"process_absent"`
+	ProcessReleased        bool           `json:"process_released"`
+	SchemaVersion          int64          `json:"schema_version"`
+	State                  OperationState `json:"state"`
+	TodoID                 string         `json:"todo_id"`
 }
 
 type PlannerGuidance struct {
@@ -915,6 +1006,41 @@ type NodeCounts struct {
 	Running   int64 `json:"running"`
 }
 
+type RepositoryAccessRequest struct {
+	Incarnation     int64  `json:"incarnation"`
+	SchemaVersion   int64  `json:"schema_version"`
+	WorkspaceDigest string `json:"workspace_digest"`
+}
+
+type GitHubRepositoryAccessResult struct {
+	Authentication   RepositoryAuthentication `json:"authentication"`
+	DefaultBranch    string                   `json:"default_branch"`
+	OperationID      string                   `json:"operation_id"`
+	ProviderMetadata ProviderMetadata         `json:"provider_metadata"`
+	RemoteURL        string                   `json:"remote_url"`
+	SchemaVersion    int64                    `json:"schema_version"`
+	WorkspaceDigest  string                   `json:"workspace_digest"`
+}
+
+type RepositoryAuthentication struct {
+	ExpiresAt *string                      `json:"expires_at,omitempty"`
+	Kind      RepositoryAuthenticationKind `json:"kind"`
+	Token     *string                      `json:"token,omitempty"`
+}
+
+type ProviderMetadata struct {
+	Github PurpleGithub `json:"github"`
+}
+
+type PurpleGithub struct {
+	RepositoryID string `json:"repository_id"`
+}
+
+type RepositoryAccessError struct {
+	Reason        WorkspaceUnavailableReason `json:"reason"`
+	SchemaVersion int64                      `json:"schema_version"`
+}
+
 type CommandEnvelopeName string
 
 const (
@@ -960,6 +1086,25 @@ type Disposition string
 
 const (
 	Withdrawn Disposition = "withdrawn"
+)
+
+type InstructionFile string
+
+const (
+	AGENTSMd InstructionFile = "AGENTS.md"
+	CLAUDEMd InstructionFile = "CLAUDE.md"
+)
+
+type WorkspaceUnavailableReason string
+
+const (
+	CredentialsMissing            WorkspaceUnavailableReason = "credentials_missing"
+	OwnershipUnresolved           WorkspaceUnavailableReason = "ownership_unresolved"
+	RefUnavailable                WorkspaceUnavailableReason = "ref_unavailable"
+	RepositoryDenied              WorkspaceUnavailableReason = "repository_denied"
+	StorageUnavailable            WorkspaceUnavailableReason = "storage_unavailable"
+	UnsupportedMultipleWorkspaces WorkspaceUnavailableReason = "unsupported_multiple_workspaces"
+	UnsupportedRemote             WorkspaceUnavailableReason = "unsupported_remote"
 )
 
 type CommandResultStatus string
@@ -1020,9 +1165,10 @@ const (
 type OperationState string
 
 const (
-	Recovery      OperationState = "recovery"
-	StateAdmitted OperationState = "admitted"
-	Succeeded     OperationState = "succeeded"
+	PurpleCancelled OperationState = "cancelled"
+	Recovery        OperationState = "recovery"
+	StateAdmitted   OperationState = "admitted"
+	Succeeded       OperationState = "succeeded"
 )
 
 type FailureKind string
@@ -1134,11 +1280,11 @@ const (
 type AttemptStatusState string
 
 const (
-	Failed          AttemptStatusState = "FAILED"
-	FluffyCANCELLED AttemptStatusState = "CANCELLED"
-	FluffyRUNNING   AttemptStatusState = "RUNNING"
-	Queued          AttemptStatusState = "QUEUED"
-	StateSUCCEEDED  AttemptStatusState = "SUCCEEDED"
+	Failed             AttemptStatusState = "FAILED"
+	FluffyRUNNING      AttemptStatusState = "RUNNING"
+	Queued             AttemptStatusState = "QUEUED"
+	StateSUCCEEDED     AttemptStatusState = "SUCCEEDED"
+	TentacledCANCELLED AttemptStatusState = "CANCELLED"
 )
 
 type OwnerConfirmProposalCommandName string
@@ -1309,9 +1455,9 @@ const (
 	Eligible         TaskPreviewStatusState = "eligible"
 	ProjectRequired  TaskPreviewStatusState = "project_required"
 	Stale            TaskPreviewStatusState = "stale"
-	StateCancelled   TaskPreviewStatusState = "cancelled"
 	StateCreated     TaskPreviewStatusState = "created"
 	StateUnavailable TaskPreviewStatusState = "unavailable"
+	StickyCancelled  TaskPreviewStatusState = "cancelled"
 )
 
 type TaskOverviewState string
@@ -1319,9 +1465,16 @@ type TaskOverviewState string
 const (
 	Blocked         TaskOverviewState = "BLOCKED"
 	Completed       TaskOverviewState = "COMPLETED"
+	FluffyCANCELLED TaskOverviewState = "CANCELLED"
 	Planning        TaskOverviewState = "PLANNING"
-	PurpleCANCELLED TaskOverviewState = "CANCELLED"
 	PurpleRUNNING   TaskOverviewState = "RUNNING"
 	ReplanRequired  TaskOverviewState = "REPLAN_REQUIRED"
 	Review          TaskOverviewState = "REVIEW"
+)
+
+type RepositoryAuthenticationKind string
+
+const (
+	Anonymous          RepositoryAuthenticationKind = "anonymous"
+	GithubInstallation RepositoryAuthenticationKind = "github_installation"
 )

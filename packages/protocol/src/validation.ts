@@ -21,7 +21,7 @@ export function validate<T>(name: string, value: unknown): T {
     validators.set(name, validator);
   }
   if (!validator(value)) throw new ProtocolValidationError(`Invalid ${name}: ${ajv.errorsText(validator.errors, { dataVar: 'body' })}`);
-  const limit = ['Frame', 'RunnerInventory'].includes(name) ? MAX_FRAME_BYTES : ['Dispatch', 'Operation', 'OperationResult'].includes(name) ? MAX_ITEM_BYTES : undefined;
+  const limit = name === 'GitHubRepositoryAccessResult' ? 16 * 1024 : ['Frame', 'RunnerInventory'].includes(name) ? MAX_FRAME_BYTES : ['Dispatch', 'Operation', 'OperationResult'].includes(name) ? MAX_ITEM_BYTES : undefined;
   if (limit !== undefined && new TextEncoder().encode(JSON.stringify(value)).length > limit) throw new ProtocolValidationError(`${name} exceeds the encoded wire byte limit`);
   return value as T;
 }

@@ -2,17 +2,19 @@ import { randomUUID } from 'node:crypto';
 import { transaction } from '../../../packages/db/src/index.ts';
 import type { Database, Transaction } from '../../../packages/db/src/index.ts';
 import { CommandError } from '../../../packages/domain/src/commands.ts';
-import { canonicalJSON, digest, validate } from '../../../packages/protocol/src/index.ts';
+import { canonicalJSON, digest, validate, workspaceId } from '../../../packages/protocol/src/index.ts';
 import type { Dispatch } from '../../../packages/protocol/src/index.ts';
 import { assertCurrentNode } from './task-records.ts';
 import type { ControlBasis } from './task-records.ts';
 import { lockDiscussion } from './discussion-state.ts';
 import type { DiscussionContext } from './discussion-state.ts';
+import { lockConfiguration } from './configuration-guards.ts';
 
 export interface QueueInput {
   attempt_id: string; runner_id: string; task_id?: string; todo_id?: string; node_id?: string;
   kind: 'node' | 'planner'; expected: ControlBasis | { control_version: number }; resource_id?: string;
   discussion_context?: DiscussionContext;
+  legacy_probe?: true; // Internal fixture admission only; never copied to wire data.
   runtime_id: Dispatch['runtime_id']; model: Dispatch['model']; prompt: string; source_watermark: number;
   selection_context?: {
     source: 'explicit' | 'planner' | 'role' | 'global'; configuration_version: number;
@@ -20,7 +22,7 @@ export interface QueueInput {
     observed_version?: string; request_digest: string;
   };
 }
-export type TaskQueueInput = QueueInput & { task_id: string; resource_id: string; expected: ControlBasis };
+export type TaskQueueInput = QueueInput & { task_id: string; expected: ControlBasis };
 interface Queued { id: string; task_id: string | null; todo_id: string | null; node_id: string | null; owner_key: string; state: string; launch: Dispatch; specification_id: string; plan_id: string | null; selection_context: QueueInput['selection_context'] | null }
 
 export class DispatchQueue {
@@ -32,12 +34,13 @@ export class DispatchQueue {
   // selected Attempt. This method does not select a model or initiate a process.
   async enqueue(tx: Transaction, input: QueueInput): Promise<string> {
     if (input.todo_id !== undefined) return this.enqueueTodo(tx, input);
-    if (!input.task_id || !input.resource_id || !('specification_id' in input.expected)) throw new CommandError('invalid_input', 'Task queue requires its exact revision basis');
+    if (!input.task_id || !('specification_id' in input.expected)) throw new CommandError('invalid_input', 'Task queue requires its exact revision basis');
+    const configurationVersion = await lockConfiguration(tx);
     for (const id of [input.attempt_id, input.runner_id, input.task_id]) validate('Id', id);
     const hash = digest(canonicalJSON(input));
     const runner = await tx.query('SELECT id FROM runners WHERE id=$1 FOR UPDATE', [input.runner_id]);
     if (!runner.rowCount) throw new CommandError('denied_scope', 'Unknown Runner');
-    const task = (await tx.query<{ state: string; control_version: string; specification_id: string; plan_id: string | null }>('SELECT state,control_version,specification_id,plan_id FROM tasks WHERE id=$1 FOR UPDATE', [input.task_id])).rows[0];
+    const task = (await tx.query<{ state: string; control_version: string; specification_id: string; plan_id: string | null; project_id: string | null }>('SELECT state,control_version,specification_id,plan_id,project_id FROM tasks WHERE id=$1 FOR UPDATE', [input.task_id])).rows[0];
     if (!task) throw new CommandError('denied_scope', 'Unknown Task');
     const existing = (await tx.query<{ queue_digest: string; dispatch_id: string }>('SELECT queue_digest,dispatch_id FROM attempts WHERE id=$1', [input.attempt_id])).rows[0];
     if (existing) {
@@ -45,6 +48,7 @@ export class DispatchQueue {
       return existing.dispatch_id;
     }
     if (task.state !== 'RUNNING') throw new CommandError('unmet_precondition', 'Task is not executing');
+    if (input.legacy_probe ? !input.resource_id : !task.project_id || input.resource_id !== undefined) throw new CommandError('denied_scope', 'Canonical Task requires its Project and no fixture resource');
     if (Number(task.control_version) !== input.expected.control_version || task.specification_id !== input.expected.specification_id || task.plan_id !== input.expected.plan_id) throw new CommandError('version_conflict', 'Queue input revision basis changed');
     await this.checkLocality(tx, input.task_id, input.runner_id);
     let activation = 0;
@@ -62,7 +66,10 @@ export class DispatchQueue {
       dispatch_id: randomUUID(), attempt_id: input.attempt_id, runner_id: input.runner_id,
       task_id: input.task_id, ...(input.node_id ? { node_id: input.node_id } : {}), kind: input.kind,
       fencing_generation: 1, node_activation: activation, control_version: input.expected.control_version,
-      resource_id: input.resource_id, runtime_id: input.runtime_id, model: input.model,
+      ...(input.legacy_probe ? { resource_id: input.resource_id! } : { workspace_reservations: {
+        project_id: task.project_id!, configuration_version: configurationVersion,
+        resources: input.kind === 'planner' ? [] : (await tx.query<{ id: string }>('SELECT id FROM project_resources WHERE project_id=$1 AND active ORDER BY id', [task.project_id])).rows.map((row) => ({ resource_id: row.id, workspace_id: workspaceId(input.task_id!, row.id) })),
+      } }), runtime_id: input.runtime_id, model: input.model,
       prompt: input.prompt, source_watermark: input.source_watermark, log_mode: 'ordered_v1',
       mutation_allowed: false, process_released: true,
     };
@@ -71,6 +78,7 @@ export class DispatchQueue {
       launch,mutation_allowed,process_released,state,queue_digest,specification_id,plan_id,selection_context)
       VALUES($1,$2,$3,$4,$5,$6,$7,1,$8,$9,false,true,'QUEUED',$10,$11,$12,$13)`,
     [input.attempt_id, input.runner_id, input.task_id, input.node_id ?? null, owner, launch.dispatch_id, input.kind, activation, launch, hash, task.specification_id, task.plan_id, input.selection_context ?? null]);
+    if (input.legacy_probe) await tx.query('INSERT INTO legacy_probe_attempts(attempt_id) VALUES($1)', [input.attempt_id]);
     return launch.dispatch_id;
   }
 
@@ -133,7 +141,8 @@ export class DispatchQueue {
             WHERE i.runner_id=q.runner_id AND i.runtime_id=(q.launch->>'runtime_id') AND i.incarnation=$2))
           AND NOT EXISTS (SELECT 1 FROM attempts a WHERE a.id<>q.id
             AND (a.owner_key=q.owner_key OR (a.task_id=q.task_id AND a.kind='node' AND q.kind='node'))
-            AND (NOT a.process_released OR EXISTS (SELECT 1 FROM operations o WHERE o.attempt_id=a.id AND o.state<>'succeeded')))
+            AND (NOT a.process_released OR EXISTS (SELECT 1 FROM operations o WHERE o.attempt_id=a.id AND o.state NOT IN ('succeeded','cancelled'))))
+          AND NOT EXISTS (SELECT 1 FROM workspace_leases l WHERE l.task_id=q.task_id AND l.state<>'released')
           ORDER BY CASE WHEN q.kind='planner' THEN 0 ELSE 1 END,q.created_at,q.id LIMIT 1`, [runnerId, incarnation, Number(runner.runtime_report_incarnation) === incarnation])).rows;
         for (const candidate of candidates) {
           const discussion = candidate.todo_id ? await lockDiscussion(tx, candidate.todo_id) : null;
@@ -161,7 +170,7 @@ export class DispatchQueue {
             }
           }
           const owner = await tx.query(`SELECT a.id FROM attempts a WHERE a.owner_key=$1 AND a.id<>$2 AND
-            (NOT a.process_released OR EXISTS (SELECT 1 FROM operations o WHERE o.attempt_id=a.id AND o.state<>'succeeded'))`, [row.owner_key, row.id]);
+            (NOT a.process_released OR EXISTS (SELECT 1 FROM operations o WHERE o.attempt_id=a.id AND o.state NOT IN ('succeeded','cancelled')))`, [row.owner_key, row.id]);
           if (owner.rowCount) continue;
           try { if (row.task_id) await this.checkLocality(tx, row.task_id, runnerId); }
           catch (error) {

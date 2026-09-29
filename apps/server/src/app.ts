@@ -141,6 +141,18 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
     validate('InventoryQuery', request.query);
     return service.inventory(await service.authenticateRunner(bearer(request)), request.query.after, request.query.snapshot_id);
   });
+  app.post<{ Params: { operation_id: string } }>('/v1/runner/operations/:operation_id/repository-access', {
+    bodyLimit: 4096,
+    onRequest: async (_request, reply) => { void reply.header('Cache-Control', 'no-store'); },
+    errorHandler: (error, _request, reply) => {
+      const detail = errorResult(error).error!;
+      const prefix = detail.message.split(':')[0];
+      const reason = ['unsupported_remote', 'credentials_missing', 'repository_denied'].includes(prefix!) ? prefix!
+        : detail.code === 'unmet_precondition' ? 'repository_denied' : 'ownership_unresolved';
+      return reply.header('Cache-Control', 'no-store').code(detail.code === 'unauthorized' ? 401 : detail.code === 'denied_scope' ? 403 : detail.code === 'internal_error' ? 500 : 409)
+        .send(validate('RepositoryAccessError', { schema_version: 1, reason }));
+    },
+  }, async (request) => service.repositoryAccess(await service.authenticateRunner(bearer(request)), request.params.operation_id, request.body));
   app.get<{ Params: { attempt_id: string; request_id: string } }>('/v1/recovery/attempts/:attempt_id/commands/:request_id', async (request) => service.recoverCommand(await service.authenticateRunner(bearer(request)), validate<string>('Id', request.params.attempt_id), validate<string>('Id', request.params.request_id)));
   app.get<{ Params: { operation_id: string } }>('/v1/recovery/operations/:operation_id', async (request) => service.recoverOperation(await service.authenticateRunner(bearer(request)), validate<string>('Id', request.params.operation_id)));
 

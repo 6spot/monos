@@ -4,7 +4,7 @@ import { runnerForCredential, transaction } from '../../../packages/db/src/index
 import type { Database, Transaction } from '../../../packages/db/src/index.ts';
 import { CommandError, guardNewCommand } from '../../../packages/domain/src/commands.ts';
 import { canonicalJSON, digest, MAX_FRAME_BYTES, parseSubmission, ProtocolVersionError, validate } from '../../../packages/protocol/src/index.ts';
-import type { CommandEnvelope, CommandResult, CommandSubmission, Dispatch, EffectResult, Frame, Operation, OperationResult, RunnerInventory, RuntimeEvent } from '../../../packages/protocol/src/index.ts';
+import type { CommandEnvelope, CommandResult, CommandSubmission, Dispatch, Frame, GitHubRepositoryAccessResult, Operation, OperationResult, RepositoryAccessRequest, RunnerInventory, RuntimeEvent } from '../../../packages/protocol/src/index.ts';
 import { authenticateAttempt, issueAttemptCredential } from './auth.ts';
 import type { AttemptIdentity } from './auth.ts';
 import { assertCurrentNode } from './task-records.ts';
@@ -12,16 +12,20 @@ import { DispatchQueue } from './dispatch-queue.ts';
 import { derivedTaskState } from './owner-execution.ts';
 import { handleDiscussionCommand, lockDiscussion } from './discussion-state.ts';
 import type { DiscussionControl, DiscussionContext } from './discussion-state.ts';
+import { admitWorkspaceEffect, admitWorkspaceOpen, explicitLegacyAttempt, lockAttemptWorkspace, settleWorkspaceOperation } from './workspaces.ts';
+import type { WorkspaceOperation } from './workspaces.ts';
+import { GitHub } from './github.ts';
+import type { GitHubCredentials } from './github.ts';
 
 interface RunnerRow { id: string; incarnation: string; connected: boolean; ready: boolean; available: boolean; capacity: number; connection_instance: string | null }
-interface TaskRow { id: string; resource_id: string; control_version: string; project_id: string | null }
+interface TaskRow { id: string; resource_id: string | null; control_version: string; project_id: string | null }
 interface AttemptRow {
   id: string; runner_id: string; task_id: string | null; todo_id: string | null; discussion_context: DiscussionContext | null; node_id: string | null; dispatch_id: string;
   kind: 'node' | 'planner'; fencing_generation: string; node_activation: string;
   mutation_allowed: boolean; process_released: boolean; process_absent: boolean; started: boolean; exit_observed: boolean; launch: Dispatch;
   state: 'QUEUED' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'CANCELLED';
 }
-interface OperationRow { id: string; attempt_id: string; schema_version: number; kind: Operation['kind']; request_id: string; state: Operation['state']; resource_id: string | null; result: EffectResult | null; failure_kind: OperationResult['failure_kind'] | null }
+interface OperationRow extends WorkspaceOperation { schema_version: number; resource_id: string | null; failure_kind: OperationResult['failure_kind'] | null }
 interface ReceiptRow { digest: string; command_name: string; response: CommandResult; operation_id: string | null }
 interface Locked { runner: RunnerRow; task: TaskRow | null; discussion: DiscussionControl | null; attempt: AttemptRow }
 
@@ -55,7 +59,7 @@ function toDispatch(row: AttemptRow): Dispatch {
   return { ...row.launch, mutation_allowed: row.mutation_allowed, process_released: row.process_released };
 }
 function toOperation(row: OperationRow, attempt: Pick<AttemptRow, 'dispatch_id'>): Operation {
-  return { schema_version: row.schema_version, operation_id: row.id, attempt_id: row.attempt_id, dispatch_id: attempt.dispatch_id, request_id: row.request_id, kind: row.kind, ...(row.resource_id ? { resource_id: row.resource_id } : {}), state: row.state, ...(row.result ? { result: row.result } : {}) };
+  return { schema_version: row.schema_version, operation_id: row.id, attempt_id: row.attempt_id, dispatch_id: attempt.dispatch_id, request_id: row.request_id, kind: row.kind, ...(row.resource_id ? { resource_id: row.resource_id } : {}), state: row.state, ...(row.result ? { result: row.result } : {}), ...(row.workspace_descriptor ? { workspace: row.workspace_descriptor, workspace_digest: row.workspace_digest! } : {}), ...(row.cancelled_by_operation_id ? { cancelled_by_operation_id: row.cancelled_by_operation_id } : {}) };
 }
 
 async function taskEvent(tx: Transaction, attempt: AttemptRow, kind: string, body: unknown, operationId: string | null = null): Promise<void> {
@@ -80,15 +84,13 @@ async function missingFormalOutcome(tx: Transaction, attempt: AttemptRow, observ
 }
 
 async function admitEffect(tx: Transaction, attempt: AttemptRow, kind: Operation['kind'], requestId: string): Promise<string> {
-  const id = randomUUID();
-  await tx.query("INSERT INTO operations(id,attempt_id,schema_version,kind,request_id,state,resource_id) VALUES($1,$2,1,$3,$4,'admitted',$5)", [id, attempt.id, kind, requestId, attempt.launch.resource_id]);
-  await tx.query("INSERT INTO outbox(id,runner_id,attempt_id,kind,operation_id) VALUES($1,$2,$3,'effect',$4)", [randomUUID(), attempt.runner_id, attempt.id, id]);
-  return id;
+  return admitWorkspaceEffect(tx, attempt, kind, requestId);
 }
 
 async function receiptResponse(tx: Transaction, receipt: ReceiptRow): Promise<CommandResult> {
   if (!receipt.operation_id || receipt.response.status === 'committed') return receipt.response;
   const operation = (await tx.query<OperationRow>('SELECT * FROM operations WHERE id=$1', [receipt.operation_id])).rows[0]!;
+  if (operation.state === 'cancelled') return { schema_version: 1, request_id: receipt.response.request_id, operation_id: operation.id, status: 'error', error: { code: 'unmet_precondition', message: 'Workspace open was cancelled by Stop; no workspace was granted.' } };
   if (operation.state !== 'succeeded') return receipt.response;
   return { ...receipt.response, status: 'committed', result: operation.result ?? {} };
 }
@@ -99,6 +101,7 @@ export interface ServiceOptions {
   // Constructor injection only; no Agent-facing fault control.
   beforeAdmissionCommit?: () => void;
   afterAdmissionCommit?: () => void;
+  github?: GitHub;
 }
 
 export class BoundaryService {
@@ -115,6 +118,42 @@ export class BoundaryService {
     const id = await runnerForCredential(this.db, digest(token));
     if (!id) throw new CommandError('unauthorized', 'Invalid Runner credential');
     return id;
+  }
+
+  async repositoryAccess(runnerId: string, operationId: string, body: unknown): Promise<GitHubRepositoryAccessResult> {
+    validate('Id', operationId);
+    const request = validate<RepositoryAccessRequest>('RepositoryAccessRequest', body);
+    const authorized = () => transaction(this.db, async (tx) => {
+      await lockConfiguration(tx);
+      const identity = (await tx.query<{ attempt_id: string }>('SELECT attempt_id FROM operations WHERE id=$1', [operationId])).rows[0];
+      if (!identity) throw new CommandError('denied_scope', 'Unknown repository operation');
+      const { runner, attempt } = await lockAttempt(tx, identity.attempt_id, runnerId);
+      checkChannel(runner, request.incarnation);
+      if (runner.connection_instance !== this.instanceId || attempt.process_released) throw new CommandError('stale_execution', 'Repository operation no longer owns this Runner connection');
+      await lockAttemptWorkspace(tx, attempt.id);
+      const operation = (await tx.query<OperationRow>('SELECT * FROM operations WHERE id=$1 FOR UPDATE', [operationId])).rows[0]!;
+      const lease = (await tx.query<{ state: string; workspace_id: string; task_id: string; node_id: string; node_activation: string; generation: string; open_operation_id: string; attempt_id: string; dispatch_id: string }>('SELECT * FROM workspace_leases WHERE id=$1', [operation.workspace_lease_id])).rows[0];
+      if (operation.kind !== 'open_workspace' || !['admitted', 'recovery'].includes(operation.state)
+        || !operation.workspace_descriptor || operation.workspace_digest !== request.workspace_digest
+        || operation.workspace_digest !== digest(canonicalJSON(operation.workspace_descriptor))
+        || !lease || lease.state === 'released' || lease.open_operation_id !== operation.id
+        || lease.attempt_id !== attempt.id || lease.dispatch_id !== attempt.dispatch_id
+        || lease.task_id !== attempt.task_id || lease.node_id !== attempt.node_id || lease.node_activation !== attempt.node_activation
+        || lease.workspace_id !== operation.workspace_descriptor.workspace_id || Number(lease.generation) !== operation.workspace_descriptor.generation
+        || operation.workspace_descriptor.runner_id !== runnerId || operation.workspace_descriptor.task_id !== attempt.task_id
+        || operation.workspace_descriptor.node_id !== attempt.node_id || operation.workspace_descriptor.node_activation !== Number(attempt.node_activation)) throw new CommandError('denied_scope', 'Repository access is outside the admitted workspace lease');
+      const config = (await tx.query<GitHubCredentials>('SELECT app_id,installation_id,encrypted_key,key_fingerprint FROM github_configuration')).rows[0];
+      return { operation, config };
+    });
+    const before = await authorized();
+    const github = this.options.github ?? new GitHub(this.options.signingKey);
+    const descriptor = before.operation.workspace_descriptor!;
+    const pinnedMetadata = descriptor.basis?.provider_metadata;
+    if (pinnedMetadata && descriptor.resource.provider_metadata && canonicalJSON(pinnedMetadata) !== canonicalJSON(descriptor.resource.provider_metadata)) throw new CommandError('denied_scope', 'Pinned provider identity differs from the resource');
+    const access = await github.repositoryAccess({ ...descriptor.resource, ...(pinnedMetadata ? { provider_metadata: pinnedMetadata } : {}) }, before.config);
+    const after = await authorized();
+    if (canonicalJSON(before.config ?? null) !== canonicalJSON(after.config ?? null)) throw new CommandError('stale_execution', 'Provider configuration changed during access; reconcile this operation');
+    return validate('GitHubRepositoryAccessResult', { schema_version: 1, operation_id: operationId, workspace_digest: request.workspace_digest, ...access });
   }
 
   async connect(runnerId: string, bootId: string): Promise<number> {
@@ -181,7 +220,10 @@ export class BoundaryService {
       }
       if (!task) throw new CommandError('denied_scope', 'Attempt owner is missing');
       if (command.name === 'commit_discussion_turn' || command.name === 'read_discussion' || command.name === 'update_working_requirement_state') throw new CommandError('denied_scope', 'Todo command requires Todo Planner authority');
-      guardNewCommand(command, { kind: attempt.kind, taskId: attempt.task_id!, resourceId: task.resource_id, mutationAllowed: attempt.mutation_allowed, processReleased: attempt.process_released, controlVersion: Number(task.control_version), sourceWatermark: attempt.launch.source_watermark, connectionAvailable: runner.available && runner.connection_instance === this.instanceId });
+      const legacy = await explicitLegacyAttempt(tx, attempt.id);
+      guardNewCommand(command, { kind: attempt.kind, taskId: attempt.task_id!, resourceId: legacy ? attempt.launch.resource_id : undefined, projectResources: !legacy, mutationAllowed: attempt.mutation_allowed, processReleased: attempt.process_released, controlVersion: Number(task.control_version), sourceWatermark: attempt.launch.source_watermark, connectionAvailable: runner.available && runner.connection_instance === this.instanceId });
+      if (!legacy && command.name === 'inspect_repository') throw new CommandError('unmet_precondition', 'Canonical Planner repository inspection is unavailable in Stage A');
+      if (!legacy && !attempt.launch.workspace_reservations) throw new CommandError('denied_scope', 'Fresh canonical effects require Project workspace reservations');
       if (task.project_id && (command.name === 'open_workspace' || command.name === 'inspect_repository')) {
         if (!(await tx.query('SELECT id FROM project_resources WHERE id=$1 AND project_id=$2 AND active', [command.payload.resource_id, task.project_id])).rowCount) throw new CommandError('denied_scope', 'Resource is not available in this Project');
       }
@@ -190,13 +232,15 @@ export class BoundaryService {
         if (node.state !== 'RUNNING') throw new CommandError('stale_execution', 'Node is no longer running');
       }
       if (command.name === 'complete_node' || command.name === 'commit_task_turn') {
-        const unfinished = await tx.query("SELECT id FROM operations WHERE attempt_id=$1 AND state <> 'succeeded'", [attempt.id]);
+        const unfinished = await tx.query("SELECT id FROM operations WHERE attempt_id=$1 AND state NOT IN ('succeeded','cancelled')", [attempt.id]);
         if (unfinished.rowCount) throw new CommandError('unmet_precondition', 'Workspace operations must settle before terminal handoff');
         await tx.query('UPDATE attempts SET mutation_allowed=false WHERE id=$1', [attempt.id]);
         await tx.query('UPDATE tasks SET control_version=control_version+1 WHERE id=$1', [task.id]);
         await tx.query("UPDATE outbox SET done=true WHERE attempt_id=$1 AND kind='start'", [attempt.id]);
       }
-      const operationId = await admitEffect(tx, attempt, command.name === 'commit_task_turn' ? 'stop' : command.name, command.request_id);
+      const operationId = !legacy && command.name === 'open_workspace'
+        ? await admitWorkspaceOpen(tx, attempt, task.project_id, command.payload.resource_id!, command.request_id)
+        : await admitEffect(tx, attempt, command.name === 'commit_task_turn' ? 'stop' : command.name, command.request_id);
       const response: CommandResult = command.name === 'commit_task_turn'
         ? { schema_version: 1, request_id: command.request_id, status: 'committed', operation_id: operationId, result: { reply: command.payload.reply!, source_watermark: command.payload.source_watermark! } }
         : { schema_version: 1, request_id: command.request_id, status: 'admitted', operation_id: operationId };
@@ -204,7 +248,8 @@ export class BoundaryService {
       if (command.name === 'commit_task_turn') await taskEvent(tx, attempt, 'task_reply_committed', response.result, operationId);
       if (command.name === 'commit_task_turn') await tx.query("UPDATE attempts SET state='SUCCEEDED' WHERE id=$1", [attempt.id]);
       this.options.beforeAdmissionCommit?.();
-      return response;
+      return !legacy && command.name === 'open_workspace'
+        ? receiptResponse(tx, { digest: submission.sha256, command_name: command.name, response, operation_id: operationId }) : response;
     });
     this.options.afterAdmissionCommit?.();
     return result;
@@ -231,7 +276,7 @@ export class BoundaryService {
   async recoverOperation(runnerId: string, operationId: string): Promise<Operation> {
     const row = (await this.db.pool.query<OperationRow & { dispatch_id: string }>('SELECT o.*,a.dispatch_id FROM operations o JOIN attempts a ON a.id=o.attempt_id WHERE o.id=$1 AND a.runner_id=$2', [operationId, runnerId])).rows[0];
     if (!row) throw new CommandError('denied_scope', 'Operation is outside Runner recovery scope');
-    return { schema_version: row.schema_version, operation_id: row.id, attempt_id: row.attempt_id, dispatch_id: row.dispatch_id, request_id: row.request_id, kind: row.kind, ...(row.resource_id ? { resource_id: row.resource_id } : {}), state: row.state, ...(row.result ? { result: row.result } : {}) };
+    return toOperation(row, row);
   }
   async inventory(runnerId: string, after?: string, snapshotId?: string): Promise<RunnerInventory> {
     let cursor: [string, string] = ['', ''];
@@ -250,10 +295,10 @@ export class BoundaryService {
       await lockRunner(tx, runnerId);
       // All inventory writers lock this Runner first. The snapshot is based on
       // included row versions, not heartbeat time, and changes invalidate paging.
-      const unresolved = "SELECT a.*,a.xmin::text AS row_version FROM attempts a WHERE a.runner_id=$1 AND (NOT a.process_released OR EXISTS (SELECT 1 FROM operations o WHERE o.attempt_id=a.id AND o.state<>'succeeded'))";
-      const snapshot = (await tx.query<{ snapshot_id: string }>(`WITH unresolved AS (${unresolved}) SELECT md5(COALESCE(string_agg(version,'|' ORDER BY version),'')) AS snapshot_id FROM (SELECT 'd:'||id||':'||row_version AS version FROM unresolved UNION ALL SELECT 'o:'||o.id||':'||o.xmin::text FROM operations o JOIN unresolved a ON a.id=o.attempt_id WHERE o.state<>'succeeded') versions`, [runnerId])).rows[0]!.snapshot_id;
+      const unresolved = "SELECT a.*,a.xmin::text AS row_version FROM attempts a WHERE a.runner_id=$1 AND (NOT a.process_released OR EXISTS (SELECT 1 FROM operations o WHERE o.attempt_id=a.id AND o.state NOT IN ('succeeded','cancelled')))";
+      const snapshot = (await tx.query<{ snapshot_id: string }>(`WITH unresolved AS (${unresolved}) SELECT md5(COALESCE(string_agg(version,'|' ORDER BY version),'')) AS snapshot_id FROM (SELECT 'd:'||id||':'||row_version AS version FROM unresolved UNION ALL SELECT 'o:'||o.id||':'||o.xmin::text FROM operations o JOIN unresolved a ON a.id=o.attempt_id WHERE o.state NOT IN ('succeeded','cancelled')) versions`, [runnerId])).rows[0]!.snapshot_id;
       if (snapshotId !== undefined && snapshotId !== snapshot) throw new CommandError('version_conflict', 'Inventory changed; restart pagination from the first page');
-      const records = (await tx.query<{ kind: 'dispatch' | 'operation'; id: string; body: AttemptRow | (OperationRow & { dispatch_id: string }) }>(`WITH unresolved AS (${unresolved}), records AS (SELECT 'dispatch' AS kind,a.id,to_jsonb(a) AS body FROM unresolved a UNION ALL SELECT 'operation',o.id,to_jsonb(o)||jsonb_build_object('dispatch_id',a.dispatch_id) FROM operations o JOIN unresolved a ON a.id=o.attempt_id WHERE o.state<>'succeeded') SELECT * FROM records WHERE (kind,id)>($2,$3) ORDER BY kind,id LIMIT 65`, [runnerId, ...cursor])).rows;
+      const records = (await tx.query<{ kind: 'dispatch' | 'operation'; id: string; body: AttemptRow | (OperationRow & { dispatch_id: string }) }>(`WITH unresolved AS (${unresolved}), records AS (SELECT 'dispatch' AS kind,a.id,to_jsonb(a) AS body FROM unresolved a UNION ALL SELECT 'operation',o.id,to_jsonb(o)||jsonb_build_object('dispatch_id',a.dispatch_id) FROM operations o JOIN unresolved a ON a.id=o.attempt_id WHERE o.state NOT IN ('succeeded','cancelled')) SELECT * FROM records WHERE (kind,id)>($2,$3) ORDER BY kind,id LIMIT 65`, [runnerId, ...cursor])).rows;
       const page: RunnerInventory = { schema_version: 1, snapshot_id: snapshot, dispatches: [], operations: [] };
       let consumed = 0;
       let last: [string, string] | undefined;
@@ -296,7 +341,7 @@ export class BoundaryService {
           frames.push({ schema_version: 1, type: 'start', incarnation, dispatch: toDispatch(attempt) });
         } else {
           const operation = (await tx.query<OperationRow>('SELECT * FROM operations WHERE id=$1', [row.operation_id])).rows[0]!;
-          if (operation.state === 'succeeded' || operation.state === 'recovery') continue;
+          if (operation.state !== 'admitted') continue;
           frames.push({ schema_version: 1, type: 'effect', incarnation, operation: toOperation(operation, attempt) });
         }
         await tx.query('UPDATE outbox SET last_sent_at=now() WHERE id=$1', [row.id]);
@@ -358,7 +403,7 @@ export class BoundaryService {
       }
       if (event.kind === 'exited' || event.kind === 'process_absent') {
         await tx.query('UPDATE attempts SET exit_observed=true WHERE id=$1', [attempt.id]);
-        const pendingCompletion = (await tx.query("SELECT 1 FROM operations WHERE attempt_id=$1 AND kind='complete_node' AND state<>'succeeded'", [attempt.id])).rowCount;
+        const pendingCompletion = (await tx.query("SELECT 1 FROM operations WHERE attempt_id=$1 AND kind='complete_node' AND state NOT IN ('succeeded','cancelled')", [attempt.id])).rowCount;
         if (!pendingCompletion) await missingFormalOutcome(tx, attempt, event.kind, event.exit_code);
         if (event.kind === 'process_absent' && pendingCompletion) {
           const recovering = (await tx.query("SELECT id FROM operations WHERE attempt_id=$1 AND kind='complete_node' AND state='recovery'", [attempt.id])).rows[0];
@@ -384,19 +429,26 @@ export class BoundaryService {
     await transaction(this.db, async (tx) => {
       const { runner, attempt } = await lockAttempt(tx, message.attempt_id, runnerId);
       checkChannel(runner, incarnation);
+      if (runner.connection_instance !== this.instanceId) throw new CommandError('stale_execution', 'Runner must reconnect to this backend');
+      await lockAttemptWorkspace(tx, attempt.id);
       const operation = (await tx.query<OperationRow>('SELECT * FROM operations WHERE id=$1 AND attempt_id=$2 FOR UPDATE', [message.operation_id, attempt.id])).rows[0];
       if (!operation) throw new CommandError('denied_scope', 'Operation is outside Attempt scope');
       if (attempt.todo_id && operation.kind !== 'stop') throw new CommandError('denied_scope', 'Todo cannot settle repository fixture effects');
+      if (operation.state === 'cancelled') {
+        if (message.success || message.cancelled_by_operation_id !== operation.cancelled_by_operation_id || canonicalJSON(operation.result) !== canonicalJSON(message.result)) throw new CommandError('payload_conflict', 'Cancelled operation result cannot change');
+        return;
+      }
       if (operation.state === 'succeeded') {
         if (!message.success || canonicalJSON(operation.result) !== canonicalJSON(message.result)) throw new CommandError('payload_conflict', 'Settled operation result cannot change');
         return;
       }
       const captureBlocked = message.failure_kind === 'capture_hard_limit' || message.failure_kind === 'invalid_finalization';
       if (captureBlocked && operation.kind !== 'complete_node') throw new CommandError('invalid_input', 'Capture failure classification requires a completion operation');
+      if (await settleWorkspaceOperation(tx, attempt, operation, message)) return;
       if (message.success) {
         const terminal = operation.kind === 'complete_node' || operation.kind === 'stop';
         if (terminal && message.result.writer_absent !== true) throw new CommandError('unmet_precondition', 'Whole-tree absence is required');
-        if (terminal && (await tx.query("SELECT id FROM operations WHERE attempt_id=$1 AND id<>$2 AND state<>'succeeded'", [attempt.id, operation.id])).rowCount) throw new CommandError('unmet_precondition', 'Other admitted workspace operations must reconcile before releasing ownership');
+        if (terminal && (await tx.query("SELECT id FROM operations WHERE attempt_id=$1 AND id<>$2 AND state NOT IN ('succeeded','cancelled')", [attempt.id, operation.id])).rowCount) throw new CommandError('unmet_precondition', 'Other admitted workspace operations must reconcile before releasing ownership');
         if (operation.kind === 'complete_node' && (!message.result.git_commit || !message.result.git_tree)) throw new CommandError('unmet_precondition', 'Exact finalized Git result is required');
         if ((operation.kind === 'open_workspace' || operation.kind === 'inspect_repository') && (!message.result.workspace_id || !message.result.path)) throw new CommandError('unmet_precondition', 'Workspace identity and Runner-local locator are required');
         await tx.query("UPDATE operations SET state='succeeded',result=$2 WHERE id=$1", [operation.id, message.result]);
@@ -412,7 +464,7 @@ export class BoundaryService {
           await tx.query("UPDATE nodes SET state='COMPLETED',result=$2 WHERE id=$1", [attempt.node_id, message.result]);
           const plan = (await tx.query<{ plan_id: string }>('SELECT plan_id FROM tasks WHERE id=$1', [attempt.task_id])).rows[0]!.plan_id;
           let state = await derivedTaskState(tx, plan);
-          if (state === 'REVIEW' && (await tx.query("SELECT 1 FROM operations o JOIN attempts a ON a.id=o.attempt_id WHERE a.task_id=$1 AND o.state<>'succeeded'", [attempt.task_id])).rowCount) state = 'RUNNING';
+          if (state === 'REVIEW' && (await tx.query("SELECT 1 FROM operations o JOIN attempts a ON a.id=o.attempt_id WHERE a.task_id=$1 AND o.state NOT IN ('succeeded','cancelled')", [attempt.task_id])).rowCount) state = 'RUNNING';
           await tx.query('UPDATE tasks SET state=$2,control_version=control_version+1 WHERE id=$1', [attempt.task_id, state]);
           await taskEvent(tx, attempt, 'node_completed', { node_id: attempt.node_id, node_activation: Number(attempt.node_activation), ...message.result }, operation.id);
         }

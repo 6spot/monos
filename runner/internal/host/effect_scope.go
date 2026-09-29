@@ -22,6 +22,15 @@ func ValidateEffectScope(d protocol.Dispatch, op protocol.Operation) error {
 		}
 		return nil
 	}
+	if d.WorkspaceReservations != nil {
+		if op.Kind == protocol.Stop && op.Workspace == nil && op.ResourceID == nil {
+			return nil
+		}
+		return validateWorkspaceScope(d, op)
+	}
+	if op.Workspace != nil || op.WorkspaceDigest != nil {
+		return fmt.Errorf("workspace descriptor on legacy dispatch")
+	}
 	// Stop owns the process tree, not a repository. Retained legacy resource IDs
 	// still have to match when present, while new resource-free Stop is valid.
 	if op.Kind == protocol.Stop && op.ResourceID == nil {

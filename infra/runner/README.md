@@ -123,7 +123,7 @@ cgroups have separate retained `*.operation.json` records. If the helper loses
 its systemd acknowledgement, status holds ownership even when a unit is not
 visible. A subsequent host boot proves the old process tree absent and permits
 the same idempotent operation to reconcile retained Git state. Automatic
-same-boot repair of an unacknowledged operation is deliberately not implemented:
+same-boot repair of an unacknowledged legacy fixture operation is deliberately not implemented:
 inspect the unit/job, cgroup and retained records before any operator repair.
 Do not delete that journal merely to make a retry proceed. Well-formed typed
 effect failures cross worker/helper JSON boundaries; `capture_hard_limit` is
@@ -144,3 +144,30 @@ to manufacture writer absence.
 Real-host cgroup/account, syscall, OpenCode and restart tests remain separate
 acceptance evidence. Local Go tests do not establish those facts. A whole-host
 reboot requires the Owner's separately agreed window.
+
+## Canonical serial Task repositories
+
+Canonical Task dispatches reserve `tasks/ws_<hash>/worktree` and its `common`
+sibling before launch. The first authenticated `open_workspace` materializes the
+repository; reservation alone creates no Git data. The hash binds Task/resource
+IDs across Attempts. Root-owned `launch/workspaces/*.json` and operation records
+retain immutable descriptor digests, storage identity, lease ownership, pinned
+base/target, private checkpoints and exact open results. SQLite retains admitted
+operations and terminal results; backend remains the formal lease authority.
+
+Bootstrap establishes matching root/service `storage-id` files once. Preserve
+both; an initialized workspace with missing/mismatched identity is unavailable,
+never silently recloned. The service owns `cache/resources/<resource>.git` and
+private fetch-pin records. Execution can read caches but cannot write/push them.
+Scoped repository access arrives from the authenticated backend exchange and
+travels through helper/worker stdin. Tokens are confined to the service fetch
+process environment; no token is stored in argv, Git config or durable records.
+
+Canonical operations use per-workspace coordination and writer locks, plus
+per-resource cache locks. The helper-wide metadata lock is released before
+network waits. Stop fences the lease and reconciles its exact transient worker,
+then cancels a never-exposed initial open or checkpoints an initialized workspace
+without changing its finalized revision. A failed refresh of an existing
+workspace uses explicit Stop-only recovery provenance to retain the previously
+verified target; ordinary opens still fetch a fresh observation. Same-activation
+reopen preserves dirty work and the real index. No extra service is installed.

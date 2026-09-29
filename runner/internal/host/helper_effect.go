@@ -91,10 +91,11 @@ func validateUnit(values map[string]string, unit, description string) error {
 }
 
 type operationRecord struct {
-	Operation protocol.Operation `json:"operation"`
-	BootID    string             `json:"boot_id"`
-	Settled   bool               `json:"settled"`
-	Status    Status             `json:"status"`
+	Operation       protocol.Operation `json:"operation"`
+	BootID          string             `json:"boot_id"`
+	Settled         bool               `json:"settled"`
+	Status          Status             `json:"status"`
+	WorkspaceAction string             `json:"workspace_action,omitempty"`
 }
 
 func operationPath(id string) string { return filepath.Join(Root, "launch", id+".operation.json") }
@@ -129,6 +130,12 @@ func checkOperationWriters(ctx context.Context, attempt, boot string) error {
 		if record.Operation.AttemptID != attempt || record.Settled || record.BootID != boot {
 			continue
 		}
+		if record.Operation.Workspace != nil {
+			// Canonical effects have independent durable cgroup ownership. Agent
+			// process inspection must remain usable so an admitted Stop can settle
+			// an unavailable fetch; backend lease barriers still retain the effect.
+			continue
+		}
 		values, err := unitProperties(ctx, operationUnit(record.Operation.OperationID))
 		if err != nil {
 			return err
@@ -146,7 +153,7 @@ func checkOperationWriters(ctx context.Context, attempt, boot string) error {
 	return nil
 }
 func sameOperation(a, b protocol.Operation) bool {
-	return a.OperationID == b.OperationID && a.AttemptID == b.AttemptID && a.DispatchID == b.DispatchID && wire.SameResource(a.ResourceID, b.ResourceID) && a.RequestID == b.RequestID && a.SchemaVersion == b.SchemaVersion && a.Kind == b.Kind
+	return a.OperationID == b.OperationID && a.AttemptID == b.AttemptID && a.DispatchID == b.DispatchID && wire.SameResource(a.ResourceID, b.ResourceID) && a.RequestID == b.RequestID && a.SchemaVersion == b.SchemaVersion && a.Kind == b.Kind && sameWorkspaceOperation(a, b)
 }
 
 func rootMaterializationBase(op protocol.Operation) (string, error) {

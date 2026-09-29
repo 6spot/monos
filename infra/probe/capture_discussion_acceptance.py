@@ -439,7 +439,7 @@ class CaptureDiscussionAcceptance(TaskPreviewProbe):
             ('unreleased', 'SELECT count(*) FROM attempts WHERE NOT process_released'),
             ('writable', 'SELECT count(*) FROM attempts WHERE mutation_allowed'),
             ('writable', 'SELECT count(*) FROM attempts WHERE mutation_allowed'),
-            ('unsettled', "SELECT count(*) FROM operations WHERE state<>'succeeded'"),
+            ('unsettled', "SELECT count(*) FROM operations WHERE state NOT IN ('succeeded','cancelled')"),
             ('pending_discussion', 'SELECT count(*) FROM todo_discussion_outbox WHERE NOT done'),
             ('unresolved_sources', 'SELECT count(*) FROM todo_discussion_controls WHERE source_message_id IS NOT NULL'),
             ('pending_outbox', 'SELECT count(*) FROM outbox WHERE NOT done')]

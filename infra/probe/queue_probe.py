@@ -146,7 +146,7 @@ class QueueProbe(StopProbe):
             "AND (NOT a.process_released OR a.state='QUEUED'))),"
             "'unresolved_operations',(SELECT coalesce(jsonb_agg(o.id ORDER BY o.id),'[]'::jsonb) "
             "FROM operations o JOIN attempts a ON a.id=o.attempt_id WHERE a.runner_id='" + self.runner + "' "
-            "AND o.state<>'succeeded'));")
+            "AND o.state NOT IN ('succeeded','cancelled')));")
 
     def log_page(self, attempt, retained=None):
         events = list(retained['events']) if retained else []

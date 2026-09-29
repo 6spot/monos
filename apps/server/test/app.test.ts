@@ -6,6 +6,7 @@ import type { AddressInfo } from 'node:net';
 import { WebSocket } from 'ws';
 import { expect, it, vi } from 'vitest';
 import { database } from '../../../packages/db/src/index.ts';
+import { CommandError } from '../../../packages/domain/src/commands.ts';
 import { MAX_BODY_BYTES } from '../../../packages/protocol/src/index.ts';
 import { createApp } from '../src/app.ts';
 import { BoundaryService } from '../src/service.ts';
@@ -41,6 +42,34 @@ it('rejects malformed, oversized and unsupported HTTP bodies without an internal
       expect(response.statusCode).toBe(409);
       expect(response.json()).toMatchObject({ status: 'error', error: { code: 'invalid_input' } });
     }
+  } finally { await app.close(); await db.pool.end(); }
+});
+
+it('bounds and sanitizes repository-access responses with no-store even before the handler runs', async () => {
+  const db = database('postgres://unused:unused@127.0.0.1:1/unused');
+  const service = new BoundaryService(db, { signingKey: 'test-only-signing-key-never-for-deployment' });
+  const auth = vi.spyOn(service, 'authenticateRunner').mockResolvedValue('runner');
+  const access = vi.spyOn(service, 'repositoryAccess').mockRejectedValue(new CommandError('unmet_precondition', 'credentials_missing: synthetic-secret'));
+  const app = createApp(service), url = '/v1/runner/operations/open/repository-access';
+  const payload = { schema_version: 1, incarnation: 1, workspace_digest: 'a'.repeat(64) };
+  try {
+    const missing = await app.inject({ method: 'POST', url, payload });
+    expect(missing.statusCode).toBe(401); expect(missing.json()).toEqual({ schema_version: 1, reason: 'ownership_unresolved' });
+    expect(auth).not.toHaveBeenCalled(); expect(access).not.toHaveBeenCalled();
+    const denied = await app.inject({ method: 'POST', url, headers: { authorization: 'Bearer fixture-token' }, payload });
+    expect(auth).toHaveBeenCalledWith('fixture-token'); expect(access).toHaveBeenCalledWith('runner', 'open', payload);
+    expect(denied.statusCode).toBe(409); expect(denied.json()).toEqual({ schema_version: 1, reason: 'credentials_missing' });
+    for (const response of [missing, denied,
+      await app.inject({ method: 'POST', url, headers: { 'content-type': 'application/json' }, payload: '{' }),
+      await app.inject({ method: 'POST', url, headers: { 'content-type': 'application/json' }, payload: JSON.stringify('x'.repeat(4096)) }),
+    ]) {
+      expect(response.headers['cache-control']).toBe('no-store'); expect(response.body).not.toContain('synthetic-secret');
+      expect(Object.keys(response.json()).sort()).toEqual(['reason', 'schema_version']);
+    }
+    access.mockRejectedValueOnce(new Error('synthetic-secret'));
+    const internal = await app.inject({ method: 'POST', url, headers: { authorization: 'Bearer fixture-token' }, payload });
+    expect(internal.statusCode).toBe(500); expect(internal.json()).toEqual({ schema_version: 1, reason: 'ownership_unresolved' });
+    expect(internal.headers['cache-control']).toBe('no-store');
   } finally { await app.close(); await db.pool.end(); }
 });
 

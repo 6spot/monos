@@ -24,14 +24,15 @@ import (
 )
 
 type Daemon struct {
-	DB      *journal.DB
-	Control *control.Client
-	Host    host.Supervisor
-	Boot    string
-	mu      sync.Mutex
-	queueMu sync.Mutex
-	queued  map[string]bool
-	workers sync.WaitGroup
+	DB       *journal.DB
+	Control  *control.Client
+	Host     host.Supervisor
+	Boot     string
+	mu       sync.Mutex
+	queueMu  sync.Mutex
+	queued   map[string]bool
+	workers  sync.WaitGroup
+	recovery *recoveryBatch // protected by queueMu; one complete connection inventory
 }
 
 func (d *Daemon) InstalledRuntimes(ctx context.Context) []protocol.RuntimeInstallation {
@@ -52,6 +53,9 @@ func (d *Daemon) event(ctx context.Context, start journal.Start, kind protocol.R
 func (d *Daemon) Reconcile(ctx context.Context, inventory protocol.RunnerInventory) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
+	if inventory.NextCursor != nil {
+		return fmt.Errorf("partial inventory cannot authorize recovery")
+	}
 	known := map[string]protocol.Dispatch{}
 	for _, dispatch := range inventory.Dispatches {
 		known[dispatch.AttemptID] = dispatch
@@ -148,28 +152,38 @@ func (d *Daemon) Reconcile(ctx context.Context, inventory protocol.RunnerInvento
 			return err
 		}
 	}
-	return nil
+	return d.prepareRecovery(ctx, inventory, known)
 }
 
 // The backend repeats unacknowledged frames. Keep at most one queued job per
 // durable identity and a bounded queue; dropped deliveries will be redelivered.
 func (d *Daemon) enqueue(ctx context.Context, key string, work func() error) bool {
 	d.queueMu.Lock()
+	defer d.queueMu.Unlock()
+	return d.enqueueLocked(ctx, key, work)
+}
+
+func (d *Daemon) enqueueLocked(ctx context.Context, key string, work func() error) bool {
 	if d.queued == nil {
 		d.queued = map[string]bool{}
 	}
 	if d.queued[key] || len(d.queued) >= 64 {
-		d.queueMu.Unlock()
 		return false
 	}
 	d.queued[key] = true
 	d.workers.Add(1)
-	d.queueMu.Unlock()
 	go func() {
 		defer d.workers.Done()
-		defer func() { d.queueMu.Lock(); delete(d.queued, key); d.queueMu.Unlock() }()
-		d.mu.Lock()
-		defer d.mu.Unlock()
+		defer func() {
+			d.queueMu.Lock()
+			delete(d.queued, key)
+			d.drainRecoveryLocked()
+			d.queueMu.Unlock()
+		}()
+		if !strings.HasPrefix(key, "workspace:") {
+			d.mu.Lock()
+			defer d.mu.Unlock()
+		}
 		if ctx.Err() != nil {
 			return
 		}
@@ -193,7 +207,11 @@ func (d *Daemon) Frame(ctx context.Context, frame protocol.Frame) {
 		}
 	case protocol.Effect:
 		if frame.Operation != nil {
-			d.enqueue(ctx, "effect:"+frame.Operation.OperationID, func() error { return d.effect(ctx, *frame.Operation) })
+			prefix := "effect:"
+			if frame.Operation.Workspace != nil {
+				prefix = "workspace:"
+			}
+			d.enqueue(ctx, prefix+frame.Operation.OperationID, func() error { return d.effect(ctx, *frame.Operation) })
 		}
 	}
 }
@@ -274,7 +292,7 @@ func (d *Daemon) effect(ctx context.Context, op protocol.Operation) error {
 	if err != nil {
 		return err
 	}
-	if old != nil && old.Success {
+	if old != nil && (old.Success || old.CancelledByOperationID != nil) {
 		return d.Control.Send(ctx, protocol.Frame{Type: protocol.TypeOperationResult, OperationResult: old})
 	}
 	s, err := d.DB.Start(op.AttemptID)
@@ -316,8 +334,42 @@ func (d *Daemon) effect(ctx context.Context, op protocol.Operation) error {
 		status = host.Status{Known: true, Result: &snapshot}
 	} else {
 		status, err = d.Host.Call(ctx, host.Request{Action: "effect", AttemptID: op.AttemptID, Operation: &op})
+		if err == nil && status.NeedsRepositoryAccess {
+			var access protocol.GitHubRepositoryAccessResult
+			access, err = d.Control.RepositoryAccess(ctx, op)
+			if err == nil {
+				status, err = d.Host.Call(ctx, host.Request{Action: "effect", AttemptID: op.AttemptID, Operation: &op, RepositoryAccess: &access})
+			}
+		}
 	}
-	if err == nil && op.Kind == protocol.KindCompleteNode && status.Result != nil && status.Result.GitCommit != nil && status.Result.GitTree != nil {
+	if err == nil && op.Workspace != nil && status.PriorOperationResult != nil {
+		prior := status.PriorOperationResult
+		// The helper supplies only an exact prior open outcome for this lease.
+		if prior.OperationID != op.Workspace.OpenOperationID || prior.AttemptID != op.AttemptID {
+			return fmt.Errorf("prior workspace result scope mismatch")
+		}
+		if e := d.DB.FinishEffect(*prior); e != nil {
+			if !errors.Is(e, sql.ErrNoRows) {
+				return e
+			}
+			var original protocol.Operation
+			if e = d.Control.Get(ctx, "/v1/recovery/operations/"+prior.OperationID, "Operation", &original); e != nil {
+				return e
+			}
+			if e = d.DB.BeginEffect(original); e != nil {
+				return e
+			}
+			if e = d.DB.FinishEffect(*prior); e != nil {
+				return e
+			}
+		}
+		if e := d.Control.Send(ctx, protocol.Frame{Type: protocol.TypeOperationResult, OperationResult: prior}); e != nil {
+			return e
+		}
+	}
+	if err == nil && op.Workspace != nil && status.Result != nil {
+		err = host.ExportWorkspace(op, *status.Result)
+	} else if err == nil && op.Kind == protocol.KindCompleteNode && status.Result != nil && status.Result.GitCommit != nil && status.Result.GitTree != nil {
 		err = host.Export(op.AttemptID, op.OperationID, *status.Result.GitCommit, *status.Result.GitTree)
 	}
 	if err == nil && !status.Known {
@@ -340,18 +392,26 @@ func (d *Daemon) effect(ctx context.Context, op protocol.Operation) error {
 		}
 		result.Result.Message = &message
 		result.FailureKind = &kind
+		if op.Workspace != nil {
+			reason := protocol.OwnershipUnresolved
+			for _, candidate := range []protocol.WorkspaceUnavailableReason{protocol.CredentialsMissing, protocol.RepositoryDenied, protocol.RefUnavailable, protocol.StorageUnavailable, protocol.UnsupportedRemote} {
+				if strings.Contains(err.Error(), string(candidate)) {
+					reason = candidate
+					break
+				}
+			}
+			result.Result.WorkspaceUnavailableReason = &reason
+		}
 	} else {
-		result.Success = true
+		result.Success = status.CancelledByOperationID == nil
+		result.CancelledByOperationID = status.CancelledByOperationID
 		if status.Result != nil {
 			result.Result = *status.Result
 		}
 		if op.Kind == protocol.Stop || op.Kind == protocol.KindCompleteNode {
 			absent := !status.Populated
 			result.Result.WriterAbsent = &absent
-			if s.Phase != "revoked" {
-				s.Phase = "absent"
-			}
-			if err = d.DB.SaveStart(s); err != nil {
+			if err = d.recordEffectAbsence(op); err != nil {
 				return err
 			}
 		}
@@ -360,6 +420,27 @@ func (d *Daemon) effect(ctx context.Context, op protocol.Operation) error {
 		return err
 	}
 	return d.Control.Send(ctx, protocol.Frame{Type: protocol.TypeOperationResult, OperationResult: &result})
+}
+
+func (d *Daemon) recordEffectAbsence(op protocol.Operation) error {
+	// Canonical network/Git work runs outside mu. Re-read under the short
+	// lifecycle lock so a completed effect cannot overwrite a newer launch or
+	// reconciliation PID/birth/cgroup with its pre-network snapshot.
+	if op.Workspace != nil {
+		d.mu.Lock()
+		defer d.mu.Unlock()
+	}
+	latest, err := d.DB.Start(op.AttemptID)
+	if err != nil {
+		return err
+	}
+	if latest.Dispatch.DispatchID != op.DispatchID {
+		return fmt.Errorf("effect absence dispatch changed")
+	}
+	if latest.Phase != "revoked" {
+		latest.Phase = "absent"
+	}
+	return d.DB.SaveStart(latest)
 }
 
 func (d *Daemon) unstartedRevocation(ctx context.Context, op protocol.Operation, inventory protocol.RunnerInventory) (journal.Start, error) {

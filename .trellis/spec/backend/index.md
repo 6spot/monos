@@ -14,6 +14,7 @@ Status: Stage A boundary-probe backend is implemented in `apps/server` with Post
 - For exact proposal confirmation and independent Task creation, read [Task preview](task-preview.md).
 - For selected Attempt status, ordered output and resumable log cursors, read [Execution logs](execution-logs.md).
 - For selected Attempt queue/promotion, read [dispatch queue](dispatch-queue.md).
+- For canonical repository admission, serial leases and ephemeral fetch access, read [workspaces](workspaces.md).
 - For production Runtime target choice and shared capacity, read [Runtime scheduling](runtime-scheduling.md).
 - For revision/activation publication, read [Task records](task-records.md).
 - For Owner sessions/proposal consumption, read [Owner commands](owner-commands.md).

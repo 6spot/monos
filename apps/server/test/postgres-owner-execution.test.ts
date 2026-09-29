@@ -58,7 +58,7 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Owner Stop and recover
     const successor = randomUUID();
     await transaction(db, (tx) => queue.enqueue(tx, { attempt_id: successor, runner_id: f.runner, task_id: f.launch.task_id,
       node_id: f.launch.node_id, kind: 'node', expected: { control_version: 3, specification_id: `spec_${f.launch.task_id}`, plan_id: `plan_${f.launch.task_id}` },
-      resource_id: 'repo', runtime_id: 'opencode', model: 'opencode/longcat-2.5-preview-free', prompt: 'current canonical fixture', source_watermark: 1 }));
+      legacy_probe: true, resource_id: 'repo', runtime_id: 'opencode', model: 'opencode/longcat-2.5-preview-free', prompt: 'current canonical fixture', source_watermark: 1 }));
     expect((await queue.promoteNext(f.runner, f.service.instanceId, f.incarnation))?.attempt_id).toBe(successor);
   });
 
@@ -161,7 +161,7 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Owner Stop and recover
     await db.pool.query("UPDATE tasks SET state='RUNNING' WHERE id=$1", [taskId]);
     const attemptId = randomUUID(); const queue = new DispatchQueue(db);
     await transaction(db, (tx) => queue.enqueue(tx, { attempt_id: attemptId, runner_id: runner, task_id: taskId, kind: 'planner', expected: basis,
-      resource_id: 'repo', runtime_id: 'opencode', model: 'opencode/longcat-2.5-preview-free', prompt: 'preplan running', source_watermark: 1 }));
+      legacy_probe: true, resource_id: 'repo', runtime_id: 'opencode', model: 'opencode/longcat-2.5-preview-free', prompt: 'preplan running', source_watermark: 1 }));
     const first = new BoundaryService(db, { signingKey }); const firstIncarnation = await first.connect(runner, 'boot-one'); await first.touch(runner, firstIncarnation, true);
     expect((await queue.promoteNext(runner, first.instanceId, firstIncarnation))?.attempt_id).toBe(attemptId);
     const session = await issueOwnerSession(db);
@@ -189,7 +189,7 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Owner Stop and recover
     await db.pool.query("UPDATE tasks SET state='RUNNING' WHERE id=$1", [taskId]);
     const attemptId = randomUUID(); const queue = new DispatchQueue(db);
     await transaction(db, (tx) => queue.enqueue(tx, { attempt_id: attemptId, runner_id: runner, task_id: taskId, kind: 'planner', expected: basis,
-      resource_id: 'repo', runtime_id: 'opencode', model: 'opencode/longcat-2.5-preview-free', prompt: 'preplan', source_watermark: 1 }));
+      legacy_probe: true, resource_id: 'repo', runtime_id: 'opencode', model: 'opencode/longcat-2.5-preview-free', prompt: 'preplan', source_watermark: 1 }));
     const session = await issueOwnerSession(db);
     const stop: OwnerCommand = { schema_version: 1, request_id: randomUUID(), scope_id: taskId, expected_control_version: 1, name: 'stop_initial_planning', payload: { attempt_id: attemptId } };
     const result = await owner.confirm(session.token, stop);
@@ -202,7 +202,7 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Owner Stop and recover
     expect((await db.pool.query('SELECT state FROM tasks WHERE id=$1', [taskId])).rows[0].state).toBe('RUNNING');
     const successor = randomUUID();
     await transaction(db, (tx) => queue.enqueue(tx, { attempt_id: successor, runner_id: runner, task_id: taskId, kind: 'planner',
-      expected: { ...basis, control_version: 3 }, resource_id: 'repo', runtime_id: 'opencode', model: 'opencode/longcat-2.5-preview-free',
+      expected: { ...basis, control_version: 3 }, legacy_probe: true, resource_id: 'repo', runtime_id: 'opencode', model: 'opencode/longcat-2.5-preview-free',
       prompt: 'new current fixture', source_watermark: 2 }));
     const service = new BoundaryService(db, { signingKey }); const incarnation = await service.connect(runner, 'boot-one'); await service.touch(runner, incarnation, true);
     expect((await queue.promoteNext(runner, service.instanceId, incarnation))?.attempt_id).toBe(successor);

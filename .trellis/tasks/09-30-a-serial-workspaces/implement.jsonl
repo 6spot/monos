@@ -1,0 +1,17 @@
+{"file": ".trellis/spec/backend/index.md", "reason": "Backend boundary and quality index"}
+{"file": ".trellis/spec/backend/database-guidelines.md", "reason": "Atomic receipts, leases and operations"}
+{"file": ".trellis/spec/backend/configuration.md", "reason": "Project/resource barriers and removal"}
+{"file": ".trellis/spec/backend/task-records.md", "reason": "Immutable Task/activation lineage"}
+{"file": ".trellis/spec/backend/dispatch-queue.md", "reason": "Existing shared dispatch ownership"}
+{"file": ".trellis/spec/backend/owner-commands.md", "reason": "Authenticated Stop/recovery"}
+{"file": ".trellis/spec/backend/infrastructure-configuration.md", "reason": "Provider configuration and private keys"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Real database/concurrency validation"}
+{"file": ".trellis/spec/protocol/index.md", "reason": "Generated cross-language contracts"}
+{"file": ".trellis/spec/protocol/commands.md", "reason": "Immutable envelopes and effects"}
+{"file": ".trellis/spec/protocol/schema-generation.md", "reason": "Generate and validate strict wire data"}
+{"file": ".trellis/spec/runner/index.md", "reason": "Native Runner ownership"}
+{"file": ".trellis/spec/runner/execution-guidelines.md", "reason": "Process/effect supervision"}
+{"file": ".trellis/spec/runner/workspace-guidelines.md", "reason": "Git/cache/checkpoint materialization"}
+{"file": ".trellis/spec/runner/quality-guidelines.md", "reason": "Linux/credential/native proof"}
+{"file": ".trellis/spec/guides/index.md", "reason": "Cross-layer and reuse guides"}
+{"file": ".trellis/tasks/09-28-a-task-execution/research/decomposition.md", "reason": "Package scope and current-code seams"}

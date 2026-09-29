@@ -58,6 +58,7 @@ export async function createAttemptFixture(db: Database, input: AttemptFixture):
     validate('Dispatch', launch);
     await tx.query('INSERT INTO attempts(id,runner_id,task_id,node_id,owner_key,dispatch_id,kind,fencing_generation,node_activation,launch) VALUES($1,$2,$3,$4,$5,$6,$7,1,$8,$9)', [input.attempt_id, input.runner_id, input.task_id, nodeId ?? null, nodeId ? `node:${nodeId}` : `planner:${input.task_id}`, launch.dispatch_id, input.kind, launch.node_activation, launch]);
     await tx.query('UPDATE attempts SET specification_id=$2,plan_id=$3 WHERE id=$1', [input.attempt_id, task.specification_id, task.plan_id]);
+    await tx.query('INSERT INTO legacy_probe_attempts(attempt_id) VALUES($1)', [input.attempt_id]);
     await tx.query("INSERT INTO outbox(id,runner_id,attempt_id,kind) VALUES($1,$2,$3,'start')", [randomUUID(), input.runner_id, input.attempt_id]);
     return launch;
   });

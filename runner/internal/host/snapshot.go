@@ -35,6 +35,19 @@ func exportCloneArgs(workspace, common, destination string) []string {
 	}
 }
 
+func exportFetchArgs(workspace, common, ref string) []string {
+	metadata := filepath.Join(common, "worktrees", filepath.Base(workspace))
+	// Git 2.47.3 rejects upload-pack through a cross-owner linked worktree's
+	// .git indirection even with both exact paths trusted. Unlike clone, fetch
+	// does not resolve that source first. Use its already-known administrative
+	// directory directly; keep the same two protected safe-directory scopes.
+	return []string{
+		"-c", "safe.directory=" + workspace,
+		"-c", "safe.directory=" + metadata,
+		"fetch", "--no-tags", metadata, ref + ":refs/monos/result",
+	}
+}
+
 // Inspect runs as the unprivileged service identity, never as the Agent account.
 // The execution group can read the snapshot; only service ownership can modify it.
 func Inspect(id string) (protocol.EffectResult, error) {
@@ -86,6 +99,29 @@ func Export(id, op, commit, tree string) error {
 	if !objectID.MatchString(commit) || !objectID.MatchString(tree) {
 		return invalidFinalization(fmt.Errorf("invalid finalized object identity"))
 	}
+	return exportPaths(Path(id, "workspace"), Path(id, "common"), op, commit, tree, "")
+}
+
+func ExportWorkspace(op protocol.Operation, result protocol.EffectResult) error {
+	if op.Workspace == nil {
+		return fmt.Errorf("workspace descriptor required")
+	}
+	commit, tree, ref := "", "", ""
+	if result.WorkspaceMetadata != nil && result.WorkspaceMetadata.Checkpoint != nil {
+		cp := result.WorkspaceMetadata.Checkpoint
+		commit, tree, ref = cp.CommitID, cp.TreeID, "refs/monos/checkpoints/"+op.OperationID
+	} else if result.GitCommit != nil && result.GitTree != nil {
+		commit, tree, ref = *result.GitCommit, *result.GitTree, "refs/monos/operations/"+op.OperationID
+	} else {
+		return nil
+	}
+	return exportPaths(TaskWorkspacePath(op.Workspace.WorkspaceID, "worktree"), TaskWorkspacePath(op.Workspace.WorkspaceID, "common"), op.OperationID, commit, tree, ref)
+}
+
+func exportPaths(workspace, common, op, commit, tree, ref string) error {
+	if !ValidID(op) || !objectID.MatchString(commit) || !objectID.MatchString(tree) || os.Geteuid() == 0 {
+		return fmt.Errorf("invalid service export identity")
+	}
 	destination := filepath.Join(Root, "results", op)
 	if err := serviceDirectory(filepath.Dir(destination), true); err != nil {
 		return err
@@ -97,22 +133,27 @@ func Export(id, op, commit, tree string) error {
 		return err
 	}
 	if _, err := os.Stat(filepath.Join(destination, "HEAD")); os.IsNotExist(err) {
-		if _, err = git(destination, exportCloneArgs(Path(id, "workspace"), Path(id, "common"), destination)...); err != nil {
+		if _, err = gitScoped(destination, nil, nil, exportCloneArgs(workspace, common, destination)...); err != nil {
 			return err
 		}
 	} else if err != nil {
 		return err
 	}
-	if _, err := git(destination, "--git-dir="+destination, "fsck", "--connectivity-only", "--no-reflogs"); err != nil {
+	if ref != "" {
+		if _, err := gitScoped(destination, nil, nil, exportFetchArgs(workspace, common, ref)...); err != nil {
+			return err
+		}
+	}
+	if _, err := gitScoped(destination, nil, nil, "--git-dir="+destination, "fsck", "--connectivity-only", "--no-reflogs"); err != nil {
 		return err
 	}
-	actual, err := git(destination, "--git-dir="+destination, "rev-parse", commit+"^{tree}")
+	actual, err := gitScoped(destination, nil, nil, "--git-dir="+destination, "rev-parse", commit+"^{tree}")
 	if err != nil {
 		return err
 	}
 	if actual != tree {
 		return invalidFinalization(fmt.Errorf("exported tree mismatch"))
 	}
-	_, err = git(destination, "--git-dir="+destination, "update-ref", "refs/monos/result", commit)
+	_, err = gitScoped(destination, nil, nil, "--git-dir="+destination, "update-ref", "refs/monos/result", commit)
 	return err
 }

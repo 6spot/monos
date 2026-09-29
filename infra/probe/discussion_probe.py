@@ -141,7 +141,7 @@ class DiscussionProbe(StopProbe):
             "'process_released',a.process_released,'process_absent',a.process_absent,"
             "'starts',(SELECT count(*) FROM outbox o WHERE o.attempt_id=a.id AND o.kind='start'),"
             "'commits',(SELECT count(*) FROM command_receipts r WHERE r.attempt_id=a.id AND r.command_name='commit_discussion_turn'),"
-            "'unresolved_operations',(SELECT count(*) FROM operations o WHERE o.attempt_id=a.id AND o.state<>'succeeded'))"
+            "'unresolved_operations',(SELECT count(*) FROM operations o WHERE o.attempt_id=a.id AND o.state NOT IN ('succeeded','cancelled')))"
             " ORDER BY a.created_at,a.id),'[]'::jsonb) FROM attempts a WHERE a.todo_id='" + todo + "'));" )
         if baseline is not None:
             value['baseline_task_count'] = baseline['task_count']

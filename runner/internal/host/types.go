@@ -33,27 +33,31 @@ func AttemptRoot(id string) string { return filepath.Join(Root, "execution", id)
 func Path(id, name string) string  { return filepath.Join(AttemptRoot(id), name) }
 
 type Request struct {
-	Action    string              `json:"action"`
-	AttemptID string              `json:"attempt_id"`
-	Dispatch  *protocol.Dispatch  `json:"dispatch,omitempty"`
-	Operation *protocol.Operation `json:"operation,omitempty"`
+	Action           string                                 `json:"action"`
+	AttemptID        string                                 `json:"attempt_id"`
+	Dispatch         *protocol.Dispatch                     `json:"dispatch,omitempty"`
+	Operation        *protocol.Operation                    `json:"operation,omitempty"`
+	RepositoryAccess *protocol.GitHubRepositoryAccessResult `json:"repository_access,omitempty"`
 }
 type Status struct {
-	Known               bool                           `json:"known"`
-	Exists              bool                           `json:"exists"`
-	Populated           bool                           `json:"populated"`
-	MainExited          bool                           `json:"main_exited,omitempty"`
-	ExitCode            *int64                         `json:"exit_code,omitempty"`
-	CaptureFailed       bool                           `json:"capture_failed,omitempty"`
-	BootID              string                         `json:"boot_id"`
-	PID                 int                            `json:"pid"`
-	Birth               string                         `json:"birth"`
-	Cgroup              string                         `json:"cgroup"`
-	Error               string                         `json:"error,omitempty"`
-	FailureKind         *protocol.FailureKind          `json:"failure_kind,omitempty"`
-	Result              *protocol.EffectResult         `json:"result,omitempty"`
-	MaterializationBase *string                        `json:"materialization_base,omitempty"`
-	Runtimes            []protocol.RuntimeInstallation `json:"runtimes,omitempty"`
+	Known                  bool                           `json:"known"`
+	Exists                 bool                           `json:"exists"`
+	Populated              bool                           `json:"populated"`
+	MainExited             bool                           `json:"main_exited,omitempty"`
+	ExitCode               *int64                         `json:"exit_code,omitempty"`
+	CaptureFailed          bool                           `json:"capture_failed,omitempty"`
+	BootID                 string                         `json:"boot_id"`
+	PID                    int                            `json:"pid"`
+	Birth                  string                         `json:"birth"`
+	Cgroup                 string                         `json:"cgroup"`
+	Error                  string                         `json:"error,omitempty"`
+	FailureKind            *protocol.FailureKind          `json:"failure_kind,omitempty"`
+	Result                 *protocol.EffectResult         `json:"result,omitempty"`
+	MaterializationBase    *string                        `json:"materialization_base,omitempty"`
+	Runtimes               []protocol.RuntimeInstallation `json:"runtimes,omitempty"`
+	CancelledByOperationID *string                        `json:"cancelled_by_operation_id,omitempty"`
+	PriorOperationResult   *protocol.OperationResult      `json:"prior_operation_result,omitempty"`
+	NeedsRepositoryAccess  bool                           `json:"needs_repository_access,omitempty"`
 }
 type Supervisor interface {
 	Call(context.Context, Request) (Status, error)

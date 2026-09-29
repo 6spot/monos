@@ -12,18 +12,27 @@
   "assignee": "me",
   "createdAt": "2026-09-28",
   "completedAt": null,
-  "branch": null,
+  "branch": "feat/stage-a-boundary-probe",
   "base_branch": "main",
   "worktree_path": null,
   "commit": null,
   "pr_url": null,
   "subtasks": [],
-  "children": [],
+  "children": [
+    "09-30-a-serial-workspaces",
+    "09-30-a-task-start-planning",
+    "09-30-a-node-execution",
+    "09-30-a-task-conversation",
+    "09-30-a-specification-changes",
+    "09-30-a-single-node-replan",
+    "09-30-a-execution-ui",
+    "09-30-a-task-execution-acceptance"
+  ],
   "parent": "09-28-stage-a-product-loop",
   "relatedFiles": [],
   "notes": "",
   "meta": {
     "roadmap_level": "work-package",
-    "planning_maturity": "backlog"
+    "planning_maturity": "decomposed"
   }
 }

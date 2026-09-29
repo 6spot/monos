@@ -50,7 +50,7 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('production Runtime tar
       });
       expected = { ...expected, plan_id: plan, control_version: expected.control_version + 1 };
     }
-    return { attempt_id: randomUUID(), task_id, ...(node_id ? { node_id } : {}), kind, expected, resource_id: 'repo', prompt: 'synthetic scheduling test; no model launch', source_watermark: 1 };
+    return { attempt_id: randomUUID(), task_id, ...(node_id ? { node_id } : {}), kind, expected, legacy_probe: true, resource_id: 'repo', prompt: 'synthetic scheduling test; no model launch', source_watermark: 1 };
   }
   async function submit(service: BoundaryService, value: SchedulingRequest) {
     return transaction(db, (tx) => new RuntimeScheduling(queue, service.instanceId).selectAndEnqueue(tx, value));

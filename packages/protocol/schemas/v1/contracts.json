@@ -436,6 +436,24 @@
         },
         "resolved_watermark": {
           "$ref": "#/definitions/Counter"
+        },
+        "instruction_files": {
+          "type": "array",
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": [
+              "AGENTS.md",
+              "CLAUDE.md"
+            ]
+          }
+        },
+        "workspace_metadata": {
+          "$ref": "#/definitions/WorkspaceMetadata"
+        },
+        "workspace_unavailable_reason": {
+          "$ref": "#/definitions/WorkspaceUnavailableReason"
         }
       }
     },
@@ -573,6 +591,9 @@
         "project_context_digest": {
           "type": "string",
           "pattern": "^[0-9a-f]{64}$"
+        },
+        "workspace_reservations": {
+          "$ref": "#/definitions/WorkspaceReservations"
         }
       },
       "allOf": [
@@ -608,7 +629,8 @@
               "project_context_digest": {
                 "type": "string",
                 "pattern": "^[0-9a-f]{64}$"
-              }
+              },
+              "workspace_reservations": false
             },
             "required": [
               "source_message_id",
@@ -629,9 +651,61 @@
               "project_context_digest": false
             },
             "required": [
-              "task_id",
-              "resource_id"
+              "task_id"
+            ],
+            "allOf": [
+              {
+                "if": {
+                  "required": [
+                    "workspace_reservations"
+                  ],
+                  "properties": {
+                    "workspace_reservations": {}
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "resource_id": false
+                  }
+                },
+                "else": {
+                  "required": [
+                    "resource_id"
+                  ],
+                  "properties": {
+                    "resource_id": {
+                      "$ref": "#/definitions/Id"
+                    }
+                  }
+                }
+              }
             ]
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "workspace_reservations"
+            ],
+            "properties": {
+              "workspace_reservations": {},
+              "kind": {
+                "const": "planner"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "workspace_reservations": {
+                "type": "object",
+                "properties": {
+                  "resources": {
+                    "type": "array",
+                    "maxItems": 0
+                  }
+                }
+              }
+            }
           }
         }
       ]
@@ -684,11 +758,21 @@
           "enum": [
             "admitted",
             "succeeded",
-            "recovery"
+            "recovery",
+            "cancelled"
           ]
         },
         "result": {
           "$ref": "#/definitions/EffectResult"
+        },
+        "workspace": {
+          "$ref": "#/definitions/WorkspaceDescriptor"
+        },
+        "workspace_digest": {
+          "$ref": "#/definitions/SHA256"
+        },
+        "cancelled_by_operation_id": {
+          "$ref": "#/definitions/Id"
         }
       },
       "allOf": [
@@ -711,8 +795,84 @@
               "resource_id"
             ]
           }
+        },
+        {
+          "if": {
+            "required": [
+              "workspace"
+            ],
+            "properties": {
+              "workspace": {}
+            }
+          },
+          "then": {
+            "properties": {
+              "kind": {
+                "enum": [
+                  "open_workspace",
+                  "complete_node",
+                  "stop"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "cancelled"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "cancelled_by_operation_id",
+              "workspace",
+              "result"
+            ],
+            "properties": {
+              "cancelled_by_operation_id": {
+                "$ref": "#/definitions/Id"
+              },
+              "workspace": {
+                "$ref": "#/definitions/WorkspaceDescriptor"
+              },
+              "kind": {
+                "const": "open_workspace"
+              },
+              "result": {
+                "type": "object",
+                "required": [
+                  "writer_absent"
+                ],
+                "properties": {
+                  "writer_absent": {
+                    "const": true
+                  },
+                  "workspace_id": false,
+                  "workspace_metadata": false,
+                  "path": false,
+                  "instruction_files": false
+                }
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "cancelled_by_operation_id": false
+            }
+          }
         }
-      ]
+      ],
+      "dependencies": {
+        "workspace": [
+          "workspace_digest"
+        ],
+        "workspace_digest": [
+          "workspace"
+        ]
+      }
     },
     "RuntimeEvent": {
       "type": "object",
@@ -804,6 +964,9 @@
             "capture_hard_limit",
             "invalid_finalization"
           ]
+        },
+        "cancelled_by_operation_id": {
+          "$ref": "#/definitions/Id"
         }
       },
       "allOf": [
@@ -818,6 +981,48 @@
           "then": {
             "properties": {
               "failure_kind": false
+            }
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "cancelled_by_operation_id"
+            ],
+            "properties": {
+              "cancelled_by_operation_id": {}
+            }
+          },
+          "then": {
+            "properties": {
+              "success": {
+                "const": false
+              },
+              "failure_kind": false,
+              "result": {
+                "type": "object",
+                "required": [
+                  "writer_absent"
+                ],
+                "properties": {
+                  "writer_absent": {
+                    "const": true
+                  },
+                  "workspace_id": false,
+                  "path": false,
+                  "git_commit": false,
+                  "git_tree": false,
+                  "reply": false,
+                  "source_watermark": false,
+                  "discussion_page": false,
+                  "message_id": false,
+                  "cache_updated": false,
+                  "resolved_watermark": false,
+                  "instruction_files": false,
+                  "workspace_metadata": false,
+                  "workspace_unavailable_reason": false
+                }
+              }
             }
           }
         }
@@ -2930,7 +3135,8 @@
           "enum": [
             "admitted",
             "succeeded",
-            "recovery"
+            "recovery",
+            "cancelled"
           ]
         },
         "process_absent": {
@@ -2947,6 +3153,9 @@
         },
         "end_reason": {
           "type": "string"
+        },
+        "cancelled_by_operation_id": {
+          "$ref": "#/definitions/Id"
         }
       }
     },
@@ -4001,7 +4210,8 @@
           "enum": [
             "admitted",
             "succeeded",
-            "recovery"
+            "recovery",
+            "cancelled"
           ]
         },
         "process_absent": {
@@ -4020,6 +4230,9 @@
           "type": "string"
         },
         "todo_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "cancelled_by_operation_id": {
           "$ref": "#/definitions/Id"
         }
       }
@@ -4475,6 +4688,493 @@
           }
         }
       ]
+    },
+    "SHA256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "GitOID": {
+      "type": "string",
+      "pattern": "^(?:[a-f0-9]{40}|[a-f0-9]{64})$"
+    },
+    "PositiveCounter": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "RepositoryProviderMetadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "github": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "repository_id"
+          ],
+          "properties": {
+            "repository_id": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]{0,15}$"
+            }
+          }
+        }
+      }
+    },
+    "WorkspaceReservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "resource_id",
+        "workspace_id"
+      ],
+      "properties": {
+        "resource_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "workspace_id": {
+          "$ref": "#/definitions/Id"
+        }
+      }
+    },
+    "WorkspaceReservations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "project_id",
+        "configuration_version",
+        "resources"
+      ],
+      "properties": {
+        "project_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "configuration_version": {
+          "$ref": "#/definitions/Counter"
+        },
+        "resources": {
+          "type": "array",
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/WorkspaceReservation"
+          }
+        }
+      }
+    },
+    "WorkspaceResource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "resource_id",
+        "repository_identity",
+        "remote_url"
+      ],
+      "properties": {
+        "resource_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "repository_identity": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        },
+        "remote_url": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        },
+        "provider_metadata": {
+          "$ref": "#/definitions/RepositoryProviderMetadata"
+        },
+        "default_ref": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        },
+        "default_branch": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        }
+      }
+    },
+    "WorkspaceBasis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "storage_id",
+        "repository_identity",
+        "base_commit",
+        "target_branch",
+        "finalized_commit"
+      ],
+      "properties": {
+        "storage_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "repository_identity": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        },
+        "provider_metadata": {
+          "$ref": "#/definitions/RepositoryProviderMetadata"
+        },
+        "base_commit": {
+          "$ref": "#/definitions/GitOID"
+        },
+        "target_branch": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        },
+        "finalized_commit": {
+          "$ref": "#/definitions/GitOID"
+        }
+      }
+    },
+    "WorkspaceDescriptor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "workspace_id",
+        "task_id",
+        "project_id",
+        "resource_id",
+        "runner_id",
+        "generation",
+        "lease_id",
+        "node_id",
+        "node_activation",
+        "open_operation_id",
+        "resource"
+      ],
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "workspace_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "task_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "project_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "resource_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "runner_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "generation": {
+          "$ref": "#/definitions/PositiveCounter"
+        },
+        "lease_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "node_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "node_activation": {
+          "$ref": "#/definitions/PositiveCounter"
+        },
+        "open_operation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "resource": {
+          "$ref": "#/definitions/WorkspaceResource"
+        },
+        "basis": {
+          "$ref": "#/definitions/WorkspaceBasis"
+        }
+      }
+    },
+    "WorkspaceCheckpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operation_id",
+        "head_commit",
+        "tree_id",
+        "commit_id"
+      ],
+      "properties": {
+        "operation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "head_commit": {
+          "$ref": "#/definitions/GitOID"
+        },
+        "tree_id": {
+          "$ref": "#/definitions/GitOID"
+        },
+        "commit_id": {
+          "$ref": "#/definitions/GitOID"
+        }
+      }
+    },
+    "WorkspaceMetadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "generation",
+        "storage_id",
+        "lease_id",
+        "repository_identity",
+        "base_commit",
+        "target_branch",
+        "target_commit",
+        "finalized_commit"
+      ],
+      "properties": {
+        "generation": {
+          "$ref": "#/definitions/PositiveCounter"
+        },
+        "storage_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "lease_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "repository_identity": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        },
+        "provider_metadata": {
+          "$ref": "#/definitions/RepositoryProviderMetadata"
+        },
+        "base_commit": {
+          "$ref": "#/definitions/GitOID"
+        },
+        "target_branch": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        },
+        "target_commit": {
+          "$ref": "#/definitions/GitOID"
+        },
+        "finalized_commit": {
+          "$ref": "#/definitions/GitOID"
+        },
+        "checkpoint": {
+          "$ref": "#/definitions/WorkspaceCheckpoint"
+        },
+        "recovered_by_stop_operation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "target_observation_lease_id": {
+          "$ref": "#/definitions/Id"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "recovered_by_stop_operation_id": {}
+            },
+            "required": [
+              "recovered_by_stop_operation_id"
+            ]
+          },
+          "then": {
+            "properties": {
+              "target_observation_lease_id": {}
+            },
+            "required": [
+              "target_observation_lease_id"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "target_observation_lease_id": {}
+            },
+            "required": [
+              "target_observation_lease_id"
+            ]
+          },
+          "then": {
+            "properties": {
+              "recovered_by_stop_operation_id": {}
+            },
+            "required": [
+              "recovered_by_stop_operation_id"
+            ]
+          }
+        }
+      ]
+    },
+    "RepositoryAccessRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "incarnation",
+        "workspace_digest"
+      ],
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "incarnation": {
+          "$ref": "#/definitions/Counter"
+        },
+        "workspace_digest": {
+          "$ref": "#/definitions/SHA256"
+        }
+      }
+    },
+    "RepositoryAuthentication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "anonymous",
+            "github_installation"
+          ]
+        },
+        "token": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "expires_at": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "anonymous"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "token": false,
+              "expires_at": false
+            }
+          },
+          "else": {
+            "properties": {
+              "token": {},
+              "expires_at": {}
+            },
+            "required": [
+              "token",
+              "expires_at"
+            ]
+          }
+        }
+      ]
+    },
+    "GitHubRepositoryAccessResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "operation_id",
+        "workspace_digest",
+        "remote_url",
+        "provider_metadata",
+        "default_branch",
+        "authentication"
+      ],
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "operation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "workspace_digest": {
+          "$ref": "#/definitions/SHA256"
+        },
+        "remote_url": {
+          "type": "string",
+          "maxLength": 2048,
+          "pattern": "^https://github[.]com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+[.]git$"
+        },
+        "provider_metadata": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "github"
+          ],
+          "properties": {
+            "github": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "repository_id"
+              ],
+              "properties": {
+                "repository_id": {
+                  "type": "string",
+                  "pattern": "^[1-9][0-9]{0,15}$"
+                }
+              }
+            }
+          }
+        },
+        "default_branch": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        },
+        "authentication": {
+          "$ref": "#/definitions/RepositoryAuthentication"
+        }
+      }
+    },
+    "WorkspaceUnavailableReason": {
+      "type": "string",
+      "enum": [
+        "unsupported_remote",
+        "unsupported_multiple_workspaces",
+        "credentials_missing",
+        "repository_denied",
+        "ref_unavailable",
+        "storage_unavailable",
+        "ownership_unresolved"
+      ]
+    },
+    "RepositoryAccessError": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "reason"
+      ],
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "reason": {
+          "$ref": "#/definitions/WorkspaceUnavailableReason"
+        }
+      }
     }
   }
 }

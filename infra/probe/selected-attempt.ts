@@ -32,7 +32,7 @@ try {
       attempt_id: input.attempt_id, task_id: task, kind: input.kind,
       ...(input.kind === 'node' ? { node_id: node } : {}),
       expected: { control_version: Number(control.control_version), specification_id: spec, plan_id: currentPlan },
-      resource_id: input.resource_id, prompt: input.prompt, source_watermark: 1,
+      legacy_probe: true, resource_id: input.resource_id, prompt: input.prompt, source_watermark: 1,
       explicit_target: { runner_id: input.runner_id, runtime_id: 'opencode', model_id: 'opencode/longcat-2.5-preview-free' },
     });
     if (selection.status !== 'queued') throw new Error(`Selected fixture unavailable: ${selection.reason}`);

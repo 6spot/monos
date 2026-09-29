@@ -187,7 +187,7 @@ export async function readTaskOverview(tx: Transaction, token: string, taskId: s
   const nodes: NodeCounts = { pending: 0, running: 0, blocked: 0, completed: 0, cancelled: 0 };
   for (const row of rows) nodes[row.state.toLowerCase() as keyof NodeCounts] = Number(row.count);
   const attempts = (await tx.query<{ queued: string; held: string }>("SELECT count(*) FILTER(WHERE state='QUEUED') AS queued,count(*) FILTER(WHERE NOT process_released) AS held FROM attempts WHERE task_id=$1", [taskId])).rows[0]!;
-  const operations = (await tx.query<{ count: string }>("SELECT count(*) FROM operations o JOIN attempts a ON a.id=o.attempt_id WHERE a.task_id=$1 AND o.state<>'succeeded'", [taskId])).rows[0]!;
+  const operations = (await tx.query<{ count: string }>("SELECT count(*) FROM operations o JOIN attempts a ON a.id=o.attempt_id WHERE a.task_id=$1 AND o.state NOT IN ('succeeded','cancelled')", [taskId])).rows[0]!;
   const revision = (await tx.query<{ content: unknown }>('SELECT content FROM specification_revisions WHERE task_id=$1 AND id=$2', [taskId, task.specification_id])).rows[0];
   return validate<TaskOverview>('TaskOverview', {
     schema_version: 1, task_id: taskId, control_version: Number(task.control_version), state: task.state,

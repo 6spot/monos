@@ -1,11 +1,11 @@
-import { randomUUID } from 'node:crypto';
 import { transaction } from '../../../packages/db/src/index.ts';
 import type { Database, Transaction } from '../../../packages/db/src/index.ts';
 import { CommandError } from '../../../packages/domain/src/commands.ts';
 import { canonicalJSON, digest, validate } from '../../../packages/protocol/src/index.ts';
-import type { OwnerCommand, OwnerCommandResult, OwnerOperationStatus } from '../../../packages/protocol/src/index.ts';
+import type { Dispatch, OwnerCommand, OwnerCommandResult, OwnerOperationStatus } from '../../../packages/protocol/src/index.ts';
 import { authenticateOwner } from './owner-commands.ts';
 import { assertCurrentNode } from './task-records.ts';
+import { admitWorkspaceEffect } from './workspaces.ts';
 
 type Action = Exclude<OwnerCommand['name'], 'confirm_proposal'>;
 interface Target { attempt_id: string; node_id?: string; node_activation?: number }
@@ -14,7 +14,7 @@ interface Attempt {
   node_activation: string; state: 'QUEUED' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'CANCELLED';
   mutation_allowed: boolean; process_absent: boolean; process_released: boolean; end_reason: string | null;
   recovery_consumed_by: string | null;
-  specification_id: string | null; plan_id: string | null; launch: { resource_id: string };
+  specification_id: string | null; plan_id: string | null; launch: Dispatch; dispatch_id: string;
 }
 interface Task { id: string; control_version: string; state: string; specification_id: string; plan_id: string | null }
 interface Operation { id: string; kind: string; state: string }
@@ -103,13 +103,9 @@ export async function executeOwnerAction(db: Database, token: string, command: O
         if (node?.state !== (attempt.state === 'QUEUED' ? 'PENDING' : 'RUNNING')) throw new CommandError('unmet_precondition', 'Node is not owned by this Attempt');
       } else if (task.state !== 'RUNNING') throw new CommandError('unmet_precondition', 'Initial planning is not running');
       const queued = attempt.state === 'QUEUED';
-      const operationId = queued ? null : randomUUID();
       await tx.query("UPDATE attempts SET mutation_allowed=false,state='CANCELLED',end_reason='owner_stopped',process_absent=CASE WHEN $2::boolean THEN true ELSE process_absent END WHERE id=$1", [attempt.id, queued]);
       await tx.query("UPDATE outbox SET done=true WHERE attempt_id=$1 AND kind='start'", [attempt.id]);
-      if (operationId) {
-        await tx.query("INSERT INTO operations(id,attempt_id,schema_version,kind,request_id,state,resource_id) VALUES($1,$2,1,'stop',$3,'admitted',$4)", [operationId, attempt.id, command.request_id, attempt.launch.resource_id]);
-        await tx.query("INSERT INTO outbox(id,runner_id,attempt_id,kind,operation_id) VALUES($1,$2,$3,'effect',$4)", [randomUUID(), attempt.runner_id, attempt.id, operationId]);
-      }
+      const operationId = queued ? null : await admitWorkspaceEffect(tx, attempt, 'stop', command.request_id);
       if (nodeAction) await tx.query("UPDATE nodes SET state='BLOCKED' WHERE id=$1", [attempt.node_id]);
       const state = nodeAction ? await derivedTaskState(tx, task.plan_id!) : 'PLANNING';
       await tx.query('UPDATE tasks SET state=$2,control_version=control_version+1 WHERE id=$1', [task.id, state]);
@@ -121,8 +117,9 @@ export async function executeOwnerAction(db: Database, token: string, command: O
     if (attempt.state !== 'FAILED' && attempt.state !== 'CANCELLED') throw new CommandError('unmet_precondition', 'Attempt is not terminal and blocked');
     if (attempt.recovery_consumed_by) throw new CommandError('unmet_precondition', 'Old Attempt recovery decision was already consumed');
     if (!attempt.process_released || !attempt.process_absent) throw new CommandError('unmet_precondition', 'Old process has not been physically released');
-    if ((await tx.query("SELECT 1 FROM operations WHERE attempt_id=$1 AND state<>'succeeded'", [attempt.id])).rowCount) throw new CommandError('unmet_precondition', 'Old operations remain unresolved');
-    if ((await tx.query("SELECT 1 FROM attempts WHERE owner_key=(SELECT owner_key FROM attempts WHERE id=$1) AND id<>$1 AND (state='QUEUED' OR NOT process_released OR EXISTS (SELECT 1 FROM operations WHERE operations.attempt_id=attempts.id AND operations.state<>'succeeded'))", [attempt.id])).rowCount) throw new CommandError('unmet_precondition', 'Another owner claim remains unresolved');
+    if ((await tx.query("SELECT 1 FROM operations WHERE attempt_id=$1 AND state NOT IN ('succeeded','cancelled')", [attempt.id])).rowCount) throw new CommandError('unmet_precondition', 'Old operations remain unresolved');
+    if ((await tx.query("SELECT 1 FROM workspace_leases WHERE attempt_id=$1 AND state<>'released'", [attempt.id])).rowCount) throw new CommandError('unmet_precondition', 'Old workspace lease remains unresolved');
+    if ((await tx.query("SELECT 1 FROM attempts WHERE owner_key=(SELECT owner_key FROM attempts WHERE id=$1) AND id<>$1 AND (state='QUEUED' OR NOT process_released OR EXISTS (SELECT 1 FROM operations WHERE operations.attempt_id=attempts.id AND operations.state NOT IN ('succeeded','cancelled')))", [attempt.id])).rowCount) throw new CommandError('unmet_precondition', 'Another owner claim remains unresolved');
     if (nodeAction) {
       if (!['RUNNING', 'BLOCKED'].includes(task.state)) throw new CommandError('unmet_precondition', 'Task is not eligible for Node recovery');
       const node = (await tx.query<{ state: string }>('SELECT state FROM nodes WHERE id=$1', [attempt.node_id])).rows[0];
@@ -149,12 +146,13 @@ export async function ownerOperationStatus(db: Database, token: string, taskId: 
   return transaction(db, async (tx) => {
     await authenticateOwner(tx, token);
     if (!(await tx.query('SELECT id FROM tasks WHERE id=$1 FOR SHARE', [taskId])).rowCount) throw new CommandError('denied_scope', 'Unknown Task scope');
-    const row = (await tx.query<{ attempt_id: string; kind: OwnerOperationStatus['kind']; state: OwnerOperationStatus['state']; failure_kind: string | null; end_reason: string | null; process_absent: boolean; process_released: boolean }>(`SELECT o.attempt_id,o.kind,o.state,o.failure_kind,a.end_reason,a.process_absent,a.process_released
+    const row = (await tx.query<{ attempt_id: string; kind: OwnerOperationStatus['kind']; state: OwnerOperationStatus['state']; cancelled_by_operation_id: string | null; failure_kind: string | null; end_reason: string | null; process_absent: boolean; process_released: boolean }>(`SELECT o.attempt_id,o.kind,o.state,o.cancelled_by_operation_id,o.failure_kind,a.end_reason,a.process_absent,a.process_released
       FROM operations o JOIN attempts a ON a.id=o.attempt_id WHERE o.id=$1 AND a.task_id=$2`, [operationId, taskId])).rows[0];
     if (!row) throw new CommandError('denied_scope', 'Operation is outside Task scope');
     return validate<OwnerOperationStatus>('OwnerOperationStatus', { schema_version: 1, task_id: taskId, operation_id: operationId,
       attempt_id: row.attempt_id, kind: row.kind, state: row.state, process_absent: row.process_absent,
       process_released: row.process_released, attention: row.state === 'recovery',
+      ...(row.cancelled_by_operation_id ? { cancelled_by_operation_id: row.cancelled_by_operation_id } : {}),
       ...(row.failure_kind ? { failure_kind: row.failure_kind } : {}), ...(row.end_reason ? { end_reason: row.end_reason } : {}) });
   });
 }

@@ -17,11 +17,18 @@ func git(dir string, args ...string) (string, error) {
 	return gitEnv(dir, nil, args...)
 }
 func gitEnv(dir string, extra []string, args ...string) (string, error) {
+	scopes := []string{filepath.Join(Root, "cache", "fixture.git")}
+	if strings.HasPrefix(filepath.Clean(dir), filepath.Join(Root, "tasks")+string(filepath.Separator)) {
+		scopes = nil
+	}
+	return gitScoped(dir, scopes, extra, args...)
+}
+func gitScoped(dir string, additional, extra []string, args ...string) (string, error) {
 	// Git 2.39's local clone transport removes GIT_CONFIG_PARAMETERS before
 	// upload-pack, so argv -c alone does not authorize cross-account sources.
 	// A private per-command protected config survives that subprocess boundary;
 	// it never modifies the Owner's global config or authorizes a wildcard path.
-	scopes := []string{dir, filepath.Join(Root, "cache", "fixture.git")}
+	scopes := append([]string{dir}, additional...)
 	for i := 0; i+1 < len(args) && args[i] == "-c"; i += 2 {
 		if scope, ok := strings.CutPrefix(args[i+1], "safe.directory="); ok {
 			scopes = append(scopes, scope)
@@ -42,7 +49,7 @@ func gitEnv(dir string, extra []string, args ...string) (string, error) {
 	cmd.Stderr = &stderr
 	output, err := cmd.Output()
 	if err != nil {
-		return "", fmt.Errorf("fixture git operation failed: %s: %w", strings.TrimSpace(stderr.String()), err)
+		return "", fmt.Errorf("git operation failed: %s: %w", strings.TrimSpace(stderr.String()), err)
 	}
 	return strings.TrimSpace(string(output)), nil
 }

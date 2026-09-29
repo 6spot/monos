@@ -158,7 +158,7 @@ export async function handleDiscussionCommand(tx: Transaction, control: Discussi
   const reply = command.payload.reply!; discussionText(reply);
   const preview = command.payload.task_preview;
   if (preview) { discussionText(preview.title); discussionText(preview.specification); if (preview.project_id !== context.project_id) throw new CommandError('denied_scope', 'Preview Project differs from the source context'); }
-  if ((await tx.query("SELECT 1 FROM operations WHERE attempt_id=$1 AND state<>'succeeded'", [attempt.id])).rowCount) throw new CommandError('unmet_precondition', 'Earlier operations must settle before commit');
+  if ((await tx.query("SELECT 1 FROM operations WHERE attempt_id=$1 AND state NOT IN ('succeeded','cancelled')", [attempt.id])).rowCount) throw new CommandError('unmet_precondition', 'Earlier operations must settle before commit');
   const id = randomUUID();
   await tx.query('UPDATE todo_discussion_controls SET sequence=sequence+1 WHERE todo_id=$1', [control.todo_id]);
   await tx.query(`INSERT INTO todo_discussion_messages(id,todo_id,sequence,author,content,source_message_id,source_watermark,project_id,project_context_version,task_preview,requirement_state)

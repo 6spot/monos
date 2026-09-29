@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
 
 	_ "github.com/mattn/go-sqlite3"
 	protocol "monos.local/protocol"
@@ -211,7 +212,7 @@ func (d *DB) BeginEffect(op protocol.Operation) error {
 	if err = json.Unmarshal(oldRaw, &old); err != nil {
 		return err
 	}
-	if old.AttemptID != op.AttemptID || old.DispatchID != op.DispatchID || old.Kind != op.Kind || !wire.SameResource(old.ResourceID, op.ResourceID) || old.RequestID != op.RequestID {
+	if old.AttemptID != op.AttemptID || old.DispatchID != op.DispatchID || old.Kind != op.Kind || !wire.SameResource(old.ResourceID, op.ResourceID) || old.RequestID != op.RequestID || old.SchemaVersion != op.SchemaVersion || !reflect.DeepEqual(old.Workspace, op.Workspace) || !reflect.DeepEqual(old.WorkspaceDigest, op.WorkspaceDigest) {
 		return ErrConflict
 	}
 	return tx.Commit()
@@ -267,8 +268,28 @@ func (d *DB) FinishEffect(r protocol.OperationResult) error {
 	if err != nil {
 		return err
 	}
-	_, err = d.db.Exec("UPDATE effects SET result=? WHERE id=?", raw, r.OperationID)
-	return err
+	tx, err := d.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	var previous []byte
+	if err = tx.QueryRow("SELECT result FROM effects WHERE id=?", r.OperationID).Scan(&previous); err != nil {
+		return err
+	}
+	if previous != nil {
+		var old protocol.OperationResult
+		if err = json.Unmarshal(previous, &old); err != nil {
+			return err
+		}
+		if (old.Success || old.CancelledByOperationID != nil) && !reflect.DeepEqual(old, r) {
+			return ErrConflict
+		}
+	}
+	if _, err = tx.Exec("UPDATE effects SET result=? WHERE id=?", raw, r.OperationID); err != nil {
+		return err
+	}
+	return tx.Commit()
 }
 func (d *DB) Effect(id string) (*protocol.OperationResult, error) {
 	var raw []byte

@@ -56,7 +56,7 @@ export class Discussion {
             await tx.query('UPDATE todo_discussion_controls SET version=version+1 WHERE todo_id=$1', [control.todo_id]);
           } else if (command.name === 'retry_discussion_turn') {
             if (!attempt || !['FAILED', 'CANCELLED'].includes(attempt.state) || !attempt.process_released || !attempt.process_absent || attempt.recovery_consumed_by) throw new CommandError('unmet_precondition', 'Retry requires a settled interrupted Attempt');
-            if ((await tx.query("SELECT 1 FROM operations WHERE attempt_id=$1 AND state<>'succeeded'", [attempt.id])).rowCount) throw new CommandError('unmet_precondition', 'Earlier effects remain unresolved');
+            if ((await tx.query("SELECT 1 FROM operations WHERE attempt_id=$1 AND state NOT IN ('succeeded','cancelled')", [attempt.id])).rowCount) throw new CommandError('unmet_precondition', 'Earlier effects remain unresolved');
             await tx.query('UPDATE attempts SET recovery_consumed_by=$2 WHERE id=$1', [attempt.id, command.request_id]);
             await tx.query('UPDATE todo_discussion_outbox SET done=true WHERE todo_id=$1 AND NOT done', [control.todo_id]);
             await tx.query('UPDATE todo_discussion_controls SET version=version+1,desired_attempt_id=NULL,waiting_reason=NULL WHERE todo_id=$1', [control.todo_id]);
@@ -99,8 +99,8 @@ export class Discussion {
       if (control.source_message_id) {
         const source = (await tx.query<{ sequence: string }>('SELECT sequence FROM todo_discussion_messages WHERE id=$1', [control.source_message_id])).rows[0]!;
         const attempt = control.desired_attempt_id ? (await tx.query<OwnerAttempt>('SELECT * FROM attempts WHERE id=$1', [control.desired_attempt_id])).rows[0] : undefined;
-        const held = (await tx.query("SELECT 1 FROM attempts a WHERE todo_id=$1 AND id<>COALESCE($2,'') AND (NOT process_released OR EXISTS(SELECT 1 FROM operations WHERE attempt_id=a.id AND state<>'succeeded'))", [todoId, control.desired_attempt_id])).rowCount;
-        const unsettled = attempt && (!attempt.process_released || (await tx.query("SELECT 1 FROM operations WHERE attempt_id=$1 AND state<>'succeeded'", [attempt.id])).rowCount);
+        const held = (await tx.query("SELECT 1 FROM attempts a WHERE todo_id=$1 AND id<>COALESCE($2,'') AND (NOT process_released OR EXISTS(SELECT 1 FROM operations WHERE attempt_id=a.id AND state NOT IN ('succeeded','cancelled')))", [todoId, control.desired_attempt_id])).rowCount;
+        const unsettled = attempt && (!attempt.process_released || (await tx.query("SELECT 1 FROM operations WHERE attempt_id=$1 AND state NOT IN ('succeeded','cancelled')", [attempt.id])).rowCount);
         const status = attempt?.state === 'RUNNING' ? 'processing' : attempt && ['FAILED', 'CANCELLED'].includes(attempt.state) ? unsettled ? 'settling' : 'interrupted' : held ? 'settling' : 'queued';
         current = { message_id: control.source_message_id, source_watermark: Number(source.sequence), status, ...(attempt ? { attempt_id: attempt.id } : {}), ...(attempt?.end_reason ? { end_reason: attempt.end_reason } : {}), ...(control.waiting_reason ? { waiting_reason: control.waiting_reason } : {}) };
       }

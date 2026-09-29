@@ -729,7 +729,7 @@
       "name": "capture_todo",
       "payload": {
         "todo_id": "todo-a",
-        "original_capture": " Idea \ud83d\ude00 "
+        "original_capture": " Idea 😀 "
       }
     }
   },
@@ -743,7 +743,7 @@
       "name": "capture_todo",
       "payload": {
         "todo_id": "todo-a",
-        "original_capture": " Idea \ud83d\ude00 ",
+        "original_capture": " Idea 😀 ",
         "project_id": "project-a"
       }
     }
@@ -801,7 +801,7 @@
       "name": "capture_todo",
       "payload": {
         "todo_id": "todo-a",
-        "original_capture": " Idea \ud83d\ude00 "
+        "original_capture": " Idea 😀 "
       },
       "expected_control_version": 1
     }
@@ -831,7 +831,7 @@
       "name": "capture_todo",
       "payload": {
         "todo_id": "todo-a",
-        "original_capture": " Idea \ud83d\ude00 ",
+        "original_capture": " Idea 😀 ",
         "project_id": null
       }
     }
@@ -846,7 +846,7 @@
       "name": "capture_todo",
       "payload": {
         "todo_id": "todo-a",
-        "original_capture": " Idea \ud83d\ude00 "
+        "original_capture": " Idea 😀 "
       }
     }
   },
@@ -871,7 +871,7 @@
     "value": {
       "schema_version": 1,
       "todo_id": "todo-a",
-      "original_capture": "  Idea\nDetail \ud83d\ude00 ",
+      "original_capture": "  Idea\nDetail 😀 ",
       "label": "Idea",
       "archived": false,
       "control_version": 1,
@@ -890,7 +890,7 @@
       "todo": {
         "schema_version": 1,
         "todo_id": "todo-a",
-        "original_capture": "  Idea\nDetail \ud83d\ude00 ",
+        "original_capture": "  Idea\nDetail 😀 ",
         "label": "Idea",
         "archived": false,
         "control_version": 1,
@@ -930,7 +930,7 @@
       "todo": {
         "schema_version": 1,
         "todo_id": "todo-a",
-        "original_capture": "  Idea\nDetail \ud83d\ude00 ",
+        "original_capture": "  Idea\nDetail 😀 ",
         "label": "Idea",
         "archived": false,
         "control_version": 1,
@@ -1234,7 +1234,7 @@
       "name": "submit_discussion_message",
       "payload": {
         "message_id": "m",
-        "content": "  Original \ud83d\ude00  "
+        "content": "  Original 😀  "
       }
     }
   },
@@ -1498,6 +1498,531 @@
     "valid": false,
     "value": {
       "unknown": "value"
+    }
+  },
+  {
+    "name": "canonical workspace descriptor",
+    "schema": "WorkspaceDescriptor",
+    "valid": true,
+    "value": {
+      "schema_version": 1,
+      "workspace_id": "workspace-a",
+      "task_id": "task-a",
+      "project_id": "project-a",
+      "resource_id": "resource-a",
+      "runner_id": "runner-a",
+      "generation": 1,
+      "lease_id": "lease-a",
+      "node_id": "node-a",
+      "node_activation": 1,
+      "open_operation_id": "open-a",
+      "resource": {
+        "resource_id": "resource-a",
+        "repository_identity": "github.com/owner/repo",
+        "remote_url": "https://github.com/owner/repo.git"
+      }
+    }
+  },
+  {
+    "name": "canonical operation bound to workspace",
+    "schema": "Operation",
+    "valid": true,
+    "value": {
+      "schema_version": 1,
+      "operation_id": "open-a",
+      "attempt_id": "attempt-a",
+      "dispatch_id": "dispatch-a",
+      "request_id": "request-a",
+      "kind": "open_workspace",
+      "resource_id": "resource-a",
+      "state": "admitted",
+      "workspace": {
+        "schema_version": 1,
+        "workspace_id": "workspace-a",
+        "task_id": "task-a",
+        "project_id": "project-a",
+        "resource_id": "resource-a",
+        "runner_id": "runner-a",
+        "generation": 1,
+        "lease_id": "lease-a",
+        "node_id": "node-a",
+        "node_activation": 1,
+        "open_operation_id": "open-a",
+        "resource": {
+          "resource_id": "resource-a",
+          "repository_identity": "github.com/owner/repo",
+          "remote_url": "https://github.com/owner/repo.git"
+        }
+      },
+      "workspace_digest": "49fce1fb3a96cb081b9fdae6d3c1f8fa5ce0b5c68c7078c7d10078343fe8d84f"
+    }
+  },
+  {
+    "name": "workspace descriptor requires digest",
+    "schema": "Operation",
+    "valid": false,
+    "value": {
+      "schema_version": 1,
+      "operation_id": "open-a",
+      "attempt_id": "attempt-a",
+      "dispatch_id": "dispatch-a",
+      "request_id": "request-a",
+      "kind": "open_workspace",
+      "resource_id": "resource-a",
+      "state": "admitted",
+      "workspace": {
+        "schema_version": 1,
+        "workspace_id": "workspace-a",
+        "task_id": "task-a",
+        "project_id": "project-a",
+        "resource_id": "resource-a",
+        "runner_id": "runner-a",
+        "generation": 1,
+        "lease_id": "lease-a",
+        "node_id": "node-a",
+        "node_activation": 1,
+        "open_operation_id": "open-a",
+        "resource": {
+          "resource_id": "resource-a",
+          "repository_identity": "github.com/owner/repo",
+          "remote_url": "https://github.com/owner/repo.git"
+        }
+      }
+    }
+  },
+  {
+    "name": "workspace descriptor rejects credentials",
+    "schema": "Operation",
+    "valid": false,
+    "value": {
+      "schema_version": 1,
+      "operation_id": "open-a",
+      "attempt_id": "attempt-a",
+      "dispatch_id": "dispatch-a",
+      "request_id": "request-a",
+      "kind": "open_workspace",
+      "resource_id": "resource-a",
+      "state": "admitted",
+      "workspace": {
+        "schema_version": 1,
+        "workspace_id": "workspace-a",
+        "task_id": "task-a",
+        "project_id": "project-a",
+        "resource_id": "resource-a",
+        "runner_id": "runner-a",
+        "generation": 1,
+        "lease_id": "lease-a",
+        "node_id": "node-a",
+        "node_activation": 1,
+        "open_operation_id": "open-a",
+        "resource": {
+          "resource_id": "resource-a",
+          "repository_identity": "github.com/owner/repo",
+          "remote_url": "https://github.com/owner/repo.git",
+          "token": "forbidden"
+        }
+      },
+      "workspace_digest": "49fce1fb3a96cb081b9fdae6d3c1f8fa5ce0b5c68c7078c7d10078343fe8d84f"
+    }
+  },
+  {
+    "name": "cancelled canonical open retains cancelling stop",
+    "schema": "Operation",
+    "valid": true,
+    "value": {
+      "schema_version": 1,
+      "operation_id": "open-a",
+      "attempt_id": "attempt-a",
+      "dispatch_id": "dispatch-a",
+      "request_id": "request-a",
+      "kind": "open_workspace",
+      "resource_id": "resource-a",
+      "state": "cancelled",
+      "workspace": {
+        "schema_version": 1,
+        "workspace_id": "workspace-a",
+        "task_id": "task-a",
+        "project_id": "project-a",
+        "resource_id": "resource-a",
+        "runner_id": "runner-a",
+        "generation": 1,
+        "lease_id": "lease-a",
+        "node_id": "node-a",
+        "node_activation": 1,
+        "open_operation_id": "open-a",
+        "resource": {
+          "resource_id": "resource-a",
+          "repository_identity": "github.com/owner/repo",
+          "remote_url": "https://github.com/owner/repo.git"
+        }
+      },
+      "workspace_digest": "49fce1fb3a96cb081b9fdae6d3c1f8fa5ce0b5c68c7078c7d10078343fe8d84f",
+      "cancelled_by_operation_id": "stop-a",
+      "result": {
+        "writer_absent": true
+      }
+    }
+  },
+  {
+    "name": "cancelled open requires stop link",
+    "schema": "Operation",
+    "valid": false,
+    "value": {
+      "schema_version": 1,
+      "operation_id": "open-a",
+      "attempt_id": "attempt-a",
+      "dispatch_id": "dispatch-a",
+      "request_id": "request-a",
+      "kind": "open_workspace",
+      "resource_id": "resource-a",
+      "state": "cancelled",
+      "workspace": {
+        "schema_version": 1,
+        "workspace_id": "workspace-a",
+        "task_id": "task-a",
+        "project_id": "project-a",
+        "resource_id": "resource-a",
+        "runner_id": "runner-a",
+        "generation": 1,
+        "lease_id": "lease-a",
+        "node_id": "node-a",
+        "node_activation": 1,
+        "open_operation_id": "open-a",
+        "resource": {
+          "resource_id": "resource-a",
+          "repository_identity": "github.com/owner/repo",
+          "remote_url": "https://github.com/owner/repo.git"
+        }
+      },
+      "workspace_digest": "49fce1fb3a96cb081b9fdae6d3c1f8fa5ce0b5c68c7078c7d10078343fe8d84f",
+      "result": {
+        "writer_absent": true
+      }
+    }
+  },
+  {
+    "name": "unexposed open cancellation result",
+    "schema": "OperationResult",
+    "valid": true,
+    "value": {
+      "operation_id": "open-a",
+      "attempt_id": "attempt-a",
+      "success": false,
+      "cancelled_by_operation_id": "stop-a",
+      "result": {
+        "writer_absent": true
+      }
+    }
+  },
+  {
+    "name": "cancelled result rejects success",
+    "schema": "OperationResult",
+    "valid": false,
+    "value": {
+      "operation_id": "open-a",
+      "attempt_id": "attempt-a",
+      "success": true,
+      "cancelled_by_operation_id": "stop-a",
+      "result": {
+        "writer_absent": true
+      }
+    }
+  },
+  {
+    "name": "cancelled result rejects failure_kind",
+    "schema": "OperationResult",
+    "valid": false,
+    "value": {
+      "operation_id": "open-a",
+      "attempt_id": "attempt-a",
+      "success": false,
+      "cancelled_by_operation_id": "stop-a",
+      "result": {
+        "writer_absent": true
+      },
+      "failure_kind": "recoverable"
+    }
+  },
+  {
+    "name": "cancelled result cannot grant workspace",
+    "schema": "OperationResult",
+    "valid": false,
+    "value": {
+      "operation_id": "open-a",
+      "attempt_id": "attempt-a",
+      "success": false,
+      "cancelled_by_operation_id": "stop-a",
+      "result": {
+        "writer_absent": true,
+        "workspace_id": "workspace-a"
+      }
+    }
+  },
+  {
+    "name": "cancelled result proves absence",
+    "schema": "OperationResult",
+    "valid": false,
+    "value": {
+      "operation_id": "open-a",
+      "attempt_id": "attempt-a",
+      "success": false,
+      "cancelled_by_operation_id": "stop-a",
+      "result": {
+        "writer_absent": false
+      }
+    }
+  },
+  {
+    "name": "verified anonymous repository access",
+    "schema": "GitHubRepositoryAccessResult",
+    "valid": true,
+    "value": {
+      "schema_version": 1,
+      "operation_id": "open-a",
+      "workspace_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "remote_url": "https://github.com/owner/repo.git",
+      "provider_metadata": {
+        "github": {
+          "repository_id": "123"
+        }
+      },
+      "default_branch": "main",
+      "authentication": {
+        "kind": "anonymous"
+      }
+    }
+  },
+  {
+    "name": "ephemeral scoped repository access",
+    "schema": "GitHubRepositoryAccessResult",
+    "valid": true,
+    "value": {
+      "schema_version": 1,
+      "operation_id": "open-a",
+      "workspace_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "remote_url": "https://github.com/owner/repo.git",
+      "provider_metadata": {
+        "github": {
+          "repository_id": "123"
+        }
+      },
+      "default_branch": "main",
+      "authentication": {
+        "kind": "github_installation",
+        "token": "synthetic-token",
+        "expires_at": "2026-09-30T12:00:00Z"
+      }
+    }
+  },
+  {
+    "name": "anonymous access rejects token",
+    "schema": "GitHubRepositoryAccessResult",
+    "valid": false,
+    "value": {
+      "schema_version": 1,
+      "operation_id": "open-a",
+      "workspace_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "remote_url": "https://github.com/owner/repo.git",
+      "provider_metadata": {
+        "github": {
+          "repository_id": "123"
+        }
+      },
+      "default_branch": "main",
+      "authentication": {
+        "kind": "anonymous",
+        "token": "wrong"
+      }
+    }
+  },
+  {
+    "name": "canonical task reservation dispatch",
+    "schema": "Dispatch",
+    "valid": true,
+    "value": {
+      "dispatch_id": "dispatch-a",
+      "attempt_id": "attempt-a",
+      "runner_id": "runner-a",
+      "task_id": "task-a",
+      "kind": "node",
+      "fencing_generation": 1,
+      "node_activation": 1,
+      "control_version": 0,
+      "runtime_id": "opencode",
+      "model": "opencode/longcat-2.5-preview-free",
+      "prompt": "fixture only",
+      "source_watermark": 1,
+      "mutation_allowed": true,
+      "process_released": false,
+      "workspace_reservations": {
+        "project_id": "project-a",
+        "configuration_version": 1,
+        "resources": [
+          {
+            "resource_id": "resource-a",
+            "workspace_id": "workspace-a"
+          }
+        ]
+      },
+      "node_id": "node-a"
+    }
+  },
+  {
+    "name": "canonical dispatch forbids fixture resource",
+    "schema": "Dispatch",
+    "valid": false,
+    "value": {
+      "dispatch_id": "dispatch-a",
+      "attempt_id": "attempt-a",
+      "runner_id": "runner-a",
+      "task_id": "task-a",
+      "kind": "node",
+      "fencing_generation": 1,
+      "node_activation": 1,
+      "control_version": 0,
+      "runtime_id": "opencode",
+      "model": "opencode/longcat-2.5-preview-free",
+      "prompt": "fixture only",
+      "source_watermark": 1,
+      "mutation_allowed": true,
+      "process_released": false,
+      "workspace_reservations": {
+        "project_id": "project-a",
+        "configuration_version": 1,
+        "resources": [
+          {
+            "resource_id": "resource-a",
+            "workspace_id": "workspace-a"
+          }
+        ]
+      },
+      "node_id": "node-a",
+      "resource_id": "fixture"
+    }
+  },
+  {
+    "name": "canonical Planner cannot reserve writable paths",
+    "schema": "Dispatch",
+    "valid": false,
+    "value": {
+      "dispatch_id": "dispatch-a",
+      "attempt_id": "attempt-a",
+      "runner_id": "runner-a",
+      "task_id": "task-a",
+      "kind": "planner",
+      "fencing_generation": 1,
+      "node_activation": 0,
+      "control_version": 0,
+      "runtime_id": "opencode",
+      "model": "opencode/longcat-2.5-preview-free",
+      "prompt": "fixture only",
+      "source_watermark": 1,
+      "mutation_allowed": true,
+      "process_released": false,
+      "workspace_reservations": {
+        "project_id": "project-a",
+        "configuration_version": 1,
+        "resources": [
+          {
+            "resource_id": "resource-a",
+            "workspace_id": "workspace-a"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "name": "canonical repository-free Planner",
+    "schema": "Dispatch",
+    "valid": true,
+    "value": {
+      "dispatch_id": "dispatch-a",
+      "attempt_id": "attempt-a",
+      "runner_id": "runner-a",
+      "task_id": "task-a",
+      "kind": "planner",
+      "fencing_generation": 1,
+      "node_activation": 0,
+      "control_version": 0,
+      "runtime_id": "opencode",
+      "model": "opencode/longcat-2.5-preview-free",
+      "prompt": "fixture only",
+      "source_watermark": 1,
+      "mutation_allowed": true,
+      "process_released": false,
+      "workspace_reservations": {
+        "project_id": "project-a",
+        "configuration_version": 1,
+        "resources": []
+      }
+    }
+  },
+  {
+    "name": "repository access attention enum",
+    "schema": "RepositoryAccessError",
+    "valid": true,
+    "value": {
+      "schema_version": 1,
+      "reason": "credentials_missing"
+    }
+  },
+  {
+    "name": "repository access attention rejects raw errors",
+    "schema": "RepositoryAccessError",
+    "valid": false,
+    "value": {
+      "schema_version": 1,
+      "reason": "credentials_missing",
+      "message": "raw token"
+    }
+  },
+  {
+    "name": "Stop recovered workspace records paired target provenance",
+    "schema": "WorkspaceMetadata",
+    "valid": true,
+    "value": {
+      "generation": 1,
+      "storage_id": "storage",
+      "lease_id": "lease",
+      "repository_identity": "github.com/example/repo",
+      "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "target_branch": "main",
+      "target_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "finalized_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "recovered_by_stop_operation_id": "stop",
+      "target_observation_lease_id": "prior-lease"
+    }
+  },
+  {
+    "name": "Stop recovered workspace rejects lone recovered_by_stop_operation_id",
+    "schema": "WorkspaceMetadata",
+    "valid": false,
+    "value": {
+      "generation": 1,
+      "storage_id": "storage",
+      "lease_id": "lease",
+      "repository_identity": "github.com/example/repo",
+      "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "target_branch": "main",
+      "target_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "finalized_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "recovered_by_stop_operation_id": "stop"
+    }
+  },
+  {
+    "name": "Stop recovered workspace rejects lone target_observation_lease_id",
+    "schema": "WorkspaceMetadata",
+    "valid": false,
+    "value": {
+      "generation": 1,
+      "storage_id": "storage",
+      "lease_id": "lease",
+      "repository_identity": "github.com/example/repo",
+      "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "target_branch": "main",
+      "target_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "finalized_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "target_observation_lease_id": "prior-lease"
     }
   }
 ]

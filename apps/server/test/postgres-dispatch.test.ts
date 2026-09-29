@@ -31,7 +31,7 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('durable selected Attem
     const expected = await transaction(db, (tx) => initializeTask(tx, { task_id, specification_id: randomUUID(), specification: { title: 'dispatch test' } }));
     // Public Owner Start is a later command; this is the authenticated-system fixture.
     await db.pool.query("UPDATE tasks SET state='RUNNING' WHERE id=$1", [task_id]);
-    return { task_id, expected, attempt_id: randomUUID(), runner_id: runnerId, kind: 'planner', resource_id: 'repo', runtime_id: 'opencode', model: 'opencode/mimo-v2.6-flash-free', prompt: 'fake adapter; do not invoke a model', source_watermark: 1 };
+    return { task_id, expected, attempt_id: randomUUID(), runner_id: runnerId, kind: 'planner', legacy_probe: true, resource_id: 'repo', runtime_id: 'opencode', model: 'opencode/mimo-v2.6-flash-free', prompt: 'fake adapter; do not invoke a model', source_watermark: 1 };
   }
   async function enqueue(value: QueueInput) { return transaction(db, (tx) => queue.enqueue(tx, value)); }
 

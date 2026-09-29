@@ -27,6 +27,11 @@ export function digest(value: string): string {
   return createHash('sha256').update(value, 'utf8').digest('hex');
 }
 
+export function workspaceId(taskId: string, resourceId: string): string {
+  validate('Id', taskId); validate('Id', resourceId);
+  return 'ws_' + digest(canonicalJSON([taskId, resourceId]));
+}
+
 export function submission(envelope: CommandEnvelope): CommandSubmission {
   validateEnvelope(envelope);
   const envelope_json = canonicalJSON(envelope);

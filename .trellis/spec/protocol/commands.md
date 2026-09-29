@@ -29,6 +29,11 @@ The bundled [monos](../../../runner/cmd/monos/main.go) supports immutable retry/
 - Same principal/scope/request ID and digest replay the existing result; changed command/payload conflicts.
 - Authenticated receipt lookup precedes new-effect version checks.
 - Return committed result, admitted operation or deterministic error distinctly.
+- Canonical workspace operations bind an immutable descriptor/digest and physical
+  lease. A cancelled never-materialized open projects its original receipt as an
+  error linked to the exact admitted Stop; `cancelled` is terminal for recovery
+  queues. Stop-only recovery of initialized work carries paired old-target
+  provenance, never an assertion that a failed fetch refreshed the repository.
 - Retry loads the immutable original payload; no mutable-file reread or new ID after uncertainty.
 - Revoked Attempts cannot make new effects. Scoped recovery reads never renew old mutation authority.
 - Product naming changes do not rewrite stored envelopes, digests or process identities. `monos` is the current CLI and `MONOS_SOCKET` its local-channel setting; historical raw evidence retains original bytes. See [deployment upgrades](../../../docs/12-product-naming-and-upgrades.md) before moving existing storage.

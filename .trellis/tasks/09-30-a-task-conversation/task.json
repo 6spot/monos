@@ -1,0 +1,29 @@
+{
+  "id": "a-task-conversation",
+  "name": "a-task-conversation",
+  "title": "Ordered Task Conversation and guidance",
+  "description": "Persist ordered Task input and canonical replies with durable guidance obligations and explicit recovery exits.",
+  "status": "planning",
+  "dev_type": "backend",
+  "scope": null,
+  "package": null,
+  "priority": "P2",
+  "creator": "me",
+  "assignee": "me",
+  "createdAt": "2026-09-30",
+  "completedAt": null,
+  "branch": "feat/stage-a-boundary-probe",
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "09-28-a-task-execution",
+  "relatedFiles": [],
+  "notes": "",
+  "meta": {
+    "roadmap_level": "leaf",
+    "planning_maturity": "backlog"
+  }
+}

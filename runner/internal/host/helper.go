@@ -31,6 +31,9 @@ type Manifest struct {
 
 func manifestPath(id string) string { return filepath.Join(Root, "launch", id+".json") }
 func ValidateRequest(r Request) error {
+	if r.RepositoryAccess != nil && (r.Action != "effect" || r.Operation == nil || r.Operation.Kind != protocol.KindOpenWorkspace || r.Operation.Workspace == nil) {
+		return fmt.Errorf("repository access only belongs to canonical open")
+	}
 	if r.Action == "discover" {
 		if r.AttemptID != "" || r.Dispatch != nil || r.Operation != nil {
 			return fmt.Errorf("discovery accepts no execution fields")
@@ -221,7 +224,7 @@ func createTraversalRoot(path string, uid, gid int) error {
 	return nil
 }
 func executionDirectories(d protocol.Dispatch) []string {
-	if d.TodoID != nil {
+	if d.TodoID != nil || d.WorkspaceReservations != nil {
 		return []string{"scratch", "data", "cache", "state", "tmp", "config"}
 	}
 	return []string{"scratch", "workspace", "common", "data", "cache", "state", "tmp", "config"}
@@ -249,6 +252,9 @@ func prepare(d protocol.Dispatch) error {
 		return err
 	}
 	if err = trustedDir(base, 0); err != nil {
+		return err
+	}
+	if err = reserveWorkspaces(d, uid, gid); err != nil {
 		return err
 	}
 	for _, name := range executionDirectories(d) {
@@ -534,6 +540,38 @@ func Handle(ctx context.Context, r Request) (Status, error) {
 		}
 	}
 	defer syscall.Flock(int(lock.Fd()), syscall.LOCK_UN)
+	if r.Action == "effect" && r.Operation.Workspace != nil {
+		m, e := readManifest(r.AttemptID)
+		if e != nil {
+			return Status{}, e
+		}
+		if e = ValidateEffectScope(m.Dispatch, *r.Operation); e != nil {
+			return Status{}, e
+		}
+		if m.Revoked || !m.Launched {
+			return Status{}, fmt.Errorf("no launched Attempt owns workspace effect")
+		}
+		if r.Operation.Kind == protocol.Stop {
+			// Physical Agent stop must remain reachable when workspace storage or
+			// durable marker writes fail. Such failure preserves recovery/lease
+			// ownership; it is never a successful workspace settlement.
+			stopped, stopErr := stopWorkspaceAgentFirst(func() (Status, error) { return stop(ctx, r.AttemptID) }, func() error { return saveRecord(workspaceStopPath(r.Operation.Workspace.LeaseID), *r.Operation) })
+			if e = syscall.Flock(int(lock.Fd()), syscall.LOCK_UN); e != nil {
+				return stopped, e
+			}
+			if stopErr != nil {
+				workerErr := settleLeaseWorkers(ctx, *r.Operation)
+				return stopped, errors.Join(stopErr, workerErr)
+			}
+			return runWorkspaceEffect(ctx, *r.Operation, r.RepositoryAccess)
+		}
+		// Canonical effects never hold the helper-wide lock across Git/network
+		// waits. Their durable record and specific writer locks own recovery.
+		if e = syscall.Flock(int(lock.Fd()), syscall.LOCK_UN); e != nil {
+			return Status{}, e
+		}
+		return runWorkspaceEffect(ctx, *r.Operation, r.RepositoryAccess)
+	}
 	switch r.Action {
 	case "status":
 		return status(ctx, r.AttemptID)

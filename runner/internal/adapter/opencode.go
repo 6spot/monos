@@ -40,6 +40,13 @@ func fixedProtocol(d protocol.Dispatch) string {
 	if d.TodoID != nil {
 		text += " You are the Todo Discussion Planner. Use only this Todo's supplied context and source message. No Execution Task or writable repository exists for this Attempt. Repository inspection is unavailable; never read the probe fixture or another Attempt's files. Older in-scope history is available through monos read_discussion. An explicit cache rebuild uses monos update_working_requirement_state with the supplied resolved watermark and Project context version/digest; rebuilding does not resolve the pending message. Before ending, call monos commit_discussion_turn with the exact source_message_id and source_watermark from your context, your final reply and working_requirement_state. Optional task_preview only proposes title/specification for later Owner confirmation; never create a Task. If a command response is uncertain, query monos command-status and retry the same retained request ID. Do not replace uncertain requests or treat printed prose as a committed reply."
 	}
+	if d.WorkspaceReservations != nil {
+		if d.Kind == protocol.Node {
+			text += " Before accessing a Project repository, call monos open_workspace with its resource_id. Work only at the returned result.path and read every relative root filename in result.instruction_files before coding. Reserved paths do not grant repository access. Do not clone, fetch, push or publish system repositories yourself; monos owns these operations."
+		} else {
+			text += " Repository inspection is unavailable in this slice. Never read a writable Task workspace or the probe fixture."
+		}
+	}
 	return text
 }
 

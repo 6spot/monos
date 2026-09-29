@@ -67,6 +67,17 @@ else:
         directory(root/name,owner=service.pw_uid,group=group)
     for name in ['service','results']:
         if (root/name).stat().st_mode & 0o077: raise SystemExit('private directory became accessible')
+    for name,owner,mode in [('tasks',0,0o755),('launch/workspaces',0,0o755),('cache/resources',service.pw_uid,0o750),('service/workspace-locks',service.pw_uid,0o700),('service/workspace-operations',service.pw_uid,0o700)]:
+        path=root/name
+        if os.path.lexists(path):
+            directory(path,owner=owner)
+            if path.stat().st_mode & 0o777 != mode: raise SystemExit('workspace directory mode changed')
+    ids=[root/'launch/storage-id',root/'service/storage-id']
+    if any(os.path.lexists(path) for path in ids):
+        for path,owner in zip(ids,[0,service.pw_uid]): regular(path,owner)
+        if ids[0].read_bytes()!=ids[1].read_bytes(): raise SystemExit('workspace storage identities disagree')
+    elif (root/'launch/workspaces').exists() and any((root/'launch/workspaces').glob('*.json')):
+        raise SystemExit('initialized workspace storage identity is missing')
     for path in targets: regular(pathlib.Path(path))
     if os.path.lexists('/run/monos-probe'):
         directory(pathlib.Path('/run/monos-probe'),owner=service.pw_uid,group=group)
@@ -102,6 +113,27 @@ install -d -o root -g root -m 0755 /var/lib/monos-probe /var/lib/monos-probe/lau
 install -d -o root -g monos-probe-read -m 0750 /var/lib/monos-probe/logs
 install -d -o monos-probe -g monos-probe-read -m 0700 /var/lib/monos-probe/service /var/lib/monos-probe/results
 install -d -o monos-probe -g monos-probe-read -m 0750 /var/lib/monos-probe/cache /var/lib/monos-probe/inspection
+install -d -o root -g root -m 0755 /var/lib/monos-probe/tasks /var/lib/monos-probe/launch/workspaces
+install -d -o monos-probe -g monos-probe-read -m 0750 /var/lib/monos-probe/cache/resources
+install -d -o monos-probe -g monos-probe-read -m 0700 /var/lib/monos-probe/service/workspace-locks /var/lib/monos-probe/service/workspace-operations
+python3 - <<'PY'
+import os, pathlib, pwd, grp, uuid
+root=pathlib.Path('/var/lib/monos-probe')
+paths=[root/'launch/storage-id',root/'service/storage-id']
+if not any(p.exists() for p in paths):
+    value=(str(uuid.uuid4())+'\n').encode()
+    for path,uid,mode in [(paths[0],0,0o644),(paths[1],pwd.getpwnam('monos-probe').pw_uid,0o600)]:
+        fd=os.open(path,os.O_CREAT|os.O_EXCL|os.O_WRONLY,mode)
+        try:
+            os.fchmod(fd,mode)
+            os.fchown(fd,uid,grp.getgrnam('monos-probe-read').gr_gid)
+            os.write(fd,value)
+            os.fsync(fd)
+        finally: os.close(fd)
+        fd=os.open(path.parent,os.O_RDONLY)
+        try: os.fsync(fd)
+        finally: os.close(fd)
+PY
 install -d -o root -g monos-probe-read -m 0750 /etc/monos-probe
 install -d -o root -g root -m 0755 /usr/local/libexec
 install -o root -g root -m 0755 "$artifacts/monos" /usr/local/bin/monos

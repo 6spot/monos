@@ -55,7 +55,11 @@ async function saveProject(tx: Transaction, project: ProjectConfiguration): Prom
   // Admission itself reserves use: an uncertain workspace operation is not safe
   // to remove. An inspection snapshot alone does not reserve a Task Workspace.
   if ((await tx.query(`SELECT 1 FROM operations o JOIN attempts a ON a.id=o.attempt_id JOIN tasks t ON t.id=a.task_id
-    WHERE o.resource_id=ANY($1::text[]) AND o.kind='open_workspace' AND (t.state NOT IN ('COMPLETED','CANCELLED') OR NOT a.process_released OR o.state<>'succeeded') LIMIT 1`, [removed])).rowCount) throw new CommandError('unmet_precondition', 'An unfinished Task still has a workspace for this resource');
+    WHERE o.resource_id=ANY($1::text[]) AND o.kind='open_workspace' AND o.workspace_descriptor IS NULL AND (t.state NOT IN ('COMPLETED','CANCELLED') OR NOT a.process_released OR o.state NOT IN ('succeeded','cancelled')) LIMIT 1`, [removed])).rowCount) throw new CommandError('unmet_precondition', 'An unfinished Task still has a workspace for this resource');
+  if ((await tx.query(`SELECT 1 FROM task_workspaces w JOIN tasks t ON t.id=w.task_id WHERE w.resource_id=ANY($1::text[])
+    AND ((w.ever_materialized AND t.state NOT IN ('COMPLETED','CANCELLED'))
+      OR EXISTS(SELECT 1 FROM workspace_leases l WHERE l.workspace_id=w.id AND l.state<>'released')
+      OR EXISTS(SELECT 1 FROM operations o WHERE o.workspace_descriptor->>'workspace_id'=w.id AND o.state NOT IN ('succeeded','cancelled'))) LIMIT 1`, [removed])).rowCount) throw new CommandError('unmet_precondition', 'An unfinished Task or workspace lease still uses this resource');
 
   await tx.query('INSERT INTO projects(id,name,context,archived) VALUES($1,$2,$3,$4) ON CONFLICT(id) DO UPDATE SET name=$2,context=$3,archived=$4', [project.id, project.name, project.context, project.archived]);
   await tx.query('DELETE FROM project_roles WHERE project_id=$1', [project.id]);
