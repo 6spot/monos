@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 12
-- **Last Active**: 2026-09-29
+- **Total Sessions**: 13
+- **Last Active**: 2026-09-30
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~280 | Active |
+| `journal-1.md` | ~302 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 13 | 2026-09-30 | Todo capture and lifecycle | `9c3ce55c0bd58dbe019290d9a32ebb2082f60408` | `feat/stage-a-boundary-probe` |
 | 12 | 2026-09-29 | Production Runtime integration accepted | `b0b57bf` | `feat/stage-a-boundary-probe` |
 | 11 | 2026-09-29 | Owner Runtime Stop and Reboot Recovery | `39b5dad`, `1c1926c` | `feat/stage-a-boundary-probe` |
 | 10 | 2026-09-29 | Production Runner execution logs | `4e63ff1`, `34a3f0e` | `feat/stage-a-boundary-probe` |

@@ -278,3 +278,25 @@ Verified real shared-slot queue, Node/Planner ordered logs and missing-result St
 ### Status
 
 [OK] **Completed**
+
+
+## Session 13: Todo capture and lifecycle
+<!-- trellis-session: v=2 fp=0868dd78efeb84b6 -->
+
+**Date**: 2026-09-30
+**Task**: Todo capture and lifecycle
+**Branch**: `feat/stage-a-boundary-probe`
+
+### Summary
+
+Implemented exact model-free Todo capture, versioned Project assignment and archive/restore, immutable command recovery and Inbox UI. 109 local, 108 PostgreSQL and 12 browser tests pass; Linux Go race/vet pass. Deployed final UI to existing test service and verified Runner reconnect. Continue ordered Todo Planner discussion.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `9c3ce55c0bd58dbe019290d9a32ebb2082f60408` | feat: add Todo capture and lifecycle workspace |
+
+### Status
+
+[OK] **Completed**
