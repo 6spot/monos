@@ -135,6 +135,17 @@ func prepareEnvelope(d protocol.Dispatch, r Request) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	nodeCommand := r.Name == "publish_artifact" || r.Name == "read_artifact" || r.Name == "block_node"
+	if nodeCommand && d.NodeExecutionSource == nil {
+		return nil, fmt.Errorf("command requires canonical Node execution source")
+	}
+	if d.NodeExecutionSource != nil {
+		switch r.Name {
+		case "publish_artifact", "read_artifact", "block_node", "complete_node", "open_workspace":
+		default:
+			return nil, fmt.Errorf("command unavailable to Node execution")
+		}
+	}
 	initialOutcome := r.Name == protocol.PublishExecutionPlan || r.Name == protocol.RaisePlanningIssue
 	if initialOutcome {
 		if d.TaskPlanningSource == nil {

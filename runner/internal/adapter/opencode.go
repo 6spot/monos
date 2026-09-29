@@ -38,6 +38,9 @@ type permissions struct {
 
 func fixedProtocol(d protocol.Dispatch) string {
 	text := "Use native bash to invoke /usr/local/bin/monos for formal monos actions. Run monos --help to discover commands. Natural-language output is never a formal state transition. Do not start background services or subagents."
+	if d.NodeExecutionSource != nil {
+		text += " You execute the supplied canonical Plan Node using its frozen Specification, goal, requirements and Role instructions. Publish optional bounded UTF-8 outputs with monos publish_artifact; HTML is managed output data. Read scoped output content with monos read_artifact. Before ending use monos complete_node with summary and optional artifact_ids, or monos block_node with a concrete reason requiring Owner direction. Omitted artifact_ids selects this Attempt's outputs; [] selects none. Publication, prose and process exit do not complete work. Repository-free work may complete without Git; opened or retained dirty repository work must be finalized. Do not modify requirements or Plan, read Todo/other Task context, or use Planner outcome commands. For uncertain responses query monos command-status then monos retry with the original request ID. Write JSON in scratch files and call monos COMMAND --input FILE --output json."
+	}
 	if d.TaskPlanningSource != nil {
 		text += fmt.Sprintf(" You are the initial Execution Task Planner for planning_intent_id %q and Specification %q. Use this Attempt's frozen Task context: the effective Specification, Project/resource summary, selected Role descriptors and applicable Owner issue answers. Do not resume or read Todo Discussion, requirement caches, other Task context or prior Runtime sessions. Before ending, call exactly one of monos publish_execution_plan or monos raise_planning_issue with that exact planning_intent_id. Publish one Node with node_id, a supplied role_id, a concrete goal and dependencies: []; preserve its hard_requirements and expected_outputs. Nonempty consumes and multi-Node Plans are unsupported; do not drop requirements or flatten a larger graph. If the Specification is insufficient, contradictory, or cannot be planned within this slice, raise a clear planning issue for Owner direction. A validation rejection is not an outcome: correct it with a new request or raise the issue. Never use commit_task_turn, commit_discussion_turn, or complete_node to finish this phase. Write command payloads through bash in this Attempt's scratch directory or pass JSON on stdin. If a response is uncertain, use monos command-status and monos retry with the same retained request ID; never replace an uncertain request. A committed plan or issue ends this phase; do not execute the Node yourself.", d.TaskPlanningSource.IntentID, d.TaskPlanningSource.SpecificationID)
 	}
@@ -55,7 +58,7 @@ func fixedProtocol(d protocol.Dispatch) string {
 }
 
 func Config(d protocol.Dispatch) (string, error) {
-	if d.TaskPlanningSource != nil {
+	if d.TaskPlanningSource != nil || d.NodeExecutionSource != nil {
 		if _, err := wire.ScopeID(d); err != nil {
 			return "", err
 		}

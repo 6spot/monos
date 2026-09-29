@@ -297,6 +297,9 @@ func (d *Daemon) effect(ctx context.Context, op protocol.Operation) error {
 		return err
 	}
 	if old != nil && (old.Success || old.CancelledByOperationID != nil) {
+		if op.Kind == protocol.KindCompleteNode && old.CancelledByOperationID != nil {
+			return d.replayCompletionSettlement(ctx, op, *old.CancelledByOperationID)
+		}
 		return d.Control.Send(ctx, protocol.Frame{Type: protocol.TypeOperationResult, OperationResult: old})
 	}
 	s, err := d.DB.Start(op.AttemptID)
@@ -331,13 +334,33 @@ func (d *Daemon) effect(ctx context.Context, op protocol.Operation) error {
 		return err
 	}
 	result := protocol.OperationResult{AttemptID: op.AttemptID, OperationID: op.OperationID}
+	var original *protocol.Operation
+	if op.Kind == protocol.SettleCompletion {
+		if op.CompletionOperationID == nil {
+			return fmt.Errorf("settlement target missing")
+		}
+		value, e := d.DB.Operation(*op.CompletionOperationID)
+		if errors.Is(e, sql.ErrNoRows) {
+			e = d.Control.Get(ctx, "/v1/recovery/operations/"+*op.CompletionOperationID, "Operation", &value)
+			if e == nil {
+				e = d.DB.BeginEffect(value)
+			}
+		}
+		if e != nil {
+			return e
+		}
+		if e = wire.ValidateCompletionTarget(op, value); e != nil {
+			return e
+		}
+		original = &value
+	}
 	var status host.Status
 	if op.Kind == protocol.KindInspectRepository {
 		var snapshot protocol.EffectResult
 		snapshot, err = host.Inspect(op.AttemptID)
 		status = host.Status{Known: true, Result: &snapshot}
 	} else {
-		status, err = d.Host.Call(ctx, host.Request{Action: "effect", AttemptID: op.AttemptID, Operation: &op})
+		status, err = d.Host.Call(ctx, host.Request{Action: "effect", AttemptID: op.AttemptID, Operation: &op, CompletionOperation: original})
 		if err == nil && status.NeedsRepositoryAccess {
 			var access protocol.GitHubRepositoryAccessResult
 			access, err = d.Control.RepositoryAccess(ctx, op)
@@ -345,6 +368,11 @@ func (d *Daemon) effect(ctx context.Context, op protocol.Operation) error {
 				status, err = d.Host.Call(ctx, host.Request{Action: "effect", AttemptID: op.AttemptID, Operation: &op, RepositoryAccess: &access})
 			}
 		}
+	}
+	if err == nil && op.Kind == protocol.KindCompleteNode && status.CancelledByOperationID != nil {
+		// A root pair may precede a failed export. Never publish its original
+		// cancellation alone: resume the target pair's export and atomic journal.
+		return d.replayCompletionSettlement(ctx, op, *status.CancelledByOperationID)
 	}
 	if err == nil && op.Workspace != nil && status.PriorOperationResult != nil {
 		prior := status.PriorOperationResult
@@ -371,19 +399,37 @@ func (d *Daemon) effect(ctx context.Context, op protocol.Operation) error {
 			return e
 		}
 	}
-	if err == nil && op.Workspace != nil && status.Result != nil {
+	if err == nil && op.Kind == protocol.SettleCompletion {
+		if status.Result == nil || status.CompletionSettlement == nil {
+			return fmt.Errorf("missing completion settlement pair")
+		}
+		pair := protocol.OperationResult{AttemptID: op.AttemptID, OperationID: op.OperationID, Success: true, Result: *status.Result, CompletionSettlement: status.CompletionSettlement}
+		if e := wire.ValidateCompletionPair(op, *original, pair); e != nil {
+			return e
+		}
+		if status.CompletionSettlement.Disposition == protocol.AlreadyFinalized {
+			err = host.ExportWorkspace(*original, status.CompletionSettlement.CompletionResult.Result)
+		} else {
+			err = host.ExportWorkspace(op, *status.Result)
+		}
+	} else if err == nil && op.Workspace != nil && status.Result != nil {
 		err = host.ExportWorkspace(op, *status.Result)
-	} else if err == nil && op.Kind == protocol.KindCompleteNode && status.Result != nil && status.Result.GitCommit != nil && status.Result.GitTree != nil {
+	} else if err == nil && op.Kind == protocol.KindCompleteNode && op.RepositoryFree == nil && status.Result != nil && status.Result.GitCommit != nil && status.Result.GitTree != nil {
 		err = host.Export(op.AttemptID, op.OperationID, *status.Result.GitCommit, *status.Result.GitTree)
 	}
 	if err == nil && !status.Known {
 		err = fmt.Errorf("effect ownership unresolved")
 	}
-	if err == nil && (op.Kind == protocol.Stop || op.Kind == protocol.KindCompleteNode) && status.Populated {
+	if err == nil && (op.Kind == protocol.Stop || op.Kind == protocol.KindCompleteNode || op.Kind == protocol.SettleCompletion) && status.Populated {
 		err = fmt.Errorf("writer absence unresolved")
 	}
-	if err == nil && op.Kind == protocol.KindCompleteNode && (status.Result == nil || status.Result.GitCommit == nil || status.Result.GitTree == nil) {
+	if err == nil && op.Kind == protocol.KindCompleteNode && op.RepositoryFree == nil && status.CancelledByOperationID == nil && (status.Result == nil || status.Result.GitCommit == nil || status.Result.GitTree == nil) {
 		err = fmt.Errorf("missing finalized Git evidence")
+	}
+	if err == nil && op.RepositoryFree != nil {
+		if status.Result == nil || status.Result.WriterAbsent == nil || !*status.Result.WriterAbsent || status.Result.GitCommit != nil || status.Result.GitTree != nil || status.Result.WorkspaceID != nil || status.Result.WorkspaceMetadata != nil || status.Result.Path != nil || status.Result.InstructionFiles != nil {
+			err = fmt.Errorf("invalid repository-free completion evidence")
+		}
 	}
 	if err != nil {
 		message := "host effect unresolved; retained for recovery"
@@ -409,10 +455,11 @@ func (d *Daemon) effect(ctx context.Context, op protocol.Operation) error {
 	} else {
 		result.Success = status.CancelledByOperationID == nil
 		result.CancelledByOperationID = status.CancelledByOperationID
+		result.CompletionSettlement = status.CompletionSettlement
 		if status.Result != nil {
 			result.Result = *status.Result
 		}
-		if op.Kind == protocol.Stop || op.Kind == protocol.KindCompleteNode {
+		if op.Kind == protocol.Stop || op.Kind == protocol.KindCompleteNode || op.Kind == protocol.SettleCompletion {
 			absent := !status.Populated
 			result.Result.WriterAbsent = &absent
 			if err = d.recordEffectAbsence(op); err != nil {

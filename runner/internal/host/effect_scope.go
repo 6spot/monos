@@ -13,6 +13,20 @@ func ValidateEffectScope(d protocol.Dispatch, op protocol.Operation) error {
 	if d.AttemptID != op.AttemptID || d.DispatchID != op.DispatchID {
 		return fmt.Errorf("effect dispatch conflict")
 	}
+	if d.NodeExecutionSource != nil {
+		if _, err := wire.ScopeID(d); err != nil {
+			return err
+		}
+	}
+	if op.RepositoryFree != nil {
+		if !*op.RepositoryFree || op.Kind != protocol.KindCompleteNode || d.NodeExecutionSource == nil || op.CompletionManifestDigest == nil || op.ResourceID != nil || op.Workspace != nil || op.WorkspaceDigest != nil {
+			return fmt.Errorf("repository-free completion requires canonical Node source and no workspace")
+		}
+		return nil
+	}
+	if op.Kind == protocol.SettleCompletion && (d.NodeExecutionSource == nil || op.CompletionOperationID == nil || op.CompletionIdentityDigest == nil || op.Workspace == nil) {
+		return fmt.Errorf("completion settlement requires source-bound canonical workspace")
+	}
 	if d.TaskPlanningSource != nil {
 		if _, err := wire.ScopeID(d); err != nil {
 			return err

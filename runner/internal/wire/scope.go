@@ -13,6 +13,19 @@ func ScopeID(d protocol.Dispatch) (string, error) {
 	if (d.TaskID == nil) == (d.TodoID == nil) {
 		return "", fmt.Errorf("dispatch must have exactly one Todo or Task scope")
 	}
+	if d.NodeExecutionSource != nil {
+		s := d.NodeExecutionSource
+		if d.TaskID == nil || d.Kind != protocol.Node || d.NodeID == nil || *d.NodeID != s.NodeID || d.NodeActivation != s.NodeActivation || d.ControlVersion != s.ControlVersion || d.TaskPlanningSource != nil || d.ResourceID != nil || d.SourceMessageID != nil || d.SourceWatermark != 0 || d.WorkspaceReservations == nil {
+			return "", fmt.Errorf("invalid canonical Node source ownership")
+		}
+		raw, err := json.Marshal(s)
+		if err != nil {
+			return "", err
+		}
+		if err = Validate("NodeExecutionSource", raw); err != nil {
+			return "", err
+		}
+	}
 	if d.TaskPlanningSource != nil {
 		if d.TaskID == nil || d.Kind != "planner" || d.NodeID != nil || d.NodeActivation != 0 || d.ResourceID != nil || d.SourceMessageID != nil || d.SourceWatermark != 0 || d.WorkspaceReservations == nil || len(d.WorkspaceReservations.Resources) != 0 {
 			return "", fmt.Errorf("invalid initial Task Planner ownership")

@@ -98,7 +98,7 @@ describe.skipIf(!enabled)('real PostgreSQL boundary admission', () => {
     const failure = () => f.service.finishOperation(f.runnerId, f.incarnation, { attempt_id: f.launch.attempt_id, operation_id: admitted.operation_id!, success: false, failure_kind: 'recoverable', result: { message: 'Git repair required' } });
     const absence = () => f.service.event(f.runnerId, f.incarnation, { attempt_id: f.launch.attempt_id, dispatch_id: f.launch.dispatch_id, stream_id: 'runtime', sequence: 2, kind: 'process_absent', text: 'verified absence' });
     if (failureFirst) { await failure(); await absence(); } else { await absence(); await failure(); }
-    expect((await db.pool.query('SELECT state FROM nodes WHERE id=$1', [f.launch.node_id])).rows[0].state).toBe('BLOCKED');
+    expect((await db.pool.query('SELECT state FROM nodes WHERE id=$1', [f.launch.node_id])).rows[0].state).toBe('RUNNING');
     expect((await db.pool.query('SELECT process_released FROM attempts WHERE id=$1', [f.launch.attempt_id])).rows[0].process_released).toBe(false);
     await retryOperationFixture(db, admitted.operation_id!);
     await f.service.finishOperation(f.runnerId, f.incarnation, { attempt_id: f.launch.attempt_id, operation_id: admitted.operation_id!, success: true, result: { writer_absent: true, git_commit: 'a'.repeat(40), git_tree: 'b'.repeat(40) } });

@@ -13,8 +13,9 @@ Lazy open/inspection, direct leases, isolated worktrees, finalization/integratio
 Canonical Project-backed serial workspaces use the workspace modules beside
 [Git effects](../../../runner/internal/host/git.go), [snapshot export](../../../runner/internal/host/snapshot.go)
 and [finalization](../../../runner/internal/host/finalize.go). Explicit legacy probe
-dispatches retain fixture behavior. Product Start/Node scheduling and delivery
-remain separate work; native acceptance of this addition is recorded in the
+dispatches retain fixture behavior. Product Start/Node scheduling is backend-owned;
+[Node execution](../backend/node-execution.md) defines canonical completion and
+hard-recovery pairs. Delivery remains separate work; native serial-workspace acceptance is recorded in the
 [serial-workspace task](../../tasks/archive/2026-09/09-30-a-serial-workspaces/prd.md).
 
 `Daemon.Reconcile(ctx, inventory)` validates and retains one recovery batch;

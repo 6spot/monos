@@ -1,6 +1,10 @@
 # Backend Development
 
-Status: Stage A boundary-probe backend is implemented in `apps/server` with PostgreSQL migrations and shared protocol packages. This is not the full Task/Plan/delivery product. See [root](../index.md), [quality evidence](quality-guidelines.md) and [technology](../../../docs/11-technology-and-deployment.md).
+Status: `apps/server` implements the Stage A foundation, Todo Discussion/Task creation,
+explicit initial planning and canonical Single-Node execution with Artifacts and
+completion recovery. Task Conversation, revision workflows and delivery remain
+later slices. See [root](../index.md), [quality evidence](quality-guidelines.md)
+and [technology](../../../docs/11-technology-and-deployment.md).
 
 ## Pre-Development Checklist
 
@@ -13,6 +17,7 @@ Status: Stage A boundary-probe backend is implemented in `apps/server` with Post
 - For ordered Todo input, Planner replies, cache and Retry/Withdraw, read [Discussion](discussion.md).
 - For exact proposal confirmation and independent Task creation, read [Task preview](task-preview.md).
 - For explicit Start, initial Plan/issue and pre-Plan controls, read [Task planning](task-planning.md).
+- For Single-Node dispatch, Artifacts and completion recovery, read [Node execution](node-execution.md).
 - For selected Attempt status, ordered output and resumable log cursors, read [Execution logs](execution-logs.md).
 - For selected Attempt queue/promotion, read [dispatch queue](dispatch-queue.md).
 - For canonical repository admission, serial leases and ephemeral fetch access, read [workspaces](workspaces.md).

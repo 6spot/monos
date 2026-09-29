@@ -3,12 +3,13 @@ import { transaction } from '../../../packages/db/src/index.ts';
 import type { Database, Transaction } from '../../../packages/db/src/index.ts';
 import { CommandError } from '../../../packages/domain/src/commands.ts';
 import { canonicalJSON, digest, validate, workspaceId } from '../../../packages/protocol/src/index.ts';
-import type { Dispatch, TaskPlanningSource } from '../../../packages/protocol/src/index.ts';
+import type { Dispatch, TaskPlanningSource, NodeExecutionSource } from '../../../packages/protocol/src/index.ts';
 import { assertCurrentNode } from './task-records.ts';
 import type { ControlBasis } from './task-records.ts';
 import { lockDiscussion } from './discussion-state.ts';
 import type { DiscussionContext } from './discussion-state.ts';
 import { assertPlanningSource } from './task-planning-state.ts';
+import { assertNodeSource } from './node-execution-state.ts';
 import { lockConfiguration } from './configuration-guards.ts';
 
 export interface QueueInput {
@@ -16,6 +17,7 @@ export interface QueueInput {
   kind: 'node' | 'planner'; expected: ControlBasis | { control_version: number }; resource_id?: string;
   discussion_context?: DiscussionContext;
   task_planning_source?: TaskPlanningSource;
+  node_execution_source?: NodeExecutionSource;
   legacy_probe?: true; // Internal fixture admission only; never copied to wire data.
   runtime_id: Dispatch['runtime_id']; model: Dispatch['model']; prompt: string; source_watermark: number;
   selection_context?: {
@@ -48,6 +50,10 @@ export class DispatchQueue {
       if (input.kind !== 'planner' || input.legacy_probe || input.node_id || input.resource_id || input.source_watermark !== 0) throw new CommandError('denied_scope', 'Planning source requires a repository-free Task Planner');
       await assertPlanningSource(tx, input.task_id, input.task_planning_source, input.attempt_id, input.prompt);
     }
+    if (input.node_execution_source) {
+      if(input.kind !== 'node' || input.legacy_probe || input.task_planning_source || input.node_id !== input.node_execution_source.node_id) throw new CommandError('denied_scope','Canonical Node source mismatch');
+      await assertNodeSource(tx,input.task_id,input.node_execution_source,input.attempt_id,input.prompt);
+    }
     const existing = (await tx.query<{ queue_digest: string; dispatch_id: string }>('SELECT queue_digest,dispatch_id FROM attempts WHERE id=$1', [input.attempt_id])).rows[0];
     if (existing) {
       if (existing.queue_digest !== hash) throw new CommandError('payload_conflict', 'Queued Attempt identity has different content');
@@ -68,30 +74,33 @@ export class DispatchQueue {
     } else if (input.node_id) throw new CommandError('invalid_input', 'Planner is not a Node');
     const owner = input.kind === 'node' ? `node:${input.node_id}` : `planner:${input.task_id}`;
     if ((await tx.query("SELECT id FROM attempts WHERE owner_key=$1 AND state='QUEUED'", [owner])).rowCount) throw new CommandError('unmet_precondition', 'Owner already has selected queued work');
+    const frozenReservations = input.node_execution_source ? (await tx.query<{context:{workspace_reservations: NonNullable<Dispatch['workspace_reservations']>}}>('SELECT context FROM node_execution_outbox WHERE id=$1',[input.node_execution_source.source_id])).rows[0]!.context.workspace_reservations : undefined;
     const launch: Dispatch = {
       dispatch_id: randomUUID(), attempt_id: input.attempt_id, runner_id: input.runner_id,
       task_id: input.task_id, ...(input.node_id ? { node_id: input.node_id } : {}), kind: input.kind,
       fencing_generation: 1, node_activation: activation, control_version: input.expected.control_version,
-      ...(input.legacy_probe ? { resource_id: input.resource_id! } : { workspace_reservations: {
+      ...(input.legacy_probe ? { resource_id: input.resource_id! } : { workspace_reservations: frozenReservations ?? {
         project_id: task.project_id!, configuration_version: configurationVersion,
         resources: input.kind === 'planner' ? [] : (await tx.query<{ id: string }>('SELECT id FROM project_resources WHERE project_id=$1 AND active ORDER BY id', [task.project_id])).rows.map((row) => ({ resource_id: row.id, workspace_id: workspaceId(input.task_id!, row.id) })),
       } }), runtime_id: input.runtime_id, model: input.model,
       prompt: input.prompt, source_watermark: input.source_watermark, log_mode: 'ordered_v1',
       ...(input.task_planning_source ? { task_planning_source: input.task_planning_source } : {}),
+      ...(input.node_execution_source ? { node_execution_source: input.node_execution_source } : {}),
       mutation_allowed: false, process_released: true,
     };
     validate('Dispatch', launch);
     await tx.query(`INSERT INTO attempts(id,runner_id,task_id,node_id,owner_key,dispatch_id,kind,fencing_generation,node_activation,
-      launch,mutation_allowed,process_released,state,queue_digest,specification_id,plan_id,selection_context,planning_intent_id)
-      VALUES($1,$2,$3,$4,$5,$6,$7,1,$8,$9,false,true,'QUEUED',$10,$11,$12,$13,$14)`,
-    [input.attempt_id, input.runner_id, input.task_id, input.node_id ?? null, owner, launch.dispatch_id, input.kind, activation, launch, hash, task.specification_id, task.plan_id, input.selection_context ?? null, input.task_planning_source?.intent_id ?? null]);
+      launch,mutation_allowed,process_released,state,queue_digest,specification_id,plan_id,selection_context,planning_intent_id,node_execution_source_id)
+      VALUES($1,$2,$3,$4,$5,$6,$7,1,$8,$9,false,true,'QUEUED',$10,$11,$12,$13,$14,$15)`,
+    [input.attempt_id, input.runner_id, input.task_id, input.node_id ?? null, owner, launch.dispatch_id, input.kind, activation, launch, hash, task.specification_id, task.plan_id, input.selection_context ?? null, input.task_planning_source?.intent_id ?? null,input.node_execution_source?.source_id ?? null]);
+    if(input.node_execution_source) await tx.query("UPDATE nodes SET state='RUNNING' WHERE id=$1",[input.node_id]);
     if (input.legacy_probe) await tx.query('INSERT INTO legacy_probe_attempts(attempt_id) VALUES($1)', [input.attempt_id]);
     return launch.dispatch_id;
   }
 
   private async enqueueTodo(tx: Transaction, input: QueueInput): Promise<string> {
     for (const id of [input.attempt_id, input.runner_id, input.todo_id]) validate('Id', id);
-    if (input.task_planning_source || input.task_id || input.node_id || input.resource_id || input.kind !== 'planner' || !input.discussion_context) throw new CommandError('invalid_input', 'Todo Planner must have one repository-free scope');
+    if (input.node_execution_source || input.task_planning_source || input.task_id || input.node_id || input.resource_id || input.kind !== 'planner' || !input.discussion_context) throw new CommandError('invalid_input', 'Todo Planner must have one repository-free scope');
     const context = input.discussion_context; const hash = digest(canonicalJSON(input));
     if (!(await tx.query('SELECT id FROM runners WHERE id=$1 FOR UPDATE', [input.runner_id])).rowCount) throw new CommandError('denied_scope', 'Unknown Runner');
     const control = await lockDiscussion(tx, input.todo_id!);
@@ -163,8 +172,9 @@ export class DispatchQueue {
               await assertPlanningSource(tx, row.task_id!, row.launch.task_planning_source, row.id, row.launch.prompt);
             } catch (error) { if (!(error instanceof CommandError)) throw error; current = false; }
           }
+          if(current && row.launch.node_execution_source) {try { await assertNodeSource(tx,row.task_id!,row.launch.node_execution_source,row.id,row.launch.prompt); } catch(error){if(!(error instanceof CommandError))throw error;current=false;} }
           if (current && row.node_id) {
-            try { current = (await assertCurrentNode(tx, { task_id: row.task_id!, node_id: row.node_id, node_activation: row.launch.node_activation })).state === 'PENDING' && await this.dependenciesReady(tx, row.plan_id!, row.node_id); }
+            try { current = (await assertCurrentNode(tx, { task_id: row.task_id!, node_id: row.node_id, node_activation: row.launch.node_activation })).state === (row.launch.node_execution_source ? 'RUNNING' : 'PENDING') && await this.dependenciesReady(tx, row.plan_id!, row.node_id); }
             catch (error) { if (!(error instanceof CommandError)) throw error; current = false; }
           }
           if (!current) { await tx.query("UPDATE attempts SET state='CANCELLED',process_absent=true,end_reason='stale_queue_basis' WHERE id=$1", [row.id]); return retry; }

@@ -25,6 +25,9 @@ const help = `monos — formal monos Tool Protocol commands
 
   monos open_workspace --input payload.json [--request-id ID] --output json
   monos inspect_repository --input payload.json [--request-id ID] --output json
+  monos publish_artifact --input payload.json [--request-id ID] --output json
+  monos read_artifact --input payload.json [--request-id ID] --output json
+  monos block_node --input payload.json [--request-id ID] --output json
   monos complete_node --input payload.json [--request-id ID] --output json
   monos publish_execution_plan --input payload.json [--request-id ID] --output json
   monos raise_planning_issue --input payload.json [--request-id ID] --output json
@@ -37,7 +40,13 @@ const help = `monos — formal monos Tool Protocol commands
 
 Use --input - to read a JSON payload from stdin (maximum 1 MiB).
 Workspace payload: {"resource_id":"RESOURCE"}
-Node completion: {"summary":"completed work"}
+Node Artifact: {"artifact_id":"ARTIFACT","title":"Output","content":{"text":"...","media_type":"text/plain"}}
+Read Artifact: {"artifact_id":"ARTIFACT"}
+Node blocker: {"reason":"Owner direction needed"}
+Node completion: {"summary":"completed work","artifact_ids":[]}
+Omit artifact_ids to select this Attempt's outputs; [] selects none. Artifacts do
+not complete work. Completion or block ends the Attempt. Repository-free work needs
+no fake repository; opened or retained dirty work must be finalized.
 Initial Task Plan: {"planning_intent_id":"INTENT","plan_id":"PLAN","nodes":[{"node_id":"NODE","role_id":"ROLE","goal":"work to perform","dependencies":[]}]}
 Initial planning issue: {"planning_intent_id":"INTENT","reason":"Owner direction needed"}
 Only the source-bound initial Task Planner may publish a Plan or raise an initial
@@ -107,7 +116,7 @@ func run(args []string) (protocol.CommandResult, error) {
 		action = "retry"
 	case "command_status":
 		action = "status"
-	case "open_workspace", "inspect_repository", "complete_node", "publish_execution_plan", "raise_planning_issue", "commit_task_turn", "read_discussion", "update_working_requirement_state", "commit_discussion_turn":
+	case "publish_artifact", "read_artifact", "block_node", "open_workspace", "inspect_repository", "complete_node", "publish_execution_plan", "raise_planning_issue", "commit_task_turn", "read_discussion", "update_working_requirement_state", "commit_discussion_turn":
 	default:
 		return result, fmt.Errorf("unknown command")
 	}

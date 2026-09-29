@@ -480,23 +480,23 @@ func checkpoint(workspace, common, operation, base string) (protocol.WorkspaceCh
 
 // WorkspaceWorker reads a root-owned operation plan; argv selects no host path,
 // repository or credential. Access arrives only on this process's stdin.
-func WorkspaceWorker(operation string, input io.Reader) (protocol.EffectResult, error) {
+func WorkspaceWorker(operation string, input io.Reader) (Status, error) {
 	var result protocol.EffectResult
 	r, err := readOperation(operationPath(operation))
 	if err != nil {
-		return result, err
+		return Status{Known: true, Result: &result}, err
 	}
 	op := r.Operation
 	if op.Workspace == nil {
-		return result, fmt.Errorf("workspace operation required")
+		return Status{Known: true, Result: &result}, fmt.Errorf("workspace operation required")
 	}
 	w := op.Workspace
 	record, err := readWorkspaceRecord(w.WorkspaceID)
 	if err != nil {
-		return result, err
+		return Status{Known: true, Result: &result}, err
 	}
 	if !sameWorkspaceOperation(record.Operation, op) {
-		return result, fmt.Errorf("workspace worker identity mismatch")
+		return Status{Known: true, Result: &result}, fmt.Errorf("workspace worker identity mismatch")
 	}
 	cache, common, workspace := resourceCache(w.ResourceID), TaskWorkspacePath(w.WorkspaceID, "common"), TaskWorkspacePath(w.WorkspaceID, "worktree")
 	metadata := record.Metadata
@@ -507,76 +507,93 @@ func WorkspaceWorker(operation string, input io.Reader) (protocol.EffectResult, 
 	// Writer lock files are created with the appropriate account by the helper.
 	lock, err := acquireFileLock(context.Background(), lockPath)
 	if err != nil {
-		return result, err
+		return Status{Known: true, Result: &result}, err
 	}
 	defer releaseFileLock(lock)
 	// A delayed systemd submission can reach this lock after Stop or a newer
 	// lease. Revalidate after acquiring physical ownership, before any mutation.
 	current, err := readWorkspaceRecord(w.WorkspaceID)
 	if err != nil || !sameWorkspaceOperation(current.Operation, op) {
-		return result, fmt.Errorf("workspace worker superseded before writer lock")
+		return Status{Known: true, Result: &result}, fmt.Errorf("workspace worker superseded before writer lock")
 	}
 	if op.Kind == protocol.KindOpenWorkspace {
 		if _, e := os.Stat(workspaceStopPath(w.LeaseID)); e == nil {
-			return result, fmt.Errorf("open fenced by Stop")
+			return Status{Known: true, Result: &result}, fmt.Errorf("open fenced by Stop")
 		} else if !os.IsNotExist(e) {
-			return result, e
+			return Status{Known: true, Result: &result}, e
 		}
+	}
+	if err = requireUnfencedCompletion(op); err != nil {
+		return Status{Known: true, Result: &result}, err
+	}
+	if op.Kind == protocol.SettleCompletion {
+		original, e := readOperation(operationPath(*op.CompletionOperationID))
+		if e != nil {
+			return Status{Known: true, Result: &result}, e
+		}
+		fence, e := readCompletionFenceAt(completionFencePath(original.Operation.OperationID), original.Operation, 0)
+		if e != nil || fence == nil || !sameOperation(*fence, op) {
+			return Status{Known: true, Result: &result}, fmt.Errorf("settlement worker fence changed")
+		}
+		if r.WorkspaceAction != "settle_completion" {
+			return Status{Known: true, Result: &result}, fmt.Errorf("invalid settlement stage")
+		}
+		return settlementWorker(op, original.Operation, metadata, workspace, common)
 	}
 	switch r.WorkspaceAction {
 	case "fetch":
 		var access protocol.GitHubRepositoryAccessResult
 		raw, err := io.ReadAll(io.LimitReader(input, 16385))
 		if err != nil || len(raw) > 16384 {
-			return result, fmt.Errorf("invalid repository access input")
+			return Status{Known: true, Result: &result}, fmt.Errorf("invalid repository access input")
 		}
 		if err = json.Unmarshal(raw, &access); err != nil {
-			return result, fmt.Errorf("invalid repository access input")
+			return Status{Known: true, Result: &result}, fmt.Errorf("invalid repository access input")
 		}
 		metadata, err = fetchWorkspace(cache, filepath.Join(Root, "service", "workspace-operations", operation+".json"), op, access)
 		if err != nil {
-			return result, err
+			return Status{Known: true, Result: &result}, err
 		}
 	case "clone":
 		if err = clonePinned(cache, TaskWorkspacePath(w.WorkspaceID, "staging-"+operation), metadata, operation); err != nil {
-			return result, err
+			return Status{Known: true, Result: &result}, err
 		}
 	case "checkout":
 		if err = checkoutPinned(workspace, common, cache, metadata.BaseCommit); err != nil {
-			return result, err
+			return Status{Known: true, Result: &result}, err
 		}
 	case "recover":
 		if op.Kind != protocol.Stop {
-			return result, fmt.Errorf("only Stop may recover existing workspace without fetch")
+			return Status{Known: true, Result: &result}, fmt.Errorf("only Stop may recover existing workspace without fetch")
 		}
 		if err = verifyRetainedWorkspace(workspace, common, record); err != nil {
-			return result, err
+			return Status{Known: true, Result: &result}, err
 		}
 	case "refresh":
 		if err = verifyRetainedWorkspace(workspace, common, record); err != nil {
-			return result, err
+			return Status{Known: true, Result: &result}, err
 		}
 		if _, err = workspaceGit(common, cache, common, nil, "fetch", "--no-tags", cache, "refs/monos/pins/"+operation+"/target:refs/monos/targets/"+operation); err != nil {
-			return result, err
+			return Status{Known: true, Result: &result}, err
 		}
 		if _, err = workspaceGit(common, cache, common, nil, "update-ref", "refs/remotes/origin/"+metadata.TargetBranch, metadata.TargetCommit); err != nil {
-			return result, err
+			return Status{Known: true, Result: &result}, err
 		}
 	case "checkpoint":
 		cp, err := checkpoint(workspace, common, operation, metadata.FinalizedCommit)
 		if err != nil {
-			return result, err
+			return Status{Known: true, Result: &result}, err
 		}
 		metadata.Checkpoint = &cp
 	case "finalize":
 		result, err = finalize(workspace, common, operation, metadata.FinalizedCommit)
 		if err != nil {
-			return result, err
+			return Status{Known: true, Result: &result}, err
 		}
 		metadata.FinalizedCommit = *result.GitCommit
 		metadata.Checkpoint = nil
 	default:
-		return result, fmt.Errorf("unknown workspace worker stage")
+		return Status{Known: true, Result: &result}, fmt.Errorf("unknown workspace worker stage")
 	}
 	result.WorkspaceID = &w.WorkspaceID
 	result.WorkspaceMetadata = &metadata
@@ -584,5 +601,5 @@ func WorkspaceWorker(operation string, input io.Reader) (protocol.EffectResult, 
 		result.Path = &workspace
 		result.InstructionFiles, err = instructionFiles(workspace)
 	}
-	return result, err
+	return Status{Known: true, Result: &result}, err
 }

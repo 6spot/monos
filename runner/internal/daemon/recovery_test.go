@@ -201,7 +201,14 @@ func TestReconnectRejectsPartialOrChangedRecoveryAuthority(t *testing.T) {
 			dispatch, op := recoveryFixture(t, "scope", protocol.Stop)
 			result := recoveryFailure(op)
 			if mode == "result-scope" {
+				if err := db.BeginEffect(op); err != nil {
+					t.Fatal(err)
+				}
 				result.AttemptID = "other-attempt"
+				if err := db.FinishEffect(*result); err == nil {
+					t.Fatal("changed result scope entered journal")
+				}
+				return
 			}
 			retainRecovery(t, db, dispatch, op, result)
 			inventory := recoveryInventory(dispatch, op)

@@ -1,0 +1,16 @@
+[
+  {
+    "operation": {
+      "schema_version": 1,
+      "operation_id": "completion",
+      "attempt_id": "attempt",
+      "dispatch_id": "dispatch",
+      "request_id": "request",
+      "kind": "complete_node",
+      "state": "admitted",
+      "repository_free": true,
+      "completion_manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "identity_digest": "01a20ab65ca8d36c626b30babc08a63f663f46f15087c20f0c66525940fb3431"
+  }
+]

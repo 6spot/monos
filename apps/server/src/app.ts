@@ -12,6 +12,8 @@ import { Configuration } from './configuration.ts';
 import { Todos } from './todos.ts';
 import { Discussion } from './discussion.ts';
 import { TodoAttemptReads } from './todo-attempt-reads.ts';
+import { NodeExecution } from './node-execution.ts';
+import { ownerArtifact, ownerArtifacts } from './artifacts.ts';
 import { TaskPlanning } from './task-planning.ts';
 import { TaskPreviews } from './task-previews.ts';
 import { GitHub } from './github.ts';
@@ -69,6 +71,7 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
   const todos = new Todos(service.db);
   const discussion = new Discussion(service.db, service.instanceId);
   const todoAttempts = new TodoAttemptReads(service.db);
+  const execution = new NodeExecution(service.db,service.instanceId);
   const planning = new TaskPlanning(service.db, service.instanceId);
   const taskPreviews = new TaskPreviews(service.db);
   if (webRoot) {
@@ -120,6 +123,9 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
     void reply.header('Set-Cookie', sessionCookie('', 0));
     return { schema_version: 1, authenticated: false };
   });
+  app.get<{ Params: { task_id: string; node_id:string } }>('/v1/owner/tasks/:task_id/nodes/:node_id/execution', async request => execution.status(ownerCredential(request),request.params.task_id,request.params.node_id));
+  app.get<{ Params: { task_id: string }; Querystring: { cursor?:string } }>('/v1/owner/tasks/:task_id/artifacts', async request => ownerArtifacts(service.db,ownerCredential(request),request.params.task_id,request.query.cursor));
+  app.get<{ Params: { task_id: string; artifact_id:string } }>('/v1/owner/tasks/:task_id/artifacts/:artifact_id', async (request,reply) => {reply.header('cache-control','no-store').header('x-content-type-options','nosniff');return ownerArtifact(service.db,ownerCredential(request),request.params.task_id,request.params.artifact_id);});
   app.get<{ Params: { task_id: string } }>('/v1/owner/tasks/:task_id/planning', async (request) => planning.status(ownerCredential(request), request.params.task_id));
   app.get<{ Params: { task_id: string; plan_id: string } }>('/v1/owner/tasks/:task_id/plans/:plan_id', async (request) => planning.plan(ownerCredential(request), request.params.task_id, request.params.plan_id));
   app.get<{ Params: { task_id: string } }>('/v1/owner/tasks/:task_id', async (request) => reads.overview(ownerCredential(request), request.params.task_id));

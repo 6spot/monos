@@ -31,6 +31,18 @@ type Manifest struct {
 
 func manifestPath(id string) string { return filepath.Join(Root, "launch", id+".json") }
 func ValidateRequest(r Request) error {
+	if r.CompletionOperation != nil {
+		if r.Action != "effect" || r.Operation == nil {
+			return fmt.Errorf("completion target only belongs to settlement")
+		}
+		raw, _ := json.Marshal(r.CompletionOperation)
+		if err := wire.Validate("Operation", raw); err != nil {
+			return err
+		}
+		if err := wire.ValidateCompletionTarget(*r.Operation, *r.CompletionOperation); err != nil {
+			return err
+		}
+	}
 	if r.RepositoryAccess != nil && (r.Action != "effect" || r.Operation == nil || r.Operation.Kind != protocol.KindOpenWorkspace || r.Operation.Workspace == nil) {
 		return fmt.Errorf("repository access only belongs to canonical open")
 	}
@@ -52,7 +64,7 @@ func ValidateRequest(r Request) error {
 		if err := wire.Validate("Dispatch", raw); err != nil {
 			return err
 		}
-		if r.Dispatch.TaskPlanningSource != nil {
+		if r.Dispatch.TaskPlanningSource != nil || r.Dispatch.NodeExecutionSource != nil {
 			if _, err := wire.ScopeID(*r.Dispatch); err != nil {
 				return err
 			}
@@ -556,6 +568,22 @@ func Handle(ctx context.Context, r Request) (Status, error) {
 		if m.Revoked || !m.Launched {
 			return Status{}, fmt.Errorf("no launched Attempt owns workspace effect")
 		}
+		if r.Operation.Kind == protocol.SettleCompletion {
+			if r.CompletionOperation == nil {
+				return Status{}, fmt.Errorf("original completion input required")
+			}
+			if e = retainCompletionTarget(*r.Operation, *r.CompletionOperation); e != nil {
+				return Status{}, e
+			}
+			stopped, stopErr := stopWorkspaceAgentFirst(func() (Status, error) { return stop(ctx, r.AttemptID) }, func() error { return fenceCompletion(*r.Operation) })
+			if e = syscall.Flock(int(lock.Fd()), syscall.LOCK_UN); e != nil {
+				return stopped, e
+			}
+			if stopErr != nil {
+				return stopped, errors.Join(stopErr, settleLeaseWorkers(ctx, *r.Operation))
+			}
+			return runWorkspaceEffect(ctx, *r.Operation, nil)
+		}
 		if r.Operation.Kind == protocol.Stop {
 			// Physical Agent stop must remain reachable when workspace storage or
 			// durable marker writes fail. Such failure preserves recovery/lease
@@ -669,6 +697,9 @@ func Handle(ctx context.Context, r Request) (Status, error) {
 		}
 		if e = checkOperationWriters(ctx, r.AttemptID, boot); e != nil {
 			return Status{}, e
+		}
+		if op.RepositoryFree != nil && *op.RepositoryFree {
+			return completeWithoutRepository(ctx, m.Dispatch, *op)
 		}
 		if op.Kind == protocol.KindCompleteNode {
 			if _, err = stop(ctx, r.AttemptID); err != nil {

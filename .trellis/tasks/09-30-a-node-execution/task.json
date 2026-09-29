@@ -3,7 +3,7 @@
   "name": "a-node-execution",
   "title": "Single-Node execution, artifacts and recovery",
   "description": "Execute published Nodes using current Role context, managed outputs and recoverable completion into local REVIEW.",
-  "status": "planning",
+  "status": "in_progress",
   "dev_type": "backend",
   "scope": null,
   "package": null,
@@ -24,6 +24,6 @@
   "notes": "",
   "meta": {
     "roadmap_level": "leaf",
-    "planning_maturity": "backlog"
+    "planning_maturity": "ready"
   }
 }

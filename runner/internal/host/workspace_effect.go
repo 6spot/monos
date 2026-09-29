@@ -101,7 +101,7 @@ func settleLeaseWorkers(ctx context.Context, op protocol.Operation) error {
 
 func acquireWorkspaceCoordinator(ctx context.Context, op protocol.Operation) (*os.File, error) {
 	p := filepath.Join(Root, "launch", "workspaces", op.Workspace.WorkspaceID+".coordinator.lock")
-	if op.Kind != protocol.Stop {
+	if op.Kind != protocol.Stop && op.Kind != protocol.SettleCompletion {
 		return acquireFileLock(ctx, p)
 	}
 	return acquireStoppingWorkspace(ctx, p, func() error { return settleLeaseWorkers(ctx, op) })
@@ -210,6 +210,10 @@ func runWorkspaceWorker(ctx context.Context, op protocol.Operation, action strin
 			releaseFileLock(lock)
 			return empty, fmt.Errorf("open Agent absent; admitted Stop must settle workspace")
 		}
+	}
+	if err = requireUnfencedCompletion(op); err != nil {
+		releaseFileLock(lock)
+		return empty, err
 	}
 	record := operationRecord{Operation: op, BootID: boot, WorkspaceAction: action}
 	if err = saveRecord(operationPath(op.OperationID), record); err != nil {
@@ -380,6 +384,9 @@ func runWorkspaceEffect(ctx context.Context, op protocol.Operation, access *prot
 	}
 	if err = prepareWorkspaceWorkerPaths(op); err != nil {
 		return status, err
+	}
+	if op.Kind == protocol.SettleCompletion {
+		return settleCompletion(ctx, op, storage)
 	}
 	if op.Kind == protocol.Stop {
 		return stopWorkspace(ctx, op, storage)
@@ -666,6 +673,15 @@ func prepareStopRecovery(r *workspaceRecord, op protocol.Operation) error {
 }
 
 func completeWorkspace(ctx context.Context, op protocol.Operation, storage string) (Status, error) {
+	if tombstone, err := completionTombstone(op); tombstone != nil || err != nil {
+		if tombstone != nil {
+			return *tombstone, err
+		}
+		return Status{}, err
+	}
+	if err := requireUnfencedCompletion(op); err != nil {
+		return Status{}, err
+	}
 	r, err := readWorkspaceRecord(op.Workspace.WorkspaceID)
 	if err != nil {
 		return Status{}, err

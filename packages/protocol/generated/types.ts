@@ -30,10 +30,12 @@ export interface CommandEnvelope {
     scope_id:                 string;
 }
 
-export type CommandEnvelopeName = "open_workspace" | "inspect_repository" | "complete_node" | "commit_task_turn" | "commit_discussion_turn" | "read_discussion" | "update_working_requirement_state" | "publish_execution_plan" | "raise_planning_issue";
+export type CommandEnvelopeName = "open_workspace" | "inspect_repository" | "complete_node" | "commit_task_turn" | "commit_discussion_turn" | "read_discussion" | "update_working_requirement_state" | "publish_execution_plan" | "raise_planning_issue" | "publish_artifact" | "read_artifact" | "block_node";
 
 export interface CommandPayload {
+    artifact_id?:               string;
     artifact_ids?:              string[];
+    content?:                   ArtifactContent;
     cursor?:                    string;
     handled_guidance_ids?:      string[];
     nodes?:                     [ExecutionPlanNode, ...ExecutionPlanNode[]];
@@ -42,6 +44,7 @@ export interface CommandPayload {
     project_context_digest?:    string;
     project_context_version?:   number;
     reason?:                    string;
+    references?:                ArtifactReference[];
     reply?:                     string;
     resolved_watermark?:        number;
     resource_id?:               string;
@@ -49,8 +52,15 @@ export interface CommandPayload {
     source_message_id?:         string;
     source_watermark?:          number;
     summary?:                   string;
+    supersedes?:                string;
     task_preview?:              TaskPreview;
+    title?:                     string;
     working_requirement_state?: string;
+}
+
+export interface ArtifactContent {
+    media_type: string;
+    text:       string;
 }
 
 export interface ExecutionPlanNode {
@@ -61,6 +71,11 @@ export interface ExecutionPlanNode {
     hard_requirements?: string[];
     node_id:            string;
     role_id:            string;
+}
+
+export interface ArtifactReference {
+    label?: string;
+    url:    string;
 }
 
 export interface Routing {
@@ -98,6 +113,9 @@ export interface ErrorInfo {
 export type Code = "invalid_input" | "denied_scope" | "unauthorized" | "stale_execution" | "version_conflict" | "payload_conflict" | "unmet_precondition" | "unsupported_version" | "control_unavailable" | "internal_error" | "rate_limited";
 
 export interface EffectResult {
+    artifact?:                     ArtifactRecord;
+    artifact_id?:                  string;
+    blocker_id?:                   string;
     cache_updated?:                boolean;
     discussion_page?:              DiscussionPage;
     git_commit?:                   string;
@@ -116,6 +134,28 @@ export interface EffectResult {
     writer_absent?:                boolean;
 }
 
+export interface ArtifactRecord {
+    content:  ArtifactContent;
+    metadata: ArtifactMetadata;
+}
+
+export interface ArtifactMetadata {
+    artifact_id:      string;
+    attempt_id:       string;
+    content_digest:   string;
+    created_at:       string;
+    media_type:       string;
+    node_activation:  number;
+    node_id:          string;
+    plan_id:          string;
+    references:       ArtifactReference[];
+    size_bytes:       number;
+    specification_id: string;
+    supersedes?:      string;
+    task_id:          string;
+    title:            string;
+}
+
 export interface DiscussionPage {
     cursor:         string;
     has_more:       boolean;
@@ -128,7 +168,7 @@ export interface DiscussionMessage {
     author:                   Author;
     content:                  string;
     created_at:               string;
-    disposition?:             Disposition;
+    disposition?:             DiscussionMessageDisposition;
     message_id:               string;
     project_context_version?: number;
     project_id?:              string;
@@ -140,7 +180,7 @@ export interface DiscussionMessage {
 
 export type Author = "owner" | "assistant";
 
-export type Disposition = "withdrawn";
+export type DiscussionMessageDisposition = "withdrawn";
 
 export type InstructionFile = "AGENTS.md" | "CLAUDE.md";
 
@@ -169,10 +209,12 @@ export interface WorkspaceMetadata {
 }
 
 export interface WorkspaceCheckpoint {
-    commit_id:    string;
-    head_commit:  string;
-    operation_id: string;
-    tree_id:      string;
+    commit_id:                   string;
+    completion_identity_digest?: string;
+    completion_operation_id?:    string;
+    head_commit:                 string;
+    operation_id:                string;
+    tree_id:                     string;
 }
 
 export interface RepositoryProviderMetadata {
@@ -221,6 +263,7 @@ export interface Dispatch {
     model:                    Model;
     mutation_allowed:         boolean;
     node_activation:          number;
+    node_execution_source?:   NodeExecutionSource;
     node_id?:                 string;
     process_released:         boolean;
     project_context_digest?:  string;
@@ -242,6 +285,16 @@ export type DispatchKind = "node" | "planner";
 export type LogModeElement = "ordered_v1";
 
 export type Model = "opencode/mimo-v2.6-flash-free" | "opencode/longcat-2.5-preview-free";
+
+export interface NodeExecutionSource {
+    context_digest:   string;
+    control_version:  number;
+    node_activation:  number;
+    node_id:          string;
+    plan_id:          string;
+    source_id:        string;
+    specification_id: string;
+}
 
 export type RuntimeID = "opencode";
 
@@ -278,21 +331,25 @@ export interface RuntimeEvent {
 export type RuntimeEventKind = "started" | "output" | "attention" | "capture_failed" | "exited" | "process_absent";
 
 export interface Operation {
-    attempt_id:                 string;
-    cancelled_by_operation_id?: string;
-    dispatch_id:                string;
-    kind:                       OperationKind;
-    operation_id:               string;
-    request_id:                 string;
-    resource_id?:               string;
-    result?:                    EffectResult;
-    schema_version:             number;
-    state:                      OperationState;
-    workspace?:                 WorkspaceDescriptor;
-    workspace_digest?:          string;
+    attempt_id:                  string;
+    cancelled_by_operation_id?:  string;
+    completion_identity_digest?: string;
+    completion_manifest_digest?: string;
+    completion_operation_id?:    string;
+    dispatch_id:                 string;
+    kind:                        OperationKind;
+    operation_id:                string;
+    repository_free?:            boolean;
+    request_id:                  string;
+    resource_id?:                string;
+    result?:                     EffectResult;
+    schema_version:              number;
+    state:                       OperationState;
+    workspace?:                  WorkspaceDescriptor;
+    workspace_digest?:           string;
 }
 
-export type OperationKind = "open_workspace" | "inspect_repository" | "complete_node" | "stop";
+export type OperationKind = "open_workspace" | "inspect_repository" | "complete_node" | "stop" | "settle_completion";
 
 export type OperationState = "admitted" | "succeeded" | "recovery" | "cancelled";
 
@@ -333,6 +390,22 @@ export interface WorkspaceResource {
 export interface OperationResult {
     attempt_id:                 string;
     cancelled_by_operation_id?: string;
+    completion_settlement?:     CompletionSettlement;
+    failure_kind?:              FailureKind;
+    operation_id:               string;
+    result:                     EffectResult;
+    success:                    boolean;
+}
+
+export interface CompletionSettlement {
+    completion_operation_id: string;
+    completion_result:       CompletionOperationResult;
+    disposition:             CompletionSettlementDisposition;
+}
+
+export interface CompletionOperationResult {
+    attempt_id:                 string;
+    cancelled_by_operation_id?: string;
     failure_kind?:              FailureKind;
     operation_id:               string;
     result:                     EffectResult;
@@ -340,6 +413,8 @@ export interface OperationResult {
 }
 
 export type FailureKind = "recoverable" | "capture_hard_limit" | "invalid_finalization";
+
+export type CompletionSettlementDisposition = "cancelled" | "already_finalized";
 
 export interface RuntimeInstallation {
     availability:      Availability;
@@ -379,22 +454,31 @@ export interface OwnerCommand {
     scope_id:                 string;
 }
 
-export type OwnerCommandName = "confirm_proposal" | "stop_node" | "continue_node" | "retry_node" | "stop_initial_planning" | "retry_initial_planning" | "start_task" | "cancel_task";
+export type OwnerCommandName = "confirm_proposal" | "stop_node" | "continue_node" | "retry_node" | "stop_initial_planning" | "retry_initial_planning" | "start_task" | "cancel_task" | "recover_completion";
 
 export interface OwnerCommandPayload {
-    content_digest?:     string;
-    proposal_id?:        string;
-    attempt_id?:         string;
-    node_activation?:    number;
-    node_id?:            string;
-    issue_sequence?:     number;
-    planning_intent_id?: string;
-    answer?:             string;
-    specification_id?:   string;
+    content_digest?:             string;
+    proposal_id?:                string;
+    attempt_id?:                 string;
+    node_activation?:            number;
+    node_id?:                    string;
+    source_id?:                  string;
+    answer?:                     string;
+    blocker_id?:                 string;
+    issue_sequence?:             number;
+    planning_intent_id?:         string;
+    specification_id?:           string;
+    plan_id?:                    string;
+    completion_identity_digest?: string;
+    mode?:                       Mode;
+    operation_id?:               string;
 }
+
+export type Mode = "retry" | "correct";
 
 export interface OwnerCommandResult {
     attempt_id?:         string;
+    blocker_id?:         string;
     confirmation_id?:    string;
     control_version?:    number;
     end_reason?:         string;
@@ -404,6 +488,7 @@ export interface OwnerCommandResult {
     proposal_id?:        string;
     request_id:          string;
     schema_version:      number;
+    source_id?:          string;
     status:              OwnerCommandResultStatus;
     task_id?:            string;
 }
@@ -665,9 +750,10 @@ export interface OwnerStopNodeCommand {
 export type OwnerStopNodeCommandName = "stop_node";
 
 export interface OwnerStopNodeCommandPayload {
-    attempt_id:      string;
+    attempt_id?:     string;
     node_activation: number;
     node_id:         string;
+    source_id?:      string;
 }
 
 export interface OwnerContinueNodeCommand {
@@ -682,9 +768,12 @@ export interface OwnerContinueNodeCommand {
 export type OwnerContinueNodeCommandName = "continue_node";
 
 export interface OwnerContinueNodeCommandPayload {
-    attempt_id:      string;
+    answer?:         string;
+    attempt_id?:     string;
+    blocker_id?:     string;
     node_activation: number;
     node_id:         string;
+    source_id?:      string;
 }
 
 export interface OwnerRetryNodeCommand {
@@ -699,9 +788,12 @@ export interface OwnerRetryNodeCommand {
 export type OwnerRetryNodeCommandName = "retry_node";
 
 export interface OwnerRetryNodeCommandPayload {
-    attempt_id:      string;
+    answer?:         string;
+    attempt_id?:     string;
+    blocker_id?:     string;
     node_activation: number;
     node_id:         string;
+    source_id?:      string;
 }
 
 export interface OwnerStopInitialPlanningCommand {
@@ -1220,6 +1312,7 @@ export interface OwnerCancelTaskCommand {
 export type OwnerCancelTaskCommandName = "cancel_task";
 
 export interface OwnerCancelTaskCommandPayload {
+    plan_id?:            string;
     planning_intent_id?: string;
     specification_id:    string;
 }
@@ -1258,3 +1351,86 @@ export interface TaskPlanRevision {
     specification_id: string;
     task_id:          string;
 }
+
+export interface ArtifactPage {
+    artifacts:      ArtifactMetadata[];
+    next_cursor?:   string;
+    schema_version: number;
+    task_id:        string;
+}
+
+export interface OwnerRecoverCompletionCommand {
+    expected_control_version: number;
+    name:                     OwnerRecoverCompletionCommandName;
+    payload:                  OwnerRecoverCompletionCommandPayload;
+    request_id:               string;
+    schema_version:           number;
+    scope_id:                 string;
+}
+
+export type OwnerRecoverCompletionCommandName = "recover_completion";
+
+export interface OwnerRecoverCompletionCommandPayload {
+    completion_identity_digest: string;
+    mode:                       Mode;
+    node_activation:            number;
+    node_id:                    string;
+    operation_id:               string;
+    source_id:                  string;
+}
+
+export interface NodeExecutionStatus {
+    attempt:          Attempt | null;
+    blocker:          Blocker | null;
+    control_version:  number;
+    manifest:         CompletionManifest | null;
+    node_activation:  number;
+    node_id:          string;
+    operations:       NodeExecutionOperationStatus[];
+    plan_id:          string;
+    schema_version:   number;
+    source:           NodeExecutionSource | null;
+    specification_id: string;
+    state:            NodeExecutionStatusState;
+    task_id:          string;
+    waiting_reason:   null | string;
+}
+
+export interface Attempt {
+    attempt_id:       string;
+    end_reason:       null | string;
+    process_released: boolean;
+    state:            AttemptStatusState;
+}
+
+export interface Blocker {
+    id:     string;
+    kind:   BlockerKind;
+    reason: string;
+}
+
+export type BlockerKind = "semantic" | "factual" | "owner_stopped";
+
+export interface CompletionManifest {
+    artifact_ids:     string[];
+    attempt_id:       string;
+    content_digest:   string;
+    node_activation:  number;
+    node_id:          string;
+    operation_id:     string;
+    plan_id:          string;
+    source_id:        string;
+    specification_id: string;
+    summary:          string;
+    task_id:          string;
+}
+
+export interface NodeExecutionOperationStatus {
+    completion_identity_digest?: string;
+    failure_kind:                null | string;
+    kind:                        OperationKind;
+    operation_id:                string;
+    state:                       OperationState;
+}
+
+export type NodeExecutionStatusState = "PENDING" | "RUNNING" | "BLOCKED" | "COMPLETED" | "CANCELLED";

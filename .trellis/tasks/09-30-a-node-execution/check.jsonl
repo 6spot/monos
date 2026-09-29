@@ -1,0 +1,23 @@
+{"file": ".trellis/spec/backend/index.md", "reason": "Backend ownership and development checklist"}
+{"file": ".trellis/spec/backend/database-guidelines.md", "reason": "Atomic receipts, immutable records, lock order and outbox"}
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "Recoverable versus hard capture failures"}
+{"file": ".trellis/spec/backend/configuration.md", "reason": "Current Role and Project context"}
+{"file": ".trellis/spec/backend/task-records.md", "reason": "Exact membership, activation and completion evidence"}
+{"file": ".trellis/spec/backend/task-planning.md", "reason": "Canonical source-bound publication provenance"}
+{"file": ".trellis/spec/backend/dispatch-queue.md", "reason": "Shared capacity and physical-owner promotion"}
+{"file": ".trellis/spec/backend/runtime-scheduling.md", "reason": "Target selection and waiting facts"}
+{"file": ".trellis/spec/backend/workspaces.md", "reason": "Canonical lease and recoverable Git settlement"}
+{"file": ".trellis/spec/backend/owner-commands.md", "reason": "Scoped immutable Owner decisions"}
+{"file": ".trellis/spec/backend/owner-reads.md", "reason": "Bounded authenticated factual reads"}
+{"file": ".trellis/spec/backend/logging-guidelines.md", "reason": "Formal events, outputs and raw logs separation"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Real concurrency, crash and native checks"}
+{"file": ".trellis/spec/protocol/commands.md", "reason": "Command scope, receipt and result authority"}
+{"file": ".trellis/spec/protocol/schema-generation.md", "reason": "One strict TS/Go/OpenAPI schema"}
+{"file": ".trellis/spec/runner/execution-guidelines.md", "reason": "CLI and process ownership"}
+{"file": ".trellis/spec/runner/workspace-guidelines.md", "reason": "Exact Git lineage and two-account effects"}
+{"file": ".trellis/spec/runner/quality-guidelines.md", "reason": "Native writer and exact result verification"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "Cross-layer consistency"}
+{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "Reuse current modules"}
+{"file": ".trellis/tasks/09-30-a-node-execution/research/backend-seams.md", "reason": "Source anchors and complete integration test matrix"}
+{"file": ".trellis/tasks/09-30-a-node-execution/research/runner-recovery.md", "reason": "Trusted failed-completion settlement and no-workspace contract"}
+{"file": ".trellis/spec/backend/node-execution.md", "reason": "Final executable Node, Artifact, immutable completion and recovery contracts"}

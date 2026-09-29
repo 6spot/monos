@@ -5,6 +5,154 @@
     "version": "1.0.0"
   },
   "paths": {
+    "/v1/owner/tasks/{task_id}/nodes/{node_id}/execution": {
+      "get": {
+        "security": [
+          {
+            "OwnerAuth": []
+          },
+          {
+            "OwnerCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authenticated response; admission is distinct from completed effects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NodeExecutionStatus"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Deterministic protocol error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/owner/tasks/{task_id}/artifacts": {
+      "get": {
+        "security": [
+          {
+            "OwnerAuth": []
+          },
+          {
+            "OwnerCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authenticated response; admission is distinct from completed effects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArtifactPage"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Deterministic protocol error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/owner/tasks/{task_id}/artifacts/{artifact_id}": {
+      "get": {
+        "security": [
+          {
+            "OwnerAuth": []
+          },
+          {
+            "OwnerCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "artifact_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authenticated response; admission is distinct from completed effects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArtifactRecord"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Deterministic protocol error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/runner/operations/{operation_id}/repository-access": {
       "post": {
         "security": [
@@ -1883,7 +2031,10 @@
               "read_discussion",
               "update_working_requirement_state",
               "publish_execution_plan",
-              "raise_planning_issue"
+              "raise_planning_issue",
+              "publish_artifact",
+              "read_artifact",
+              "block_node"
             ]
           },
           "scope_id": {
@@ -1903,7 +2054,8 @@
                 "name": {
                   "const": "open_workspace"
                 }
-              }
+              },
+              "type": "object"
             },
             "then": {
               "properties": {
@@ -1917,7 +2069,8 @@
                   },
                   "additionalProperties": false
                 }
-              }
+              },
+              "type": "object"
             }
           },
           {
@@ -1926,7 +2079,8 @@
                 "name": {
                   "const": "inspect_repository"
                 }
-              }
+              },
+              "type": "object"
             },
             "then": {
               "properties": {
@@ -1940,7 +2094,8 @@
                   },
                   "additionalProperties": false
                 }
-              }
+              },
+              "type": "object"
             }
           },
           {
@@ -1949,7 +2104,8 @@
                 "name": {
                   "const": "complete_node"
                 }
-              }
+              },
+              "type": "object"
             },
             "then": {
               "properties": {
@@ -1965,7 +2121,8 @@
                   },
                   "additionalProperties": false
                 }
-              }
+              },
+              "type": "object"
             }
           },
           {
@@ -1974,7 +2131,8 @@
                 "name": {
                   "const": "commit_task_turn"
                 }
-              }
+              },
+              "type": "object"
             },
             "then": {
               "properties": {
@@ -1992,7 +2150,8 @@
                   },
                   "additionalProperties": false
                 }
-              }
+              },
+              "type": "object"
             }
           },
           {
@@ -2001,7 +2160,8 @@
                 "name": {
                   "const": "commit_discussion_turn"
                 }
-              }
+              },
+              "type": "object"
             },
             "then": {
               "properties": {
@@ -2037,7 +2197,8 @@
                     "source_watermark"
                   ]
                 }
-              }
+              },
+              "type": "object"
             }
           },
           {
@@ -2046,7 +2207,8 @@
                 "name": {
                   "const": "read_discussion"
                 }
-              }
+              },
+              "type": "object"
             },
             "then": {
               "properties": {
@@ -2060,7 +2222,8 @@
                   },
                   "required": []
                 }
-              }
+              },
+              "type": "object"
             }
           },
           {
@@ -2069,7 +2232,8 @@
                 "name": {
                   "const": "update_working_requirement_state"
                 }
-              }
+              },
+              "type": "object"
             },
             "then": {
               "properties": {
@@ -2100,7 +2264,8 @@
                     "project_context_digest"
                   ]
                 }
-              }
+              },
+              "type": "object"
             }
           },
           {
@@ -2109,7 +2274,8 @@
                 "name": {
                   "const": "publish_execution_plan"
                 }
-              }
+              },
+              "type": "object"
             },
             "then": {
               "properties": {
@@ -2138,7 +2304,8 @@
                     }
                   }
                 }
-              }
+              },
+              "type": "object"
             }
           },
           {
@@ -2147,7 +2314,8 @@
                 "name": {
                   "const": "raise_planning_issue"
                 }
-              }
+              },
+              "type": "object"
             },
             "then": {
               "properties": {
@@ -2167,7 +2335,89 @@
                     }
                   }
                 }
-              }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "name": {
+                  "const": "publish_artifact"
+                }
+              },
+              "type": "object"
+            },
+            "then": {
+              "properties": {
+                "payload": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "artifact_id": {},
+                    "title": {},
+                    "content": {},
+                    "references": {},
+                    "supersedes": {}
+                  },
+                  "required": [
+                    "artifact_id",
+                    "title",
+                    "content"
+                  ]
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "name": {
+                  "const": "read_artifact"
+                }
+              },
+              "type": "object"
+            },
+            "then": {
+              "properties": {
+                "payload": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "artifact_id": {}
+                  },
+                  "required": [
+                    "artifact_id"
+                  ]
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "name": {
+                  "const": "block_node"
+                }
+              },
+              "type": "object"
+            },
+            "then": {
+              "properties": {
+                "payload": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "reason": {}
+                  },
+                  "required": [
+                    "reason"
+                  ]
+                }
+              },
+              "type": "object"
             }
           }
         ]
@@ -2186,10 +2436,11 @@
           },
           "artifact_ids": {
             "type": "array",
-            "maxItems": 0,
+            "maxItems": 256,
             "items": {
               "$ref": "#/components/schemas/Id"
-            }
+            },
+            "uniqueItems": true
           },
           "handled_guidance_ids": {
             "type": "array",
@@ -2261,6 +2512,27 @@
           },
           "reason": {
             "$ref": "#/components/schemas/PlanningText"
+          },
+          "artifact_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 256,
+            "pattern": "^[^\\x00]*$"
+          },
+          "content": {
+            "$ref": "#/components/schemas/ArtifactContent"
+          },
+          "references": {
+            "type": "array",
+            "maxItems": 32,
+            "items": {
+              "$ref": "#/components/schemas/ArtifactReference"
+            }
+          },
+          "supersedes": {
+            "$ref": "#/components/schemas/Id"
           }
         }
       },
@@ -2381,6 +2653,15 @@
           },
           "planning_outcome": {
             "$ref": "#/components/schemas/PlanningOutcome"
+          },
+          "artifact": {
+            "$ref": "#/components/schemas/ArtifactRecord"
+          },
+          "artifact_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "blocker_id": {
+            "$ref": "#/components/schemas/Id"
           }
         }
       },
@@ -2524,6 +2805,9 @@
           },
           "task_planning_source": {
             "$ref": "#/components/schemas/TaskPlanningSource"
+          },
+          "node_execution_source": {
+            "$ref": "#/components/schemas/NodeExecutionSource"
           }
         },
         "allOf": [
@@ -2534,7 +2818,8 @@
               ],
               "properties": {
                 "todo_id": {}
-              }
+              },
+              "type": "object"
             },
             "then": {
               "properties": {
@@ -2566,7 +2851,8 @@
                 "source_message_id",
                 "project_context_version",
                 "project_context_digest"
-              ]
+              ],
+              "type": "object"
             },
             "else": {
               "properties": {
@@ -2591,12 +2877,14 @@
                     ],
                     "properties": {
                       "workspace_reservations": {}
-                    }
+                    },
+                    "type": "object"
                   },
                   "then": {
                     "properties": {
                       "resource_id": false
-                    }
+                    },
+                    "type": "object"
                   },
                   "else": {
                     "required": [
@@ -2606,10 +2894,12 @@
                       "resource_id": {
                         "$ref": "#/components/schemas/Id"
                       }
-                    }
+                    },
+                    "type": "object"
                   }
                 }
-              ]
+              ],
+              "type": "object"
             }
           },
           {
@@ -2622,7 +2912,8 @@
                 "kind": {
                   "const": "planner"
                 }
-              }
+              },
+              "type": "object"
             },
             "then": {
               "properties": {
@@ -2635,7 +2926,8 @@
                     }
                   }
                 }
-              }
+              },
+              "type": "object"
             }
           },
           {
@@ -2645,7 +2937,8 @@
               ],
               "properties": {
                 "task_planning_source": {}
-              }
+              },
+              "type": "object"
             },
             "then": {
               "required": [
@@ -2677,7 +2970,38 @@
                 "source_watermark": {
                   "const": 0
                 }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "if": {
+              "required": [
+                "node_execution_source"
+              ],
+              "type": "object",
+              "properties": {
+                "node_execution_source": {}
               }
+            },
+            "then": {
+              "required": [
+                "task_id",
+                "node_id",
+                "workspace_reservations"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "node"
+                },
+                "todo_id": false,
+                "resource_id": false,
+                "task_planning_source": false,
+                "task_id": {},
+                "node_id": {},
+                "workspace_reservations": {}
+              },
+              "type": "object"
             }
           }
         ]
@@ -2719,7 +3043,8 @@
               "open_workspace",
               "inspect_repository",
               "complete_node",
-              "stop"
+              "stop",
+              "settle_completion"
             ]
           },
           "resource_id": {
@@ -2745,6 +3070,19 @@
           },
           "cancelled_by_operation_id": {
             "$ref": "#/components/schemas/Id"
+          },
+          "repository_free": {
+            "type": "boolean",
+            "const": true
+          },
+          "completion_manifest_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "completion_operation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "completion_identity_digest": {
+            "$ref": "#/components/schemas/SHA256"
           }
         },
         "allOf": [
@@ -2752,20 +3090,25 @@
             "if": {
               "properties": {
                 "kind": {
-                  "const": "stop"
+                  "enum": [
+                    "open_workspace",
+                    "inspect_repository",
+                    "settle_completion"
+                  ]
                 }
-              }
+              },
+              "type": "object"
             },
-            "then": {},
-            "else": {
+            "then": {
+              "required": [
+                "resource_id"
+              ],
               "properties": {
                 "resource_id": {
                   "$ref": "#/components/schemas/Id"
                 }
               },
-              "required": [
-                "resource_id"
-              ]
+              "type": "object"
             }
           },
           {
@@ -2775,7 +3118,8 @@
               ],
               "properties": {
                 "workspace": {}
-              }
+              },
+              "type": "object"
             },
             "then": {
               "properties": {
@@ -2783,10 +3127,12 @@
                   "enum": [
                     "open_workspace",
                     "complete_node",
-                    "stop"
+                    "stop",
+                    "settle_completion"
                   ]
                 }
-              }
+              },
+              "type": "object"
             }
           },
           {
@@ -2795,7 +3141,8 @@
                 "state": {
                   "const": "cancelled"
                 }
-              }
+              },
+              "type": "object"
             },
             "then": {
               "required": [
@@ -2811,7 +3158,10 @@
                   "$ref": "#/components/schemas/WorkspaceDescriptor"
                 },
                 "kind": {
-                  "const": "open_workspace"
+                  "enum": [
+                    "open_workspace",
+                    "complete_node"
+                  ]
                 },
                 "result": {
                   "type": "object",
@@ -2828,12 +3178,123 @@
                     "instruction_files": false
                   }
                 }
-              }
+              },
+              "type": "object"
             },
             "else": {
               "properties": {
                 "cancelled_by_operation_id": false
+              },
+              "type": "object"
+            }
+          },
+          {
+            "if": {
+              "required": [
+                "repository_free"
+              ],
+              "type": "object",
+              "properties": {
+                "repository_free": {}
               }
+            },
+            "then": {
+              "properties": {
+                "kind": {
+                  "const": "complete_node"
+                },
+                "workspace": false,
+                "workspace_digest": false,
+                "resource_id": false
+              },
+              "type": "object"
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "complete_node"
+                }
+              },
+              "not": {
+                "required": [
+                  "resource_id"
+                ],
+                "type": "object",
+                "properties": {
+                  "resource_id": {}
+                }
+              },
+              "type": "object"
+            },
+            "then": {
+              "required": [
+                "repository_free"
+              ],
+              "properties": {
+                "repository_free": {
+                  "type": "boolean",
+                  "const": true
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "settle_completion"
+                }
+              },
+              "type": "object"
+            },
+            "then": {
+              "required": [
+                "workspace",
+                "completion_operation_id",
+                "completion_identity_digest"
+              ],
+              "properties": {
+                "repository_free": false,
+                "workspace": {
+                  "$ref": "#/components/schemas/WorkspaceDescriptor"
+                },
+                "completion_operation_id": {
+                  "$ref": "#/components/schemas/Id"
+                },
+                "completion_identity_digest": {
+                  "$ref": "#/components/schemas/SHA256"
+                }
+              },
+              "type": "object"
+            },
+            "else": {
+              "properties": {
+                "completion_operation_id": false,
+                "completion_identity_digest": false
+              },
+              "type": "object"
+            }
+          },
+          {
+            "if": {
+              "required": [
+                "completion_manifest_digest"
+              ],
+              "properties": {
+                "completion_manifest_digest": {}
+              },
+              "type": "object"
+            },
+            "then": {
+              "properties": {
+                "kind": {
+                  "const": "complete_node"
+                }
+              },
+              "type": "object"
             }
           }
         ],
@@ -2939,6 +3400,9 @@
           },
           "cancelled_by_operation_id": {
             "$ref": "#/components/schemas/Id"
+          },
+          "completion_settlement": {
+            "$ref": "#/components/schemas/CompletionSettlement"
           }
         },
         "allOf": [
@@ -2948,12 +3412,14 @@
                 "success": {
                   "const": true
                 }
-              }
+              },
+              "type": "object"
             },
             "then": {
               "properties": {
                 "failure_kind": false
-              }
+              },
+              "type": "object"
             }
           },
           {
@@ -2963,7 +3429,8 @@
               ],
               "properties": {
                 "cancelled_by_operation_id": {}
-              }
+              },
+              "type": "object"
             },
             "then": {
               "properties": {
@@ -2992,10 +3459,34 @@
                     "resolved_watermark": false,
                     "instruction_files": false,
                     "workspace_metadata": false,
-                    "workspace_unavailable_reason": false
+                    "workspace_unavailable_reason": false,
+                    "planning_outcome": false,
+                    "artifact": false,
+                    "artifact_id": false,
+                    "blocker_id": false
                   }
                 }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "if": {
+              "required": [
+                "completion_settlement"
+              ],
+              "type": "object",
+              "properties": {
+                "completion_settlement": {}
               }
+            },
+            "then": {
+              "properties": {
+                "success": {
+                  "const": true
+                }
+              },
+              "type": "object"
             }
           }
         ]
@@ -3111,7 +3602,8 @@
                 "type": {
                   "const": "hello"
                 }
-              }
+              },
+              "type": "object"
             },
             "then": {
               "required": [
@@ -3126,7 +3618,8 @@
                 "runner_id": {},
                 "boot_id": {}
               },
-              "additionalProperties": false
+              "additionalProperties": false,
+              "type": "object"
             }
           },
           {
@@ -3135,7 +3628,8 @@
                 "type": {
                   "const": "welcome"
                 }
-              }
+              },
+              "type": "object"
             },
             "then": {
               "required": [
@@ -3150,7 +3644,8 @@
                 "runner_id": {},
                 "incarnation": {}
               },
-              "additionalProperties": false
+              "additionalProperties": false,
+              "type": "object"
             }
           },
           {
@@ -3159,7 +3654,8 @@
                 "type": {
                   "const": "ready"
                 }
-              }
+              },
+              "type": "object"
             },
             "then": {
               "required": [
@@ -3174,7 +3670,8 @@
                 "runtimes": {},
                 "log_modes": {}
               },
-              "additionalProperties": false
+              "additionalProperties": false,
+              "type": "object"
             }
           },
           {
@@ -3183,7 +3680,8 @@
                 "type": {
                   "const": "heartbeat"
                 }
-              }
+              },
+              "type": "object"
             },
             "then": {
               "required": [
@@ -3196,7 +3694,8 @@
                 "type": {},
                 "incarnation": {}
               },
-              "additionalProperties": false
+              "additionalProperties": false,
+              "type": "object"
             }
           },
           {
@@ -3205,7 +3704,8 @@
                 "type": {
                   "const": "start"
                 }
-              }
+              },
+              "type": "object"
             },
             "then": {
               "required": [
@@ -3220,7 +3720,8 @@
                 "dispatch": {},
                 "incarnation": {}
               },
-              "additionalProperties": false
+              "additionalProperties": false,
+              "type": "object"
             }
           },
           {
@@ -3229,7 +3730,8 @@
                 "type": {
                   "const": "effect"
                 }
-              }
+              },
+              "type": "object"
             },
             "then": {
               "required": [
@@ -3244,7 +3746,8 @@
                 "operation": {},
                 "incarnation": {}
               },
-              "additionalProperties": false
+              "additionalProperties": false,
+              "type": "object"
             }
           },
           {
@@ -3253,7 +3756,8 @@
                 "type": {
                   "const": "authorize_dispatch"
                 }
-              }
+              },
+              "type": "object"
             },
             "then": {
               "required": [
@@ -3270,7 +3774,8 @@
                 "correlation_id": {},
                 "incarnation": {}
               },
-              "additionalProperties": false
+              "additionalProperties": false,
+              "type": "object"
             }
           },
           {
@@ -3279,7 +3784,8 @@
                 "type": {
                   "const": "authorization"
                 }
-              }
+              },
+              "type": "object"
             },
             "then": {
               "required": [
@@ -3298,7 +3804,8 @@
                 "credential": {},
                 "expires_at": {}
               },
-              "additionalProperties": false
+              "additionalProperties": false,
+              "type": "object"
             }
           },
           {
@@ -3307,7 +3814,8 @@
                 "type": {
                   "const": "event"
                 }
-              }
+              },
+              "type": "object"
             },
             "then": {
               "required": [
@@ -3322,7 +3830,8 @@
                 "event": {},
                 "incarnation": {}
               },
-              "additionalProperties": false
+              "additionalProperties": false,
+              "type": "object"
             }
           },
           {
@@ -3331,7 +3840,8 @@
                 "type": {
                   "const": "event_ack"
                 }
-              }
+              },
+              "type": "object"
             },
             "then": {
               "required": [
@@ -3350,7 +3860,8 @@
                 "sequence": {},
                 "incarnation": {}
               },
-              "additionalProperties": false
+              "additionalProperties": false,
+              "type": "object"
             }
           },
           {
@@ -3359,7 +3870,8 @@
                 "type": {
                   "const": "operation_result"
                 }
-              }
+              },
+              "type": "object"
             },
             "then": {
               "required": [
@@ -3374,7 +3886,8 @@
                 "operation_result": {},
                 "incarnation": {}
               },
-              "additionalProperties": false
+              "additionalProperties": false,
+              "type": "object"
             }
           },
           {
@@ -3383,7 +3896,8 @@
                 "type": {
                   "const": "operation_ack"
                 }
-              }
+              },
+              "type": "object"
             },
             "then": {
               "required": [
@@ -3398,7 +3912,8 @@
                 "operation_id": {},
                 "incarnation": {}
               },
-              "additionalProperties": false
+              "additionalProperties": false,
+              "type": "object"
             }
           },
           {
@@ -3407,7 +3922,8 @@
                 "type": {
                   "const": "error"
                 }
-              }
+              },
+              "type": "object"
             },
             "then": {
               "required": [
@@ -3423,7 +3939,8 @@
                 "incarnation": {},
                 "correlation_id": {}
               },
-              "additionalProperties": false
+              "additionalProperties": false,
+              "type": "object"
             }
           },
           {
@@ -3438,13 +3955,19 @@
               },
               "required": [
                 "allowed"
-              ]
+              ],
+              "type": "object"
             },
             "then": {
               "required": [
                 "credential",
                 "expires_at"
-              ]
+              ],
+              "type": "object",
+              "properties": {
+                "credential": {},
+                "expires_at": {}
+              }
             }
           }
         ]
@@ -3546,6 +4069,9 @@
           },
           {
             "$ref": "#/components/schemas/OwnerCancelTaskCommand"
+          },
+          {
+            "$ref": "#/components/schemas/OwnerRecoverCompletionCommand"
           }
         ]
       },
@@ -3601,6 +4127,12 @@
           },
           "planning_intent_id": {
             "$ref": "#/components/schemas/Id"
+          },
+          "source_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "blocker_id": {
+            "$ref": "#/components/schemas/Id"
           }
         },
         "allOf": [
@@ -3613,7 +4145,8 @@
               },
               "required": [
                 "status"
-              ]
+              ],
+              "type": "object"
             },
             "then": {
               "anyOf": [
@@ -3625,7 +4158,8 @@
                   "properties": {
                     "confirmation_id": {},
                     "proposal_id": {}
-                  }
+                  },
+                  "type": "object"
                 },
                 {
                   "required": [
@@ -3635,7 +4169,8 @@
                   "properties": {
                     "attempt_id": {},
                     "control_version": {}
-                  }
+                  },
+                  "type": "object"
                 },
                 {
                   "required": [
@@ -3645,7 +4180,8 @@
                   "properties": {
                     "task_id": {},
                     "control_version": {}
-                  }
+                  },
+                  "type": "object"
                 }
               ]
             }
@@ -3659,7 +4195,8 @@
               },
               "required": [
                 "status"
-              ]
+              ],
+              "type": "object"
             },
             "then": {
               "required": [
@@ -3669,7 +4206,8 @@
               "properties": {
                 "attempt_id": {},
                 "operation_id": {}
-              }
+              },
+              "type": "object"
             }
           }
         ]
@@ -3918,7 +4456,8 @@
                 "authenticated": {
                   "const": true
                 }
-              }
+              },
+              "type": "object"
             },
             "then": {
               "required": [
@@ -3928,12 +4467,14 @@
                 "expires_at": {
                   "type": "string"
                 }
-              }
+              },
+              "type": "object"
             },
             "else": {
               "properties": {
                 "expires_at": false
-              }
+              },
+              "type": "object"
             }
           }
         ]
@@ -4142,14 +4683,16 @@
               },
               "required": [
                 "name"
-              ]
+              ],
+              "type": "object"
             },
             "then": {
               "properties": {
                 "payload": {
                   "$ref": "#/components/schemas/ProjectConfiguration"
                 }
-              }
+              },
+              "type": "object"
             }
           },
           {
@@ -4161,14 +4704,16 @@
               },
               "required": [
                 "name"
-              ]
+              ],
+              "type": "object"
             },
             "then": {
               "properties": {
                 "payload": {
                   "$ref": "#/components/schemas/RoleConfiguration"
                 }
-              }
+              },
+              "type": "object"
             }
           },
           {
@@ -4180,14 +4725,16 @@
               },
               "required": [
                 "name"
-              ]
+              ],
+              "type": "object"
             },
             "then": {
               "properties": {
                 "payload": {
                   "$ref": "#/components/schemas/PolicyConfiguration"
                 }
-              }
+              },
+              "type": "object"
             }
           },
           {
@@ -4199,14 +4746,16 @@
               },
               "required": [
                 "name"
-              ]
+              ],
+              "type": "object"
             },
             "then": {
               "properties": {
                 "payload": {
                   "$ref": "#/components/schemas/GitHubConfigurationInput"
                 }
-              }
+              },
+              "type": "object"
             }
           },
           {
@@ -4218,14 +4767,16 @@
               },
               "required": [
                 "name"
-              ]
+              ],
+              "type": "object"
             },
             "then": {
               "properties": {
                 "payload": {
                   "$ref": "#/components/schemas/PlannerGuidance"
                 }
-              }
+              },
+              "type": "object"
             }
           }
         ]
@@ -4880,11 +5431,7 @@
           "payload": {
             "type": "object",
             "additionalProperties": false,
-            "required": [
-              "attempt_id",
-              "node_id",
-              "node_activation"
-            ],
+            "required": [],
             "properties": {
               "attempt_id": {
                 "$ref": "#/components/schemas/Id"
@@ -4894,8 +5441,53 @@
               },
               "node_activation": {
                 "$ref": "#/components/schemas/Counter"
+              },
+              "source_id": {
+                "$ref": "#/components/schemas/Id"
               }
-            }
+            },
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "attempt_id",
+                  "node_id",
+                  "node_activation"
+                ],
+                "properties": {
+                  "attempt_id": {
+                    "$ref": "#/components/schemas/Id"
+                  },
+                  "node_id": {
+                    "$ref": "#/components/schemas/Id"
+                  },
+                  "node_activation": {
+                    "$ref": "#/components/schemas/Counter"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "node_id": {
+                    "$ref": "#/components/schemas/Id"
+                  },
+                  "node_activation": {
+                    "$ref": "#/components/schemas/PositiveCounter"
+                  },
+                  "source_id": {
+                    "$ref": "#/components/schemas/Id"
+                  }
+                },
+                "required": [
+                  "node_id",
+                  "node_activation",
+                  "source_id"
+                ]
+              }
+            ]
           }
         }
       },
@@ -4931,11 +5523,7 @@
           "payload": {
             "type": "object",
             "additionalProperties": false,
-            "required": [
-              "attempt_id",
-              "node_id",
-              "node_activation"
-            ],
+            "required": [],
             "properties": {
               "attempt_id": {
                 "$ref": "#/components/schemas/Id"
@@ -4945,8 +5533,65 @@
               },
               "node_activation": {
                 "$ref": "#/components/schemas/Counter"
+              },
+              "source_id": {
+                "$ref": "#/components/schemas/Id"
+              },
+              "blocker_id": {
+                "$ref": "#/components/schemas/Id"
+              },
+              "answer": {
+                "$ref": "#/components/schemas/PlanningText"
               }
-            }
+            },
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "attempt_id",
+                  "node_id",
+                  "node_activation"
+                ],
+                "properties": {
+                  "attempt_id": {
+                    "$ref": "#/components/schemas/Id"
+                  },
+                  "node_id": {
+                    "$ref": "#/components/schemas/Id"
+                  },
+                  "node_activation": {
+                    "$ref": "#/components/schemas/Counter"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "node_id": {
+                    "$ref": "#/components/schemas/Id"
+                  },
+                  "node_activation": {
+                    "$ref": "#/components/schemas/PositiveCounter"
+                  },
+                  "source_id": {
+                    "$ref": "#/components/schemas/Id"
+                  },
+                  "blocker_id": {
+                    "$ref": "#/components/schemas/Id"
+                  },
+                  "answer": {
+                    "$ref": "#/components/schemas/PlanningText"
+                  }
+                },
+                "required": [
+                  "node_id",
+                  "node_activation",
+                  "source_id"
+                ]
+              }
+            ]
           }
         }
       },
@@ -4982,11 +5627,7 @@
           "payload": {
             "type": "object",
             "additionalProperties": false,
-            "required": [
-              "attempt_id",
-              "node_id",
-              "node_activation"
-            ],
+            "required": [],
             "properties": {
               "attempt_id": {
                 "$ref": "#/components/schemas/Id"
@@ -4996,8 +5637,65 @@
               },
               "node_activation": {
                 "$ref": "#/components/schemas/Counter"
+              },
+              "source_id": {
+                "$ref": "#/components/schemas/Id"
+              },
+              "blocker_id": {
+                "$ref": "#/components/schemas/Id"
+              },
+              "answer": {
+                "$ref": "#/components/schemas/PlanningText"
               }
-            }
+            },
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "attempt_id",
+                  "node_id",
+                  "node_activation"
+                ],
+                "properties": {
+                  "attempt_id": {
+                    "$ref": "#/components/schemas/Id"
+                  },
+                  "node_id": {
+                    "$ref": "#/components/schemas/Id"
+                  },
+                  "node_activation": {
+                    "$ref": "#/components/schemas/Counter"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "node_id": {
+                    "$ref": "#/components/schemas/Id"
+                  },
+                  "node_activation": {
+                    "$ref": "#/components/schemas/PositiveCounter"
+                  },
+                  "source_id": {
+                    "$ref": "#/components/schemas/Id"
+                  },
+                  "blocker_id": {
+                    "$ref": "#/components/schemas/Id"
+                  },
+                  "answer": {
+                    "$ref": "#/components/schemas/PlanningText"
+                  }
+                },
+                "required": [
+                  "node_id",
+                  "node_activation",
+                  "source_id"
+                ]
+              }
+            ]
           }
         }
       },
@@ -5201,7 +5899,8 @@
               "stop",
               "complete_node",
               "open_workspace",
-              "inspect_repository"
+              "inspect_repository",
+              "settle_completion"
             ]
           },
           "state": {
@@ -5331,7 +6030,8 @@
               },
               "required": [
                 "scope"
-              ]
+              ],
+              "type": "object"
             },
             "then": {
               "required": [
@@ -5341,12 +6041,14 @@
                 "project_id": {
                   "$ref": "#/components/schemas/Id"
                 }
-              }
+              },
+              "type": "object"
             },
             "else": {
               "properties": {
                 "project_id": false
-              }
+              },
+              "type": "object"
             }
           }
         ]
@@ -5396,7 +6098,8 @@
               },
               "required": [
                 "scope"
-              ]
+              ],
+              "type": "object"
             },
             "then": {
               "required": [
@@ -5406,12 +6109,14 @@
                 "project_id": {
                   "$ref": "#/components/schemas/Id"
                 }
-              }
+              },
+              "type": "object"
             },
             "else": {
               "properties": {
                 "project_id": false
-              }
+              },
+              "type": "object"
             }
           }
         ]
@@ -5593,7 +6298,8 @@
               },
               "required": [
                 "status"
-              ]
+              ],
+              "type": "object"
             },
             "then": {
               "required": [
@@ -5603,12 +6309,14 @@
                 "todo": {
                   "$ref": "#/components/schemas/TodoRecord"
                 }
-              }
+              },
+              "type": "object"
             },
             "else": {
               "properties": {
                 "todo": false
-              }
+              },
+              "type": "object"
             }
           }
         ]
@@ -6055,7 +6763,8 @@
                 "status": {
                   "const": "committed"
                 }
-              }
+              },
+              "type": "object"
             },
             "then": {
               "properties": {
@@ -6069,7 +6778,8 @@
               "required": [
                 "todo_id",
                 "discussion_version"
-              ]
+              ],
+              "type": "object"
             },
             "else": {
               "properties": {
@@ -6078,7 +6788,8 @@
                 "discussion_version": false,
                 "attempt_id": false,
                 "operation_id": false
-              }
+              },
+              "type": "object"
             }
           }
         ]
@@ -6276,7 +6987,8 @@
               "stop",
               "complete_node",
               "open_workspace",
-              "inspect_repository"
+              "inspect_repository",
+              "settle_completion"
             ]
           },
           "state": {
@@ -6541,7 +7253,8 @@
                 "status": {
                   "const": "committed"
                 }
-              }
+              },
+              "type": "object"
             },
             "then": {
               "required": [
@@ -6553,7 +7266,8 @@
                 "todo_id": {},
                 "proposal_message_id": {},
                 "outcome": {}
-              }
+              },
+              "type": "object"
             },
             "else": {
               "properties": {
@@ -6564,7 +7278,8 @@
                 "content_digest": false,
                 "task_id": false,
                 "specification_id": false
-              }
+              },
+              "type": "object"
             }
           },
           {
@@ -6576,7 +7291,8 @@
                 "outcome": {
                   "const": "confirmed"
                 }
-              }
+              },
+              "type": "object"
             },
             "then": {
               "required": [
@@ -6588,7 +7304,8 @@
                 "specification_id": false,
                 "confirmation_id": {},
                 "content_digest": {}
-              }
+              },
+              "type": "object"
             }
           },
           {
@@ -6600,7 +7317,8 @@
                 "outcome": {
                   "const": "created"
                 }
-              }
+              },
+              "type": "object"
             },
             "then": {
               "required": [
@@ -6614,7 +7332,8 @@
                 "content_digest": {},
                 "task_id": {},
                 "specification_id": {}
-              }
+              },
+              "type": "object"
             }
           },
           {
@@ -6626,7 +7345,8 @@
                 "outcome": {
                   "const": "cancelled"
                 }
-              }
+              },
+              "type": "object"
             },
             "then": {
               "required": [],
@@ -6635,7 +7355,8 @@
                 "content_digest": false,
                 "task_id": false,
                 "specification_id": false
-              }
+              },
+              "type": "object"
             }
           }
         ]
@@ -6720,7 +7441,8 @@
                 "state": {
                   "const": "created"
                 }
-              }
+              },
+              "type": "object"
             },
             "then": {
               "required": [
@@ -6734,12 +7456,14 @@
                 "selected_project_id": {},
                 "content_digest": {},
                 "confirmation_id": {}
-              }
+              },
+              "type": "object"
             },
             "else": {
               "properties": {
                 "task": false
-              }
+              },
+              "type": "object"
             }
           },
           {
@@ -6748,7 +7472,8 @@
                 "state": {
                   "const": "eligible"
                 }
-              }
+              },
+              "type": "object"
             },
             "then": {
               "required": [
@@ -6758,7 +7483,8 @@
               "properties": {
                 "selected_project_id": {},
                 "content_digest": {}
-              }
+              },
+              "type": "object"
             }
           }
         ]
@@ -6990,7 +7716,21 @@
           },
           "commit_id": {
             "$ref": "#/components/schemas/GitOID"
+          },
+          "completion_operation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "completion_identity_digest": {
+            "$ref": "#/components/schemas/SHA256"
           }
+        },
+        "dependencies": {
+          "completion_operation_id": [
+            "completion_identity_digest"
+          ],
+          "completion_identity_digest": [
+            "completion_operation_id"
+          ]
         }
       },
       "WorkspaceMetadata": {
@@ -7056,7 +7796,8 @@
               },
               "required": [
                 "recovered_by_stop_operation_id"
-              ]
+              ],
+              "type": "object"
             },
             "then": {
               "properties": {
@@ -7064,7 +7805,8 @@
               },
               "required": [
                 "target_observation_lease_id"
-              ]
+              ],
+              "type": "object"
             }
           },
           {
@@ -7074,7 +7816,8 @@
               },
               "required": [
                 "target_observation_lease_id"
-              ]
+              ],
+              "type": "object"
             },
             "then": {
               "properties": {
@@ -7082,7 +7825,8 @@
               },
               "required": [
                 "recovered_by_stop_operation_id"
-              ]
+              ],
+              "type": "object"
             }
           }
         ]
@@ -7140,13 +7884,15 @@
                 "kind": {
                   "const": "anonymous"
                 }
-              }
+              },
+              "type": "object"
             },
             "then": {
               "properties": {
                 "token": false,
                 "expires_at": false
-              }
+              },
+              "type": "object"
             },
             "else": {
               "properties": {
@@ -7156,7 +7902,8 @@
               "required": [
                 "token",
                 "expires_at"
-              ]
+              ],
+              "type": "object"
             }
           }
         ]
@@ -7381,7 +8128,8 @@
                 "kind": {
                   "const": "plan"
                 }
-              }
+              },
+              "type": "object"
             },
             "then": {
               "required": [
@@ -7390,7 +8138,8 @@
               "properties": {
                 "plan_id": {},
                 "issue_sequence": false
-              }
+              },
+              "type": "object"
             },
             "else": {
               "required": [
@@ -7399,7 +8148,8 @@
               "properties": {
                 "issue_sequence": {},
                 "plan_id": false
-              }
+              },
+              "type": "object"
             }
           }
         ]
@@ -7487,6 +8237,9 @@
                 "$ref": "#/components/schemas/Id"
               },
               "planning_intent_id": {
+                "$ref": "#/components/schemas/Id"
+              },
+              "plan_id": {
                 "$ref": "#/components/schemas/Id"
               }
             }
@@ -7642,6 +8395,734 @@
             }
           }
         }
+      },
+      "NodeExecutionSource": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "source_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "node_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "node_activation": {
+            "$ref": "#/components/schemas/PositiveCounter"
+          },
+          "specification_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "plan_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "control_version": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "context_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          }
+        },
+        "required": [
+          "source_id",
+          "node_id",
+          "node_activation",
+          "specification_id",
+          "plan_id",
+          "control_version",
+          "context_digest"
+        ]
+      },
+      "ArtifactReference": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "url": {
+            "type": "string",
+            "maxLength": 2048,
+            "pattern": "^https?://[^\\s]+$"
+          },
+          "label": {
+            "type": "string",
+            "maxLength": 256,
+            "pattern": "^[^\\x00]*$"
+          }
+        },
+        "required": [
+          "url"
+        ]
+      },
+      "ArtifactContent": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "text": {
+            "type": "string",
+            "maxLength": 262144,
+            "pattern": "^[^\\x00]*$"
+          },
+          "media_type": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9!#$&^_.+-]+/[A-Za-z0-9!#$&^_.+-]+$"
+          }
+        },
+        "required": [
+          "text",
+          "media_type"
+        ]
+      },
+      "ArtifactMetadata": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "artifact_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "task_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "node_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "node_activation": {
+            "$ref": "#/components/schemas/PositiveCounter"
+          },
+          "attempt_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "specification_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "plan_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 256,
+            "pattern": "^[^\\x00]*$"
+          },
+          "media_type": {
+            "type": "string",
+            "maxLength": 128,
+            "pattern": "^[^\\x00]*$"
+          },
+          "size_bytes": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "content_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "references": {
+            "type": "array",
+            "maxItems": 32,
+            "items": {
+              "$ref": "#/components/schemas/ArtifactReference"
+            }
+          },
+          "supersedes": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "created_at": {
+            "type": "string",
+            "maxLength": 64,
+            "pattern": "^[^\\x00]*$"
+          }
+        },
+        "required": [
+          "artifact_id",
+          "task_id",
+          "node_id",
+          "node_activation",
+          "attempt_id",
+          "specification_id",
+          "plan_id",
+          "title",
+          "media_type",
+          "size_bytes",
+          "content_digest",
+          "references",
+          "created_at"
+        ]
+      },
+      "ArtifactRecord": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "metadata": {
+            "$ref": "#/components/schemas/ArtifactMetadata"
+          },
+          "content": {
+            "$ref": "#/components/schemas/ArtifactContent"
+          }
+        },
+        "required": [
+          "metadata",
+          "content"
+        ]
+      },
+      "ArtifactPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "const": 1,
+            "type": "integer"
+          },
+          "task_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "artifacts": {
+            "type": "array",
+            "maxItems": 64,
+            "items": {
+              "$ref": "#/components/schemas/ArtifactMetadata"
+            }
+          },
+          "next_cursor": {
+            "$ref": "#/components/schemas/Id"
+          }
+        },
+        "required": [
+          "schema_version",
+          "task_id",
+          "artifacts"
+        ]
+      },
+      "CompletionOperationResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "operation_id",
+          "attempt_id",
+          "success",
+          "result"
+        ],
+        "properties": {
+          "operation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "attempt_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "success": {
+            "type": "boolean"
+          },
+          "result": {
+            "$ref": "#/components/schemas/EffectResult"
+          },
+          "failure_kind": {
+            "type": "string",
+            "enum": [
+              "recoverable",
+              "capture_hard_limit",
+              "invalid_finalization"
+            ]
+          },
+          "cancelled_by_operation_id": {
+            "$ref": "#/components/schemas/Id"
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "success": {
+                  "const": true
+                }
+              },
+              "type": "object"
+            },
+            "then": {
+              "properties": {
+                "failure_kind": false
+              },
+              "type": "object"
+            }
+          },
+          {
+            "if": {
+              "required": [
+                "cancelled_by_operation_id"
+              ],
+              "properties": {
+                "cancelled_by_operation_id": {}
+              },
+              "type": "object"
+            },
+            "then": {
+              "properties": {
+                "success": {
+                  "const": false
+                },
+                "failure_kind": false,
+                "result": {
+                  "type": "object",
+                  "required": [
+                    "writer_absent"
+                  ],
+                  "properties": {
+                    "writer_absent": {
+                      "const": true
+                    },
+                    "workspace_id": false,
+                    "path": false,
+                    "git_commit": false,
+                    "git_tree": false,
+                    "reply": false,
+                    "source_watermark": false,
+                    "discussion_page": false,
+                    "message_id": false,
+                    "cache_updated": false,
+                    "resolved_watermark": false,
+                    "instruction_files": false,
+                    "workspace_metadata": false,
+                    "workspace_unavailable_reason": false,
+                    "planning_outcome": false,
+                    "artifact": false,
+                    "artifact_id": false,
+                    "blocker_id": false
+                  }
+                }
+              },
+              "type": "object"
+            }
+          }
+        ]
+      },
+      "CompletionSettlement": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "completion_operation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "disposition": {
+            "type": "string",
+            "enum": [
+              "cancelled",
+              "already_finalized"
+            ]
+          },
+          "completion_result": {
+            "$ref": "#/components/schemas/CompletionOperationResult"
+          }
+        },
+        "required": [
+          "completion_operation_id",
+          "disposition",
+          "completion_result"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "disposition": {
+                  "const": "cancelled"
+                }
+              },
+              "type": "object"
+            },
+            "then": {
+              "properties": {
+                "completion_result": {
+                  "required": [
+                    "cancelled_by_operation_id"
+                  ],
+                  "properties": {
+                    "success": {
+                      "const": false
+                    },
+                    "cancelled_by_operation_id": {
+                      "$ref": "#/components/schemas/Id"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            },
+            "else": {
+              "properties": {
+                "completion_result": {
+                  "properties": {
+                    "success": {
+                      "const": true
+                    },
+                    "cancelled_by_operation_id": false,
+                    "result": {
+                      "type": "object",
+                      "required": [
+                        "writer_absent",
+                        "git_commit",
+                        "git_tree"
+                      ],
+                      "properties": {
+                        "writer_absent": {
+                          "const": true
+                        },
+                        "git_commit": {
+                          "$ref": "#/components/schemas/GitOID"
+                        },
+                        "git_tree": {
+                          "$ref": "#/components/schemas/GitOID"
+                        }
+                      }
+                    }
+                  },
+                  "type": "object",
+                  "required": [
+                    "result"
+                  ]
+                }
+              },
+              "type": "object"
+            }
+          }
+        ]
+      },
+      "OwnerRecoverCompletionCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "schema_version",
+          "request_id",
+          "scope_id",
+          "expected_control_version",
+          "name",
+          "payload"
+        ],
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "request_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "scope_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "expected_control_version": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "name": {
+            "type": "string",
+            "const": "recover_completion"
+          },
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "node_id": {
+                "$ref": "#/components/schemas/Id"
+              },
+              "node_activation": {
+                "$ref": "#/components/schemas/PositiveCounter"
+              },
+              "source_id": {
+                "$ref": "#/components/schemas/Id"
+              },
+              "operation_id": {
+                "$ref": "#/components/schemas/Id"
+              },
+              "completion_identity_digest": {
+                "$ref": "#/components/schemas/SHA256"
+              },
+              "mode": {
+                "type": "string",
+                "enum": [
+                  "retry",
+                  "correct"
+                ]
+              }
+            },
+            "required": [
+              "node_id",
+              "node_activation",
+              "source_id",
+              "operation_id",
+              "completion_identity_digest",
+              "mode"
+            ]
+          }
+        }
+      },
+      "NodeExecutionOperationStatus": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "operation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "open_workspace",
+              "inspect_repository",
+              "complete_node",
+              "stop",
+              "settle_completion"
+            ]
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "admitted",
+              "succeeded",
+              "recovery",
+              "cancelled"
+            ]
+          },
+          "failure_kind": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 128
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "completion_identity_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          }
+        },
+        "required": [
+          "operation_id",
+          "kind",
+          "state",
+          "failure_kind"
+        ]
+      },
+      "CompletionManifest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "operation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "task_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "node_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "node_activation": {
+            "$ref": "#/components/schemas/PositiveCounter"
+          },
+          "attempt_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "source_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "specification_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "plan_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "summary": {
+            "type": "string",
+            "maxLength": 262144
+          },
+          "artifact_ids": {
+            "type": "array",
+            "maxItems": 256,
+            "items": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          "content_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          }
+        },
+        "required": [
+          "operation_id",
+          "task_id",
+          "node_id",
+          "node_activation",
+          "attempt_id",
+          "source_id",
+          "specification_id",
+          "plan_id",
+          "summary",
+          "artifact_ids",
+          "content_digest"
+        ]
+      },
+      "NodeExecutionStatus": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "task_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "node_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "node_activation": {
+            "$ref": "#/components/schemas/PositiveCounter"
+          },
+          "control_version": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "specification_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "plan_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "RUNNING",
+              "BLOCKED",
+              "COMPLETED",
+              "CANCELLED"
+            ]
+          },
+          "source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NodeExecutionSource"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "waiting_reason": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 128
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "attempt": {
+            "anyOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "attempt_id": {
+                    "$ref": "#/components/schemas/Id"
+                  },
+                  "state": {
+                    "type": "string",
+                    "enum": [
+                      "QUEUED",
+                      "RUNNING",
+                      "FAILED",
+                      "SUCCEEDED",
+                      "CANCELLED"
+                    ]
+                  },
+                  "process_released": {
+                    "type": "boolean"
+                  },
+                  "end_reason": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 128
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "attempt_id",
+                  "state",
+                  "process_released",
+                  "end_reason"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "blocker": {
+            "anyOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "id": {
+                    "$ref": "#/components/schemas/Id"
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "semantic",
+                      "factual",
+                      "owner_stopped"
+                    ]
+                  },
+                  "reason": {
+                    "type": "string",
+                    "maxLength": 262144
+                  }
+                },
+                "required": [
+                  "id",
+                  "kind",
+                  "reason"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "operations": {
+            "type": "array",
+            "maxItems": 256,
+            "items": {
+              "$ref": "#/components/schemas/NodeExecutionOperationStatus"
+            }
+          },
+          "manifest": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CompletionManifest"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "schema_version",
+          "task_id",
+          "node_id",
+          "node_activation",
+          "control_version",
+          "specification_id",
+          "plan_id",
+          "state",
+          "source",
+          "waiting_reason",
+          "attempt",
+          "blocker",
+          "operations",
+          "manifest"
+        ]
       }
     },
     "securitySchemes": {

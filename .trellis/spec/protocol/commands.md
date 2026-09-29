@@ -23,6 +23,11 @@ The bundled [monos](../../../runner/cmd/monos/main.go) supports immutable retry/
 
 ## 3. Contracts
 
+Single-Node execution adds `publish_artifact`, `read_artifact`, `block_node`,
+`Dispatch.node_execution_source`, explicit repository-free completion and exact
+`settle_completion` pairs. See [Node execution](../backend/node-execution.md) for
+strict payloads, omitted/empty Artifact selection and canonical Owner controls.
+
 - Schemas/versioned generated types own wire fields; domain services own transitions.
 - Backend derives caller identity and scope. Owner flags, socket paths and claimed Attempt IDs cannot grant authority.
 - Owner, Runner and Attempt credentials are separate. Never expose secrets in logs/prompts/arguments.
@@ -43,8 +48,10 @@ The bundled [monos](../../../runner/cmd/monos/main.go) supports immutable retry/
 - Owner acceptance serializes with message admission; later conversation cannot route execution changes into the accepted batch.
 - Owner execution commands bind Task, Attempt, control version and, for Nodes,
   activation. A queued Stop commits without an operation; a running Stop returns
-  a stable admitted operation. Continue/Retry requires verified process absence,
-  physical release and settled effects. The Owner command receipt is immutable;
+  a stable admitted operation. Legacy Continue/Retry requires verified process
+  absence, physical release and settled effects. Canonical source-aware controls
+  may save a successor intent while cleanup is pending, but never promote before
+  those same physical conditions hold. The Owner command receipt is immutable;
   the scoped operation read reports later settlement or recovery attention.
 
 ## 4. Validation & Error Matrix

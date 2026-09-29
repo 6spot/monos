@@ -4,7 +4,8 @@
 
 Use `apps/server/src/dispatch-queue.ts` for already selected system work awaiting
 capacity. Runtime/model selection is owned by [Runtime scheduling](runtime-scheduling.md);
-Owner Start and semantic context construction remain owned by later modules. Existing WSS `pending` polling promotes durable
+Owner Start and semantic context construction are owned by [Task planning](task-planning.md)
+and [Node execution](node-execution.md). Existing WSS `pending` polling promotes durable
 queued rows; memory wakeups are not authoritative.
 
 ## 2. Signatures
@@ -22,6 +23,9 @@ queued rows; memory wakeups are not authoritative.
 QUEUED has no process reservation (`process_released=true`, mutation disabled).
 It is omitted from Runner inventory and cannot get tool credentials or send Runtime
 events. Capacity waiting is normal and does not make Task BLOCKED.
+Canonical source-bound Node admission sets Node RUNNING at enqueue, even while
+the Attempt is QUEUED. Its frozen Project map/reservations and source digest must
+survive later configuration edits unchanged.
 
 Promotion requires a ready connection owned by the current backend and matching
 incarnation, free physical capacity, current Task/revision/activation basis and

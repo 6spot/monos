@@ -34,7 +34,7 @@ including across concurrent Tasks. Confirmation checks its immutable request
 receipt before current-state guards and reuses one authorization per proposal.
 Confirmation does not execute the proposed action or advance Task control version.
 
-Execution actions bind the exact Task, Attempt and control version; Node actions
+Legacy selected-execution actions bind the exact Task, Attempt and control version; Node actions
 also bind Node ID and activation. After Owner authentication, check an existing
 `(scope_id, request_id)` receipt and its digest before resolving the new payload's
 Attempt ID. Then retain Runner -> Task -> Attempt lock order and recheck the receipt
@@ -47,13 +47,19 @@ the physical claim. Initial-planning Stop applies only before Plan publication
 and returns the Task to PLANNING. An admitted terminal Agent handoff wins a later
 Owner Stop and returns its existing operation identity.
 
-Continue accepts an Owner-stopped Node; Retry accepts a failed Node or stopped/
+Legacy Continue accepts an Owner-stopped Node; Retry accepts a failed Node or stopped/
 failed initial Planner. Require the old Attempt to be absent and physically
 released with all operations settled. A recovery decision consumes that Attempt
 once and restores eligibility in the same Task/Node lineage. It does not launch
 a successor or reuse the old prompt; the owning Task module supplies current
 canonical context to selected dispatch. An admitted Stop receipt remains immutable;
 the operation read reports later settlement or recovery attention.
+
+Canonical [Node execution](node-execution.md) uses exact source/activation/blocker
+controls; old Attempt-only forms are rejected for those sources. A saved successor
+may wait for cleanup, but promotion still requires settled physical ownership.
+`recover_completion` repairs an exact original operation or settles it before
+fresh correction. Cancel permits exact cleanup retry without Task/source revival.
 
 Consumption revalidates eligibility/current basis and exact action/content/scope.
 The domain caller must check its prior command receipt first, then consume, mutate
@@ -73,7 +79,7 @@ contract; different consumers cannot reuse the receipt.
 | Expired/revoked proposal | `unmet_precondition` for new confirmation/consumption |
 | Known identical committed request | Original result, despite later stale proposal |
 | Missing receipt | `unknown`, without success/failure inference |
-| Old process or operation unresolved | `unmet_precondition` for Continue/Retry |
+| Old process or operation unresolved | Legacy Continue/Retry rejects; canonical successor waits without promotion |
 | Stop settles with Runner failure | Original operation enters `recovery`; retain claim and show attention |
 
 ## 5. Good / Base / Bad Cases

@@ -2685,5 +2685,791 @@
       "dependencies": []
     },
     "valid": false
+  },
+  {
+    "name": "canonical source-bound Node dispatch",
+    "schema": "Dispatch",
+    "value": {
+      "dispatch_id": "dispatch-a",
+      "attempt_id": "attempt-a",
+      "runner_id": "runner-a",
+      "task_id": "task-a",
+      "kind": "node",
+      "fencing_generation": 1,
+      "node_activation": 1,
+      "control_version": 0,
+      "runtime_id": "opencode",
+      "model": "opencode/longcat-2.5-preview-free",
+      "prompt": "fixture only",
+      "source_watermark": 0,
+      "mutation_allowed": true,
+      "process_released": false,
+      "workspace_reservations": {
+        "project_id": "project-a",
+        "configuration_version": 1,
+        "resources": [
+          {
+            "resource_id": "resource-a",
+            "workspace_id": "workspace-a"
+          }
+        ]
+      },
+      "node_id": "node-a",
+      "node_execution_source": {
+        "source_id": "source-a",
+        "node_id": "node-a",
+        "node_activation": 1,
+        "specification_id": "spec-a",
+        "plan_id": "plan-a",
+        "control_version": 0,
+        "context_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "Node source cannot become Planner dispatch",
+    "schema": "Dispatch",
+    "value": {
+      "dispatch_id": "dispatch-a",
+      "attempt_id": "attempt-a",
+      "runner_id": "runner-a",
+      "task_id": "task-a",
+      "kind": "planner",
+      "fencing_generation": 1,
+      "node_activation": 1,
+      "control_version": 0,
+      "runtime_id": "opencode",
+      "model": "opencode/longcat-2.5-preview-free",
+      "prompt": "fixture only",
+      "source_watermark": 0,
+      "mutation_allowed": true,
+      "process_released": false,
+      "workspace_reservations": {
+        "project_id": "project-a",
+        "configuration_version": 1,
+        "resources": [
+          {
+            "resource_id": "resource-a",
+            "workspace_id": "workspace-a"
+          }
+        ]
+      },
+      "node_id": "node-a",
+      "node_execution_source": {
+        "source_id": "source-a",
+        "node_id": "node-a",
+        "node_activation": 1,
+        "specification_id": "spec-a",
+        "plan_id": "plan-a",
+        "control_version": 0,
+        "context_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "Node source requires Node identity",
+    "schema": "Dispatch",
+    "value": {
+      "dispatch_id": "dispatch-a",
+      "attempt_id": "attempt-a",
+      "runner_id": "runner-a",
+      "task_id": "task-a",
+      "kind": "node",
+      "fencing_generation": 1,
+      "node_activation": 1,
+      "control_version": 0,
+      "runtime_id": "opencode",
+      "model": "opencode/longcat-2.5-preview-free",
+      "prompt": "fixture only",
+      "source_watermark": 0,
+      "mutation_allowed": true,
+      "process_released": false,
+      "workspace_reservations": {
+        "project_id": "project-a",
+        "configuration_version": 1,
+        "resources": [
+          {
+            "resource_id": "resource-a",
+            "workspace_id": "workspace-a"
+          }
+        ]
+      },
+      "node_execution_source": {
+        "source_id": "source-a",
+        "node_id": "node-a",
+        "node_activation": 1,
+        "specification_id": "spec-a",
+        "plan_id": "plan-a",
+        "control_version": 0,
+        "context_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "Node source rejects null Plan basis",
+    "schema": "Dispatch",
+    "value": {
+      "dispatch_id": "dispatch-a",
+      "attempt_id": "attempt-a",
+      "runner_id": "runner-a",
+      "task_id": "task-a",
+      "kind": "node",
+      "fencing_generation": 1,
+      "node_activation": 1,
+      "control_version": 0,
+      "runtime_id": "opencode",
+      "model": "opencode/longcat-2.5-preview-free",
+      "prompt": "fixture only",
+      "source_watermark": 0,
+      "mutation_allowed": true,
+      "process_released": false,
+      "workspace_reservations": {
+        "project_id": "project-a",
+        "configuration_version": 1,
+        "resources": [
+          {
+            "resource_id": "resource-a",
+            "workspace_id": "workspace-a"
+          }
+        ]
+      },
+      "node_id": "node-a",
+      "node_execution_source": {
+        "source_id": "source-a",
+        "node_id": "node-a",
+        "node_activation": 1,
+        "specification_id": "spec-a",
+        "plan_id": null,
+        "control_version": 0,
+        "context_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "explicit repository-free completion operation",
+    "schema": "Operation",
+    "value": {
+      "schema_version": 1,
+      "operation_id": "complete-a",
+      "attempt_id": "attempt-a",
+      "dispatch_id": "dispatch-a",
+      "request_id": "complete-request",
+      "kind": "complete_node",
+      "state": "admitted",
+      "repository_free": true,
+      "completion_manifest_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    "valid": true
+  },
+  {
+    "name": "repository-free completion requires explicit flag",
+    "schema": "Operation",
+    "value": {
+      "schema_version": 1,
+      "operation_id": "complete-a",
+      "attempt_id": "attempt-a",
+      "dispatch_id": "dispatch-a",
+      "request_id": "complete-request",
+      "kind": "complete_node",
+      "state": "admitted",
+      "completion_manifest_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    "valid": false
+  },
+  {
+    "name": "repository-free completion cannot claim fixture resource",
+    "schema": "Operation",
+    "value": {
+      "schema_version": 1,
+      "operation_id": "complete-a",
+      "attempt_id": "attempt-a",
+      "dispatch_id": "dispatch-a",
+      "request_id": "complete-request",
+      "kind": "complete_node",
+      "state": "admitted",
+      "repository_free": true,
+      "completion_manifest_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "resource_id": "fixture-repo"
+    },
+    "valid": false
+  },
+  {
+    "name": "repository-free completion flag cannot become Stop",
+    "schema": "Operation",
+    "value": {
+      "schema_version": 1,
+      "operation_id": "complete-a",
+      "attempt_id": "attempt-a",
+      "dispatch_id": "dispatch-a",
+      "request_id": "complete-request",
+      "kind": "stop",
+      "state": "admitted",
+      "repository_free": true,
+      "completion_manifest_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    "valid": false
+  },
+  {
+    "name": "managed UTF-8 HTML Artifact publication",
+    "schema": "CommandEnvelope",
+    "value": {
+      "schema_version": 1,
+      "request_id": "artifact-request",
+      "scope_id": "task-a",
+      "expected_control_version": 0,
+      "name": "publish_artifact",
+      "payload": {
+        "artifact_id": "artifact-a",
+        "title": "Reading list",
+        "content": {
+          "text": "<button>Add book</button> 😀",
+          "media_type": "text/html"
+        },
+        "references": [
+          {
+            "url": "https://example.com/book",
+            "label": "External reference"
+          }
+        ]
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "Artifact cannot masquerade Runner path as managed content",
+    "schema": "CommandEnvelope",
+    "value": {
+      "schema_version": 1,
+      "request_id": "artifact-request",
+      "scope_id": "task-a",
+      "expected_control_version": 0,
+      "name": "publish_artifact",
+      "payload": {
+        "artifact_id": "artifact-a",
+        "title": "Reading list",
+        "content": {
+          "path": "/runner/private/result.html",
+          "media_type": "text/html"
+        },
+        "references": [
+          {
+            "url": "https://example.com/book",
+            "label": "External reference"
+          }
+        ]
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "Artifact rejects null content text",
+    "schema": "CommandEnvelope",
+    "value": {
+      "schema_version": 1,
+      "request_id": "artifact-request",
+      "scope_id": "task-a",
+      "expected_control_version": 0,
+      "name": "publish_artifact",
+      "payload": {
+        "artifact_id": "artifact-a",
+        "title": "Reading list",
+        "content": {
+          "text": null,
+          "media_type": "text/html"
+        },
+        "references": [
+          {
+            "url": "https://example.com/book",
+            "label": "External reference"
+          }
+        ]
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "managed Artifact permits empty text",
+    "schema": "CommandEnvelope",
+    "value": {
+      "schema_version": 1,
+      "request_id": "artifact-request",
+      "scope_id": "task-a",
+      "expected_control_version": 0,
+      "name": "publish_artifact",
+      "payload": {
+        "artifact_id": "artifact-a",
+        "title": "Reading list",
+        "content": {
+          "text": "",
+          "media_type": "text/html"
+        },
+        "references": [
+          {
+            "url": "https://example.com/book",
+            "label": "External reference"
+          }
+        ]
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "scoped managed Artifact read",
+    "schema": "CommandEnvelope",
+    "value": {
+      "schema_version": 1,
+      "request_id": "artifact-request",
+      "scope_id": "task-a",
+      "expected_control_version": 0,
+      "name": "read_artifact",
+      "payload": {
+        "artifact_id": "artifact-a"
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "Node semantic block command",
+    "schema": "CommandEnvelope",
+    "value": {
+      "schema_version": 1,
+      "request_id": "artifact-request",
+      "scope_id": "task-a",
+      "expected_control_version": 0,
+      "name": "block_node",
+      "payload": {
+        "reason": "Which exact label should be used?"
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "completion can select earlier same-activation outputs",
+    "schema": "CommandEnvelope",
+    "value": {
+      "schema_version": 1,
+      "request_id": "artifact-request",
+      "scope_id": "task-a",
+      "expected_control_version": 0,
+      "name": "complete_node",
+      "payload": {
+        "summary": "Finished",
+        "artifact_ids": [
+          "earlier-artifact"
+        ]
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "completion selection rejects duplicate IDs",
+    "schema": "CommandEnvelope",
+    "value": {
+      "schema_version": 1,
+      "request_id": "artifact-request",
+      "scope_id": "task-a",
+      "expected_control_version": 0,
+      "name": "complete_node",
+      "payload": {
+        "summary": "Finished",
+        "artifact_ids": [
+          "same",
+          "same"
+        ]
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "trusted completion settlement operation",
+    "schema": "Operation",
+    "value": {
+      "schema_version": 1,
+      "operation_id": "settle-a",
+      "attempt_id": "attempt-a",
+      "dispatch_id": "dispatch-a",
+      "request_id": "settle-request",
+      "kind": "settle_completion",
+      "resource_id": "resource-a",
+      "state": "admitted",
+      "workspace": {
+        "schema_version": 1,
+        "workspace_id": "workspace-a",
+        "task_id": "task-a",
+        "project_id": "project-a",
+        "resource_id": "resource-a",
+        "runner_id": "runner-a",
+        "generation": 1,
+        "lease_id": "lease-a",
+        "node_id": "node-a",
+        "node_activation": 1,
+        "open_operation_id": "open-a",
+        "resource": {
+          "resource_id": "resource-a",
+          "repository_identity": "github.com/owner/repo",
+          "remote_url": "https://github.com/owner/repo.git"
+        }
+      },
+      "workspace_digest": "49fce1fb3a96cb081b9fdae6d3c1f8fa5ce0b5c68c7078c7d10078343fe8d84f",
+      "completion_operation_id": "complete-a",
+      "completion_identity_digest": "3d2f890c98ff3599c016558502288c0dfa873b90b1daf021bba5e34fc6671422"
+    },
+    "valid": true
+  },
+  {
+    "name": "completion settlement requires immutable target digest",
+    "schema": "Operation",
+    "value": {
+      "schema_version": 1,
+      "operation_id": "settle-a",
+      "attempt_id": "attempt-a",
+      "dispatch_id": "dispatch-a",
+      "request_id": "settle-request",
+      "kind": "settle_completion",
+      "resource_id": "resource-a",
+      "state": "admitted",
+      "workspace": {
+        "schema_version": 1,
+        "workspace_id": "workspace-a",
+        "task_id": "task-a",
+        "project_id": "project-a",
+        "resource_id": "resource-a",
+        "runner_id": "runner-a",
+        "generation": 1,
+        "lease_id": "lease-a",
+        "node_id": "node-a",
+        "node_activation": 1,
+        "open_operation_id": "open-a",
+        "resource": {
+          "resource_id": "resource-a",
+          "repository_identity": "github.com/owner/repo",
+          "remote_url": "https://github.com/owner/repo.git"
+        }
+      },
+      "workspace_digest": "49fce1fb3a96cb081b9fdae6d3c1f8fa5ce0b5c68c7078c7d10078343fe8d84f",
+      "completion_operation_id": "complete-a"
+    },
+    "valid": false
+  },
+  {
+    "name": "ordinary Stop cannot select a completion target",
+    "schema": "Operation",
+    "value": {
+      "schema_version": 1,
+      "operation_id": "settle-a",
+      "attempt_id": "attempt-a",
+      "dispatch_id": "dispatch-a",
+      "request_id": "settle-request",
+      "kind": "stop",
+      "resource_id": "resource-a",
+      "state": "admitted",
+      "workspace": {
+        "schema_version": 1,
+        "workspace_id": "workspace-a",
+        "task_id": "task-a",
+        "project_id": "project-a",
+        "resource_id": "resource-a",
+        "runner_id": "runner-a",
+        "generation": 1,
+        "lease_id": "lease-a",
+        "node_id": "node-a",
+        "node_activation": 1,
+        "open_operation_id": "open-a",
+        "resource": {
+          "resource_id": "resource-a",
+          "repository_identity": "github.com/owner/repo",
+          "remote_url": "https://github.com/owner/repo.git"
+        }
+      },
+      "workspace_digest": "49fce1fb3a96cb081b9fdae6d3c1f8fa5ce0b5c68c7078c7d10078343fe8d84f",
+      "completion_operation_id": "complete-a",
+      "completion_identity_digest": "3d2f890c98ff3599c016558502288c0dfa873b90b1daf021bba5e34fc6671422"
+    },
+    "valid": false
+  },
+  {
+    "name": "completion cancellation carries one bounded result pair",
+    "schema": "OperationResult",
+    "value": {
+      "operation_id": "settle-a",
+      "attempt_id": "attempt-a",
+      "success": true,
+      "result": {
+        "writer_absent": true,
+        "workspace_id": "workspace-a",
+        "workspace_metadata": {
+          "storage_id": "storage-a",
+          "generation": 1,
+          "lease_id": "lease-a",
+          "repository_identity": "github.com/owner/repo",
+          "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "finalized_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "target_branch": "main",
+          "target_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "checkpoint": {
+            "operation_id": "settle-a",
+            "head_commit": "cccccccccccccccccccccccccccccccccccccccc",
+            "tree_id": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "commit_id": "dddddddddddddddddddddddddddddddddddddddd",
+            "completion_operation_id": "complete-a",
+            "completion_identity_digest": "3d2f890c98ff3599c016558502288c0dfa873b90b1daf021bba5e34fc6671422"
+          }
+        }
+      },
+      "completion_settlement": {
+        "completion_operation_id": "complete-a",
+        "disposition": "cancelled",
+        "completion_result": {
+          "operation_id": "complete-a",
+          "attempt_id": "attempt-a",
+          "success": false,
+          "cancelled_by_operation_id": "settle-a",
+          "result": {
+            "writer_absent": true
+          }
+        }
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "finalized disposition rejects cancelled inner result",
+    "schema": "OperationResult",
+    "value": {
+      "operation_id": "settle-a",
+      "attempt_id": "attempt-a",
+      "success": true,
+      "result": {
+        "writer_absent": true,
+        "workspace_id": "workspace-a",
+        "workspace_metadata": {
+          "storage_id": "storage-a",
+          "generation": 1,
+          "lease_id": "lease-a",
+          "repository_identity": "github.com/owner/repo",
+          "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "finalized_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "target_branch": "main",
+          "target_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "checkpoint": {
+            "operation_id": "settle-a",
+            "head_commit": "cccccccccccccccccccccccccccccccccccccccc",
+            "tree_id": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "commit_id": "dddddddddddddddddddddddddddddddddddddddd",
+            "completion_operation_id": "complete-a",
+            "completion_identity_digest": "3d2f890c98ff3599c016558502288c0dfa873b90b1daf021bba5e34fc6671422"
+          }
+        }
+      },
+      "completion_settlement": {
+        "completion_operation_id": "complete-a",
+        "disposition": "already_finalized",
+        "completion_result": {
+          "operation_id": "complete-a",
+          "attempt_id": "attempt-a",
+          "success": false,
+          "cancelled_by_operation_id": "settle-a",
+          "result": {
+            "writer_absent": true
+          }
+        }
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "cancelled completion cannot claim semantic Artifact evidence",
+    "schema": "OperationResult",
+    "value": {
+      "operation_id": "settle-a",
+      "attempt_id": "attempt-a",
+      "success": true,
+      "result": {
+        "writer_absent": true,
+        "workspace_id": "workspace-a",
+        "workspace_metadata": {
+          "storage_id": "storage-a",
+          "generation": 1,
+          "lease_id": "lease-a",
+          "repository_identity": "github.com/owner/repo",
+          "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "finalized_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "target_branch": "main",
+          "target_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "checkpoint": {
+            "operation_id": "settle-a",
+            "head_commit": "cccccccccccccccccccccccccccccccccccccccc",
+            "tree_id": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "commit_id": "dddddddddddddddddddddddddddddddddddddddd",
+            "completion_operation_id": "complete-a",
+            "completion_identity_digest": "3d2f890c98ff3599c016558502288c0dfa873b90b1daf021bba5e34fc6671422"
+          }
+        }
+      },
+      "completion_settlement": {
+        "completion_operation_id": "complete-a",
+        "disposition": "cancelled",
+        "completion_result": {
+          "operation_id": "complete-a",
+          "attempt_id": "attempt-a",
+          "success": false,
+          "cancelled_by_operation_id": "settle-a",
+          "result": {
+            "writer_absent": true,
+            "artifact_id": "artifact-a"
+          }
+        }
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "completion result pairs are nonrecursive",
+    "schema": "OperationResult",
+    "value": {
+      "operation_id": "settle-a",
+      "attempt_id": "attempt-a",
+      "success": true,
+      "result": {
+        "writer_absent": true,
+        "workspace_id": "workspace-a",
+        "workspace_metadata": {
+          "storage_id": "storage-a",
+          "generation": 1,
+          "lease_id": "lease-a",
+          "repository_identity": "github.com/owner/repo",
+          "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "finalized_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "target_branch": "main",
+          "target_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "checkpoint": {
+            "operation_id": "settle-a",
+            "head_commit": "cccccccccccccccccccccccccccccccccccccccc",
+            "tree_id": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "commit_id": "dddddddddddddddddddddddddddddddddddddddd",
+            "completion_operation_id": "complete-a",
+            "completion_identity_digest": "3d2f890c98ff3599c016558502288c0dfa873b90b1daf021bba5e34fc6671422"
+          }
+        }
+      },
+      "completion_settlement": {
+        "completion_operation_id": "complete-a",
+        "disposition": "cancelled",
+        "completion_result": {
+          "operation_id": "complete-a",
+          "attempt_id": "attempt-a",
+          "success": false,
+          "cancelled_by_operation_id": "settle-a",
+          "result": {
+            "writer_absent": true
+          },
+          "completion_settlement": {}
+        }
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "failed settlement cannot carry successful pair",
+    "schema": "OperationResult",
+    "value": {
+      "operation_id": "settle-a",
+      "attempt_id": "attempt-a",
+      "success": false,
+      "result": {
+        "writer_absent": true,
+        "workspace_id": "workspace-a",
+        "workspace_metadata": {
+          "storage_id": "storage-a",
+          "generation": 1,
+          "lease_id": "lease-a",
+          "repository_identity": "github.com/owner/repo",
+          "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "finalized_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "target_branch": "main",
+          "target_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "checkpoint": {
+            "operation_id": "settle-a",
+            "head_commit": "cccccccccccccccccccccccccccccccccccccccc",
+            "tree_id": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "commit_id": "dddddddddddddddddddddddddddddddddddddddd",
+            "completion_operation_id": "complete-a",
+            "completion_identity_digest": "3d2f890c98ff3599c016558502288c0dfa873b90b1daf021bba5e34fc6671422"
+          }
+        }
+      },
+      "completion_settlement": {
+        "completion_operation_id": "complete-a",
+        "disposition": "cancelled",
+        "completion_result": {
+          "operation_id": "complete-a",
+          "attempt_id": "attempt-a",
+          "success": false,
+          "cancelled_by_operation_id": "settle-a",
+          "result": {
+            "writer_absent": true
+          }
+        }
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "settlement retains already-finalized original success",
+    "schema": "OperationResult",
+    "value": {
+      "operation_id": "settle-a",
+      "attempt_id": "attempt-a",
+      "success": true,
+      "result": {
+        "writer_absent": true
+      },
+      "completion_settlement": {
+        "completion_operation_id": "complete-a",
+        "disposition": "already_finalized",
+        "completion_result": {
+          "operation_id": "complete-a",
+          "attempt_id": "attempt-a",
+          "success": true,
+          "result": {
+            "writer_absent": true,
+            "git_commit": "dddddddddddddddddddddddddddddddddddddddd",
+            "git_tree": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+          }
+        }
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "cancelled disposition rejects finalized inner result",
+    "schema": "OperationResult",
+    "value": {
+      "operation_id": "settle-a",
+      "attempt_id": "attempt-a",
+      "success": true,
+      "result": {
+        "writer_absent": true
+      },
+      "completion_settlement": {
+        "completion_operation_id": "complete-a",
+        "disposition": "cancelled",
+        "completion_result": {
+          "operation_id": "complete-a",
+          "attempt_id": "attempt-a",
+          "success": true,
+          "result": {
+            "writer_absent": true,
+            "git_commit": "dddddddddddddddddddddddddddddddddddddddd",
+            "git_tree": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+          }
+        }
+      }
+    },
+    "valid": false
   }
 ]

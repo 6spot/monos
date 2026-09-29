@@ -152,9 +152,7 @@ func checkOperationWriters(ctx context.Context, attempt, boot string) error {
 	}
 	return nil
 }
-func sameOperation(a, b protocol.Operation) bool {
-	return a.OperationID == b.OperationID && a.AttemptID == b.AttemptID && a.DispatchID == b.DispatchID && wire.SameResource(a.ResourceID, b.ResourceID) && a.RequestID == b.RequestID && a.SchemaVersion == b.SchemaVersion && a.Kind == b.Kind && sameWorkspaceOperation(a, b)
-}
+func sameOperation(a, b protocol.Operation) bool { return wire.SameOperation(a, b) }
 
 func rootMaterializationBase(op protocol.Operation) (string, error) {
 	paths, err := filepath.Glob(filepath.Join(Root, "launch", "*.operation.json"))

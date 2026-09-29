@@ -13,6 +13,7 @@ export interface WorkspaceOperation {
   id: string; attempt_id: string; kind: Operation['kind']; state: Operation['state']; request_id: string;
   workspace_descriptor: WorkspaceDescriptor | null; workspace_digest: string | null; workspace_lease_id: string | null;
   cancelled_by_operation_id: string | null; result: EffectResult | null;
+  repository_free?: boolean | null; completion_operation_id?:string|null; completion_identity_digest?:string|null;
 }
 interface Workspace {
   id: string; task_id: string; project_id: string; resource_id: string; runner_id: string; generation: string;
@@ -59,10 +60,10 @@ function basis(workspace: Workspace): WorkspaceBasis | undefined {
 }
 
 async function insertOperation(tx: Transaction, attempt: WorkspaceAttempt, kind: Operation['kind'], requestId: string,
-  id: string, resourceId?: string, descriptor?: WorkspaceDescriptor): Promise<string> {
+  id: string, resourceId?: string, descriptor?: WorkspaceDescriptor, manifestDigest?:string): Promise<string> {
   const hash = descriptor ? digest(canonicalJSON(descriptor)) : null;
-  await tx.query(`INSERT INTO operations(id,attempt_id,schema_version,kind,request_id,state,resource_id,workspace_descriptor,workspace_digest,workspace_lease_id)
-    VALUES($1,$2,1,$3,$4,'admitted',$5,$6,$7,$8)`, [id, attempt.id, kind, requestId, resourceId ?? null, descriptor ?? null, hash, descriptor?.lease_id ?? null]);
+  await tx.query(`INSERT INTO operations(id,attempt_id,schema_version,kind,request_id,state,resource_id,workspace_descriptor,workspace_digest,workspace_lease_id,repository_free,completion_manifest_digest)
+    VALUES($1,$2,1,$3,$4,'admitted',$5,$6,$7,$8,$9,$10)`, [id, attempt.id, kind, requestId, resourceId ?? null, descriptor ?? null, hash, descriptor?.lease_id ?? null,kind==='complete_node' && !resourceId && !!attempt.launch.node_execution_source ? true : null,manifestDigest ?? null]);
   await tx.query("INSERT INTO outbox(id,runner_id,attempt_id,kind,operation_id) VALUES($1,$2,$3,'effect',$4)", [randomUUID(), attempt.runner_id, attempt.id, id]);
   return id;
 }
@@ -106,14 +107,17 @@ export async function admitWorkspaceOpen(tx: Transaction, attempt: WorkspaceAtte
   return insertOperation(tx, attempt, 'open_workspace', requestId, id, resourceId, descriptor);
 }
 
-export async function admitWorkspaceEffect(tx: Transaction, attempt: WorkspaceAttempt, kind: Operation['kind'], requestId: string): Promise<string> {
+export async function admitWorkspaceEffect(tx: Transaction, attempt: WorkspaceAttempt, kind: Operation['kind'], requestId: string, manifestDigest?:string): Promise<string> {
   if (!attempt.launch.workspace_reservations) return insertOperation(tx, attempt, kind, requestId, randomUUID(), attempt.launch.resource_id);
   await lockAttemptWorkspace(tx, attempt.id);
   const lease = (await tx.query<Lease>("SELECT * FROM workspace_leases WHERE attempt_id=$1 AND state<>'released'", [attempt.id])).rows[0];
-  if (!lease && kind === 'complete_node') throw new CommandError('unmet_precondition', 'Open the Task repository before completing this Stage A Node');
+  if (!lease && kind === 'complete_node') {
+    if (!attempt.launch.node_execution_source) throw new CommandError('unmet_precondition','Canonical Node source required for repository-free completion');
+    if ((await tx.query("SELECT 1 FROM operations WHERE attempt_id=$1 AND kind='open_workspace' AND state NOT IN ('succeeded','cancelled')",[attempt.id])).rowCount || (await tx.query(`SELECT 1 FROM workspace_leases l WHERE l.task_id=$1 AND l.node_id=$2 AND l.node_activation=$3 AND l.checkpoint IS NOT NULL AND NOT EXISTS(SELECT 1 FROM workspace_leases later WHERE later.workspace_id=l.workspace_id AND (later.created_at,later.id)>(l.created_at,l.id))`,[attempt.task_id,attempt.node_id,attempt.node_activation])).rowCount) throw new CommandError('unmet_precondition','Reopen and finalize retained private workspace work before completion');
+  }
   const open = lease ? (await tx.query<WorkspaceOperation>('SELECT * FROM operations WHERE id=$1', [lease.open_operation_id])).rows[0]! : undefined;
   if (open && kind === 'complete_node' && open.state !== 'succeeded') throw new CommandError('unmet_precondition', 'Workspace open must succeed before completion');
-  const id = await insertOperation(tx, attempt, kind, requestId, randomUUID(), open?.workspace_descriptor?.resource_id, open?.workspace_descriptor ?? undefined);
+  const id = await insertOperation(tx, attempt, kind, requestId, randomUUID(), open?.workspace_descriptor?.resource_id, open?.workspace_descriptor ?? undefined,manifestDigest);
   if (lease) await tx.query("UPDATE workspace_leases SET state='settling',settle_operation_id=$2 WHERE id=$1", [lease.id, id]);
   return id;
 }
@@ -125,7 +129,7 @@ export async function settleWorkspaceOperation(tx: Transaction, attempt: Workspa
   if (!descriptor) {
     if (message.cancelled_by_operation_id || message.result.workspace_metadata) throw new CommandError('denied_scope', 'Workspace result requires canonical admitted ownership');
     if (attempt.launch.workspace_reservations) {
-      if (operation.kind !== 'stop' || message.result.workspace_id || message.result.path || message.result.instruction_files
+      if ((operation.kind !== 'stop' && !(operation.kind==='complete_node' && operation.repository_free && attempt.launch.node_execution_source)) || message.result.workspace_id || message.result.path || message.result.instruction_files
         || message.result.git_commit || message.result.git_tree) throw new CommandError('denied_scope', 'Repository-free Stop cannot claim a workspace result');
       if ((await tx.query("SELECT 1 FROM workspace_leases WHERE attempt_id=$1 AND state<>'released'", [attempt.id])).rowCount) throw new CommandError('unmet_precondition', 'A held workspace requires its admitted settlement descriptor');
     }
@@ -187,11 +191,13 @@ export async function settleWorkspaceOperation(tx: Transaction, attempt: Workspa
     await tx.query('UPDATE workspace_leases SET target_commit=$2,recovered_by_stop_operation_id=$3,target_observation_lease_id=$4 WHERE id=$1',
       [lease.id, metadata.target_commit, metadata.recovered_by_stop_operation_id ?? null, metadata.target_observation_lease_id ?? null]);
   } else {
-    if (lease.settle_operation_id !== operation.id || lease.state !== 'settling' || open.state !== 'succeeded'
+    if (lease.settle_operation_id !== (operation.kind==='settle_completion' ? operation.completion_operation_id : operation.id) || lease.state !== 'settling' || open.state !== 'succeeded'
       || metadata.target_commit !== lease.target_commit || message.result.writer_absent !== true
       || (metadata.recovered_by_stop_operation_id ?? null) !== lease.recovered_by_stop_operation_id
       || (metadata.target_observation_lease_id ?? null) !== lease.target_observation_lease_id) throw new CommandError('unmet_precondition', 'Workspace settlement does not match its lease');
-    if (operation.kind === 'stop') {
+    if (operation.kind === 'stop' || operation.kind==='settle_completion') {
+      if(operation.kind==='settle_completion' && (metadata.checkpoint?.completion_operation_id!==operation.completion_operation_id || metadata.checkpoint?.completion_identity_digest!==operation.completion_identity_digest)) throw new CommandError('denied_scope','Recovery checkpoint target differs');
+      if(operation.kind==='stop' && metadata.checkpoint?.completion_operation_id) throw new CommandError('denied_scope','Ordinary Stop cannot assert correction checkpoint');
       if (!metadata.checkpoint || metadata.checkpoint.operation_id !== operation.id || metadata.finalized_commit !== workspace.finalized_commit) throw new CommandError('unmet_precondition', 'Stopped workspace requires an attributed private checkpoint');
       await tx.query("UPDATE workspace_leases SET checkpoint=$2,state='released' WHERE id=$1", [lease.id, metadata.checkpoint]);
     } else if (operation.kind === 'complete_node') {

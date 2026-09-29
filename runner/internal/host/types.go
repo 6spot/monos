@@ -33,11 +33,12 @@ func AttemptRoot(id string) string { return filepath.Join(Root, "execution", id)
 func Path(id, name string) string  { return filepath.Join(AttemptRoot(id), name) }
 
 type Request struct {
-	Action           string                                 `json:"action"`
-	AttemptID        string                                 `json:"attempt_id"`
-	Dispatch         *protocol.Dispatch                     `json:"dispatch,omitempty"`
-	Operation        *protocol.Operation                    `json:"operation,omitempty"`
-	RepositoryAccess *protocol.GitHubRepositoryAccessResult `json:"repository_access,omitempty"`
+	Action              string                                 `json:"action"`
+	AttemptID           string                                 `json:"attempt_id"`
+	Dispatch            *protocol.Dispatch                     `json:"dispatch,omitempty"`
+	Operation           *protocol.Operation                    `json:"operation,omitempty"`
+	CompletionOperation *protocol.Operation                    `json:"completion_operation,omitempty"`
+	RepositoryAccess    *protocol.GitHubRepositoryAccessResult `json:"repository_access,omitempty"`
 }
 type Status struct {
 	Known                  bool                           `json:"known"`
@@ -57,6 +58,7 @@ type Status struct {
 	Runtimes               []protocol.RuntimeInstallation `json:"runtimes,omitempty"`
 	CancelledByOperationID *string                        `json:"cancelled_by_operation_id,omitempty"`
 	PriorOperationResult   *protocol.OperationResult      `json:"prior_operation_result,omitempty"`
+	CompletionSettlement   *protocol.CompletionSettlement `json:"completion_settlement,omitempty"`
 	NeedsRepositoryAccess  bool                           `json:"needs_repository_access,omitempty"`
 }
 type Supervisor interface {

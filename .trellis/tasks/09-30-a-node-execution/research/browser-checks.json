@@ -1,0 +1,25 @@
+{
+  "outcome": "pass",
+  "title": "Personal Reading List",
+  "url": "file:///tmp/monos-node-reading-list.html",
+  "checks": {
+    "add_book": true,
+    "two_entries": true,
+    "finished_pressed": true,
+    "finished_style": true,
+    "keyboard_submit": true,
+    "safe_title": true,
+    "focus_returned": true,
+    "labelled": true,
+    "no_external_scripts": true
+  },
+  "entries": [
+    "The Left Hand of DarknessMark unfinished",
+    "<img src=x onerror=alert('unsafe')>Mark finished"
+  ],
+  "inspected_artifact_id": "c1e9683d-3bbc-423a-abb4-6b3f6dbcb9fd",
+  "limitations": [
+    "Browser file-origin console emitted a same-file URL security warning; recorded requests were the local document only. No remote request was observed.",
+    "Generated completion prose counted 3901 characters as bytes; authoritative artifact length is 3903 UTF-8 bytes."
+  ]
+}

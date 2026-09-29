@@ -212,9 +212,10 @@ func (d *DB) BeginEffect(op protocol.Operation) error {
 	if err = json.Unmarshal(oldRaw, &old); err != nil {
 		return err
 	}
-	if old.AttemptID != op.AttemptID || old.DispatchID != op.DispatchID || old.Kind != op.Kind || !wire.SameResource(old.ResourceID, op.ResourceID) || old.RequestID != op.RequestID || old.SchemaVersion != op.SchemaVersion || !reflect.DeepEqual(old.Workspace, op.Workspace) || !reflect.DeepEqual(old.WorkspaceDigest, op.WorkspaceDigest) {
+	if !wire.SameOperation(old, op) {
 		return ErrConflict
 	}
+
 	return tx.Commit()
 }
 
@@ -263,19 +264,32 @@ func (d *DB) LogEvent(e protocol.RuntimeEvent, from, to int64) (protocol.Runtime
 	}
 	return e, tx.Commit()
 }
-func (d *DB) FinishEffect(r protocol.OperationResult) error {
+func (d *DB) Operation(id string) (protocol.Operation, error) {
+	var op protocol.Operation
+	var raw []byte
+	err := d.db.QueryRow("SELECT body FROM effects WHERE id=?", id).Scan(&raw)
+	if err != nil {
+		return op, err
+	}
+	err = json.Unmarshal(raw, &op)
+	return op, err
+}
+
+func finishEffect(tx *sql.Tx, r protocol.OperationResult) error {
 	raw, err := json.Marshal(r)
 	if err != nil {
 		return err
 	}
-	tx, err := d.db.Begin()
-	if err != nil {
+	var body, previous []byte
+	if err = tx.QueryRow("SELECT body,result FROM effects WHERE id=?", r.OperationID).Scan(&body, &previous); err != nil {
 		return err
 	}
-	defer tx.Rollback()
-	var previous []byte
-	if err = tx.QueryRow("SELECT result FROM effects WHERE id=?", r.OperationID).Scan(&previous); err != nil {
+	var op protocol.Operation
+	if err = json.Unmarshal(body, &op); err != nil {
 		return err
+	}
+	if op.AttemptID != r.AttemptID {
+		return ErrConflict
 	}
 	if previous != nil {
 		var old protocol.OperationResult
@@ -286,7 +300,60 @@ func (d *DB) FinishEffect(r protocol.OperationResult) error {
 			return ErrConflict
 		}
 	}
-	if _, err = tx.Exec("UPDATE effects SET result=? WHERE id=?", raw, r.OperationID); err != nil {
+	_, err = tx.Exec("UPDATE effects SET result=? WHERE id=?", raw, r.OperationID)
+	return err
+}
+
+func (d *DB) FinishEffect(r protocol.OperationResult) error {
+	if r.CompletionSettlement != nil {
+		return d.FinishCompletionSettlement(r)
+	}
+	tx, err := d.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	if err = finishEffect(tx, r); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+// Both terminal records commit together. A failed second write or changed
+// retained terminal result leaves both previous results untouched.
+func (d *DB) FinishCompletionSettlement(r protocol.OperationResult) error {
+	if r.CompletionSettlement == nil {
+		return ErrConflict
+	}
+	tx, err := d.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	read := func(id string) (protocol.Operation, error) {
+		var op protocol.Operation
+		var raw []byte
+		if e := tx.QueryRow("SELECT body FROM effects WHERE id=?", id).Scan(&raw); e != nil {
+			return op, e
+		}
+		e := json.Unmarshal(raw, &op)
+		return op, e
+	}
+	op, err := read(r.OperationID)
+	if err != nil {
+		return err
+	}
+	original, err := read(r.CompletionSettlement.CompletionOperationID)
+	if err != nil {
+		return err
+	}
+	if err = wire.ValidateCompletionPair(op, original, r); err != nil {
+		return err
+	}
+	if err = finishEffect(tx, wire.CompletionResult(r.CompletionSettlement.CompletionResult)); err != nil {
+		return err
+	}
+	if err = finishEffect(tx, r); err != nil {
 		return err
 	}
 	return tx.Commit()

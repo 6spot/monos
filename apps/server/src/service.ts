@@ -5,6 +5,10 @@ import type { Database, Transaction } from '../../../packages/db/src/index.ts';
 import { CommandError, guardNewCommand } from '../../../packages/domain/src/commands.ts';
 import { canonicalJSON, digest, MAX_FRAME_BYTES, parseSubmission, ProtocolVersionError, validate } from '../../../packages/protocol/src/index.ts';
 import type { CommandEnvelope, CommandResult, CommandSubmission, Dispatch, Frame, GitHubRepositoryAccessResult, Operation, OperationResult, RepositoryAccessRequest, RunnerInventory, RuntimeEvent } from '../../../packages/protocol/src/index.ts';
+import { assertNodeSource, blockNodeSource } from './node-execution-state.ts';
+import type { NodeSource } from './node-execution-state.ts';
+import { finishCompletionSettlement, projectCompletion, refreshTaskState } from './node-completion.ts';
+import { freezeManifest, publishArtifact, readArtifact, storeManifest } from './artifacts.ts';
 import { handlePlanningCommand } from './task-planning-state.ts';
 import { authenticateAttempt, issueAttemptCredential } from './auth.ts';
 import type { AttemptIdentity } from './auth.ts';
@@ -20,14 +24,14 @@ import type { GitHubCredentials } from './github.ts';
 
 interface RunnerRow { id: string; incarnation: string; connected: boolean; ready: boolean; available: boolean; capacity: number; connection_instance: string | null }
 interface TaskRow { id: string; resource_id: string | null; control_version: string; project_id: string | null }
-interface AttemptRow {
+export interface AttemptRow {
   planning_intent_id: string | null; specification_id: string | null; plan_id: string | null; recovery_consumed_by: string | null; end_reason: string | null;
   id: string; runner_id: string; task_id: string | null; todo_id: string | null; discussion_context: DiscussionContext | null; node_id: string | null; dispatch_id: string;
   kind: 'node' | 'planner'; fencing_generation: string; node_activation: string;
   mutation_allowed: boolean; process_released: boolean; process_absent: boolean; started: boolean; exit_observed: boolean; launch: Dispatch;
   state: 'QUEUED' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'CANCELLED';
 }
-interface OperationRow extends WorkspaceOperation { schema_version: number; resource_id: string | null; failure_kind: OperationResult['failure_kind'] | null }
+export interface OperationRow extends WorkspaceOperation { repository_free:boolean|null; completion_manifest_digest:string|null; completion_operation_id:string|null; completion_identity_digest:string|null; completion_settlement:OperationResult['completion_settlement']|null; settlement_purpose:'correct'|'cancel_task'|null; schema_version: number; resource_id: string | null; failure_kind: OperationResult['failure_kind'] | null }
 interface ReceiptRow { digest: string; command_name: string; response: CommandResult; operation_id: string | null }
 interface Locked { runner: RunnerRow; task: TaskRow | null; discussion: DiscussionControl | null; attempt: AttemptRow }
 
@@ -61,7 +65,7 @@ function toDispatch(row: AttemptRow): Dispatch {
   return { ...row.launch, mutation_allowed: row.mutation_allowed, process_released: row.process_released };
 }
 function toOperation(row: OperationRow, attempt: Pick<AttemptRow, 'dispatch_id'>): Operation {
-  return { schema_version: row.schema_version, operation_id: row.id, attempt_id: row.attempt_id, dispatch_id: attempt.dispatch_id, request_id: row.request_id, kind: row.kind, ...(row.resource_id ? { resource_id: row.resource_id } : {}), state: row.state, ...(row.result ? { result: row.result } : {}), ...(row.workspace_descriptor ? { workspace: row.workspace_descriptor, workspace_digest: row.workspace_digest! } : {}), ...(row.cancelled_by_operation_id ? { cancelled_by_operation_id: row.cancelled_by_operation_id } : {}) };
+  return { schema_version: row.schema_version, operation_id: row.id, attempt_id: row.attempt_id, dispatch_id: attempt.dispatch_id, request_id: row.request_id, kind: row.kind, ...(row.resource_id ? { resource_id: row.resource_id } : {}), state: row.state, ...(row.repository_free ? {repository_free:true as const}:{}), ...(row.completion_manifest_digest?{completion_manifest_digest:row.completion_manifest_digest}:{}), ...(row.completion_operation_id?{completion_operation_id:row.completion_operation_id,completion_identity_digest:row.completion_identity_digest!}:{}), ...(row.result ? { result: row.result } : {}), ...(row.workspace_descriptor ? { workspace: row.workspace_descriptor, workspace_digest: row.workspace_digest! } : {}), ...(row.cancelled_by_operation_id ? { cancelled_by_operation_id: row.cancelled_by_operation_id } : {}) };
 }
 
 async function taskEvent(tx: Transaction, attempt: AttemptRow, kind: string, body: unknown, operationId: string | null = null): Promise<void> {
@@ -78,7 +82,10 @@ async function missingFormalOutcome(tx: Transaction, attempt: AttemptRow, observ
     await admitEffect(tx, attempt, 'stop', randomUUID()); return;
   }
   await tx.query("UPDATE attempts SET mutation_allowed=false,state='FAILED',end_reason='missing_formal_outcome' WHERE id=$1", [attempt.id]);
-  if (attempt.node_id) await tx.query("UPDATE nodes SET state='BLOCKED' WHERE id=$1", [attempt.node_id]);
+  if (attempt.node_id) {
+    if(attempt.launch.node_execution_source){const source=(await tx.query<NodeSource>('SELECT * FROM node_execution_outbox WHERE id=$1',[attempt.launch.node_execution_source.source_id])).rows[0]!;await blockNodeSource(tx,source,'factual','missing_formal_outcome',attempt.id);}
+    else await tx.query("UPDATE nodes SET state='BLOCKED' WHERE id=$1", [attempt.node_id]);
+  }
   const state = attempt.node_id ? await derivedTaskState(tx, (await tx.query<{ plan_id: string }>('SELECT plan_id FROM tasks WHERE id=$1', [attempt.task_id])).rows[0]!.plan_id) : null;
   await tx.query('UPDATE tasks SET state=COALESCE($2,state),control_version=control_version+1 WHERE id=$1', [attempt.task_id, state]);
   await admitEffect(tx, attempt, 'stop', randomUUID());
@@ -92,7 +99,7 @@ async function admitEffect(tx: Transaction, attempt: AttemptRow, kind: Operation
 async function receiptResponse(tx: Transaction, receipt: ReceiptRow): Promise<CommandResult> {
   if (!receipt.operation_id || receipt.response.status === 'committed') return receipt.response;
   const operation = (await tx.query<OperationRow>('SELECT * FROM operations WHERE id=$1', [receipt.operation_id])).rows[0]!;
-  if (operation.state === 'cancelled') return { schema_version: 1, request_id: receipt.response.request_id, operation_id: operation.id, status: 'error', error: { code: 'unmet_precondition', message: 'Workspace open was cancelled by Stop; no workspace was granted.' } };
+  if (operation.state === 'cancelled') return { schema_version: 1, request_id: receipt.response.request_id, operation_id: operation.id, status: 'error', error: { code: 'unmet_precondition', message: operation.kind==='complete_node' ? 'Completion was cancelled by its trusted settlement; retained output remains available for correction or cancellation history.' : 'Workspace open was cancelled by Stop; no workspace was granted.' } };
   if (operation.state !== 'succeeded') return receipt.response;
   return { ...receipt.response, status: 'committed', result: operation.result ?? {} };
 }
@@ -240,6 +247,30 @@ export class BoundaryService {
         const node = await assertCurrentNode(tx, { task_id: attempt.task_id!, node_id: attempt.node_id, node_activation: Number(attempt.node_activation) });
         if (node.state !== 'RUNNING') throw new CommandError('stale_execution', 'Node is no longer running');
       }
+      const source = attempt.launch.node_execution_source
+        ? await assertNodeSource(tx,task.id,attempt.launch.node_execution_source,attempt.id,attempt.launch.prompt) : undefined;
+      if (['publish_artifact','read_artifact','block_node'].includes(command.name)) {
+        if (!source || legacy) throw new CommandError('denied_scope','Canonical Node source is required');
+        let operationId:string|undefined;
+        let result:CommandResult['result'];
+        if (command.name==='publish_artifact') result={artifact_id:await publishArtifact(tx,source,command)};
+        else if(command.name==='read_artifact') result={artifact:await readArtifact(tx,task.id,command.payload.artifact_id!)};
+        else {
+          if ((await tx.query("SELECT 1 FROM operations WHERE attempt_id=$1 AND state NOT IN ('succeeded','cancelled')",[attempt.id])).rowCount) throw new CommandError('unmet_precondition','Earlier workspace effects must settle before blocking');
+          const reason=command.payload.reason!;
+          if(Buffer.byteLength(reason)>262144)throw new CommandError('invalid_input','Block reason exceeds budget');
+          await tx.query("UPDATE attempts SET mutation_allowed=false,state='SUCCEEDED',end_reason='semantic_block' WHERE id=$1",[attempt.id]);
+          operationId=await admitWorkspaceEffect(tx,attempt,'stop',command.request_id);
+          result={blocker_id:await blockNodeSource(tx,source,'semantic',reason,attempt.id)};
+          await tx.query('UPDATE tasks SET control_version=control_version+1 WHERE id=$1',[task.id]);
+          await tx.query("UPDATE outbox SET done=true WHERE attempt_id=$1 AND kind='start'",[attempt.id]);
+        }
+        const response:CommandResult={schema_version:1,request_id:command.request_id,status:'committed',result,...(operationId?{operation_id:operationId}:{})};
+        validate('CommandResult',response);
+        await tx.query('INSERT INTO command_receipts(attempt_id,scope_id,request_id,command_name,digest,schema_version,envelope_json,response,operation_id) VALUES($1,$2,$3,$4,$5,1,$6,$7,$8)',[attempt.id,task.id,command.request_id,command.name,submission.sha256,submission.envelope_json,response,operationId??null]);
+        this.options.beforeAdmissionCommit?.();return response;
+      }
+      const frozen = command.name==='complete_node' && source ? await freezeManifest(tx,source,command) : undefined;
       if (command.name === 'complete_node' || command.name === 'commit_task_turn') {
         const unfinished = await tx.query("SELECT id FROM operations WHERE attempt_id=$1 AND state NOT IN ('succeeded','cancelled')", [attempt.id]);
         if (unfinished.rowCount) throw new CommandError('unmet_precondition', 'Workspace operations must settle before terminal handoff');
@@ -249,7 +280,8 @@ export class BoundaryService {
       }
       const operationId = !legacy && command.name === 'open_workspace'
         ? await admitWorkspaceOpen(tx, attempt, task.project_id, command.payload.resource_id!, command.request_id)
-        : await admitEffect(tx, attempt, command.name === 'commit_task_turn' ? 'stop' : command.name, command.request_id);
+        : await admitWorkspaceEffect(tx, attempt, command.name === 'commit_task_turn' ? 'stop' : command.name as Operation['kind'], command.request_id,frozen?.hash);
+      if(frozen && source)await storeManifest(tx,source,operationId,frozen);
       const response: CommandResult = command.name === 'commit_task_turn'
         ? { schema_version: 1, request_id: command.request_id, status: 'committed', operation_id: operationId, result: { reply: command.payload.reply!, source_watermark: command.payload.source_watermark! } }
         : { schema_version: 1, request_id: command.request_id, status: 'admitted', operation_id: operationId };
@@ -415,7 +447,7 @@ export class BoundaryService {
         const pendingCompletion = (await tx.query("SELECT 1 FROM operations WHERE attempt_id=$1 AND kind='complete_node' AND state NOT IN ('succeeded','cancelled')", [attempt.id])).rowCount;
         if (!pendingCompletion) await missingFormalOutcome(tx, attempt, event.kind, event.exit_code);
         if (event.kind === 'process_absent' && pendingCompletion) {
-          const recovering = (await tx.query("SELECT id FROM operations WHERE attempt_id=$1 AND kind='complete_node' AND state='recovery'", [attempt.id])).rows[0];
+          const recovering = (await tx.query("SELECT id FROM operations WHERE attempt_id=$1 AND kind='complete_node' AND state='recovery' AND failure_kind IN ('capture_hard_limit','invalid_finalization')", [attempt.id])).rows[0];
           if (recovering) {
             const changed = await tx.query("UPDATE nodes SET state='BLOCKED' WHERE id=$1 AND activation=$2 AND state='RUNNING'", [attempt.node_id, attempt.node_activation]);
             if (changed.rowCount) {
@@ -436,6 +468,7 @@ export class BoundaryService {
   async finishOperation(runnerId: string, incarnation: number, input: OperationResult): Promise<void> {
     const message = validate<OperationResult>('OperationResult', input);
     await transaction(this.db, async (tx) => {
+      const configurationVersion = await lockConfiguration(tx);
       const { runner, attempt } = await lockAttempt(tx, message.attempt_id, runnerId);
       checkChannel(runner, incarnation);
       if (runner.connection_instance !== this.instanceId) throw new CommandError('stale_execution', 'Runner must reconnect to this backend');
@@ -443,10 +476,15 @@ export class BoundaryService {
       const operation = (await tx.query<OperationRow>('SELECT * FROM operations WHERE id=$1 AND attempt_id=$2 FOR UPDATE', [message.operation_id, attempt.id])).rows[0];
       if (!operation) throw new CommandError('denied_scope', 'Operation is outside Attempt scope');
       if (attempt.todo_id && operation.kind !== 'stop') throw new CommandError('denied_scope', 'Todo cannot settle repository fixture effects');
+      if(operation.kind==='settle_completion') {
+        await finishCompletionSettlement(tx,attempt,operation,message,configurationVersion);return;
+      }
+      if(message.completion_settlement)throw new CommandError('denied_scope','Only the admitted settlement may submit a pair');
       if (operation.state === 'cancelled') {
         if (message.success || message.cancelled_by_operation_id !== operation.cancelled_by_operation_id || canonicalJSON(operation.result) !== canonicalJSON(message.result)) throw new CommandError('payload_conflict', 'Cancelled operation result cannot change');
         return;
       }
+      if(operation.kind==='complete_node' && message.cancelled_by_operation_id)throw new CommandError('unmet_precondition','Completion cancellation requires the exported atomic settlement pair');
       if (operation.state === 'succeeded') {
         if (!message.success || canonicalJSON(operation.result) !== canonicalJSON(message.result)) throw new CommandError('payload_conflict', 'Settled operation result cannot change');
         return;
@@ -458,29 +496,17 @@ export class BoundaryService {
         const terminal = operation.kind === 'complete_node' || operation.kind === 'stop';
         if (terminal && message.result.writer_absent !== true) throw new CommandError('unmet_precondition', 'Whole-tree absence is required');
         if (terminal && (await tx.query("SELECT id FROM operations WHERE attempt_id=$1 AND id<>$2 AND state NOT IN ('succeeded','cancelled')", [attempt.id, operation.id])).rowCount) throw new CommandError('unmet_precondition', 'Other admitted workspace operations must reconcile before releasing ownership');
-        if (operation.kind === 'complete_node' && (!message.result.git_commit || !message.result.git_tree)) throw new CommandError('unmet_precondition', 'Exact finalized Git result is required');
+        if (operation.kind === 'complete_node' && !operation.repository_free && (!message.result.git_commit || !message.result.git_tree)) throw new CommandError('unmet_precondition', 'Exact finalized Git result is required');
         if ((operation.kind === 'open_workspace' || operation.kind === 'inspect_repository') && (!message.result.workspace_id || !message.result.path)) throw new CommandError('unmet_precondition', 'Workspace identity and Runner-local locator are required');
         await tx.query("UPDATE operations SET state='succeeded',result=$2 WHERE id=$1", [operation.id, message.result]);
         await tx.query('UPDATE outbox SET done=true WHERE operation_id=$1', [operation.id]);
         if (terminal) await tx.query("UPDATE attempts SET mutation_allowed=false,process_absent=true,process_released=true,state=CASE WHEN $2::boolean THEN 'SUCCEEDED' WHEN state='RUNNING' THEN 'CANCELLED' ELSE state END WHERE id=$1", [attempt.id, operation.kind === 'complete_node']);
-        if (operation.kind === 'complete_node') {
-          await assertCurrentNode(tx, { task_id: attempt.task_id!, node_id: attempt.node_id!, node_activation: Number(attempt.node_activation) });
-          const node = (await tx.query<{ activation: string; state: string }>('SELECT activation,state FROM nodes WHERE id=$1 FOR UPDATE', [attempt.node_id])).rows[0];
-          const blockedByThisOperation = node?.state === 'BLOCKED' && (operation.failure_kind === 'capture_hard_limit' || operation.failure_kind === 'invalid_finalization' || attempt.process_absent);
-          const taskState = (await tx.query<{ state: string }>('SELECT state FROM tasks WHERE id=$1', [attempt.task_id])).rows[0]!.state;
-          if (!node || Number(node.activation) !== Number(attempt.node_activation) || (node.state !== 'RUNNING' && !blockedByThisOperation) || !['RUNNING', 'BLOCKED'].includes(taskState) || attempt.process_released) throw new CommandError('stale_execution', 'Completion activation is no longer current');
-          await tx.query('INSERT INTO node_completions(node_id,activation,attempt_id,operation_id,result) VALUES($1,$2,$3,$4,$5)', [attempt.node_id, attempt.node_activation, attempt.id, operation.id, message.result]);
-          await tx.query("UPDATE nodes SET state='COMPLETED',result=$2 WHERE id=$1", [attempt.node_id, message.result]);
-          const plan = (await tx.query<{ plan_id: string }>('SELECT plan_id FROM tasks WHERE id=$1', [attempt.task_id])).rows[0]!.plan_id;
-          let state = await derivedTaskState(tx, plan);
-          if (state === 'REVIEW' && (await tx.query("SELECT 1 FROM operations o JOIN attempts a ON a.id=o.attempt_id WHERE a.task_id=$1 AND o.state NOT IN ('succeeded','cancelled')", [attempt.task_id])).rowCount) state = 'RUNNING';
-          await tx.query('UPDATE tasks SET state=$2,control_version=control_version+1 WHERE id=$1', [attempt.task_id, state]);
-          await taskEvent(tx, attempt, 'node_completed', { node_id: attempt.node_id, node_activation: Number(attempt.node_activation), ...message.result }, operation.id);
-        }
+        if (operation.kind === 'complete_node') await projectCompletion(tx,attempt,operation,message);
+        else if(operation.kind==='stop' && attempt.task_id) await refreshTaskState(tx,attempt.task_id);
       } else {
         if (message.result.writer_absent === true) await tx.query('UPDATE attempts SET process_absent=true WHERE id=$1', [attempt.id]);
         await tx.query("UPDATE operations SET state='recovery',result=$2,failure_kind=CASE WHEN failure_kind IN ('capture_hard_limit','invalid_finalization') THEN failure_kind ELSE COALESCE($3,failure_kind) END WHERE id=$1", [operation.id, message.result, message.failure_kind ?? null]);
-        if (captureBlocked || (operation.kind === 'complete_node' && (attempt.process_absent || message.result.writer_absent === true))) {
+        if (captureBlocked && (await tx.query("SELECT 1 FROM tasks WHERE id=$1 AND state IN ('RUNNING','BLOCKED')",[attempt.task_id])).rowCount) {
           const node = (await tx.query<{ activation: string; state: string }>('SELECT activation,state FROM nodes WHERE id=$1 FOR UPDATE', [attempt.node_id])).rows[0];
           if (!node || Number(node.activation) !== Number(attempt.node_activation) || !['RUNNING', 'BLOCKED'].includes(node.state) || attempt.process_released) throw new CommandError('stale_execution', 'Capture failure activation is no longer current');
           if (node.state === 'RUNNING') {

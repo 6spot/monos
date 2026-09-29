@@ -2,6 +2,7 @@ package daemon
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"sort"
@@ -42,7 +43,11 @@ func (d *Daemon) retainedRecovery(op protocol.Operation, dispatch protocol.Dispa
 	if err = host.ValidateEffectScope(start.Dispatch, op); err != nil {
 		return false, err
 	}
-	if op.Workspace == nil {
+	if dispatch.NodeExecutionSource != nil || start.Dispatch.NodeExecutionSource != nil {
+		if dispatch.NodeExecutionSource == nil || dispatch.MutationAllowed || dispatch.ProcessReleased || !reflect.DeepEqual(start.Dispatch.TaskID, dispatch.TaskID) || !reflect.DeepEqual(start.Dispatch.NodeExecutionSource, dispatch.NodeExecutionSource) || !reflect.DeepEqual(start.Dispatch.WorkspaceReservations, dispatch.WorkspaceReservations) {
+			return false, fmt.Errorf("Node recovery source or authorization changed")
+		}
+	} else if op.Workspace == nil {
 		if dispatch.TaskPlanningSource == nil || dispatch.MutationAllowed || dispatch.ProcessReleased ||
 			!reflect.DeepEqual(start.Dispatch.TaskID, dispatch.TaskID) ||
 			!reflect.DeepEqual(start.Dispatch.TaskPlanningSource, dispatch.TaskPlanningSource) {
@@ -61,9 +66,9 @@ func (d *Daemon) prepareRecovery(ctx context.Context, inventory protocol.RunnerI
 			continue
 		}
 		dispatch, exists := dispatches[op.AttemptID]
-		// Repository-free recovery is deliberately limited to the source-bound
-		// initial Planner's Stop. Other Task phases and Todo retain their policy.
-		if op.Workspace == nil && (op.Kind != protocol.Stop || dispatch.TaskPlanningSource == nil) {
+		// Only exact source-bound terminal effects gain repository-free replay.
+		nodeFree := dispatch.NodeExecutionSource != nil && (op.Kind == protocol.Stop || op.Kind == protocol.KindCompleteNode && op.RepositoryFree != nil && *op.RepositoryFree)
+		if op.Workspace == nil && !nodeFree && (op.Kind != protocol.Stop || dispatch.TaskPlanningSource == nil) {
 			continue
 		}
 		if prior, exists := seen[op.OperationID]; exists {
@@ -85,17 +90,30 @@ func (d *Daemon) prepareRecovery(ctx context.Context, inventory protocol.RunnerI
 		}
 		if eligible {
 			operations = append(operations, op)
-			if dispatch.TaskPlanningSource != nil {
-				source, task := *dispatch.TaskPlanningSource, *dispatch.TaskID
-				dispatch.TaskPlanningSource, dispatch.TaskID = &source, &task
+			raw, e := json.Marshal(dispatch)
+			if e != nil {
+				return e
 			}
-			retainedDispatches[op.AttemptID] = dispatch
+			var frozen protocol.Dispatch
+			if e = json.Unmarshal(raw, &frozen); e != nil {
+				return e
+			}
+			retainedDispatches[op.AttemptID] = frozen
 		}
 	}
 	// Stop owns cancellation/checkpointing of its earlier open. Let settlement
 	// reach the existing fence/worker rules before filling slots with fetches.
 	sort.SliceStable(operations, func(i, j int) bool {
-		return operations[i].Kind == protocol.Stop && operations[j].Kind != protocol.Stop
+		priority := func(k protocol.OperationKind) int {
+			if k == protocol.SettleCompletion {
+				return 0
+			}
+			if k == protocol.Stop {
+				return 1
+			}
+			return 2
+		}
+		return priority(operations[i].Kind) < priority(operations[j].Kind)
 	})
 	batch := &recoveryBatch{ctx: ctx, operations: operations, dispatches: retainedDispatches}
 	d.queueMu.Lock()

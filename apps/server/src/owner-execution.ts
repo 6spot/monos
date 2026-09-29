@@ -5,6 +5,7 @@ import { canonicalJSON, digest, validate } from '../../../packages/protocol/src/
 import type { Dispatch, OwnerCommand, OwnerCommandResult, OwnerOperationStatus } from '../../../packages/protocol/src/index.ts';
 import { authenticateOwner } from './owner-commands.ts';
 import { assertCurrentNode } from './task-records.ts';
+import { NodeExecution } from './node-execution.ts';
 import { TaskPlanning } from './task-planning.ts';
 import { admitWorkspaceEffect } from './workspaces.ts';
 
@@ -30,7 +31,8 @@ export async function derivedTaskState(tx: Transaction, planId: string): Promise
     FROM plan_nodes pn JOIN nodes n ON n.id=pn.node_id WHERE pn.plan_id=$1`, [planId])).rows;
   if (rows.some((row) => row.runnable)) return 'RUNNING';
   if (rows.some((row) => row.state !== 'COMPLETED')) return 'BLOCKED';
-  return 'REVIEW';
+  const held = await tx.query(`SELECT 1 FROM attempts a JOIN tasks t ON t.id=a.task_id WHERE t.plan_id=$1 AND (NOT a.process_released OR EXISTS(SELECT 1 FROM operations o WHERE o.attempt_id=a.id AND o.state NOT IN ('succeeded','cancelled'))) UNION SELECT 1 FROM workspace_leases l JOIN tasks t ON t.id=l.task_id WHERE t.plan_id=$1 AND l.state<>'released'`, [planId]);
+  return held.rowCount ? 'RUNNING' : 'REVIEW';
 }
 
 async function event(tx: Transaction, attempt: Attempt, kind: string, body: object, operationId: string | null) {
@@ -53,6 +55,7 @@ async function existingTerminal(tx: Transaction, attempt: Attempt): Promise<Oper
 }
 
 export async function executeOwnerAction(db: Database, token: string, command: OwnerCommand): Promise<OwnerCommandResult> {
+  if ('source_id' in command.payload || command.name === 'recover_completion' || (command.name === 'cancel_task' && 'plan_id' in command.payload)) return new NodeExecution(db).command(token,command);
   if (command.name === 'start_task' || command.name === 'cancel_task' || 'planning_intent_id' in command.payload
     || (['stop_initial_planning', 'retry_initial_planning'].includes(command.name) && 'attempt_id' in command.payload
       && (await db.pool.query('SELECT 1 FROM attempts WHERE id=$1 AND planning_intent_id IS NOT NULL', [command.payload.attempt_id])).rowCount)) return new TaskPlanning(db).command(token, command);
@@ -82,6 +85,7 @@ export async function executeOwnerAction(db: Database, token: string, command: O
       return prior.response;
     }
     const nodeAction = action.endsWith('_node');
+    if (nodeAction && attempt.launch.node_execution_source) throw new CommandError('denied_scope', 'Canonical Node controls require exact source and blocker targeting');
     if (nodeAction) {
       if (attempt.kind !== 'node' || attempt.node_id !== target.node_id || Number(attempt.node_activation) !== target.node_activation) throw new CommandError('denied_scope', 'Node Attempt binding differs');
       if (!task.plan_id || attempt.plan_id !== task.plan_id || attempt.specification_id !== task.specification_id) throw new CommandError('version_conflict', 'Attempt revision basis changed', Number(task.control_version));

@@ -88,7 +88,7 @@ export class RuntimeScheduling {
       i.incarnation AS installation_incarnation,i.observation
       FROM runners r LEFT JOIN runtime_installations i ON i.runner_id=r.id AND i.runtime_id=$1
       WHERE ($3::text IS NULL OR r.id=$3) ORDER BY r.id`, [target.runtime_id, this.backendInstance, target.runner_id ?? null])).rows;
-    if (!facts.length) return { status: 'unavailable', reason: target.runner_id ? 'runner_missing' : 'installation_unavailable', source, target };
+    if (!facts.length) return { status: 'unavailable', reason: target.runner_id || request.node_execution_source ? 'runner_missing' : 'installation_unavailable', source, target };
     const eligible = facts.filter((fact) => issue(fact) === null);
     if (!target.runner_id && eligible.length > 1) return { status: 'unavailable', reason: 'ambiguous_auto_placement', source, target };
     const chosen = eligible[0];
@@ -109,7 +109,7 @@ export class RuntimeScheduling {
     };
     const dispatch_id = await this.queue.enqueue(tx, {
       attempt_id: request.attempt_id, task_id: request.task_id, node_id: request.node_id,
-      todo_id: request.todo_id, discussion_context: request.discussion_context, task_planning_source: request.task_planning_source,
+      todo_id: request.todo_id, discussion_context: request.discussion_context, task_planning_source: request.task_planning_source, node_execution_source: request.node_execution_source,
       kind: request.kind, expected: request.expected, resource_id: request.resource_id,
       ...(request.legacy_probe ? { legacy_probe: true as const } : {}),
       prompt: request.prompt, source_watermark: request.source_watermark,

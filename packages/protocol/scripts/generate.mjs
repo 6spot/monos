@@ -60,6 +60,9 @@ const get = (name, auth, parameters = []) => ({ security: security(auth), parame
 artifacts.set('generated/openapi.json', `${JSON.stringify({
   openapi: '3.1.0', info: { title: 'monos boundary probe', version: '1.0.0' },
   paths: {
+    '/v1/owner/tasks/{task_id}/nodes/{node_id}/execution': { get: get('NodeExecutionStatus', 'OwnerAuth', ['task_id', 'node_id']) },
+    '/v1/owner/tasks/{task_id}/artifacts': { get: get('ArtifactPage', 'OwnerAuth', ['task_id']) },
+    '/v1/owner/tasks/{task_id}/artifacts/{artifact_id}': { get: get('ArtifactRecord', 'OwnerAuth', ['task_id', 'artifact_id']) },
     '/v1/runner/operations/{operation_id}/repository-access': { post: { security: security('RunnerAuth'), parameters: [{ name: 'operation_id', in: 'path', required: true, schema: reference('Id') }], requestBody: { required: true, content: { 'application/json': { schema: reference('RepositoryAccessRequest') } } }, responses: { ...responses('GitHubRepositoryAccessResult'), default: { description: 'Bounded repository access attention; never includes provider secrets.', content: { 'application/json': { schema: reference('RepositoryAccessError') } } } } } },
     '/v1/owner/task-previews/commands': { post: { security: security('OwnerAuth'), requestBody: { required: true, content: { 'application/json': { schema: reference('TaskPreviewCommand') } } }, responses: responses('TaskPreviewCommandResult') } },
     '/v1/owner/task-previews/commands/{request_id}': { get: get('TaskPreviewCommandResult', 'OwnerAuth', ['request_id']) },

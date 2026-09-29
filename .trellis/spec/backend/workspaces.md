@@ -9,7 +9,8 @@ see the task's verification report for versions, retained failures and limits.
 ## 1. Scope / Trigger
 
 Canonical Node dispatch, lazy `open_workspace`, same-Task serial lease reuse,
-completion and system Stop reconciliation. Task Start, artifacts, multi-repository
+completion and system Stop reconciliation. [Node execution](node-execution.md)
+adds Task-driven dispatch, Artifacts and hard-completion recovery. Multi-repository
 completion, Planner inspection and delivery are later slices.
 
 ## 2. Signatures
@@ -51,11 +52,14 @@ outbox, operation, dispatch, database journal or Agent environment.
 - Stop preserves private work through a system-generated checkpoint and does not
   advance finalized revision. A fresh Attempt in the same activation may reuse it;
   another activation needs explicit disposition from the later settlement slice.
-- `cancelled` is terminal only for an exact never-materialized open, linked to an
+- For open operations, `cancelled` is terminal only for an exact never-materialized open, linked to an
   admitted Stop for its fenced Attempt/lease. Its receipt projects an error, never
   a successful workspace. The matching Stop may release without a checkpoint only
   when that exact cancellation is proved. All unresolved predicates exclude both
   succeeded and cancelled.
+- Canonical completion cancellation is a separate exact exported settlement pair
+  under [Node execution](node-execution.md); never apply unopened-workspace rules
+  to that retained private-work recovery.
 - An initialized workspace whose new lease cannot refresh is not cancellable as
   an empty allocation. Stop-only recovered open carries paired
   `recovered_by_stop_operation_id` / `target_observation_lease_id`, binding the

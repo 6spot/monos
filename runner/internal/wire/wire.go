@@ -157,6 +157,13 @@ func Envelope(raw []byte) (protocol.CommandEnvelope, error) {
 		required = []string{"summary"}
 		allowed["artifact_ids"] = true
 		allowed["handled_guidance_ids"] = true
+	case "publish_artifact":
+		required = []string{"artifact_id", "title", "content"}
+		allowed["references"], allowed["supersedes"] = true, true
+	case "read_artifact":
+		required = []string{"artifact_id"}
+	case "block_node":
+		required = []string{"reason"}
 	case protocol.CommitTaskTurn:
 		required = []string{"reply", "source_watermark", "routing"}
 	case "publish_execution_plan":

@@ -11,12 +11,17 @@ import (
 
 	protocol "monos.local/protocol"
 	"monos.local/runner/internal/local"
+	"monos.local/runner/internal/wire"
 )
 
 func TestPlannerCLIUsesNativeJournalChannel(t *testing.T) {
 	// This socket fixture tests CLI argument/input transport. Kernel attribution
 	// remains covered by local/host tests and the Linux integration trial.
 	for _, command := range []struct{ name, payload string }{
+		{"publish_artifact", `{"artifact_id":"artifact","title":"HTML result","content":{"text":"<h1>Hello</h1>","media_type":"text/html"}}`},
+		{"read_artifact", `{"artifact_id":"artifact"}`},
+		{"block_node", `{"reason":"Owner answer needed"}`},
+		{"complete_node", `{"summary":"Complete","artifact_ids":[]}`},
 		{"read_discussion", `{}`},
 		{"update_working_requirement_state", `{"working_requirement_state":"state","resolved_watermark":0,"project_context_version":1,"project_context_digest":"` + strings.Repeat("a", 64) + `"}`},
 		{"commit_discussion_turn", `{"reply":"reply","working_requirement_state":"state","source_message_id":"source","source_watermark":1}`},
@@ -62,7 +67,9 @@ func TestPlannerCLIUsesNativeJournalChannel(t *testing.T) {
 			}
 			select {
 			case request := <-observed:
-				if request.Action != "prepare" || string(request.Name) != command.name || request.RequestID != "same-request" || string(request.Payload) != command.payload {
+				got, _, gotErr := wire.CanonicalRaw(request.Payload)
+				want, _, wantErr := wire.CanonicalRaw([]byte(command.payload))
+				if request.Action != "prepare" || string(request.Name) != command.name || request.RequestID != "same-request" || gotErr != nil || wantErr != nil || string(got) != string(want) {
 					t.Fatalf("CLI changed retained command: %+v", request)
 				}
 			case <-time.After(time.Second):

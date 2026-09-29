@@ -33,7 +33,7 @@ func resourceCache(id string) string { return filepath.Join(Root, "cache", "reso
 
 func validateWorkspaceScope(d protocol.Dispatch, op protocol.Operation) error {
 	w := op.Workspace
-	if op.Kind != protocol.KindOpenWorkspace && op.Kind != protocol.KindCompleteNode && op.Kind != protocol.Stop {
+	if op.Kind != protocol.KindOpenWorkspace && op.Kind != protocol.KindCompleteNode && op.Kind != protocol.Stop && op.Kind != protocol.SettleCompletion {
 		return fmt.Errorf("canonical repository inspection is unavailable")
 	}
 	if w == nil || op.WorkspaceDigest == nil || d.TaskID == nil || d.WorkspaceReservations == nil || d.Kind != protocol.Node {
