@@ -1,0 +1,19 @@
+{"file": ".trellis/spec/backend/index.md", "reason": "Backend ownership and development checklist"}
+{"file": ".trellis/spec/backend/database-guidelines.md", "reason": "Atomic receipts, lock order and outbox"}
+{"file": ".trellis/spec/backend/configuration.md", "reason": "Start eligibility and current selected Roles"}
+{"file": ".trellis/spec/backend/task-records.md", "reason": "Immutable Specification/Plan publication"}
+{"file": ".trellis/spec/backend/dispatch-queue.md", "reason": "Physical owner claims and source promotion"}
+{"file": ".trellis/spec/backend/runtime-scheduling.md", "reason": "Current target selection before Task locks"}
+{"file": ".trellis/spec/backend/owner-commands.md", "reason": "Exact Owner receipts and controls"}
+{"file": ".trellis/spec/backend/owner-reads.md", "reason": "Scoped factual projections"}
+{"file": ".trellis/spec/backend/task-preview.md", "reason": "Canonical independent creation"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Real contention and crash verification"}
+{"file": ".trellis/spec/protocol/index.md", "reason": "Shared protocol ownership"}
+{"file": ".trellis/spec/protocol/commands.md", "reason": "Authenticated authority and replay"}
+{"file": ".trellis/spec/protocol/schema-generation.md", "reason": "Strict schemas and generated TS/Go consumers"}
+{"file": ".trellis/spec/runner/index.md", "reason": "Native execution boundary"}
+{"file": ".trellis/spec/runner/execution-guidelines.md", "reason": "Process and outcome settlement"}
+{"file": ".trellis/spec/runner/workspace-guidelines.md", "reason": "No writable Planner workspace"}
+{"file": ".trellis/spec/runner/quality-guidelines.md", "reason": "Native verification"}
+{"file": ".trellis/spec/guides/index.md", "reason": "Cross-layer and reuse guides"}
+{"file": ".trellis/tasks/09-30-a-task-start-planning/research/backend-seams.md", "reason": "Researched source/schema/lock seams and scope decisions"}

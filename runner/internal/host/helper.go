@@ -52,6 +52,11 @@ func ValidateRequest(r Request) error {
 		if err := wire.Validate("Dispatch", raw); err != nil {
 			return err
 		}
+		if r.Dispatch.TaskPlanningSource != nil {
+			if _, err := wire.ScopeID(*r.Dispatch); err != nil {
+				return err
+			}
+		}
 		if r.Dispatch.AttemptID != r.AttemptID || r.Dispatch.RuntimeID != protocol.Opencode || string(r.Dispatch.Model) != FreeModel {
 			return fmt.Errorf("dispatch mismatch")
 		}
@@ -224,7 +229,7 @@ func createTraversalRoot(path string, uid, gid int) error {
 	return nil
 }
 func executionDirectories(d protocol.Dispatch) []string {
-	if d.TodoID != nil || d.WorkspaceReservations != nil {
+	if d.TodoID != nil || d.TaskPlanningSource != nil || d.WorkspaceReservations != nil {
 		return []string{"scratch", "data", "cache", "state", "tmp", "config"}
 	}
 	return []string{"scratch", "workspace", "common", "data", "cache", "state", "tmp", "config"}

@@ -26,6 +26,8 @@ const help = `monos — formal monos Tool Protocol commands
   monos open_workspace --input payload.json [--request-id ID] --output json
   monos inspect_repository --input payload.json [--request-id ID] --output json
   monos complete_node --input payload.json [--request-id ID] --output json
+  monos publish_execution_plan --input payload.json [--request-id ID] --output json
+  monos raise_planning_issue --input payload.json [--request-id ID] --output json
   monos commit_task_turn --input payload.json [--request-id ID] --output json
   monos read_discussion --input payload.json [--request-id ID] --output json
   monos update_working_requirement_state --input payload.json [--request-id ID] --output json
@@ -36,6 +38,12 @@ const help = `monos — formal monos Tool Protocol commands
 Use --input - to read a JSON payload from stdin (maximum 1 MiB).
 Workspace payload: {"resource_id":"RESOURCE"}
 Node completion: {"summary":"completed work"}
+Initial Task Plan: {"planning_intent_id":"INTENT","plan_id":"PLAN","nodes":[{"node_id":"NODE","role_id":"ROLE","goal":"work to perform","dependencies":[]}]}
+Initial planning issue: {"planning_intent_id":"INTENT","reason":"Owner direction needed"}
+Only the source-bound initial Task Planner may publish a Plan or raise an initial
+planning issue. Use its supplied planning_intent_id. Exactly one Node is supported;
+preserve optional hard_requirements and expected_outputs when supplied.
+Only these two commands end initial planning; commit_task_turn does not.
 Planner reply: {"reply":"...","source_watermark":1,"routing":{"kind":"reply_only"}}
 Todo history: {} or {"cursor":"CURSOR"}; only this Attempt's input cutoff is readable.
 Todo cache rebuild: {"working_requirement_state":"...","resolved_watermark":0,"project_context_version":1,"project_context_digest":"64-hex-digest-from-context"}
@@ -99,7 +107,7 @@ func run(args []string) (protocol.CommandResult, error) {
 		action = "retry"
 	case "command_status":
 		action = "status"
-	case "open_workspace", "inspect_repository", "complete_node", "commit_task_turn", "read_discussion", "update_working_requirement_state", "commit_discussion_turn":
+	case "open_workspace", "inspect_repository", "complete_node", "publish_execution_plan", "raise_planning_issue", "commit_task_turn", "read_discussion", "update_working_requirement_state", "commit_discussion_turn":
 	default:
 		return result, fmt.Errorf("unknown command")
 	}

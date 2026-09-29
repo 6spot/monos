@@ -9,13 +9,18 @@ Start one independent Task planning chain and publish a valid one-Node Plan.
 - Explicit Owner Start moves PLANNING to RUNNING and records one durable planning intent; duplicate Start cannot create another chain.
 - Build Task-scoped context from effective Specification, current Project/resources and selected Role descriptors without Todo Discussion/cache/session.
 - Planner publishes one immutable valid Node or raises a planning issue; unsupported multi-Node plans are not flattened.
-- Expose queued/unavailable reasons, Stop/Retry and planning-issue answer/Retry plus appropriate explicit withdrawal/exit.
+- Expose queued/unavailable reasons, source-targeted Stop/Retry, exact planning-issue answer + Retry, and pre-Plan Cancel. These controls remain available without model capacity; successor execution waits for prior physical settlement.
+- Preserve immutable bounded context, exact Owner/Agent receipts, current source/claim/revision guards, and historical attempt-targeted Stop/Retry compatibility.
+- Publish only a single PENDING Node in this leaf; production Node execution follows in the next leaf.
 
 ## Acceptance criteria
 
-- [ ] Created Tasks do no planning until Start; real Planner produces one valid Plan or recorded issue with exact source/claim/revision guards.
-- [ ] Concurrent/replayed Start, stale publication, process loss and restart preserve one planning chain and no automatic workspace creation.
-- [ ] Owner exits work without free model capacity; stopped Tasks do not restart through chat or stale work.
+- [x] Created Tasks do no planning until Start; real Planner produces one valid Plan or recorded issue with exact source/claim/revision guards.
+- [x] Concurrent/replayed Start, stale publication, process loss and restart preserve one planning chain and no automatic workspace creation.
+- [x] Owner exits work without free model capacity; stopped/cancelled Tasks do not restart through chat or stale work.
+- [x] An open issue has exact answer + Retry, Stop withdrawal and Cancel exits; repeated answers remain in fresh Task-only context.
+- [x] Context/transport budgets reject oversized input without clipping, and an explicit Retry is required to refresh a failed frozen source.
+- [x] Real canonical Owner-created Tasks prove no planning before Start and real bundled-CLI Plan/issue outcomes, with settled processes and no repository/Node execution.
 
 ## Dependency and scope
 
@@ -25,5 +30,6 @@ authorized sequential execution and routine implementation/test decisions.
 No new permanent service, team model, generic workflow engine, automatic Runtime
 hang inference, mandatory native session resume or cross-Runner migration.
 
-This is a scoped backlog leaf; complete its design, implementation plan and real
-context manifests immediately before starting it. See parent research for seams.
+Design, implementation ownership and validation gates are recorded in `design.md`
+and `implement.md`; curated context manifests include the completed backend-seam
+research. Planning was reviewed under the standing sequential-work authorization.

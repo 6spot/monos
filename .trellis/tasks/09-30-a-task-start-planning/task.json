@@ -3,7 +3,7 @@
   "name": "a-task-start-planning",
   "title": "Explicit Task Start and initial planning",
   "description": "Start one Task planning chain explicitly and publish an immutable one-Node Plan or recoverable planning issue.",
-  "status": "planning",
+  "status": "in_progress",
   "dev_type": "backend",
   "scope": null,
   "package": null,
@@ -24,6 +24,6 @@
   "notes": "",
   "meta": {
     "roadmap_level": "leaf",
-    "planning_maturity": "backlog"
+    "planning_maturity": "ready"
   }
 }

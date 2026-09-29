@@ -5,6 +5,7 @@ import { canonicalJSON, digest, validate } from '../../../packages/protocol/src/
 import type { Dispatch, OwnerCommand, OwnerCommandResult, OwnerOperationStatus } from '../../../packages/protocol/src/index.ts';
 import { authenticateOwner } from './owner-commands.ts';
 import { assertCurrentNode } from './task-records.ts';
+import { TaskPlanning } from './task-planning.ts';
 import { admitWorkspaceEffect } from './workspaces.ts';
 
 type Action = Exclude<OwnerCommand['name'], 'confirm_proposal'>;
@@ -52,6 +53,9 @@ async function existingTerminal(tx: Transaction, attempt: Attempt): Promise<Oper
 }
 
 export async function executeOwnerAction(db: Database, token: string, command: OwnerCommand): Promise<OwnerCommandResult> {
+  if (command.name === 'start_task' || command.name === 'cancel_task' || 'planning_intent_id' in command.payload
+    || (['stop_initial_planning', 'retry_initial_planning'].includes(command.name) && 'attempt_id' in command.payload
+      && (await db.pool.query('SELECT 1 FROM attempts WHERE id=$1 AND planning_intent_id IS NOT NULL', [command.payload.attempt_id])).rowCount)) return new TaskPlanning(db).command(token, command);
   const action = command.name as Action;
   const target = command.payload as Target;
   const envelope = canonicalJSON(command); const hash = digest(envelope);

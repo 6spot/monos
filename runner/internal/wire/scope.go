@@ -1,6 +1,7 @@
 package wire
 
 import (
+	"encoding/json"
 	"fmt"
 
 	protocol "monos.local/protocol"
@@ -11,6 +12,18 @@ import (
 func ScopeID(d protocol.Dispatch) (string, error) {
 	if (d.TaskID == nil) == (d.TodoID == nil) {
 		return "", fmt.Errorf("dispatch must have exactly one Todo or Task scope")
+	}
+	if d.TaskPlanningSource != nil {
+		if d.TaskID == nil || d.Kind != "planner" || d.NodeID != nil || d.NodeActivation != 0 || d.ResourceID != nil || d.SourceMessageID != nil || d.SourceWatermark != 0 || d.WorkspaceReservations == nil || len(d.WorkspaceReservations.Resources) != 0 {
+			return "", fmt.Errorf("invalid initial Task Planner ownership")
+		}
+		raw, err := json.Marshal(d.TaskPlanningSource)
+		if err != nil {
+			return "", err
+		}
+		if err = Validate("TaskPlanningSource", raw); err != nil {
+			return "", err
+		}
 	}
 	if d.TodoID != nil {
 		if *d.TodoID == "" || d.Kind != "planner" || d.NodeID != nil || d.NodeActivation != 0 || d.ResourceID != nil || d.SourceMessageID == nil || *d.SourceMessageID == "" {

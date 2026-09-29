@@ -21,6 +21,8 @@ type GitOID string
 
 type PositiveCounter int64
 
+type PlanningText string
+
 type CommandEnvelope struct {
 	ExpectedControlVersion int64               `json:"expected_control_version"`
 	Name                   CommandEnvelopeName `json:"name"`
@@ -31,20 +33,34 @@ type CommandEnvelope struct {
 }
 
 type CommandPayload struct {
-	ArtifactIDS             []string     `json:"artifact_ids,omitempty"`
-	Cursor                  *string      `json:"cursor,omitempty"`
-	HandledGuidanceIDS      []string     `json:"handled_guidance_ids,omitempty"`
-	ProjectContextDigest    *string      `json:"project_context_digest,omitempty"`
-	ProjectContextVersion   *int64       `json:"project_context_version,omitempty"`
-	Reply                   *string      `json:"reply,omitempty"`
-	ResolvedWatermark       *int64       `json:"resolved_watermark,omitempty"`
-	ResourceID              *string      `json:"resource_id,omitempty"`
-	Routing                 *Routing     `json:"routing,omitempty"`
-	SourceMessageID         *string      `json:"source_message_id,omitempty"`
-	SourceWatermark         *int64       `json:"source_watermark,omitempty"`
-	Summary                 *string      `json:"summary,omitempty"`
-	TaskPreview             *TaskPreview `json:"task_preview,omitempty"`
-	WorkingRequirementState *string      `json:"working_requirement_state,omitempty"`
+	ArtifactIDS             []string            `json:"artifact_ids,omitempty"`
+	Cursor                  *string             `json:"cursor,omitempty"`
+	HandledGuidanceIDS      []string            `json:"handled_guidance_ids,omitempty"`
+	Nodes                   []ExecutionPlanNode `json:"nodes,omitempty"`
+	PlanID                  *string             `json:"plan_id,omitempty"`
+	PlanningIntentID        *string             `json:"planning_intent_id,omitempty"`
+	ProjectContextDigest    *string             `json:"project_context_digest,omitempty"`
+	ProjectContextVersion   *int64              `json:"project_context_version,omitempty"`
+	Reason                  *string             `json:"reason,omitempty"`
+	Reply                   *string             `json:"reply,omitempty"`
+	ResolvedWatermark       *int64              `json:"resolved_watermark,omitempty"`
+	ResourceID              *string             `json:"resource_id,omitempty"`
+	Routing                 *Routing            `json:"routing,omitempty"`
+	SourceMessageID         *string             `json:"source_message_id,omitempty"`
+	SourceWatermark         *int64              `json:"source_watermark,omitempty"`
+	Summary                 *string             `json:"summary,omitempty"`
+	TaskPreview             *TaskPreview        `json:"task_preview,omitempty"`
+	WorkingRequirementState *string             `json:"working_requirement_state,omitempty"`
+}
+
+type ExecutionPlanNode struct {
+	Consumes         []string `json:"consumes,omitempty"`
+	Dependencies     []string `json:"dependencies"`
+	ExpectedOutputs  []string `json:"expected_outputs,omitempty"`
+	Goal             string   `json:"goal"`
+	HardRequirements []string `json:"hard_requirements,omitempty"`
+	NodeID           string   `json:"node_id"`
+	RoleID           string   `json:"role_id"`
 }
 
 type Routing struct {
@@ -86,6 +102,7 @@ type EffectResult struct {
 	Message                    *string                     `json:"message,omitempty"`
 	MessageID                  *string                     `json:"message_id,omitempty"`
 	Path                       *string                     `json:"path,omitempty"`
+	PlanningOutcome            *PlanningOutcome            `json:"planning_outcome,omitempty"`
 	Reply                      *string                     `json:"reply,omitempty"`
 	ResolvedWatermark          *int64                      `json:"resolved_watermark,omitempty"`
 	SourceWatermark            *int64                      `json:"source_watermark,omitempty"`
@@ -115,6 +132,13 @@ type DiscussionMessage struct {
 	SourceMessageID       *string      `json:"source_message_id,omitempty"`
 	SourceWatermark       *int64       `json:"source_watermark,omitempty"`
 	TaskPreview           *TaskPreview `json:"task_preview,omitempty"`
+}
+
+type PlanningOutcome struct {
+	IssueSequence    *int64              `json:"issue_sequence,omitempty"`
+	Kind             PlanningOutcomeKind `json:"kind"`
+	PlanID           *string             `json:"plan_id,omitempty"`
+	PlanningIntentID string              `json:"planning_intent_id"`
 }
 
 type WorkspaceMetadata struct {
@@ -192,8 +216,15 @@ type Dispatch struct {
 	SourceMessageID       *string                `json:"source_message_id,omitempty"`
 	SourceWatermark       int64                  `json:"source_watermark"`
 	TaskID                *string                `json:"task_id,omitempty"`
+	TaskPlanningSource    *TaskPlanningSource    `json:"task_planning_source,omitempty"`
 	TodoID                *string                `json:"todo_id,omitempty"`
 	WorkspaceReservations *WorkspaceReservations `json:"workspace_reservations,omitempty"`
+}
+
+type TaskPlanningSource struct {
+	ContextDigest   string `json:"context_digest"`
+	IntentID        string `json:"intent_id"`
+	SpecificationID string `json:"specification_id"`
 }
 
 type WorkspaceReservations struct {
@@ -311,24 +342,30 @@ type OwnerCommand struct {
 }
 
 type OwnerCommandPayload struct {
-	ContentDigest  *string `json:"content_digest,omitempty"`
-	ProposalID     *string `json:"proposal_id,omitempty"`
-	AttemptID      *string `json:"attempt_id,omitempty"`
-	NodeActivation *int64  `json:"node_activation,omitempty"`
-	NodeID         *string `json:"node_id,omitempty"`
+	ContentDigest    *string `json:"content_digest,omitempty"`
+	ProposalID       *string `json:"proposal_id,omitempty"`
+	AttemptID        *string `json:"attempt_id,omitempty"`
+	NodeActivation   *int64  `json:"node_activation,omitempty"`
+	NodeID           *string `json:"node_id,omitempty"`
+	IssueSequence    *int64  `json:"issue_sequence,omitempty"`
+	PlanningIntentID *string `json:"planning_intent_id,omitempty"`
+	Answer           *string `json:"answer,omitempty"`
+	SpecificationID  *string `json:"specification_id,omitempty"`
 }
 
 type OwnerCommandResult struct {
-	AttemptID      *string                  `json:"attempt_id,omitempty"`
-	ConfirmationID *string                  `json:"confirmation_id,omitempty"`
-	ControlVersion *int64                   `json:"control_version,omitempty"`
-	EndReason      *string                  `json:"end_reason,omitempty"`
-	NodeID         *string                  `json:"node_id,omitempty"`
-	OperationID    *string                  `json:"operation_id,omitempty"`
-	ProposalID     *string                  `json:"proposal_id,omitempty"`
-	RequestID      string                   `json:"request_id"`
-	SchemaVersion  int64                    `json:"schema_version"`
-	Status         OwnerCommandResultStatus `json:"status"`
+	AttemptID        *string                  `json:"attempt_id,omitempty"`
+	ConfirmationID   *string                  `json:"confirmation_id,omitempty"`
+	ControlVersion   *int64                   `json:"control_version,omitempty"`
+	EndReason        *string                  `json:"end_reason,omitempty"`
+	NodeID           *string                  `json:"node_id,omitempty"`
+	OperationID      *string                  `json:"operation_id,omitempty"`
+	PlanningIntentID *string                  `json:"planning_intent_id,omitempty"`
+	ProposalID       *string                  `json:"proposal_id,omitempty"`
+	RequestID        string                   `json:"request_id"`
+	SchemaVersion    int64                    `json:"schema_version"`
+	Status           OwnerCommandResultStatus `json:"status"`
+	TaskID           *string                  `json:"task_id,omitempty"`
 }
 
 type TaskEventsQuery struct {
@@ -613,7 +650,9 @@ type OwnerStopInitialPlanningCommand struct {
 }
 
 type OwnerStopInitialPlanningCommandPayload struct {
-	AttemptID string `json:"attempt_id"`
+	AttemptID        *string `json:"attempt_id,omitempty"`
+	IssueSequence    *int64  `json:"issue_sequence,omitempty"`
+	PlanningIntentID *string `json:"planning_intent_id,omitempty"`
 }
 
 type OwnerRetryInitialPlanningCommand struct {
@@ -626,7 +665,10 @@ type OwnerRetryInitialPlanningCommand struct {
 }
 
 type OwnerRetryInitialPlanningCommandPayload struct {
-	AttemptID string `json:"attempt_id"`
+	Answer           *string `json:"answer,omitempty"`
+	AttemptID        *string `json:"attempt_id,omitempty"`
+	IssueSequence    *int64  `json:"issue_sequence,omitempty"`
+	PlanningIntentID *string `json:"planning_intent_id,omitempty"`
 }
 
 type OwnerOperationStatus struct {
@@ -1041,6 +1083,64 @@ type RepositoryAccessError struct {
 	SchemaVersion int64                      `json:"schema_version"`
 }
 
+type OwnerStartTaskCommand struct {
+	ExpectedControlVersion int64                        `json:"expected_control_version"`
+	Name                   OwnerStartTaskCommandName    `json:"name"`
+	Payload                OwnerStartTaskCommandPayload `json:"payload"`
+	RequestID              string                       `json:"request_id"`
+	SchemaVersion          int64                        `json:"schema_version"`
+	ScopeID                string                       `json:"scope_id"`
+}
+
+type OwnerStartTaskCommandPayload struct {
+	SpecificationID string `json:"specification_id"`
+}
+
+type OwnerCancelTaskCommand struct {
+	ExpectedControlVersion int64                         `json:"expected_control_version"`
+	Name                   OwnerCancelTaskCommandName    `json:"name"`
+	Payload                OwnerCancelTaskCommandPayload `json:"payload"`
+	RequestID              string                        `json:"request_id"`
+	SchemaVersion          int64                         `json:"schema_version"`
+	ScopeID                string                        `json:"scope_id"`
+}
+
+type OwnerCancelTaskCommandPayload struct {
+	PlanningIntentID *string `json:"planning_intent_id,omitempty"`
+	SpecificationID  string  `json:"specification_id"`
+}
+
+type TaskPlanningStatus struct {
+	AttemptID        *string                  `json:"attempt_id,omitempty"`
+	AvailableActions []AvailableAction        `json:"available_actions"`
+	ControlVersion   int64                    `json:"control_version"`
+	EndReason        *string                  `json:"end_reason,omitempty"`
+	Issue            *PlanningIssue           `json:"issue,omitempty"`
+	OperationID      *string                  `json:"operation_id,omitempty"`
+	PlanID           *string                  `json:"plan_id,omitempty"`
+	PlanningSource   *TaskPlanningSource      `json:"planning_source,omitempty"`
+	SchemaVersion    int64                    `json:"schema_version"`
+	SpecificationID  string                   `json:"specification_id"`
+	State            TaskOverviewState        `json:"state"`
+	Status           TaskPlanningStatusStatus `json:"status"`
+	TaskID           string                   `json:"task_id"`
+	WaitingReason    *string                  `json:"waiting_reason,omitempty"`
+}
+
+type PlanningIssue struct {
+	IssueSequence int64  `json:"issue_sequence"`
+	Reason        string `json:"reason"`
+}
+
+type TaskPlanRevision struct {
+	ContentDigest   string              `json:"content_digest"`
+	Nodes           []ExecutionPlanNode `json:"nodes"`
+	PlanID          string              `json:"plan_id"`
+	SchemaVersion   int64               `json:"schema_version"`
+	SpecificationID string              `json:"specification_id"`
+	TaskID          string              `json:"task_id"`
+}
+
 type CommandEnvelopeName string
 
 const (
@@ -1049,6 +1149,8 @@ const (
 	NameCompleteNode              CommandEnvelopeName = "complete_node"
 	NameInspectRepository         CommandEnvelopeName = "inspect_repository"
 	NameOpenWorkspace             CommandEnvelopeName = "open_workspace"
+	PublishExecutionPlan          CommandEnvelopeName = "publish_execution_plan"
+	RaisePlanningIssue            CommandEnvelopeName = "raise_planning_issue"
 	ReadDiscussion                CommandEnvelopeName = "read_discussion"
 	UpdateWorkingRequirementState CommandEnvelopeName = "update_working_requirement_state"
 )
@@ -1093,6 +1195,13 @@ type InstructionFile string
 const (
 	AGENTSMd InstructionFile = "AGENTS.md"
 	CLAUDEMd InstructionFile = "CLAUDE.md"
+)
+
+type PlanningOutcomeKind string
+
+const (
+	KindIssue PlanningOutcomeKind = "issue"
+	Plan      PlanningOutcomeKind = "plan"
 )
 
 type WorkspaceUnavailableReason string
@@ -1216,10 +1325,12 @@ const (
 type OwnerCommandName string
 
 const (
+	PurpleCancelTask           OwnerCommandName = "cancel_task"
 	PurpleConfirmProposal      OwnerCommandName = "confirm_proposal"
 	PurpleContinueNode         OwnerCommandName = "continue_node"
 	PurpleRetryInitialPlanning OwnerCommandName = "retry_initial_planning"
 	PurpleRetryNode            OwnerCommandName = "retry_node"
+	PurpleStartTask            OwnerCommandName = "start_task"
 	PurpleStopInitialPlanning  OwnerCommandName = "stop_initial_planning"
 	PurpleStopNode             OwnerCommandName = "stop_node"
 )
@@ -1361,10 +1472,10 @@ const (
 type DiscussionSourceStatus string
 
 const (
-	Interrupted  DiscussionSourceStatus = "interrupted"
-	Processing   DiscussionSourceStatus = "processing"
-	Settling     DiscussionSourceStatus = "settling"
-	StatusQueued DiscussionSourceStatus = "queued"
+	PurpleInterrupted DiscussionSourceStatus = "interrupted"
+	PurpleProcessing  DiscussionSourceStatus = "processing"
+	PurpleQueued      DiscussionSourceStatus = "queued"
+	PurpleSettling    DiscussionSourceStatus = "settling"
 )
 
 type DiscussionSubmitCommandName string
@@ -1477,4 +1588,41 @@ type RepositoryAuthenticationKind string
 const (
 	Anonymous          RepositoryAuthenticationKind = "anonymous"
 	GithubInstallation RepositoryAuthenticationKind = "github_installation"
+)
+
+type OwnerStartTaskCommandName string
+
+const (
+	FluffyStartTask OwnerStartTaskCommandName = "start_task"
+)
+
+type OwnerCancelTaskCommandName string
+
+const (
+	FluffyCancelTask OwnerCancelTaskCommandName = "cancel_task"
+)
+
+type AvailableAction string
+
+const (
+	AvailableActionCancelTask           AvailableAction = "cancel_task"
+	AvailableActionRetryInitialPlanning AvailableAction = "retry_initial_planning"
+	AvailableActionStartTask            AvailableAction = "start_task"
+	AvailableActionStopInitialPlanning  AvailableAction = "stop_initial_planning"
+)
+
+type TaskPlanningStatusStatus string
+
+const (
+	FluffyInterrupted TaskPlanningStatusStatus = "interrupted"
+	FluffyProcessing  TaskPlanningStatusStatus = "processing"
+	FluffyQueued      TaskPlanningStatusStatus = "queued"
+	FluffySettling    TaskPlanningStatusStatus = "settling"
+	NotStarted        TaskPlanningStatusStatus = "not_started"
+	Pending           TaskPlanningStatusStatus = "pending"
+	Published         TaskPlanningStatusStatus = "published"
+	StatusCancelled   TaskPlanningStatusStatus = "cancelled"
+	StatusIssue       TaskPlanningStatusStatus = "issue"
+	StatusUnavailable TaskPlanningStatusStatus = "unavailable"
+	Stopped           TaskPlanningStatusStatus = "stopped"
 )

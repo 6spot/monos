@@ -77,5 +77,15 @@ Backend coverage: [auth.test.ts](../../../apps/server/test/auth.test.ts), [app.t
 
 ## 7. Wrong vs Correct
 
+Initial Task planning adds source-bound `publish_execution_plan` and
+`raise_planning_issue`, strict `ExecutionPlanNode` definitions and
+`EffectResult.planning_outcome`. Optional `Dispatch.task_planning_source` is
+Task-Planner-only with empty canonical reservations. A legacy Planner kind does
+not imply this authority. Source-targeted Owner Start/Stop/Retry/Cancel and scoped
+read contracts are documented in [Task planning](../backend/task-planning.md).
+Keep the historical attempt-targeted Stop/Retry variants. Preserve optional Node
+arrays as absent versus empty across JSON -> TS -> Go -> immutable Plan storage;
+regeneration must retain the explicit Go marshaling rules.
+
 Wrong: transport timeout -> generate request ID -> repeat effect.
 Correct: retain original envelope -> read receipt -> explicitly retry under still-valid authority.

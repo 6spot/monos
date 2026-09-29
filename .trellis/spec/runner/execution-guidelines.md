@@ -102,6 +102,32 @@ Correct: reconcile the original records; preserve the unsent request as unknown 
 the interrupted Node as BLOCKED. Manual Runner startup proves recovery after startup,
 not that the installation automatically enables Runner at boot.
 
+## Initial Task planning
+
+Dispatch `task_planning_source` grants only source-bound initial Task Planner
+authority: no Todo/Node identity, no resource ID, and empty canonical workspace
+reservations. Validate its Task/Specification/source/digest before CLI and Host
+work. The fixed protocol requires `publish_execution_plan` or
+`raise_planning_issue`; local preparation rejects wrong intent/phase and generic
+`commit_task_turn`. Use actual bundled syntax `--input FILE` and
+`command-status --request-id ID`. Planning remains scratch-only; repository-free
+Stop is its sole Host effect.
+
+The finite reconnect recovery batch also owns repository-free Stops for these
+initial Planners. A complete validated inventory, exact retained source/Task/
+Specification/context, original operation, revoked unreleased dispatch and a
+matching recoverable (or legacy untyped) local failure are required. Use the
+normal `effect:` queue key and lock; retain entries blocked by old workers until
+the bounded single-flight queue can drain. Retry once after Ready per connection.
+Exact terminal results replay with zero Host effects. Missing/hard failures,
+altered intent or operation, Todo and legacy Planner Stops do not gain authority.
+No timer loop, fabricated operation or backend state reset is permitted.
+
+Tests must reproduce failed Stop -> reconnect physical absence -> original Stop
+result -> claim release, plus stale source/authorization, duplicate inventory,
+occupied keys, hard/missing evidence and TLS Ready ordering. A database terminal
+Attempt or process-absence report alone cannot replace successful Stop settlement.
+
 ## Installation discovery
 
 The constrained helper additionally accepts `{action:"discover",attempt_id:""}`

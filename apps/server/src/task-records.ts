@@ -1,12 +1,13 @@
 import type { Transaction } from '../../../packages/db/src/index.ts';
 import { CommandError } from '../../../packages/domain/src/commands.ts';
 import { canonicalJSON, digest, MAX_BODY_BYTES, validate } from '../../../packages/protocol/src/index.ts';
+import type { ExecutionPlanNode } from '../../../packages/protocol/src/index.ts';
 import { consumeTaskConfirmation } from './owner-commands.ts';
 import { assertActiveProject, assertProjectRoles, lockConfiguration } from './configuration-guards.ts';
 
 export interface ControlBasis { control_version: number; specification_id: string; plan_id: string | null }
 interface ControlRow { id: string; control_version: string; specification_id: string; plan_id: string | null; state: string; project_id: string | null }
-export interface PlanNode { node_id: string; role_id: string; goal: string; dependencies: string[] }
+export type PlanNode = ExecutionPlanNode;
 
 function contentJSON(value: unknown): string {
   let json: string;
@@ -28,7 +29,8 @@ export function validatePlan(nodes: PlanNode[]): void {
   contentJSON(nodes);
   const byId = new Map<string, PlanNode>();
   for (const node of nodes) {
-    validate('Id', node.node_id); validate('Id', node.role_id);
+    try { validate('ExecutionPlanNode', node); } catch { throw new CommandError('invalid_input', 'Invalid Node definition'); }
+    if (Buffer.byteLength(node.goal) > 262144) throw new CommandError('invalid_input', 'Node goal exceeds 256 KiB');
     if (byId.has(node.node_id) || typeof node.goal !== 'string' || !node.goal.trim() || !Array.isArray(node.dependencies) || new Set(node.dependencies).size !== node.dependencies.length) throw new CommandError('invalid_input', 'Invalid or duplicate Node definition');
     byId.set(node.node_id, node);
   }

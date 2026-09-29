@@ -6,6 +6,30 @@ Run only on the Owner-authorized Linux host with the staging checkout at
 `/root/monos-boundary-probe-src`. They never reboot, publish Git, configure a
 paid provider, or print bearer/config/environment contents.
 
+`task_planning_probe.py` covers canonical initial Task planning after migration 17
+is deployed. It uses the current Owner APIs and the real native Planner, without
+the fixture Plan/Node admission helper. On the existing host, run the stages in
+order using the same fresh private evidence directory:
+
+```sh
+python3 infra/probe/task_planning_probe.py --evidence /root/monos-planning-native-v1 --password-file /etc/monos-probe/owner-password create
+python3 infra/probe/task_planning_probe.py --evidence /root/monos-planning-native-v1 --password-file /etc/monos-probe/owner-password start
+python3 infra/probe/task_planning_probe.py --evidence /root/monos-planning-native-v1 --password-file /etc/monos-probe/owner-password issue
+python3 infra/probe/task_planning_probe.py --evidence /root/monos-planning-native-v1 --password-file /etc/monos-probe/owner-password retry
+python3 infra/probe/task_planning_probe.py --evidence /root/monos-planning-native-v1 --password-file /etc/monos-probe/owner-password plan
+python3 infra/probe/task_planning_probe.py --evidence /root/monos-planning-native-v1 --password-file /etc/monos-probe/owner-password audit
+```
+
+Each stage preserves an exclusive claim and exact command before admission. A
+timeout retains the source for inspection; repeating a stage or changing its
+evidence directory is not recovery authority. The trial confirms an exact native
+preview, proves zero execution before Start, then resolves a deliberately missing
+Owner choice through issue + answer/Retry. Pass requires native journal/receipt
+identity, one Start per Planner, physical Stop settlement, frozen Task-only
+context and an exact one-Node Plan. Its final Node is PENDING, with no Node Attempt
+or repository workspace. The next execution leaf must account for this retained
+Task before enabling new scheduling. These commands do not restart services.
+
 `probe.py` runs as root for private read-only evidence and explicitly targeted
 service restarts. `driver.py` is installed root-owned under
 `/var/lib/monos-probe/probe-tools`, then invoked by the **real OpenCode native

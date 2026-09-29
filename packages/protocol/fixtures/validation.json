@@ -2024,5 +2024,666 @@
       "finalized_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
       "target_observation_lease_id": "prior-lease"
     }
+  },
+  {
+    "name": "initial planning retains optional objective fields",
+    "schema": "ExecutionPlanNode",
+    "value": {
+      "node_id": "node",
+      "role_id": "role",
+      "goal": "Exact goal",
+      "dependencies": [],
+      "hard_requirements": [
+        "Test the result"
+      ],
+      "expected_outputs": [],
+      "consumes": []
+    },
+    "valid": true
+  },
+  {
+    "name": "planning node rejects role_instructions",
+    "schema": "ExecutionPlanNode",
+    "value": {
+      "node_id": "node",
+      "role_id": "role",
+      "goal": "Exact goal",
+      "dependencies": [],
+      "hard_requirements": [
+        "Test the result"
+      ],
+      "expected_outputs": [],
+      "consumes": [],
+      "role_instructions": "secret"
+    },
+    "valid": false
+  },
+  {
+    "name": "planning node rejects runtime_id",
+    "schema": "ExecutionPlanNode",
+    "value": {
+      "node_id": "node",
+      "role_id": "role",
+      "goal": "Exact goal",
+      "dependencies": [],
+      "hard_requirements": [
+        "Test the result"
+      ],
+      "expected_outputs": [],
+      "consumes": [],
+      "runtime_id": "opencode"
+    },
+    "valid": false
+  },
+  {
+    "name": "planning node rejects depends_on",
+    "schema": "ExecutionPlanNode",
+    "value": {
+      "node_id": "node",
+      "role_id": "role",
+      "goal": "Exact goal",
+      "dependencies": [],
+      "hard_requirements": [
+        "Test the result"
+      ],
+      "expected_outputs": [],
+      "consumes": [],
+      "depends_on": []
+    },
+    "valid": false
+  },
+  {
+    "name": "planning node rejects path",
+    "schema": "ExecutionPlanNode",
+    "value": {
+      "node_id": "node",
+      "role_id": "role",
+      "goal": "Exact goal",
+      "dependencies": [],
+      "hard_requirements": [
+        "Test the result"
+      ],
+      "expected_outputs": [],
+      "consumes": [],
+      "path": "/tmp/work"
+    },
+    "valid": false
+  },
+  {
+    "name": "planning text rejects ''",
+    "schema": "ExecutionPlanNode",
+    "value": {
+      "node_id": "node",
+      "role_id": "role",
+      "goal": "",
+      "dependencies": []
+    },
+    "valid": false
+  },
+  {
+    "name": "planning text rejects '  \\n\\t'",
+    "schema": "ExecutionPlanNode",
+    "value": {
+      "node_id": "node",
+      "role_id": "role",
+      "goal": "  \n\t",
+      "dependencies": []
+    },
+    "valid": false
+  },
+  {
+    "name": "planning text rejects '\\x00'",
+    "schema": "ExecutionPlanNode",
+    "value": {
+      "node_id": "node",
+      "role_id": "role",
+      "goal": "\u0000",
+      "dependencies": []
+    },
+    "valid": false
+  },
+  {
+    "name": "planning text accepts Unicode",
+    "schema": "ExecutionPlanNode",
+    "value": {
+      "node_id": "node",
+      "role_id": "role",
+      "goal": "目标 😀",
+      "dependencies": []
+    },
+    "valid": true
+  },
+  {
+    "name": "initial Plan command",
+    "schema": "CommandEnvelope",
+    "value": {
+      "schema_version": 1,
+      "scope_id": "task",
+      "request_id": "request",
+      "expected_control_version": 2,
+      "name": "publish_execution_plan",
+      "payload": {
+        "planning_intent_id": "intent",
+        "plan_id": "plan",
+        "nodes": [
+          {
+            "node_id": "node",
+            "role_id": "role",
+            "goal": "Exact goal",
+            "dependencies": [],
+            "hard_requirements": [
+              "Test the result"
+            ],
+            "expected_outputs": [],
+            "consumes": []
+          }
+        ]
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "planning issue command",
+    "schema": "CommandEnvelope",
+    "value": {
+      "schema_version": 1,
+      "scope_id": "task",
+      "request_id": "request",
+      "expected_control_version": 2,
+      "name": "raise_planning_issue",
+      "payload": {
+        "planning_intent_id": "intent",
+        "reason": "Need direction"
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "initial Plan rejects mixed turn payload",
+    "schema": "CommandEnvelope",
+    "value": {
+      "schema_version": 1,
+      "scope_id": "task",
+      "request_id": "request",
+      "expected_control_version": 2,
+      "name": "publish_execution_plan",
+      "payload": {
+        "planning_intent_id": "intent",
+        "plan_id": "plan",
+        "nodes": [
+          {
+            "node_id": "node",
+            "role_id": "role",
+            "goal": "Exact goal",
+            "dependencies": [],
+            "hard_requirements": [
+              "Test the result"
+            ],
+            "expected_outputs": [],
+            "consumes": []
+          }
+        ],
+        "reply": "Mixed"
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "initial Plan structural graph remains transportable for explicit unsupported response",
+    "schema": "CommandEnvelope",
+    "value": {
+      "schema_version": 1,
+      "scope_id": "task",
+      "request_id": "request",
+      "expected_control_version": 2,
+      "name": "publish_execution_plan",
+      "payload": {
+        "planning_intent_id": "intent",
+        "plan_id": "plan",
+        "nodes": [
+          {
+            "node_id": "node",
+            "role_id": "role",
+            "goal": "Exact goal",
+            "dependencies": [],
+            "hard_requirements": [
+              "Test the result"
+            ],
+            "expected_outputs": [],
+            "consumes": []
+          },
+          {
+            "node_id": "second",
+            "role_id": "role",
+            "goal": "Exact goal",
+            "dependencies": [
+              "node"
+            ],
+            "hard_requirements": [
+              "Test the result"
+            ],
+            "expected_outputs": [],
+            "consumes": []
+          }
+        ]
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "source Start Owner control",
+    "schema": "OwnerCommand",
+    "value": {
+      "schema_version": 1,
+      "scope_id": "task",
+      "request_id": "request",
+      "expected_control_version": 2,
+      "name": "start_task",
+      "payload": {
+        "specification_id": "spec"
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "Owner stop_initial_planning {'planning_intent_id': 'intent', 'issue_sequence': 1}",
+    "schema": "OwnerCommand",
+    "value": {
+      "schema_version": 1,
+      "scope_id": "task",
+      "request_id": "request",
+      "expected_control_version": 2,
+      "name": "stop_initial_planning",
+      "payload": {
+        "planning_intent_id": "intent",
+        "issue_sequence": 1
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "Owner retry_initial_planning {'planning_intent_id': 'intent', 'issue_sequence': 1, 'answer': 'Proceed'}",
+    "schema": "OwnerCommand",
+    "value": {
+      "schema_version": 1,
+      "scope_id": "task",
+      "request_id": "request",
+      "expected_control_version": 2,
+      "name": "retry_initial_planning",
+      "payload": {
+        "planning_intent_id": "intent",
+        "issue_sequence": 1,
+        "answer": "Proceed"
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "Owner retry_initial_planning {'attempt_id': 'attempt'}",
+    "schema": "OwnerCommand",
+    "value": {
+      "schema_version": 1,
+      "scope_id": "task",
+      "request_id": "request",
+      "expected_control_version": 2,
+      "name": "retry_initial_planning",
+      "payload": {
+        "attempt_id": "attempt"
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "Owner cancel_task {'specification_id': 'spec'}",
+    "schema": "OwnerCommand",
+    "value": {
+      "schema_version": 1,
+      "scope_id": "task",
+      "request_id": "request",
+      "expected_control_version": 2,
+      "name": "cancel_task",
+      "payload": {
+        "specification_id": "spec"
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "Owner rejects mixed or incomplete Retry {'planning_intent_id': 'intent', 'attempt_id': 'attempt'}",
+    "schema": "OwnerCommand",
+    "value": {
+      "schema_version": 1,
+      "scope_id": "task",
+      "request_id": "request",
+      "expected_control_version": 2,
+      "name": "retry_initial_planning",
+      "payload": {
+        "planning_intent_id": "intent",
+        "attempt_id": "attempt"
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "Owner rejects mixed or incomplete Retry {'planning_intent_id': 'intent', 'answer': 'No issue'}",
+    "schema": "OwnerCommand",
+    "value": {
+      "schema_version": 1,
+      "scope_id": "task",
+      "request_id": "request",
+      "expected_control_version": 2,
+      "name": "retry_initial_planning",
+      "payload": {
+        "planning_intent_id": "intent",
+        "answer": "No issue"
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "Owner rejects mixed or incomplete Retry {'planning_intent_id': 'intent', 'issue_sequence': 1}",
+    "schema": "OwnerCommand",
+    "value": {
+      "schema_version": 1,
+      "scope_id": "task",
+      "request_id": "request",
+      "expected_control_version": 2,
+      "name": "retry_initial_planning",
+      "payload": {
+        "planning_intent_id": "intent",
+        "issue_sequence": 1
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "source bound Task Planner dispatch",
+    "schema": "Dispatch",
+    "value": {
+      "dispatch_id": "dispatch",
+      "attempt_id": "attempt",
+      "runner_id": "runner",
+      "task_id": "task",
+      "kind": "planner",
+      "fencing_generation": 1,
+      "node_activation": 0,
+      "control_version": 2,
+      "runtime_id": "opencode",
+      "model": "opencode/longcat-2.5-preview-free",
+      "prompt": "context",
+      "source_watermark": 0,
+      "mutation_allowed": true,
+      "process_released": false,
+      "workspace_reservations": {
+        "project_id": "project",
+        "configuration_version": 1,
+        "resources": []
+      },
+      "task_planning_source": {
+        "intent_id": "intent",
+        "specification_id": "spec",
+        "context_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "initial Dispatch rejects {'kind': 'node', 'node_id': 'node'}",
+    "schema": "Dispatch",
+    "value": {
+      "dispatch_id": "dispatch",
+      "attempt_id": "attempt",
+      "runner_id": "runner",
+      "task_id": "task",
+      "kind": "node",
+      "fencing_generation": 1,
+      "node_activation": 0,
+      "control_version": 2,
+      "runtime_id": "opencode",
+      "model": "opencode/longcat-2.5-preview-free",
+      "prompt": "context",
+      "source_watermark": 0,
+      "mutation_allowed": true,
+      "process_released": false,
+      "workspace_reservations": {
+        "project_id": "project",
+        "configuration_version": 1,
+        "resources": []
+      },
+      "task_planning_source": {
+        "intent_id": "intent",
+        "specification_id": "spec",
+        "context_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "node_id": "node"
+    },
+    "valid": false
+  },
+  {
+    "name": "initial Dispatch rejects {'todo_id': 'todo'}",
+    "schema": "Dispatch",
+    "value": {
+      "dispatch_id": "dispatch",
+      "attempt_id": "attempt",
+      "runner_id": "runner",
+      "task_id": "task",
+      "kind": "planner",
+      "fencing_generation": 1,
+      "node_activation": 0,
+      "control_version": 2,
+      "runtime_id": "opencode",
+      "model": "opencode/longcat-2.5-preview-free",
+      "prompt": "context",
+      "source_watermark": 0,
+      "mutation_allowed": true,
+      "process_released": false,
+      "workspace_reservations": {
+        "project_id": "project",
+        "configuration_version": 1,
+        "resources": []
+      },
+      "task_planning_source": {
+        "intent_id": "intent",
+        "specification_id": "spec",
+        "context_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "todo_id": "todo"
+    },
+    "valid": false
+  },
+  {
+    "name": "initial Dispatch rejects {'source_message_id': 'message'}",
+    "schema": "Dispatch",
+    "value": {
+      "dispatch_id": "dispatch",
+      "attempt_id": "attempt",
+      "runner_id": "runner",
+      "task_id": "task",
+      "kind": "planner",
+      "fencing_generation": 1,
+      "node_activation": 0,
+      "control_version": 2,
+      "runtime_id": "opencode",
+      "model": "opencode/longcat-2.5-preview-free",
+      "prompt": "context",
+      "source_watermark": 0,
+      "mutation_allowed": true,
+      "process_released": false,
+      "workspace_reservations": {
+        "project_id": "project",
+        "configuration_version": 1,
+        "resources": []
+      },
+      "task_planning_source": {
+        "intent_id": "intent",
+        "specification_id": "spec",
+        "context_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "source_message_id": "message"
+    },
+    "valid": false
+  },
+  {
+    "name": "initial Dispatch rejects {'resource_id': 'repo'}",
+    "schema": "Dispatch",
+    "value": {
+      "dispatch_id": "dispatch",
+      "attempt_id": "attempt",
+      "runner_id": "runner",
+      "task_id": "task",
+      "kind": "planner",
+      "fencing_generation": 1,
+      "node_activation": 0,
+      "control_version": 2,
+      "runtime_id": "opencode",
+      "model": "opencode/longcat-2.5-preview-free",
+      "prompt": "context",
+      "source_watermark": 0,
+      "mutation_allowed": true,
+      "process_released": false,
+      "workspace_reservations": {
+        "project_id": "project",
+        "configuration_version": 1,
+        "resources": []
+      },
+      "task_planning_source": {
+        "intent_id": "intent",
+        "specification_id": "spec",
+        "context_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "resource_id": "repo"
+    },
+    "valid": false
+  },
+  {
+    "name": "initial Dispatch rejects {'source_watermark': 2}",
+    "schema": "Dispatch",
+    "value": {
+      "dispatch_id": "dispatch",
+      "attempt_id": "attempt",
+      "runner_id": "runner",
+      "task_id": "task",
+      "kind": "planner",
+      "fencing_generation": 1,
+      "node_activation": 0,
+      "control_version": 2,
+      "runtime_id": "opencode",
+      "model": "opencode/longcat-2.5-preview-free",
+      "prompt": "context",
+      "source_watermark": 2,
+      "mutation_allowed": true,
+      "process_released": false,
+      "workspace_reservations": {
+        "project_id": "project",
+        "configuration_version": 1,
+        "resources": []
+      },
+      "task_planning_source": {
+        "intent_id": "intent",
+        "specification_id": "spec",
+        "context_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "initial Dispatch rejects {'task_planning_source': {'intent_id': 'intent', 'specification_id': 'spec', 'context_digest': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'unknown': 1}}",
+    "schema": "Dispatch",
+    "value": {
+      "dispatch_id": "dispatch",
+      "attempt_id": "attempt",
+      "runner_id": "runner",
+      "task_id": "task",
+      "kind": "planner",
+      "fencing_generation": 1,
+      "node_activation": 0,
+      "control_version": 2,
+      "runtime_id": "opencode",
+      "model": "opencode/longcat-2.5-preview-free",
+      "prompt": "context",
+      "source_watermark": 0,
+      "mutation_allowed": true,
+      "process_released": false,
+      "workspace_reservations": {
+        "project_id": "project",
+        "configuration_version": 1,
+        "resources": []
+      },
+      "task_planning_source": {
+        "intent_id": "intent",
+        "specification_id": "spec",
+        "context_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "unknown": 1
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "exact initial plan result",
+    "schema": "EffectResult",
+    "value": {
+      "planning_outcome": {
+        "kind": "plan",
+        "planning_intent_id": "intent",
+        "plan_id": "plan"
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "exact initial issue result",
+    "schema": "EffectResult",
+    "value": {
+      "planning_outcome": {
+        "kind": "issue",
+        "planning_intent_id": "intent",
+        "issue_sequence": 1
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "planning outcome rejects mixed phase result",
+    "schema": "PlanningOutcome",
+    "value": {
+      "kind": "plan",
+      "planning_intent_id": "intent",
+      "plan_id": "plan",
+      "issue_sequence": 1
+    },
+    "valid": false
+  },
+  {
+    "name": "planning text rejects Unicode whitespace '\\xa0'",
+    "schema": "ExecutionPlanNode",
+    "value": {
+      "node_id": "node",
+      "role_id": "role",
+      "goal": " ",
+      "dependencies": []
+    },
+    "valid": false
+  },
+  {
+    "name": "planning text rejects Unicode whitespace '\\u3000'",
+    "schema": "ExecutionPlanNode",
+    "value": {
+      "node_id": "node",
+      "role_id": "role",
+      "goal": "　",
+      "dependencies": []
+    },
+    "valid": false
+  },
+  {
+    "name": "planning text rejects Unicode whitespace '\\ufeff'",
+    "schema": "ExecutionPlanNode",
+    "value": {
+      "node_id": "node",
+      "role_id": "role",
+      "goal": "﻿",
+      "dependencies": []
+    },
+    "valid": false
   }
 ]

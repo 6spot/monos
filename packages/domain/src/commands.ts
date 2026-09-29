@@ -13,6 +13,7 @@ export interface AdmissionBasis {
   taskId?: string; scopeId?: string; scopeKind?: 'task' | 'todo';
   resourceId?: string;
   projectResources?: boolean;
+  initialPlanning?: boolean;
   mutationAllowed: boolean;
   processReleased: boolean;
   controlVersion: number;
@@ -32,7 +33,10 @@ export function guardNewCommand(command: CommandEnvelope, basis: AdmissionBasis)
     return;
   }
   if (['commit_discussion_turn', 'read_discussion', 'update_working_requirement_state'].includes(command.name)) throw new CommandError('denied_scope', 'Todo command requires a Todo Planner');
-  const plannerCommand = command.name === 'inspect_repository' || command.name === 'commit_task_turn';
+  const initialOutcome = command.name === 'publish_execution_plan' || command.name === 'raise_planning_issue';
+  if (initialOutcome && !basis.initialPlanning) throw new CommandError('denied_scope', 'Initial outcome requires a source-bound Task Planner');
+  if (basis.initialPlanning && command.name !== 'inspect_repository' && !initialOutcome) throw new CommandError('denied_scope', 'Initial Planner must publish a Plan or raise an issue');
+  const plannerCommand = command.name === 'inspect_repository' || command.name === 'commit_task_turn' || initialOutcome;
   if (plannerCommand !== (basis.kind === 'planner')) throw new CommandError('denied_scope', 'Command is not allowed for this execution scope');
   if (!basis.projectResources && command.payload.resource_id !== undefined && command.payload.resource_id !== basis.resourceId) throw new CommandError('denied_scope', 'Resource is outside the Project fixture');
   if (command.name === 'commit_task_turn' && command.payload.source_watermark !== basis.sourceWatermark) throw new CommandError('version_conflict', 'Planner source watermark is stale');

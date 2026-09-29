@@ -12,3 +12,16 @@ func (value EffectResult) MarshalJSON() ([]byte, error) {
     InstructionFiles *[]InstructionFile `json:"instruction_files,omitempty"`
   }{plain(value), files})
 }
+func (value ExecutionPlanNode) MarshalJSON() ([]byte, error) {
+  type plain ExecutionPlanNode
+  var consumes, hardRequirements, expectedOutputs *[]string
+  if value.Consumes != nil { consumes = &value.Consumes }
+  if value.HardRequirements != nil { hardRequirements = &value.HardRequirements }
+  if value.ExpectedOutputs != nil { expectedOutputs = &value.ExpectedOutputs }
+  return json.Marshal(struct {
+    plain
+    Consumes *[]string `json:"consumes,omitempty"`
+    HardRequirements *[]string `json:"hard_requirements,omitempty"`
+    ExpectedOutputs *[]string `json:"expected_outputs,omitempty"`
+  }{plain(value), consumes, hardRequirements, expectedOutputs})
+}

@@ -14,6 +14,7 @@ import (
 
 	protocol "monos.local/protocol"
 	"monos.local/runner/internal/host"
+	"monos.local/runner/internal/wire"
 )
 
 // Policy order is significant to OpenCode; this struct keeps '*' first.
@@ -37,6 +38,9 @@ type permissions struct {
 
 func fixedProtocol(d protocol.Dispatch) string {
 	text := "Use native bash to invoke /usr/local/bin/monos for formal monos actions. Run monos --help to discover commands. Natural-language output is never a formal state transition. Do not start background services or subagents."
+	if d.TaskPlanningSource != nil {
+		text += fmt.Sprintf(" You are the initial Execution Task Planner for planning_intent_id %q and Specification %q. Use this Attempt's frozen Task context: the effective Specification, Project/resource summary, selected Role descriptors and applicable Owner issue answers. Do not resume or read Todo Discussion, requirement caches, other Task context or prior Runtime sessions. Before ending, call exactly one of monos publish_execution_plan or monos raise_planning_issue with that exact planning_intent_id. Publish one Node with node_id, a supplied role_id, a concrete goal and dependencies: []; preserve its hard_requirements and expected_outputs. Nonempty consumes and multi-Node Plans are unsupported; do not drop requirements or flatten a larger graph. If the Specification is insufficient, contradictory, or cannot be planned within this slice, raise a clear planning issue for Owner direction. A validation rejection is not an outcome: correct it with a new request or raise the issue. Never use commit_task_turn, commit_discussion_turn, or complete_node to finish this phase. Write command payloads through bash in this Attempt's scratch directory or pass JSON on stdin. If a response is uncertain, use monos command-status and monos retry with the same retained request ID; never replace an uncertain request. A committed plan or issue ends this phase; do not execute the Node yourself.", d.TaskPlanningSource.IntentID, d.TaskPlanningSource.SpecificationID)
+	}
 	if d.TodoID != nil {
 		text += " You are the Todo Discussion Planner. Use only this Todo's supplied context and source message. No Execution Task or writable repository exists for this Attempt. Repository inspection is unavailable; never read the probe fixture or another Attempt's files. Older in-scope history is available through monos read_discussion. An explicit cache rebuild uses monos update_working_requirement_state with the supplied resolved watermark and Project context version/digest; rebuilding does not resolve the pending message. Before ending, call monos commit_discussion_turn with the exact source_message_id and source_watermark from your context, your final reply and working_requirement_state. Optional task_preview only proposes title/specification for later Owner confirmation; never create a Task. If a command response is uncertain, query monos command-status and retry the same retained request ID. Do not replace uncertain requests or treat printed prose as a committed reply."
 	}
@@ -51,6 +55,11 @@ func fixedProtocol(d protocol.Dispatch) string {
 }
 
 func Config(d protocol.Dispatch) (string, error) {
+	if d.TaskPlanningSource != nil {
+		if _, err := wire.ScopeID(d); err != nil {
+			return "", err
+		}
+	}
 	edit := "deny"
 	if d.Kind == protocol.Node {
 		edit = "allow"

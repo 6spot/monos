@@ -19,6 +19,8 @@ type GitOID = string;
 
 type PositiveCounter = number;
 
+type PlanningText = string;
+
 export interface CommandEnvelope {
     expected_control_version: number;
     name:                     CommandEnvelopeName;
@@ -28,14 +30,18 @@ export interface CommandEnvelope {
     scope_id:                 string;
 }
 
-export type CommandEnvelopeName = "open_workspace" | "inspect_repository" | "complete_node" | "commit_task_turn" | "commit_discussion_turn" | "read_discussion" | "update_working_requirement_state";
+export type CommandEnvelopeName = "open_workspace" | "inspect_repository" | "complete_node" | "commit_task_turn" | "commit_discussion_turn" | "read_discussion" | "update_working_requirement_state" | "publish_execution_plan" | "raise_planning_issue";
 
 export interface CommandPayload {
     artifact_ids?:              string[];
     cursor?:                    string;
     handled_guidance_ids?:      string[];
+    nodes?:                     [ExecutionPlanNode, ...ExecutionPlanNode[]];
+    plan_id?:                   string;
+    planning_intent_id?:        string;
     project_context_digest?:    string;
     project_context_version?:   number;
+    reason?:                    string;
     reply?:                     string;
     resolved_watermark?:        number;
     resource_id?:               string;
@@ -45,6 +51,16 @@ export interface CommandPayload {
     summary?:                   string;
     task_preview?:              TaskPreview;
     working_requirement_state?: string;
+}
+
+export interface ExecutionPlanNode {
+    consumes?:          string[];
+    dependencies:       string[];
+    expected_outputs?:  string[];
+    goal:               string;
+    hard_requirements?: string[];
+    node_id:            string;
+    role_id:            string;
 }
 
 export interface Routing {
@@ -90,6 +106,7 @@ export interface EffectResult {
     message?:                      string;
     message_id?:                   string;
     path?:                         string;
+    planning_outcome?:             PlanningOutcome;
     reply?:                        string;
     resolved_watermark?:           number;
     source_watermark?:             number;
@@ -126,6 +143,15 @@ export type Author = "owner" | "assistant";
 export type Disposition = "withdrawn";
 
 export type InstructionFile = "AGENTS.md" | "CLAUDE.md";
+
+export interface PlanningOutcome {
+    issue_sequence?:    number;
+    kind:               PlanningOutcomeKind;
+    plan_id?:           string;
+    planning_intent_id: string;
+}
+
+export type PlanningOutcomeKind = "plan" | "issue";
 
 export interface WorkspaceMetadata {
     base_commit:                     string;
@@ -206,6 +232,7 @@ export interface Dispatch {
     source_message_id?:       string;
     source_watermark:         number;
     task_id?:                 string;
+    task_planning_source?:    TaskPlanningSource;
     todo_id?:                 string;
     workspace_reservations?:  WorkspaceReservations;
 }
@@ -217,6 +244,12 @@ export type LogModeElement = "ordered_v1";
 export type Model = "opencode/mimo-v2.6-flash-free" | "opencode/longcat-2.5-preview-free";
 
 export type RuntimeID = "opencode";
+
+export interface TaskPlanningSource {
+    context_digest:   string;
+    intent_id:        string;
+    specification_id: string;
+}
 
 export interface WorkspaceReservations {
     configuration_version: number;
@@ -346,27 +379,33 @@ export interface OwnerCommand {
     scope_id:                 string;
 }
 
-export type OwnerCommandName = "confirm_proposal" | "stop_node" | "continue_node" | "retry_node" | "stop_initial_planning" | "retry_initial_planning";
+export type OwnerCommandName = "confirm_proposal" | "stop_node" | "continue_node" | "retry_node" | "stop_initial_planning" | "retry_initial_planning" | "start_task" | "cancel_task";
 
 export interface OwnerCommandPayload {
-    content_digest?:  string;
-    proposal_id?:     string;
-    attempt_id?:      string;
-    node_activation?: number;
-    node_id?:         string;
+    content_digest?:     string;
+    proposal_id?:        string;
+    attempt_id?:         string;
+    node_activation?:    number;
+    node_id?:            string;
+    issue_sequence?:     number;
+    planning_intent_id?: string;
+    answer?:             string;
+    specification_id?:   string;
 }
 
 export interface OwnerCommandResult {
-    attempt_id?:      string;
-    confirmation_id?: string;
-    control_version?: number;
-    end_reason?:      string;
-    node_id?:         string;
-    operation_id?:    string;
-    proposal_id?:     string;
-    request_id:       string;
-    schema_version:   number;
-    status:           OwnerCommandResultStatus;
+    attempt_id?:         string;
+    confirmation_id?:    string;
+    control_version?:    number;
+    end_reason?:         string;
+    node_id?:            string;
+    operation_id?:       string;
+    planning_intent_id?: string;
+    proposal_id?:        string;
+    request_id:          string;
+    schema_version:      number;
+    status:              OwnerCommandResultStatus;
+    task_id?:            string;
 }
 
 export type OwnerCommandResultStatus = "committed" | "admitted" | "unknown";
@@ -677,7 +716,9 @@ export interface OwnerStopInitialPlanningCommand {
 export type OwnerStopInitialPlanningCommandName = "stop_initial_planning";
 
 export interface OwnerStopInitialPlanningCommandPayload {
-    attempt_id: string;
+    attempt_id?:         string;
+    issue_sequence?:     number;
+    planning_intent_id?: string;
 }
 
 export interface OwnerRetryInitialPlanningCommand {
@@ -692,7 +733,10 @@ export interface OwnerRetryInitialPlanningCommand {
 export type OwnerRetryInitialPlanningCommandName = "retry_initial_planning";
 
 export interface OwnerRetryInitialPlanningCommandPayload {
-    attempt_id: string;
+    answer?:             string;
+    attempt_id?:         string;
+    issue_sequence?:     number;
+    planning_intent_id?: string;
 }
 
 export interface OwnerOperationStatus {
@@ -1147,4 +1191,70 @@ export interface PurpleGithub {
 export interface RepositoryAccessError {
     reason:         WorkspaceUnavailableReason;
     schema_version: number;
+}
+
+export interface OwnerStartTaskCommand {
+    expected_control_version: number;
+    name:                     OwnerStartTaskCommandName;
+    payload:                  OwnerStartTaskCommandPayload;
+    request_id:               string;
+    schema_version:           number;
+    scope_id:                 string;
+}
+
+export type OwnerStartTaskCommandName = "start_task";
+
+export interface OwnerStartTaskCommandPayload {
+    specification_id: string;
+}
+
+export interface OwnerCancelTaskCommand {
+    expected_control_version: number;
+    name:                     OwnerCancelTaskCommandName;
+    payload:                  OwnerCancelTaskCommandPayload;
+    request_id:               string;
+    schema_version:           number;
+    scope_id:                 string;
+}
+
+export type OwnerCancelTaskCommandName = "cancel_task";
+
+export interface OwnerCancelTaskCommandPayload {
+    planning_intent_id?: string;
+    specification_id:    string;
+}
+
+export interface TaskPlanningStatus {
+    attempt_id?:       string;
+    available_actions: AvailableAction[];
+    control_version:   number;
+    end_reason?:       string;
+    issue?:            PlanningIssue;
+    operation_id?:     string;
+    plan_id?:          string;
+    planning_source?:  TaskPlanningSource;
+    schema_version:    number;
+    specification_id:  string;
+    state:             TaskOverviewState;
+    status:            TaskPlanningStatusStatus;
+    task_id:           string;
+    waiting_reason?:   string;
+}
+
+export type AvailableAction = "start_task" | "stop_initial_planning" | "retry_initial_planning" | "cancel_task";
+
+export interface PlanningIssue {
+    issue_sequence: number;
+    reason:         string;
+}
+
+export type TaskPlanningStatusStatus = "not_started" | "pending" | "unavailable" | "queued" | "processing" | "settling" | "interrupted" | "issue" | "stopped" | "cancelled" | "published";
+
+export interface TaskPlanRevision {
+    content_digest:   string;
+    nodes:            [ExecutionPlanNode, ...ExecutionPlanNode[]];
+    plan_id:          string;
+    schema_version:   number;
+    specification_id: string;
+    task_id:          string;
 }

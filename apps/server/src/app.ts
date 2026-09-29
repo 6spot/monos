@@ -12,6 +12,7 @@ import { Configuration } from './configuration.ts';
 import { Todos } from './todos.ts';
 import { Discussion } from './discussion.ts';
 import { TodoAttemptReads } from './todo-attempt-reads.ts';
+import { TaskPlanning } from './task-planning.ts';
 import { TaskPreviews } from './task-previews.ts';
 import { GitHub } from './github.ts';
 import fastifyStatic from '@fastify/static';
@@ -68,6 +69,7 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
   const todos = new Todos(service.db);
   const discussion = new Discussion(service.db, service.instanceId);
   const todoAttempts = new TodoAttemptReads(service.db);
+  const planning = new TaskPlanning(service.db, service.instanceId);
   const taskPreviews = new TaskPreviews(service.db);
   if (webRoot) {
     void app.register(fastifyStatic, { root: join(webRoot, 'assets'), prefix: '/assets/', index: false, dotfiles: 'deny', immutable: true, maxAge: '1y' });
@@ -118,6 +120,8 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
     void reply.header('Set-Cookie', sessionCookie('', 0));
     return { schema_version: 1, authenticated: false };
   });
+  app.get<{ Params: { task_id: string } }>('/v1/owner/tasks/:task_id/planning', async (request) => planning.status(ownerCredential(request), request.params.task_id));
+  app.get<{ Params: { task_id: string; plan_id: string } }>('/v1/owner/tasks/:task_id/plans/:plan_id', async (request) => planning.plan(ownerCredential(request), request.params.task_id, request.params.plan_id));
   app.get<{ Params: { task_id: string } }>('/v1/owner/tasks/:task_id', async (request) => reads.overview(ownerCredential(request), request.params.task_id));
   app.get<{ Params: { task_id: string }; Querystring: { cursor?: string } }>('/v1/owner/tasks/:task_id/events', async (request) => {
     validate('TaskEventsQuery', request.query);

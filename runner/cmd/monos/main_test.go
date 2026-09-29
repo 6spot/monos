@@ -13,13 +13,15 @@ import (
 	"monos.local/runner/internal/local"
 )
 
-func TestDiscussionCLIUsesNativeJournalChannel(t *testing.T) {
+func TestPlannerCLIUsesNativeJournalChannel(t *testing.T) {
 	// This socket fixture tests CLI argument/input transport. Kernel attribution
 	// remains covered by local/host tests and the Linux integration trial.
 	for _, command := range []struct{ name, payload string }{
 		{"read_discussion", `{}`},
 		{"update_working_requirement_state", `{"working_requirement_state":"state","resolved_watermark":0,"project_context_version":1,"project_context_digest":"` + strings.Repeat("a", 64) + `"}`},
 		{"commit_discussion_turn", `{"reply":"reply","working_requirement_state":"state","source_message_id":"source","source_watermark":1}`},
+		{"publish_execution_plan", `{"planning_intent_id":"intent","plan_id":"plan","nodes":[{"node_id":"node","role_id":"role","goal":"Complete the requested work","dependencies":[],"hard_requirements":["Keep compatibility"],"expected_outputs":["Verified result"]}]}`},
+		{"raise_planning_issue", `{"planning_intent_id":"intent","reason":"The Specification needs Owner direction"}`},
 	} {
 		t.Run(command.name, func(t *testing.T) {
 			// Short directory avoids the Unix socket path limit on macOS.
@@ -56,7 +58,7 @@ func TestDiscussionCLIUsesNativeJournalChannel(t *testing.T) {
 			}
 			result, err := run([]string{command.name, "--input", input, "--request-id", "same-request", "--output", "json"})
 			if err != nil || result.Status != "committed" {
-				t.Fatal("native Discussion command failed", err)
+				t.Fatal("native Planner command failed", err)
 			}
 			select {
 			case request := <-observed:

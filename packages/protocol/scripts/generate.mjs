@@ -36,6 +36,19 @@ func (value EffectResult) MarshalJSON() ([]byte, error) {
     InstructionFiles *[]InstructionFile \x60json:"instruction_files,omitempty"\x60
   }{plain(value), files})
 }
+func (value ExecutionPlanNode) MarshalJSON() ([]byte, error) {
+  type plain ExecutionPlanNode
+  var consumes, hardRequirements, expectedOutputs *[]string
+  if value.Consumes != nil { consumes = &value.Consumes }
+  if value.HardRequirements != nil { hardRequirements = &value.HardRequirements }
+  if value.ExpectedOutputs != nil { expectedOutputs = &value.ExpectedOutputs }
+  return json.Marshal(struct {
+    plain
+    Consumes *[]string \x60json:"consumes,omitempty"\x60
+    HardRequirements *[]string \x60json:"hard_requirements,omitempty"\x60
+    ExpectedOutputs *[]string \x60json:"expected_outputs,omitempty"\x60
+  }{plain(value), consumes, hardRequirements, expectedOutputs})
+}
 `);
 const reference = (name) => ({ $ref: `#/components/schemas/${name}` });
 const responses = (name) => ({
@@ -71,6 +84,8 @@ artifacts.set('generated/openapi.json', `${JSON.stringify({
     '/v1/owner/login': { post: { description: 'Same-origin password login; sets Secure HttpOnly __Host-monos cookie.', requestBody: { required: true, content: { 'application/json': { schema: reference('OwnerLogin') } } }, responses: responses('OwnerSessionStatus') } },
     '/v1/owner/session': { get: get('OwnerSessionStatus', 'OwnerAuth') },
     '/v1/owner/logout': { post: { security: security('OwnerAuth'), description: 'Revokes current session and clears its cookie; cookie writes require same Origin.', responses: responses('OwnerSessionStatus') } },
+    '/v1/owner/tasks/{task_id}/planning': { get: get('TaskPlanningStatus', 'OwnerAuth', ['task_id']) },
+    '/v1/owner/tasks/{task_id}/plans/{plan_id}': { get: get('TaskPlanRevision', 'OwnerAuth', ['task_id', 'plan_id']) },
     '/v1/owner/tasks/{task_id}': { get: get('TaskOverview', 'OwnerAuth', ['task_id']) },
     '/v1/owner/tasks/{task_id}/events': { get: { ...get('TaskEventPage', 'OwnerAuth', ['task_id']), parameters: [...get('TaskEventPage', 'OwnerAuth', ['task_id']).parameters, { name: 'cursor', in: 'query', required: false, schema: reference('TaskEventCursor') }] } },
     '/v1/owner/tasks/{task_id}/attempts': { get: { ...get('AttemptListPage', 'OwnerAuth', ['task_id']), parameters: [...get('AttemptListPage', 'OwnerAuth', ['task_id']).parameters, { name: 'cursor', in: 'query', required: false, schema: reference('AttemptListCursor') }] } },

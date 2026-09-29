@@ -135,6 +135,20 @@ func prepareEnvelope(d protocol.Dispatch, r Request) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	initialOutcome := r.Name == protocol.PublishExecutionPlan || r.Name == protocol.RaisePlanningIssue
+	if initialOutcome {
+		if d.TaskPlanningSource == nil {
+			return nil, fmt.Errorf("initial planning command requires a source-bound Task Planner")
+		}
+		var payload struct {
+			PlanningIntentID string `json:"planning_intent_id"`
+		}
+		if err := json.Unmarshal(r.Payload, &payload); err != nil || payload.PlanningIntentID != d.TaskPlanningSource.IntentID {
+			return nil, fmt.Errorf("planning intent does not match this Attempt")
+		}
+	} else if d.TaskPlanningSource != nil && r.Name != protocol.NameInspectRepository {
+		return nil, fmt.Errorf("initial Task planning ends only with publish_execution_plan or raise_planning_issue")
+	}
 	env := map[string]any{"schema_version": 1, "request_id": r.RequestID, "scope_id": scope, "name": r.Name, "expected_control_version": d.ControlVersion, "payload": r.Payload}
 	raw, _, err := wire.Canonical(env)
 	return raw, err

@@ -14,11 +14,12 @@ type recoveryBatch struct {
 	ctx        context.Context
 	ready      bool
 	operations []protocol.Operation
+	dispatches map[string]protocol.Dispatch
 }
 
 // A recovery state is not another admission. It authorizes reconciliation of the
 // same immutable effect, using its retained local failure or terminal result.
-func (d *Daemon) retainedRecovery(op protocol.Operation) (bool, error) {
+func (d *Daemon) retainedRecovery(op protocol.Operation, dispatch protocol.Dispatch) (bool, error) {
 	result, err := d.DB.Effect(op.OperationID)
 	if err != nil || result == nil {
 		return false, err
@@ -41,14 +42,28 @@ func (d *Daemon) retainedRecovery(op protocol.Operation) (bool, error) {
 	if err = host.ValidateEffectScope(start.Dispatch, op); err != nil {
 		return false, err
 	}
+	if op.Workspace == nil {
+		if dispatch.TaskPlanningSource == nil || dispatch.MutationAllowed || dispatch.ProcessReleased ||
+			!reflect.DeepEqual(start.Dispatch.TaskID, dispatch.TaskID) ||
+			!reflect.DeepEqual(start.Dispatch.TaskPlanningSource, dispatch.TaskPlanningSource) {
+			return false, fmt.Errorf("initial planning recovery source or authorization changed")
+		}
+	}
 	return true, nil
 }
 
 func (d *Daemon) prepareRecovery(ctx context.Context, inventory protocol.RunnerInventory, dispatches map[string]protocol.Dispatch) error {
 	operations := []protocol.Operation{}
+	retainedDispatches := map[string]protocol.Dispatch{}
 	seen := map[string]protocol.Operation{}
 	for _, op := range inventory.Operations {
-		if op.State != protocol.Recovery || op.Workspace == nil {
+		if op.State != protocol.Recovery {
+			continue
+		}
+		dispatch, exists := dispatches[op.AttemptID]
+		// Repository-free recovery is deliberately limited to the source-bound
+		// initial Planner's Stop. Other Task phases and Todo retain their policy.
+		if op.Workspace == nil && (op.Kind != protocol.Stop || dispatch.TaskPlanningSource == nil) {
 			continue
 		}
 		if prior, exists := seen[op.OperationID]; exists {
@@ -58,19 +73,23 @@ func (d *Daemon) prepareRecovery(ctx context.Context, inventory protocol.RunnerI
 			continue
 		}
 		seen[op.OperationID] = op
-		dispatch, exists := dispatches[op.AttemptID]
 		if !exists {
 			return fmt.Errorf("recovery operation has no inventory dispatch")
 		}
 		if err := host.ValidateEffectScope(dispatch, op); err != nil {
 			return err
 		}
-		eligible, err := d.retainedRecovery(op)
+		eligible, err := d.retainedRecovery(op, dispatch)
 		if err != nil {
 			return err
 		}
 		if eligible {
 			operations = append(operations, op)
+			if dispatch.TaskPlanningSource != nil {
+				source, task := *dispatch.TaskPlanningSource, *dispatch.TaskID
+				dispatch.TaskPlanningSource, dispatch.TaskID = &source, &task
+			}
+			retainedDispatches[op.AttemptID] = dispatch
 		}
 	}
 	// Stop owns cancellation/checkpointing of its earlier open. Let settlement
@@ -78,7 +97,7 @@ func (d *Daemon) prepareRecovery(ctx context.Context, inventory protocol.RunnerI
 	sort.SliceStable(operations, func(i, j int) bool {
 		return operations[i].Kind == protocol.Stop && operations[j].Kind != protocol.Stop
 	})
-	batch := &recoveryBatch{ctx: ctx, operations: operations}
+	batch := &recoveryBatch{ctx: ctx, operations: operations, dispatches: retainedDispatches}
 	d.queueMu.Lock()
 	d.recovery = batch
 	d.queueMu.Unlock()
@@ -118,11 +137,11 @@ func (d *Daemon) drainRecoveryLocked() {
 	}
 	pending := batch.operations[:0]
 	for _, op := range batch.operations {
-		if !d.enqueueLocked(batch.ctx, "workspace:"+op.OperationID, func() error {
+		if !d.enqueueLocked(batch.ctx, effectKey(op), func() error {
 			// An older connection may have finished while this entry waited for
 			// its key. Recheck hard failures and scope; effect replays terminal
 			// results without invoking the host or replacing immutable bytes.
-			eligible, err := d.retainedRecovery(op)
+			eligible, err := d.retainedRecovery(op, batch.dispatches[op.AttemptID])
 			if err != nil || !eligible {
 				return err
 			}

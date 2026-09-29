@@ -207,14 +207,18 @@ func (d *Daemon) Frame(ctx context.Context, frame protocol.Frame) {
 		}
 	case protocol.Effect:
 		if frame.Operation != nil {
-			prefix := "effect:"
-			if frame.Operation.Workspace != nil {
-				prefix = "workspace:"
-			}
-			d.enqueue(ctx, prefix+frame.Operation.OperationID, func() error { return d.effect(ctx, *frame.Operation) })
+			d.enqueue(ctx, effectKey(*frame.Operation), func() error { return d.effect(ctx, *frame.Operation) })
 		}
 	}
 }
+
+func effectKey(op protocol.Operation) string {
+	if op.Workspace != nil {
+		return "workspace:" + op.OperationID
+	}
+	return "effect:" + op.OperationID
+}
+
 func (d *Daemon) start(ctx context.Context, dispatch protocol.Dispatch) error {
 	retained, err := d.DB.Start(dispatch.AttemptID)
 	if err == nil {

@@ -1110,6 +1110,102 @@
         }
       }
     },
+    "/v1/owner/tasks/{task_id}/planning": {
+      "get": {
+        "security": [
+          {
+            "OwnerAuth": []
+          },
+          {
+            "OwnerCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authenticated response; admission is distinct from completed effects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskPlanningStatus"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Deterministic protocol error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/owner/tasks/{task_id}/plans/{plan_id}": {
+      "get": {
+        "security": [
+          {
+            "OwnerAuth": []
+          },
+          {
+            "OwnerCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "plan_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authenticated response; admission is distinct from completed effects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskPlanRevision"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Deterministic protocol error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/owner/tasks/{task_id}": {
       "get": {
         "security": [
@@ -1785,7 +1881,9 @@
               "commit_task_turn",
               "commit_discussion_turn",
               "read_discussion",
-              "update_working_requirement_state"
+              "update_working_requirement_state",
+              "publish_execution_plan",
+              "raise_planning_issue"
             ]
           },
           "scope_id": {
@@ -2004,6 +2102,73 @@
                 }
               }
             }
+          },
+          {
+            "if": {
+              "properties": {
+                "name": {
+                  "const": "publish_execution_plan"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "payload": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "planning_intent_id",
+                    "plan_id",
+                    "nodes"
+                  ],
+                  "properties": {
+                    "planning_intent_id": {
+                      "$ref": "#/components/schemas/Id"
+                    },
+                    "plan_id": {
+                      "$ref": "#/components/schemas/Id"
+                    },
+                    "nodes": {
+                      "type": "array",
+                      "minItems": 1,
+                      "maxItems": 256,
+                      "items": {
+                        "$ref": "#/components/schemas/ExecutionPlanNode"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "name": {
+                  "const": "raise_planning_issue"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "payload": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "planning_intent_id",
+                    "reason"
+                  ],
+                  "properties": {
+                    "planning_intent_id": {
+                      "$ref": "#/components/schemas/Id"
+                    },
+                    "reason": {
+                      "$ref": "#/components/schemas/PlanningText"
+                    }
+                  }
+                }
+              }
+            }
           }
         ]
       },
@@ -2079,6 +2244,23 @@
           "project_context_digest": {
             "type": "string",
             "pattern": "^[0-9a-f]{64}$"
+          },
+          "planning_intent_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "plan_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "nodes": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 256,
+            "items": {
+              "$ref": "#/components/schemas/ExecutionPlanNode"
+            }
+          },
+          "reason": {
+            "$ref": "#/components/schemas/PlanningText"
           }
         }
       },
@@ -2196,6 +2378,9 @@
           },
           "workspace_unavailable_reason": {
             "$ref": "#/components/schemas/WorkspaceUnavailableReason"
+          },
+          "planning_outcome": {
+            "$ref": "#/components/schemas/PlanningOutcome"
           }
         }
       },
@@ -2336,6 +2521,9 @@
           },
           "workspace_reservations": {
             "$ref": "#/components/schemas/WorkspaceReservations"
+          },
+          "task_planning_source": {
+            "$ref": "#/components/schemas/TaskPlanningSource"
           }
         },
         "allOf": [
@@ -2446,6 +2634,48 @@
                       "maxItems": 0
                     }
                   }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "required": [
+                "task_planning_source"
+              ],
+              "properties": {
+                "task_planning_source": {}
+              }
+            },
+            "then": {
+              "required": [
+                "task_id",
+                "workspace_reservations"
+              ],
+              "properties": {
+                "task_id": {
+                  "$ref": "#/components/schemas/Id"
+                },
+                "workspace_reservations": {
+                  "type": "object",
+                  "properties": {
+                    "resources": {
+                      "type": "array",
+                      "maxItems": 0
+                    }
+                  }
+                },
+                "kind": {
+                  "const": "planner"
+                },
+                "node_id": false,
+                "todo_id": false,
+                "resource_id": false,
+                "node_activation": {
+                  "const": 0
+                },
+                "source_watermark": {
+                  "const": 0
                 }
               }
             }
@@ -3310,6 +3540,12 @@
           },
           {
             "$ref": "#/components/schemas/OwnerRetryInitialPlanningCommand"
+          },
+          {
+            "$ref": "#/components/schemas/OwnerStartTaskCommand"
+          },
+          {
+            "$ref": "#/components/schemas/OwnerCancelTaskCommand"
           }
         ]
       },
@@ -3359,6 +3595,12 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 128
+          },
+          "task_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "planning_intent_id": {
+            "$ref": "#/components/schemas/Id"
           }
         },
         "allOf": [
@@ -3392,6 +3634,16 @@
                   ],
                   "properties": {
                     "attempt_id": {},
+                    "control_version": {}
+                  }
+                },
+                {
+                  "required": [
+                    "task_id",
+                    "control_version"
+                  ],
+                  "properties": {
+                    "task_id": {},
                     "control_version": {}
                   }
                 }
@@ -4781,14 +5033,47 @@
           "payload": {
             "type": "object",
             "additionalProperties": false,
-            "required": [
-              "attempt_id"
-            ],
+            "required": [],
             "properties": {
               "attempt_id": {
                 "$ref": "#/components/schemas/Id"
+              },
+              "planning_intent_id": {
+                "$ref": "#/components/schemas/Id"
+              },
+              "issue_sequence": {
+                "$ref": "#/components/schemas/Counter"
               }
-            }
+            },
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "attempt_id"
+                ],
+                "properties": {
+                  "attempt_id": {
+                    "$ref": "#/components/schemas/Id"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "planning_intent_id"
+                ],
+                "properties": {
+                  "planning_intent_id": {
+                    "$ref": "#/components/schemas/Id"
+                  },
+                  "issue_sequence": {
+                    "$ref": "#/components/schemas/Counter"
+                  }
+                }
+              }
+            ]
           }
         }
       },
@@ -4824,13 +5109,60 @@
           "payload": {
             "type": "object",
             "additionalProperties": false,
-            "required": [
-              "attempt_id"
-            ],
+            "required": [],
             "properties": {
               "attempt_id": {
                 "$ref": "#/components/schemas/Id"
+              },
+              "planning_intent_id": {
+                "$ref": "#/components/schemas/Id"
+              },
+              "issue_sequence": {
+                "$ref": "#/components/schemas/Counter"
+              },
+              "answer": {
+                "$ref": "#/components/schemas/PlanningText"
               }
+            },
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "attempt_id"
+                ],
+                "properties": {
+                  "attempt_id": {
+                    "$ref": "#/components/schemas/Id"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "planning_intent_id"
+                ],
+                "properties": {
+                  "planning_intent_id": {
+                    "$ref": "#/components/schemas/Id"
+                  },
+                  "issue_sequence": {
+                    "$ref": "#/components/schemas/Counter"
+                  },
+                  "answer": {
+                    "$ref": "#/components/schemas/PlanningText"
+                  }
+                }
+              }
+            ],
+            "dependencies": {
+              "answer": [
+                "issue_sequence"
+              ],
+              "issue_sequence": [
+                "answer"
+              ]
             }
           }
         }
@@ -6915,6 +7247,399 @@
           },
           "reason": {
             "$ref": "#/components/schemas/WorkspaceUnavailableReason"
+          }
+        }
+      },
+      "PlanningText": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 65536,
+        "pattern": "[^ \\t\\n\\r\\f\\v   -     　﻿]",
+        "allOf": [
+          {
+            "pattern": "^[^\\x00]*$"
+          }
+        ]
+      },
+      "ExecutionPlanNode": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "node_id",
+          "role_id",
+          "goal",
+          "dependencies"
+        ],
+        "properties": {
+          "node_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "role_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "goal": {
+            "$ref": "#/components/schemas/PlanningText"
+          },
+          "dependencies": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Id"
+            },
+            "maxItems": 256,
+            "uniqueItems": true
+          },
+          "hard_requirements": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096,
+              "pattern": "[^ \\t\\n\\r\\f\\v   -     　﻿]",
+              "allOf": [
+                {
+                  "pattern": "^[^\\x00]*$"
+                }
+              ]
+            },
+            "maxItems": 64
+          },
+          "expected_outputs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096,
+              "pattern": "[^ \\t\\n\\r\\f\\v   -     　﻿]",
+              "allOf": [
+                {
+                  "pattern": "^[^\\x00]*$"
+                }
+              ]
+            },
+            "maxItems": 64
+          },
+          "consumes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Id"
+            },
+            "maxItems": 256,
+            "uniqueItems": true
+          }
+        }
+      },
+      "TaskPlanningSource": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "intent_id",
+          "specification_id",
+          "context_digest"
+        ],
+        "properties": {
+          "intent_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "specification_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "context_digest": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        }
+      },
+      "PlanningOutcome": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "planning_intent_id"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "plan",
+              "issue"
+            ]
+          },
+          "planning_intent_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "plan_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "issue_sequence": {
+            "$ref": "#/components/schemas/Counter"
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "plan"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "plan_id"
+              ],
+              "properties": {
+                "plan_id": {},
+                "issue_sequence": false
+              }
+            },
+            "else": {
+              "required": [
+                "issue_sequence"
+              ],
+              "properties": {
+                "issue_sequence": {},
+                "plan_id": false
+              }
+            }
+          }
+        ]
+      },
+      "OwnerStartTaskCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "schema_version",
+          "request_id",
+          "scope_id",
+          "expected_control_version",
+          "name",
+          "payload"
+        ],
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "request_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "scope_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "expected_control_version": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "name": {
+            "type": "string",
+            "const": "start_task"
+          },
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "specification_id"
+            ],
+            "properties": {
+              "specification_id": {
+                "$ref": "#/components/schemas/Id"
+              }
+            }
+          }
+        }
+      },
+      "OwnerCancelTaskCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "schema_version",
+          "request_id",
+          "scope_id",
+          "expected_control_version",
+          "name",
+          "payload"
+        ],
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "request_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "scope_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "expected_control_version": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "name": {
+            "type": "string",
+            "const": "cancel_task"
+          },
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "specification_id"
+            ],
+            "properties": {
+              "specification_id": {
+                "$ref": "#/components/schemas/Id"
+              },
+              "planning_intent_id": {
+                "$ref": "#/components/schemas/Id"
+              }
+            }
+          }
+        }
+      },
+      "PlanningIssue": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "issue_sequence",
+          "reason"
+        ],
+        "properties": {
+          "issue_sequence": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "reason": {
+            "$ref": "#/components/schemas/PlanningText"
+          }
+        }
+      },
+      "TaskPlanningStatus": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "schema_version",
+          "task_id",
+          "control_version",
+          "state",
+          "specification_id",
+          "status",
+          "available_actions"
+        ],
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "task_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "control_version": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "PLANNING",
+              "RUNNING",
+              "BLOCKED",
+              "REPLAN_REQUIRED",
+              "REVIEW",
+              "COMPLETED",
+              "CANCELLED"
+            ]
+          },
+          "specification_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "plan_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "planning_source": {
+            "$ref": "#/components/schemas/TaskPlanningSource"
+          },
+          "attempt_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "operation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "issue": {
+            "$ref": "#/components/schemas/PlanningIssue"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "not_started",
+              "pending",
+              "unavailable",
+              "queued",
+              "processing",
+              "settling",
+              "interrupted",
+              "issue",
+              "stopped",
+              "cancelled",
+              "published"
+            ]
+          },
+          "waiting_reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "end_reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "available_actions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "start_task",
+                "stop_initial_planning",
+                "retry_initial_planning",
+                "cancel_task"
+              ]
+            },
+            "maxItems": 4,
+            "uniqueItems": true
+          }
+        }
+      },
+      "TaskPlanRevision": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "schema_version",
+          "task_id",
+          "plan_id",
+          "specification_id",
+          "content_digest",
+          "nodes"
+        ],
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "task_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "plan_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "specification_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "content_digest": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "nodes": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 256,
+            "items": {
+              "$ref": "#/components/schemas/ExecutionPlanNode"
+            }
           }
         }
       }

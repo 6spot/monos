@@ -5,6 +5,7 @@ import type { Database, Transaction } from '../../../packages/db/src/index.ts';
 import { CommandError, guardNewCommand } from '../../../packages/domain/src/commands.ts';
 import { canonicalJSON, digest, MAX_FRAME_BYTES, parseSubmission, ProtocolVersionError, validate } from '../../../packages/protocol/src/index.ts';
 import type { CommandEnvelope, CommandResult, CommandSubmission, Dispatch, Frame, GitHubRepositoryAccessResult, Operation, OperationResult, RepositoryAccessRequest, RunnerInventory, RuntimeEvent } from '../../../packages/protocol/src/index.ts';
+import { handlePlanningCommand } from './task-planning-state.ts';
 import { authenticateAttempt, issueAttemptCredential } from './auth.ts';
 import type { AttemptIdentity } from './auth.ts';
 import { assertCurrentNode } from './task-records.ts';
@@ -20,6 +21,7 @@ import type { GitHubCredentials } from './github.ts';
 interface RunnerRow { id: string; incarnation: string; connected: boolean; ready: boolean; available: boolean; capacity: number; connection_instance: string | null }
 interface TaskRow { id: string; resource_id: string | null; control_version: string; project_id: string | null }
 interface AttemptRow {
+  planning_intent_id: string | null; specification_id: string | null; plan_id: string | null; recovery_consumed_by: string | null; end_reason: string | null;
   id: string; runner_id: string; task_id: string | null; todo_id: string | null; discussion_context: DiscussionContext | null; node_id: string | null; dispatch_id: string;
   kind: 'node' | 'planner'; fencing_generation: string; node_activation: string;
   mutation_allowed: boolean; process_released: boolean; process_absent: boolean; started: boolean; exit_observed: boolean; launch: Dispatch;
@@ -221,7 +223,14 @@ export class BoundaryService {
       if (!task) throw new CommandError('denied_scope', 'Attempt owner is missing');
       if (command.name === 'commit_discussion_turn' || command.name === 'read_discussion' || command.name === 'update_working_requirement_state') throw new CommandError('denied_scope', 'Todo command requires Todo Planner authority');
       const legacy = await explicitLegacyAttempt(tx, attempt.id);
-      guardNewCommand(command, { kind: attempt.kind, taskId: attempt.task_id!, resourceId: legacy ? attempt.launch.resource_id : undefined, projectResources: !legacy, mutationAllowed: attempt.mutation_allowed, processReleased: attempt.process_released, controlVersion: Number(task.control_version), sourceWatermark: attempt.launch.source_watermark, connectionAvailable: runner.available && runner.connection_instance === this.instanceId });
+      guardNewCommand(command, { kind: attempt.kind, taskId: attempt.task_id!, resourceId: legacy ? attempt.launch.resource_id : undefined, projectResources: !legacy, initialPlanning: !!attempt.planning_intent_id && !legacy, mutationAllowed: attempt.mutation_allowed, processReleased: attempt.process_released, controlVersion: Number(task.control_version), sourceWatermark: attempt.launch.source_watermark, connectionAvailable: runner.available && runner.connection_instance === this.instanceId });
+      if (command.name === 'publish_execution_plan' || command.name === 'raise_planning_issue') {
+        const outcome = await handlePlanningCommand(tx, attempt, command);
+        const response: CommandResult = { schema_version: 1, request_id: command.request_id, status: 'committed', result: outcome.result, operation_id: outcome.operation_id };
+        validate('CommandResult', response);
+        await tx.query('INSERT INTO command_receipts(attempt_id,scope_id,request_id,command_name,digest,schema_version,envelope_json,response,operation_id) VALUES($1,$2,$3,$4,$5,1,$6,$7,$8)', [attempt.id, task.id, command.request_id, command.name, submission.sha256, submission.envelope_json, response, outcome.operation_id]);
+        this.options.beforeAdmissionCommit?.(); return response;
+      }
       if (!legacy && command.name === 'inspect_repository') throw new CommandError('unmet_precondition', 'Canonical Planner repository inspection is unavailable in Stage A');
       if (!legacy && !attempt.launch.workspace_reservations) throw new CommandError('denied_scope', 'Fresh canonical effects require Project workspace reservations');
       if (task.project_id && (command.name === 'open_workspace' || command.name === 'inspect_repository')) {

@@ -459,7 +459,7 @@ func TestReconnectStopStillReachesCoexistingUnexposedOpen(t *testing.T) {
 }
 
 func TestReconnectTerminalReplayFollowsReadyOnWireWithoutHostEffect(t *testing.T) {
-	for _, outcome := range []string{"success", "cancelled"} {
+	for _, outcome := range []string{"success", "cancelled", "initial-planning"} {
 		t.Run(outcome, func(t *testing.T) {
 			db := testDB(t)
 			kind := protocol.KindOpenWorkspace
@@ -467,11 +467,14 @@ func TestReconnectTerminalReplayFollowsReadyOnWireWithoutHostEffect(t *testing.T
 				kind = protocol.KindCompleteNode
 			}
 			dispatch, op := recoveryFixture(t, "lost-result", kind)
+			if outcome == "initial-planning" {
+				dispatch, op = planningRecoveryFixture(t)
+			}
 			absent := true
-			terminal := protocol.OperationResult{OperationID: op.OperationID, AttemptID: op.AttemptID, Success: outcome == "success", Result: protocol.EffectResult{WriterAbsent: &absent}}
+			terminal := protocol.OperationResult{OperationID: op.OperationID, AttemptID: op.AttemptID, Success: outcome != "cancelled", Result: protocol.EffectResult{WriterAbsent: &absent}}
 			if outcome == "cancelled" {
 				terminal.CancelledByOperationID = ptr("admitted-stop")
-			} else {
+			} else if outcome == "success" {
 				terminal.Result.GitCommit, terminal.Result.GitTree = ptr(strings.Repeat("b", 40)), ptr(strings.Repeat("c", 40))
 			}
 			retainRecovery(t, db, dispatch, op, &terminal)

@@ -159,6 +159,10 @@ func Envelope(raw []byte) (protocol.CommandEnvelope, error) {
 		allowed["handled_guidance_ids"] = true
 	case protocol.CommitTaskTurn:
 		required = []string{"reply", "source_watermark", "routing"}
+	case "publish_execution_plan":
+		required = []string{"planning_intent_id", "plan_id", "nodes"}
+	case "raise_planning_issue":
+		required = []string{"planning_intent_id", "reason"}
 	case "commit_discussion_turn":
 		required = []string{"reply", "working_requirement_state", "source_message_id", "source_watermark"}
 		allowed["task_preview"] = true
