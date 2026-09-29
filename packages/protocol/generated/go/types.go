@@ -246,28 +246,6 @@ type TaskEventsQuery struct {
 	Cursor *string `json:"cursor,omitempty"`
 }
 
-type TaskOverview struct {
-	ControlVersion  int64             `json:"control_version"`
-	EventCursor     string            `json:"event_cursor"`
-	HeldAttempts    int64             `json:"held_attempts"`
-	Nodes           NodeCounts        `json:"nodes"`
-	OpenOperations  int64             `json:"open_operations"`
-	PlanID          *string           `json:"plan_id,omitempty"`
-	QueuedAttempts  int64             `json:"queued_attempts"`
-	SchemaVersion   int64             `json:"schema_version"`
-	SpecificationID string            `json:"specification_id"`
-	State           TaskOverviewState `json:"state"`
-	TaskID          string            `json:"task_id"`
-}
-
-type NodeCounts struct {
-	Blocked   int64 `json:"blocked"`
-	Cancelled int64 `json:"cancelled"`
-	Completed int64 `json:"completed"`
-	Pending   int64 `json:"pending"`
-	Running   int64 `json:"running"`
-}
-
 type TaskEventPage struct {
 	Cursor        string            `json:"cursor"`
 	Events        []FormalTaskEvent `json:"events"`
@@ -820,6 +798,123 @@ type PlannerGuidance struct {
 	Guidance string `json:"guidance"`
 }
 
+type ConfirmTaskPreviewCommand struct {
+	Name          ConfirmTaskPreviewCommandName    `json:"name"`
+	Payload       ConfirmTaskPreviewCommandPayload `json:"payload"`
+	RequestID     string                           `json:"request_id"`
+	SchemaVersion int64                            `json:"schema_version"`
+	TodoID        string                           `json:"todo_id"`
+}
+
+type ConfirmTaskPreviewCommandPayload struct {
+	ContentDigest     string `json:"content_digest"`
+	ProjectID         string `json:"project_id"`
+	ProposalMessageID string `json:"proposal_message_id"`
+}
+
+type CreateExecutionTaskCommand struct {
+	Name          CreateExecutionTaskCommandName    `json:"name"`
+	Payload       CreateExecutionTaskCommandPayload `json:"payload"`
+	RequestID     string                            `json:"request_id"`
+	SchemaVersion int64                             `json:"schema_version"`
+	TodoID        string                            `json:"todo_id"`
+}
+
+type CreateExecutionTaskCommandPayload struct {
+	ConfirmationID    string `json:"confirmation_id"`
+	ContentDigest     string `json:"content_digest"`
+	ProposalMessageID string `json:"proposal_message_id"`
+}
+
+type CancelTaskPreviewCommand struct {
+	Name          CancelTaskPreviewCommandName    `json:"name"`
+	Payload       CancelTaskPreviewCommandPayload `json:"payload"`
+	RequestID     string                          `json:"request_id"`
+	SchemaVersion int64                           `json:"schema_version"`
+	TodoID        string                          `json:"todo_id"`
+}
+
+type CancelTaskPreviewCommandPayload struct {
+	ProposalMessageID string `json:"proposal_message_id"`
+}
+
+type TaskPreviewCommand struct {
+	Name          TaskPreviewCommandName    `json:"name"`
+	Payload       TaskPreviewCommandPayload `json:"payload"`
+	RequestID     string                    `json:"request_id"`
+	SchemaVersion int64                     `json:"schema_version"`
+	TodoID        string                    `json:"todo_id"`
+}
+
+type TaskPreviewCommandPayload struct {
+	ContentDigest     *string `json:"content_digest,omitempty"`
+	ProjectID         *string `json:"project_id,omitempty"`
+	ProposalMessageID string  `json:"proposal_message_id"`
+	ConfirmationID    *string `json:"confirmation_id,omitempty"`
+}
+
+type TaskPreviewQuery struct {
+	ProjectID *string `json:"project_id,omitempty"`
+}
+
+type TaskPreviewCommandResult struct {
+	ConfirmationID    *string                   `json:"confirmation_id,omitempty"`
+	ContentDigest     *string                   `json:"content_digest,omitempty"`
+	Outcome           *Outcome                  `json:"outcome,omitempty"`
+	ProposalMessageID *string                   `json:"proposal_message_id,omitempty"`
+	RequestID         string                    `json:"request_id"`
+	SchemaVersion     int64                     `json:"schema_version"`
+	SpecificationID   *string                   `json:"specification_id,omitempty"`
+	Status            ConfigurationResultStatus `json:"status"`
+	TaskID            *string                   `json:"task_id,omitempty"`
+	TodoID            *string                   `json:"todo_id,omitempty"`
+}
+
+type TaskPreviewStatus struct {
+	ConfirmationID        *string                `json:"confirmation_id,omitempty"`
+	ContentDigest         *string                `json:"content_digest,omitempty"`
+	Preview               TaskPreview            `json:"preview"`
+	ProjectContextVersion int64                  `json:"project_context_version"`
+	ProposalMessageID     string                 `json:"proposal_message_id"`
+	Reason                *Reason                `json:"reason,omitempty"`
+	SchemaVersion         int64                  `json:"schema_version"`
+	SelectedProjectID     *string                `json:"selected_project_id,omitempty"`
+	SourceMessageID       string                 `json:"source_message_id"`
+	SourceProjectID       *string                `json:"source_project_id,omitempty"`
+	SourceWatermark       int64                  `json:"source_watermark"`
+	State                 TaskPreviewStatusState `json:"state"`
+	Task                  *TaskOverview          `json:"task,omitempty"`
+	TodoID                string                 `json:"todo_id"`
+}
+
+type TaskOverview struct {
+	ControlVersion         int64             `json:"control_version"`
+	CreatedAt              *string           `json:"created_at,omitempty"`
+	EventCursor            string            `json:"event_cursor"`
+	HeldAttempts           int64             `json:"held_attempts"`
+	InitialSpecificationID *string           `json:"initial_specification_id,omitempty"`
+	Nodes                  NodeCounts        `json:"nodes"`
+	OpenOperations         int64             `json:"open_operations"`
+	PlanID                 *string           `json:"plan_id,omitempty"`
+	ProjectID              *string           `json:"project_id,omitempty"`
+	QueuedAttempts         int64             `json:"queued_attempts"`
+	SchemaVersion          int64             `json:"schema_version"`
+	Specification          *string           `json:"specification,omitempty"`
+	SpecificationID        string            `json:"specification_id"`
+	State                  TaskOverviewState `json:"state"`
+	TaskID                 string            `json:"task_id"`
+	Title                  *string           `json:"title,omitempty"`
+	TodoID                 *string           `json:"todo_id,omitempty"`
+}
+
+type NodeCounts struct {
+	Blocked   int64 `json:"blocked"`
+	Cancelled int64 `json:"cancelled"`
+	Completed int64 `json:"completed"`
+	Pending   int64 `json:"pending"`
+	Running   int64 `json:"running"`
+}
+
 type CommandEnvelopeName string
 
 const (
@@ -941,9 +1036,9 @@ const (
 type Availability string
 
 const (
-	Detected    Availability = "detected"
-	NotFound    Availability = "not_found"
-	Unavailable Availability = "unavailable"
+	AvailabilityUnavailable Availability = "unavailable"
+	Detected                Availability = "detected"
+	NotFound                Availability = "not_found"
 )
 
 type Type string
@@ -989,18 +1084,6 @@ const (
 	FluffyAdmitted  OwnerCommandResultStatus = "admitted"
 	FluffyCommitted OwnerCommandResultStatus = "committed"
 	FluffyUnknown   OwnerCommandResultStatus = "unknown"
-)
-
-type TaskOverviewState string
-
-const (
-	Blocked         TaskOverviewState = "BLOCKED"
-	Completed       TaskOverviewState = "COMPLETED"
-	Planning        TaskOverviewState = "PLANNING"
-	PurpleCANCELLED TaskOverviewState = "CANCELLED"
-	PurpleRUNNING   TaskOverviewState = "RUNNING"
-	ReplanRequired  TaskOverviewState = "REPLAN_REQUIRED"
-	Review          TaskOverviewState = "REVIEW"
 )
 
 type ConfigurationCommandName string
@@ -1175,4 +1258,70 @@ type TodoAttemptStatusKind string
 
 const (
 	FluffyPlanner TodoAttemptStatusKind = "planner"
+)
+
+type ConfirmTaskPreviewCommandName string
+
+const (
+	PurpleConfirmTaskPreview ConfirmTaskPreviewCommandName = "confirm_task_preview"
+)
+
+type CreateExecutionTaskCommandName string
+
+const (
+	PurpleCreateExecutionTask CreateExecutionTaskCommandName = "create_execution_task"
+)
+
+type CancelTaskPreviewCommandName string
+
+const (
+	PurpleCancelTaskPreview CancelTaskPreviewCommandName = "cancel_task_preview"
+)
+
+type TaskPreviewCommandName string
+
+const (
+	FluffyCancelTaskPreview   TaskPreviewCommandName = "cancel_task_preview"
+	FluffyConfirmTaskPreview  TaskPreviewCommandName = "confirm_task_preview"
+	FluffyCreateExecutionTask TaskPreviewCommandName = "create_execution_task"
+)
+
+type Outcome string
+
+const (
+	Confirmed        Outcome = "confirmed"
+	OutcomeCancelled Outcome = "cancelled"
+	OutcomeCreated   Outcome = "created"
+)
+
+type Reason string
+
+const (
+	NewerInput           Reason = "newer_input"
+	ProjectUnavailable   Reason = "project_unavailable"
+	SourceProjectChanged Reason = "source_project_changed"
+	TodoArchived         Reason = "todo_archived"
+)
+
+type TaskPreviewStatusState string
+
+const (
+	Eligible         TaskPreviewStatusState = "eligible"
+	ProjectRequired  TaskPreviewStatusState = "project_required"
+	Stale            TaskPreviewStatusState = "stale"
+	StateCancelled   TaskPreviewStatusState = "cancelled"
+	StateCreated     TaskPreviewStatusState = "created"
+	StateUnavailable TaskPreviewStatusState = "unavailable"
+)
+
+type TaskOverviewState string
+
+const (
+	Blocked         TaskOverviewState = "BLOCKED"
+	Completed       TaskOverviewState = "COMPLETED"
+	Planning        TaskOverviewState = "PLANNING"
+	PurpleCANCELLED TaskOverviewState = "CANCELLED"
+	PurpleRUNNING   TaskOverviewState = "RUNNING"
+	ReplanRequired  TaskOverviewState = "REPLAN_REQUIRED"
+	Review          TaskOverviewState = "REVIEW"
 )

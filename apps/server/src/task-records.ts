@@ -46,11 +46,16 @@ export function validatePlan(nodes: PlanNode[]): void {
 
 // Internal primitives: caller authenticates, checks its receipt first, and commits
 // these writes with the command receipt/event/outbox. No independent HTTP access.
-export async function initializeTask(tx: Transaction, input: { task_id: string; specification_id: string; specification: unknown; project_id?: string }): Promise<ControlBasis> {
+export async function initializeTask(tx: Transaction, input: { task_id: string; specification_id: string; specification: unknown; project_id?: string; creation?: { title: string; todo_id: string; proposal_message_id: string; confirmation_id: string } }): Promise<ControlBasis> {
   validate('Id', input.task_id); validate('Id', input.specification_id);
   const json = contentJSON(input.specification);
   if (input.project_id !== undefined) { validate('Id', input.project_id); await lockConfiguration(tx); await assertActiveProject(tx, input.project_id); }
-  await tx.query("INSERT INTO tasks(id,specification_id,state,project_id) VALUES($1,$2,'PLANNING',$3)", [input.task_id, input.specification_id, input.project_id ?? null]);
+  if (input.creation) {
+    validate('TaskPreview', { title: input.creation.title, specification: input.specification, project_id: input.project_id });
+    for (const id of [input.creation.todo_id, input.creation.proposal_message_id, input.creation.confirmation_id]) validate('Id', id);
+    await tx.query(`INSERT INTO tasks(id,specification_id,state,project_id,title,todo_id,initial_specification_id,creation_confirmation_id,source_proposal_message_id,created_at)
+      VALUES($1,$2,'PLANNING',$3,$4,$5,$2,$6,$7,clock_timestamp())`, [input.task_id, input.specification_id, input.project_id, input.creation.title, input.creation.todo_id, input.creation.confirmation_id, input.creation.proposal_message_id]);
+  } else await tx.query("INSERT INTO tasks(id,specification_id,state,project_id) VALUES($1,$2,'PLANNING',$3)", [input.task_id, input.specification_id, input.project_id ?? null]);
   await tx.query('INSERT INTO specification_revisions(id,task_id,content,content_digest) VALUES($1,$2,$3,$4)', [input.specification_id, input.task_id, json, digest(json)]);
   return { control_version: 1, specification_id: input.specification_id, plan_id: null };
 }

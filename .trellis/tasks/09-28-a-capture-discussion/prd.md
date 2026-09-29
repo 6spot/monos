@@ -28,7 +28,7 @@ Execute these independently verifiable leaves in order after Runtime integration
 
 1. [Todo capture and lifecycle](../archive/2026-09/09-29-a-todo-capture/prd.md): model-free capture, organization and Inbox workspace.
 2. [Ordered Todo Planner discussion](../archive/2026-09/09-29-a-todo-discussion/prd.md): Todo-scoped Attempts, ordered input, atomic replies/requirement state and recovery.
-3. [Exact Task preview and creation](../09-29-a-task-preview/prd.md): structured previews, exact Owner confirmation and independent Task creation.
+3. [Exact Task preview and creation](../archive/2026-09/09-29-a-task-preview/prd.md): structured previews, exact Owner confirmation and independent Task creation.
 4. [Capture and Discussion integration acceptance](../09-29-a-capture-discussion-acceptance/prd.md): combined real-service and browser acceptance.
 
 On 2026-09-29 the Owner authorized sequential roadmap execution and delegated routine planning, implementation and testing decisions without repeated approval prompts. This parent remains an acceptance coordinator, not a bulk implementation assignment.

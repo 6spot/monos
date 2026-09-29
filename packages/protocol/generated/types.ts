@@ -282,30 +282,6 @@ export interface TaskEventsQuery {
     cursor?: string;
 }
 
-export interface TaskOverview {
-    control_version:  number;
-    event_cursor:     string;
-    held_attempts:    number;
-    nodes:            NodeCounts;
-    open_operations:  number;
-    plan_id?:         string;
-    queued_attempts:  number;
-    schema_version:   number;
-    specification_id: string;
-    state:            TaskOverviewState;
-    task_id:          string;
-}
-
-export interface NodeCounts {
-    blocked:   number;
-    cancelled: number;
-    completed: number;
-    pending:   number;
-    running:   number;
-}
-
-export type TaskOverviewState = "PLANNING" | "RUNNING" | "BLOCKED" | "REPLAN_REQUIRED" | "REVIEW" | "COMPLETED" | "CANCELLED";
-
 export interface TaskEventPage {
     cursor:         string;
     events:         FormalTaskEvent[];
@@ -907,3 +883,136 @@ export interface TodoOperationStatus {
 export interface PlannerGuidance {
     guidance: string;
 }
+
+export interface ConfirmTaskPreviewCommand {
+    name:           ConfirmTaskPreviewCommandName;
+    payload:        ConfirmTaskPreviewCommandPayload;
+    request_id:     string;
+    schema_version: number;
+    todo_id:        string;
+}
+
+export type ConfirmTaskPreviewCommandName = "confirm_task_preview";
+
+export interface ConfirmTaskPreviewCommandPayload {
+    content_digest:      string;
+    project_id:          string;
+    proposal_message_id: string;
+}
+
+export interface CreateExecutionTaskCommand {
+    name:           CreateExecutionTaskCommandName;
+    payload:        CreateExecutionTaskCommandPayload;
+    request_id:     string;
+    schema_version: number;
+    todo_id:        string;
+}
+
+export type CreateExecutionTaskCommandName = "create_execution_task";
+
+export interface CreateExecutionTaskCommandPayload {
+    confirmation_id:     string;
+    content_digest:      string;
+    proposal_message_id: string;
+}
+
+export interface CancelTaskPreviewCommand {
+    name:           CancelTaskPreviewCommandName;
+    payload:        CancelTaskPreviewCommandPayload;
+    request_id:     string;
+    schema_version: number;
+    todo_id:        string;
+}
+
+export type CancelTaskPreviewCommandName = "cancel_task_preview";
+
+export interface CancelTaskPreviewCommandPayload {
+    proposal_message_id: string;
+}
+
+export interface TaskPreviewCommand {
+    name:           TaskPreviewCommandName;
+    payload:        TaskPreviewCommandPayload;
+    request_id:     string;
+    schema_version: number;
+    todo_id:        string;
+}
+
+export type TaskPreviewCommandName = "confirm_task_preview" | "create_execution_task" | "cancel_task_preview";
+
+export interface TaskPreviewCommandPayload {
+    content_digest?:     string;
+    project_id?:         string;
+    proposal_message_id: string;
+    confirmation_id?:    string;
+}
+
+export interface TaskPreviewQuery {
+    project_id?: string;
+}
+
+export interface TaskPreviewCommandResult {
+    confirmation_id?:     string;
+    content_digest?:      string;
+    outcome?:             Outcome;
+    proposal_message_id?: string;
+    request_id:           string;
+    schema_version:       number;
+    specification_id?:    string;
+    status:               ConfigurationResultStatus;
+    task_id?:             string;
+    todo_id?:             string;
+}
+
+export type Outcome = "confirmed" | "created" | "cancelled";
+
+export interface TaskPreviewStatus {
+    confirmation_id?:        string;
+    content_digest?:         string;
+    preview:                 TaskPreview;
+    project_context_version: number;
+    proposal_message_id:     string;
+    reason?:                 Reason;
+    schema_version:          number;
+    selected_project_id?:    string;
+    source_message_id:       string;
+    source_project_id?:      string;
+    source_watermark:        number;
+    state:                   TaskPreviewStatusState;
+    task?:                   TaskOverview;
+    todo_id:                 string;
+}
+
+export type Reason = "todo_archived" | "newer_input" | "source_project_changed" | "project_unavailable";
+
+export type TaskPreviewStatusState = "eligible" | "project_required" | "unavailable" | "stale" | "cancelled" | "created";
+
+export interface TaskOverview {
+    control_version:           number;
+    created_at?:               string;
+    event_cursor:              string;
+    held_attempts:             number;
+    initial_specification_id?: string;
+    nodes:                     NodeCounts;
+    open_operations:           number;
+    plan_id?:                  string;
+    project_id?:               string;
+    queued_attempts:           number;
+    schema_version:            number;
+    specification?:            string;
+    specification_id:          string;
+    state:                     TaskOverviewState;
+    task_id:                   string;
+    title?:                    string;
+    todo_id?:                  string;
+}
+
+export interface NodeCounts {
+    blocked:   number;
+    cancelled: number;
+    completed: number;
+    pending:   number;
+    running:   number;
+}
+
+export type TaskOverviewState = "PLANNING" | "RUNNING" | "BLOCKED" | "REPLAN_REQUIRED" | "REVIEW" | "COMPLETED" | "CANCELLED";

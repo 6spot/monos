@@ -12,6 +12,7 @@ import { Configuration } from './configuration.ts';
 import { Todos } from './todos.ts';
 import { Discussion } from './discussion.ts';
 import { TodoAttemptReads } from './todo-attempt-reads.ts';
+import { TaskPreviews } from './task-previews.ts';
 import { GitHub } from './github.ts';
 import fastifyStatic from '@fastify/static';
 import { join } from 'node:path';
@@ -67,12 +68,18 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
   const todos = new Todos(service.db);
   const discussion = new Discussion(service.db, service.instanceId);
   const todoAttempts = new TodoAttemptReads(service.db);
+  const taskPreviews = new TaskPreviews(service.db);
   if (webRoot) {
     void app.register(fastifyStatic, { root: join(webRoot, 'assets'), prefix: '/assets/', index: false, dotfiles: 'deny', immutable: true, maxAge: '1y' });
     app.get('/', async (_request, reply) => reply.header('Cache-Control', 'no-store').sendFile('index.html', webRoot, { cacheControl: false }));
   }
   app.get('/v1/owner/configuration', async (request) => configuration.read(ownerCredential(request)));
   app.get('/v1/owner/todos', async (request) => todos.list(ownerCredential(request), request.query));
+  app.post('/v1/owner/task-previews/commands', async (request) => taskPreviews.command(ownerCredential(request), request.body));
+  app.get<{ Params: { request_id: string } }>('/v1/owner/task-previews/commands/:request_id', async (request) => taskPreviews.receipt(ownerCredential(request), request.params.request_id));
+  app.get<{ Params: { todo_id: string; message_id: string }; Querystring: { project_id?: string } }>('/v1/owner/todos/:todo_id/task-previews/:message_id', async (request) => {
+    validate('TaskPreviewQuery', request.query); return taskPreviews.read(ownerCredential(request), request.params.todo_id, request.params.message_id, request.query.project_id);
+  });
   app.post('/v1/owner/todos/discussion/commands', async (request) => discussion.command(ownerCredential(request), request.body));
   app.get<{ Params: { request_id: string } }>('/v1/owner/todos/discussion/commands/:request_id', async (request) => discussion.receipt(ownerCredential(request), request.params.request_id));
   app.get<{ Params: { todo_id: string } }>('/v1/owner/todos/:todo_id/discussion', async (request) => discussion.status(ownerCredential(request), request.params.todo_id));

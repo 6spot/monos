@@ -5,7 +5,7 @@ import { canonicalJSON, MAX_BODY_BYTES, validate } from '../../../packages/proto
 import type { AttemptListPage, AttemptLogPage, AttemptStatus, FormalTaskEvent, NodeCounts, RuntimeEvent, TaskEventPage, TaskOverview } from '../../../packages/protocol/src/index.ts';
 import { authenticateOwner } from './owner-commands.ts';
 
-interface TaskRow { id: string; control_version: string; state: TaskOverview['state']; specification_id: string; plan_id: string | null; event_sequence: string }
+interface TaskRow { id: string; control_version: string; state: TaskOverview['state']; specification_id: string; plan_id: string | null; event_sequence: string; title: string | null; todo_id: string | null; project_id: string | null; initial_specification_id: string | null; created_at: Date | null }
 
 export function taskEventCursor(taskId: string, after: number): string {
   validate('Id', taskId); validate('Counter', after);
@@ -29,7 +29,7 @@ function readCursor(taskId: string, cursor?: string): number {
 
 async function readTask(tx: Transaction, token: string, taskId: string): Promise<TaskRow> {
   validate('Id', taskId); await authenticateOwner(tx, token);
-  const task = (await tx.query<TaskRow>('SELECT id,control_version,state,specification_id,plan_id,event_sequence FROM tasks WHERE id=$1 FOR SHARE', [taskId])).rows[0];
+  const task = (await tx.query<TaskRow>('SELECT id,control_version,state,specification_id,plan_id,event_sequence,title,todo_id,project_id,initial_specification_id,created_at FROM tasks WHERE id=$1 FOR SHARE', [taskId])).rows[0];
   if (!task) throw new CommandError('denied_scope', 'Unknown Task');
   return task;
 }
@@ -153,20 +153,7 @@ export class OwnerReads {
   }
 
   async overview(token: string, taskId: string): Promise<TaskOverview> {
-    return transaction(this.db, async (tx) => {
-      const task = await readTask(tx, token, taskId);
-      const rows = (await tx.query<{ state: string; count: string }>('SELECT n.state,count(*) FROM nodes n JOIN plan_nodes pn ON pn.node_id=n.id WHERE pn.plan_id=$1 GROUP BY n.state', [task.plan_id])).rows;
-      const nodes: NodeCounts = { pending: 0, running: 0, blocked: 0, completed: 0, cancelled: 0 };
-      for (const row of rows) nodes[row.state.toLowerCase() as keyof NodeCounts] = Number(row.count);
-      const attempts = (await tx.query<{ queued: string; held: string }>("SELECT count(*) FILTER(WHERE state='QUEUED') AS queued,count(*) FILTER(WHERE NOT process_released) AS held FROM attempts WHERE task_id=$1", [taskId])).rows[0]!;
-      const operations = (await tx.query<{ count: string }>("SELECT count(*) FROM operations o JOIN attempts a ON a.id=o.attempt_id WHERE a.task_id=$1 AND o.state<>'succeeded'", [taskId])).rows[0]!;
-      return validate<TaskOverview>('TaskOverview', {
-        schema_version: 1, task_id: taskId, control_version: Number(task.control_version), state: task.state,
-        specification_id: task.specification_id, ...(task.plan_id ? { plan_id: task.plan_id } : {}), nodes,
-        queued_attempts: Number(attempts.queued), held_attempts: Number(attempts.held), open_operations: Number(operations.count),
-        event_cursor: taskEventCursor(taskId, Number(task.event_sequence)),
-      });
-    });
+    return transaction(this.db, (tx) => readTaskOverview(tx, token, taskId));
   }
 
   async events(token: string, taskId: string, cursor?: string): Promise<TaskEventPage> {
@@ -192,4 +179,23 @@ export class OwnerReads {
       return validate<TaskEventPage>('TaskEventPage', { schema_version: 1, task_id: taskId, events, cursor: taskEventCursor(taskId, last), has_more: last < cutoff, reset_required: false });
     });
   }
+}
+
+export async function readTaskOverview(tx: Transaction, token: string, taskId: string): Promise<TaskOverview> {
+  const task = await readTask(tx, token, taskId);
+  const rows = (await tx.query<{ state: string; count: string }>('SELECT n.state,count(*) FROM nodes n JOIN plan_nodes pn ON pn.node_id=n.id WHERE pn.plan_id=$1 GROUP BY n.state', [task.plan_id])).rows;
+  const nodes: NodeCounts = { pending: 0, running: 0, blocked: 0, completed: 0, cancelled: 0 };
+  for (const row of rows) nodes[row.state.toLowerCase() as keyof NodeCounts] = Number(row.count);
+  const attempts = (await tx.query<{ queued: string; held: string }>("SELECT count(*) FILTER(WHERE state='QUEUED') AS queued,count(*) FILTER(WHERE NOT process_released) AS held FROM attempts WHERE task_id=$1", [taskId])).rows[0]!;
+  const operations = (await tx.query<{ count: string }>("SELECT count(*) FROM operations o JOIN attempts a ON a.id=o.attempt_id WHERE a.task_id=$1 AND o.state<>'succeeded'", [taskId])).rows[0]!;
+  const revision = (await tx.query<{ content: unknown }>('SELECT content FROM specification_revisions WHERE task_id=$1 AND id=$2', [taskId, task.specification_id])).rows[0];
+  return validate<TaskOverview>('TaskOverview', {
+    schema_version: 1, task_id: taskId, control_version: Number(task.control_version), state: task.state,
+    specification_id: task.specification_id, ...(task.plan_id ? { plan_id: task.plan_id } : {}), nodes,
+    queued_attempts: Number(attempts.queued), held_attempts: Number(attempts.held), open_operations: Number(operations.count),
+    ...(task.title !== null ? { title: task.title } : {}), ...(task.todo_id ? { todo_id: task.todo_id } : {}),
+    ...(task.project_id ? { project_id: task.project_id } : {}), ...(task.initial_specification_id ? { initial_specification_id: task.initial_specification_id } : {}),
+    ...(task.created_at ? { created_at: task.created_at.toISOString() } : {}), ...(typeof revision?.content === 'string' ? { specification: revision.content } : {}),
+    event_cursor: taskEventCursor(taskId, Number(task.event_sequence)),
+  });
 }

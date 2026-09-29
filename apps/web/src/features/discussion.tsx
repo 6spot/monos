@@ -1,10 +1,12 @@
-import { useEffect, useId } from 'react';
+import { useEffect, useId, useRef } from 'react';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import type { ConfigurationSnapshot, DiscussionCommand, TodoRecord } from '../../../../packages/protocol/generated/types.ts';
 import { Button } from '../components/ui/button.tsx';
 import { APIError } from '../lib/api.ts';
 import { readDiscussion, readDiscussionPage } from '../lib/discussion-api.ts';
 import { useDiscussion } from '../lib/use-discussion.ts';
+import { useTaskPreviews } from '../lib/use-task-previews.ts';
+import { TaskPreviewCard } from './task-preview.tsx';
 
 const sourceLabels = { queued: 'Planner queued', processing: 'Planner is answering', interrupted: 'Discussion interrupted', settling: 'Stopping and settling previous work' } as const;
 const waitingReasons: Record<string, string> = {
@@ -32,6 +34,8 @@ const endReasons: Record<string, string> = {
 // uncertain request, including while the next detail query is loading.
 export function Discussion({ todo, snapshot, onUnauthorized }: { todo?: TodoRecord; snapshot: ConfigurationSnapshot; onUnauthorized: () => void }) {
   const local = useDiscussion(onUnauthorized);
+  const previews = useTaskPreviews(onUnauthorized);
+  const composer = useRef<HTMLTextAreaElement>(null);
   const composerId = useId(); const noticeId = useId();
   const id = todo?.todo_id;
   const status = useQuery({ queryKey: ['todos', 'discussion', id, 'status'], enabled: !!id, retry: false, refetchInterval: 2000,
@@ -77,7 +81,7 @@ export function Discussion({ todo, snapshot, onUnauthorized }: { todo?: TodoReco
         </div>
         {message.author === 'assistant' && <p className="hint">Reply using {projectName(message.project_id)} context{source ? ` · In reply to “${Array.from(source.content).slice(0, 100).join('')}”` : ''}</p>}
         <p className="discussion-content">{message.content}</p>
-        {message.task_preview && <aside className="discussion-preview" aria-label="Proposed Task"><h3>{message.task_preview.title}</h3><p className="hint">Proposed Task · {projectName(message.task_preview.project_id)}</p><p className="discussion-content">{message.task_preview.specification}</p></aside>}
+        {message.task_preview && <TaskPreviewCard todoId={id} message={message} snapshot={snapshot} controller={previews} continueDiscussion={() => composer.current?.focus()} onUnauthorized={onUnauthorized} />}
       </li>;
     })}</ol>
     {history.hasNextPage && <Button variant="outline" disabled={history.isFetching} onClick={() => { void history.fetchNextPage(); }}>Load earlier messages</Button>}
@@ -94,7 +98,7 @@ export function Discussion({ todo, snapshot, onUnauthorized }: { todo?: TodoReco
     </div>}
     {status.data?.working_requirement_state && <details className="subsection"><summary>Current understanding</summary><p className="discussion-content">{status.data.working_requirement_state}</p></details>}
     <form className="discussion-composer subsection" aria-label="Discussion composer" onSubmit={(event) => { event.preventDefault(); void local.execute({ schema_version: 1, request_id: crypto.randomUUID(), todo_id: id, name: 'submit_discussion_message', payload: { message_id: crypto.randomUUID(), content: state?.draft ?? '' } }); }}>
-      <div className="field"><label htmlFor={composerId}>Message Planner</label><textarea id={composerId} rows={4} required maxLength={65536} disabled={disabled} value={state?.draft ?? ''} onChange={(event) => local.setDraft(id, event.target.value)} aria-describedby={`${composerId}-hint${state?.notice ? ` ${noticeId}` : ''}`} /><p id={`${composerId}-hint`} className="hint">{current ? 'New messages are saved and queued behind this request.' : 'Sending a message starts a Planner discussion for this Todo.'}</p></div>
+      <div className="field"><label htmlFor={composerId}>Message Planner</label><textarea id={composerId} ref={composer} rows={4} required maxLength={65536} disabled={disabled} value={state?.draft ?? ''} onChange={(event) => local.setDraft(id, event.target.value)} aria-describedby={`${composerId}-hint${state?.notice ? ` ${noticeId}` : ''}`} /><p id={`${composerId}-hint`} className="hint">{current ? 'New messages are saved and queued behind this request.' : 'Sending a message starts a Planner discussion for this Todo.'}</p></div>
       <Button type="submit" disabled={disabled || !state?.draft.trim()}>{state?.busy ? 'Saving message…' : 'Send message'}</Button>
     </form>
   </section>;

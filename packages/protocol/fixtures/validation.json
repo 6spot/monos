@@ -729,7 +729,7 @@
       "name": "capture_todo",
       "payload": {
         "todo_id": "todo-a",
-        "original_capture": " Idea 😀 "
+        "original_capture": " Idea \ud83d\ude00 "
       }
     }
   },
@@ -743,7 +743,7 @@
       "name": "capture_todo",
       "payload": {
         "todo_id": "todo-a",
-        "original_capture": " Idea 😀 ",
+        "original_capture": " Idea \ud83d\ude00 ",
         "project_id": "project-a"
       }
     }
@@ -801,7 +801,7 @@
       "name": "capture_todo",
       "payload": {
         "todo_id": "todo-a",
-        "original_capture": " Idea 😀 "
+        "original_capture": " Idea \ud83d\ude00 "
       },
       "expected_control_version": 1
     }
@@ -831,7 +831,7 @@
       "name": "capture_todo",
       "payload": {
         "todo_id": "todo-a",
-        "original_capture": " Idea 😀 ",
+        "original_capture": " Idea \ud83d\ude00 ",
         "project_id": null
       }
     }
@@ -846,7 +846,7 @@
       "name": "capture_todo",
       "payload": {
         "todo_id": "todo-a",
-        "original_capture": " Idea 😀 "
+        "original_capture": " Idea \ud83d\ude00 "
       }
     }
   },
@@ -871,7 +871,7 @@
     "value": {
       "schema_version": 1,
       "todo_id": "todo-a",
-      "original_capture": "  Idea\nDetail 😀 ",
+      "original_capture": "  Idea\nDetail \ud83d\ude00 ",
       "label": "Idea",
       "archived": false,
       "control_version": 1,
@@ -890,7 +890,7 @@
       "todo": {
         "schema_version": 1,
         "todo_id": "todo-a",
-        "original_capture": "  Idea\nDetail 😀 ",
+        "original_capture": "  Idea\nDetail \ud83d\ude00 ",
         "label": "Idea",
         "archived": false,
         "control_version": 1,
@@ -930,7 +930,7 @@
       "todo": {
         "schema_version": 1,
         "todo_id": "todo-a",
-        "original_capture": "  Idea\nDetail 😀 ",
+        "original_capture": "  Idea\nDetail \ud83d\ude00 ",
         "label": "Idea",
         "archived": false,
         "control_version": 1,
@@ -1234,7 +1234,7 @@
       "name": "submit_discussion_message",
       "payload": {
         "message_id": "m",
-        "content": "  Original 😀  "
+        "content": "  Original \ud83d\ude00  "
       }
     }
   },
@@ -1289,6 +1289,215 @@
       "request_id": "r",
       "status": "unknown",
       "todo_id": "todo"
+    }
+  },
+  {
+    "name": "task preview confirm",
+    "schema": "TaskPreviewCommand",
+    "valid": true,
+    "value": {
+      "schema_version": 1,
+      "request_id": "request-a",
+      "todo_id": "todo-a",
+      "name": "confirm_task_preview",
+      "payload": {
+        "proposal_message_id": "reply-a",
+        "project_id": "project-a",
+        "content_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    }
+  },
+  {
+    "name": "task preview create",
+    "schema": "TaskPreviewCommand",
+    "valid": true,
+    "value": {
+      "schema_version": 1,
+      "request_id": "request-a",
+      "todo_id": "todo-a",
+      "name": "create_execution_task",
+      "payload": {
+        "proposal_message_id": "reply-a",
+        "confirmation_id": "confirmation-a",
+        "content_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    }
+  },
+  {
+    "name": "task preview cancel",
+    "schema": "TaskPreviewCommand",
+    "valid": true,
+    "value": {
+      "schema_version": 1,
+      "request_id": "request-a",
+      "todo_id": "todo-a",
+      "name": "cancel_task_preview",
+      "payload": {
+        "proposal_message_id": "reply-a"
+      }
+    }
+  },
+  {
+    "name": "task preview create result",
+    "schema": "TaskPreviewCommandResult",
+    "valid": true,
+    "value": {
+      "schema_version": 1,
+      "request_id": "request-a",
+      "todo_id": "todo-a",
+      "status": "committed",
+      "proposal_message_id": "reply-a",
+      "outcome": "created",
+      "confirmation_id": "confirmation-a",
+      "content_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "task_id": "task-a",
+      "specification_id": "spec-a"
+    }
+  },
+  {
+    "name": "task preview unknown result",
+    "schema": "TaskPreviewCommandResult",
+    "valid": true,
+    "value": {
+      "schema_version": 1,
+      "request_id": "request-a",
+      "status": "unknown"
+    }
+  },
+  {
+    "name": "task preview unassigned read",
+    "schema": "TaskPreviewStatus",
+    "valid": true,
+    "value": {
+      "schema_version": 1,
+      "todo_id": "todo-a",
+      "proposal_message_id": "reply-a",
+      "preview": {
+        "title": "Exact title",
+        "specification": "# Markdown\n"
+      },
+      "source_message_id": "input-a",
+      "source_watermark": 1,
+      "project_context_version": 0,
+      "state": "project_required"
+    }
+  },
+  {
+    "name": "task preview confirm extra lifecycle",
+    "schema": "TaskPreviewCommand",
+    "valid": false,
+    "value": {
+      "schema_version": 1,
+      "request_id": "request-a",
+      "todo_id": "todo-a",
+      "name": "confirm_task_preview",
+      "payload": {
+        "proposal_message_id": "reply-a",
+        "project_id": "project-a",
+        "content_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "start": true
+      }
+    }
+  },
+  {
+    "name": "task preview create missing confirmation",
+    "schema": "TaskPreviewCommand",
+    "valid": false,
+    "value": {
+      "schema_version": 1,
+      "request_id": "request-a",
+      "todo_id": "todo-a",
+      "name": "create_execution_task",
+      "payload": {
+        "proposal_message_id": "reply-a",
+        "content_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    }
+  },
+  {
+    "name": "task preview cancel irrelevant project",
+    "schema": "TaskPreviewCommand",
+    "valid": false,
+    "value": {
+      "schema_version": 1,
+      "request_id": "request-a",
+      "todo_id": "todo-a",
+      "name": "cancel_task_preview",
+      "payload": {
+        "proposal_message_id": "reply-a",
+        "project_id": "project-a"
+      }
+    }
+  },
+  {
+    "name": "task preview result missing task",
+    "schema": "TaskPreviewCommandResult",
+    "valid": false,
+    "value": {
+      "schema_version": 1,
+      "request_id": "request-a",
+      "todo_id": "todo-a",
+      "status": "committed",
+      "proposal_message_id": "reply-a",
+      "outcome": "created",
+      "confirmation_id": "confirmation-a",
+      "content_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "specification_id": "spec-a"
+    }
+  },
+  {
+    "name": "task preview unknown carries task",
+    "schema": "TaskPreviewCommandResult",
+    "valid": false,
+    "value": {
+      "schema_version": 1,
+      "request_id": "request-a",
+      "status": "unknown",
+      "task_id": "task-a"
+    }
+  },
+  {
+    "name": "task preview eligible missing project",
+    "schema": "TaskPreviewStatus",
+    "valid": false,
+    "value": {
+      "schema_version": 1,
+      "todo_id": "todo-a",
+      "proposal_message_id": "reply-a",
+      "preview": {
+        "title": "Exact title",
+        "specification": "# Markdown\n"
+      },
+      "source_message_id": "input-a",
+      "source_watermark": 1,
+      "project_context_version": 0,
+      "state": "eligible"
+    }
+  },
+  {
+    "name": "task preview created missing task",
+    "schema": "TaskPreviewStatus",
+    "valid": false,
+    "value": {
+      "schema_version": 1,
+      "todo_id": "todo-a",
+      "proposal_message_id": "reply-a",
+      "preview": {
+        "title": "Exact title",
+        "specification": "# Markdown\n"
+      },
+      "source_message_id": "input-a",
+      "source_watermark": 1,
+      "project_context_version": 0,
+      "state": "created"
+    }
+  },
+  {
+    "name": "task preview unknown selector",
+    "schema": "TaskPreviewQuery",
+    "valid": false,
+    "value": {
+      "unknown": "value"
     }
   }
 ]

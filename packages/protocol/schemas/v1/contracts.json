@@ -1577,6 +1577,30 @@
         },
         "event_cursor": {
           "$ref": "#/definitions/TaskEventCursor"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "todo_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "project_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "initial_specification_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "specification": {
+          "type": "string",
+          "maxLength": 2097152,
+          "pattern": "^[^\\x00]*$"
+        },
+        "created_at": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d\\.\\d{3}Z$",
+          "maxLength": 24
         }
       }
     },
@@ -4012,6 +4036,444 @@
       },
       "required": [
         "guidance"
+      ]
+    },
+    "ConfirmTaskPreviewCommand": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "request_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "todo_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "name": {
+          "type": "string",
+          "const": "confirm_task_preview"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "proposal_message_id": {
+              "$ref": "#/definitions/Id"
+            },
+            "project_id": {
+              "$ref": "#/definitions/Id"
+            },
+            "content_digest": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          },
+          "required": [
+            "proposal_message_id",
+            "project_id",
+            "content_digest"
+          ]
+        }
+      },
+      "required": [
+        "schema_version",
+        "request_id",
+        "todo_id",
+        "name",
+        "payload"
+      ]
+    },
+    "CreateExecutionTaskCommand": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "request_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "todo_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "name": {
+          "type": "string",
+          "const": "create_execution_task"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "proposal_message_id": {
+              "$ref": "#/definitions/Id"
+            },
+            "confirmation_id": {
+              "$ref": "#/definitions/Id"
+            },
+            "content_digest": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          },
+          "required": [
+            "proposal_message_id",
+            "confirmation_id",
+            "content_digest"
+          ]
+        }
+      },
+      "required": [
+        "schema_version",
+        "request_id",
+        "todo_id",
+        "name",
+        "payload"
+      ]
+    },
+    "CancelTaskPreviewCommand": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "request_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "todo_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "name": {
+          "type": "string",
+          "const": "cancel_task_preview"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "proposal_message_id": {
+              "$ref": "#/definitions/Id"
+            }
+          },
+          "required": [
+            "proposal_message_id"
+          ]
+        }
+      },
+      "required": [
+        "schema_version",
+        "request_id",
+        "todo_id",
+        "name",
+        "payload"
+      ]
+    },
+    "TaskPreviewCommand": {
+      "oneOf": [
+        {
+          "$ref": "#/definitions/ConfirmTaskPreviewCommand"
+        },
+        {
+          "$ref": "#/definitions/CreateExecutionTaskCommand"
+        },
+        {
+          "$ref": "#/definitions/CancelTaskPreviewCommand"
+        }
+      ]
+    },
+    "TaskPreviewQuery": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "project_id": {
+          "$ref": "#/definitions/Id"
+        }
+      },
+      "required": []
+    },
+    "TaskPreviewCommandResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "request_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "committed",
+            "unknown"
+          ]
+        },
+        "todo_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "proposal_message_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "outcome": {
+          "type": "string",
+          "enum": [
+            "confirmed",
+            "created",
+            "cancelled"
+          ]
+        },
+        "confirmation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "content_digest": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "task_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "specification_id": {
+          "$ref": "#/definitions/Id"
+        }
+      },
+      "required": [
+        "schema_version",
+        "request_id",
+        "status"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "committed"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "todo_id",
+              "proposal_message_id",
+              "outcome"
+            ],
+            "properties": {
+              "todo_id": {},
+              "proposal_message_id": {},
+              "outcome": {}
+            }
+          },
+          "else": {
+            "properties": {
+              "todo_id": false,
+              "proposal_message_id": false,
+              "outcome": false,
+              "confirmation_id": false,
+              "content_digest": false,
+              "task_id": false,
+              "specification_id": false
+            }
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "outcome"
+            ],
+            "properties": {
+              "outcome": {
+                "const": "confirmed"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "confirmation_id",
+              "content_digest"
+            ],
+            "properties": {
+              "task_id": false,
+              "specification_id": false,
+              "confirmation_id": {},
+              "content_digest": {}
+            }
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "outcome"
+            ],
+            "properties": {
+              "outcome": {
+                "const": "created"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "confirmation_id",
+              "content_digest",
+              "task_id",
+              "specification_id"
+            ],
+            "properties": {
+              "confirmation_id": {},
+              "content_digest": {},
+              "task_id": {},
+              "specification_id": {}
+            }
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "outcome"
+            ],
+            "properties": {
+              "outcome": {
+                "const": "cancelled"
+              }
+            }
+          },
+          "then": {
+            "required": [],
+            "properties": {
+              "confirmation_id": false,
+              "content_digest": false,
+              "task_id": false,
+              "specification_id": false
+            }
+          }
+        }
+      ]
+    },
+    "TaskPreviewStatus": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "todo_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "proposal_message_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "preview": {
+          "$ref": "#/definitions/TaskPreview"
+        },
+        "source_message_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "source_watermark": {
+          "$ref": "#/definitions/Counter"
+        },
+        "project_context_version": {
+          "$ref": "#/definitions/Counter"
+        },
+        "source_project_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "eligible",
+            "project_required",
+            "unavailable",
+            "stale",
+            "cancelled",
+            "created"
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "enum": [
+            "todo_archived",
+            "newer_input",
+            "source_project_changed",
+            "project_unavailable"
+          ]
+        },
+        "selected_project_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "content_digest": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "confirmation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "task": {
+          "$ref": "#/definitions/TaskOverview"
+        }
+      },
+      "required": [
+        "schema_version",
+        "todo_id",
+        "proposal_message_id",
+        "preview",
+        "source_message_id",
+        "source_watermark",
+        "project_context_version",
+        "state"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "created"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "task",
+              "selected_project_id",
+              "content_digest",
+              "confirmation_id"
+            ],
+            "properties": {
+              "task": {},
+              "selected_project_id": {},
+              "content_digest": {},
+              "confirmation_id": {}
+            }
+          },
+          "else": {
+            "properties": {
+              "task": false
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "eligible"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "selected_project_id",
+              "content_digest"
+            ],
+            "properties": {
+              "selected_project_id": {},
+              "content_digest": {}
+            }
+          }
+        }
       ]
     }
   }

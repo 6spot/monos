@@ -154,6 +154,7 @@ test('canonical status fixtures drive exact recovery exits and attributed replie
   await page.getByLabel('Message Planner', { exact: true }).fill('Draft during reconnect');
   offline = true; await page.getByRole('button', { name: 'Refresh Discussion', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Retry Discussion connection', exact: true })).toBeVisible();
+  await page.route(`**/v1/owner/todos/${todoId}/task-previews/*`, (route) => { const proposal = messages.find((message) => message.task_preview); return route.fulfill({ json: { schema_version: 1, todo_id: todoId, proposal_message_id: proposal?.message_id, preview: proposal?.task_preview, source_message_id: laterId, source_watermark: 2, project_context_version: 1, state: 'project_required' } }); });
   messages.push({ message_id: randomUUID(), sequence: 3, author: 'assistant', content: 'Committed Planner reply', source_message_id: laterId, source_watermark: 2, project_context_version: 1, created_at: '2026-09-30T00:00:02.000Z', task_preview: { title: 'A proposed improvement', specification: 'A small independently reviewable change.' } });
   delete status.current_source; status.latest_sequence = 3; status.resolved_watermark = 2; status.working_requirement_state = 'Current understood requirement';
   offline = false; await page.getByRole('button', { name: 'Retry Discussion connection', exact: true }).click();

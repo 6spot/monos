@@ -86,3 +86,28 @@ settling/interrupted state; Stop retains input, Withdraw resolves it without a
 reply, and Retry waits for server-verified settlement. Raw Runtime output is never
 inserted into Discussion history. Optional Task preview content is a proposal;
 creation requires the separate exact Owner command.
+
+## Task preview and independent Task navigation
+
+`useTaskPreviews` is owned by the mounted Discussion, not individual paginated
+history cards. Key local Project choice and exact pending envelope by Todo and
+proposal message identity. A Create Task click first confirms the displayed digest,
+then retains the creation envelope before sending it. Resolve a lost confirmation
+before moving to creation; resolve a lost creation before sending another request.
+No browser-persistent command or credential store is introduced.
+
+Preview queries include explicit local Project selection. Do not enable Create
+while that selection's read is pending or reuse the old digest after selection
+changes. Created projections take precedence over a stale selector and restore
+the actual Task/Project even after source archive/reassignment. The backend's
+immutable source mapping, not local success state, reconstructs cross-device cards.
+
+Cancel proposal is a formal source decision; Continue discussing only focuses the
+existing composer and retains its draft. Neither is a Task Cancel or Start command.
+Keep per-proposal uncertainty visible while other Todos remain usable.
+
+The `#task?task_id=...` route reads TaskOverview independently and preserves mounted
+Todo/settings state. `#todos?todo_id=...` is explicit source navigation; plain Todos
+still does not auto-open an arbitrary item. Task detail pairs current Markdown with
+current `specification_id`; it never substitutes initial text or serializes legacy
+JSON as Markdown. Initial Specification identity remains separate provenance.

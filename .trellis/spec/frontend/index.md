@@ -1,6 +1,6 @@
 # Frontend Development
 
-Status: protected Owner configuration, Todo capture/organization, ordered Discussion and scoped execution reads are implemented in `apps/web`. Task preview/creation and the full execution workflow remain later work. Sources: [UI](../../../docs/07-owner-review-and-ui.md), [technology](../../../docs/11-technology-and-deployment.md).
+Status: protected Owner configuration, Todo capture/organization, ordered Discussion and scoped execution reads are implemented in `apps/web`. Exact Task preview/creation and a minimal read-only Task detail are implemented; the full execution workflow remains later work. Sources: [UI](../../../docs/07-owner-review-and-ui.md), [technology](../../../docs/11-technology-and-deployment.md).
 
 ## Pre-Development Checklist
 

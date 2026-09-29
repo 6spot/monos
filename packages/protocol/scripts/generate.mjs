@@ -32,6 +32,9 @@ const get = (name, auth, parameters = []) => ({ security: security(auth), parame
 artifacts.set('generated/openapi.json', `${JSON.stringify({
   openapi: '3.1.0', info: { title: 'monos boundary probe', version: '1.0.0' },
   paths: {
+    '/v1/owner/task-previews/commands': { post: { security: security('OwnerAuth'), requestBody: { required: true, content: { 'application/json': { schema: reference('TaskPreviewCommand') } } }, responses: responses('TaskPreviewCommandResult') } },
+    '/v1/owner/task-previews/commands/{request_id}': { get: get('TaskPreviewCommandResult', 'OwnerAuth', ['request_id']) },
+    '/v1/owner/todos/{todo_id}/task-previews/{message_id}': { get: { ...get('TaskPreviewStatus', 'OwnerAuth', ['todo_id', 'message_id']), parameters: [...get('TaskPreviewStatus', 'OwnerAuth', ['todo_id', 'message_id']).parameters, { name: 'project_id', in: 'query', required: false, schema: reference('Id') }] } },
     '/v1/owner/todos/discussion/commands': { post: { security: security('OwnerAuth'), requestBody: { required: true, content: { 'application/json': { schema: reference('DiscussionCommand') } } }, responses: responses('DiscussionCommandResult') } },
     '/v1/owner/todos/discussion/commands/{request_id}': { get: get('DiscussionCommandResult', 'OwnerAuth', ['request_id']) },
     '/v1/owner/todos/{todo_id}/discussion': { get: get('DiscussionStatus', 'OwnerAuth', ['todo_id']) },

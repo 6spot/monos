@@ -8,7 +8,7 @@ the command module owns authentication, receipts, formal events and durable inte
 
 ## 2. Signatures
 
-- `initializeTask(tx, {task_id, specification_id, specification})` creates PLANNING
+- `initializeTask(tx, {task_id, specification_id, specification, project_id?, creation?})` creates PLANNING
   with no Plan, Node, Attempt or scheduling side effect.
 - `publishInitialPlan(tx, {task_id, plan_id, expected, nodes, claim})` writes the
   graph, first activations and effective pointer atomically.
@@ -24,6 +24,12 @@ the command module owns authentication, receipts, formal events and durable inte
 effective revision pointers are not copied into another control table. A nullable
 Plan is normal before initial publication; probe resource identity is nullable
 for future Project-owned resource lookup and is not a formal Task resource binding.
+
+The optional internal `creation` input is supplied only by the exact
+[Task preview](task-preview.md) command transaction. It binds immutable title,
+Todo, source proposal, confirmation and initial Specification metadata in the
+initial insert; it does not retrofit old fixture history. Canonical public
+creation requires an active Project and exact Markdown.
 
 Migration 5 adds same-Task foreign keys, immutable revision metadata, `plan_nodes`,
 `node_activations` and `node_completions`. New Attempts record Specification/Plan

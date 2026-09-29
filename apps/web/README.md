@@ -48,8 +48,8 @@ native hash navigation; mounted views retain scoped memory-only drafts.
 Todo capture preserves the exact original text and invokes no model. The workspace
 provides All active, Inbox, Project and Archived scopes, bounded list pagination,
 Project assignment and archive/restore. No Todo opens until selected or captured
-in the visible scope. Mobile detail has an explicit return to the list. Task
-creation remains separate follow-up work.
+in the visible scope, or followed through an explicit Todo link. Mobile detail has
+an explicit return to the list.
 The selected detail keeps Original Capture visible and places Project/archive
 controls inside the native, initially collapsed Organize Todo disclosure so
 Discussion remains the main working surface. Organization drafts survive closing
@@ -59,7 +59,7 @@ Discussion starts only when the Owner sends a message. The canonical recent wind
 shows up to 64 messages, with earlier pages loaded on demand. Polling refreshes the
 loaded history and withdrawal dispositions; immutable message IDs prevent duplicate
 rendering. Planner output appears only after formal reply commit, with its source
-Project attribution. Optional proposals are displayed without Task creation actions.
+Project attribution. Committed proposals expose exact Specification review and Task creation actions.
 Queued, answering, interrupted and settling states come from authenticated reads;
 Stop, Retry and Withdraw preserve exact source/Attempt/version identities.
 
@@ -82,3 +82,21 @@ retain the original request for Check save result; keep the tab open to recover 
 Reloading the whole page discards local drafts/pending requests. Installation detected
 means a reported version check, not CLI login/model/tool readiness. Stored policies
 are consumed by future production Runtime integration, not the fixed boundary probe.
+
+Task previews read canonical proposal eligibility and an exact digest for the selected
+active Project. Create Task explicitly confirms that digest and consumes the
+confirmation through a separate immutable command. Cancellation is a durable
+proposal decision; Continue discussing only focuses the existing draft. Selection
+and uncertain command stages remain scoped by Todo/proposal across navigation.
+Check Task result first recovers the original receipt and replays only after unknown.
+A created association always shows the actual Task Project, even when another client
+chose differently. A proposal creates at most one independent PLANNING Task.
+
+View Task opens the authenticated read-only `#task?task_id=...` route; direct reload
+works and Back to Todo selects its source while preserving mounted editor drafts.
+Task detail reads the current Specification; unavailable legacy Markdown is stated
+explicitly. Creation/viewing do not Start execution. Browser acceptance uses real
+committed Discussion proposals in an isolated test fixture and covers two clients,
+lost confirmation/create responses, cancellation, stale input, Project choices,
+current revisions, navigation, keyboard focus and desktop/mobile layouts. The test
+fixture alone provides proposal/revision seed routes; production has neither.

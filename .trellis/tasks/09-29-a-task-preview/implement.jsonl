@@ -1,0 +1,12 @@
+{"file": ".trellis/spec/backend/index.md", "reason": "Backend ownership and quality gate"}
+{"file": ".trellis/spec/backend/database-guidelines.md", "reason": "Atomic receipt/authorization/Task transaction and locks"}
+{"file": ".trellis/spec/backend/owner-commands.md", "reason": "Existing exact Owner confirmation patterns and compatibility"}
+{"file": ".trellis/spec/backend/task-records.md", "reason": "PLANNING initialization and immutable Specification"}
+{"file": ".trellis/spec/backend/configuration.md", "reason": "Active Project and configuration barrier"}
+{"file": ".trellis/spec/backend/discussion.md", "reason": "Immutable source watermark and Project epoch"}
+{"file": ".trellis/spec/protocol/schema-generation.md", "reason": "One strict generated TS/Go protocol authority"}
+{"file": ".trellis/spec/frontend/index.md", "reason": "Existing frontend component and state conventions"}
+{"file": ".trellis/spec/frontend/state-management.md", "reason": "Per-proposal scoped drafts and immutable recovery"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "Meaningful browser cross-device/reconnect acceptance"}
+{"file": ".trellis/tasks/09-29-a-task-preview/research/backend.md", "reason": "Exact preview/authorization/storage contract research"}
+{"file": ".trellis/tasks/09-29-a-task-preview/research/frontend.md", "reason": "Inline card and real Task route integration"}

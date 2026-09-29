@@ -20,10 +20,11 @@ function inScope(todo: TodoRecord, filter: Scope) {
   return !todo.archived && (filter.scope === 'all' || (filter.scope === 'inbox' ? !todo.project_id : todo.project_id === filter.projectId));
 }
 function scopeValue(filter: Scope) { return filter.scope === 'project' ? `project:${filter.projectId}` : filter.scope; }
+function linkedTodo() { return new URLSearchParams(location.hash.startsWith('#todos?') ? location.hash.slice(7) : '').get('todo_id') ?? undefined; }
 
 export function Todos({ snapshot, onUnauthorized }: { snapshot: ConfigurationSnapshot; onUnauthorized: () => void }) {
   const [filter, setFilter] = useState<Scope>(readScope);
-  const [selected, setSelected] = useState<string>();
+  const [selected, setSelected] = useState<string | undefined>(linkedTodo);
   const [capture, setCapture] = useState(''); const [captureProject, setCaptureProject] = useState('');
   const [drafts, setDrafts] = useState<Record<string, ProjectDraft>>({});
   const captureId = useId(); const noticeId = useId();
@@ -53,7 +54,7 @@ export function Todos({ snapshot, onUnauthorized }: { snapshot: ConfigurationSna
   const projectName = (id?: string) => id ? snapshot.projects.find((project) => project.id === id)?.name ?? 'Unavailable Project' : 'Inbox';
 
   useEffect(() => {
-    const change = () => { if (location.hash === '#todos' || location.hash.startsWith('#todos?')) setFilter(readScope()); };
+    const change = () => { if (location.hash === '#todos' || location.hash.startsWith('#todos?')) { setFilter(readScope()); const id = linkedTodo(); if (id) { lastFocused.current = undefined; setSelected(id); } } };
     addEventListener('hashchange', change); return () => removeEventListener('hashchange', change);
   }, []);
   useEffect(() => {
@@ -61,6 +62,7 @@ export function Todos({ snapshot, onUnauthorized }: { snapshot: ConfigurationSna
   }, [list.error, detail.error, onUnauthorized]);
   useEffect(() => {
     if (todo && !inScope(todo, filter)) {
+      if (linkedTodo() === todo.todo_id) { setFilter({ scope: todo.archived ? 'archived' : 'all' }); return; }
       restoreCaptureFocus.current = document.activeElement === document.body || !!detailColumn.current?.contains(document.activeElement);
       setSelected(undefined);
     }

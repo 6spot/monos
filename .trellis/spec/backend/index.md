@@ -11,6 +11,7 @@ Status: Stage A boundary-probe backend is implemented in `apps/server` with Post
 - For overview/Timeline/cursors, read [Owner reads](owner-reads.md).
 - For Todo capture, organization and Inbox reads, read [Todos](todos.md).
 - For ordered Todo input, Planner replies, cache and Retry/Withdraw, read [Discussion](discussion.md).
+- For exact proposal confirmation and independent Task creation, read [Task preview](task-preview.md).
 - For selected Attempt status, ordered output and resumable log cursors, read [Execution logs](execution-logs.md).
 - For selected Attempt queue/promotion, read [dispatch queue](dispatch-queue.md).
 - For production Runtime target choice and shared capacity, read [Runtime scheduling](runtime-scheduling.md).
