@@ -233,3 +233,26 @@ Implemented ordered Runner Attempt logs and authenticated Owner cursor reads; ve
 ### Status
 
 [OK] **Completed**
+
+
+## Session 11: Owner Runtime Stop and Reboot Recovery
+<!-- trellis-session: v=2 fp=fe1b5e1f24c6e886 -->
+
+**Date**: 2026-09-29
+**Task**: Owner Runtime Stop and Reboot Recovery
+**Branch**: `feat/stage-a-boundary-probe`
+
+### Summary
+
+Added authenticated idempotent Owner Stop/Continue/Retry and physical release guards; passed 96 PostgreSQL tests, selected Node and Planner host trials, controlled reboot reconciliation, and updated executable specs.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `39b5dad` | feat: add Owner runtime stop and recovery |
+| `1c1926c` | docs: record runtime stop contracts and host acceptance |
+
+### Status
+
+[OK] **Completed**
