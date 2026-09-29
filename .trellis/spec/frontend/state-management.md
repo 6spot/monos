@@ -29,6 +29,15 @@ Explicit Request Changes/Cancel use backend guards. Partial delivery offers fini
 Wrong: set Task COMPLETED optimistically after the Accept HTTP response.
 Correct: show the admitted operation, then reflect the authoritative final delivery outcome.
 
+## Attempt log reconnect
+
+Keep the selected Attempt log cursor with the rendered or otherwise retained entries.
+Advance it only after those entries are retained, so a failed render or interrupted
+request can safely replay the same page. `has_more=false` describes one read, not
+the end of an active Attempt; continue polling while status permits later Runtime
+events. Show gaps and factual activity without inferring Task/Node progress or a
+formal outcome from log text.
+
 ## Verification
 
 Test two tabs racing Accept/message, stale projections, correction during delivery, pending conversation after completion and partial failure. Client refresh/navigation never advances lifecycle.

@@ -14,6 +14,7 @@ Every command, dispatch, normalized Runtime event, recovery page or backend/Runn
 - Runtime validation: browser-safe [protocol/src/validation.ts](../../../packages/protocol/src/validation.ts) uses AJV and TextEncoder byte limits; Node-only canonicalization/crypto stays in [protocol/src/index.ts](../../../packages/protocol/src/index.ts); [wire.go](../../../runner/internal/wire/wire.go) validates against the same embedded schema before decoding Go structs.
 - `RunnerInventory { schema_version, snapshot_id, dispatches, operations, next_cursor? }`; `InventoryQuery { after?, snapshot_id? }` requires both query fields together.
 - `OperationResult { operation_id, attempt_id, success, result, failure_kind? }`; failure classification is forbidden on success.
+- `Dispatch.log_mode="ordered_v1"`, `Ready.log_modes`, `RuntimeEvent.order_sequence` and `RuntimeEvent.data_base64` establish ordered capture. `AttemptStatus`, `AttemptListPage`, and `AttemptLogPage` are generated Owner read contracts; see [execution logs](../backend/execution-logs.md).
 
 ## 3. Contracts
 

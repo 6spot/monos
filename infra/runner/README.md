@@ -88,8 +88,13 @@ ownership; its edit-tool denial is supplemental. Interactive questions,
 unreviewed native subagents/skills and role switching are excluded from this
 single-runtime probe. Main, small, title, summary and compaction models are
 explicitly pinned to the selected free model; confirm resolved values on-host.
-Retained stdout/stderr have bounded payloads plus one fixed truncation marker
-when bytes are actually dropped; reaching the exact limit alone is not a loss.
+Execution stdout/stderr are retained without a fixed truncation limit. The
+worker copies output through a checked, synced writer into the supervised spool;
+write or sync failure cancels the child and leaves a reserved capture-failure
+marker for Runner attention and physical reconciliation. The marker is writable
+by the execution account, so it is an attention hint, not authoritative proof
+of filesystem failure or a formal Task transition. The separate model
+catalog preflight remains bounded and fails if its catalog exceeds that limit.
 
 The first successful workspace opening records its original Git base in the
 root-owned operation result before returning the workspace. Duplicate opens

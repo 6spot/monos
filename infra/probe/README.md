@@ -41,6 +41,29 @@ These regressions check receipt/effect correlation, exact finalized-tree compari
 required driver evidence, physical identity, reboot checkpoint comparisons and
 zero-cost model validation. They perform no host operations.
 
+## Ordered execution log trials
+
+After the selected Runner and Compose server are installed, use fresh Attempt
+IDs for each run. `logs_probe.py` seeds a selected Node or Planner owner, checks
+the exact model's current zero prices, launches through the installed OpenCode
+and `monos` CLI, restarts the task Compose backend, and resumes authenticated
+Owner log pages from the last retained cursor. It compares the complete page
+sequence with canonical storage and checks that raw output did not enter formal
+Task Events. Its final evidence is `logs-final-<attempt>.json`.
+
+```sh
+python3 infra/probe/logs_probe.py --evidence /root/monos-logs-evidence --password-file /etc/monos-probe/owner-password --kind node logs-node-01
+python3 infra/probe/logs_probe.py --evidence /root/monos-logs-evidence --password-file /etc/monos-probe/owner-password --kind planner logs-planner-01
+python3 infra/probe/missing_outcome_probe.py --evidence /root/monos-logs-evidence logs-missing-01
+```
+
+The missing-result trial uses a selected Node that exits without
+`complete_node` while detached descendants are still live. It requires
+`BLOCKED`, revoked mutation authority and verified whole-tree Stop/release.
+Neither script overwrites earlier evidence. A failed or interrupted trial may
+still own processes; inspect and settle it before installing another Runner
+binary or reusing the host.
+
 ## Recommended sequence
 
 First run native Linux `go test -race ./...` with CGO enabled and the isolated

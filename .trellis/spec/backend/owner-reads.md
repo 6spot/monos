@@ -33,6 +33,7 @@ the same position. No history pruning is implemented by this API.
 Runner paths in event bodies remain opaque locators. This reader performs database
 queries only; content retrieval must later use the owning Runner/service boundary.
 Browser UI and SSE bindings consume these contracts in their own implementation.
+Selected Attempt status and ordered raw-log cursors use the separate [execution log contract](execution-logs.md); Task event cursors never include raw output.
 
 ## 4. Validation & Error Matrix
 
