@@ -27,6 +27,15 @@ event acknowledgements; bearer tokens stay in memory. Failed journal writes
 produce no send permit. Unknown receipts remain uncertain, and an expired or
 revoked Attempt is never refreshed by a recovery read.
 
+Todo Discussion reuses the same Attempt supervision and slots. Its dispatch has
+`todo_id` instead of `task_id`, no repository resource, and runs in private scratch
+with fresh Runtime context. Native `monos read_discussion`,
+`update_working_requirement_state` and `commit_discussion_turn` use the same
+attributed socket and immutable retry path. Only the final commit resolves a turn;
+process output or exit does not. Todo repository effects are explicitly unavailable
+and cannot access the Task probe fixture. Stop is process-scoped and permits an
+omitted resource; legacy Task manifests and request bytes remain unchanged.
+
 Recovery inventory is snapshot-guarded and paginated. Every page is validated,
 deduplicated and checked for complete operation ownership before reconciliation
 or `ready`. A changing snapshot is retried from the beginning at most three

@@ -1,16 +1,23 @@
 import { useEffect, useState } from 'react';
 import type { ConfigurationResult, ConfigurationSnapshot, InfrastructureSnapshot, PolicyConfiguration } from '../../../../packages/protocol/generated/types.ts';
 import { Button } from '../components/ui/button.tsx';
-import { EditorActions, PageHeading } from '../components/forms.tsx';
+import { EditorActions, Field, PageHeading } from '../components/forms.tsx';
 import type { Draft, Save } from '../components/forms.tsx';
 import { emptyPolicy, PolicyEditor } from './policy-editor.tsx';
 
 export function Execution({ snapshot, infrastructure, infrastructureError, refresh, save, disabled, committed }: { snapshot: ConfigurationSnapshot; infrastructure?: InfrastructureSnapshot; infrastructureError?: Error | null; refresh: () => void; save: Save; disabled: boolean; committed?: ConfigurationResult }) {
   const [local, setLocal] = useState<Draft<PolicyConfiguration>>();
+  const [guidance, setGuidance] = useState<Draft<string>>();
   useEffect(() => { if (committed?.entity_id === 'save_policies') setLocal(undefined); }, [committed]);
+  useEffect(() => { if (committed?.entity_id === 'save_planner_guidance') setGuidance(undefined); }, [committed]);
   const draft = local ?? { value: snapshot.policies, basis: snapshot.control_version };
+  const guidanceDraft = guidance ?? { value: snapshot.planner_guidance ?? '', basis: snapshot.control_version };
   function update(value: PolicyConfiguration) { setLocal({ value, basis: draft.basis }); }
   return <><PageHeading title="Execution" description="Choose how future work runs and inspect your connected Runners." />
+    <form className="card editor" aria-label="Planner guidance settings" onSubmit={async (event) => { event.preventDefault(); if (await save('save_planner_guidance', { guidance: guidanceDraft.value }, guidanceDraft.basis)) setGuidance(undefined); }}><fieldset disabled={disabled}>
+      <h2>Planner guidance</h2><Field label="Planner guidance" multiline rows={4} maxLength={65536} value={guidanceDraft.value} onChange={(value) => setGuidance({ value, basis: guidanceDraft.basis })} hint="Your instructions for future Planner discussions. Each Todo also keeps its own capture, history and current Project context." />
+      <div className="button-row"><Button type="submit">Save Planner guidance</Button><Button type="button" variant="outline" onClick={() => setGuidance(undefined)}>Reload saved guidance</Button></div>{guidance && <p className="hint">Unsaved Planner guidance</p>}
+    </fieldset></form>
     <section className="card runner-section"><div className="section-label"><h2>Runners & installed tools</h2><Button variant="outline" onClick={refresh}>Refresh status</Button></div>
       {infrastructureError && <p role="alert">{infrastructureError.message}</p>}
       {!infrastructure && !infrastructureError && <p>Loading Runner status…</p>}

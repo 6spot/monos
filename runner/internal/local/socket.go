@@ -95,8 +95,7 @@ func (s *Service) Handle(ctx context.Context, conn *net.UnixConn, r Request) (Re
 	var retained journal.Request
 	switch r.Action {
 	case "prepare":
-		env := map[string]any{"schema_version": 1, "request_id": r.RequestID, "scope_id": d.TaskID, "name": r.Name, "expected_control_version": d.ControlVersion, "payload": r.Payload}
-		raw, _, e := wire.Canonical(env)
+		raw, e := prepareEnvelope(d, r)
 		if e != nil {
 			return Response{}, e
 		}
@@ -130,6 +129,17 @@ func (s *Service) Handle(ctx context.Context, conn *net.UnixConn, r Request) (Re
 	}
 	return Response{EnvelopeJSON: string(retained.Raw), Digest: retained.Digest, Credential: credential, Endpoint: s.Control.Config.Endpoint, CA: ca}, nil
 }
+
+func prepareEnvelope(d protocol.Dispatch, r Request) ([]byte, error) {
+	scope, err := wire.ScopeID(d)
+	if err != nil {
+		return nil, err
+	}
+	env := map[string]any{"schema_version": 1, "request_id": r.RequestID, "scope_id": scope, "name": r.Name, "expected_control_version": d.ControlVersion, "payload": r.Payload}
+	raw, _, err := wire.Canonical(env)
+	return raw, err
+}
+
 func (s *Service) Serve(ctx context.Context, path string) error {
 	listener, err := net.ListenUnix("unix", &net.UnixAddr{Name: path, Net: "unix"})
 	if err != nil {

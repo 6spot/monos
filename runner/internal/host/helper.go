@@ -220,6 +220,13 @@ func createTraversalRoot(path string, uid, gid int) error {
 	}
 	return nil
 }
+func executionDirectories(d protocol.Dispatch) []string {
+	if d.TodoID != nil {
+		return []string{"scratch", "data", "cache", "state", "tmp", "config"}
+	}
+	return []string{"scratch", "workspace", "common", "data", "cache", "state", "tmp", "config"}
+}
+
 func prepare(d protocol.Dispatch) error {
 	account, err := user.Lookup("me")
 	if err != nil {
@@ -244,7 +251,7 @@ func prepare(d protocol.Dispatch) error {
 	if err = trustedDir(base, 0); err != nil {
 		return err
 	}
-	for _, name := range []string{"scratch", "workspace", "common", "data", "cache", "state", "tmp", "config"} {
+	for _, name := range executionDirectories(d) {
 		p := Path(d.AttemptID, name)
 		err = os.Mkdir(p, 0750)
 		if err == nil {
@@ -601,8 +608,8 @@ func Handle(ctx context.Context, r Request) (Status, error) {
 			return Status{}, e
 		}
 		op := r.Operation
-		if m.Dispatch.DispatchID != op.DispatchID || m.Dispatch.ResourceID != op.ResourceID {
-			return Status{}, fmt.Errorf("effect dispatch/resource conflict")
+		if err := ValidateEffectScope(m.Dispatch, *op); err != nil {
+			return Status{}, err
 		}
 		if m.BootID == "" {
 			return Status{}, fmt.Errorf("missing boot ownership")

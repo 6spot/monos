@@ -2,6 +2,7 @@ package journal
 
 import (
 	"bytes"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"testing"
@@ -21,6 +22,76 @@ func openTest(t *testing.T) *DB {
 	}
 	t.Cleanup(func() { db.Close() })
 	return db
+}
+
+func TestOperationReplayComparesResourceValuesAndAbsence(t *testing.T) {
+	for _, resource := range []*string{nil, testString("repo")} {
+		db := openTest(t)
+		op := protocol.Operation{OperationID: "op", AttemptID: "attempt", DispatchID: "dispatch", Kind: protocol.Stop, RequestID: "request", ResourceID: resource, SchemaVersion: 1, State: protocol.StateAdmitted}
+		if err := db.BeginEffect(op); err != nil {
+			t.Fatal(err)
+		}
+		raw, err := json.Marshal(op)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var replay protocol.Operation
+		if err = json.Unmarshal(raw, &replay); err != nil {
+			t.Fatal(err)
+		}
+		if err = db.BeginEffect(replay); err != nil {
+			t.Fatalf("decoded replay conflicted: %v", err)
+		}
+		if resource == nil {
+			replay.ResourceID = testString("repo")
+		} else {
+			replay.ResourceID = nil
+		}
+		if err = db.BeginEffect(replay); err != ErrConflict {
+			t.Fatalf("changed resource presence accepted: %v", err)
+		}
+	}
+}
+
+func TestTodoDispatchAndUnsentHandoffSurviveJournalReopen(t *testing.T) {
+	root := t.TempDir()
+	if err := os.Chmod(root, 0700); err != nil {
+		t.Fatal(err)
+	}
+	path := filepath.Join(root, "journal.sqlite")
+	db, err := Open(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	dispatch := protocol.Dispatch{AttemptID: "attempt", DispatchID: "dispatch", TodoID: testString("todo"), Kind: "planner", SourceMessageID: testString("source")}
+	if err = db.SaveStart(Start{Dispatch: dispatch, BootID: "boot", Phase: "running", Cgroup: "group"}); err != nil {
+		t.Fatal(err)
+	}
+	const raw = `{"schema_version":1,"request_id":"request","scope_id":"todo","expected_control_version":0,"name":"commit_discussion_turn","payload":{"reply":"exact reply","working_requirement_state":"state","source_message_id":"source","source_watermark":1}}`
+	first, err := db.PutRequest("attempt", []byte(raw))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = db.Close(); err != nil {
+		t.Fatal(err)
+	}
+	db, err = Open(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+	start, err := db.Start("attempt")
+	if err != nil || start.Dispatch.TodoID == nil || *start.Dispatch.TodoID != "todo" || start.Dispatch.TaskID != nil || start.Dispatch.ResourceID != nil {
+		t.Fatalf("Todo lineage changed: %+v %v", start, err)
+	}
+	retained, err := db.Request("attempt", "request")
+	if err != nil || !bytes.Equal(first.Raw, retained.Raw) || first.Digest != retained.Digest {
+		t.Fatal("retained handoff changed after reopen", err)
+	}
+	changed := bytes.ReplaceAll([]byte(raw), []byte(`"scope_id":"todo"`), []byte(`"scope_id":"other"`))
+	if _, err = db.PutRequest("attempt", changed); err != ErrConflict {
+		t.Fatal("scope replacement accepted", err)
+	}
 }
 func envelope(payload string) []byte {
 	return []byte(`{"schema_version":1,"request_id":"request-a","scope_id":"task-a","name":"complete_node","expected_control_version":1,"payload":{"summary":"` + payload + `"}}`)
@@ -166,3 +237,5 @@ func TestCaptureAttentionCanBeRecoveredWithoutDuplicateObservation(t *testing.T)
 		t.Fatalf("lost retained alert: %v %v", found, err)
 	}
 }
+
+func testString(value string) *string { return &value }

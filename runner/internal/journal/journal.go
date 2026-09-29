@@ -211,7 +211,7 @@ func (d *DB) BeginEffect(op protocol.Operation) error {
 	if err = json.Unmarshal(oldRaw, &old); err != nil {
 		return err
 	}
-	if old.AttemptID != op.AttemptID || old.DispatchID != op.DispatchID || old.Kind != op.Kind || old.ResourceID != op.ResourceID || old.RequestID != op.RequestID {
+	if old.AttemptID != op.AttemptID || old.DispatchID != op.DispatchID || old.Kind != op.Kind || !wire.SameResource(old.ResourceID, op.ResourceID) || old.RequestID != op.RequestID {
 		return ErrConflict
 	}
 	return tx.Commit()

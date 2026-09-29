@@ -37,6 +37,15 @@ test('real login, Role/Project/policy/provider persistence, drafts and responsiv
   await page.screenshot({ path: info.outputPath('projects-desktop.png'), fullPage: true });
   await navigate(page, 'Execution'); await page.getByRole('checkbox', { name: 'Set a global default policy' }).check();
   await page.getByLabel('Default model', { exact: true }).fill('provider/new-manual-model'); await save(page); await page.reload(); await expect(page.getByLabel('Default model', { exact: true })).toHaveValue('provider/new-manual-model');
+  await page.getByLabel('Planner guidance', { exact: true }).fill('Ask focused questions. Keep each Todo discussion independent.');
+  await page.getByRole('button', { name: 'Save Planner guidance', exact: true }).click();
+  await expect(page.getByText('Unsaved Planner guidance', { exact: true })).toHaveCount(0);
+  await page.reload(); await expect(page.getByLabel('Planner guidance', { exact: true })).toHaveValue('Ask focused questions. Keep each Todo discussion independent.');
+  await page.getByLabel('Planner guidance', { exact: true }).fill('Unfinished Planner guidance');
+  await navigate(page, 'Roles'); await navigate(page, 'Execution');
+  await expect(page.getByLabel('Planner guidance', { exact: true })).toHaveValue('Unfinished Planner guidance');
+  await page.getByRole('button', { name: 'Reload saved guidance', exact: true }).click();
+  await expect(page.getByLabel('Planner guidance', { exact: true })).toHaveValue('Ask focused questions. Keep each Todo discussion independent.');
   await navigate(page, 'GitHub');
   const key = generateKeyPairSync('rsa', { modulusLength: 2048 }).privateKey.export({ type: 'pkcs8', format: 'pem' }).toString();
   await page.getByLabel('GitHub App ID', { exact: true }).fill('123'); await page.getByLabel('Installation ID', { exact: true }).fill('456'); await page.getByLabel('App private key', { exact: true }).fill(key); await save(page);

@@ -13,6 +13,8 @@ type TodoCursor string
 
 type TodoCaptureText string
 
+type DiscussionText string
+
 type CommandEnvelope struct {
 	ExpectedControlVersion int64               `json:"expected_control_version"`
 	Name                   CommandEnvelopeName `json:"name"`
@@ -23,17 +25,30 @@ type CommandEnvelope struct {
 }
 
 type CommandPayload struct {
-	ArtifactIDS        []string `json:"artifact_ids,omitempty"`
-	HandledGuidanceIDS []string `json:"handled_guidance_ids,omitempty"`
-	Reply              *string  `json:"reply,omitempty"`
-	ResourceID         *string  `json:"resource_id,omitempty"`
-	Routing            *Routing `json:"routing,omitempty"`
-	SourceWatermark    *int64   `json:"source_watermark,omitempty"`
-	Summary            *string  `json:"summary,omitempty"`
+	ArtifactIDS             []string     `json:"artifact_ids,omitempty"`
+	Cursor                  *string      `json:"cursor,omitempty"`
+	HandledGuidanceIDS      []string     `json:"handled_guidance_ids,omitempty"`
+	ProjectContextDigest    *string      `json:"project_context_digest,omitempty"`
+	ProjectContextVersion   *int64       `json:"project_context_version,omitempty"`
+	Reply                   *string      `json:"reply,omitempty"`
+	ResolvedWatermark       *int64       `json:"resolved_watermark,omitempty"`
+	ResourceID              *string      `json:"resource_id,omitempty"`
+	Routing                 *Routing     `json:"routing,omitempty"`
+	SourceMessageID         *string      `json:"source_message_id,omitempty"`
+	SourceWatermark         *int64       `json:"source_watermark,omitempty"`
+	Summary                 *string      `json:"summary,omitempty"`
+	TaskPreview             *TaskPreview `json:"task_preview,omitempty"`
+	WorkingRequirementState *string      `json:"working_requirement_state,omitempty"`
 }
 
 type Routing struct {
 	Kind RoutingKind `json:"kind"`
+}
+
+type TaskPreview struct {
+	ProjectID     *string `json:"project_id,omitempty"`
+	Specification string  `json:"specification"`
+	Title         string  `json:"title"`
 }
 
 type CommandSubmission struct {
@@ -57,14 +72,40 @@ type ErrorInfo struct {
 }
 
 type EffectResult struct {
-	GitCommit       *string `json:"git_commit,omitempty"`
-	GitTree         *string `json:"git_tree,omitempty"`
-	Message         *string `json:"message,omitempty"`
-	Path            *string `json:"path,omitempty"`
-	Reply           *string `json:"reply,omitempty"`
-	SourceWatermark *int64  `json:"source_watermark,omitempty"`
-	WorkspaceID     *string `json:"workspace_id,omitempty"`
-	WriterAbsent    *bool   `json:"writer_absent,omitempty"`
+	CacheUpdated      *bool           `json:"cache_updated,omitempty"`
+	DiscussionPage    *DiscussionPage `json:"discussion_page,omitempty"`
+	GitCommit         *string         `json:"git_commit,omitempty"`
+	GitTree           *string         `json:"git_tree,omitempty"`
+	Message           *string         `json:"message,omitempty"`
+	MessageID         *string         `json:"message_id,omitempty"`
+	Path              *string         `json:"path,omitempty"`
+	Reply             *string         `json:"reply,omitempty"`
+	ResolvedWatermark *int64          `json:"resolved_watermark,omitempty"`
+	SourceWatermark   *int64          `json:"source_watermark,omitempty"`
+	WorkspaceID       *string         `json:"workspace_id,omitempty"`
+	WriterAbsent      *bool           `json:"writer_absent,omitempty"`
+}
+
+type DiscussionPage struct {
+	Cursor        string              `json:"cursor"`
+	HasMore       bool                `json:"has_more"`
+	Messages      []DiscussionMessage `json:"messages"`
+	SchemaVersion int64               `json:"schema_version"`
+	TodoID        string              `json:"todo_id"`
+}
+
+type DiscussionMessage struct {
+	Author                Author       `json:"author"`
+	Content               string       `json:"content"`
+	CreatedAt             string       `json:"created_at"`
+	Disposition           *Disposition `json:"disposition,omitempty"`
+	MessageID             string       `json:"message_id"`
+	ProjectContextVersion *int64       `json:"project_context_version,omitempty"`
+	ProjectID             *string      `json:"project_id,omitempty"`
+	Sequence              int64        `json:"sequence"`
+	SourceMessageID       *string      `json:"source_message_id,omitempty"`
+	SourceWatermark       *int64       `json:"source_watermark,omitempty"`
+	TaskPreview           *TaskPreview `json:"task_preview,omitempty"`
 }
 
 type Frame struct {
@@ -92,23 +133,27 @@ type Frame struct {
 }
 
 type Dispatch struct {
-	AttemptID         string          `json:"attempt_id"`
-	ControlVersion    int64           `json:"control_version"`
-	DispatchID        string          `json:"dispatch_id"`
-	FencingGeneration int64           `json:"fencing_generation"`
-	Kind              DispatchKind    `json:"kind"`
-	LogMode           *LogModeElement `json:"log_mode,omitempty"`
-	Model             Model           `json:"model"`
-	MutationAllowed   bool            `json:"mutation_allowed"`
-	NodeActivation    int64           `json:"node_activation"`
-	NodeID            *string         `json:"node_id,omitempty"`
-	ProcessReleased   bool            `json:"process_released"`
-	Prompt            string          `json:"prompt"`
-	ResourceID        string          `json:"resource_id"`
-	RunnerID          string          `json:"runner_id"`
-	RuntimeID         RuntimeID       `json:"runtime_id"`
-	SourceWatermark   int64           `json:"source_watermark"`
-	TaskID            string          `json:"task_id"`
+	AttemptID             string          `json:"attempt_id"`
+	ControlVersion        int64           `json:"control_version"`
+	DispatchID            string          `json:"dispatch_id"`
+	FencingGeneration     int64           `json:"fencing_generation"`
+	Kind                  DispatchKind    `json:"kind"`
+	LogMode               *LogModeElement `json:"log_mode,omitempty"`
+	Model                 Model           `json:"model"`
+	MutationAllowed       bool            `json:"mutation_allowed"`
+	NodeActivation        int64           `json:"node_activation"`
+	NodeID                *string         `json:"node_id,omitempty"`
+	ProcessReleased       bool            `json:"process_released"`
+	ProjectContextDigest  *string         `json:"project_context_digest,omitempty"`
+	ProjectContextVersion *int64          `json:"project_context_version,omitempty"`
+	Prompt                string          `json:"prompt"`
+	ResourceID            *string         `json:"resource_id,omitempty"`
+	RunnerID              string          `json:"runner_id"`
+	RuntimeID             RuntimeID       `json:"runtime_id"`
+	SourceMessageID       *string         `json:"source_message_id,omitempty"`
+	SourceWatermark       int64           `json:"source_watermark"`
+	TaskID                *string         `json:"task_id,omitempty"`
+	TodoID                *string         `json:"todo_id,omitempty"`
 }
 
 type RuntimeEvent struct {
@@ -130,7 +175,7 @@ type Operation struct {
 	Kind          OperationKind  `json:"kind"`
 	OperationID   string         `json:"operation_id"`
 	RequestID     string         `json:"request_id"`
-	ResourceID    string         `json:"resource_id"`
+	ResourceID    *string        `json:"resource_id,omitempty"`
 	Result        *EffectResult  `json:"result,omitempty"`
 	SchemaVersion int64          `json:"schema_version"`
 	State         OperationState `json:"state"`
@@ -274,6 +319,7 @@ type PayloadClass struct {
 	AppID           *string                 `json:"app_id,omitempty"`
 	InstallationID  *string                 `json:"installation_id,omitempty"`
 	PrivateKey      *string                 `json:"private_key,omitempty"`
+	Guidance        *string                 `json:"guidance,omitempty"`
 }
 
 type ExecutionPolicy struct {
@@ -309,12 +355,13 @@ type ConfigurationResult struct {
 }
 
 type ConfigurationSnapshot struct {
-	ControlVersion int64                      `json:"control_version"`
-	Github         *GitHubConfigurationStatus `json:"github,omitempty"`
-	Policies       PolicyConfiguration        `json:"policies"`
-	Projects       []ProjectConfiguration     `json:"projects"`
-	Roles          []RoleConfiguration        `json:"roles"`
-	SchemaVersion  int64                      `json:"schema_version"`
+	ControlVersion  int64                      `json:"control_version"`
+	Github          *GitHubConfigurationStatus `json:"github,omitempty"`
+	PlannerGuidance *string                    `json:"planner_guidance,omitempty"`
+	Policies        PolicyConfiguration        `json:"policies"`
+	Projects        []ProjectConfiguration     `json:"projects"`
+	Roles           []RoleConfiguration        `json:"roles"`
+	SchemaVersion   int64                      `json:"schema_version"`
 }
 
 type GitHubConfigurationStatus struct {
@@ -617,13 +664,172 @@ type TodoCommandResult struct {
 	Todo          *TodoRecord               `json:"todo,omitempty"`
 }
 
+type DiscussionStatus struct {
+	CurrentSource           *DiscussionSource `json:"current_source,omitempty"`
+	DiscussionVersion       int64             `json:"discussion_version"`
+	LatestSequence          int64             `json:"latest_sequence"`
+	ProjectContextDigest    string            `json:"project_context_digest"`
+	ProjectContextVersion   int64             `json:"project_context_version"`
+	ResolvedWatermark       int64             `json:"resolved_watermark"`
+	SchemaVersion           int64             `json:"schema_version"`
+	TodoID                  string            `json:"todo_id"`
+	WorkingRequirementState *string           `json:"working_requirement_state,omitempty"`
+}
+
+type DiscussionSource struct {
+	AttemptID       *string                `json:"attempt_id,omitempty"`
+	EndReason       *string                `json:"end_reason,omitempty"`
+	MessageID       string                 `json:"message_id"`
+	SourceWatermark int64                  `json:"source_watermark"`
+	Status          DiscussionSourceStatus `json:"status"`
+	WaitingReason   *string                `json:"waiting_reason,omitempty"`
+}
+
+type DiscussionSubmitCommand struct {
+	Name          DiscussionSubmitCommandName    `json:"name"`
+	Payload       DiscussionSubmitCommandPayload `json:"payload"`
+	RequestID     string                         `json:"request_id"`
+	SchemaVersion int64                          `json:"schema_version"`
+	TodoID        string                         `json:"todo_id"`
+}
+
+type DiscussionSubmitCommandPayload struct {
+	Content   string `json:"content"`
+	MessageID string `json:"message_id"`
+}
+
+type DiscussionRetryCommand struct {
+	ExpectedDiscussionVersion int64                         `json:"expected_discussion_version"`
+	Name                      DiscussionRetryCommandName    `json:"name"`
+	Payload                   DiscussionRetryCommandPayload `json:"payload"`
+	RequestID                 string                        `json:"request_id"`
+	SchemaVersion             int64                         `json:"schema_version"`
+	TodoID                    string                        `json:"todo_id"`
+}
+
+type DiscussionRetryCommandPayload struct {
+	SourceMessageID string `json:"source_message_id"`
+}
+
+type DiscussionWithdrawCommand struct {
+	ExpectedDiscussionVersion int64                            `json:"expected_discussion_version"`
+	Name                      DiscussionWithdrawCommandName    `json:"name"`
+	Payload                   DiscussionWithdrawCommandPayload `json:"payload"`
+	RequestID                 string                           `json:"request_id"`
+	SchemaVersion             int64                            `json:"schema_version"`
+	TodoID                    string                           `json:"todo_id"`
+}
+
+type DiscussionWithdrawCommandPayload struct {
+	SourceMessageID string `json:"source_message_id"`
+}
+
+type DiscussionStopCommand struct {
+	ExpectedDiscussionVersion int64                        `json:"expected_discussion_version"`
+	Name                      DiscussionStopCommandName    `json:"name"`
+	Payload                   DiscussionStopCommandPayload `json:"payload"`
+	RequestID                 string                       `json:"request_id"`
+	SchemaVersion             int64                        `json:"schema_version"`
+	TodoID                    string                       `json:"todo_id"`
+}
+
+type DiscussionStopCommandPayload struct {
+	AttemptID       string `json:"attempt_id"`
+	SourceMessageID string `json:"source_message_id"`
+}
+
+type DiscussionCommand struct {
+	Name                      DiscussionCommandName    `json:"name"`
+	Payload                   DiscussionCommandPayload `json:"payload"`
+	RequestID                 string                   `json:"request_id"`
+	SchemaVersion             int64                    `json:"schema_version"`
+	TodoID                    string                   `json:"todo_id"`
+	ExpectedDiscussionVersion *int64                   `json:"expected_discussion_version,omitempty"`
+}
+
+type DiscussionCommandPayload struct {
+	Content         *string `json:"content,omitempty"`
+	MessageID       *string `json:"message_id,omitempty"`
+	SourceMessageID *string `json:"source_message_id,omitempty"`
+	AttemptID       *string `json:"attempt_id,omitempty"`
+}
+
+type DiscussionCommandResult struct {
+	AttemptID         *string                   `json:"attempt_id,omitempty"`
+	DiscussionVersion *int64                    `json:"discussion_version,omitempty"`
+	MessageID         *string                   `json:"message_id,omitempty"`
+	OperationID       *string                   `json:"operation_id,omitempty"`
+	RequestID         string                    `json:"request_id"`
+	SchemaVersion     int64                     `json:"schema_version"`
+	Status            ConfigurationResultStatus `json:"status"`
+	TodoID            *string                   `json:"todo_id,omitempty"`
+}
+
+type TodoAttemptListPage struct {
+	Attempts      []TodoAttemptStatus `json:"attempts"`
+	Cursor        string              `json:"cursor"`
+	HasMore       bool                `json:"has_more"`
+	SchemaVersion int64               `json:"schema_version"`
+	TodoID        string              `json:"todo_id"`
+}
+
+type TodoAttemptStatus struct {
+	ActivityAt      *string               `json:"activity_at,omitempty"`
+	AttemptID       string                `json:"attempt_id"`
+	CreatedAt       string                `json:"created_at"`
+	EndReason       *string               `json:"end_reason,omitempty"`
+	Kind            TodoAttemptStatusKind `json:"kind"`
+	LatestSequence  int64                 `json:"latest_sequence"`
+	LogMode         AttemptStatusLogMode  `json:"log_mode"`
+	MutationAllowed bool                  `json:"mutation_allowed"`
+	ProcessAbsent   bool                  `json:"process_absent"`
+	ProcessReleased bool                  `json:"process_released"`
+	RunnerID        string                `json:"runner_id"`
+	SchemaVersion   int64                 `json:"schema_version"`
+	Started         bool                  `json:"started"`
+	State           AttemptStatusState    `json:"state"`
+	TodoID          string                `json:"todo_id"`
+	VisibleSequence int64                 `json:"visible_sequence"`
+}
+
+type TodoAttemptLogPage struct {
+	AttemptID     string         `json:"attempt_id"`
+	Cursor        string         `json:"cursor"`
+	Events        []RuntimeEvent `json:"events"`
+	GapAfter      int64          `json:"gap_after"`
+	HasMore       bool           `json:"has_more"`
+	SchemaVersion int64          `json:"schema_version"`
+	TodoID        string         `json:"todo_id"`
+}
+
+type TodoOperationStatus struct {
+	AttemptID       string         `json:"attempt_id"`
+	Attention       bool           `json:"attention"`
+	EndReason       *string        `json:"end_reason,omitempty"`
+	FailureKind     *string        `json:"failure_kind,omitempty"`
+	Kind            OperationKind  `json:"kind"`
+	OperationID     string         `json:"operation_id"`
+	ProcessAbsent   bool           `json:"process_absent"`
+	ProcessReleased bool           `json:"process_released"`
+	SchemaVersion   int64          `json:"schema_version"`
+	State           OperationState `json:"state"`
+	TodoID          string         `json:"todo_id"`
+}
+
+type PlannerGuidance struct {
+	Guidance string `json:"guidance"`
+}
+
 type CommandEnvelopeName string
 
 const (
-	CommitTaskTurn        CommandEnvelopeName = "commit_task_turn"
-	NameCompleteNode      CommandEnvelopeName = "complete_node"
-	NameInspectRepository CommandEnvelopeName = "inspect_repository"
-	NameOpenWorkspace     CommandEnvelopeName = "open_workspace"
+	CommitDiscussionTurn          CommandEnvelopeName = "commit_discussion_turn"
+	CommitTaskTurn                CommandEnvelopeName = "commit_task_turn"
+	NameCompleteNode              CommandEnvelopeName = "complete_node"
+	NameInspectRepository         CommandEnvelopeName = "inspect_repository"
+	NameOpenWorkspace             CommandEnvelopeName = "open_workspace"
+	ReadDiscussion                CommandEnvelopeName = "read_discussion"
+	UpdateWorkingRequirementState CommandEnvelopeName = "update_working_requirement_state"
 )
 
 type RoutingKind string
@@ -648,6 +854,19 @@ const (
 	VersionConflict    Code = "version_conflict"
 )
 
+type Author string
+
+const (
+	Assistant Author = "assistant"
+	Owner     Author = "owner"
+)
+
+type Disposition string
+
+const (
+	Withdrawn Disposition = "withdrawn"
+)
+
 type CommandResultStatus string
 
 const (
@@ -660,8 +879,8 @@ const (
 type DispatchKind string
 
 const (
-	Node    DispatchKind = "node"
-	Planner DispatchKind = "planner"
+	Node          DispatchKind = "node"
+	PurplePlanner DispatchKind = "planner"
 )
 
 type LogModeElement string
@@ -787,10 +1006,11 @@ const (
 type ConfigurationCommandName string
 
 const (
-	SaveGithub   ConfigurationCommandName = "save_github"
-	SavePolicies ConfigurationCommandName = "save_policies"
-	SaveProject  ConfigurationCommandName = "save_project"
-	SaveRole     ConfigurationCommandName = "save_role"
+	SaveGithub          ConfigurationCommandName = "save_github"
+	SavePlannerGuidance ConfigurationCommandName = "save_planner_guidance"
+	SavePolicies        ConfigurationCommandName = "save_policies"
+	SaveProject         ConfigurationCommandName = "save_project"
+	SaveRole            ConfigurationCommandName = "save_role"
 )
 
 type MergeMethod string
@@ -907,4 +1127,52 @@ const (
 	FluffyAssignTodoProject TodoCommandName = "assign_todo_project"
 	FluffyCaptureTodo       TodoCommandName = "capture_todo"
 	FluffySetTodoArchived   TodoCommandName = "set_todo_archived"
+)
+
+type DiscussionSourceStatus string
+
+const (
+	Interrupted  DiscussionSourceStatus = "interrupted"
+	Processing   DiscussionSourceStatus = "processing"
+	Settling     DiscussionSourceStatus = "settling"
+	StatusQueued DiscussionSourceStatus = "queued"
+)
+
+type DiscussionSubmitCommandName string
+
+const (
+	PurpleSubmitDiscussionMessage DiscussionSubmitCommandName = "submit_discussion_message"
+)
+
+type DiscussionRetryCommandName string
+
+const (
+	PurpleRetryDiscussionTurn DiscussionRetryCommandName = "retry_discussion_turn"
+)
+
+type DiscussionWithdrawCommandName string
+
+const (
+	PurpleWithdrawDiscussionTurn DiscussionWithdrawCommandName = "withdraw_discussion_turn"
+)
+
+type DiscussionStopCommandName string
+
+const (
+	PurpleStopDiscussionTurn DiscussionStopCommandName = "stop_discussion_turn"
+)
+
+type DiscussionCommandName string
+
+const (
+	FluffyRetryDiscussionTurn     DiscussionCommandName = "retry_discussion_turn"
+	FluffyStopDiscussionTurn      DiscussionCommandName = "stop_discussion_turn"
+	FluffySubmitDiscussionMessage DiscussionCommandName = "submit_discussion_message"
+	FluffyWithdrawDiscussionTurn  DiscussionCommandName = "withdraw_discussion_turn"
+)
+
+type TodoAttemptStatusKind string
+
+const (
+	FluffyPlanner TodoAttemptStatusKind = "planner"
 )

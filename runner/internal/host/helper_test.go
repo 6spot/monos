@@ -105,13 +105,13 @@ func TestAtomicRecordIgnoresUnfinishedTemporaryFile(t *testing.T) {
 }
 
 func TestOperationReplayBindsImmutableIdentity(t *testing.T) {
-	a := protocol.Operation{OperationID: "op", AttemptID: "a", DispatchID: "d", ResourceID: "r", RequestID: "req", SchemaVersion: 1, Kind: protocol.KindCompleteNode}
+	a := protocol.Operation{OperationID: "op", AttemptID: "a", DispatchID: "d", ResourceID: ptr("r"), RequestID: "req", SchemaVersion: 1, Kind: protocol.KindCompleteNode}
 	b := a
 	b.State = "recovery"
 	if !sameOperation(a, b) {
 		t.Fatal("mutable control projection rejected")
 	}
-	b.ResourceID = "other"
+	b.ResourceID = ptr("other")
 	if sameOperation(a, b) {
 		t.Fatal("changed immutable resource accepted")
 	}
@@ -137,7 +137,7 @@ func TestDispatchIdentityMustMatchHelperRequest(t *testing.T) {
 }
 
 func TestRevocationTombstoneRejectsLateStartAndOwnershipReplacement(t *testing.T) {
-	d := protocol.Dispatch{AttemptID: "a", DispatchID: "d", RunnerID: "runner", TaskID: "task", ResourceID: "repo", Kind: protocol.Node, RuntimeID: protocol.Opencode, Model: FreeModel, Prompt: "probe"}
+	d := protocol.Dispatch{AttemptID: "a", DispatchID: "d", RunnerID: "runner", TaskID: ptr("task"), ResourceID: ptr("repo"), Kind: protocol.Node, RuntimeID: protocol.Opencode, Model: FreeModel, Prompt: "probe"}
 	if err := ValidateRequest(Request{Action: "tombstone", AttemptID: "a", Dispatch: &d}); err != nil {
 		t.Fatal(err)
 	}
@@ -163,7 +163,7 @@ func TestRevocationTombstoneRejectsLateStartAndOwnershipReplacement(t *testing.T
 		t.Fatal("replaced launched ownership with never-launched tombstone")
 	}
 	changed := d
-	changed.ResourceID = "other"
+	changed.ResourceID = ptr("other")
 	if _, err = revokedManifest(&revoked, changed, "boot"); err == nil {
 		t.Fatal("changed tombstone identity")
 	}

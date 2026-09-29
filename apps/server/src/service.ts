@@ -10,18 +10,20 @@ import type { AttemptIdentity } from './auth.ts';
 import { assertCurrentNode } from './task-records.ts';
 import { DispatchQueue } from './dispatch-queue.ts';
 import { derivedTaskState } from './owner-execution.ts';
+import { handleDiscussionCommand, lockDiscussion } from './discussion-state.ts';
+import type { DiscussionControl, DiscussionContext } from './discussion-state.ts';
 
 interface RunnerRow { id: string; incarnation: string; connected: boolean; ready: boolean; available: boolean; capacity: number; connection_instance: string | null }
 interface TaskRow { id: string; resource_id: string; control_version: string; project_id: string | null }
 interface AttemptRow {
-  id: string; runner_id: string; task_id: string; node_id: string | null; dispatch_id: string;
+  id: string; runner_id: string; task_id: string | null; todo_id: string | null; discussion_context: DiscussionContext | null; node_id: string | null; dispatch_id: string;
   kind: 'node' | 'planner'; fencing_generation: string; node_activation: string;
   mutation_allowed: boolean; process_released: boolean; process_absent: boolean; started: boolean; exit_observed: boolean; launch: Dispatch;
   state: 'QUEUED' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'CANCELLED';
 }
-interface OperationRow { id: string; attempt_id: string; schema_version: number; kind: Operation['kind']; request_id: string; state: Operation['state']; resource_id: string; result: EffectResult | null; failure_kind: OperationResult['failure_kind'] | null }
+interface OperationRow { id: string; attempt_id: string; schema_version: number; kind: Operation['kind']; request_id: string; state: Operation['state']; resource_id: string | null; result: EffectResult | null; failure_kind: OperationResult['failure_kind'] | null }
 interface ReceiptRow { digest: string; command_name: string; response: CommandResult; operation_id: string | null }
-interface Locked { runner: RunnerRow; task: TaskRow; attempt: AttemptRow }
+interface Locked { runner: RunnerRow; task: TaskRow | null; discussion: DiscussionControl | null; attempt: AttemptRow }
 
 async function lockRunner(tx: Transaction, id: string): Promise<RunnerRow> {
   const result = await tx.query<RunnerRow>("SELECT *, (connected AND ready AND last_seen > now() - interval '15 seconds') AS available FROM runners WHERE id=$1 FOR UPDATE", [id]);
@@ -34,9 +36,10 @@ async function lockAttempt(tx: Transaction, id: string, runnerId?: string): Prom
   if (!identity || (runnerId !== undefined && identity.runner_id !== runnerId)) throw new CommandError('denied_scope', 'Attempt is outside caller scope');
   // Every writer uses this order: Runner capacity -> Task control -> Attempt -> operation.
   const runner = await lockRunner(tx, identity.runner_id);
-  const task = (await tx.query<TaskRow>('SELECT * FROM tasks WHERE id=$1 FOR UPDATE', [identity.task_id])).rows[0]!;
+  const discussion = identity.todo_id ? await lockDiscussion(tx, identity.todo_id) : null;
+  const task = identity.task_id ? (await tx.query<TaskRow>('SELECT * FROM tasks WHERE id=$1 FOR UPDATE', [identity.task_id])).rows[0]! : null;
   const attempt = (await tx.query<AttemptRow>('SELECT * FROM attempts WHERE id=$1 FOR UPDATE', [id])).rows[0]!;
-  return { runner, task, attempt };
+  return { runner, task, discussion, attempt };
 }
 
 function checkChannel(runner: RunnerRow, incarnation: number): void {
@@ -52,16 +55,22 @@ function toDispatch(row: AttemptRow): Dispatch {
   return { ...row.launch, mutation_allowed: row.mutation_allowed, process_released: row.process_released };
 }
 function toOperation(row: OperationRow, attempt: Pick<AttemptRow, 'dispatch_id'>): Operation {
-  return { schema_version: row.schema_version, operation_id: row.id, attempt_id: row.attempt_id, dispatch_id: attempt.dispatch_id, request_id: row.request_id, kind: row.kind, resource_id: row.resource_id, state: row.state, ...(row.result ? { result: row.result } : {}) };
+  return { schema_version: row.schema_version, operation_id: row.id, attempt_id: row.attempt_id, dispatch_id: attempt.dispatch_id, request_id: row.request_id, kind: row.kind, ...(row.resource_id ? { resource_id: row.resource_id } : {}), state: row.state, ...(row.result ? { result: row.result } : {}) };
 }
 
 async function taskEvent(tx: Transaction, attempt: AttemptRow, kind: string, body: unknown, operationId: string | null = null): Promise<void> {
+  if (!attempt.task_id) throw new CommandError('denied_scope', 'Todo Attempts cannot write Task events');
   const result = await tx.query<{ event_sequence: string }>('UPDATE tasks SET event_sequence=event_sequence+1 WHERE id=$1 RETURNING event_sequence', [attempt.task_id]);
   await tx.query('INSERT INTO task_events(task_id,sequence,kind,attempt_id,operation_id,body) VALUES($1,$2,$3,$4,$5,$6)', [attempt.task_id, result.rows[0]!.event_sequence, kind, attempt.id, operationId, body]);
 }
 
 async function missingFormalOutcome(tx: Transaction, attempt: AttemptRow, observation: string, exitCode?: number): Promise<void> {
   if (!attempt.mutation_allowed) return;
+  if (attempt.todo_id) {
+    await tx.query("UPDATE attempts SET mutation_allowed=false,state='FAILED',end_reason='missing_formal_outcome' WHERE id=$1", [attempt.id]);
+    await tx.query('UPDATE todo_discussion_controls SET version=version+1 WHERE todo_id=$1', [attempt.todo_id]);
+    await admitEffect(tx, attempt, 'stop', randomUUID()); return;
+  }
   await tx.query("UPDATE attempts SET mutation_allowed=false,state='FAILED',end_reason='missing_formal_outcome' WHERE id=$1", [attempt.id]);
   if (attempt.node_id) await tx.query("UPDATE nodes SET state='BLOCKED' WHERE id=$1", [attempt.node_id]);
   const state = attempt.node_id ? await derivedTaskState(tx, (await tx.query<{ plan_id: string }>('SELECT plan_id FROM tasks WHERE id=$1', [attempt.task_id])).rows[0]!.plan_id) : null;
@@ -155,20 +164,29 @@ export class BoundaryService {
     const { envelope: command, submission } = request;
     const result = await transaction(this.db, async (tx) => {
       await lockConfiguration(tx);
-      const { runner, task, attempt } = await lockAttempt(tx, identity.attempt_id);
+      const { runner, task, discussion, attempt } = await lockAttempt(tx, identity.attempt_id);
       checkIdentity(attempt, identity);
-      if (command.scope_id !== attempt.task_id) throw new CommandError('denied_scope', 'Command belongs to another scope');
+      if (command.scope_id !== (attempt.todo_id ?? attempt.task_id)) throw new CommandError('denied_scope', 'Command belongs to another scope');
       const receipt = (await tx.query<ReceiptRow>('SELECT * FROM command_receipts WHERE attempt_id=$1 AND scope_id=$2 AND request_id=$3', [attempt.id, command.scope_id, command.request_id])).rows[0];
       if (receipt) {
         if (receipt.digest !== submission.sha256 || receipt.command_name !== command.name) throw new CommandError('payload_conflict', 'Request ID already records different content');
         return receiptResponse(tx, receipt);
       }
-      guardNewCommand(command, { kind: attempt.kind, taskId: attempt.task_id, resourceId: task.resource_id, mutationAllowed: attempt.mutation_allowed, processReleased: attempt.process_released, controlVersion: Number(task.control_version), sourceWatermark: attempt.launch.source_watermark, connectionAvailable: runner.available && runner.connection_instance === this.instanceId });
+      if (discussion) {
+        guardNewCommand(command, { kind: attempt.kind, scopeId: discussion.todo_id, scopeKind: 'todo', mutationAllowed: attempt.mutation_allowed, processReleased: attempt.process_released, controlVersion: Number(discussion.version), sourceWatermark: attempt.launch.source_watermark, connectionAvailable: runner.available && runner.connection_instance === this.instanceId });
+        const outcome = await handleDiscussionCommand(tx, discussion, attempt, command);
+        const response: CommandResult = { schema_version: 1, request_id: command.request_id, status: 'committed', result: outcome.result, ...(outcome.operation_id ? { operation_id: outcome.operation_id } : {}) };
+        await tx.query('INSERT INTO command_receipts(attempt_id,scope_id,request_id,command_name,digest,schema_version,envelope_json,response,operation_id) VALUES($1,$2,$3,$4,$5,1,$6,$7,$8)', [attempt.id, discussion.todo_id, command.request_id, command.name, submission.sha256, submission.envelope_json, response, outcome.operation_id ?? null]);
+        this.options.beforeAdmissionCommit?.(); return response;
+      }
+      if (!task) throw new CommandError('denied_scope', 'Attempt owner is missing');
+      if (command.name === 'commit_discussion_turn' || command.name === 'read_discussion' || command.name === 'update_working_requirement_state') throw new CommandError('denied_scope', 'Todo command requires Todo Planner authority');
+      guardNewCommand(command, { kind: attempt.kind, taskId: attempt.task_id!, resourceId: task.resource_id, mutationAllowed: attempt.mutation_allowed, processReleased: attempt.process_released, controlVersion: Number(task.control_version), sourceWatermark: attempt.launch.source_watermark, connectionAvailable: runner.available && runner.connection_instance === this.instanceId });
       if (task.project_id && (command.name === 'open_workspace' || command.name === 'inspect_repository')) {
         if (!(await tx.query('SELECT id FROM project_resources WHERE id=$1 AND project_id=$2 AND active', [command.payload.resource_id, task.project_id])).rowCount) throw new CommandError('denied_scope', 'Resource is not available in this Project');
       }
       if (attempt.node_id) {
-        const node = await assertCurrentNode(tx, { task_id: attempt.task_id, node_id: attempt.node_id, node_activation: Number(attempt.node_activation) });
+        const node = await assertCurrentNode(tx, { task_id: attempt.task_id!, node_id: attempt.node_id, node_activation: Number(attempt.node_activation) });
         if (node.state !== 'RUNNING') throw new CommandError('stale_execution', 'Node is no longer running');
       }
       if (command.name === 'complete_node' || command.name === 'commit_task_turn') {
@@ -201,7 +219,7 @@ export class BoundaryService {
     });
   }
   private async lookupReceipt(tx: Transaction, attempt: AttemptRow, requestId: string): Promise<CommandResult> {
-    const receipt = (await tx.query<ReceiptRow>('SELECT * FROM command_receipts WHERE attempt_id=$1 AND scope_id=$2 AND request_id=$3', [attempt.id, attempt.task_id, requestId])).rows[0];
+    const receipt = (await tx.query<ReceiptRow>('SELECT * FROM command_receipts WHERE attempt_id=$1 AND scope_id=$2 AND request_id=$3', [attempt.id, attempt.todo_id ?? attempt.task_id, requestId])).rows[0];
     return receipt ? receiptResponse(tx, receipt) : { schema_version: 1, request_id: requestId, status: 'unknown' };
   }
   async recoverCommand(runnerId: string, attemptId: string, requestId: string): Promise<CommandResult> {
@@ -213,7 +231,7 @@ export class BoundaryService {
   async recoverOperation(runnerId: string, operationId: string): Promise<Operation> {
     const row = (await this.db.pool.query<OperationRow & { dispatch_id: string }>('SELECT o.*,a.dispatch_id FROM operations o JOIN attempts a ON a.id=o.attempt_id WHERE o.id=$1 AND a.runner_id=$2', [operationId, runnerId])).rows[0];
     if (!row) throw new CommandError('denied_scope', 'Operation is outside Runner recovery scope');
-    return { schema_version: row.schema_version, operation_id: row.id, attempt_id: row.attempt_id, dispatch_id: row.dispatch_id, request_id: row.request_id, kind: row.kind, resource_id: row.resource_id, state: row.state, ...(row.result ? { result: row.result } : {}) };
+    return { schema_version: row.schema_version, operation_id: row.id, attempt_id: row.attempt_id, dispatch_id: row.dispatch_id, request_id: row.request_id, kind: row.kind, ...(row.resource_id ? { resource_id: row.resource_id } : {}), state: row.state, ...(row.result ? { result: row.result } : {}) };
   }
   async inventory(runnerId: string, after?: string, snapshotId?: string): Promise<RunnerInventory> {
     let cursor: [string, string] = ['', ''];
@@ -322,12 +340,18 @@ export class BoundaryService {
       if (event.kind === 'capture_failed' && !attempt.process_released) {
         const completion = (await tx.query("SELECT 1 FROM operations WHERE attempt_id=$1 AND kind='complete_node'", [attempt.id])).rowCount;
         if (!completion && attempt.mutation_allowed) {
+          if (attempt.todo_id) {
+            await tx.query("UPDATE attempts SET mutation_allowed=false,state='FAILED',end_reason='capture_failed' WHERE id=$1", [attempt.id]);
+            await tx.query('UPDATE todo_discussion_controls SET version=version+1 WHERE todo_id=$1', [attempt.todo_id]);
+            await admitEffect(tx, attempt, 'stop', randomUUID());
+          } else {
           await tx.query("UPDATE attempts SET mutation_allowed=false,state='FAILED',end_reason='capture_failed' WHERE id=$1", [attempt.id]);
           if (attempt.node_id) await tx.query("UPDATE nodes SET state='BLOCKED' WHERE id=$1 AND activation=$2", [attempt.node_id, attempt.node_activation]);
           const state = attempt.node_id ? await derivedTaskState(tx, (await tx.query<{ plan_id: string }>('SELECT plan_id FROM tasks WHERE id=$1', [attempt.task_id])).rows[0]!.plan_id) : null;
           await tx.query('UPDATE tasks SET state=COALESCE($2,state),control_version=control_version+1 WHERE id=$1', [attempt.task_id, state]);
           await admitEffect(tx, attempt, 'stop', randomUUID());
           await taskEvent(tx, attempt, 'execution_capture_failed', { observation: 'capture_failed' });
+          }
         }
         // Admitted completion already revoked Agent authority and owns recovery.
         await tx.query('UPDATE attempts SET mutation_allowed=false WHERE id=$1', [attempt.id]);
@@ -362,6 +386,7 @@ export class BoundaryService {
       checkChannel(runner, incarnation);
       const operation = (await tx.query<OperationRow>('SELECT * FROM operations WHERE id=$1 AND attempt_id=$2 FOR UPDATE', [message.operation_id, attempt.id])).rows[0];
       if (!operation) throw new CommandError('denied_scope', 'Operation is outside Attempt scope');
+      if (attempt.todo_id && operation.kind !== 'stop') throw new CommandError('denied_scope', 'Todo cannot settle repository fixture effects');
       if (operation.state === 'succeeded') {
         if (!message.success || canonicalJSON(operation.result) !== canonicalJSON(message.result)) throw new CommandError('payload_conflict', 'Settled operation result cannot change');
         return;
@@ -378,7 +403,7 @@ export class BoundaryService {
         await tx.query('UPDATE outbox SET done=true WHERE operation_id=$1', [operation.id]);
         if (terminal) await tx.query("UPDATE attempts SET mutation_allowed=false,process_absent=true,process_released=true,state=CASE WHEN $2::boolean THEN 'SUCCEEDED' WHEN state='RUNNING' THEN 'CANCELLED' ELSE state END WHERE id=$1", [attempt.id, operation.kind === 'complete_node']);
         if (operation.kind === 'complete_node') {
-          await assertCurrentNode(tx, { task_id: attempt.task_id, node_id: attempt.node_id!, node_activation: Number(attempt.node_activation) });
+          await assertCurrentNode(tx, { task_id: attempt.task_id!, node_id: attempt.node_id!, node_activation: Number(attempt.node_activation) });
           const node = (await tx.query<{ activation: string; state: string }>('SELECT activation,state FROM nodes WHERE id=$1 FOR UPDATE', [attempt.node_id])).rows[0];
           const blockedByThisOperation = node?.state === 'BLOCKED' && (operation.failure_kind === 'capture_hard_limit' || operation.failure_kind === 'invalid_finalization' || attempt.process_absent);
           const taskState = (await tx.query<{ state: string }>('SELECT state FROM tasks WHERE id=$1', [attempt.task_id])).rows[0]!.state;

@@ -70,3 +70,19 @@ When an organization command removes the selected Todo from the current filter,
 return keyboard focus to the enabled capture input after detail unmounts. Preserve
 focus already on navigation/filter controls. Browser tests cover desktop/mobile
 archive, restore, assignment and retained drafts.
+
+## Todo Discussion
+
+`features/discussion.tsx` stays mounted within Todos even when selection changes;
+`useDiscussion` retains drafts and exact pending requests keyed by Todo ID. Clear
+only a committed submitted draft, and recover the same request before another
+submission for that Todo. Read status and history with Todo-scoped query keys.
+
+Owner history starts with a bounded recent page; explicitly loaded pages move
+backward. Merge by immutable message ID in sequence order, allowing a refreshed
+canonical withdrawal disposition to replace an older projection. New input must
+appear without fetching all prior history. Status is factual queued/processing/
+settling/interrupted state; Stop retains input, Withdraw resolves it without a
+reply, and Retry waits for server-verified settlement. Raw Runtime output is never
+inserted into Discussion history. Optional Task preview content is a proposal;
+creation requires the separate exact Owner command.

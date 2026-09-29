@@ -5,6 +5,406 @@
     "version": "1.0.0"
   },
   "paths": {
+    "/v1/owner/todos/discussion/commands": {
+      "post": {
+        "security": [
+          {
+            "OwnerAuth": []
+          },
+          {
+            "OwnerCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DiscussionCommand"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authenticated response; admission is distinct from completed effects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiscussionCommandResult"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Deterministic protocol error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/owner/todos/discussion/commands/{request_id}": {
+      "get": {
+        "security": [
+          {
+            "OwnerAuth": []
+          },
+          {
+            "OwnerCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authenticated response; admission is distinct from completed effects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiscussionCommandResult"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Deterministic protocol error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/owner/todos/{todo_id}/discussion": {
+      "get": {
+        "security": [
+          {
+            "OwnerAuth": []
+          },
+          {
+            "OwnerCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "todo_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authenticated response; admission is distinct from completed effects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiscussionStatus"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Deterministic protocol error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/owner/todos/{todo_id}/discussion/messages": {
+      "get": {
+        "security": [
+          {
+            "OwnerAuth": []
+          },
+          {
+            "OwnerCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "todo_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/TodoCursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authenticated response; admission is distinct from completed effects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiscussionPage"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Deterministic protocol error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/owner/todos/{todo_id}/attempts": {
+      "get": {
+        "security": [
+          {
+            "OwnerAuth": []
+          },
+          {
+            "OwnerCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "todo_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/TodoCursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authenticated response; admission is distinct from completed effects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TodoAttemptListPage"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Deterministic protocol error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/owner/todos/{todo_id}/attempts/{attempt_id}": {
+      "get": {
+        "security": [
+          {
+            "OwnerAuth": []
+          },
+          {
+            "OwnerCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "todo_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "attempt_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authenticated response; admission is distinct from completed effects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TodoAttemptStatus"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Deterministic protocol error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/owner/todos/{todo_id}/attempts/{attempt_id}/logs": {
+      "get": {
+        "security": [
+          {
+            "OwnerAuth": []
+          },
+          {
+            "OwnerCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "todo_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "attempt_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/TodoCursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authenticated response; admission is distinct from completed effects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TodoAttemptLogPage"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Deterministic protocol error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/owner/todos/{todo_id}/operations/{operation_id}": {
+      "get": {
+        "security": [
+          {
+            "OwnerAuth": []
+          },
+          {
+            "OwnerCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "todo_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "operation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authenticated response; admission is distinct from completed effects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TodoOperationStatus"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Deterministic protocol error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/owner/todos": {
       "get": {
         "security": [
@@ -1183,7 +1583,10 @@
               "open_workspace",
               "inspect_repository",
               "complete_node",
-              "commit_task_turn"
+              "commit_task_turn",
+              "commit_discussion_turn",
+              "read_discussion",
+              "update_working_requirement_state"
             ]
           },
           "scope_id": {
@@ -1294,6 +1697,114 @@
                 }
               }
             }
+          },
+          {
+            "if": {
+              "properties": {
+                "name": {
+                  "const": "commit_discussion_turn"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "payload": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "reply": {
+                      "type": "string",
+                      "maxLength": 65536,
+                      "pattern": "^[^\\x00]*$",
+                      "minLength": 1
+                    },
+                    "working_requirement_state": {
+                      "type": "string",
+                      "maxLength": 65536,
+                      "pattern": "^[^\\x00]*$"
+                    },
+                    "source_message_id": {
+                      "$ref": "#/components/schemas/Id"
+                    },
+                    "source_watermark": {
+                      "$ref": "#/components/schemas/Counter"
+                    },
+                    "task_preview": {
+                      "$ref": "#/components/schemas/TaskPreview"
+                    }
+                  },
+                  "required": [
+                    "reply",
+                    "working_requirement_state",
+                    "source_message_id",
+                    "source_watermark"
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "name": {
+                  "const": "read_discussion"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "payload": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "cursor": {
+                      "$ref": "#/components/schemas/TodoCursor"
+                    }
+                  },
+                  "required": []
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "name": {
+                  "const": "update_working_requirement_state"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "payload": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "working_requirement_state": {
+                      "type": "string",
+                      "maxLength": 65536,
+                      "pattern": "^[^\\x00]*$"
+                    },
+                    "resolved_watermark": {
+                      "$ref": "#/components/schemas/Counter"
+                    },
+                    "project_context_version": {
+                      "$ref": "#/components/schemas/Counter"
+                    },
+                    "project_context_digest": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{64}$"
+                    }
+                  },
+                  "required": [
+                    "working_requirement_state",
+                    "resolved_watermark",
+                    "project_context_version",
+                    "project_context_digest"
+                  ]
+                }
+              }
+            }
           }
         ]
       },
@@ -1345,6 +1856,30 @@
                 ]
               }
             }
+          },
+          "working_requirement_state": {
+            "type": "string",
+            "maxLength": 65536,
+            "pattern": "^[^\\x00]*$"
+          },
+          "source_message_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "task_preview": {
+            "$ref": "#/components/schemas/TaskPreview"
+          },
+          "cursor": {
+            "$ref": "#/components/schemas/TodoCursor"
+          },
+          "resolved_watermark": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "project_context_version": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "project_context_digest": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
           }
         }
       },
@@ -1432,6 +1967,18 @@
           "message": {
             "type": "string",
             "maxLength": 1024
+          },
+          "discussion_page": {
+            "$ref": "#/components/schemas/DiscussionPage"
+          },
+          "message_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "cache_updated": {
+            "type": "boolean"
+          },
+          "resolved_watermark": {
+            "$ref": "#/components/schemas/Counter"
           }
         }
       },
@@ -1479,12 +2026,10 @@
           "dispatch_id",
           "attempt_id",
           "runner_id",
-          "task_id",
           "kind",
           "fencing_generation",
           "node_activation",
           "control_version",
-          "resource_id",
           "runtime_id",
           "model",
           "prompt",
@@ -1558,8 +2103,81 @@
             "enum": [
               "ordered_v1"
             ]
+          },
+          "todo_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "source_message_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "project_context_version": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "project_context_digest": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
           }
-        }
+        },
+        "allOf": [
+          {
+            "if": {
+              "required": [
+                "todo_id"
+              ],
+              "properties": {
+                "todo_id": {}
+              }
+            },
+            "then": {
+              "properties": {
+                "todo_id": {
+                  "$ref": "#/components/schemas/Id"
+                },
+                "task_id": false,
+                "node_id": false,
+                "resource_id": false,
+                "kind": {
+                  "const": "planner"
+                },
+                "node_activation": {
+                  "const": 0
+                },
+                "source_message_id": {
+                  "$ref": "#/components/schemas/Id"
+                },
+                "project_context_version": {
+                  "$ref": "#/components/schemas/Counter"
+                },
+                "project_context_digest": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                }
+              },
+              "required": [
+                "source_message_id",
+                "project_context_version",
+                "project_context_digest"
+              ]
+            },
+            "else": {
+              "properties": {
+                "task_id": {
+                  "$ref": "#/components/schemas/Id"
+                },
+                "resource_id": {
+                  "$ref": "#/components/schemas/Id"
+                },
+                "source_message_id": false,
+                "project_context_version": false,
+                "project_context_digest": false
+              },
+              "required": [
+                "task_id",
+                "resource_id"
+              ]
+            }
+          }
+        ]
       },
       "Operation": {
         "type": "object",
@@ -1571,7 +2189,6 @@
           "dispatch_id",
           "request_id",
           "kind",
-          "resource_id",
           "state"
         ],
         "properties": {
@@ -1616,7 +2233,29 @@
           "result": {
             "$ref": "#/components/schemas/EffectResult"
           }
-        }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "stop"
+                }
+              }
+            },
+            "then": {},
+            "else": {
+              "properties": {
+                "resource_id": {
+                  "$ref": "#/components/schemas/Id"
+                }
+              },
+              "required": [
+                "resource_id"
+              ]
+            }
+          }
+        ]
       },
       "RuntimeEvent": {
         "type": "object",
@@ -2789,7 +3428,8 @@
               "save_project",
               "save_role",
               "save_policies",
-              "save_github"
+              "save_github",
+              "save_planner_guidance"
             ]
           },
           "payload": {
@@ -2805,6 +3445,9 @@
               },
               {
                 "$ref": "#/components/schemas/GitHubConfigurationInput"
+              },
+              {
+                "$ref": "#/components/schemas/PlannerGuidance"
               }
             ]
           }
@@ -2885,6 +3528,25 @@
                 }
               }
             }
+          },
+          {
+            "if": {
+              "properties": {
+                "name": {
+                  "const": "save_planner_guidance"
+                }
+              },
+              "required": [
+                "name"
+              ]
+            },
+            "then": {
+              "properties": {
+                "payload": {
+                  "$ref": "#/components/schemas/PlannerGuidance"
+                }
+              }
+            }
           }
         ]
       },
@@ -2960,6 +3622,11 @@
           },
           "github": {
             "$ref": "#/components/schemas/GitHubConfigurationStatus"
+          },
+          "planner_guidance": {
+            "type": "string",
+            "maxLength": 65536,
+            "pattern": "^[^\\x00]*$"
           }
         }
       },
@@ -4180,6 +4847,714 @@
               }
             }
           }
+        ]
+      },
+      "DiscussionText": {
+        "type": "string",
+        "maxLength": 65536,
+        "pattern": "^[^\\x00]*$"
+      },
+      "TaskPreview": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "specification": {
+            "type": "string",
+            "maxLength": 65536,
+            "pattern": "^[^\\x00]*$",
+            "minLength": 1
+          },
+          "project_id": {
+            "$ref": "#/components/schemas/Id"
+          }
+        },
+        "required": [
+          "title",
+          "specification"
+        ]
+      },
+      "DiscussionMessage": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "message_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "sequence": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "author": {
+            "type": "string",
+            "enum": [
+              "owner",
+              "assistant"
+            ]
+          },
+          "content": {
+            "type": "string",
+            "maxLength": 65536,
+            "pattern": "^[^\\x00]*$",
+            "minLength": 1
+          },
+          "created_at": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d\\.\\d{3}Z$",
+            "maxLength": 24
+          },
+          "source_message_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "source_watermark": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "project_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "project_context_version": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "task_preview": {
+            "$ref": "#/components/schemas/TaskPreview"
+          },
+          "disposition": {
+            "type": "string",
+            "const": "withdrawn"
+          }
+        },
+        "required": [
+          "message_id",
+          "sequence",
+          "author",
+          "content",
+          "created_at"
+        ]
+      },
+      "DiscussionPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "todo_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "messages": {
+            "type": "array",
+            "maxItems": 64,
+            "items": {
+              "$ref": "#/components/schemas/DiscussionMessage"
+            }
+          },
+          "cursor": {
+            "$ref": "#/components/schemas/TodoCursor"
+          },
+          "has_more": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "schema_version",
+          "todo_id",
+          "messages",
+          "cursor",
+          "has_more"
+        ]
+      },
+      "DiscussionSource": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "message_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "source_watermark": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "processing",
+              "interrupted",
+              "settling"
+            ]
+          },
+          "attempt_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "end_reason": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "waiting_reason": {
+            "type": "string",
+            "maxLength": 128
+          }
+        },
+        "required": [
+          "message_id",
+          "source_watermark",
+          "status"
+        ]
+      },
+      "DiscussionStatus": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "todo_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "discussion_version": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "resolved_watermark": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "latest_sequence": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "project_context_version": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "project_context_digest": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "working_requirement_state": {
+            "type": "string",
+            "maxLength": 65536,
+            "pattern": "^[^\\x00]*$"
+          },
+          "current_source": {
+            "$ref": "#/components/schemas/DiscussionSource"
+          }
+        },
+        "required": [
+          "schema_version",
+          "todo_id",
+          "discussion_version",
+          "resolved_watermark",
+          "latest_sequence",
+          "project_context_version",
+          "project_context_digest"
+        ]
+      },
+      "DiscussionSubmitCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "request_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "todo_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "name": {
+            "type": "string",
+            "const": "submit_discussion_message"
+          },
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "message_id": {
+                "$ref": "#/components/schemas/Id"
+              },
+              "content": {
+                "type": "string",
+                "maxLength": 65536,
+                "pattern": "^[^\\x00]*$",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "message_id",
+              "content"
+            ]
+          }
+        },
+        "required": [
+          "schema_version",
+          "request_id",
+          "todo_id",
+          "name",
+          "payload"
+        ]
+      },
+      "DiscussionRetryCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "request_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "todo_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "name": {
+            "type": "string",
+            "const": "retry_discussion_turn"
+          },
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "source_message_id": {
+                "$ref": "#/components/schemas/Id"
+              }
+            },
+            "required": [
+              "source_message_id"
+            ]
+          },
+          "expected_discussion_version": {
+            "$ref": "#/components/schemas/Counter"
+          }
+        },
+        "required": [
+          "schema_version",
+          "request_id",
+          "todo_id",
+          "name",
+          "payload",
+          "expected_discussion_version"
+        ]
+      },
+      "DiscussionWithdrawCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "request_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "todo_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "name": {
+            "type": "string",
+            "const": "withdraw_discussion_turn"
+          },
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "source_message_id": {
+                "$ref": "#/components/schemas/Id"
+              }
+            },
+            "required": [
+              "source_message_id"
+            ]
+          },
+          "expected_discussion_version": {
+            "$ref": "#/components/schemas/Counter"
+          }
+        },
+        "required": [
+          "schema_version",
+          "request_id",
+          "todo_id",
+          "name",
+          "payload",
+          "expected_discussion_version"
+        ]
+      },
+      "DiscussionStopCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "request_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "todo_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "name": {
+            "type": "string",
+            "const": "stop_discussion_turn"
+          },
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "source_message_id": {
+                "$ref": "#/components/schemas/Id"
+              },
+              "attempt_id": {
+                "$ref": "#/components/schemas/Id"
+              }
+            },
+            "required": [
+              "source_message_id",
+              "attempt_id"
+            ]
+          },
+          "expected_discussion_version": {
+            "$ref": "#/components/schemas/Counter"
+          }
+        },
+        "required": [
+          "schema_version",
+          "request_id",
+          "todo_id",
+          "name",
+          "payload",
+          "expected_discussion_version"
+        ]
+      },
+      "DiscussionCommand": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/DiscussionSubmitCommand"
+          },
+          {
+            "$ref": "#/components/schemas/DiscussionRetryCommand"
+          },
+          {
+            "$ref": "#/components/schemas/DiscussionWithdrawCommand"
+          },
+          {
+            "$ref": "#/components/schemas/DiscussionStopCommand"
+          }
+        ]
+      },
+      "DiscussionCommandResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "request_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "committed",
+              "unknown"
+            ]
+          },
+          "todo_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "message_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "discussion_version": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "attempt_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "operation_id": {
+            "$ref": "#/components/schemas/Id"
+          }
+        },
+        "required": [
+          "schema_version",
+          "request_id",
+          "status"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "committed"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "todo_id": {
+                  "$ref": "#/components/schemas/Id"
+                },
+                "discussion_version": {
+                  "$ref": "#/components/schemas/Counter"
+                }
+              },
+              "required": [
+                "todo_id",
+                "discussion_version"
+              ]
+            },
+            "else": {
+              "properties": {
+                "todo_id": false,
+                "message_id": false,
+                "discussion_version": false,
+                "attempt_id": false,
+                "operation_id": false
+              }
+            }
+          }
+        ]
+      },
+      "TodoAttemptStatus": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "schema_version",
+          "todo_id",
+          "attempt_id",
+          "kind",
+          "state",
+          "runner_id",
+          "started",
+          "process_absent",
+          "process_released",
+          "mutation_allowed",
+          "log_mode",
+          "visible_sequence",
+          "latest_sequence",
+          "created_at"
+        ],
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "attempt_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "kind": {
+            "type": "string",
+            "const": "planner"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "QUEUED",
+              "RUNNING",
+              "SUCCEEDED",
+              "FAILED",
+              "CANCELLED"
+            ]
+          },
+          "runner_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "started": {
+            "type": "boolean"
+          },
+          "process_absent": {
+            "type": "boolean"
+          },
+          "process_released": {
+            "type": "boolean"
+          },
+          "mutation_allowed": {
+            "type": "boolean"
+          },
+          "log_mode": {
+            "type": "string",
+            "enum": [
+              "ordered_v1",
+              "legacy"
+            ]
+          },
+          "visible_sequence": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "latest_sequence": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "activity_at": {
+            "type": "string",
+            "minLength": 1
+          },
+          "created_at": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "end_reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "todo_id": {
+            "$ref": "#/components/schemas/Id"
+          }
+        }
+      },
+      "TodoAttemptListPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "schema_version",
+          "todo_id",
+          "attempts",
+          "cursor",
+          "has_more"
+        ],
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "attempts": {
+            "type": "array",
+            "maxItems": 64,
+            "items": {
+              "$ref": "#/components/schemas/TodoAttemptStatus"
+            }
+          },
+          "cursor": {
+            "$ref": "#/components/schemas/TodoCursor"
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "todo_id": {
+            "$ref": "#/components/schemas/Id"
+          }
+        }
+      },
+      "TodoAttemptLogPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "schema_version",
+          "todo_id",
+          "attempt_id",
+          "events",
+          "cursor",
+          "has_more",
+          "gap_after"
+        ],
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "attempt_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "events": {
+            "type": "array",
+            "maxItems": 64,
+            "items": {
+              "$ref": "#/components/schemas/RuntimeEvent"
+            }
+          },
+          "cursor": {
+            "$ref": "#/components/schemas/TodoCursor"
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "gap_after": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "todo_id": {
+            "$ref": "#/components/schemas/Id"
+          }
+        }
+      },
+      "TodoOperationStatus": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "schema_version",
+          "todo_id",
+          "operation_id",
+          "attempt_id",
+          "kind",
+          "state",
+          "process_absent",
+          "process_released",
+          "attention"
+        ],
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "operation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "attempt_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "stop",
+              "complete_node",
+              "open_workspace",
+              "inspect_repository"
+            ]
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "admitted",
+              "succeeded",
+              "recovery"
+            ]
+          },
+          "process_absent": {
+            "type": "boolean"
+          },
+          "process_released": {
+            "type": "boolean"
+          },
+          "attention": {
+            "type": "boolean"
+          },
+          "failure_kind": {
+            "type": "string"
+          },
+          "end_reason": {
+            "type": "string"
+          },
+          "todo_id": {
+            "$ref": "#/components/schemas/Id"
+          }
+        }
+      },
+      "PlannerGuidance": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "guidance": {
+            "type": "string",
+            "maxLength": 65536,
+            "pattern": "^[^\\x00]*$"
+          }
+        },
+        "required": [
+          "guidance"
         ]
       }
     },

@@ -20,6 +20,7 @@ import (
 	"monos.local/runner/internal/control"
 	"monos.local/runner/internal/host"
 	"monos.local/runner/internal/journal"
+	"monos.local/runner/internal/wire"
 )
 
 type Daemon struct {
@@ -304,8 +305,8 @@ func (d *Daemon) effect(ctx context.Context, op protocol.Operation) error {
 			return err
 		}
 	}
-	if s.Dispatch.DispatchID != op.DispatchID {
-		return fmt.Errorf("effect ownership mismatch")
+	if err := host.ValidateEffectScope(s.Dispatch, op); err != nil {
+		return err
 	}
 	result := protocol.OperationResult{AttemptID: op.AttemptID, OperationID: op.OperationID}
 	var status host.Status
@@ -374,7 +375,7 @@ func (d *Daemon) unstartedRevocation(ctx context.Context, op protocol.Operation,
 		}
 	}
 	for _, candidate := range inventory.Operations {
-		if candidate.OperationID == op.OperationID && candidate.AttemptID == op.AttemptID && candidate.DispatchID == op.DispatchID && candidate.RequestID == op.RequestID && candidate.ResourceID == op.ResourceID && candidate.Kind == protocol.Stop {
+		if candidate.OperationID == op.OperationID && candidate.AttemptID == op.AttemptID && candidate.DispatchID == op.DispatchID && candidate.RequestID == op.RequestID && wire.SameResource(candidate.ResourceID, op.ResourceID) && candidate.Kind == protocol.Stop {
 			operationFound = true
 		}
 	}

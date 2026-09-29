@@ -15,10 +15,15 @@ Let the Owner discuss an assigned or unassigned Todo using real Planner executio
 
 ## Acceptance criteria
 
-- [ ] Real Todo-scoped Planner uses existing shared slots and native monos commands without manufacturing a Task.
-- [ ] Concurrent messages preserve order; atomic reply/requirement state/watermark commit and receipt replay are crash-safe.
-- [ ] Retry/Withdraw/Stop and reconnect preserve physical fencing, queue progress and immutable history.
-- [ ] Unassigned and reassigned Todo context, UI drafts and committed replies remain properly isolated.
+- [x] Real Todo-scoped Planner uses existing shared slots and native monos commands without manufacturing a Task.
+- [x] Concurrent messages preserve order; atomic reply/requirement state/watermark commit and receipt replay are crash-safe.
+- [x] Retry/Withdraw/Stop and reconnect preserve physical fencing, queue progress and immutable history.
+- [x] Unassigned and reassigned Todo context, UI drafts and committed replies remain properly isolated.
+
+## Authorization
+
+The Owner authorized sequential implementation and routine choices on 2026-09-29.
+No unresolved product decision remains; technical contracts are in `design.md`.
 
 ## Scope
 

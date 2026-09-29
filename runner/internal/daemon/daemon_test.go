@@ -26,12 +26,12 @@ func TestOnlyTypedCaptureFailureIsBlocking(t *testing.T) {
 	}{{"transient", errors.New("permission or IO needs repair"), protocol.Recoverable}, {"capture", &host.EffectError{Kind: protocol.CaptureHardLimit, Cause: errors.New("storage limit")}, protocol.CaptureHardLimit}, {"invalid-result", &host.EffectError{Kind: protocol.InvalidFinalization, Cause: errors.New("recorded identity mismatch")}, protocol.InvalidFinalization}} {
 		t.Run(test.name, func(t *testing.T) {
 			db := testDB(t)
-			dispatch := protocol.Dispatch{AttemptID: "a", DispatchID: "d"}
+			dispatch := protocol.Dispatch{AttemptID: "a", DispatchID: "d", ResourceID: ptr("repo")}
 			if err := db.SaveStart(journal.Start{Dispatch: dispatch, Phase: "running"}); err != nil {
 				t.Fatal(err)
 			}
 			daemon := Daemon{DB: db, Host: &fakeSupervisor{Err: test.err}, Control: &control.Client{}}
-			_ = daemon.effect(context.Background(), protocol.Operation{SchemaVersion: 1, OperationID: "o", AttemptID: "a", DispatchID: "d", RequestID: "r", Kind: protocol.KindCompleteNode, ResourceID: "repo", State: protocol.StateAdmitted})
+			_ = daemon.effect(context.Background(), protocol.Operation{SchemaVersion: 1, OperationID: "o", AttemptID: "a", DispatchID: "d", RequestID: "r", Kind: protocol.KindCompleteNode, ResourceID: ptr("repo"), State: protocol.StateAdmitted})
 			result, err := db.Effect("o")
 			if err != nil || result == nil || result.Success || result.FailureKind == nil || *result.FailureKind != test.kind {
 				t.Fatalf("classification %+v %v", result, err)

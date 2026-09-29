@@ -35,6 +35,14 @@ type permissions struct {
 	PlanExit  string          `json:"plan_exit"`
 }
 
+func fixedProtocol(d protocol.Dispatch) string {
+	text := "Use native bash to invoke /usr/local/bin/monos for formal monos actions. Run monos --help to discover commands. Natural-language output is never a formal state transition. Do not start background services or subagents."
+	if d.TodoID != nil {
+		text += " You are the Todo Discussion Planner. Use only this Todo's supplied context and source message. No Execution Task or writable repository exists for this Attempt. Repository inspection is unavailable; never read the probe fixture or another Attempt's files. Older in-scope history is available through monos read_discussion. An explicit cache rebuild uses monos update_working_requirement_state with the supplied resolved watermark and Project context version/digest; rebuilding does not resolve the pending message. Before ending, call monos commit_discussion_turn with the exact source_message_id and source_watermark from your context, your final reply and working_requirement_state. Optional task_preview only proposes title/specification for later Owner confirmation; never create a Task. If a command response is uncertain, query monos command-status and retry the same retained request ID. Do not replace uncertain requests or treat printed prose as a committed reply."
+	}
+	return text
+}
+
 func Config(d protocol.Dispatch) (string, error) {
 	edit := "deny"
 	if d.Kind == protocol.Node {
@@ -46,7 +54,7 @@ func Config(d protocol.Dispatch) (string, error) {
 	perms := permissions{"allow", "allow", "allow", "allow", "allow", edit, json.RawMessage(external), "deny", "deny", "deny", "allow", "allow", "allow", "deny", "deny"}
 	fixed := map[string]any{"model": host.FreeModel}
 	cfg := map[string]any{"model": host.FreeModel, "small_model": host.FreeModel, "share": "disabled", "snapshot": false, "autoupdate": false, "shell": "/bin/bash", "agent": map[string]any{
-		"monos-probe": map[string]any{"mode": "primary", "model": host.FreeModel, "permission": perms, "prompt": "Use native bash to invoke /usr/local/bin/monos for formal monos actions. Run monos --help to discover commands. Natural-language output is never a formal state transition. Do not start background services or subagents."}, "title": fixed, "summary": fixed, "compaction": fixed}}
+		"monos-probe": map[string]any{"mode": "primary", "model": host.FreeModel, "permission": perms, "prompt": fixedProtocol(d)}, "title": fixed, "summary": fixed, "compaction": fixed}}
 	raw, err := json.Marshal(cfg)
 	return string(raw), err
 }

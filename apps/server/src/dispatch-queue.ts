@@ -6,10 +6,13 @@ import { canonicalJSON, digest, validate } from '../../../packages/protocol/src/
 import type { Dispatch } from '../../../packages/protocol/src/index.ts';
 import { assertCurrentNode } from './task-records.ts';
 import type { ControlBasis } from './task-records.ts';
+import { lockDiscussion } from './discussion-state.ts';
+import type { DiscussionContext } from './discussion-state.ts';
 
 export interface QueueInput {
-  attempt_id: string; runner_id: string; task_id: string; node_id?: string;
-  kind: 'node' | 'planner'; expected: ControlBasis; resource_id: string;
+  attempt_id: string; runner_id: string; task_id?: string; todo_id?: string; node_id?: string;
+  kind: 'node' | 'planner'; expected: ControlBasis | { control_version: number }; resource_id?: string;
+  discussion_context?: DiscussionContext;
   runtime_id: Dispatch['runtime_id']; model: Dispatch['model']; prompt: string; source_watermark: number;
   selection_context?: {
     source: 'explicit' | 'planner' | 'role' | 'global'; configuration_version: number;
@@ -17,7 +20,8 @@ export interface QueueInput {
     observed_version?: string; request_digest: string;
   };
 }
-interface Queued { id: string; task_id: string; node_id: string | null; owner_key: string; state: string; launch: Dispatch; specification_id: string; plan_id: string | null; selection_context: QueueInput['selection_context'] | null }
+export type TaskQueueInput = QueueInput & { task_id: string; resource_id: string; expected: ControlBasis };
+interface Queued { id: string; task_id: string | null; todo_id: string | null; node_id: string | null; owner_key: string; state: string; launch: Dispatch; specification_id: string; plan_id: string | null; selection_context: QueueInput['selection_context'] | null }
 
 export class DispatchQueue {
   readonly db: Database;
@@ -27,6 +31,8 @@ export class DispatchQueue {
   // The owning command authenticates and writes its receipt with this durable
   // selected Attempt. This method does not select a model or initiate a process.
   async enqueue(tx: Transaction, input: QueueInput): Promise<string> {
+    if (input.todo_id !== undefined) return this.enqueueTodo(tx, input);
+    if (!input.task_id || !input.resource_id || !('specification_id' in input.expected)) throw new CommandError('invalid_input', 'Task queue requires its exact revision basis');
     for (const id of [input.attempt_id, input.runner_id, input.task_id]) validate('Id', id);
     const hash = digest(canonicalJSON(input));
     const runner = await tx.query('SELECT id FROM runners WHERE id=$1 FOR UPDATE', [input.runner_id]);
@@ -68,6 +74,31 @@ export class DispatchQueue {
     return launch.dispatch_id;
   }
 
+  private async enqueueTodo(tx: Transaction, input: QueueInput): Promise<string> {
+    for (const id of [input.attempt_id, input.runner_id, input.todo_id]) validate('Id', id);
+    if (input.task_id || input.node_id || input.resource_id || input.kind !== 'planner' || !input.discussion_context) throw new CommandError('invalid_input', 'Todo Planner must have one repository-free scope');
+    const context = input.discussion_context; const hash = digest(canonicalJSON(input));
+    if (!(await tx.query('SELECT id FROM runners WHERE id=$1 FOR UPDATE', [input.runner_id])).rowCount) throw new CommandError('denied_scope', 'Unknown Runner');
+    const control = await lockDiscussion(tx, input.todo_id!);
+    const prior = (await tx.query<{ queue_digest: string; dispatch_id: string }>('SELECT queue_digest,dispatch_id FROM attempts WHERE id=$1', [input.attempt_id])).rows[0];
+    if (prior) { if (prior.queue_digest !== hash) throw new CommandError('payload_conflict', 'Queued Attempt content changed'); return prior.dispatch_id; }
+    if (control.source_message_id !== context.source_message_id || Number(control.version) !== input.expected.control_version || context.discussion_version !== Number(control.version)) throw new CommandError('version_conflict', 'Discussion input intent changed');
+    if (control.desired_attempt_id) throw new CommandError('unmet_precondition', 'Discussion input already selected');
+    const owner = `todo-planner:${input.todo_id}`;
+    if ((await tx.query("SELECT 1 FROM attempts WHERE owner_key=$1 AND state='QUEUED'", [owner])).rowCount) throw new CommandError('unmet_precondition', 'Todo already has queued work');
+    const launch: Dispatch = { dispatch_id: randomUUID(), attempt_id: input.attempt_id, runner_id: input.runner_id, todo_id: input.todo_id,
+      kind: 'planner', fencing_generation: 1, node_activation: 0, control_version: Number(control.version), source_message_id: context.source_message_id,
+      project_context_version: context.project_context_version, project_context_digest: context.project_context_digest,
+      runtime_id: input.runtime_id, model: input.model, prompt: input.prompt, source_watermark: input.source_watermark,
+      log_mode: 'ordered_v1', mutation_allowed: false, process_released: true };
+    validate('Dispatch', launch);
+    await tx.query(`INSERT INTO attempts(id,runner_id,todo_id,owner_key,dispatch_id,kind,fencing_generation,node_activation,launch,
+      mutation_allowed,process_released,state,queue_digest,selection_context,discussion_context)
+      VALUES($1,$2,$3,$4,$5,'planner',1,0,$6,false,true,'QUEUED',$7,$8,$9)`, [input.attempt_id, input.runner_id, input.todo_id, owner, launch.dispatch_id, launch, hash, input.selection_context ?? null, context]);
+    await tx.query('UPDATE todo_discussion_controls SET desired_attempt_id=$2,waiting_reason=NULL WHERE todo_id=$1', [input.todo_id, input.attempt_id]);
+    return launch.dispatch_id;
+  }
+
   private async checkLocality(tx: Transaction, taskId: string, runnerId: string) {
     if ((await tx.query(`SELECT runner_id FROM task_runner_locality WHERE task_id=$1 AND runner_id<>$2
       UNION SELECT runner_id FROM attempts a WHERE task_id=$1 AND runner_id<>$2
@@ -105,39 +136,40 @@ export class DispatchQueue {
             AND (NOT a.process_released OR EXISTS (SELECT 1 FROM operations o WHERE o.attempt_id=a.id AND o.state<>'succeeded')))
           ORDER BY CASE WHEN q.kind='planner' THEN 0 ELSE 1 END,q.created_at,q.id LIMIT 1`, [runnerId, incarnation, Number(runner.runtime_report_incarnation) === incarnation])).rows;
         for (const candidate of candidates) {
-          const task = (await tx.query<{ state: string; control_version: string; specification_id: string; plan_id: string | null }>('SELECT state,control_version,specification_id,plan_id FROM tasks WHERE id=$1 FOR UPDATE', [candidate.task_id])).rows[0]!;
+          const discussion = candidate.todo_id ? await lockDiscussion(tx, candidate.todo_id) : null;
+          const task = candidate.task_id ? (await tx.query<{ state: string; control_version: string; specification_id: string; plan_id: string | null }>('SELECT state,control_version,specification_id,plan_id FROM tasks WHERE id=$1 FOR UPDATE', [candidate.task_id])).rows[0]! : null;
           const row = (await tx.query<Queued>('SELECT * FROM attempts WHERE id=$1 FOR UPDATE', [candidate.id])).rows[0]!;
           if (row.state !== 'QUEUED') return retry;
-          let current = task.state === 'RUNNING' && Number(task.control_version) === row.launch.control_version && task.specification_id === row.specification_id && task.plan_id === row.plan_id;
+          let current = discussion ? Number(discussion.version) === row.launch.control_version && discussion.source_message_id === row.launch.source_message_id && discussion.desired_attempt_id === row.id : !!task && task.state === 'RUNNING' && Number(task.control_version) === row.launch.control_version && task.specification_id === row.specification_id && task.plan_id === row.plan_id;
           if (current && row.node_id) {
-            try { current = (await assertCurrentNode(tx, { task_id: row.task_id, node_id: row.node_id, node_activation: row.launch.node_activation })).state === 'PENDING' && await this.dependenciesReady(tx, row.plan_id!, row.node_id); }
+            try { current = (await assertCurrentNode(tx, { task_id: row.task_id!, node_id: row.node_id, node_activation: row.launch.node_activation })).state === 'PENDING' && await this.dependenciesReady(tx, row.plan_id!, row.node_id); }
             catch (error) { if (!(error instanceof CommandError)) throw error; current = false; }
           }
-          if (!current) { await tx.query("UPDATE attempts SET state='CANCELLED',end_reason='stale_queue_basis' WHERE id=$1", [row.id]); return retry; }
+          if (!current) { await tx.query("UPDATE attempts SET state='CANCELLED',process_absent=true,end_reason='stale_queue_basis' WHERE id=$1", [row.id]); return retry; }
           if (row.selection_context) {
             const observed = (await tx.query<{ incarnation: string; observation: { availability: string; supports_model: boolean } }>('SELECT incarnation,observation FROM runtime_installations WHERE runner_id=$1 AND runtime_id=$2', [runnerId, row.launch.runtime_id])).rows[0];
             // An omitted discovery report after reconnect is not evidence that the
             // installation vanished. Wait until the current incarnation reports.
             if (!observed || Number(observed.incarnation) !== incarnation) {
               if (Number(runner.runtime_report_incarnation) !== incarnation) continue;
-              await tx.query("UPDATE attempts SET state='CANCELLED',end_reason='runtime_missing_before_start' WHERE id=$1", [row.id]);
+              await tx.query("UPDATE attempts SET state='CANCELLED',process_absent=true,end_reason='runtime_missing_before_start' WHERE id=$1", [row.id]);
               return retry;
             }
             if (observed.observation.availability !== 'detected' || !observed.observation.supports_model) {
-              await tx.query("UPDATE attempts SET state='CANCELLED',end_reason='runtime_unavailable_before_start' WHERE id=$1", [row.id]);
+              await tx.query("UPDATE attempts SET state='CANCELLED',process_absent=true,end_reason='runtime_unavailable_before_start' WHERE id=$1", [row.id]);
               return retry;
             }
           }
           const owner = await tx.query(`SELECT a.id FROM attempts a WHERE a.owner_key=$1 AND a.id<>$2 AND
             (NOT a.process_released OR EXISTS (SELECT 1 FROM operations o WHERE o.attempt_id=a.id AND o.state<>'succeeded'))`, [row.owner_key, row.id]);
           if (owner.rowCount) continue;
-          try { await this.checkLocality(tx, row.task_id, runnerId); }
+          try { if (row.task_id) await this.checkLocality(tx, row.task_id, runnerId); }
           catch (error) {
             if (!(error instanceof CommandError)) throw error;
-            await tx.query("UPDATE attempts SET state='CANCELLED',end_reason='unsupported_runner_transfer' WHERE id=$1", [row.id]);
+            await tx.query("UPDATE attempts SET state='CANCELLED',process_absent=true,end_reason='unsupported_runner_transfer' WHERE id=$1", [row.id]);
             return retry;
           }
-          await tx.query('INSERT INTO task_runner_locality(task_id,runner_id) VALUES($1,$2) ON CONFLICT DO NOTHING', [row.task_id, runnerId]);
+          if (row.task_id) await tx.query('INSERT INTO task_runner_locality(task_id,runner_id) VALUES($1,$2) ON CONFLICT DO NOTHING', [row.task_id, runnerId]);
           const fence = (await tx.query<{ generation: string }>("SELECT COALESCE(max(fencing_generation),0)+1 AS generation FROM attempts WHERE owner_key=$1 AND state<>'QUEUED'", [row.owner_key])).rows[0]!;
           const launch = { ...row.launch, fencing_generation: Number(fence.generation), mutation_allowed: true, process_released: false };
           validate('Dispatch', launch);

@@ -8,7 +8,7 @@ import (
 )
 
 func TestUnicodeDispatchReservesEncodedFrameOverhead(t *testing.T) {
-	d := protocol.Dispatch{AttemptID: "a", DispatchID: "d", RunnerID: "r", TaskID: "t", Kind: protocol.Node, ResourceID: "repo", RuntimeID: protocol.Opencode, Model: protocol.OpencodeMIMOV26FlashFree}
+	d := protocol.Dispatch{AttemptID: "a", DispatchID: "d", RunnerID: "r", TaskID: ptr("t"), Kind: protocol.Node, ResourceID: ptr("repo"), RuntimeID: protocol.Opencode, Model: protocol.OpencodeMIMOV26FlashFree}
 	base, err := json.Marshal(d)
 	if err != nil {
 		t.Fatal(err)
@@ -28,3 +28,5 @@ func TestUnicodeDispatchReservesEncodedFrameOverhead(t *testing.T) {
 		t.Fatal("item accepted without framing margin")
 	}
 }
+
+func ptr(value string) *string { return &value }

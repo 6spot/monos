@@ -32,6 +32,14 @@ const get = (name, auth, parameters = []) => ({ security: security(auth), parame
 artifacts.set('generated/openapi.json', `${JSON.stringify({
   openapi: '3.1.0', info: { title: 'monos boundary probe', version: '1.0.0' },
   paths: {
+    '/v1/owner/todos/discussion/commands': { post: { security: security('OwnerAuth'), requestBody: { required: true, content: { 'application/json': { schema: reference('DiscussionCommand') } } }, responses: responses('DiscussionCommandResult') } },
+    '/v1/owner/todos/discussion/commands/{request_id}': { get: get('DiscussionCommandResult', 'OwnerAuth', ['request_id']) },
+    '/v1/owner/todos/{todo_id}/discussion': { get: get('DiscussionStatus', 'OwnerAuth', ['todo_id']) },
+    '/v1/owner/todos/{todo_id}/discussion/messages': { get: { ...get('DiscussionPage', 'OwnerAuth', ['todo_id']), parameters: [...get('DiscussionPage', 'OwnerAuth', ['todo_id']).parameters, { name: 'cursor', in: 'query', required: false, schema: reference('TodoCursor') }] } },
+    '/v1/owner/todos/{todo_id}/attempts': { get: { ...get('TodoAttemptListPage', 'OwnerAuth', ['todo_id']), parameters: [...get('TodoAttemptListPage', 'OwnerAuth', ['todo_id']).parameters, { name: 'cursor', in: 'query', required: false, schema: reference('TodoCursor') }] } },
+    '/v1/owner/todos/{todo_id}/attempts/{attempt_id}': { get: get('TodoAttemptStatus', 'OwnerAuth', ['todo_id', 'attempt_id']) },
+    '/v1/owner/todos/{todo_id}/attempts/{attempt_id}/logs': { get: { ...get('TodoAttemptLogPage', 'OwnerAuth', ['todo_id', 'attempt_id']), parameters: [...get('TodoAttemptLogPage', 'OwnerAuth', ['todo_id', 'attempt_id']).parameters, { name: 'cursor', in: 'query', required: false, schema: reference('TodoCursor') }] } },
+    '/v1/owner/todos/{todo_id}/operations/{operation_id}': { get: get('TodoOperationStatus', 'OwnerAuth', ['todo_id', 'operation_id']) },
     '/v1/owner/todos': { get: { ...get('TodoPage', 'OwnerAuth'), parameters: Object.entries(schema.definitions.TodoListQuery.properties).map(([name, shape]) => ({ name, in: 'query', required: name === 'scope', description: 'project_id is required only for the project scope. Cursors are bound to the exact scope.', schema: JSON.parse(JSON.stringify(shape).replaceAll('#/definitions/', '#/components/schemas/')) })) } },
     '/v1/owner/todos/{todo_id}': { get: get('TodoRecord', 'OwnerAuth', ['todo_id']) },
     '/v1/owner/todos/commands': { post: { security: security('OwnerAuth'), requestBody: { required: true, content: { 'application/json': { schema: reference('TodoCommand') } } }, responses: responses('TodoCommandResult') } },

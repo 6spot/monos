@@ -3,6 +3,7 @@ import { database } from '../../../packages/db/src/index.ts';
 import { migrate } from '../../../packages/db/src/migrate.ts';
 import { createApp } from './app.ts';
 import { BoundaryService } from './service.ts';
+import { Discussion } from './discussion.ts';
 import { fileURLToPath } from 'node:url';
 
 const required = (name: string): string => { const value = process.env[name]; if (!value) throw new Error(`${name} is required`); return value; };
@@ -10,9 +11,17 @@ const databaseURL = process.env.MONOS_DATABASE_URL_FILE ? (await readFile(proces
 const db = database(databaseURL);
 await migrate(db);
 const signingKey = (await readFile(required('MONOS_SIGNING_KEY_FILE'), 'utf8')).trim();
-const app = createApp(new BoundaryService(db, { signingKey }), {
+const service = new BoundaryService(db, { signingKey });
+const discussion = new Discussion(db, service.instanceId);
+const app = createApp(service, {
   key: await readFile(required('MONOS_TLS_KEY_FILE')),
   cert: await readFile(required('MONOS_TLS_CERT_FILE')),
 }, fileURLToPath(new URL('../../web/dist', import.meta.url)));
+let scheduling: Promise<void> | undefined;
+let discussionTimer: ReturnType<typeof setInterval> | undefined = undefined;
+const pump = () => scheduling ??= discussion.pump().catch(() => app.log.warn('Discussion scheduling pass failed; durable input retained')).finally(() => { scheduling = undefined; });
+app.addHook('onClose', async () => { clearInterval(discussionTimer); await scheduling; });
 await app.listen({ host: process.env.MONOS_LISTEN_HOST ?? '127.0.0.1', port: Number(process.env.MONOS_PORT ?? 18443) });
+discussionTimer = setInterval(() => { void pump(); }, 1000); discussionTimer.unref();
+void pump();
 for (const signal of ['SIGINT', 'SIGTERM'] as const) process.on(signal, () => { void app.close().then(() => db.pool.end()); });

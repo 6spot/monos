@@ -163,6 +163,43 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('production Runtime tar
     }
   }, 20000);
 
+  it('lets an in-flight Runner heartbeat finish before Auto locks its stable candidate set', async () => {
+    const r = await runner(); await db.pool.query('UPDATE execution_policies SET policies=$1', [{ global: policy() }]);
+    const value = await request(); const updated = { ...installation, version: '1.18.31' };
+    const barrier = await db.pool.connect();
+    let heartbeat: Promise<void> | undefined; let admission: ReturnType<typeof submit> | undefined;
+    async function blockedBy(pid: number, query?: string): Promise<number> {
+      for (let count = 0; count < 500; count++) {
+        const waiting = (await admin.pool.query<{ pid: number }>(`SELECT pid FROM pg_stat_activity
+          WHERE $1=ANY(pg_blocking_pids(pid)) AND wait_event_type='Lock' AND ($2::text IS NULL OR query LIKE $2)`, [pid, query ?? null])).rows[0];
+        if (waiting) return Number(waiting.pid);
+        await delay(10);
+      }
+      throw new Error('Concurrent transaction did not reach the database lock barrier');
+    }
+    try {
+      await barrier.query('BEGIN');
+      // touch has already locked its Runner before this installation DELETE.
+      // Hold it there so Auto deterministically arrives between row lock and UPDATE.
+      await barrier.query('LOCK TABLE runtime_installations IN SHARE MODE');
+      const barrierPid = Number((await barrier.query<{ pid: number }>('SELECT pg_backend_pid() AS pid')).rows[0]!.pid);
+      heartbeat = r.service.touch(r.id, r.incarnation, true, [updated]); void heartbeat.catch(() => undefined);
+      const heartbeatPid = await blockedBy(barrierPid, 'DELETE FROM runtime_installations%');
+      expect((await db.pool.query("SELECT 1 FROM pg_locks WHERE pid=$1 AND relation='runners'::regclass AND mode='RowShareLock' AND granted", [heartbeatPid])).rowCount).toBe(1);
+      admission = submit(r.service, value); void admission.catch(() => undefined);
+      const admissionPid = await blockedBy(heartbeatPid);
+      expect(new Set([barrierPid, heartbeatPid, admissionPid]).size).toBe(3);
+      await barrier.query('COMMIT');
+      await expect(heartbeat).resolves.toBeUndefined();
+      expect(await admission).toMatchObject({ status: 'queued', runner_id: r.id });
+      expect((await db.pool.query('SELECT selection_context FROM attempts WHERE id=$1', [value.attempt_id])).rows[0].selection_context.observed_version).toBe(updated.version);
+    } finally {
+      await barrier.query('ROLLBACK');
+      await Promise.allSettled([heartbeat, admission]);
+      barrier.release();
+    }
+  }, 20000);
+
   it('clears a stale control head and promotes the next eligible row in one poll', async () => {
     const r = await runner(); await db.pool.query('UPDATE execution_policies SET policies=$1', [{ global: policy(r.id) }]);
     const stale = await request(); await submit(r.service, stale);

@@ -5,6 +5,8 @@ import { CommandError } from '../../../packages/domain/src/commands.ts';
 import { canonicalJSON, digest, validate } from '../../../packages/protocol/src/index.ts';
 import type { Dispatch } from '../../../packages/protocol/src/index.ts';
 
+type TaskFixtureDispatch = Dispatch & { task_id: string; resource_id: string };
+
 export interface AttemptFixture { runner_id: string; attempt_id: string; task_id: string; kind: 'node' | 'planner'; resource_id: string; prompt: string; node_id?: string }
 
 export async function enrollFixture(db: Database, runnerId: string, credential: string, capacity = 2): Promise<void> {
@@ -17,13 +19,13 @@ export async function enrollFixture(db: Database, runnerId: string, credential: 
   });
 }
 
-export async function createAttemptFixture(db: Database, input: AttemptFixture): Promise<Dispatch> {
+export async function createAttemptFixture(db: Database, input: AttemptFixture): Promise<TaskFixtureDispatch> {
   for (const id of [input.runner_id, input.attempt_id, input.task_id, input.resource_id, ...(input.node_id ? [input.node_id] : [])]) validate('Id', id);
   if (!['node', 'planner'].includes(input.kind) || typeof input.prompt !== 'string') throw new Error('Invalid fixture');
   return transaction(db, async (tx) => {
     const runner = (await tx.query<{ capacity: number }>('SELECT capacity FROM runners WHERE id=$1 FOR UPDATE', [input.runner_id])).rows[0];
     if (!runner) throw new Error('Enroll the Runner first');
-    const existing = (await tx.query<{ launch: Dispatch }>('SELECT launch FROM attempts WHERE id=$1', [input.attempt_id])).rows[0];
+    const existing = (await tx.query<{ launch: TaskFixtureDispatch }>('SELECT launch FROM attempts WHERE id=$1', [input.attempt_id])).rows[0];
     if (existing) {
       if (existing.launch.task_id !== input.task_id || existing.launch.runner_id !== input.runner_id || existing.launch.prompt !== input.prompt || existing.launch.kind !== input.kind || existing.launch.resource_id !== input.resource_id) throw new Error('Attempt fixture already has different content');
       return existing.launch;
@@ -47,7 +49,7 @@ export async function createAttemptFixture(db: Database, input: AttemptFixture):
       await tx.query('INSERT INTO plan_nodes(task_id,plan_id,node_id,definition) SELECT id,plan_id,$2,$3 FROM tasks WHERE id=$1 AND NOT EXISTS (SELECT 1 FROM plan_nodes WHERE plan_nodes.plan_id=tasks.plan_id AND node_id=$2)', [input.task_id, nodeId, { node_id: nodeId, dependencies: [], probe: true }]);
       await tx.query("INSERT INTO node_activations(task_id,node_id,activation,specification_id,plan_id,basis_source) SELECT id,$2,1,specification_id,plan_id,'recorded' FROM tasks WHERE id=$1 ON CONFLICT DO NOTHING", [input.task_id, nodeId]);
     }
-    const launch: Dispatch = {
+    const launch: TaskFixtureDispatch = {
       dispatch_id: randomUUID(), attempt_id: input.attempt_id, runner_id: input.runner_id, task_id: input.task_id,
       ...(nodeId ? { node_id: nodeId } : {}), kind: input.kind, fencing_generation: 1, node_activation: nodeId ? 1 : 0,
       control_version: Number(task.control_version), resource_id: input.resource_id, runtime_id: 'opencode', model: 'opencode/longcat-2.5-preview-free',

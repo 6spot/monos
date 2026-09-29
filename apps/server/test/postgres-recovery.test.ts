@@ -34,7 +34,7 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('PostgreSQL process-cra
     const runnerId = randomUUID(); await enrollFixture(db, runnerId, randomUUID(), 1);
     return createAttemptFixture(db, { runner_id: runnerId, attempt_id: randomUUID(), task_id: randomUUID(), kind, resource_id: 'repo', prompt: 'atomic crash verification' });
   }
-  function reply(launch: Dispatch): CommandEnvelope {
+  function reply(launch: Dispatch & { task_id: string }): CommandEnvelope {
     return { schema_version: 1, request_id: randomUUID(), scope_id: launch.task_id, expected_control_version: 1, name: 'commit_task_turn', payload: { reply: 'durable reply', source_watermark: 1, routing: { kind: 'reply_only' } } };
   }
   async function counts(launch: Dispatch) {

@@ -159,6 +159,13 @@ func Envelope(raw []byte) (protocol.CommandEnvelope, error) {
 		allowed["handled_guidance_ids"] = true
 	case protocol.CommitTaskTurn:
 		required = []string{"reply", "source_watermark", "routing"}
+	case "commit_discussion_turn":
+		required = []string{"reply", "working_requirement_state", "source_message_id", "source_watermark"}
+		allowed["task_preview"] = true
+	case "read_discussion":
+		allowed["cursor"] = true
+	case "update_working_requirement_state":
+		required = []string{"working_requirement_state", "resolved_watermark", "project_context_version", "project_context_digest"}
 	default:
 		return v, fmt.Errorf("unsupported command")
 	}

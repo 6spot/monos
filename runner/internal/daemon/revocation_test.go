@@ -12,8 +12,8 @@ import (
 )
 
 func revokedInventory() (protocol.Operation, protocol.RunnerInventory) {
-	dispatch := protocol.Dispatch{AttemptID: "a", DispatchID: "d", RunnerID: "runner", TaskID: "task", ResourceID: "repo", Kind: protocol.Node, RuntimeID: protocol.Opencode, Model: protocol.OpencodeMIMOV26FlashFree, MutationAllowed: false}
-	op := protocol.Operation{SchemaVersion: 1, OperationID: "stop-a", AttemptID: "a", DispatchID: "d", RequestID: "r", ResourceID: "repo", Kind: protocol.Stop, State: protocol.StateAdmitted}
+	dispatch := protocol.Dispatch{AttemptID: "a", DispatchID: "d", RunnerID: "runner", TaskID: ptr("task"), ResourceID: ptr("repo"), Kind: protocol.Node, RuntimeID: protocol.Opencode, Model: protocol.OpencodeMIMOV26FlashFree, MutationAllowed: false}
+	op := protocol.Operation{SchemaVersion: 1, OperationID: "stop-a", AttemptID: "a", DispatchID: "d", RequestID: "r", ResourceID: ptr("repo"), Kind: protocol.Stop, State: protocol.StateAdmitted}
 	return op, protocol.RunnerInventory{SchemaVersion: 1, SnapshotID: "snapshot", Dispatches: []protocol.Dispatch{dispatch}, Operations: []protocol.Operation{op}}
 }
 func TestNeverDeliveredRevokeWritesTombstoneBeforeStopAndRejectsLateStart(t *testing.T) {
@@ -172,7 +172,7 @@ func TestRevokedPrepareFailureRequiresMatchingAdmittedStop(t *testing.T) {
 			case "other_dispatch":
 				inventory.Operations[0].DispatchID = "another-dispatch"
 			case "changed_resource":
-				inventory.Dispatches[0].ResourceID = "another-resource"
+				inventory.Dispatches[0].ResourceID = ptr("another-resource")
 			}
 			supervisor := &fakeSupervisor{}
 			d := Daemon{DB: db, Host: supervisor, Boot: "boot"}

@@ -16,8 +16,8 @@ Architecture modules remain authoritative. The existing boundary probe implement
 
 ## Dependencies and order
 
-- [Command and persistence foundation](../09-28-a-command-foundation/prd.md)
-- [Owner access and minimum configuration](../09-28-a-owner-configuration/prd.md)
+- [Command and persistence foundation](../archive/2026-09/09-28-a-command-foundation/prd.md)
+- [Owner access and minimum configuration](../archive/2026-09/09-28-a-owner-configuration/prd.md)
 - [Production Runtime integration](../archive/2026-09/09-28-a-runtime-integration/prd.md)
 
 These are completion/evidence gates, not automatic scheduler dependencies. Parent/child links express scope ownership only. Evidence inspection and planning may proceed earlier; implementation must resolve upstream failures first.
@@ -26,8 +26,8 @@ These are completion/evidence gates, not automatic scheduler dependencies. Paren
 
 Execute these independently verifiable leaves in order after Runtime integration acceptance:
 
-1. [Todo capture and lifecycle](../09-29-a-todo-capture/prd.md): model-free capture, organization and Inbox workspace.
-2. [Ordered Todo Planner discussion](../09-29-a-todo-discussion/prd.md): Todo-scoped Attempts, ordered input, atomic replies/requirement state and recovery.
+1. [Todo capture and lifecycle](../archive/2026-09/09-29-a-todo-capture/prd.md): model-free capture, organization and Inbox workspace.
+2. [Ordered Todo Planner discussion](../archive/2026-09/09-29-a-todo-discussion/prd.md): Todo-scoped Attempts, ordered input, atomic replies/requirement state and recovery.
 3. [Exact Task preview and creation](../09-29-a-task-preview/prd.md): structured previews, exact Owner confirmation and independent Task creation.
 4. [Capture and Discussion integration acceptance](../09-29-a-capture-discussion-acceptance/prd.md): combined real-service and browser acceptance.
 

@@ -5,6 +5,7 @@ import { Button } from '../components/ui/button.tsx';
 import { PageHeading, Select } from '../components/forms.tsx';
 import { APIError, request } from '../lib/api.ts';
 import { useTodoCommand } from '../lib/use-todo-command.ts';
+import { Discussion } from './discussion.tsx';
 
 type Scope = { scope: TodoPage['scope']; projectId?: string };
 type ProjectDraft = { projectId: string; basis: number };
@@ -139,6 +140,7 @@ export function Todos({ snapshot, onUnauthorized }: { snapshot: ConfigurationSna
             <div className="section-label"><h2 ref={heading} tabIndex={-1}>{todo.label}</h2><span className="tag">{todo.archived ? 'Archived' : 'Active'}</span></div>
             <p className="hint">{projectName(todo.project_id)}{snapshot.projects.find((project) => project.id === todo.project_id)?.archived ? ' (archived Project)' : ''}</p>
             <section className="subsection" aria-label="Original Capture"><h3>Original Capture</h3><p className="todo-original">{todo.original_capture}</p><p className="hint">Captured <time dateTime={todo.created_at}>{new Date(todo.created_at).toLocaleString()}</time></p></section>
+            <details key={todo.todo_id} className="todo-organization"><summary>Organize Todo</summary>
             <form className="subsection" aria-label="Todo organization" onSubmit={(event) => { event.preventDefault(); void command.execute({ schema_version: 1, request_id: crypto.randomUUID(), name: 'assign_todo_project', expected_control_version: draft?.basis ?? todo.control_version, payload: { todo_id: todo.todo_id, ...(assignment ? { project_id: assignment } : {}) } }); }}>
               <fieldset disabled={disabled}><h3>Organization</h3><Select label="Todo Project" value={assignment} onChange={(event) => setDrafts((all) => ({ ...all, [todo.todo_id]: { projectId: event.target.value, basis: draft?.basis ?? todo.control_version } }))}>
                 <option value="">Inbox — no Project</option>{activeProjects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
@@ -146,8 +148,10 @@ export function Todos({ snapshot, onUnauthorized }: { snapshot: ConfigurationSna
               </Select><div className="button-row"><Button type="submit" disabled={disabled || !draft}>Save Project</Button>{draft && <Button type="button" variant="outline" onClick={() => clearDraft(todo.todo_id)}>Reload saved Project</Button>}</div>{draft && <p className="hint">Unsaved Project change</p>}</fieldset>
             </form>
             <div className="subsection"><p className="hint">{todo.archived ? 'Restore this Todo to your active ideas.' : 'Archive this Todo when you want to set it aside.'}</p><Button variant="outline" disabled={disabled} onClick={() => { void command.execute({ schema_version: 1, request_id: crypto.randomUUID(), name: 'set_todo_archived', expected_control_version: todo.control_version, payload: { todo_id: todo.todo_id, archived: !todo.archived } }); }}>{todo.archived ? 'Restore Todo' : 'Archive Todo'}</Button></div>
+            </details>
           </article>}
         </> : <div className="card empty-state"><span className="empty-symbol" aria-hidden="true">↗</span><h2>No Todo selected</h2><p>Select an idea from the list to see its original capture and organize it.</p><Button variant="outline" onClick={() => captureInput.current?.focus()}>Create Todo</Button></div>}
+        <Discussion todo={todo && inScope(todo, filter) ? todo : undefined} snapshot={snapshot} onUnauthorized={onUnauthorized} />
       </section>
     </div>
   </>;

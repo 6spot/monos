@@ -27,6 +27,9 @@ const help = `monos — formal monos Tool Protocol commands
   monos inspect_repository --input payload.json [--request-id ID] --output json
   monos complete_node --input payload.json [--request-id ID] --output json
   monos commit_task_turn --input payload.json [--request-id ID] --output json
+  monos read_discussion --input payload.json [--request-id ID] --output json
+  monos update_working_requirement_state --input payload.json [--request-id ID] --output json
+  monos commit_discussion_turn --input payload.json [--request-id ID] --output json
   monos retry --request-id ID --output json
   monos command-status --request-id ID --output json
 
@@ -34,6 +37,11 @@ Use --input - to read a JSON payload from stdin (maximum 1 MiB).
 Workspace payload: {"resource_id":"RESOURCE"}
 Node completion: {"summary":"completed work"}
 Planner reply: {"reply":"...","source_watermark":1,"routing":{"kind":"reply_only"}}
+Todo history: {} or {"cursor":"CURSOR"}; only this Attempt's input cutoff is readable.
+Todo cache rebuild: {"working_requirement_state":"...","resolved_watermark":0,"project_context_version":1,"project_context_digest":"64-hex-digest-from-context"}
+Todo reply: {"reply":"...","working_requirement_state":"...","source_message_id":"MESSAGE","source_watermark":1}
+Only commit_discussion_turn completes a Todo Discussion turn. A history read or
+cache rebuild does not consume the Owner's unresolved message.
 The Runner derives your scope from the kernel process identity. No scope/PID hints
 grant authority. Retry reloads the immutable journaled payload, never your file.
 An uncertain response must be reconciled with command-status using the same ID.
@@ -91,7 +99,7 @@ func run(args []string) (protocol.CommandResult, error) {
 		action = "retry"
 	case "command_status":
 		action = "status"
-	case "open_workspace", "inspect_repository", "complete_node", "commit_task_turn":
+	case "open_workspace", "inspect_repository", "complete_node", "commit_task_turn", "read_discussion", "update_working_requirement_state", "commit_discussion_turn":
 	default:
 		return result, fmt.Errorf("unknown command")
 	}

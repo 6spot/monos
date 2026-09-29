@@ -13,7 +13,7 @@ const snapshotA = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 const snapshotB = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
 
 func inventoryDispatch() protocol.Dispatch {
-	return protocol.Dispatch{AttemptID: "a", DispatchID: "d", RunnerID: "runner", TaskID: "t", Kind: protocol.Node, ResourceID: "repo", RuntimeID: protocol.Opencode, Model: protocol.OpencodeMIMOV26FlashFree, Prompt: "hello", MutationAllowed: true}
+	return protocol.Dispatch{AttemptID: "a", DispatchID: "d", RunnerID: "runner", TaskID: ptr("t"), Kind: protocol.Node, ResourceID: ptr("repo"), RuntimeID: protocol.Opencode, Model: protocol.OpencodeMIMOV26FlashFree, Prompt: "hello", MutationAllowed: true}
 }
 func inventoryClient(t *testing.T, handler http.HandlerFunc) *Client {
 	t.Helper()
@@ -32,7 +32,7 @@ func TestInventoryCollectsAllPagesAndDeduplicates(t *testing.T) {
 			if r.URL.Query().Get("snapshot_id") != snapshotA {
 				t.Error("snapshot query lost")
 			}
-			page.Operations = []protocol.Operation{{SchemaVersion: 1, OperationID: "o", AttemptID: "a", DispatchID: "d", RequestID: "r", Kind: protocol.Stop, ResourceID: "repo", State: protocol.StateAdmitted}}
+			page.Operations = []protocol.Operation{{SchemaVersion: 1, OperationID: "o", AttemptID: "a", DispatchID: "d", RequestID: "r", Kind: protocol.Stop, ResourceID: ptr("repo"), State: protocol.StateAdmitted}}
 		}
 		json.NewEncoder(w).Encode(page)
 	})
@@ -77,7 +77,7 @@ func TestPartialInventoryAndCursorLoopNeverSucceed(t *testing.T) {
 			client := inventoryClient(t, func(w http.ResponseWriter, r *http.Request) {
 				page := protocol.RunnerInventory{SchemaVersion: 1, SnapshotID: snapshotA, Dispatches: []protocol.Dispatch{}, Operations: []protocol.Operation{}}
 				if mode == "unmapped-operation" {
-					page.Operations = []protocol.Operation{{SchemaVersion: 1, OperationID: "o", AttemptID: "missing", DispatchID: "d", RequestID: "r", Kind: protocol.Stop, ResourceID: "repo", State: protocol.StateAdmitted}}
+					page.Operations = []protocol.Operation{{SchemaVersion: 1, OperationID: "o", AttemptID: "missing", DispatchID: "d", RequestID: "r", Kind: protocol.Stop, ResourceID: ptr("repo"), State: protocol.StateAdmitted}}
 				} else {
 					page.NextCursor = &cursor
 					if mode == "truncated" && r.URL.Query().Get("after") != "" {
@@ -93,3 +93,5 @@ func TestPartialInventoryAndCursorLoopNeverSucceed(t *testing.T) {
 		})
 	}
 }
+
+func ptr(value string) *string { return &value }

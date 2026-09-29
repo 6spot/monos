@@ -41,6 +41,18 @@ h1,h2,h3,h4,p { margin:0; } h1 { font-size:32px; line-height:1.2; font-weight:60
 .todo-original { white-space:pre-wrap; overflow-wrap:anywhere; font-size:14px; line-height:1.8; margin:16px 0 20px; }
 .todo-detail .subsection > [data-slot=button] { margin-top:12px; }
 .todo-back { display:none!important; }
+.todo-discussion { margin-top:20px; }
+.todo-organization { margin-top:18px; }
+.todo-organization > summary { cursor:pointer; font-size:13px; font-weight:500; }
+.discussion-messages { list-style:none; padding:0; margin:20px 0; display:flex; flex-direction:column; gap:18px; }
+.discussion-message { min-width:0; padding:14px 0; border-bottom:1px solid var(--border); }
+.discussion-message-meta { display:flex; align-items:center; flex-wrap:wrap; gap:8px 12px; margin-bottom:8px; }
+.discussion-message-meta time { font-size:11px; color:var(--muted-foreground); }
+.discussion-content { white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.75; margin-top:10px; }
+.discussion-preview,.discussion-attention { margin-top:14px; padding:16px; border:1px solid var(--border); border-radius:10px; }
+.discussion-preview h3 { overflow-wrap:anywhere; }
+.discussion-attention .button-row { margin-top:12px; }
+.discussion-composer .field { margin-top:0; }
 @media(max-width:1100px) { .todo-workspace { grid-template-columns:minmax(210px,260px) minmax(0,1fr); gap:18px; } }
 @media(max-width:760px) {
   .todo-workspace { display:block; }

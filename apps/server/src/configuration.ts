@@ -6,6 +6,7 @@ import { CommandError } from '../../../packages/domain/src/commands.ts';
 import { repositoryIdentity, validateGitRef } from '../../../packages/domain/src/repositories.ts';
 import { authenticateOwner } from './owner-commands.ts';
 import { lockConfiguration } from './configuration-guards.ts';
+import { discussionText } from './discussion-state.ts';
 import type { GitHub, GitHubCredentials } from './github.ts';
 
 async function snapshot(tx: Transaction, version: number): Promise<ConfigurationSnapshot> {
@@ -16,7 +17,8 @@ async function snapshot(tx: Transaction, version: number): Promise<Configuration
   const projects = (await tx.query<Omit<ProjectConfiguration, 'resources' | 'role_ids'>>('SELECT id,name,context,archived FROM projects ORDER BY id')).rows;
   const resources = (await tx.query<{ project_id: string; settings: GitRepositoryResource }>('SELECT project_id,settings FROM project_resources WHERE active ORDER BY id')).rows;
   const selected = (await tx.query<{ project_id: string; role_id: string }>('SELECT project_id,role_id FROM project_roles ORDER BY role_id')).rows;
-  const result = { schema_version: 1, control_version: version, roles, policies, ...(github ? { github } : {}), projects: projects.map((project) => ({ ...project, resources: resources.filter((r) => r.project_id === project.id).map((r) => r.settings), role_ids: selected.filter((r) => r.project_id === project.id).map((r) => r.role_id) })) };
+  const planner_guidance = (await tx.query<{ planner_guidance: string }>('SELECT planner_guidance FROM execution_policies')).rows[0]!.planner_guidance;
+  const result = { schema_version: 1, control_version: version, roles, policies, planner_guidance, ...(github ? { github } : {}), projects: projects.map((project) => ({ ...project, resources: resources.filter((r) => r.project_id === project.id).map((r) => r.settings), role_ids: selected.filter((r) => r.project_id === project.id).map((r) => r.role_id) })) };
   if (Buffer.byteLength(JSON.stringify(result)) > MAX_BODY_BYTES) throw new CommandError('unmet_precondition', 'Configuration exceeds the current 2 MiB snapshot limit');
   return validate('ConfigurationSnapshot', result);
 }
@@ -86,6 +88,10 @@ export class Configuration {
       }
       if (version !== command.expected_control_version) throw new CommandError('version_conflict', 'Configuration changed; reload and review your edit', version);
       switch (command.name) {
+        case 'save_planner_guidance': {
+          const { guidance } = validate<{ guidance: string }>('PlannerGuidance', command.payload); discussionText(guidance, true);
+          await tx.query('UPDATE execution_policies SET planner_guidance=$1', [guidance]); break;
+        }
         case 'save_project': await saveProject(tx, validate('ProjectConfiguration', command.payload)); break;
         case 'save_role': await saveRole(tx, validate('RoleConfiguration', command.payload)); break;
         case 'save_policies': await tx.query('UPDATE execution_policies SET policies=$1', [validate('PolicyConfiguration', command.payload)]); break;

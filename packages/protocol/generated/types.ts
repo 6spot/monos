@@ -11,6 +11,8 @@ type TodoCursor = string;
 
 type TodoCaptureText = string;
 
+type DiscussionText = string;
+
 export interface CommandEnvelope {
     expected_control_version: number;
     name:                     CommandEnvelopeName;
@@ -20,16 +22,23 @@ export interface CommandEnvelope {
     scope_id:                 string;
 }
 
-export type CommandEnvelopeName = "open_workspace" | "inspect_repository" | "complete_node" | "commit_task_turn";
+export type CommandEnvelopeName = "open_workspace" | "inspect_repository" | "complete_node" | "commit_task_turn" | "commit_discussion_turn" | "read_discussion" | "update_working_requirement_state";
 
 export interface CommandPayload {
-    artifact_ids?:         string[];
-    handled_guidance_ids?: string[];
-    reply?:                string;
-    resource_id?:          string;
-    routing?:              Routing;
-    source_watermark?:     number;
-    summary?:              string;
+    artifact_ids?:              string[];
+    cursor?:                    string;
+    handled_guidance_ids?:      string[];
+    project_context_digest?:    string;
+    project_context_version?:   number;
+    reply?:                     string;
+    resolved_watermark?:        number;
+    resource_id?:               string;
+    routing?:                   Routing;
+    source_message_id?:         string;
+    source_watermark?:          number;
+    summary?:                   string;
+    task_preview?:              TaskPreview;
+    working_requirement_state?: string;
 }
 
 export interface Routing {
@@ -37,6 +46,12 @@ export interface Routing {
 }
 
 export type RoutingKind = "reply_only";
+
+export interface TaskPreview {
+    project_id?:   string;
+    specification: string;
+    title:         string;
+}
 
 export interface CommandSubmission {
     envelope_json: string;
@@ -61,15 +76,45 @@ export interface ErrorInfo {
 export type Code = "invalid_input" | "denied_scope" | "unauthorized" | "stale_execution" | "version_conflict" | "payload_conflict" | "unmet_precondition" | "unsupported_version" | "control_unavailable" | "internal_error" | "rate_limited";
 
 export interface EffectResult {
-    git_commit?:       string;
-    git_tree?:         string;
-    message?:          string;
-    path?:             string;
-    reply?:            string;
-    source_watermark?: number;
-    workspace_id?:     string;
-    writer_absent?:    boolean;
+    cache_updated?:      boolean;
+    discussion_page?:    DiscussionPage;
+    git_commit?:         string;
+    git_tree?:           string;
+    message?:            string;
+    message_id?:         string;
+    path?:               string;
+    reply?:              string;
+    resolved_watermark?: number;
+    source_watermark?:   number;
+    workspace_id?:       string;
+    writer_absent?:      boolean;
 }
+
+export interface DiscussionPage {
+    cursor:         string;
+    has_more:       boolean;
+    messages:       DiscussionMessage[];
+    schema_version: number;
+    todo_id:        string;
+}
+
+export interface DiscussionMessage {
+    author:                   Author;
+    content:                  string;
+    created_at:               string;
+    disposition?:             Disposition;
+    message_id:               string;
+    project_context_version?: number;
+    project_id?:              string;
+    sequence:                 number;
+    source_message_id?:       string;
+    source_watermark?:        number;
+    task_preview?:            TaskPreview;
+}
+
+export type Author = "owner" | "assistant";
+
+export type Disposition = "withdrawn";
 
 export type CommandResultStatus = "admitted" | "committed" | "error" | "unknown";
 
@@ -98,23 +143,27 @@ export interface Frame {
 }
 
 export interface Dispatch {
-    attempt_id:         string;
-    control_version:    number;
-    dispatch_id:        string;
-    fencing_generation: number;
-    kind:               DispatchKind;
-    log_mode?:          LogModeElement;
-    model:              Model;
-    mutation_allowed:   boolean;
-    node_activation:    number;
-    node_id?:           string;
-    process_released:   boolean;
-    prompt:             string;
-    resource_id:        string;
-    runner_id:          string;
-    runtime_id:         RuntimeID;
-    source_watermark:   number;
-    task_id:            string;
+    attempt_id:               string;
+    control_version:          number;
+    dispatch_id:              string;
+    fencing_generation:       number;
+    kind:                     DispatchKind;
+    log_mode?:                LogModeElement;
+    model:                    Model;
+    mutation_allowed:         boolean;
+    node_activation:          number;
+    node_id?:                 string;
+    process_released:         boolean;
+    project_context_digest?:  string;
+    project_context_version?: number;
+    prompt:                   string;
+    resource_id?:             string;
+    runner_id:                string;
+    runtime_id:               RuntimeID;
+    source_message_id?:       string;
+    source_watermark:         number;
+    task_id?:                 string;
+    todo_id?:                 string;
 }
 
 export type DispatchKind = "node" | "planner";
@@ -146,7 +195,7 @@ export interface Operation {
     kind:           OperationKind;
     operation_id:   string;
     request_id:     string;
-    resource_id:    string;
+    resource_id?:   string;
     result?:        EffectResult;
     schema_version: number;
     state:          OperationState;
@@ -293,7 +342,7 @@ export interface ConfigurationCommand {
     schema_version:           number;
 }
 
-export type ConfigurationCommandName = "save_project" | "save_role" | "save_policies" | "save_github";
+export type ConfigurationCommandName = "save_project" | "save_role" | "save_policies" | "save_github" | "save_planner_guidance";
 
 export interface PayloadClass {
     archived?:         boolean;
@@ -310,6 +359,7 @@ export interface PayloadClass {
     app_id?:           string;
     installation_id?:  string;
     private_key?:      string;
+    guidance?:         string;
 }
 
 export interface ExecutionPolicy {
@@ -353,12 +403,13 @@ export interface ConfigurationResult {
 export type ConfigurationResultStatus = "committed" | "unknown";
 
 export interface ConfigurationSnapshot {
-    control_version: number;
-    github?:         GitHubConfigurationStatus;
-    policies:        PolicyConfiguration;
-    projects:        ProjectConfiguration[];
-    roles:           RoleConfiguration[];
-    schema_version:  number;
+    control_version:   number;
+    github?:           GitHubConfigurationStatus;
+    planner_guidance?: string;
+    policies:          PolicyConfiguration;
+    projects:          ProjectConfiguration[];
+    roles:             RoleConfiguration[];
+    schema_version:    number;
 }
 
 export interface GitHubConfigurationStatus {
@@ -685,4 +736,174 @@ export interface TodoCommandResult {
     schema_version: number;
     status:         ConfigurationResultStatus;
     todo?:          TodoRecord;
+}
+
+export interface DiscussionStatus {
+    current_source?:            DiscussionSource;
+    discussion_version:         number;
+    latest_sequence:            number;
+    project_context_digest:     string;
+    project_context_version:    number;
+    resolved_watermark:         number;
+    schema_version:             number;
+    todo_id:                    string;
+    working_requirement_state?: string;
+}
+
+export interface DiscussionSource {
+    attempt_id?:      string;
+    end_reason?:      string;
+    message_id:       string;
+    source_watermark: number;
+    status:           DiscussionSourceStatus;
+    waiting_reason?:  string;
+}
+
+export type DiscussionSourceStatus = "queued" | "processing" | "interrupted" | "settling";
+
+export interface DiscussionSubmitCommand {
+    name:           DiscussionSubmitCommandName;
+    payload:        DiscussionSubmitCommandPayload;
+    request_id:     string;
+    schema_version: number;
+    todo_id:        string;
+}
+
+export type DiscussionSubmitCommandName = "submit_discussion_message";
+
+export interface DiscussionSubmitCommandPayload {
+    content:    string;
+    message_id: string;
+}
+
+export interface DiscussionRetryCommand {
+    expected_discussion_version: number;
+    name:                        DiscussionRetryCommandName;
+    payload:                     DiscussionRetryCommandPayload;
+    request_id:                  string;
+    schema_version:              number;
+    todo_id:                     string;
+}
+
+export type DiscussionRetryCommandName = "retry_discussion_turn";
+
+export interface DiscussionRetryCommandPayload {
+    source_message_id: string;
+}
+
+export interface DiscussionWithdrawCommand {
+    expected_discussion_version: number;
+    name:                        DiscussionWithdrawCommandName;
+    payload:                     DiscussionWithdrawCommandPayload;
+    request_id:                  string;
+    schema_version:              number;
+    todo_id:                     string;
+}
+
+export type DiscussionWithdrawCommandName = "withdraw_discussion_turn";
+
+export interface DiscussionWithdrawCommandPayload {
+    source_message_id: string;
+}
+
+export interface DiscussionStopCommand {
+    expected_discussion_version: number;
+    name:                        DiscussionStopCommandName;
+    payload:                     DiscussionStopCommandPayload;
+    request_id:                  string;
+    schema_version:              number;
+    todo_id:                     string;
+}
+
+export type DiscussionStopCommandName = "stop_discussion_turn";
+
+export interface DiscussionStopCommandPayload {
+    attempt_id:        string;
+    source_message_id: string;
+}
+
+export interface DiscussionCommand {
+    name:                         DiscussionCommandName;
+    payload:                      DiscussionCommandPayload;
+    request_id:                   string;
+    schema_version:               number;
+    todo_id:                      string;
+    expected_discussion_version?: number;
+}
+
+export type DiscussionCommandName = "submit_discussion_message" | "retry_discussion_turn" | "withdraw_discussion_turn" | "stop_discussion_turn";
+
+export interface DiscussionCommandPayload {
+    content?:           string;
+    message_id?:        string;
+    source_message_id?: string;
+    attempt_id?:        string;
+}
+
+export interface DiscussionCommandResult {
+    attempt_id?:         string;
+    discussion_version?: number;
+    message_id?:         string;
+    operation_id?:       string;
+    request_id:          string;
+    schema_version:      number;
+    status:              ConfigurationResultStatus;
+    todo_id?:            string;
+}
+
+export interface TodoAttemptListPage {
+    attempts:       TodoAttemptStatus[];
+    cursor:         string;
+    has_more:       boolean;
+    schema_version: number;
+    todo_id:        string;
+}
+
+export interface TodoAttemptStatus {
+    activity_at?:     string;
+    attempt_id:       string;
+    created_at:       string;
+    end_reason?:      string;
+    kind:             TodoAttemptStatusKind;
+    latest_sequence:  number;
+    log_mode:         AttemptStatusLogMode;
+    mutation_allowed: boolean;
+    process_absent:   boolean;
+    process_released: boolean;
+    runner_id:        string;
+    schema_version:   number;
+    started:          boolean;
+    state:            AttemptStatusState;
+    todo_id:          string;
+    visible_sequence: number;
+}
+
+export type TodoAttemptStatusKind = "planner";
+
+export interface TodoAttemptLogPage {
+    attempt_id:     string;
+    cursor:         string;
+    events:         RuntimeEvent[];
+    gap_after:      number;
+    has_more:       boolean;
+    schema_version: number;
+    todo_id:        string;
+}
+
+export interface TodoOperationStatus {
+    attempt_id:       string;
+    attention:        boolean;
+    end_reason?:      string;
+    failure_kind?:    string;
+    kind:             OperationKind;
+    operation_id:     string;
+    process_absent:   boolean;
+    process_released: boolean;
+    schema_version:   number;
+    state:            OperationState;
+    todo_id:          string;
+}
+
+export interface PlannerGuidance {
+    guidance: string;
 }

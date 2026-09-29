@@ -96,7 +96,7 @@ func TestOnlyExplicitFreeModelsAndUnrestrictedShell(t *testing.T) {
 	if !strings.Contains(args, "--auto") || !strings.Contains(args, "--model "+host.FreeModel) {
 		t.Fatal("unattended/free model invocation missing")
 	}
-	planner, err := Config(protocol.Dispatch{Kind: protocol.Planner, AttemptID: "p"})
+	planner, err := Config(protocol.Dispatch{Kind: "planner", AttemptID: "p"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -118,5 +118,57 @@ func TestWorkerRetainsCaptureFailureWhenMarkerCannotPersist(t *testing.T) {
 	err := runWithSink(protocol.Dispatch{RuntimeID: protocol.Opencode, Model: host.FreeModel, AttemptID: "a"}, execute, outputSink{stdout: failingOutput{}, stderr: io.Discard, mark: func(string) { /* failed marker persistence */ }})
 	if !errors.Is(err, ErrCaptureFailure) {
 		t.Fatalf("capture fact lost: %v", err)
+	}
+}
+
+func TestTodoUsesFreshScratchContextAndOneFormalHandoffProtocol(t *testing.T) {
+	todo, source := "todo-a", "source-a"
+	d := protocol.Dispatch{AttemptID: "todo-attempt", TodoID: &todo, SourceMessageID: &source, Kind: "planner", RuntimeID: protocol.Opencode, Model: host.FreeModel, Prompt: "authoritative Todo-only context\nsource_message_id: source-a"}
+	var calls int
+	var preflightEnv []string
+	err := runWithSink(d, func(cmd *exec.Cmd) error {
+		if cmd.Dir != host.Path(d.AttemptID, "scratch") {
+			t.Error("Todo left its reserved scratch directory")
+		}
+		if cmd.Args[1] == "models" {
+			preflightEnv = append([]string(nil), cmd.Env...)
+			_, err := io.WriteString(cmd.Stdout, host.FreeModel+`
+{"id":"longcat-2.5-preview-free","providerID":"opencode","status":"active","capabilities":{"toolcall":true},"cost":{"input":0,"output":0,"cache":{"read":0,"write":0}}}`)
+			return err
+		}
+		calls++
+		if strings.Join(cmd.Env, "\n") != strings.Join(preflightEnv, "\n") {
+			t.Error("catalog and invocation environments differ")
+		}
+		raw, err := io.ReadAll(cmd.Stdin)
+		if err != nil || string(raw) != d.Prompt {
+			t.Error("authoritative context was replaced", err)
+		}
+		args := strings.Join(cmd.Args, " ")
+		for _, forbidden := range []string{"--session", "--continue", "fixture.git", "workspace", "authoritative Todo-only"} {
+			if strings.Contains(args, forbidden) {
+				t.Error("unexpected resume/repository/context argument", forbidden)
+			}
+		}
+		return nil // Exit without a tool must not create another model invocation.
+	}, outputSink{stdout: io.Discard, stderr: io.Discard})
+	if err != nil || calls != 1 {
+		t.Fatalf("unexpected model invocation count=%d: %v", calls, err)
+	}
+	protocolText := fixedProtocol(d)
+	for _, name := range []string{"monos read_discussion", "monos update_working_requirement_state", "monos commit_discussion_turn", "source_message_id", "source_watermark", "same retained request ID"} {
+		if !strings.Contains(protocolText, name) {
+			t.Error("Todo protocol missing", name)
+		}
+	}
+	if strings.Count(protocolText, "monos commit_discussion_turn") != 1 || strings.Contains(protocolText, "monos commit_task_turn") {
+		t.Fatal("Todo protocol uses an incorrect or repeated terminal handoff")
+	}
+	if strings.Contains(fixedProtocol(protocol.Dispatch{Kind: "planner"}), "Todo Discussion") {
+		t.Fatal("legacy Task protocol inherited Todo context")
+	}
+	cfg, err := Config(d)
+	if err != nil || !strings.Contains(cfg, `"edit":"deny"`) || !strings.Contains(cfg, `"bash":"allow"`) {
+		t.Fatal("Todo lost Planner filesystem or tool permissions", err)
 	}
 }

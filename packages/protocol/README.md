@@ -2,13 +2,24 @@
 
 Authority: `schemas/v1/contracts.json`. Run `pnpm protocol:generate` and `pnpm protocol:check`; never hand-edit generated types. JSON Schema validators remain mandatory: Go pointers/structs alone cannot reject null, missing fields or unknown properties. Go module import is `monos.local/protocol`, with Runner `replace monos.local/protocol => ../packages/protocol/generated/go`.
 
-All HTTPS/WSS clients must verify the task CA. Runner credentials and Attempt credentials are different Bearer tokens. No token appears in an envelope, journal, runtime event or log. `POST /v1/commands` accepts `CommandSubmission`: parse input, construct `CommandEnvelope`, canonicalize with RFC 8785, save exact UTF-8 bytes durably, then SHA256 those bytes. Backend requires canonical bytes and validates both digest and schema. Retry uses the retained bytes. Scope is the dispatch's `task_id`; backend derives Attempt/fence/activation from the credential and its records.
+All HTTPS/WSS clients must verify the task CA. Runner credentials and Attempt credentials are different Bearer tokens. No token appears in an envelope, journal, runtime event or log. `POST /v1/commands` accepts `CommandSubmission`: parse input, construct `CommandEnvelope`, canonicalize with RFC 8785, save exact UTF-8 bytes durably, then SHA256 those bytes. Backend requires canonical bytes and validates both digest and schema. Retry uses the retained bytes. Scope is the dispatch's exclusive `task_id` or `todo_id`; backend derives Attempt/fence/activation from the credential and its records. Todo dispatches are Planner-owned with no Task, Node or repository resource. Legacy Task dispatches retain their original wire meaning and journal bytes.
 
 Supported payloads:
 
 - `open_workspace` / `inspect_repository`: `{ "resource_id": "..." }`.
 - `complete_node`: `{ "summary": "...", "artifact_ids": [], "handled_guidance_ids": [] }`; optional arrays may be absent, only empty selections are supported in this probe.
 - `commit_task_turn`: `{ "reply": "...", "source_watermark": 1, "routing": { "kind": "reply_only" } }`.
+- `read_discussion`: `{}` or `{ "cursor": "..." }`; a bounded `result.discussion_page` contains only this Todo's history through the Attempt's launch cutoff.
+- `update_working_requirement_state`: `{ "working_requirement_state": "...", "resolved_watermark": 0, "project_context_version": 1, "project_context_digest": "<64 hexadecimal characters>" }`; rebuilding the cache does not resolve pending input.
+- `commit_discussion_turn`: `{ "reply": "...", "working_requirement_state": "...", "source_message_id": "...", "source_watermark": 1 }`; optional `task_preview` is `{ "title": "...", "specification": "...", "project_id": "..." }` with optional Project. This is structured proposal content, never Task creation.
+
+The same-named native `monos` commands use `--input <file|-> --request-id <id> --output json`.
+Only `commit_discussion_turn` completes a Todo Discussion phase. Resource-free Todo
+launches use private scratch and fresh provider context. Repository inspection is
+unavailable for Todo Attempts until the Runner implements configured-resource
+inspection; the probe repository is never a fallback. Stop may omit `resource_id`,
+while workspace effects require a real matching resource. Deploy a compatible
+Runner before enabling Todo dispatch; old strict readers reject the new shape.
 
 Unknown or irrelevant payload members are rejected. All requests carry the original `expected_control_version`; opening/inspecting a workspace does not change it. Successful terminal handoff changes it, but receipt replay precedes new-effect guards.
 

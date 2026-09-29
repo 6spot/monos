@@ -973,5 +973,322 @@
       "scope": "all",
       "limit": "999"
     }
+  },
+  {
+    "name": "Todo repository-free dispatch",
+    "schema": "Dispatch",
+    "valid": true,
+    "value": {
+      "dispatch_id": "dispatch-a",
+      "attempt_id": "attempt-a",
+      "runner_id": "runner-a",
+      "kind": "planner",
+      "fencing_generation": 1,
+      "node_activation": 0,
+      "control_version": 0,
+      "runtime_id": "opencode",
+      "model": "opencode/longcat-2.5-preview-free",
+      "prompt": "fixture only",
+      "source_watermark": 1,
+      "mutation_allowed": true,
+      "process_released": false,
+      "todo_id": "todo",
+      "source_message_id": "source",
+      "project_context_version": 0,
+      "project_context_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    }
+  },
+  {
+    "name": "Todo dispatch cannot fake Task scope",
+    "schema": "Dispatch",
+    "valid": false,
+    "value": {
+      "dispatch_id": "dispatch-a",
+      "attempt_id": "attempt-a",
+      "runner_id": "runner-a",
+      "kind": "planner",
+      "fencing_generation": 1,
+      "node_activation": 0,
+      "control_version": 0,
+      "runtime_id": "opencode",
+      "model": "opencode/longcat-2.5-preview-free",
+      "prompt": "fixture only",
+      "source_watermark": 1,
+      "mutation_allowed": true,
+      "process_released": false,
+      "todo_id": "todo",
+      "source_message_id": "source",
+      "project_context_version": 0,
+      "project_context_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "task_id": "todo"
+    }
+  },
+  {
+    "name": "Todo dispatch cannot own Node",
+    "schema": "Dispatch",
+    "valid": false,
+    "value": {
+      "dispatch_id": "dispatch-a",
+      "attempt_id": "attempt-a",
+      "runner_id": "runner-a",
+      "kind": "planner",
+      "fencing_generation": 1,
+      "node_activation": 0,
+      "control_version": 0,
+      "runtime_id": "opencode",
+      "model": "opencode/longcat-2.5-preview-free",
+      "prompt": "fixture only",
+      "source_watermark": 1,
+      "mutation_allowed": true,
+      "process_released": false,
+      "todo_id": "todo",
+      "source_message_id": "source",
+      "project_context_version": 0,
+      "project_context_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "node_id": "node"
+    }
+  },
+  {
+    "name": "Todo dispatch cannot bind fixture resource",
+    "schema": "Dispatch",
+    "valid": false,
+    "value": {
+      "dispatch_id": "dispatch-a",
+      "attempt_id": "attempt-a",
+      "runner_id": "runner-a",
+      "kind": "planner",
+      "fencing_generation": 1,
+      "node_activation": 0,
+      "control_version": 0,
+      "runtime_id": "opencode",
+      "model": "opencode/longcat-2.5-preview-free",
+      "prompt": "fixture only",
+      "source_watermark": 1,
+      "mutation_allowed": true,
+      "process_released": false,
+      "todo_id": "todo",
+      "source_message_id": "source",
+      "project_context_version": 0,
+      "project_context_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "resource_id": "fixture"
+    }
+  },
+  {
+    "name": "Todo dispatch requires source",
+    "schema": "Dispatch",
+    "valid": false,
+    "value": {
+      "dispatch_id": "dispatch-a",
+      "attempt_id": "attempt-a",
+      "runner_id": "runner-a",
+      "kind": "planner",
+      "fencing_generation": 1,
+      "node_activation": 0,
+      "control_version": 0,
+      "runtime_id": "opencode",
+      "model": "opencode/longcat-2.5-preview-free",
+      "prompt": "fixture only",
+      "source_watermark": 1,
+      "mutation_allowed": true,
+      "process_released": false,
+      "todo_id": "todo",
+      "project_context_version": 0,
+      "project_context_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    }
+  },
+  {
+    "name": "Repository-free Stop effect",
+    "schema": "Operation",
+    "valid": true,
+    "value": {
+      "schema_version": 1,
+      "operation_id": "o",
+      "attempt_id": "a",
+      "dispatch_id": "d",
+      "request_id": "r",
+      "kind": "stop",
+      "state": "admitted"
+    }
+  },
+  {
+    "name": "Workspace effect requires resource",
+    "schema": "Operation",
+    "valid": false,
+    "value": {
+      "schema_version": 1,
+      "operation_id": "o",
+      "attempt_id": "a",
+      "dispatch_id": "d",
+      "request_id": "r",
+      "kind": "inspect_repository",
+      "state": "admitted"
+    }
+  },
+  {
+    "name": "Atomic Discussion commit and preview",
+    "schema": "CommandEnvelope",
+    "valid": true,
+    "value": {
+      "schema_version": 1,
+      "request_id": "r",
+      "scope_id": "todo",
+      "expected_control_version": 1,
+      "name": "commit_discussion_turn",
+      "payload": {
+        "source_message_id": "source",
+        "source_watermark": 1,
+        "reply": "Canonical reply",
+        "working_requirement_state": "Understanding",
+        "task_preview": {
+          "title": "Preview",
+          "specification": "Exact proposed work"
+        }
+      }
+    }
+  },
+  {
+    "name": "Discussion commit requires state",
+    "schema": "CommandEnvelope",
+    "valid": false,
+    "value": {
+      "schema_version": 1,
+      "request_id": "r",
+      "scope_id": "todo",
+      "expected_control_version": 1,
+      "name": "commit_discussion_turn",
+      "payload": {
+        "source_message_id": "source",
+        "source_watermark": 1,
+        "reply": "Canonical reply",
+        "task_preview": {
+          "title": "Preview",
+          "specification": "Exact proposed work"
+        }
+      }
+    }
+  },
+  {
+    "name": "Discussion commit rejects irrelevant routing",
+    "schema": "CommandEnvelope",
+    "valid": false,
+    "value": {
+      "schema_version": 1,
+      "request_id": "r",
+      "scope_id": "todo",
+      "expected_control_version": 1,
+      "name": "commit_discussion_turn",
+      "payload": {
+        "source_message_id": "source",
+        "source_watermark": 1,
+        "reply": "Canonical reply",
+        "working_requirement_state": "Understanding",
+        "task_preview": {
+          "title": "Preview",
+          "specification": "Exact proposed work"
+        },
+        "routing": {
+          "kind": "reply_only"
+        }
+      }
+    }
+  },
+  {
+    "name": "Discussion scoped history read",
+    "schema": "CommandEnvelope",
+    "valid": true,
+    "value": {
+      "schema_version": 1,
+      "request_id": "r",
+      "scope_id": "todo",
+      "expected_control_version": 1,
+      "name": "read_discussion",
+      "payload": {}
+    }
+  },
+  {
+    "name": "Discussion explicit cache CAS",
+    "schema": "CommandEnvelope",
+    "valid": true,
+    "value": {
+      "schema_version": 1,
+      "request_id": "r",
+      "scope_id": "todo",
+      "expected_control_version": 1,
+      "name": "update_working_requirement_state",
+      "payload": {
+        "working_requirement_state": "",
+        "resolved_watermark": 0,
+        "project_context_version": 0,
+        "project_context_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    }
+  },
+  {
+    "name": "Owner Discussion submit",
+    "schema": "DiscussionCommand",
+    "valid": true,
+    "value": {
+      "schema_version": 1,
+      "request_id": "r",
+      "todo_id": "todo",
+      "name": "submit_discussion_message",
+      "payload": {
+        "message_id": "m",
+        "content": "  Original 😀  "
+      }
+    }
+  },
+  {
+    "name": "Owner Discussion Stop needs exact Attempt",
+    "schema": "DiscussionCommand",
+    "valid": false,
+    "value": {
+      "schema_version": 1,
+      "request_id": "r",
+      "todo_id": "todo",
+      "name": "stop_discussion_turn",
+      "payload": {
+        "source_message_id": "m"
+      },
+      "expected_discussion_version": 1
+    }
+  },
+  {
+    "name": "Owner Discussion rejects NUL",
+    "schema": "DiscussionCommand",
+    "valid": false,
+    "value": {
+      "schema_version": 1,
+      "request_id": "r",
+      "todo_id": "todo",
+      "name": "submit_discussion_message",
+      "payload": {
+        "message_id": "m",
+        "content": "a\u0000b"
+      }
+    }
+  },
+  {
+    "name": "Owner Discussion committed receipt",
+    "schema": "DiscussionCommandResult",
+    "valid": true,
+    "value": {
+      "schema_version": 1,
+      "request_id": "r",
+      "status": "committed",
+      "todo_id": "todo",
+      "discussion_version": 1
+    }
+  },
+  {
+    "name": "Owner Discussion unknown excludes result",
+    "schema": "DiscussionCommandResult",
+    "valid": false,
+    "value": {
+      "schema_version": 1,
+      "request_id": "r",
+      "status": "unknown",
+      "todo_id": "todo"
+    }
   }
 ]

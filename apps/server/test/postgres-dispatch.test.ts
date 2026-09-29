@@ -4,7 +4,7 @@ import { database, transaction } from '../../../packages/db/src/index.ts';
 import type { Database } from '../../../packages/db/src/index.ts';
 import { migrate } from '../../../packages/db/src/migrate.ts';
 import { DispatchQueue } from '../src/dispatch-queue.ts';
-import type { QueueInput } from '../src/dispatch-queue.ts';
+import type { TaskQueueInput as QueueInput } from '../src/dispatch-queue.ts';
 import { initializeTask, publishInitialPlan } from '../src/task-records.ts';
 import { BoundaryService } from '../src/service.ts';
 import { enrollFixture } from '../src/fixtures.ts';

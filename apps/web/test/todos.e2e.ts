@@ -27,17 +27,24 @@ async function saveProject(page: Page) {
   await page.getByRole('button', { name: 'Save Project', exact: true }).click();
   await expect(page.getByText('Unsaved Project change', { exact: true })).not.toBeVisible();
 }
+async function openOrganization(page: Page) {
+  const details = page.locator('.todo-organization');
+  await expect(details).toBeVisible();
+  if (!await details.evaluate((element) => (element as HTMLDetailsElement).open)) await details.locator('summary').click();
+}
 
 test('capture and keyboard opening preserve exact text without AI work; initial selection stays empty', async ({ page }, info) => {
   await signIn(page);
   await expect(page.getByRole('heading', { name: 'No Todo selected', exact: true })).toBeVisible();
   await expect(page.getByRole('textbox')).toHaveCount(1);
+  await expect(page.getByLabel('Message Planner', { exact: true })).toHaveCount(0);
   const writes: string[] = [];
   page.on('request', (request) => { if (request.method() === 'POST') writes.push(new URL(request.url()).pathname); });
   await page.getByRole('button', { name: 'Create Todo', exact: true }).click();
   await expect(page.getByLabel('Capture an idea', { exact: true })).toBeFocused();
   const original = '  A quiet captured idea  \n\nKeep <markup> & 中文 exactly.\n';
   await capture(page, original);
+  await expect(page.getByLabel('Todo Project', { exact: true })).not.toBeVisible();
   expect(await page.getByRole('region', { name: 'Original Capture', exact: true }).locator('.todo-original').textContent()).toBe(original);
   expect(writes).toEqual(['/v1/owner/todos/commands']);
   await page.reload();
@@ -45,7 +52,8 @@ test('capture and keyboard opening preserve exact text without AI work; initial 
   const row = page.getByRole('button', { name: /^A quiet captured idea/ });
   await row.focus(); await page.keyboard.press('Enter');
   await expect(page.getByRole('heading', { name: 'A quiet captured idea', exact: true })).toBeFocused();
-  await expect(page.getByRole('textbox')).toHaveCount(1);
+  await expect(page.getByRole('textbox')).toHaveCount(2);
+  await expect(page.getByLabel('Message Planner', { exact: true })).toHaveValue('');
   expect(writes).toEqual(['/v1/owner/todos/commands']);
   await page.screenshot({ path: info.outputPath('todos-desktop.png'), fullPage: true });
 });
@@ -55,13 +63,16 @@ test('Inbox, Project, archive and restore preserve capture and scoped drafts', a
   const project = await createProject(page, 'Todo organization Project'); await page.reload();
   await capture(page, 'Organize first idea'); await capture(page, 'Organize second idea');
   await page.getByRole('button', { name: /^Organize first idea/ }).click();
+  await openOrganization(page);
   await page.getByLabel('Todo Project', { exact: true }).selectOption(project);
   await page.getByLabel('Capture an idea', { exact: true }).fill('Keep my next idea');
   await page.getByRole('button', { name: /^Organize second idea/ }).click();
+  await openOrganization(page);
   await expect(page.getByLabel('Todo Project', { exact: true })).toHaveValue('');
   await page.getByRole('link', { name: 'Projects', exact: true }).click();
   await page.getByRole('link', { name: 'Todos', exact: true }).click();
   await page.getByRole('button', { name: /^Organize first idea/ }).click();
+  await openOrganization(page);
   await expect(page.getByLabel('Todo Project', { exact: true })).toHaveValue(project);
   await expect(page.getByLabel('Capture an idea', { exact: true })).toHaveValue('Keep my next idea');
   await page.getByLabel('Todo scope', { exact: true }).selectOption('inbox'); await saveProject(page);
@@ -76,27 +87,32 @@ test('Inbox, Project, archive and restore preserve capture and scoped drafts', a
   await expect(page.getByLabel('Todo scope', { exact: true })).toBeFocused();
   await page.getByLabel('Todo scope', { exact: true }).selectOption(`project:${project}`);
   await page.getByRole('button', { name: /^Organize first idea/ }).click();
+  await openOrganization(page);
   await page.getByRole('button', { name: 'Archive Todo', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'No Todo selected', exact: true })).toBeVisible();
   await expect(page.getByLabel('Capture an idea', { exact: true })).toBeFocused();
   await page.getByLabel('Todo scope', { exact: true }).selectOption('archived');
   await page.getByRole('button', { name: /^Organize first idea/ }).click();
+  await openOrganization(page);
   await expect(page.getByRole('region', { name: 'Original Capture', exact: true })).toContainText('Organize first idea');
   await page.getByRole('button', { name: 'Restore Todo', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'No Todo selected', exact: true })).toBeVisible();
   await expect(page.getByLabel('Capture an idea', { exact: true })).toBeFocused();
   await page.getByLabel('Todo scope', { exact: true }).selectOption(`project:${project}`);
   await page.getByRole('button', { name: /^Organize first idea/ }).click();
+  await openOrganization(page);
   await page.getByLabel('Todo Project', { exact: true }).selectOption(''); await saveProject(page);
   await expect(page.getByRole('heading', { name: 'No Todo selected', exact: true })).toBeVisible();
   await expect(page.getByLabel('Capture an idea', { exact: true })).toBeFocused();
   await page.getByLabel('Todo scope', { exact: true }).selectOption('inbox');
   await page.getByRole('button', { name: /^Organize first idea/ }).click();
+  await openOrganization(page);
   await expect(page.getByLabel('Todo Project', { exact: true })).toHaveValue('');
   await expect(page.getByLabel('Capture an idea', { exact: true })).toHaveValue('Keep my next idea');
   await page.getByLabel('Capture Project (optional)', { exact: true }).selectOption(project);
   await page.getByLabel('Todo scope', { exact: true }).selectOption(`project:${project}`);
   await capture(page, 'Captured directly in a Project');
+  await openOrganization(page);
   await expect(page.getByLabel('Todo Project', { exact: true })).toHaveValue(project);
   await page.reload(); await expect(page.getByLabel('Todo scope', { exact: true })).toHaveValue(`project:${project}`);
   await expect(page.getByRole('heading', { name: 'No Todo selected', exact: true })).toBeVisible();
@@ -145,9 +161,11 @@ test('two tabs reject stale organization without silently replacing its expected
   await signIn(page);
   const first = await createProject(page, 'First Todo Project'); const second = await createProject(page, 'Second Todo Project'); await page.reload();
   await capture(page, 'Concurrent Todo organization');
+  await openOrganization(page);
   await page.getByLabel('Todo Project', { exact: true }).selectOption(first);
   const other = await context.newPage(); await other.goto('/');
   await other.getByRole('button', { name: /^Concurrent Todo organization/ }).click();
+  await openOrganization(other);
   await other.getByLabel('Todo Project', { exact: true }).selectOption(second); await saveProject(other);
   await page.getByRole('button', { name: 'Save Project', exact: true }).click();
   await expect(page.getByRole('alert')).toContainText(/changed|version/i);
@@ -169,12 +187,15 @@ test('mobile returns from detail to the list with capture drafts intact and no h
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({ path: info.outputPath('todos-mobile-list.png'), fullPage: true });
   await page.getByRole('button', { name: /^Mobile captured idea/ }).click();
+  await page.locator('.todo-organization > summary').focus(); await page.keyboard.press('Enter');
+  await expect(page.getByRole('button', { name: 'Archive Todo', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Archive Todo', exact: true }).focus();
   await page.keyboard.press('Enter');
   await expect(page.getByLabel('Capture an idea', { exact: true })).toBeFocused();
   await expect(page.getByLabel('Capture an idea', { exact: true })).toHaveValue('Mobile unfinished capture');
   await page.getByLabel('Todo scope', { exact: true }).selectOption('archived');
   await page.getByRole('button', { name: /^Mobile captured idea/ }).click();
+  await openOrganization(page);
   await page.getByRole('button', { name: 'Restore Todo', exact: true }).focus();
   await page.keyboard.press('Enter');
   await expect(page.getByLabel('Capture an idea', { exact: true })).toBeFocused();

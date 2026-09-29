@@ -44,7 +44,7 @@ describe.skipIf(!enabled)('real PostgreSQL boundary admission', () => {
     expect(grant).not.toBeNull();
     return { runnerId, runnerToken, service, incarnation, launch, token: grant!.credential };
   }
-  function complete(launch: Dispatch): CommandEnvelope {
+  function complete(launch: Dispatch & { task_id: string }): CommandEnvelope {
     return { schema_version: 1, request_id: randomUUID(), scope_id: launch.task_id, expected_control_version: launch.control_version, name: 'complete_node', payload: { summary: 'complete' } };
   }
 

@@ -76,11 +76,12 @@ export class RuntimeScheduling {
     if (target.model_id !== supportedModel) return { status: 'unavailable', reason: 'unsupported_model', source, target };
     if (target.thinking_level !== undefined) return { status: 'unavailable', reason: 'unsupported_thinking', source, target };
 
-    // Auto must see one stable Runner set through queue admission. SHARE ROW
-    // EXCLUSIVE also waits for connect/touch transactions that already hold a
-    // Runner row lock before they update it; a plain SHARE lock could deadlock
-    // with that existing lock order. Pinned targets only need their row lock.
-    if (!target.runner_id) await tx.query('LOCK TABLE runners IN SHARE ROW EXCLUSIVE MODE');
+    // Auto must see one stable Runner set through queue admission. EXCLUSIVE
+    // waits for the ROW SHARE table lock taken by connect/touch's FOR UPDATE.
+    // SHARE ROW EXCLUSIVE would permit their row lock, then block their UPDATE
+    // while Auto waits for that row, forming a deadlock. Pinned targets only
+    // need their row lock.
+    if (!target.runner_id) await tx.query('LOCK TABLE runners IN EXCLUSIVE MODE');
 
     const facts = (await tx.query<RunnerFact>(`SELECT r.id,r.incarnation,r.runtime_report_incarnation,
       (r.connected AND r.ready AND r.connection_instance=$2 AND r.last_seen>clock_timestamp()-interval '15 seconds') AS online,
@@ -108,6 +109,7 @@ export class RuntimeScheduling {
     };
     const dispatch_id = await this.queue.enqueue(tx, {
       attempt_id: request.attempt_id, task_id: request.task_id, node_id: request.node_id,
+      todo_id: request.todo_id, discussion_context: request.discussion_context,
       kind: request.kind, expected: request.expected, resource_id: request.resource_id,
       prompt: request.prompt, source_watermark: request.source_watermark,
       runner_id: chosen.id, runtime_id: 'opencode', model: supportedModel, selection_context,

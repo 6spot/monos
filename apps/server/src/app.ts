@@ -10,6 +10,8 @@ import { OwnerReads } from './owner-reads.ts';
 import { OwnerAccess } from './owner-access.ts';
 import { Configuration } from './configuration.ts';
 import { Todos } from './todos.ts';
+import { Discussion } from './discussion.ts';
+import { TodoAttemptReads } from './todo-attempt-reads.ts';
 import { GitHub } from './github.ts';
 import fastifyStatic from '@fastify/static';
 import { join } from 'node:path';
@@ -63,12 +65,28 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
   const access = new OwnerAccess(service.db);
   const configuration = new Configuration(service.db, new GitHub(service.options.signingKey));
   const todos = new Todos(service.db);
+  const discussion = new Discussion(service.db, service.instanceId);
+  const todoAttempts = new TodoAttemptReads(service.db);
   if (webRoot) {
     void app.register(fastifyStatic, { root: join(webRoot, 'assets'), prefix: '/assets/', index: false, dotfiles: 'deny', immutable: true, maxAge: '1y' });
     app.get('/', async (_request, reply) => reply.header('Cache-Control', 'no-store').sendFile('index.html', webRoot, { cacheControl: false }));
   }
   app.get('/v1/owner/configuration', async (request) => configuration.read(ownerCredential(request)));
   app.get('/v1/owner/todos', async (request) => todos.list(ownerCredential(request), request.query));
+  app.post('/v1/owner/todos/discussion/commands', async (request) => discussion.command(ownerCredential(request), request.body));
+  app.get<{ Params: { request_id: string } }>('/v1/owner/todos/discussion/commands/:request_id', async (request) => discussion.receipt(ownerCredential(request), request.params.request_id));
+  app.get<{ Params: { todo_id: string } }>('/v1/owner/todos/:todo_id/discussion', async (request) => discussion.status(ownerCredential(request), request.params.todo_id));
+  app.get<{ Params: { todo_id: string }; Querystring: { cursor?: string } }>('/v1/owner/todos/:todo_id/discussion/messages', async (request) => {
+    validate('AttemptListQuery', request.query); return discussion.messages(ownerCredential(request), request.params.todo_id, request.query.cursor);
+  });
+  app.get<{ Params: { todo_id: string }; Querystring: { cursor?: string } }>('/v1/owner/todos/:todo_id/attempts', async (request) => {
+    validate('AttemptListQuery', request.query); return todoAttempts.attempts(ownerCredential(request), request.params.todo_id, request.query.cursor);
+  });
+  app.get<{ Params: { todo_id: string; attempt_id: string } }>('/v1/owner/todos/:todo_id/attempts/:attempt_id', async (request) => todoAttempts.attempt(ownerCredential(request), request.params.todo_id, request.params.attempt_id));
+  app.get<{ Params: { todo_id: string; attempt_id: string }; Querystring: { cursor?: string } }>('/v1/owner/todos/:todo_id/attempts/:attempt_id/logs', async (request) => {
+    validate('AttemptListQuery', request.query); return todoAttempts.logs(ownerCredential(request), request.params.todo_id, request.params.attempt_id, request.query.cursor);
+  });
+  app.get<{ Params: { todo_id: string; operation_id: string } }>('/v1/owner/todos/:todo_id/operations/:operation_id', async (request) => todoAttempts.operation(ownerCredential(request), request.params.todo_id, request.params.operation_id));
   app.get<{ Params: { todo_id: string } }>('/v1/owner/todos/:todo_id', async (request) => todos.read(ownerCredential(request), request.params.todo_id));
   app.post('/v1/owner/todos/commands', async (request) => todos.command(ownerCredential(request), request.body));
   app.get<{ Params: { request_id: string } }>('/v1/owner/todos/commands/:request_id', async (request) => todos.status(ownerCredential(request), request.params.request_id));

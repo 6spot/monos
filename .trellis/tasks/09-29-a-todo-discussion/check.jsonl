@@ -1,0 +1,8 @@
+{"file": ".trellis/spec/backend/database-guidelines.md", "reason": "Atomicity and lock ordering"}
+{"file": ".trellis/spec/backend/todos.md", "reason": "Capture and organization compatibility"}
+{"file": ".trellis/spec/backend/runtime-scheduling.md", "reason": "Shared target resolution and capacity"}
+{"file": ".trellis/spec/backend/dispatch-queue.md", "reason": "Queue promotion and physical claim"}
+{"file": ".trellis/spec/protocol/commands.md", "reason": "Scope authorization and immutable recovery"}
+{"file": ".trellis/spec/runner/execution-guidelines.md", "reason": "Runner physical ownership"}
+{"file": ".trellis/spec/frontend/state-management.md", "reason": "Canonical UI and scoped drafts"}
+{"file": "docs/02-planner-and-planning.md", "reason": "Ordered Discussion and Project attribution"}

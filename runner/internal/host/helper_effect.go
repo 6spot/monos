@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	protocol "monos.local/protocol"
+	"monos.local/runner/internal/wire"
 )
 
 func unitProperties(ctx context.Context, unit string) (map[string]string, error) {
@@ -145,7 +146,7 @@ func checkOperationWriters(ctx context.Context, attempt, boot string) error {
 	return nil
 }
 func sameOperation(a, b protocol.Operation) bool {
-	return a.OperationID == b.OperationID && a.AttemptID == b.AttemptID && a.DispatchID == b.DispatchID && a.ResourceID == b.ResourceID && a.RequestID == b.RequestID && a.SchemaVersion == b.SchemaVersion && a.Kind == b.Kind
+	return a.OperationID == b.OperationID && a.AttemptID == b.AttemptID && a.DispatchID == b.DispatchID && wire.SameResource(a.ResourceID, b.ResourceID) && a.RequestID == b.RequestID && a.SchemaVersion == b.SchemaVersion && a.Kind == b.Kind
 }
 
 func rootMaterializationBase(op protocol.Operation) (string, error) {
@@ -162,7 +163,7 @@ func rootMaterializationBase(op protocol.Operation) (string, error) {
 		if record.Operation.AttemptID != op.AttemptID || record.Operation.Kind != protocol.KindOpenWorkspace || !record.Settled || record.Status.Error != "" {
 			continue
 		}
-		if record.Operation.DispatchID != op.DispatchID || record.Operation.ResourceID != op.ResourceID {
+		if record.Operation.DispatchID != op.DispatchID || !wire.SameResource(record.Operation.ResourceID, op.ResourceID) {
 			return "", fmt.Errorf("materialization ownership mismatch")
 		}
 		value := record.Status.MaterializationBase
