@@ -43,6 +43,20 @@ formal outcome from log text.
 Test two tabs racing Accept/message, stale projections, correction during delivery, pending conversation after completion and partial failure. Client refresh/navigation never advances lifecycle.
 
 
+## Todo capture state
+
+`features/todos.tsx` owns filter/selection, capture text and Project drafts by
+Todo ID. `['todos', ...]` query keys separate list scope and detail identity.
+No selection auto-opens an item, and capture/opening never sends a Planner
+command. Settings views remain mounted when switching to/from Todos.
+
+`useTodoCommand` keeps one immutable pending command and blocks same-tick
+duplicate submits. After committed or recovered save, invalidate authoritative
+queries; the receipt's old Todo snapshot must not overwrite a later change.
+Organization drafts keep their original version for explicit conflict recovery.
+Capture text clears only after commit. Full page reload loses memory-only drafts
+and pending requests; communicate this while a result is uncertain.
+
 ## Configuration drafts
 
 Project/Role drafts are keyed by stable IDs, retain their original control version,
@@ -51,3 +65,8 @@ A snapshot refresh never rebases an edited draft. Conflict refreshes canonical d
 only explicit Reload saved version discards a draft. No browser persistent storage
 contains passwords, keys, session tokens or pending commands. Secrets clear on
 committed save (including recovered receipts), logout and session revocation.
+
+When an organization command removes the selected Todo from the current filter,
+return keyboard focus to the enabled capture input after detail unmounts. Preserve
+focus already on navigation/filter controls. Browser tests cover desktop/mobile
+archive, restore, assignment and retained drafts.

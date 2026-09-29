@@ -14,7 +14,7 @@ export class ProtocolVersionError extends Error {}
 export class ProtocolValidationError extends Error {}
 
 export function validate<T>(name: string, value: unknown): T {
-  if (['Frame', 'CommandEnvelope', 'OwnerCommand', 'OwnerLogin', 'ConfigurationCommand'].includes(name) && value && typeof value === 'object' && 'schema_version' in value && value.schema_version !== 1) throw new ProtocolVersionError('Unsupported schema version');
+  if (['Frame', 'CommandEnvelope', 'OwnerCommand', 'OwnerLogin', 'ConfigurationCommand', 'TodoCommand'].includes(name) && value && typeof value === 'object' && 'schema_version' in value && value.schema_version !== 1) throw new ProtocolVersionError('Unsupported schema version');
   let validator = validators.get(name);
   if (!validator) {
     validator = ajv.compile({ $ref: `${schema.$id}#/definitions/${name}` });
@@ -25,4 +25,3 @@ export function validate<T>(name: string, value: unknown): T {
   if (limit !== undefined && new TextEncoder().encode(JSON.stringify(value)).length > limit) throw new ProtocolValidationError(`${name} exceeds the encoded wire byte limit`);
   return value as T;
 }
-

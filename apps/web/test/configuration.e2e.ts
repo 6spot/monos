@@ -7,7 +7,7 @@ async function navigate(page: Page, name: string) {
   await expect(page.getByRole('heading', { name, exact: true })).toBeVisible();
 }
 async function signIn(page: Page) {
-  await page.goto('/'); await page.getByLabel('Password', { exact: true }).fill('monos-browser-test-password');
+  await page.goto('/#projects'); await page.getByLabel('Password', { exact: true }).fill('monos-browser-test-password');
   await page.getByRole('button', { name: 'Sign in', exact: true }).click(); await expect(page.getByRole('heading', { name: 'Projects', exact: true })).toBeVisible();
 }
 async function save(page: Page) {
@@ -17,7 +17,7 @@ async function save(page: Page) {
 }
 
 test('real login, Role/Project/policy/provider persistence, drafts and responsive controls', async ({ page }, info) => {
-  await page.goto('/');
+  await page.goto('/#projects');
   await page.getByLabel('Password', { exact: true }).fill('incorrect-test-password'); await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await expect(page.getByRole('alert')).toContainText('Invalid Owner credentials');
   await page.getByLabel('Password', { exact: true }).fill('monos-browser-test-password'); await page.getByRole('button', { name: 'Sign in', exact: true }).click();
@@ -55,7 +55,7 @@ test('real login, Role/Project/policy/provider persistence, drafts and responsiv
 
 test('two tabs reject stale edits and explicitly reload the saved version', async ({ page, context }) => {
   await signIn(page); await page.getByRole('button', { name: 'New project', exact: true }).click(); await page.getByLabel('Project name', { exact: true }).fill('Concurrent project'); await save(page);
-  const other = await context.newPage(); await other.goto('/'); await other.getByRole('button', { name: 'Concurrent project', exact: false }).click();
+  const other = await context.newPage(); await other.goto('/#projects'); await other.getByRole('button', { name: 'Concurrent project', exact: false }).click();
   await other.getByLabel('Project name', { exact: true }).fill('Second tab draft');
   await page.getByLabel('Project name', { exact: true }).fill('First tab saved'); await save(page);
   await other.getByRole('button', { name: 'Save changes', exact: true }).click(); await expect(other.getByRole('alert')).toContainText('Configuration changed');

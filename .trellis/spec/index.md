@@ -2,7 +2,7 @@
 
 ## Status and authority
 
-The Stage A foundations implement `apps/server`, `packages/{domain,db,protocol}`, the Go `runner`, Owner configuration in `apps/web`, and deployment recipes under `infra`. Production Runtime integration passed combined real-host acceptance on 2026-09-29. Todo/Task conversation and the full delivery product flow remain later work. These specs connect accepted decisions to implementation; task verification reports distinguish deterministic tests from real Linux/CLI acceptance.
+The Stage A foundations implement `apps/server`, `packages/{domain,db,protocol}`, the Go `runner`, Owner configuration in `apps/web`, and deployment recipes under `infra`. Production Runtime integration passed combined real-host acceptance on 2026-09-29. Todo capture, organization and the Inbox workspace are implemented. Todo/Task conversation and the full delivery product flow remain later work. These specs connect accepted decisions to implementation; task verification reports distinguish deterministic tests from real Linux/CLI acceptance.
 
 Read [ARCHITECTURE.md](../../ARCHITECTURE.md), the relevant [module](../../docs/README.md), and [invariants](../../docs/08-principles-and-non-goals.md) first. Domain rules belong there; this tree specifies implementation and verification. Update both when an accepted decision changes.
 
@@ -11,7 +11,7 @@ Read [ARCHITECTURE.md](../../ARCHITECTURE.md), the relevant [module](../../docs/
 | Entry | Destinations |
 | --- | --- |
 | [Backend](backend/index.md) | `apps/server`, `packages/domain`, `packages/db` |
-| [Frontend](frontend/index.md) | `apps/web` (Owner access/configuration implemented) |
+| [Frontend](frontend/index.md) | `apps/web` (Owner access, configuration and Todo capture implemented) |
 | [Protocol](protocol/index.md) | `packages/protocol`; HTTP/WSS/CLI boundaries |
 | [Runner](runner/index.md) | Go `runner` and Linux host configuration |
 | [Thinking guides](guides/index.md) | Cross-layer changes and reuse |

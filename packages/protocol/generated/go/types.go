@@ -9,6 +9,10 @@ type AttemptLogCursor string
 
 type AttemptListCursor string
 
+type TodoCursor string
+
+type TodoCaptureText string
+
 type CommandEnvelope struct {
 	ExpectedControlVersion int64               `json:"expected_control_version"`
 	Name                   CommandEnvelopeName `json:"name"`
@@ -525,6 +529,94 @@ type OwnerOperationStatus struct {
 	TaskID          string         `json:"task_id"`
 }
 
+type TodoListQuery struct {
+	Cursor    *string   `json:"cursor,omitempty"`
+	ProjectID *string   `json:"project_id,omitempty"`
+	Scope     TodoScope `json:"scope"`
+}
+
+type TodoPage struct {
+	Cursor        string       `json:"cursor"`
+	HasMore       bool         `json:"has_more"`
+	ProjectID     *string      `json:"project_id,omitempty"`
+	SchemaVersion int64        `json:"schema_version"`
+	Scope         TodoScope    `json:"scope"`
+	Todos         []TodoRecord `json:"todos"`
+}
+
+type TodoRecord struct {
+	Archived             bool    `json:"archived"`
+	ControlVersion       int64   `json:"control_version"`
+	CreatedAt            string  `json:"created_at"`
+	DiscussionActivityAt string  `json:"discussion_activity_at"`
+	Label                string  `json:"label"`
+	OriginalCapture      string  `json:"original_capture"`
+	ProjectID            *string `json:"project_id,omitempty"`
+	SchemaVersion        int64   `json:"schema_version"`
+	TodoID               string  `json:"todo_id"`
+}
+
+type TodoCaptureCommand struct {
+	Name          TodoCaptureCommandName    `json:"name"`
+	Payload       TodoCaptureCommandPayload `json:"payload"`
+	RequestID     string                    `json:"request_id"`
+	SchemaVersion int64                     `json:"schema_version"`
+}
+
+type TodoCaptureCommandPayload struct {
+	OriginalCapture string  `json:"original_capture"`
+	ProjectID       *string `json:"project_id,omitempty"`
+	TodoID          string  `json:"todo_id"`
+}
+
+type TodoAssignProjectCommand struct {
+	ExpectedControlVersion int64                           `json:"expected_control_version"`
+	Name                   TodoAssignProjectCommandName    `json:"name"`
+	Payload                TodoAssignProjectCommandPayload `json:"payload"`
+	RequestID              string                          `json:"request_id"`
+	SchemaVersion          int64                           `json:"schema_version"`
+}
+
+type TodoAssignProjectCommandPayload struct {
+	ProjectID *string `json:"project_id,omitempty"`
+	TodoID    string  `json:"todo_id"`
+}
+
+type TodoSetArchivedCommand struct {
+	ExpectedControlVersion int64                         `json:"expected_control_version"`
+	Name                   TodoSetArchivedCommandName    `json:"name"`
+	Payload                TodoSetArchivedCommandPayload `json:"payload"`
+	RequestID              string                        `json:"request_id"`
+	SchemaVersion          int64                         `json:"schema_version"`
+}
+
+type TodoSetArchivedCommandPayload struct {
+	Archived bool   `json:"archived"`
+	TodoID   string `json:"todo_id"`
+}
+
+type TodoCommand struct {
+	Name                   TodoCommandName    `json:"name"`
+	Payload                TodoCommandPayload `json:"payload"`
+	RequestID              string             `json:"request_id"`
+	SchemaVersion          int64              `json:"schema_version"`
+	ExpectedControlVersion *int64             `json:"expected_control_version,omitempty"`
+}
+
+type TodoCommandPayload struct {
+	OriginalCapture *string `json:"original_capture,omitempty"`
+	ProjectID       *string `json:"project_id,omitempty"`
+	TodoID          string  `json:"todo_id"`
+	Archived        *bool   `json:"archived,omitempty"`
+}
+
+type TodoCommandResult struct {
+	RequestID     string                    `json:"request_id"`
+	SchemaVersion int64                     `json:"schema_version"`
+	Status        ConfigurationResultStatus `json:"status"`
+	Todo          *TodoRecord               `json:"todo,omitempty"`
+}
+
 type CommandEnvelopeName string
 
 const (
@@ -780,4 +872,39 @@ type OwnerRetryInitialPlanningCommandName string
 
 const (
 	FluffyRetryInitialPlanning OwnerRetryInitialPlanningCommandName = "retry_initial_planning"
+)
+
+type TodoScope string
+
+const (
+	All      TodoScope = "all"
+	Archived TodoScope = "archived"
+	Inbox    TodoScope = "inbox"
+	Project  TodoScope = "project"
+)
+
+type TodoCaptureCommandName string
+
+const (
+	PurpleCaptureTodo TodoCaptureCommandName = "capture_todo"
+)
+
+type TodoAssignProjectCommandName string
+
+const (
+	PurpleAssignTodoProject TodoAssignProjectCommandName = "assign_todo_project"
+)
+
+type TodoSetArchivedCommandName string
+
+const (
+	PurpleSetTodoArchived TodoSetArchivedCommandName = "set_todo_archived"
+)
+
+type TodoCommandName string
+
+const (
+	FluffyAssignTodoProject TodoCommandName = "assign_todo_project"
+	FluffyCaptureTodo       TodoCommandName = "capture_todo"
+	FluffySetTodoArchived   TodoCommandName = "set_todo_archived"
 )

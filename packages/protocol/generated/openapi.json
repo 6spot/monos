@@ -5,6 +5,201 @@
     "version": "1.0.0"
   },
   "paths": {
+    "/v1/owner/todos": {
+      "get": {
+        "security": [
+          {
+            "OwnerAuth": []
+          },
+          {
+            "OwnerCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "required": true,
+            "description": "project_id is required only for the project scope. Cursors are bound to the exact scope.",
+            "schema": {
+              "$ref": "#/components/schemas/TodoScope"
+            }
+          },
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": false,
+            "description": "project_id is required only for the project scope. Cursors are bound to the exact scope.",
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "description": "project_id is required only for the project scope. Cursors are bound to the exact scope.",
+            "schema": {
+              "$ref": "#/components/schemas/TodoCursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authenticated response; admission is distinct from completed effects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TodoPage"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Deterministic protocol error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/owner/todos/{todo_id}": {
+      "get": {
+        "security": [
+          {
+            "OwnerAuth": []
+          },
+          {
+            "OwnerCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "todo_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authenticated response; admission is distinct from completed effects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TodoRecord"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Deterministic protocol error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/owner/todos/commands": {
+      "post": {
+        "security": [
+          {
+            "OwnerAuth": []
+          },
+          {
+            "OwnerCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TodoCommand"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authenticated response; admission is distinct from completed effects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TodoCommandResult"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Deterministic protocol error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/owner/todos/commands/{request_id}": {
+      "get": {
+        "security": [
+          {
+            "OwnerAuth": []
+          },
+          {
+            "OwnerCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authenticated response; admission is distinct from completed effects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TodoCommandResult"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Deterministic protocol error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/owner/infrastructure": {
       "get": {
         "security": [
@@ -3606,6 +3801,386 @@
             "type": "string"
           }
         }
+      },
+      "TodoScope": {
+        "type": "string",
+        "enum": [
+          "all",
+          "inbox",
+          "project",
+          "archived"
+        ]
+      },
+      "TodoCursor": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 1024,
+        "pattern": "^[A-Za-z0-9_-]+$"
+      },
+      "TodoCaptureText": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 65536,
+        "pattern": "^[^\\x00]*$"
+      },
+      "TodoRecord": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "schema_version",
+          "todo_id",
+          "original_capture",
+          "label",
+          "archived",
+          "control_version",
+          "created_at",
+          "discussion_activity_at"
+        ],
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "todo_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "original_capture": {
+            "$ref": "#/components/schemas/TodoCaptureText"
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "project_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "archived": {
+            "type": "boolean"
+          },
+          "control_version": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "created_at": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d\\.\\d{3}Z$",
+            "maxLength": 24
+          },
+          "discussion_activity_at": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d\\.\\d{3}Z$",
+            "maxLength": 24
+          }
+        }
+      },
+      "TodoListQuery": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "scope"
+        ],
+        "properties": {
+          "scope": {
+            "$ref": "#/components/schemas/TodoScope"
+          },
+          "project_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "cursor": {
+            "$ref": "#/components/schemas/TodoCursor"
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "scope": {
+                  "const": "project"
+                }
+              },
+              "required": [
+                "scope"
+              ]
+            },
+            "then": {
+              "required": [
+                "project_id"
+              ],
+              "properties": {
+                "project_id": {
+                  "$ref": "#/components/schemas/Id"
+                }
+              }
+            },
+            "else": {
+              "properties": {
+                "project_id": false
+              }
+            }
+          }
+        ]
+      },
+      "TodoPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "schema_version",
+          "scope",
+          "todos",
+          "cursor",
+          "has_more"
+        ],
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "scope": {
+            "$ref": "#/components/schemas/TodoScope"
+          },
+          "project_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "todos": {
+            "type": "array",
+            "maxItems": 64,
+            "items": {
+              "$ref": "#/components/schemas/TodoRecord"
+            }
+          },
+          "cursor": {
+            "$ref": "#/components/schemas/TodoCursor"
+          },
+          "has_more": {
+            "type": "boolean"
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "scope": {
+                  "const": "project"
+                }
+              },
+              "required": [
+                "scope"
+              ]
+            },
+            "then": {
+              "required": [
+                "project_id"
+              ],
+              "properties": {
+                "project_id": {
+                  "$ref": "#/components/schemas/Id"
+                }
+              }
+            },
+            "else": {
+              "properties": {
+                "project_id": false
+              }
+            }
+          }
+        ]
+      },
+      "TodoCaptureCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "schema_version",
+          "request_id",
+          "name",
+          "payload"
+        ],
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "request_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "name": {
+            "type": "string",
+            "const": "capture_todo"
+          },
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "todo_id",
+              "original_capture"
+            ],
+            "properties": {
+              "todo_id": {
+                "$ref": "#/components/schemas/Id"
+              },
+              "original_capture": {
+                "$ref": "#/components/schemas/TodoCaptureText"
+              },
+              "project_id": {
+                "$ref": "#/components/schemas/Id"
+              }
+            }
+          }
+        }
+      },
+      "TodoAssignProjectCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "schema_version",
+          "request_id",
+          "name",
+          "payload",
+          "expected_control_version"
+        ],
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "request_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "name": {
+            "type": "string",
+            "const": "assign_todo_project"
+          },
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "todo_id"
+            ],
+            "properties": {
+              "todo_id": {
+                "$ref": "#/components/schemas/Id"
+              },
+              "project_id": {
+                "$ref": "#/components/schemas/Id"
+              }
+            }
+          },
+          "expected_control_version": {
+            "$ref": "#/components/schemas/Counter"
+          }
+        }
+      },
+      "TodoSetArchivedCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "schema_version",
+          "request_id",
+          "name",
+          "payload",
+          "expected_control_version"
+        ],
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "request_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "name": {
+            "type": "string",
+            "const": "set_todo_archived"
+          },
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "todo_id",
+              "archived"
+            ],
+            "properties": {
+              "todo_id": {
+                "$ref": "#/components/schemas/Id"
+              },
+              "archived": {
+                "type": "boolean"
+              }
+            }
+          },
+          "expected_control_version": {
+            "$ref": "#/components/schemas/Counter"
+          }
+        }
+      },
+      "TodoCommand": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/TodoCaptureCommand"
+          },
+          {
+            "$ref": "#/components/schemas/TodoAssignProjectCommand"
+          },
+          {
+            "$ref": "#/components/schemas/TodoSetArchivedCommand"
+          }
+        ]
+      },
+      "TodoCommandResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "schema_version",
+          "request_id",
+          "status"
+        ],
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "request_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "committed",
+              "unknown"
+            ]
+          },
+          "todo": {
+            "$ref": "#/components/schemas/TodoRecord"
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "committed"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "required": [
+                "todo"
+              ],
+              "properties": {
+                "todo": {
+                  "$ref": "#/components/schemas/TodoRecord"
+                }
+              }
+            },
+            "else": {
+              "properties": {
+                "todo": false
+              }
+            }
+          }
+        ]
       }
     },
     "securitySchemes": {

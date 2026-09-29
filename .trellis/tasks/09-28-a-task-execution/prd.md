@@ -17,7 +17,7 @@ Architecture modules remain authoritative. The existing boundary probe implement
 ## Dependencies and order
 
 - [Capture and Discussion](../09-28-a-capture-discussion/prd.md)
-- [Production Runtime integration](../09-28-a-runtime-integration/prd.md)
+- [Production Runtime integration](../archive/2026-09/09-28-a-runtime-integration/prd.md)
 
 These are completion/evidence gates, not automatic scheduler dependencies. Parent/child links express scope ownership only. Evidence inspection and planning may proceed earlier; implementation must resolve upstream failures first.
 

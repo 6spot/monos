@@ -718,5 +718,260 @@
       "operation_id": "operation",
       "control_version": 2
     }
+  },
+  {
+    "name": "Todo capture has no required Project or Task version",
+    "schema": "TodoCommand",
+    "valid": true,
+    "value": {
+      "schema_version": 1,
+      "request_id": "capture-a",
+      "name": "capture_todo",
+      "payload": {
+        "todo_id": "todo-a",
+        "original_capture": " Idea 😀 "
+      }
+    }
+  },
+  {
+    "name": "Todo capture preserves optional Project",
+    "schema": "TodoCommand",
+    "valid": true,
+    "value": {
+      "schema_version": 1,
+      "request_id": "capture-a",
+      "name": "capture_todo",
+      "payload": {
+        "todo_id": "todo-a",
+        "original_capture": " Idea 😀 ",
+        "project_id": "project-a"
+      }
+    }
+  },
+  {
+    "name": "Todo assignment can return to Inbox",
+    "schema": "TodoCommand",
+    "valid": true,
+    "value": {
+      "schema_version": 1,
+      "request_id": "assign-a",
+      "expected_control_version": 1,
+      "name": "assign_todo_project",
+      "payload": {
+        "todo_id": "todo-a"
+      }
+    }
+  },
+  {
+    "name": "Todo archive binds expected version",
+    "schema": "TodoCommand",
+    "valid": true,
+    "value": {
+      "schema_version": 1,
+      "request_id": "assign-a",
+      "expected_control_version": 1,
+      "name": "set_todo_archived",
+      "payload": {
+        "todo_id": "todo-a",
+        "archived": true
+      }
+    }
+  },
+  {
+    "name": "Todo organization requires version",
+    "schema": "TodoCommand",
+    "valid": false,
+    "value": {
+      "schema_version": 1,
+      "request_id": "assign-a",
+      "name": "set_todo_archived",
+      "payload": {
+        "todo_id": "todo-a",
+        "archived": true
+      }
+    }
+  },
+  {
+    "name": "Todo capture rejects irrelevant version",
+    "schema": "TodoCommand",
+    "valid": false,
+    "value": {
+      "schema_version": 1,
+      "request_id": "capture-a",
+      "name": "capture_todo",
+      "payload": {
+        "todo_id": "todo-a",
+        "original_capture": " Idea 😀 "
+      },
+      "expected_control_version": 1
+    }
+  },
+  {
+    "name": "Todo command rejects irrelevant text edit",
+    "schema": "TodoCommand",
+    "valid": false,
+    "value": {
+      "schema_version": 1,
+      "request_id": "assign-a",
+      "expected_control_version": 1,
+      "name": "assign_todo_project",
+      "payload": {
+        "todo_id": "todo-a",
+        "original_capture": "changed"
+      }
+    }
+  },
+  {
+    "name": "Todo optional Project is absent not null",
+    "schema": "TodoCommand",
+    "valid": false,
+    "value": {
+      "schema_version": 1,
+      "request_id": "capture-a",
+      "name": "capture_todo",
+      "payload": {
+        "todo_id": "todo-a",
+        "original_capture": " Idea 😀 ",
+        "project_id": null
+      }
+    }
+  },
+  {
+    "name": "Todo command version rejected",
+    "schema": "TodoCommand",
+    "valid": false,
+    "value": {
+      "schema_version": 2,
+      "request_id": "capture-a",
+      "name": "capture_todo",
+      "payload": {
+        "todo_id": "todo-a",
+        "original_capture": " Idea 😀 "
+      }
+    }
+  },
+  {
+    "name": "Todo capture rejects NUL",
+    "schema": "TodoCommand",
+    "valid": false,
+    "value": {
+      "schema_version": 1,
+      "request_id": "capture-a",
+      "name": "capture_todo",
+      "payload": {
+        "todo_id": "todo-a",
+        "original_capture": "a\u0000b"
+      }
+    }
+  },
+  {
+    "name": "Todo detail canonical original text",
+    "schema": "TodoRecord",
+    "valid": true,
+    "value": {
+      "schema_version": 1,
+      "todo_id": "todo-a",
+      "original_capture": "  Idea\nDetail 😀 ",
+      "label": "Idea",
+      "archived": false,
+      "control_version": 1,
+      "created_at": "2026-09-29T00:00:00.000Z",
+      "discussion_activity_at": "2026-09-29T00:00:00.000Z"
+    }
+  },
+  {
+    "name": "Todo command committed includes record",
+    "schema": "TodoCommandResult",
+    "valid": true,
+    "value": {
+      "schema_version": 1,
+      "request_id": "capture-a",
+      "status": "committed",
+      "todo": {
+        "schema_version": 1,
+        "todo_id": "todo-a",
+        "original_capture": "  Idea\nDetail 😀 ",
+        "label": "Idea",
+        "archived": false,
+        "control_version": 1,
+        "created_at": "2026-09-29T00:00:00.000Z",
+        "discussion_activity_at": "2026-09-29T00:00:00.000Z"
+      }
+    }
+  },
+  {
+    "name": "Todo unknown receipt excludes result",
+    "schema": "TodoCommandResult",
+    "valid": true,
+    "value": {
+      "schema_version": 1,
+      "request_id": "capture-a",
+      "status": "unknown"
+    }
+  },
+  {
+    "name": "Todo committed receipt requires record",
+    "schema": "TodoCommandResult",
+    "valid": false,
+    "value": {
+      "schema_version": 1,
+      "request_id": "capture-a",
+      "status": "committed"
+    }
+  },
+  {
+    "name": "Todo unknown receipt cannot imply committed record",
+    "schema": "TodoCommandResult",
+    "valid": false,
+    "value": {
+      "schema_version": 1,
+      "request_id": "capture-a",
+      "status": "unknown",
+      "todo": {
+        "schema_version": 1,
+        "todo_id": "todo-a",
+        "original_capture": "  Idea\nDetail 😀 ",
+        "label": "Idea",
+        "archived": false,
+        "control_version": 1,
+        "created_at": "2026-09-29T00:00:00.000Z",
+        "discussion_activity_at": "2026-09-29T00:00:00.000Z"
+      }
+    }
+  },
+  {
+    "name": "Todo Project page requires scope Project",
+    "schema": "TodoListQuery",
+    "valid": false,
+    "value": {
+      "scope": "inbox",
+      "project_id": "project-a"
+    }
+  },
+  {
+    "name": "Todo Project filter requires ID",
+    "schema": "TodoListQuery",
+    "valid": false,
+    "value": {
+      "scope": "project"
+    }
+  },
+  {
+    "name": "Todo Project filter valid",
+    "schema": "TodoListQuery",
+    "valid": true,
+    "value": {
+      "scope": "project",
+      "project_id": "project-a"
+    }
+  },
+  {
+    "name": "Todo query rejects unknown fields",
+    "schema": "TodoListQuery",
+    "valid": false,
+    "value": {
+      "scope": "all",
+      "limit": "999"
+    }
   }
 ]

@@ -7,6 +7,10 @@ type AttemptLogCursor = string;
 
 type AttemptListCursor = string;
 
+type TodoCursor = string;
+
+type TodoCaptureText = string;
+
 export interface CommandEnvelope {
     expected_control_version: number;
     name:                     CommandEnvelopeName;
@@ -583,4 +587,102 @@ export interface OwnerOperationStatus {
     schema_version:   number;
     state:            OperationState;
     task_id:          string;
+}
+
+export interface TodoListQuery {
+    cursor?:     string;
+    project_id?: string;
+    scope:       TodoScope;
+}
+
+export type TodoScope = "all" | "inbox" | "project" | "archived";
+
+export interface TodoPage {
+    cursor:         string;
+    has_more:       boolean;
+    project_id?:    string;
+    schema_version: number;
+    scope:          TodoScope;
+    todos:          TodoRecord[];
+}
+
+export interface TodoRecord {
+    archived:               boolean;
+    control_version:        number;
+    created_at:             string;
+    discussion_activity_at: string;
+    label:                  string;
+    original_capture:       string;
+    project_id?:            string;
+    schema_version:         number;
+    todo_id:                string;
+}
+
+export interface TodoCaptureCommand {
+    name:           TodoCaptureCommandName;
+    payload:        TodoCaptureCommandPayload;
+    request_id:     string;
+    schema_version: number;
+}
+
+export type TodoCaptureCommandName = "capture_todo";
+
+export interface TodoCaptureCommandPayload {
+    original_capture: string;
+    project_id?:      string;
+    todo_id:          string;
+}
+
+export interface TodoAssignProjectCommand {
+    expected_control_version: number;
+    name:                     TodoAssignProjectCommandName;
+    payload:                  TodoAssignProjectCommandPayload;
+    request_id:               string;
+    schema_version:           number;
+}
+
+export type TodoAssignProjectCommandName = "assign_todo_project";
+
+export interface TodoAssignProjectCommandPayload {
+    project_id?: string;
+    todo_id:     string;
+}
+
+export interface TodoSetArchivedCommand {
+    expected_control_version: number;
+    name:                     TodoSetArchivedCommandName;
+    payload:                  TodoSetArchivedCommandPayload;
+    request_id:               string;
+    schema_version:           number;
+}
+
+export type TodoSetArchivedCommandName = "set_todo_archived";
+
+export interface TodoSetArchivedCommandPayload {
+    archived: boolean;
+    todo_id:  string;
+}
+
+export interface TodoCommand {
+    name:                      TodoCommandName;
+    payload:                   TodoCommandPayload;
+    request_id:                string;
+    schema_version:            number;
+    expected_control_version?: number;
+}
+
+export type TodoCommandName = "capture_todo" | "assign_todo_project" | "set_todo_archived";
+
+export interface TodoCommandPayload {
+    original_capture?: string;
+    project_id?:       string;
+    todo_id:           string;
+    archived?:         boolean;
+}
+
+export interface TodoCommandResult {
+    request_id:     string;
+    schema_version: number;
+    status:         ConfigurationResultStatus;
+    todo?:          TodoRecord;
 }

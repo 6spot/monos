@@ -20,3 +20,33 @@ h1,h2,h3,h4,p { margin:0; } h1 { font-size:32px; line-height:1.2; font-weight:60
 @media(max-width:1100px) { .workspace { grid-template-columns:200px minmax(0,1fr); } .page-content { padding:30px; } .topbar { padding:0 30px; } .split-view { grid-template-columns:155px minmax(0,1fr); gap:18px; } .settings-grid { grid-template-columns:1fr; } .setup-note { max-width:650px; } .editor-actions { flex-wrap:wrap; } .editor-actions > .hint { flex-basis:100%; } }
 @media(max-width:760px) { .workspace { display:block; } .sidebar { position:static; height:auto; padding:18px 18px 10px; } .sidebar .brand { font-size:18px; padding:0; } .brand-mark { width:27px; height:27px; font-size:24px; } .nav-label,.topbar { display:none; } .sidebar { position:relative; } .sidebar-bottom { position:absolute; right:15px; top:15px; border:0; padding:0; margin:0; } .sidebar-bottom .owner-avatar,.sidebar-bottom > div { display:none; } .sidebar nav { flex-direction:row; margin-top:18px; gap:3px; overflow-x:auto; } .sidebar nav a { font-size:12px; padding:10px; gap:7px; flex-shrink:0; } .sidebar nav a[aria-current]::after { display:none; } .page-content { padding:26px 18px; } .page-heading { align-items:flex-start; gap:12px; margin-bottom:24px; } h1 { font-size:27px; } .lede { font-size:12px; } .page-heading [data-slot=button] { font-size:11px; padding:8px 10px; } .split-view { grid-template-columns:1fr; gap:18px; } .record-list { flex-direction:row; overflow-x:auto; } .record { min-width:145px; width:auto; flex-shrink:0; } .empty-list { padding:0; } .editor { padding:20px; } .editor-actions { margin:25px -20px -20px; padding:16px 20px; } .field-grid { grid-template-columns:1fr; } .empty-state { min-height:290px; padding:35px 25px; } .notice { align-items:flex-start; flex-wrap:wrap; } .resource { padding:12px; } .runner-section,.access-check { padding:20px; } .runtime-row { align-items:flex-start; } .runtime-row > div:last-child { text-align:right; } .runtime-row span:not(.tag) { display:block; margin:5px 0; } .login-layout { grid-template-columns:1fr; } .login-intro { padding:25px; min-height:150px; } .login-intro > div:not(.brand),.login-footer { display:none; } .login-main { padding:40px 25px; align-items:flex-start; } .login-intro::after { display:none; } .page-footer { margin-top:28px; } }
 @media(prefers-reduced-motion:reduce) { *,*::before,*::after { transition:none!important; scroll-behavior:auto!important; } }
+
+.todo-workspace { display:grid; grid-template-columns:minmax(230px,300px) minmax(0,1fr); gap:28px; align-items:start; }
+.todo-list-column,.todo-detail-column { min-width:0; }
+.todo-list-column > .field { margin-top:0; }
+.todo-capture { padding:16px; }
+.todo-capture .field:first-child { margin-top:0; }
+.todo-capture .field { margin-bottom:14px; }
+.todo-capture [data-slot=button] { width:100%; }
+.todo-list-tools { display:flex; align-items:center; justify-content:space-between; gap:8px; margin:14px 0 6px; }
+.todo-list-tools [data-slot=button] { font-size:11px; padding:8px; }
+.todo-rows { display:flex; flex-direction:column; gap:5px; margin-bottom:14px; }
+.todo-row { min-width:0; }
+.todo-row > span { overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; line-height:1.5; }
+.todo-row small { display:flex; justify-content:space-between; gap:12px; }
+.todo-row .todo-project-label { font-size:11px; font-weight:400; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.todo-row time { flex-shrink:0; }
+.todo-detail h2 { overflow-wrap:anywhere; line-height:1.45; }
+.todo-detail .section-label { align-items:flex-start; margin-bottom:8px; }
+.todo-original { white-space:pre-wrap; overflow-wrap:anywhere; font-size:14px; line-height:1.8; margin:16px 0 20px; }
+.todo-detail .subsection > [data-slot=button] { margin-top:12px; }
+.todo-back { display:none!important; }
+@media(max-width:1100px) { .todo-workspace { grid-template-columns:minmax(210px,260px) minmax(0,1fr); gap:18px; } }
+@media(max-width:760px) {
+  .todo-workspace { display:block; }
+  .todo-workspace.has-selection .todo-list-column { display:none; }
+  .todo-workspace:not(.has-selection) .todo-detail-column { display:none; }
+  .todo-row { width:100%; flex-shrink:1; }
+  .todo-back { display:inline-flex!important; margin-bottom:14px; }
+  .todo-capture { padding:18px; }
+}

@@ -18,7 +18,12 @@
   "commit": null,
   "pr_url": null,
   "subtasks": [],
-  "children": [],
+  "children": [
+    "09-29-a-todo-capture",
+    "09-29-a-todo-discussion",
+    "09-29-a-task-preview",
+    "09-29-a-capture-discussion-acceptance"
+  ],
   "parent": "09-28-stage-a-product-loop",
   "relatedFiles": [],
   "notes": "",

@@ -9,6 +9,7 @@ Status: Stage A boundary-probe backend is implemented in `apps/server` with Post
 - For Project/Role edits and selection guards, read [configuration](configuration.md).
 - For login/bootstrap/Cookie security, read [Owner access](owner-access.md).
 - For overview/Timeline/cursors, read [Owner reads](owner-reads.md).
+- For Todo capture, organization and Inbox reads, read [Todos](todos.md).
 - For selected Attempt status, ordered output and resumable log cursors, read [Execution logs](execution-logs.md).
 - For selected Attempt queue/promotion, read [dispatch queue](dispatch-queue.md).
 - For production Runtime target choice and shared capacity, read [Runtime scheduling](runtime-scheduling.md).

@@ -1,6 +1,6 @@
-# Owner configuration Web client
+# Owner Web client
 
-A same-origin React/Vite SPA for Owner login, Projects/repositories, reusable Roles,
+A same-origin React/Vite SPA for Todo capture/organization, Owner login, Projects/repositories, reusable Roles,
 execution policies, Runner installation observations and GitHub App configuration.
 The backend remains authoritative; UI writes use versioned commands and immutable
 receipts. Session cookies and provider keys never enter browser persistent storage.
@@ -39,7 +39,21 @@ Screenshots and failure traces are local ignored `test-results/` artifacts.
 `src/lib/api.ts` consumes generated protocol types and the shared browser-safe AJV
 entry. Never import DB/server code or the Node crypto protocol entry into Web.
 The source-owned shadcn Button uses Base UI (`base-nova`); add primitives only when
-needed. Four views use native hash navigation and scoped memory-only drafts.
+needed. Todos is the default view. Explicit settings routes and Todo scopes use
+native hash navigation; mounted views retain scoped memory-only drafts.
+
+Todo capture preserves the exact original text and invokes no model. The workspace
+provides All active, Inbox, Project and Archived scopes, bounded list pagination,
+Project assignment and archive/restore. No Todo opens until selected or captured
+in the visible scope. Mobile detail has an explicit return to the list. Discussion
+and Task creation are separate follow-up work.
+
+Todo commands retain their exact request and draft until a committed response is
+validated. Check Todo result first looks up the receipt and only replays the same
+command when the server reports it unknown. Stale organization drafts retain their
+original version until explicitly reloaded. Browser regressions cover these cases,
+keyboard opening, scope changes and mobile list/detail behavior against the real
+backend and isolated PostgreSQL schema.
 
 Save conflicts retain the draft/version for explicit review. Unknown write outcomes
 retain the original request for Check save result; keep the tab open to recover it.

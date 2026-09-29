@@ -1,0 +1,17 @@
+{"file": ".trellis/spec/backend/index.md", "reason": "Todo capture contracts and owning-layer implementation/verification rules"}
+{"file": ".trellis/spec/backend/database-guidelines.md", "reason": "Todo capture contracts and owning-layer implementation/verification rules"}
+{"file": ".trellis/spec/backend/owner-access.md", "reason": "Todo capture contracts and owning-layer implementation/verification rules"}
+{"file": ".trellis/spec/backend/owner-commands.md", "reason": "Todo capture contracts and owning-layer implementation/verification rules"}
+{"file": ".trellis/spec/backend/configuration.md", "reason": "Todo capture contracts and owning-layer implementation/verification rules"}
+{"file": ".trellis/spec/backend/owner-reads.md", "reason": "Todo capture contracts and owning-layer implementation/verification rules"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Todo capture contracts and owning-layer implementation/verification rules"}
+{"file": ".trellis/spec/frontend/index.md", "reason": "Todo capture contracts and owning-layer implementation/verification rules"}
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "Todo capture contracts and owning-layer implementation/verification rules"}
+{"file": ".trellis/spec/frontend/hook-guidelines.md", "reason": "Todo capture contracts and owning-layer implementation/verification rules"}
+{"file": ".trellis/spec/frontend/state-management.md", "reason": "Todo capture contracts and owning-layer implementation/verification rules"}
+{"file": ".trellis/spec/frontend/type-safety.md", "reason": "Todo capture contracts and owning-layer implementation/verification rules"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "Todo capture contracts and owning-layer implementation/verification rules"}
+{"file": ".trellis/spec/protocol/commands.md", "reason": "Todo capture contracts and owning-layer implementation/verification rules"}
+{"file": ".trellis/spec/protocol/schema-generation.md", "reason": "Todo capture contracts and owning-layer implementation/verification rules"}
+{"file": "docs/01-product-and-domain.md", "reason": "Todo capture contracts and owning-layer implementation/verification rules"}
+{"file": "docs/07-owner-review-and-ui.md", "reason": "Todo capture contracts and owning-layer implementation/verification rules"}

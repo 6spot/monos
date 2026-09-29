@@ -9,6 +9,7 @@ import { OwnerCommands } from './owner-commands.ts';
 import { OwnerReads } from './owner-reads.ts';
 import { OwnerAccess } from './owner-access.ts';
 import { Configuration } from './configuration.ts';
+import { Todos } from './todos.ts';
 import { GitHub } from './github.ts';
 import fastifyStatic from '@fastify/static';
 import { join } from 'node:path';
@@ -61,11 +62,16 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
   const reads = new OwnerReads(service.db);
   const access = new OwnerAccess(service.db);
   const configuration = new Configuration(service.db, new GitHub(service.options.signingKey));
+  const todos = new Todos(service.db);
   if (webRoot) {
     void app.register(fastifyStatic, { root: join(webRoot, 'assets'), prefix: '/assets/', index: false, dotfiles: 'deny', immutable: true, maxAge: '1y' });
     app.get('/', async (_request, reply) => reply.header('Cache-Control', 'no-store').sendFile('index.html', webRoot, { cacheControl: false }));
   }
   app.get('/v1/owner/configuration', async (request) => configuration.read(ownerCredential(request)));
+  app.get('/v1/owner/todos', async (request) => todos.list(ownerCredential(request), request.query));
+  app.get<{ Params: { todo_id: string } }>('/v1/owner/todos/:todo_id', async (request) => todos.read(ownerCredential(request), request.params.todo_id));
+  app.post('/v1/owner/todos/commands', async (request) => todos.command(ownerCredential(request), request.body));
+  app.get<{ Params: { request_id: string } }>('/v1/owner/todos/commands/:request_id', async (request) => todos.status(ownerCredential(request), request.params.request_id));
   app.get('/v1/owner/infrastructure', async (request) => configuration.infrastructure(ownerCredential(request), service.instanceId));
   app.get<{ Querystring: { page?: string } }>('/v1/owner/github/repositories', async (request) => {
     if (Object.keys(request.query).some((key) => key !== 'page') || (request.query.page !== undefined && !/^[1-9][0-9]{0,3}$/.test(request.query.page))) throw new CommandError('invalid_input', 'Invalid repository page');
