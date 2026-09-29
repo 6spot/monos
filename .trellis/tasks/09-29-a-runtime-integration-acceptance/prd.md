@@ -4,6 +4,10 @@
 
 Verify the complete production Runtime integration before its parent package is accepted.
 
+## Confirmed context
+
+The preceding three Runtime leaves are complete. Current work uses existing test-host services and their immutable evidence, verifying source/binary identity before reuse. On 2026-09-29 the Owner authorized sequential roadmap execution and delegated routine planning, implementation and test decisions without further approval prompts.
+
 ## Dependencies
 
 Follow the target scheduling, Runner/log and Stop/recovery leaves. This task checks their combined behavior and owns any integration fixes that cannot be assigned to an earlier leaf.
@@ -16,9 +20,11 @@ Follow the target scheduling, Runner/log and Stop/recovery leaves. This task che
 
 ## Acceptance criteria
 
-- [ ] Integrated local and real-host cases pass with retained evidence, including queue saturation, missing formal completion, Stop and restart.
-- [ ] No leftover process, unreleased Attempt or test resource remains after controlled validation.
-- [ ] Parent Runtime-integration acceptance is updated only from this evidence; full Stage A/V1 is not claimed here.
+- [x] Integrated local and real-host cases pass with retained evidence, including queue saturation, missing formal completion, Stop and restart.
+- [x] No leftover process, unreleased Attempt or active test resource remains after controlled validation; historical evidence and workspaces remain retained.
+- [x] Parent Runtime-integration acceptance is updated only from this evidence; full Stage A/V1 is not claimed here.
+
+See [verification](verification.md) and the source/evidence manifests under `research/`.
 
 ## Out of scope
 

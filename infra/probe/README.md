@@ -64,6 +64,43 @@ Neither script overwrites earlier evidence. A failed or interrupted trial may
 still own processes; inspect and settle it before installing another Runner
 binary or reusing the host.
 
+## Shared-slot queue acceptance
+
+`queue_probe.py` requires an idle, connected two-slot Runner and uses three fresh
+Attempt IDs derived from a prefix. It holds a selected Node and Planner at their
+native driver checkpoints, then admits another selected Planner through
+`selected-attempt.ts` in the existing one-shot Compose tests container. Both
+Planner fixtures are pre-Plan so the existing Owner Stop command can cancel
+them even before Start. Each admission performs the inherited free-model
+preflight; Runner also checks the exact catalog in its launch environment.
+
+```sh
+python3 infra/probe/queue_probe.py --evidence /root/monos-queue-evidence --password-file /etc/monos-probe/owner-password queue-01
+```
+
+The trial requires authenticated Owner status/list/log reads to show the third
+Attempt as `QUEUED`, without a process, Start intent, log or inferred activity.
+It restarts only the existing task Runner and Compose backend, preserving both
+live process identities, dispatch selections and Start IDs. It releases the
+Node through normal formal completion, checks capacity and predecessor release
+in atomic database snapshots during promotion, verifies the Node's exact Git
+result and absent descendants, and completes the remaining two Planners.
+Resumed Owner log pages must equal canonical ordered history for every Attempt.
+
+Every checkpoint is root-private and refuses overwrite. `queue-final-<prefix>.json`
+records successful completion, one durable Start per selection, physical release
+and settled operations. A failure retains `queue-failure-<prefix>.json`, prior
+checkpoints and cleanup evidence. Cleanup first submits authenticated Owner Stop
+for the last queued selection before freeing any occupied slot. If that action
+is uncertain, cleanup retains the other claims for inspection; it never retries
+admission, deletes evidence or treats missing records as absence. Inspect and
+settle any unknown claim before another trial. Use a new prefix for each run.
+
+Polling bounds are fixture observation limits. Atomic capacity samples and live
+physical snapshots do not observe every instant; the concurrent promotion guard
+is separately covered by PostgreSQL race tests. This trial adds no standing
+service and does not replace controlled host-reboot evidence.
+
 ## Owner Stop and reboot recovery
 
 `stop_probe.py` uses the selected native CLI fixture and authenticated Owner

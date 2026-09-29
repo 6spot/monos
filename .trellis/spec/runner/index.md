@@ -1,6 +1,6 @@
 # Go Runner and Linux Execution
 
-Status: the Go boundary probe under `runner` passed real Linux/OpenCode acceptance on 2026-09-29; recipes are in `infra/runner`. The archived boundary-probe report records the exact LongCat model, four normal completions, live service restart and controlled reboot. Runner startup after reboot was manual. This is not production Runtime integration, the full Task scheduler or delivery implementation.
+Status: the Go Runner under `runner` passed combined production Runtime integration acceptance on 2026-09-29; recipes are in `infra/runner`. The Runtime integration report records exact OpenCode/LongCat versions, two-slot queueing, ordered logs, scoped commands, missing outcomes, Stop and service/host recovery. Runner startup after the retained reboot trial was manual. Full Task scheduling/context construction and delivery remain later work.
 
 ## Pre-Development Checklist
 

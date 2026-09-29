@@ -1,0 +1,149 @@
+{
+  "recorded_at": 1790696221.3824134,
+  "cases": {
+    "/root/monos-integration-evidence-v1/missing-final-integration-missing-20260929-01.json": {
+      "sha256": "74d0b3abade483065193bc48c559f9d84a2045efd3468b88b9e3a03119e0c004",
+      "outcome": "pass",
+      "checks": {
+        "authority_revoked": true,
+        "driver_exited_without_handoff": true,
+        "main_exit_reported": true,
+        "no_formal_completion": true,
+        "node_blocked": true,
+        "physical_stop_verified": true,
+        "selected_dispatch": true
+      }
+    },
+    "/root/monos-integration-evidence-v1/logs-final-integration-logs-node-20260929-01.json": {
+      "sha256": "431b3cd0d52c6d4572f0444c44f69781b21a3fbca243b7ca5b8c7592b8a12d5a",
+      "outcome": "pass",
+      "checks": {
+        "installed_cli_and_formal_completion": true,
+        "raw_output_absent_from_formal_history": true,
+        "raw_output_present": true,
+        "resumed_exact_complete_history": true,
+        "selected_ordered_dispatch": true
+      }
+    },
+    "/root/monos-integration-evidence-v1/logs-final-integration-logs-planner-20260929-01.json": {
+      "sha256": "1925f0cf94c717f2e6ada594bc76c9d113d9a04907192c571165ea1ffe5bfae5",
+      "outcome": "pass",
+      "checks": {
+        "installed_cli_and_formal_completion": true,
+        "raw_output_absent_from_formal_history": true,
+        "raw_output_present": true,
+        "resumed_exact_complete_history": true,
+        "selected_ordered_dispatch": true
+      }
+    },
+    "/root/monos-integration-evidence-v1/queue-final-integration-queue-20260929-01.json": {
+      "sha256": "b5c5dcd5e3ee5dffa56f3552503ffccd5db14071ffeb0e45fe2b324f8b2576ab",
+      "outcome": "pass",
+      "checks": {
+        "all_formal_outcomes": true,
+        "all_ordered_logs": true,
+        "all_released_no_effects": true,
+        "one_start_per_selection": true
+      }
+    },
+    "/root/monos-stop-evidence-v1/stop-final-stopn-20260929-a3.json": {
+      "sha256": "f75257e430e9a0dc6ece719719c4eadb74f337a5aa734c25c04dc544c061a2db",
+      "outcome": "pass",
+      "checks": {
+        "authority_revoked": true,
+        "changed_payload_conflicts": true,
+        "live_restart_preserved_identity": true,
+        "no_formal_completion": true,
+        "node_blocked_before_continue": true,
+        "node_pending_after_continue": true,
+        "physical_claim_released": true,
+        "resume_same_owner": true,
+        "same_receipt_after_retry": true,
+        "selected_native_attempt": true,
+        "stop_operation_succeeded": true,
+        "whole_tree_absent": true
+      }
+    },
+    "/root/monos-stop-evidence-v1/stop-final-stopp-20260929-a2.json": {
+      "sha256": "18b79d7d47ef7e7983a962d1d8ab92bf52bbca1e2ac045ee0d8929c84572b357",
+      "outcome": "pass",
+      "checks": {
+        "authority_revoked": true,
+        "changed_payload_conflicts": true,
+        "no_formal_completion": true,
+        "physical_claim_released": true,
+        "pre_plan_retry_returned_running": true,
+        "pre_plan_stop_returned_planning": true,
+        "resume_same_owner": true,
+        "same_receipt_after_retry": true,
+        "selected_native_attempt": true,
+        "stop_operation_succeeded": true,
+        "whole_tree_absent": true
+      }
+    },
+    "/root/monos-stop-evidence-v1/reboot-after-reboot-stop-20260929-a1.json": {
+      "sha256": "4db66ad9dc79ae5d26413e3f43b84a2a39939a6749e931a8ab82ee13a2154dcb",
+      "outcome": "pass",
+      "checks": {
+        "boot_changed": true,
+        "claim_released_after_stop": true,
+        "existing_result_readable_unsent_unknown": true,
+        "immutable_requests_preserved": true,
+        "interrupted_work_not_completed": true,
+        "no_replacement_start": true,
+        "old_writers_absent": true,
+        "receipts_preserved_no_unsent_admission": true,
+        "retained_original_dispatch": true,
+        "valid_live_checkpoint": true
+      }
+    }
+  },
+  "sha256": {
+    "/usr/local/bin/monos": "55d4d139a55a48b031eb31e63bbf34ea526fb0e13729ba83b3ac98c73b55ab62",
+    "/usr/local/libexec/monos-runner": "1ef5e0f8a5aa2dcfb416ad09747be235fd4c28d758747d4048d608145b73a523",
+    "/root/monos-boundary-probe-src/infra/probe/queue_probe.py": "0ed9ef27c4ef25a5c9e2e1e507198e14d75d6631f781f51ec2284d36268d211d",
+    "/root/monos-integration-evidence-v1/queue-tested-source.py": "dc0f700e11d5efa807e7fe3e7302d6ee7cc91d3e5308dc02586190867db6cbc2"
+  },
+  "inventory": {
+    "runner": {
+      "ready": true,
+      "capacity": 2,
+      "connected": true,
+      "runner_id": "runner-a",
+      "incarnation": 22,
+      "connection_instance": "fbec76cc-cc57-4738-8cbe-33ae7e250f27"
+    },
+    "attempts": [],
+    "unresolved_operations": []
+  },
+  "profile": {
+    "boot_id": "eb12bbe6-c63c-4e2e-8463-82b3e780aca1",
+    "catalog": {
+      "cost": {
+        "cache": {
+          "read": 0,
+          "write": 0
+        },
+        "input": 0,
+        "output": 0
+      },
+      "model": "opencode/longcat-2.5-preview-free",
+      "status": "active",
+      "toolcall": true
+    },
+    "kernel": "6.12.107+deb13-amd64",
+    "machine": "x86_64",
+    "opencode": "1.18.30",
+    "reboot": "not_run",
+    "source_fingerprint": "610001953d2ae211be3726495ade0050f8d27f1d76e28f04b7403551ea753ffa",
+    "systemd": "systemd 257 (257.13-1~deb13u1)"
+  },
+  "services": [
+    "active",
+    "active"
+  ],
+  "active_attempt_units": [
+    "  monos-probe-runner.service loaded active running monos isolated boundary probe Runner"
+  ],
+  "outcome": "pass"
+}

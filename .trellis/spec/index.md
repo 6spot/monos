@@ -2,7 +2,7 @@
 
 ## Status and authority
 
-The Stage A boundary probe now scaffolds `apps/server`, `packages/{domain,db,protocol}`, the Go `runner`, and deployment recipes under `infra`. These specs connect accepted decisions to that implementation. The frontend and full Task/delivery product flow remain unimplemented. Source references establish behavior; the active task's evidence report distinguishes local tests from real Linux/CLI acceptance.
+The Stage A foundations implement `apps/server`, `packages/{domain,db,protocol}`, the Go `runner`, Owner configuration in `apps/web`, and deployment recipes under `infra`. Production Runtime integration passed combined real-host acceptance on 2026-09-29. Todo/Task conversation and the full delivery product flow remain later work. These specs connect accepted decisions to implementation; task verification reports distinguish deterministic tests from real Linux/CLI acceptance.
 
 Read [ARCHITECTURE.md](../../ARCHITECTURE.md), the relevant [module](../../docs/README.md), and [invariants](../../docs/08-principles-and-non-goals.md) first. Domain rules belong there; this tree specifies implementation and verification. Update both when an accepted decision changes.
 
@@ -11,7 +11,7 @@ Read [ARCHITECTURE.md](../../ARCHITECTURE.md), the relevant [module](../../docs/
 | Entry | Destinations |
 | --- | --- |
 | [Backend](backend/index.md) | `apps/server`, `packages/domain`, `packages/db` |
-| [Frontend](frontend/index.md) | `apps/web` (planned, not scaffolded) |
+| [Frontend](frontend/index.md) | `apps/web` (Owner access/configuration implemented) |
 | [Protocol](protocol/index.md) | `packages/protocol`; HTTP/WSS/CLI boundaries |
 | [Runner](runner/index.md) | Go `runner` and Linux host configuration |
 | [Thinking guides](guides/index.md) | Cross-layer changes and reuse |

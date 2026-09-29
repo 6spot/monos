@@ -62,6 +62,34 @@ durable records and boot identity together with current unit/cgroup/process inve
 do not turn missing identity evidence into absence. Retain failed audit reports and
 state precisely why a corrected check changes the conclusion.
 
+## Shared-slot integration evidence
+
+1. **Scope:** selected Runtime integration across queue promotion, native processes,
+   service reconnect and authenticated Owner reads.
+2. **Signature:** `python3 infra/probe/queue_probe.py --evidence <private-dir>
+   --password-file <root-private-file> <fresh-prefix>` creates `-node`, `-planner`
+   and `-queued` trial identities on an idle, ready two-slot Runner.
+3. **Contract:** retain immutable preparation/checkpoint evidence, exact selection
+   and Start outbox IDs, two distinct held process identities, queued status/logs,
+   and complete resumed ordered logs. Use one SQL statement for capacity/Start
+   observations. Samples establish observed invariants, not every instant;
+   PostgreSQL race tests independently establish the promotion guard. A repeated
+   factual `started` event does not itself prove a duplicate OS process.
+4. **Errors:** reused trial ID, unrelated work, missing identity, invalid model
+   catalog, expired fixture hold, changed selection or over-capacity sample fails
+   the trial. Cancel queued work before releasing predecessors; an uncertain
+   cancellation stops cleanup and retains claims for explicit reconciliation.
+5. **Cases:** good is a queued Planner surviving reconnect and starting once after
+   Node release; base is idle preflight refusal; bad is freeing a predecessor
+   while the queued cancellation is still unknown.
+6. **Tests:** `test_queue_probe.py` rejects missing claims, false queue visibility,
+   changed Start/selection/identity, unsafe promotion and uncertain cleanup.
+   Regular Python tests do not substitute for the installed native CLI trial.
+7. **Wrong/correct:** never cancel a selected queued Attempt with the fixture
+   `revoke` shortcut (it skips `mutation_allowed=false` rows). Use authenticated
+   Owner Stop; pre-Plan Planner fixtures permit `stop_initial_planning` before a
+   queued model launches. Preserve failed evidence and verify physical release.
+
 ## Test layers
 
 - Unit: adapter event normalization, schema validation, bounded recovery decisions.

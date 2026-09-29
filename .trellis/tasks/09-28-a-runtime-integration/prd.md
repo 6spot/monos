@@ -6,7 +6,7 @@ Integrate the proven Runner/CLI boundary with canonical Attempts and two shared 
 
 ## Planning status
 
-Roadmap level: **work-package**. Status: **planning / backlog**, not implementation-ready. The Owner approved the three-level roadmap structure on 2026-09-28. This PRD records scope and acceptance, not approval to start implementation.
+Roadmap level: **work-package**. All four implementation/acceptance leaves passed on 2026-09-29. The Owner authorized sequential roadmap execution and completion under the existing architecture.
 
 ## Background and scope
 
@@ -32,8 +32,10 @@ The Runtime/host feasibility and command-foundation dependencies are complete. I
 
 ## Acceptance criteria
 
-- [ ] Real Attempts, ordered log streaming, scoped commands and restart reconciliation use formal dispatch ownership.
-- [ ] Stop/freeze terminates descendants before slot/workspace reuse; missing complete_node does not report success; queued Planner work is visible.
+- [x] Real Attempts, ordered log streaming, scoped commands and restart reconciliation use formal dispatch ownership.
+- [x] Stop/freeze terminates descendants before slot/workspace reuse; missing complete_node does not report success; queued Planner work is visible.
+
+Combined acceptance: [Runtime integration verification](../09-29-a-runtime-integration-acceptance/verification.md). It records current-source Node/Planner log trials, missing-outcome Stop, two-slot queue/reconnect/promotion, matched prior Stop/reboot evidence, 96 real PostgreSQL tests, Linux Go race/vet and final idle ownership audit. Full Stage A/V1 remains open.
 
 ## Out of scope
 

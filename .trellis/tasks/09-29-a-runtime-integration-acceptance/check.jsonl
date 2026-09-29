@@ -1,0 +1,5 @@
+{"file": ".trellis/spec/runner/quality-guidelines.md", "reason": "Immutable real-host evidence and physical ownership"}
+{"file": ".trellis/spec/backend/runtime-scheduling.md", "reason": "Shared slots and selected admission"}
+{"file": ".trellis/spec/backend/execution-logs.md", "reason": "Authenticated queue visibility and ordered logs"}
+{"file": ".trellis/spec/protocol/commands.md", "reason": "Command authority and replay"}
+{"file": "infra/probe/README.md", "reason": "Existing real-host harness usage"}
