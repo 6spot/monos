@@ -322,3 +322,25 @@ Implemented Todo-scoped Planner turns, atomic replies/cache, explicit Stop/Retry
 ### Status
 
 [OK] **Completed**
+
+
+## Session 15: Exact Task preview and creation
+<!-- trellis-session: v=2 fp=84fca7b3f961d6bd -->
+
+**Date**: 2026-09-30
+**Task**: Exact Task preview and creation
+**Branch**: `feat/stage-a-boundary-probe`
+
+### Summary
+
+Completed exact Project-bound confirmations, one independent PLANNING Task per Discussion proposal, immutable provenance, recoverable browser previews and Task Specification view. Full local 151, PostgreSQL 138, browser 23 and Python 67 tests passed. Native zero-price Planner trial and final physical ownership audit passed on the existing host. Evidence: /root/monos-task-preview-evidence-v1. Continuing with Capture and Discussion integration acceptance.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `61f140b2df821e1647f64e7ee4f418404fcb66bc` | feat: add exact Task preview and creation |
+
+### Status
+
+[OK] **Completed**
