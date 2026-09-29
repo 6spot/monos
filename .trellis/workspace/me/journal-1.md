@@ -256,3 +256,25 @@ Added authenticated idempotent Owner Stop/Continue/Retry and physical release gu
 ### Status
 
 [OK] **Completed**
+
+
+## Session 12: Production Runtime integration accepted
+<!-- trellis-session: v=2 fp=b245c53f679c23b8 -->
+
+**Date**: 2026-09-29
+**Task**: Production Runtime integration accepted
+**Branch**: `feat/stage-a-boundary-probe`
+
+### Summary
+
+Verified real shared-slot queue, Node/Planner ordered logs and missing-result Stop on existing host; matched prior Stop/reboot evidence; 96 DB and 50 Python tests plus Go race/vet pass. Runtime package accepted, no unresolved physical ownership. Continue sequential roadmap with Todo capture.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `b0b57bf` | test: verify integrated runtime scheduling and recovery |
+
+### Status
+
+[OK] **Completed**
