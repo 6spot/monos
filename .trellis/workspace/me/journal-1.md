@@ -410,3 +410,25 @@ Implemented migration17 durable Task-only initial planning, source-bound Plan/is
 ### Status
 
 [OK] **Completed**
+
+
+## Session 19: Canonical Node execution, Artifacts and native recovery accepted
+<!-- trellis-session: v=2 fp=ff4fd699f937bc01 -->
+
+**Date**: 2026-09-30
+**Task**: Canonical Node execution, Artifacts and native recovery accepted
+**Branch**: `feat/stage-a-boundary-probe`
+
+### Summary
+
+Implemented canonical single-Node scheduling, immutable text Artifacts and completion manifests, source-bound Owner controls, trusted completion correction and local cancellation. Accepted TS249/PG214/Python155, Linux race/vet/build, real Artifact/browser, Git Stop/Continue/ancestry correction/export and existing backend/Runner restart. Independent review ACCEPT with 25 completion and 20 restart checks; retained all failed-trial evidence. Continue ordered Task Conversation next.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `c5ce437` | feat: execute canonical Nodes with Artifacts and recovery |
+
+### Status
+
+[OK] **Completed**
