@@ -366,3 +366,25 @@ Accepted Capture/Discussion package from exact source-bound native/browser/datab
 ### Status
 
 [OK] **Completed**
+
+
+## Session 17: Canonical serial Task workspaces and native recovery
+<!-- trellis-session: v=2 fp=e37c9a8f975fce80 -->
+
+**Date**: 2026-09-30
+**Task**: Canonical serial Task workspaces and native recovery
+**Branch**: `feat/stage-a-boundary-probe`
+
+### Summary
+
+Implemented migration16 canonical Project-backed serial workspaces, scoped repository access, stable storage/leases, checkpoint and cancellation. Passed 182 local TS, 151 PostgreSQL, 136 Python, full local/Linux Go race/vet/build and independent review. Native public/two-account open/restart/Stop/Continue/completion and unavailable-ref cancellation passed. Retained initial export failure; fixed Git2.47 linked-worktree fetch and finite reconnect recovery, then settled same Stop without changing root records or duplicating Start. Final source v5 and Runner v4 deployed to existing18444 installation; all global queues/ownership idle, prior created Task untouched. Next: explicit Task Start and initial planning.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `97cf6a9` | feat: add canonical serial Task workspaces |
+
+### Status
+
+[OK] **Completed**

@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 16
+- **Total Sessions**: 17
 - **Last Active**: 2026-09-30
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~368 | Active |
+| `journal-1.md` | ~390 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 17 | 2026-09-30 | Canonical serial Task workspaces and native recovery | `97cf6a9` | `feat/stage-a-boundary-probe` |
 | 16 | 2026-09-30 | Capture and Discussion integrated acceptance | `a5b990a473b8bf031740a325d5e343b0406f48ba` | `feat/stage-a-boundary-probe` |
 | 15 | 2026-09-30 | Exact Task preview and creation | `61f140b2df821e1647f64e7ee4f418404fcb66bc` | `feat/stage-a-boundary-probe` |
 | 14 | 2026-09-30 | Ordered Todo Discussion and native recovery acceptance | `d623444` | `feat/stage-a-boundary-probe` |
