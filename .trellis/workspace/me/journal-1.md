@@ -300,3 +300,25 @@ Implemented exact model-free Todo capture, versioned Project assignment and arch
 ### Status
 
 [OK] **Completed**
+
+
+## Session 14: Ordered Todo Discussion and native recovery acceptance
+<!-- trellis-session: v=2 fp=9260b92ad54d5dee -->
+
+**Date**: 2026-09-30
+**Task**: Ordered Todo Discussion and native recovery acceptance
+**Branch**: `feat/stage-a-boundary-probe`
+
+### Summary
+
+Implemented Todo-scoped Planner turns, atomic replies/cache, explicit Stop/Retry/Withdraw, scoped UI and shared Runtime ownership. Passed 123 PostgreSQL, 131 local, 16 full plus 1 focused browser tests, Linux race/vet and 61 Python regressions. Real ordered and interrupted native-model trials passed on existing test host; all processes/effects settled and trial Todos archived. Fixed Auto Runner lock deadlock. Continue exact Task preview and creation.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `d623444` | feat: add ordered Todo Planner discussion |
+
+### Status
+
+[OK] **Completed**
