@@ -1,0 +1,213 @@
+{
+  "host": "100.120.14.84",
+  "outcome": "pass",
+  "task_id": "0c24174a-6910-4810-b4b6-14f68d202f0b",
+  "evidence_directory": "/root/monos-capture-discussion-acceptance-v2",
+  "harness_sha256": "9ea5e1b42515a198ca42918fd3cdc021ce18ec8463413813c24490b29c6ab3ba",
+  "sha256": {
+    "after-runner.json": "83ab3db55c96e141d5930ba54cc61d03462c63875e7d6dcfedf6450bbfc53152",
+    "before-runner.json": "8a5369616247dc5428ae0a1ccf8d72994b473b657bc2d676ba06e34fea3fb1e2",
+    "before.json": "ee29d6bba24bca96b74a6f208f0e755781a1e5249311d0cdb3b3efa9545251e6",
+    "claim.json": "1760cc8229104ca1d0c9682821db48ee79248c84af222bc9710df0f297cc55e3",
+    "complete.json": "088d2ae552bd05b01f6e35e392f7ee9a5923cb3dd6ace087a48410e27b423229",
+    "prior-evidence.json": "9f7ccb9833549e59eab882d83422a491f7c3949f3ca626802b07155cd95df2ae",
+    "restart-runner-intent.json": "b3503ac9a66857f948077e538c4b244e5ba9c8325a99154a6d8532a37155d6c6",
+    "resume-backend-evidence.json": "73ee6cabb78df1f6ff87c4c3c3fb99e820e989a789f4cbbaf82b9ea393120b29",
+    "runtime-progress-runner.json": "916a61c531d150986cfd3c525a2c7005b5c2721a47dc3f504062fdef37f363d4"
+  },
+  "original_backend_evidence_retained": "/root/monos-capture-discussion-acceptance-v1",
+  "backend_comparison": {
+    "projection_changes": {
+      "22eff06b-d656-4872-a9c5-1e4d5f775a05": {
+        "activity_at": {
+          "after": "2026-09-29T18:06:02.086957+00:00",
+          "before": "2026-09-29T17:39:28.235379+00:00"
+        },
+        "exit_observed": {
+          "after": true,
+          "before": false
+        },
+        "log_visible_sequence": {
+          "after": 8,
+          "before": 7
+        }
+      }
+    },
+    "runtime_appends": [
+      {
+        "attempt_id": "22eff06b-d656-4872-a9c5-1e4d5f775a05",
+        "body": {
+          "attempt_id": "22eff06b-d656-4872-a9c5-1e4d5f775a05",
+          "boot_id": "eb12bbe6-c63c-4e2e-8463-82b3e780aca1",
+          "dispatch_id": "38db80ef-7c7c-4815-820e-7493b25c72c1",
+          "kind": "exited",
+          "order_sequence": 8,
+          "sequence": 2,
+          "stream_id": "runtime",
+          "text": "runtime main process exited; formal completion is independent"
+        },
+        "digest": "97316eb5840b5627044b2bfb021100ad4d8d7ef70a1000721bfcd0b7e24544a9",
+        "sequence": 2,
+        "stream_id": "runtime"
+      }
+    ],
+    "valid": true
+  },
+  "runner_checks": {
+    "archived_created_project": true,
+    "archived_source": true,
+    "attempts_discussion-interrupted-20260930-a": true,
+    "attempts_discussion-ordered-20260930-a": true,
+    "attempts_task-preview-20260930-a": true,
+    "backend_process_unchanged": true,
+    "consumed_once_for_exact_task": true,
+    "created_preview_retained": true,
+    "current_ready_connection": true,
+    "exact_confirmation_digest": true,
+    "exact_content_and_project": true,
+    "exact_final_task": true,
+    "exact_owner_receipts": true,
+    "final_source": true,
+    "globally_idle": true,
+    "historical_events_22eff06b-d656-4872-a9c5-1e4d5f775a05": true,
+    "historical_events_25e35e26-1c9e-4fef-891a-6bf487af5780": true,
+    "historical_events_4179fa0a-8d85-4699-98bf-1f2728739425": true,
+    "historical_events_60620095-2947-4f4f-aac9-d4fa634c6b24": true,
+    "historical_events_71b66a16-3435-445d-8c95-8ff4727a9d19": true,
+    "history_discussion-interrupted-20260930-a": true,
+    "history_discussion-ordered-20260930-a": true,
+    "history_task-preview-20260930-a": true,
+    "independent_ready_task": true,
+    "installed_images": true,
+    "installed_runner": true,
+    "native_absence": true,
+    "native_children_absent": true,
+    "native_provenance_22eff06b-d656-4872-a9c5-1e4d5f775a05": true,
+    "native_provenance_25e35e26-1c9e-4fef-891a-6bf487af5780": true,
+    "native_provenance_4179fa0a-8d85-4699-98bf-1f2728739425": true,
+    "native_provenance_60620095-2947-4f4f-aac9-d4fa634c6b24": true,
+    "native_provenance_71b66a16-3435-445d-8c95-8ff4727a9d19": true,
+    "new_runner_incarnation": true,
+    "one_exact_confirmation": true,
+    "one_initial_revision_no_execution": true,
+    "one_task_across_requests": true,
+    "persisted_command_receipts": true,
+    "persisted_exact_authorization": true,
+    "persisted_exact_initial_revision": true,
+    "runner_binaries_unchanged": true,
+    "runner_process_restarted": true,
+    "same_backend_connection": true,
+    "same_boot": true,
+    "same_compose_images": true,
+    "same_container_image": true,
+    "semantic_state_unchanged": true,
+    "source_unchanged": true,
+    "status_discussion-interrupted-20260930-a": true,
+    "status_discussion-ordered-20260930-a": true,
+    "successful_native_handoff_22eff06b-d656-4872-a9c5-1e4d5f775a05": true,
+    "successful_native_handoff_4179fa0a-8d85-4699-98bf-1f2728739425": true,
+    "successful_native_handoff_60620095-2947-4f4f-aac9-d4fa634c6b24": true,
+    "successful_native_handoff_d7ef6a5d-1df0-43cb-8ad7-bb58500c81a8": true,
+    "successful_source_count_discussion-interrupted-20260930-a": true,
+    "successful_source_count_discussion-ordered-20260930-a": true,
+    "successful_source_count_task-preview-20260930-a": true
+  },
+  "runner_before": {
+    "backend": {
+      "id": "46e7875b207795ab6344f788d9c669defa79b158e9f59d81dfe58ce630dd7c47",
+      "image": "sha256:9b6dea2290aee82f98149f477eaf83e7962361b57e45a8bd154b57f32b15f0ad",
+      "pid": 498636,
+      "restart_count": 0,
+      "running": true,
+      "started": "2026-09-29T18:05:55.764698994Z"
+    },
+    "service": {
+      "ActiveState": "active",
+      "ExecMainStartTimestampMonotonic": "4358316770",
+      "InvocationID": "ddab2b515c054aec9b18ed2b580cc0fb",
+      "MainPID": "213462",
+      "SubState": "running"
+    },
+    "runner": {
+      "connected": true,
+      "connection_instance": "a2689c6a-79db-4b67-946d-564a79ff2651",
+      "fresh": true,
+      "incarnation": 28,
+      "last_seen": "2026-09-29T18:15:38.079673+00:00",
+      "ready": true,
+      "runtime_report_incarnation": 28
+    }
+  },
+  "runner_after": {
+    "backend": {
+      "id": "46e7875b207795ab6344f788d9c669defa79b158e9f59d81dfe58ce630dd7c47",
+      "image": "sha256:9b6dea2290aee82f98149f477eaf83e7962361b57e45a8bd154b57f32b15f0ad",
+      "pid": 498636,
+      "restart_count": 0,
+      "running": true,
+      "started": "2026-09-29T18:05:55.764698994Z"
+    },
+    "service": {
+      "ActiveState": "active",
+      "ExecMainStartTimestampMonotonic": "10895540181",
+      "InvocationID": "240d795fdb574de992805b00e65ccfb9",
+      "MainPID": "530200",
+      "SubState": "running"
+    },
+    "runner": {
+      "connected": true,
+      "connection_instance": "a2689c6a-79db-4b67-946d-564a79ff2651",
+      "fresh": true,
+      "incarnation": 29,
+      "last_seen": "2026-09-29T18:15:48.333246+00:00",
+      "ready": true,
+      "runtime_report_incarnation": 29
+    }
+  },
+  "source": {
+    "manifest_digest": "2d8c8e187ba20a3cdd3c953e22afca1e0c983334e303a7fed24a6ce23c6a1d1f",
+    "source_files_verified": 205,
+    "source_tar_sha256": "a0913337e59aa109940bd2486c1e5b0264d27aba44af54d53c4ac6af39b1a014"
+  },
+  "binaries": {
+    "monos": "22f58f0ee3548c535aec80478bca2e3da4a450211c7205cf09b02ba2b5f5c755",
+    "monos-probe-exec": "0e9ebfb7cd7d59bface537eddebd4cdbc607ebe0e495b4690db7c7a1110c313d",
+    "monos-probe-launch": "e4921defbb3eaacce02a627a803f8d4e566e908dffadfa9cefb4cb26917bbd69",
+    "monos-runner": "df546541226a3e32cdab44006a943b8936bb4d3b5260c453f078d75c48ec7581"
+  },
+  "idle": {
+    "pending_discussion": 0,
+    "pending_outbox": 0,
+    "queued": 0,
+    "unreleased": 0,
+    "unresolved_sources": 0,
+    "unsettled": 0,
+    "writable": 0
+  },
+  "footprint": {
+    "attempts": 0,
+    "nodes": 0,
+    "plans": 0,
+    "revisions": 1,
+    "starts": 0,
+    "tasks": 1
+  },
+  "attempts_checked": [
+    "22eff06b-d656-4872-a9c5-1e4d5f775a05",
+    "25e35e26-1c9e-4fef-891a-6bf487af5780",
+    "4179fa0a-8d85-4699-98bf-1f2728739425",
+    "60620095-2947-4f4f-aac9-d4fa634c6b24",
+    "71b66a16-3435-445d-8c95-8ff4727a9d19",
+    "d7ef6a5d-1df0-43cb-8ad7-bb58500c81a8"
+  ],
+  "successful_reply_provenance_count": 4,
+  "historical_native_snapshots": 5,
+  "known_sleep_children": 2,
+  "receipt_count": 24,
+  "runtime_progress_runner": {
+    "projection_changes": {},
+    "runtime_appends": [],
+    "valid": true
+  },
+  "limits": "Idle persistence only; no model call, live interruption, host reboot or Task execution."
+}

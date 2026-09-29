@@ -1,0 +1,123 @@
+{
+  "host": "100.120.14.84",
+  "evidence_directory": "/root/monos-capture-discussion-acceptance-v1",
+  "original_outcome": "fail",
+  "original_failed_checks": [
+    "semantic_state_unchanged"
+  ],
+  "sha256": {
+    "after-backend.json": "0069f4c37e61416742427c9d9f4ce3bf730698fd78a0be68e50f3c224f8bcad7",
+    "before-backend.json": "25013c6c35764f7046492cbee0a3776241185f512d8d3ea6f30bf449704d6acd",
+    "before.json": "47345c9d24fce45b37a9a7f97444c7f1d0859127e79afbfb5c1fa57dbaf6bc0e",
+    "claim.json": "705de34b25bbd95099f1d4385d797dd938a5c07f347da6e457e40cd3a8fc524f",
+    "failure.json": "7966b79fb2fb97dc6dee401f187f8817e0fb0e77f1c1a0abc5d9dae492e6ad25",
+    "prior-evidence.json": "9f7ccb9833549e59eab882d83422a491f7c3949f3ca626802b07155cd95df2ae",
+    "restart-backend-intent.json": "c7fc6df799a9f21377a0ca092f43e6cbf15c18fd7ca56fa631de5d580f81fbbb"
+  },
+  "task_unchanged": true,
+  "owner_receipts_unchanged": true,
+  "footprint": {
+    "attempts": 0,
+    "nodes": 0,
+    "plans": 0,
+    "revisions": 1,
+    "starts": 0,
+    "tasks": 1
+  },
+  "idle": {
+    "pending_discussion": 0,
+    "pending_outbox": 0,
+    "queued": 0,
+    "unreleased": 0,
+    "unresolved_sources": 0,
+    "unsettled": 0,
+    "writable": 0
+  },
+  "attempt_projection_changes": {
+    "22eff06b-d656-4872-a9c5-1e4d5f775a05": {
+      "activity_at": {
+        "before": "2026-09-29T17:39:28.235379+00:00",
+        "after": "2026-09-29T18:06:02.086957+00:00"
+      },
+      "exit_observed": {
+        "before": false,
+        "after": true
+      },
+      "log_visible_sequence": {
+        "before": 7,
+        "after": 8
+      }
+    }
+  },
+  "new_runtime_events": [
+    {
+      "attempt_id": "22eff06b-d656-4872-a9c5-1e4d5f775a05",
+      "body": {
+        "attempt_id": "22eff06b-d656-4872-a9c5-1e4d5f775a05",
+        "boot_id": "eb12bbe6-c63c-4e2e-8463-82b3e780aca1",
+        "dispatch_id": "38db80ef-7c7c-4815-820e-7493b25c72c1",
+        "kind": "exited",
+        "order_sequence": 8,
+        "sequence": 2,
+        "stream_id": "runtime",
+        "text": "runtime main process exited; formal completion is independent"
+      },
+      "digest": "97316eb5840b5627044b2bfb021100ad4d8d7ef70a1000721bfcd0b7e24544a9",
+      "sequence": 2,
+      "stream_id": "runtime"
+    }
+  ],
+  "removed_runtime_events": [],
+  "before_service": {
+    "backend": {
+      "id": "46e7875b207795ab6344f788d9c669defa79b158e9f59d81dfe58ce630dd7c47",
+      "image": "sha256:9b6dea2290aee82f98149f477eaf83e7962361b57e45a8bd154b57f32b15f0ad",
+      "pid": 417012,
+      "restart_count": 0,
+      "running": true,
+      "started": "2026-09-29T17:38:22.35094667Z"
+    },
+    "service": {
+      "ActiveState": "active",
+      "ExecMainStartTimestampMonotonic": "4358316770",
+      "InvocationID": "ddab2b515c054aec9b18ed2b580cc0fb",
+      "MainPID": "213462",
+      "SubState": "running"
+    },
+    "runner": {
+      "connected": true,
+      "connection_instance": "f9de819b-71b3-4774-82c5-5cf9161b0e51",
+      "fresh": true,
+      "incarnation": 27,
+      "last_seen": "2026-09-29T18:05:43.232237+00:00",
+      "ready": true,
+      "runtime_report_incarnation": 27
+    }
+  },
+  "after_service": {
+    "backend": {
+      "id": "46e7875b207795ab6344f788d9c669defa79b158e9f59d81dfe58ce630dd7c47",
+      "image": "sha256:9b6dea2290aee82f98149f477eaf83e7962361b57e45a8bd154b57f32b15f0ad",
+      "pid": 498636,
+      "restart_count": 0,
+      "running": true,
+      "started": "2026-09-29T18:05:55.764698994Z"
+    },
+    "service": {
+      "ActiveState": "active",
+      "ExecMainStartTimestampMonotonic": "4358316770",
+      "InvocationID": "ddab2b515c054aec9b18ed2b580cc0fb",
+      "MainPID": "213462",
+      "SubState": "running"
+    },
+    "runner": {
+      "connected": true,
+      "connection_instance": "a2689c6a-79db-4b67-946d-564a79ff2651",
+      "fresh": true,
+      "incarnation": 28,
+      "last_seen": "2026-09-29T18:06:05.079146+00:00",
+      "ready": true,
+      "runtime_report_incarnation": 28
+    }
+  }
+}

@@ -1,0 +1,5 @@
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Evidence scope and real database checks"}
+{"file": ".trellis/spec/runner/quality-guidelines.md", "reason": "Restart evidence and physical ownership"}
+{"file": ".trellis/spec/backend/discussion.md", "reason": "Ordered input and source provenance"}
+{"file": ".trellis/spec/backend/task-preview.md", "reason": "Exact creation and immutable receipts"}
+{"file": ".trellis/tasks/archive/2026-09/09-29-a-capture-discussion-acceptance/research/evidence-map.md", "reason": "Completed leaves and combined proof"}

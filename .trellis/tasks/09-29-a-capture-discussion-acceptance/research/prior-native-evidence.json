@@ -1,0 +1,173 @@
+{
+  "host": "100.120.14.84",
+  "cases": {
+    "/root/monos-todo-capture-evidence-v1/capture-deployment.json": {
+      "sha256": "f82b512a36f8cacc256240255becf453bc636d563155da74948f027dcc44ee56",
+      "checks": {
+        "authenticated_todos": true,
+        "final_web_asset": true,
+        "healthy": true,
+        "idle_attempts": true,
+        "migrated": true,
+        "runner_ready": true
+      },
+      "outcome": "pass"
+    },
+    "/root/monos-todo-discussion-evidence-v1/captured-discussion-ordered-20260930-a.json": {
+      "sha256": "98032384a77e4e73293a4025db346db54fde63e962c436facba557b94023aa74",
+      "checks": {
+        "no_task": true,
+        "pure_capture": true
+      },
+      "outcome": "pass"
+    },
+    "/root/monos-todo-discussion-evidence-v1/ordered-discussion-ordered-20260930-a.json": {
+      "sha256": "90ae41ac16a4b7d7af41e874bbc660db2258c880519954057ba99d548ae99b4a",
+      "checks": {
+        "correct_source_watermarks": true,
+        "exact_sources": true,
+        "journaled_formal_commits": true,
+        "latest_requirement_retained": true,
+        "native_cli_journal": true,
+        "no_task_or_node_created": true,
+        "nonempty_formal_replies": true,
+        "one_attempt_per_source": true,
+        "one_reply_per_source": true,
+        "real_todo_planners": true,
+        "requirement_cache": true,
+        "resolved_second_source": true,
+        "single_start_and_formal_handoff": true,
+        "source_specific_replies": true,
+        "successful_physical_release": true,
+        "unique_ordered_history": true
+      },
+      "outcome": "pass"
+    },
+    "/root/monos-todo-discussion-evidence-v1/stopped-discussion-interrupted-20260930-a.json": {
+      "sha256": "cf2706b9964d3a9f8de96a6706e9a1a0b54df8864e49dd2e54f0054f1be94161",
+      "checks": {
+        "host_absence_proved": true,
+        "later_source_retained": true,
+        "no_reply_or_replacement": true,
+        "old_writer_released": true,
+        "same_unresolved_source": true
+      },
+      "outcome": "pass"
+    },
+    "/root/monos-todo-discussion-evidence-v1/retried-discussion-interrupted-20260930-a.json": {
+      "sha256": "b064cc4c133cf2ea8477cf23ea9e30db9c277714aae479d173c4fed614cf686a",
+      "checks": {
+        "live_retry_process": true,
+        "no_duplicate_input": true,
+        "old_writer_remains_released": true,
+        "same_source_new_attempt": true
+      },
+      "outcome": "pass"
+    },
+    "/root/monos-todo-discussion-evidence-v1/retry-stopped-discussion-interrupted-20260930-a.json": {
+      "sha256": "b772a88e7cb4f68d678cc9bdfd46c0f046235a4a5f931f31429645f755bf6842",
+      "checks": {
+        "host_absence_proved": true
+      },
+      "outcome": "pass"
+    },
+    "/root/monos-todo-discussion-evidence-v1/withdrawn-discussion-interrupted-20260930-a.json": {
+      "sha256": "14b47aeee2f8385106fef6e0ea660ff25841acaf385e94a2914d4454395efc6b",
+      "checks": {
+        "all_reconciled": true,
+        "correct_sources": true,
+        "no_task_or_node_created": true,
+        "only_later_reply": true,
+        "only_todo_scope": true,
+        "second_success": true,
+        "withdrawal_retained": true
+      },
+      "outcome": "pass"
+    },
+    "/root/monos-todo-discussion-evidence-v1/discussion-complete.json": {
+      "sha256": "a745f3067d11bdd34f78d7e41a02d2b19a9ba41f86628a30bf0d8c85db04a2e6",
+      "checks": null,
+      "outcome": "pass"
+    },
+    "/root/monos-task-preview-evidence-v1/preview-proposed-task-preview-20260930-a.json": {
+      "sha256": "84c89feb12dcf8b428b00d4417493f190fe86901ed768cc6801377a91d958ab4",
+      "checks": {
+        "correct_source_watermarks": true,
+        "exact_sources": true,
+        "native_journal_handoff": true,
+        "no_task_or_node_created": true,
+        "nonempty_formal_replies": true,
+        "one_attempt_per_source": true,
+        "one_reply_per_source": true,
+        "physical_source_absence": true,
+        "real_todo_planners": true,
+        "single_start_and_formal_handoff": true,
+        "structured_committed_preview": true,
+        "successful_physical_release": true,
+        "unique_ordered_history": true
+      },
+      "outcome": "pass"
+    },
+    "/root/monos-task-preview-evidence-v1/preview-read-task-preview-20260930-a.json": {
+      "sha256": "53ae8441af08caf5686585d2780860c819a95cbc80cacc1cfd1f93d3ad3b6195",
+      "checks": {
+        "exact_digest": true,
+        "exact_source": true,
+        "no_task_from_reads": true,
+        "project_required": true,
+        "selected_without_reassigning": true
+      },
+      "outcome": "pass"
+    },
+    "/root/monos-task-preview-evidence-v1/preview-confirmed-task-preview-20260930-a.json": {
+      "sha256": "668e8e322e92c998c03fa12d60a6ed8a374133389d82af45a4708d27b74587e7",
+      "checks": {
+        "no_task_from_confirmation": true,
+        "same_authorization": true
+      },
+      "outcome": "pass"
+    },
+    "/root/monos-task-preview-evidence-v1/preview-created-task-preview-20260930-a.json": {
+      "sha256": "7862a3c84c17bdf0267455dc12d66b79b9cb68f2db3045f7b331530ce3f61e64",
+      "checks": {
+        "consumed_once_for_exact_task": true,
+        "exact_confirmation_digest": true,
+        "exact_content_and_project": true,
+        "independent_ready_task": true,
+        "one_exact_confirmation": true,
+        "one_initial_revision_no_execution": true,
+        "one_task_across_requests": true,
+        "persisted_command_receipts": true,
+        "persisted_exact_authorization": true,
+        "persisted_exact_initial_revision": true
+      },
+      "outcome": "pass"
+    },
+    "/root/monos-task-preview-evidence-v1/preview-complete-task-preview-20260930-a.json": {
+      "sha256": "d0e1457780e5a796200359aae4c598321d7e206653d91da58c1c42bcb987f254",
+      "checks": {
+        "created_binding_wins": true,
+        "immutable_request_replay": true,
+        "new_request_same_task_after_archive": true,
+        "one_task_no_execution": true,
+        "source_attempt_released": true
+      },
+      "outcome": "pass"
+    },
+    "/root/monos-task-preview-evidence-v1/preview-installation-audit.json": {
+      "sha256": "7394dd671a1f15ce83c936ca3c6925466cc64e37732f90871a0ec056720616df",
+      "checks": null,
+      "outcome": "pass"
+    },
+    "/root/monos-integration-evidence-v1/queue-final-integration-queue-20260929-01.json": {
+      "sha256": "b5c5dcd5e3ee5dffa56f3552503ffccd5db14071ffeb0e45fe2b324f8b2576ab",
+      "checks": {
+        "all_formal_outcomes": true,
+        "all_ordered_logs": true,
+        "all_released_no_effects": true,
+        "one_start_per_selection": true
+      },
+      "outcome": "pass"
+    }
+  }
+}

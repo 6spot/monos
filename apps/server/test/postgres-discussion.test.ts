@@ -97,6 +97,51 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('ordered Todo Discussio
     await expect(service.admit(f.credential, submission({ ...command, request_id: randomUUID() }))).rejects.toMatchObject(fault('stale_execution'));
   }, 20000);
 
+  it('orders distinct first submissions from two clients before replying once per source after settlement', async () => {
+    const id = await todo(); const secondToken = (await issueOwnerSession(db)).token;
+    const commands: DiscussionCommand[] = ['First client question', 'Second client question'].map((content) => ({ schema_version: 1, request_id: randomUUID(), todo_id: id, name: 'submit_discussion_message', payload: { message_id: randomUUID(), content } }));
+    const applications = [0, 1].map((index) => `${namespace}_${index}`);
+    const clients = applications.map((application) => { const url = new URL(databaseUrl); url.searchParams.set('application_name', application); return database(url.toString()); });
+    const barrier = await db.pool.connect();
+    try {
+      await barrier.query('BEGIN'); await barrier.query('SELECT id FROM todos WHERE id=$1 FOR UPDATE', [id]);
+      const pending = Promise.allSettled(clients.map((client, index) => new Discussion(client, service.instanceId).command(index ? secondToken : token, commands[index]!)));
+      try {
+        // Observe both transactions waiting, rather than assuming Promise.all alone overlaps admission.
+        await expect.poll(async () => (await admin.pool.query("SELECT pid FROM pg_stat_activity WHERE application_name=ANY($1::text[]) AND wait_event_type='Lock'", [applications])).rowCount, { timeout: 5000 }).toBe(2);
+      } finally { await barrier.query('ROLLBACK'); }
+      const results = await pending;
+      for (const [index, result] of results.entries()) expect(result).toMatchObject({ status: 'fulfilled', value: { status: 'committed', request_id: commands[index]!.request_id, message_id: commands[index]!.payload.message_id } });
+    } finally { barrier.release(); await Promise.all(clients.map((client) => client.pool.end())); }
+
+    const owners = (await discussion.messages(token, id)).messages;
+    expect(owners.map((message) => message.sequence)).toEqual([1, 2]);
+    expect(new Set(owners.map((message) => message.message_id))).toEqual(new Set(commands.map((command) => command.payload.message_id)));
+    for (const owner of owners) expect(owner.content).toBe(commands.find((command) => command.payload.message_id === owner.message_id)!.payload.content);
+    const r = await runner(2); // A spare slot must not bypass the same-Todo settlement guard.
+    for (const [index, owner] of owners.entries()) {
+      const current = await start(id, r);
+      expect(current.launch).toMatchObject({ source_message_id: owner.message_id, source_watermark: owner.sequence });
+      if (index === 0) expect(current.launch.prompt).not.toContain(owners[1]!.content);
+      const command = commit(current.launch, `Reply to ${owner.message_id}`);
+      const result = await service.admit(current.credential, submission(command));
+      expect(await service.admit(current.credential, submission(command))).toEqual(result);
+      await discussion.pump(); expect(await queue.promoteNext(r.id, service.instanceId, r.incarnation)).toBeNull();
+      expect((await db.pool.query('SELECT process_released FROM attempts WHERE id=$1', [current.launch.attempt_id])).rows[0].process_released).toBe(false);
+      if (index === 0) expect((await discussion.status(secondToken, id)).current_source).toMatchObject({ message_id: owners[1]!.message_id, status: 'settling' });
+      // Synthetic Stop completion proves the database guard; native absence is a separate host gate.
+      await settle(r, current.launch.attempt_id);
+    }
+    const messages = (await discussion.messages(token, id)).messages;
+    expect(messages.map((message) => message.sequence)).toEqual([1, 2, 3, 4]);
+    expect(messages.filter((message) => message.author === 'assistant').map((message) => [message.source_message_id, message.source_watermark, message.content])).toEqual(owners.map((owner) => [owner.message_id, owner.sequence, `Reply to ${owner.message_id}`]));
+    expect((await discussion.status(token, id)).resolved_watermark).toBe(2);
+    expect(await discussion.status(token, id)).not.toHaveProperty('current_source');
+    const attempts = (await db.pool.query("SELECT launch->>'source_message_id' AS source_message_id,process_released FROM attempts WHERE todo_id=$1 ORDER BY (launch->>'source_watermark')::bigint", [id])).rows;
+    expect(attempts).toEqual(owners.map((owner) => ({ source_message_id: owner.message_id, process_released: true })));
+    expect((await db.pool.query("SELECT 1 FROM operations WHERE state<>'succeeded'")).rowCount).toBe(0);
+  }, 20000);
+
   it('uses shared slots with Task execution and independent Todos, including equal Task/Todo IDs', async () => {
     const a = await todo(); const b = await todo(); const r = await runner(2);
     await createAttemptFixture(db, { runner_id: r.id, task_id: a, attempt_id: randomUUID(), kind: 'node', resource_id: 'repo', prompt: 'Task fixture' });

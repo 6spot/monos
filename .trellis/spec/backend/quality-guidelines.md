@@ -20,6 +20,11 @@ database suites unless `MONOS_TEST_DATABASE=1`; use `pnpm test:db` for this gate
 
 - Test deterministic rules independently of HTTP/Git/Runtime.
 - Use fakes for races, then real Linux/CLI/provider probes for external assumptions.
+- For concurrent input, test distinct first-time requests as well as duplicate
+  replay. Use separate connections/sessions and observe lock contention before
+  releasing the barrier; verify canonical ordering and one outcome per source.
+  `postgres-discussion.test.ts` additionally requires prior physical settlement
+  before same-Todo promotion even when another Runner slot is free.
 - Validate external payloads and handle result variants exhaustively.
 - Never refresh a stale basis automatically to make an action succeed.
 - Preserve full collection cardinalities in the single-Node slice.

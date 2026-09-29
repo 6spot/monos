@@ -90,6 +90,47 @@ state precisely why a corrected check changes the conclusion.
    Owner Stop; pre-Plan Planner fixtures permit `stop_initial_planning` before a
    queued model launches. Preserve failed evidence and verify physical release.
 
+## Combined Capture/Discussion idle persistence
+
+1. **Scope:** retained Todo sources, exact created Task and immutable receipts
+   across independent restarts of the existing idle backend and Runner.
+2. **Signature:** `capture_discussion_acceptance.py --evidence <fresh-dir>
+   --password-file <private-file> --prior-index <versioned-evidence-index>`;
+   `--check-only` records preflight without service restart. No model is invoked.
+3. **Contract:** verify prior report hashes, deployed product manifest and installed
+   binary hashes; require globally settled work, fresh Runner registration and
+   exact canonical Task/Specification/preview/receipt facts. Persist single-use
+   claim and checkpoint-bound intent before each restart. Compare immutable
+   semantic records after each restart, and prove actual process/connection
+   identity change plus whole-tree absence of historical native Attempts.
+4. **Errors:** existing evidence, unresolved work, changed content/source/binaries,
+   missing ownership, stale registration or lost canonical state rejects the run.
+   An uncertain restart preserves intent and requires inspection, never automatic
+   repetition under another directory. Authentication/session observations are
+   operational facts and are not compared as immutable business records.
+5. **Cases:** historical early snapshots may predate the final log drain even
+   after a command/process settled. Retain every prior per-stream event unchanged;
+   only contiguous later output/exit events are acceptable, with no extra Start.
+   Record the appended metadata. The same asynchronous boundary exists during
+   reconnect: an already released/revoked Attempt may report its final output or
+   exit. Validate exact dispatch/boot, event digests, stream/order continuity and
+   prior-row retention. Only the appended events may explain changes to
+   `activity_at`, `log_visible_sequence` and `exit_observed`; preserve every other
+   Attempt field, ownership fact, command receipt and Task/Specification exactly.
+   Native/local/API reads may precede the raw database event collection; verify
+   their retained prefix instead of claiming one cross-process atomic snapshot.
+6. **Tests:** reject lost/changed/reordered events, duplicate sequence or Start,
+   missing receipt/Task, unexplained projection changes, unresolved process,
+   failed evidence write and repeat invocation after an uncertain restart. An
+   explicit `--resume-after-backend <prior-dir>` must verify retained intent and
+   changed backend identity, take an exclusive continuation claim, and restart
+   only the unperformed Runner stage. A native reply without an earlier
+   process snapshot still needs exact source/watermark/body and journal/receipt
+   provenance; do not invent a historical PID comparison.
+7. **Wrong/correct:** persisted `ready=true` alone is not reconnect proof. Verify
+   fresh Runtime registration, advanced Runner incarnation and changed backend
+   connection or systemd invocation identity, with unchanged retained results.
+
 ## Test layers
 
 - Unit: adapter event normalization, schema validation, bounded recovery decisions.
