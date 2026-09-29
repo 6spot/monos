@@ -11,7 +11,7 @@
     "lint": "eslint apps packages --max-warnings 0",
     "typecheck": "tsc --noEmit && pnpm --filter @monos/web typecheck",
     "test": "vitest run",
-    "test:db": "MONOS_TEST_DATABASE=1 vitest run apps/server/test/postgres.test.ts apps/server/test/postgres-claims.test.ts apps/server/test/postgres-recovery.test.ts apps/server/test/postgres-owner.test.ts apps/server/test/postgres-task-records.test.ts apps/server/test/postgres-dispatch.test.ts apps/server/test/postgres-runtime-scheduling.test.ts apps/server/test/postgres-reads.test.ts apps/server/test/postgres-owner-access.test.ts apps/server/test/postgres-configuration.test.ts apps/server/test/postgres-infrastructure.test.ts",
+    "test:db": "MONOS_TEST_DATABASE=1 vitest run apps/server/test/postgres.test.ts apps/server/test/postgres-claims.test.ts apps/server/test/postgres-recovery.test.ts apps/server/test/postgres-owner.test.ts apps/server/test/postgres-owner-execution.test.ts apps/server/test/postgres-task-records.test.ts apps/server/test/postgres-dispatch.test.ts apps/server/test/postgres-runtime-scheduling.test.ts apps/server/test/postgres-reads.test.ts apps/server/test/postgres-owner-access.test.ts apps/server/test/postgres-configuration.test.ts apps/server/test/postgres-infrastructure.test.ts",
     "protocol:generate": "node packages/protocol/scripts/generate.mjs",
     "protocol:check": "node packages/protocol/scripts/generate.mjs --check",
     "db:migrate": "node --experimental-strip-types packages/db/src/migrate.ts",

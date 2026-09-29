@@ -655,5 +655,68 @@
       "mutation_allowed": true,
       "process_released": false
     }
+  },
+  {
+    "name": "Owner Node Stop binds exact activation",
+    "schema": "OwnerCommand",
+    "valid": true,
+    "value": {
+      "schema_version": 1,
+      "request_id": "owner-stop-request",
+      "scope_id": "task",
+      "expected_control_version": 1,
+      "name": "stop_node",
+      "payload": {
+        "attempt_id": "attempt",
+        "node_id": "node",
+        "node_activation": 1
+      }
+    }
+  },
+  {
+    "name": "Owner Node Stop rejects missing activation",
+    "schema": "OwnerCommand",
+    "valid": false,
+    "value": {
+      "schema_version": 1,
+      "request_id": "owner-stop-request",
+      "scope_id": "task",
+      "expected_control_version": 1,
+      "name": "stop_node",
+      "payload": {
+        "attempt_id": "attempt",
+        "node_id": "node"
+      }
+    }
+  },
+  {
+    "name": "Owner Planner Stop forbids Node payload",
+    "schema": "OwnerCommand",
+    "valid": false,
+    "value": {
+      "schema_version": 1,
+      "request_id": "owner-stop-request",
+      "scope_id": "task",
+      "expected_control_version": 1,
+      "name": "stop_initial_planning",
+      "payload": {
+        "attempt_id": "attempt",
+        "node_id": "node",
+        "node_activation": 1
+      }
+    }
+  },
+  {
+    "name": "Owner Stop admitted operation",
+    "schema": "OwnerCommandResult",
+    "valid": true,
+    "value": {
+      "schema_version": 1,
+      "request_id": "owner-stop-request",
+      "status": "admitted",
+      "attempt_id": "attempt",
+      "operation_id": "operation",
+      "control_version": 2
+    }
   }
 ]

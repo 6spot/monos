@@ -194,28 +194,36 @@ export type TaskProposalAction = "apply_specification_revision" | "apply_rework"
 export interface OwnerCommand {
     expected_control_version: number;
     name:                     OwnerCommandName;
-    payload:                  Payload;
+    payload:                  OwnerCommandPayload;
     request_id:               string;
     schema_version:           number;
     scope_id:                 string;
 }
 
-export type OwnerCommandName = "confirm_proposal";
+export type OwnerCommandName = "confirm_proposal" | "stop_node" | "continue_node" | "retry_node" | "stop_initial_planning" | "retry_initial_planning";
 
-export interface Payload {
-    content_digest: string;
-    proposal_id:    string;
+export interface OwnerCommandPayload {
+    content_digest?:  string;
+    proposal_id?:     string;
+    attempt_id?:      string;
+    node_activation?: number;
+    node_id?:         string;
 }
 
 export interface OwnerCommandResult {
+    attempt_id?:      string;
     confirmation_id?: string;
+    control_version?: number;
+    end_reason?:      string;
+    node_id?:         string;
+    operation_id?:    string;
     proposal_id?:     string;
     request_id:       string;
     schema_version:   number;
     status:           OwnerCommandResultStatus;
 }
 
-export type OwnerCommandResultStatus = "committed" | "unknown";
+export type OwnerCommandResultStatus = "committed" | "admitted" | "unknown";
 
 export interface TaskEventsQuery {
     cursor?: string;
@@ -335,8 +343,10 @@ export interface ConfigurationResult {
     entity_id?:       string;
     request_id:       string;
     schema_version:   number;
-    status:           OwnerCommandResultStatus;
+    status:           ConfigurationResultStatus;
 }
+
+export type ConfigurationResultStatus = "committed" | "unknown";
 
 export interface ConfigurationSnapshot {
     control_version: number;
@@ -463,3 +473,114 @@ export interface AttemptStatus {
 export type AttemptStatusLogMode = "ordered_v1" | "legacy";
 
 export type AttemptStatusState = "QUEUED" | "RUNNING" | "SUCCEEDED" | "FAILED" | "CANCELLED";
+
+export interface OwnerConfirmProposalCommand {
+    expected_control_version: number;
+    name:                     OwnerConfirmProposalCommandName;
+    payload:                  OwnerConfirmProposalCommandPayload;
+    request_id:               string;
+    schema_version:           number;
+    scope_id:                 string;
+}
+
+export type OwnerConfirmProposalCommandName = "confirm_proposal";
+
+export interface OwnerConfirmProposalCommandPayload {
+    content_digest: string;
+    proposal_id:    string;
+}
+
+export interface OwnerStopNodeCommand {
+    expected_control_version: number;
+    name:                     OwnerStopNodeCommandName;
+    payload:                  OwnerStopNodeCommandPayload;
+    request_id:               string;
+    schema_version:           number;
+    scope_id:                 string;
+}
+
+export type OwnerStopNodeCommandName = "stop_node";
+
+export interface OwnerStopNodeCommandPayload {
+    attempt_id:      string;
+    node_activation: number;
+    node_id:         string;
+}
+
+export interface OwnerContinueNodeCommand {
+    expected_control_version: number;
+    name:                     OwnerContinueNodeCommandName;
+    payload:                  OwnerContinueNodeCommandPayload;
+    request_id:               string;
+    schema_version:           number;
+    scope_id:                 string;
+}
+
+export type OwnerContinueNodeCommandName = "continue_node";
+
+export interface OwnerContinueNodeCommandPayload {
+    attempt_id:      string;
+    node_activation: number;
+    node_id:         string;
+}
+
+export interface OwnerRetryNodeCommand {
+    expected_control_version: number;
+    name:                     OwnerRetryNodeCommandName;
+    payload:                  OwnerRetryNodeCommandPayload;
+    request_id:               string;
+    schema_version:           number;
+    scope_id:                 string;
+}
+
+export type OwnerRetryNodeCommandName = "retry_node";
+
+export interface OwnerRetryNodeCommandPayload {
+    attempt_id:      string;
+    node_activation: number;
+    node_id:         string;
+}
+
+export interface OwnerStopInitialPlanningCommand {
+    expected_control_version: number;
+    name:                     OwnerStopInitialPlanningCommandName;
+    payload:                  OwnerStopInitialPlanningCommandPayload;
+    request_id:               string;
+    schema_version:           number;
+    scope_id:                 string;
+}
+
+export type OwnerStopInitialPlanningCommandName = "stop_initial_planning";
+
+export interface OwnerStopInitialPlanningCommandPayload {
+    attempt_id: string;
+}
+
+export interface OwnerRetryInitialPlanningCommand {
+    expected_control_version: number;
+    name:                     OwnerRetryInitialPlanningCommandName;
+    payload:                  OwnerRetryInitialPlanningCommandPayload;
+    request_id:               string;
+    schema_version:           number;
+    scope_id:                 string;
+}
+
+export type OwnerRetryInitialPlanningCommandName = "retry_initial_planning";
+
+export interface OwnerRetryInitialPlanningCommandPayload {
+    attempt_id: string;
+}
+
+export interface OwnerOperationStatus {
+    attempt_id:       string;
+    attention:        boolean;
+    end_reason?:      string;
+    failure_kind?:    string;
+    kind:             OperationKind;
+    operation_id:     string;
+    process_absent:   boolean;
+    process_released: boolean;
+    schema_version:   number;
+    state:            OperationState;
+    task_id:          string;
+}

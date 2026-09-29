@@ -164,21 +164,29 @@ type InventoryQuery struct {
 }
 
 type OwnerCommand struct {
-	ExpectedControlVersion int64            `json:"expected_control_version"`
-	Name                   OwnerCommandName `json:"name"`
-	Payload                Payload          `json:"payload"`
-	RequestID              string           `json:"request_id"`
-	SchemaVersion          int64            `json:"schema_version"`
-	ScopeID                string           `json:"scope_id"`
+	ExpectedControlVersion int64               `json:"expected_control_version"`
+	Name                   OwnerCommandName    `json:"name"`
+	Payload                OwnerCommandPayload `json:"payload"`
+	RequestID              string              `json:"request_id"`
+	SchemaVersion          int64               `json:"schema_version"`
+	ScopeID                string              `json:"scope_id"`
 }
 
-type Payload struct {
-	ContentDigest string `json:"content_digest"`
-	ProposalID    string `json:"proposal_id"`
+type OwnerCommandPayload struct {
+	ContentDigest  *string `json:"content_digest,omitempty"`
+	ProposalID     *string `json:"proposal_id,omitempty"`
+	AttemptID      *string `json:"attempt_id,omitempty"`
+	NodeActivation *int64  `json:"node_activation,omitempty"`
+	NodeID         *string `json:"node_id,omitempty"`
 }
 
 type OwnerCommandResult struct {
+	AttemptID      *string                  `json:"attempt_id,omitempty"`
 	ConfirmationID *string                  `json:"confirmation_id,omitempty"`
+	ControlVersion *int64                   `json:"control_version,omitempty"`
+	EndReason      *string                  `json:"end_reason,omitempty"`
+	NodeID         *string                  `json:"node_id,omitempty"`
+	OperationID    *string                  `json:"operation_id,omitempty"`
 	ProposalID     *string                  `json:"proposal_id,omitempty"`
 	RequestID      string                   `json:"request_id"`
 	SchemaVersion  int64                    `json:"schema_version"`
@@ -289,11 +297,11 @@ type GitRepositoryResource struct {
 }
 
 type ConfigurationResult struct {
-	ControlVersion *int64                   `json:"control_version,omitempty"`
-	EntityID       *string                  `json:"entity_id,omitempty"`
-	RequestID      string                   `json:"request_id"`
-	SchemaVersion  int64                    `json:"schema_version"`
-	Status         OwnerCommandResultStatus `json:"status"`
+	ControlVersion *int64                    `json:"control_version,omitempty"`
+	EntityID       *string                   `json:"entity_id,omitempty"`
+	RequestID      string                    `json:"request_id"`
+	SchemaVersion  int64                     `json:"schema_version"`
+	Status         ConfigurationResultStatus `json:"status"`
 }
 
 type ConfigurationSnapshot struct {
@@ -418,6 +426,105 @@ type AttemptStatus struct {
 	VisibleSequence int64                `json:"visible_sequence"`
 }
 
+type OwnerConfirmProposalCommand struct {
+	ExpectedControlVersion int64                              `json:"expected_control_version"`
+	Name                   OwnerConfirmProposalCommandName    `json:"name"`
+	Payload                OwnerConfirmProposalCommandPayload `json:"payload"`
+	RequestID              string                             `json:"request_id"`
+	SchemaVersion          int64                              `json:"schema_version"`
+	ScopeID                string                             `json:"scope_id"`
+}
+
+type OwnerConfirmProposalCommandPayload struct {
+	ContentDigest string `json:"content_digest"`
+	ProposalID    string `json:"proposal_id"`
+}
+
+type OwnerStopNodeCommand struct {
+	ExpectedControlVersion int64                       `json:"expected_control_version"`
+	Name                   OwnerStopNodeCommandName    `json:"name"`
+	Payload                OwnerStopNodeCommandPayload `json:"payload"`
+	RequestID              string                      `json:"request_id"`
+	SchemaVersion          int64                       `json:"schema_version"`
+	ScopeID                string                      `json:"scope_id"`
+}
+
+type OwnerStopNodeCommandPayload struct {
+	AttemptID      string `json:"attempt_id"`
+	NodeActivation int64  `json:"node_activation"`
+	NodeID         string `json:"node_id"`
+}
+
+type OwnerContinueNodeCommand struct {
+	ExpectedControlVersion int64                           `json:"expected_control_version"`
+	Name                   OwnerContinueNodeCommandName    `json:"name"`
+	Payload                OwnerContinueNodeCommandPayload `json:"payload"`
+	RequestID              string                          `json:"request_id"`
+	SchemaVersion          int64                           `json:"schema_version"`
+	ScopeID                string                          `json:"scope_id"`
+}
+
+type OwnerContinueNodeCommandPayload struct {
+	AttemptID      string `json:"attempt_id"`
+	NodeActivation int64  `json:"node_activation"`
+	NodeID         string `json:"node_id"`
+}
+
+type OwnerRetryNodeCommand struct {
+	ExpectedControlVersion int64                        `json:"expected_control_version"`
+	Name                   OwnerRetryNodeCommandName    `json:"name"`
+	Payload                OwnerRetryNodeCommandPayload `json:"payload"`
+	RequestID              string                       `json:"request_id"`
+	SchemaVersion          int64                        `json:"schema_version"`
+	ScopeID                string                       `json:"scope_id"`
+}
+
+type OwnerRetryNodeCommandPayload struct {
+	AttemptID      string `json:"attempt_id"`
+	NodeActivation int64  `json:"node_activation"`
+	NodeID         string `json:"node_id"`
+}
+
+type OwnerStopInitialPlanningCommand struct {
+	ExpectedControlVersion int64                                  `json:"expected_control_version"`
+	Name                   OwnerStopInitialPlanningCommandName    `json:"name"`
+	Payload                OwnerStopInitialPlanningCommandPayload `json:"payload"`
+	RequestID              string                                 `json:"request_id"`
+	SchemaVersion          int64                                  `json:"schema_version"`
+	ScopeID                string                                 `json:"scope_id"`
+}
+
+type OwnerStopInitialPlanningCommandPayload struct {
+	AttemptID string `json:"attempt_id"`
+}
+
+type OwnerRetryInitialPlanningCommand struct {
+	ExpectedControlVersion int64                                   `json:"expected_control_version"`
+	Name                   OwnerRetryInitialPlanningCommandName    `json:"name"`
+	Payload                OwnerRetryInitialPlanningCommandPayload `json:"payload"`
+	RequestID              string                                  `json:"request_id"`
+	SchemaVersion          int64                                   `json:"schema_version"`
+	ScopeID                string                                  `json:"scope_id"`
+}
+
+type OwnerRetryInitialPlanningCommandPayload struct {
+	AttemptID string `json:"attempt_id"`
+}
+
+type OwnerOperationStatus struct {
+	AttemptID       string         `json:"attempt_id"`
+	Attention       bool           `json:"attention"`
+	EndReason       *string        `json:"end_reason,omitempty"`
+	FailureKind     *string        `json:"failure_kind,omitempty"`
+	Kind            OperationKind  `json:"kind"`
+	OperationID     string         `json:"operation_id"`
+	ProcessAbsent   bool           `json:"process_absent"`
+	ProcessReleased bool           `json:"process_released"`
+	SchemaVersion   int64          `json:"schema_version"`
+	State           OperationState `json:"state"`
+	TaskID          string         `json:"task_id"`
+}
+
 type CommandEnvelopeName string
 
 const (
@@ -452,9 +559,9 @@ const (
 type CommandResultStatus string
 
 const (
+	PurpleAdmitted  CommandResultStatus = "admitted"
 	PurpleCommitted CommandResultStatus = "committed"
 	PurpleUnknown   CommandResultStatus = "unknown"
-	StatusAdmitted  CommandResultStatus = "admitted"
 	StatusError     CommandResultStatus = "error"
 )
 
@@ -557,12 +664,18 @@ const (
 type OwnerCommandName string
 
 const (
-	ConfirmProposal OwnerCommandName = "confirm_proposal"
+	PurpleConfirmProposal      OwnerCommandName = "confirm_proposal"
+	PurpleContinueNode         OwnerCommandName = "continue_node"
+	PurpleRetryInitialPlanning OwnerCommandName = "retry_initial_planning"
+	PurpleRetryNode            OwnerCommandName = "retry_node"
+	PurpleStopInitialPlanning  OwnerCommandName = "stop_initial_planning"
+	PurpleStopNode             OwnerCommandName = "stop_node"
 )
 
 type OwnerCommandResultStatus string
 
 const (
+	FluffyAdmitted  OwnerCommandResultStatus = "admitted"
 	FluffyCommitted OwnerCommandResultStatus = "committed"
 	FluffyUnknown   OwnerCommandResultStatus = "unknown"
 )
@@ -609,6 +722,13 @@ const (
 	Automatic       RemotePreparation = "automatic"
 )
 
+type ConfigurationResultStatus string
+
+const (
+	TentacledCommitted ConfigurationResultStatus = "committed"
+	TentacledUnknown   ConfigurationResultStatus = "unknown"
+)
+
 type AttemptStatusLogMode string
 
 const (
@@ -624,4 +744,40 @@ const (
 	FluffyRUNNING   AttemptStatusState = "RUNNING"
 	Queued          AttemptStatusState = "QUEUED"
 	StateSUCCEEDED  AttemptStatusState = "SUCCEEDED"
+)
+
+type OwnerConfirmProposalCommandName string
+
+const (
+	FluffyConfirmProposal OwnerConfirmProposalCommandName = "confirm_proposal"
+)
+
+type OwnerStopNodeCommandName string
+
+const (
+	FluffyStopNode OwnerStopNodeCommandName = "stop_node"
+)
+
+type OwnerContinueNodeCommandName string
+
+const (
+	FluffyContinueNode OwnerContinueNodeCommandName = "continue_node"
+)
+
+type OwnerRetryNodeCommandName string
+
+const (
+	FluffyRetryNode OwnerRetryNodeCommandName = "retry_node"
+)
+
+type OwnerStopInitialPlanningCommandName string
+
+const (
+	FluffyStopInitialPlanning OwnerStopInitialPlanningCommandName = "stop_initial_planning"
+)
+
+type OwnerRetryInitialPlanningCommandName string
+
+const (
+	FluffyRetryInitialPlanning OwnerRetryInitialPlanningCommandName = "retry_initial_planning"
 )

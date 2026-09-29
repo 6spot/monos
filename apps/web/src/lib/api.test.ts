@@ -1,6 +1,6 @@
 import { afterEach, expect, it, vi } from 'vitest';
-import { APIError, recover, request, submit, UncertainError } from './api.ts';
-import type { ConfigurationCommand } from '../../../../packages/protocol/generated/types.ts';
+import { APIError, recover, recoverOwnerExecution, request, submit, UncertainError } from './api.ts';
+import type { ConfigurationCommand, OwnerCommand } from '../../../../packages/protocol/generated/types.ts';
 
 afterEach(() => vi.unstubAllGlobals());
 const command: ConfigurationCommand = { schema_version: 1, request_id: 'original-request', expected_control_version: 4, name: 'save_role', payload: { id: 'role', name: 'Test', description: '', instructions: '', archived: false } };
@@ -26,4 +26,16 @@ it('retains uncertainty when receipt lookup is malformed or unavailable, without
   fetch.mockRejectedValueOnce(new Error('offline'));
   await expect(recover(command)).rejects.toBeInstanceOf(UncertainError);
   expect(fetch).toHaveBeenCalledTimes(2);
+});
+it('recovers an admitted Owner Stop by exact request ID without turning it into a new Stop', async () => {
+  const stop: OwnerCommand = { schema_version: 1, request_id: 'stop-request', scope_id: 'task', expected_control_version: 3,
+    name: 'stop_node', payload: { attempt_id: 'attempt', node_id: 'node', node_activation: 1 } };
+  const fetch = vi.fn(async (path: string) => {
+    expect(path).toBe('/v1/owner/scopes/task/commands/stop-request');
+    return Response.json({ schema_version: 1, request_id: stop.request_id, status: 'admitted',
+      attempt_id: 'attempt', operation_id: 'stop-operation', control_version: 4 });
+  });
+  vi.stubGlobal('fetch', fetch);
+  expect(await recoverOwnerExecution(stop)).toMatchObject({ status: 'admitted', operation_id: 'stop-operation' });
+  expect(fetch).toHaveBeenCalledTimes(1);
 });

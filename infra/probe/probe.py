@@ -194,8 +194,10 @@ class Probe:
                 output.write(source.read_bytes())
             os.chmod(target, 0o644)
 
-    def start(self, attempt, kind, hold=False, peer_attempt=None):
+    def start(self, attempt, kind, hold=False, peer_attempt=None, pre_plan=False):
         attempt = checked_id(attempt)
+        if pre_plan and kind != "planner":
+            raise ValueError("only Planner may use a pre-Plan fixture")
         catalog = self.catalog()  # Check free selection before every real trial.
         self.install_driver()
         command = "python3 /var/lib/monos-probe/probe-tools/driver.py --attempt " + attempt + " --kind " + kind + (" --hold" if hold else "")
@@ -205,14 +207,15 @@ class Probe:
                   "The root-owned test driver calls bundled monos --help, submits formal workspace and lifecycle commands using input files, tests retries and normal shell/Git. "
                   "Do not replace it with a text answer or skip failed cases. Completion can stop this process tree before a final answer; that is expected.\n" + command)
         hashes = {name: hashlib.sha256((self.source / "infra/probe" / name).read_bytes()).hexdigest() for name in ("driver.py", "probe.py")}
-        trial = {"attempt_id": attempt, "kind": kind, "model": catalog, "hold": hold, "prepared_at": time.time(), "harness_sha256": hashes}
+        trial = {"attempt_id": attempt, "kind": kind, "model": catalog, "hold": hold, "pre_plan": pre_plan, "prepared_at": time.time(), "harness_sha256": hashes}
         if peer_attempt:
             trial["peer_attempt"] = peer_attempt
         # Evidence is not dispatch authority. If admission loses its response,
         # inspect the backend using this ID; never infer that no launch occurred.
         self.save("prepared-" + attempt, trial)
         launch = self.admin({"action": "attempt", "runner_id": self.runner, "attempt_id": attempt,
-                             "task_id": "task_" + attempt, "kind": kind, "resource_id": "fixture-repo", "prompt": prompt})
+                             "task_id": "task_" + attempt, "kind": kind, "resource_id": "fixture-repo", "prompt": prompt,
+                             **({"pre_plan": True} if pre_plan else {})})
         trial.update(dispatch_id=launch["dispatch_id"], started_at=time.time())
         self.save("started-" + attempt, trial)
         return trial

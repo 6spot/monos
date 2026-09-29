@@ -103,6 +103,7 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
   });
   app.post('/v1/owner/commands', async (request) => owner.confirm(ownerCredential(request), request.body));
   app.get<{ Params: { scope_id: string; request_id: string } }>('/v1/owner/scopes/:scope_id/commands/:request_id', async (request) => owner.status(ownerCredential(request), request.params.scope_id, request.params.request_id));
+  app.get<{ Params: { task_id: string; operation_id: string } }>('/v1/owner/tasks/:task_id/operations/:operation_id', async (request) => owner.operation(ownerCredential(request), request.params.task_id, request.params.operation_id));
   app.post('/v1/commands', async (request) => service.admit(bearer(request), request.body));
   app.get<{ Params: { request_id: string } }>('/v1/commands/:request_id', async (request) => service.commandStatus(bearer(request), validate<string>('Id', request.params.request_id)));
   app.get<{ Querystring: InventoryQuery }>('/v1/runner/inventory', async (request) => {

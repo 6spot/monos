@@ -2,8 +2,9 @@ import { randomBytes, randomUUID } from 'node:crypto';
 import { transaction } from '../../../packages/db/src/index.ts';
 import type { Database, Transaction } from '../../../packages/db/src/index.ts';
 import { canonicalJSON, digest, MAX_BODY_BYTES, validate } from '../../../packages/protocol/src/index.ts';
-import type { OwnerCommand, OwnerCommandResult, TaskProposalAction } from '../../../packages/protocol/src/index.ts';
+import type { OwnerCommand, OwnerCommandResult, OwnerConfirmProposalCommand, TaskProposalAction } from '../../../packages/protocol/src/index.ts';
 import { CommandError } from '../../../packages/domain/src/commands.ts';
+import { executeOwnerAction, ownerOperationStatus } from './owner-execution.ts';
 
 interface TaskBasis { control_version: number; specification_id: string; plan_id: string | null }
 interface Proposal { id: string; task_id: string; action: TaskProposalAction; content_digest: string; basis: TaskBasis; eligible: boolean }
@@ -75,6 +76,8 @@ export class OwnerCommands {
   constructor(db: Database) { this.db = db; }
   async confirm(token: string, body: unknown): Promise<OwnerCommandResult> {
     const command = validate<OwnerCommand>('OwnerCommand', body);
+    if (command.name !== 'confirm_proposal') return executeOwnerAction(this.db, token, command);
+    const confirmationCommand = command as OwnerConfirmProposalCommand;
     const envelope = canonicalJSON(command); const hash = digest(envelope);
     return transaction(this.db, async (tx) => {
       await authenticateOwner(tx, token);
@@ -85,8 +88,8 @@ export class OwnerCommands {
         return prior.response;
       }
       if (basis.control_version !== command.expected_control_version) throw new CommandError('version_conflict', 'Task control basis changed', basis.control_version);
-      const row = await proposal(tx, command.payload.proposal_id);
-      current(row, command.scope_id, command.payload.content_digest, basis);
+      const row = await proposal(tx, confirmationCommand.payload.proposal_id);
+      current(row, command.scope_id, confirmationCommand.payload.content_digest, basis);
       const existing = (await tx.query<{ id: string }>('SELECT id FROM authorization_receipts WHERE proposal_id=$1', [row.id])).rows[0];
       const confirmation = existing?.id ?? randomUUID();
       if (!existing) await tx.query('INSERT INTO authorization_receipts(id,proposal_id) VALUES($1,$2)', [confirmation, row.id]);
@@ -95,6 +98,9 @@ export class OwnerCommands {
       await tx.query('INSERT INTO owner_command_receipts(scope_id,request_id,digest,envelope_json,response) VALUES($1,$2,$3,$4,$5)', [command.scope_id, command.request_id, hash, envelope, response]);
       return response;
     });
+  }
+  async operation(token: string, taskId: string, operationId: string) {
+    return ownerOperationStatus(this.db, token, taskId, operationId);
   }
   async status(token: string, scopeId: string, requestId: string): Promise<OwnerCommandResult> {
     validate('Id', scopeId); validate('Id', requestId);

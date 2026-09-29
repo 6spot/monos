@@ -1106,52 +1106,26 @@
       ]
     },
     "OwnerCommand": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "schema_version",
-        "request_id",
-        "scope_id",
-        "expected_control_version",
-        "name",
-        "payload"
-      ],
-      "properties": {
-        "schema_version": {
-          "type": "integer",
-          "const": 1
+      "oneOf": [
+        {
+          "$ref": "#/definitions/OwnerConfirmProposalCommand"
         },
-        "request_id": {
-          "$ref": "#/definitions/Id"
+        {
+          "$ref": "#/definitions/OwnerStopNodeCommand"
         },
-        "scope_id": {
-          "$ref": "#/definitions/Id"
+        {
+          "$ref": "#/definitions/OwnerContinueNodeCommand"
         },
-        "expected_control_version": {
-          "$ref": "#/definitions/Counter"
+        {
+          "$ref": "#/definitions/OwnerRetryNodeCommand"
         },
-        "name": {
-          "type": "string",
-          "const": "confirm_proposal"
+        {
+          "$ref": "#/definitions/OwnerStopInitialPlanningCommand"
         },
-        "payload": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "proposal_id",
-            "content_digest"
-          ],
-          "properties": {
-            "proposal_id": {
-              "$ref": "#/definitions/Id"
-            },
-            "content_digest": {
-              "type": "string",
-              "pattern": "^[0-9a-f]{64}$"
-            }
-          }
+        {
+          "$ref": "#/definitions/OwnerRetryInitialPlanningCommand"
         }
-      }
+      ]
     },
     "OwnerCommandResult": {
       "type": "object",
@@ -1173,6 +1147,7 @@
           "type": "string",
           "enum": [
             "committed",
+            "admitted",
             "unknown"
           ]
         },
@@ -1181,6 +1156,23 @@
         },
         "proposal_id": {
           "$ref": "#/definitions/Id"
+        },
+        "operation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "attempt_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "node_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "control_version": {
+          "$ref": "#/definitions/Counter"
+        },
+        "end_reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
         }
       },
       "allOf": [
@@ -1190,26 +1182,55 @@
               "status": {
                 "const": "committed"
               }
-            }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "anyOf": [
+              {
+                "required": [
+                  "confirmation_id",
+                  "proposal_id"
+                ],
+                "properties": {
+                  "confirmation_id": {},
+                  "proposal_id": {}
+                }
+              },
+              {
+                "required": [
+                  "attempt_id",
+                  "control_version"
+                ],
+                "properties": {
+                  "attempt_id": {},
+                  "control_version": {}
+                }
+              }
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "admitted"
+              }
+            },
+            "required": [
+              "status"
+            ]
           },
           "then": {
             "required": [
-              "confirmation_id",
-              "proposal_id"
+              "attempt_id",
+              "operation_id"
             ],
             "properties": {
-              "confirmation_id": {
-                "$ref": "#/definitions/Id"
-              },
-              "proposal_id": {
-                "$ref": "#/definitions/Id"
-              }
-            }
-          },
-          "else": {
-            "properties": {
-              "confirmation_id": false,
-              "proposal_id": false
+              "attempt_id": {},
+              "operation_id": {}
             }
           }
         }
@@ -2286,6 +2307,355 @@
         },
         "has_more": {
           "type": "boolean"
+        }
+      }
+    },
+    "OwnerConfirmProposalCommand": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "request_id",
+        "scope_id",
+        "expected_control_version",
+        "name",
+        "payload"
+      ],
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "request_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "scope_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "expected_control_version": {
+          "$ref": "#/definitions/Counter"
+        },
+        "name": {
+          "type": "string",
+          "const": "confirm_proposal"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "proposal_id",
+            "content_digest"
+          ],
+          "properties": {
+            "proposal_id": {
+              "$ref": "#/definitions/Id"
+            },
+            "content_digest": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        }
+      }
+    },
+    "OwnerStopNodeCommand": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "request_id",
+        "scope_id",
+        "expected_control_version",
+        "name",
+        "payload"
+      ],
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "request_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "scope_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "expected_control_version": {
+          "$ref": "#/definitions/Counter"
+        },
+        "name": {
+          "type": "string",
+          "const": "stop_node"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "attempt_id",
+            "node_id",
+            "node_activation"
+          ],
+          "properties": {
+            "attempt_id": {
+              "$ref": "#/definitions/Id"
+            },
+            "node_id": {
+              "$ref": "#/definitions/Id"
+            },
+            "node_activation": {
+              "$ref": "#/definitions/Counter"
+            }
+          }
+        }
+      }
+    },
+    "OwnerContinueNodeCommand": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "request_id",
+        "scope_id",
+        "expected_control_version",
+        "name",
+        "payload"
+      ],
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "request_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "scope_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "expected_control_version": {
+          "$ref": "#/definitions/Counter"
+        },
+        "name": {
+          "type": "string",
+          "const": "continue_node"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "attempt_id",
+            "node_id",
+            "node_activation"
+          ],
+          "properties": {
+            "attempt_id": {
+              "$ref": "#/definitions/Id"
+            },
+            "node_id": {
+              "$ref": "#/definitions/Id"
+            },
+            "node_activation": {
+              "$ref": "#/definitions/Counter"
+            }
+          }
+        }
+      }
+    },
+    "OwnerRetryNodeCommand": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "request_id",
+        "scope_id",
+        "expected_control_version",
+        "name",
+        "payload"
+      ],
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "request_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "scope_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "expected_control_version": {
+          "$ref": "#/definitions/Counter"
+        },
+        "name": {
+          "type": "string",
+          "const": "retry_node"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "attempt_id",
+            "node_id",
+            "node_activation"
+          ],
+          "properties": {
+            "attempt_id": {
+              "$ref": "#/definitions/Id"
+            },
+            "node_id": {
+              "$ref": "#/definitions/Id"
+            },
+            "node_activation": {
+              "$ref": "#/definitions/Counter"
+            }
+          }
+        }
+      }
+    },
+    "OwnerStopInitialPlanningCommand": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "request_id",
+        "scope_id",
+        "expected_control_version",
+        "name",
+        "payload"
+      ],
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "request_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "scope_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "expected_control_version": {
+          "$ref": "#/definitions/Counter"
+        },
+        "name": {
+          "type": "string",
+          "const": "stop_initial_planning"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "attempt_id"
+          ],
+          "properties": {
+            "attempt_id": {
+              "$ref": "#/definitions/Id"
+            }
+          }
+        }
+      }
+    },
+    "OwnerRetryInitialPlanningCommand": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "request_id",
+        "scope_id",
+        "expected_control_version",
+        "name",
+        "payload"
+      ],
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "request_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "scope_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "expected_control_version": {
+          "$ref": "#/definitions/Counter"
+        },
+        "name": {
+          "type": "string",
+          "const": "retry_initial_planning"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "attempt_id"
+          ],
+          "properties": {
+            "attempt_id": {
+              "$ref": "#/definitions/Id"
+            }
+          }
+        }
+      }
+    },
+    "OwnerOperationStatus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "task_id",
+        "operation_id",
+        "attempt_id",
+        "kind",
+        "state",
+        "process_absent",
+        "process_released",
+        "attention"
+      ],
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "task_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "operation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "attempt_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "stop",
+            "complete_node",
+            "open_workspace",
+            "inspect_repository"
+          ]
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "admitted",
+            "succeeded",
+            "recovery"
+          ]
+        },
+        "process_absent": {
+          "type": "boolean"
+        },
+        "process_released": {
+          "type": "boolean"
+        },
+        "attention": {
+          "type": "boolean"
+        },
+        "failure_kind": {
+          "type": "string"
+        },
+        "end_reason": {
+          "type": "string"
         }
       }
     }

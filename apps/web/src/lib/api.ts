@@ -1,5 +1,5 @@
 import { validate } from '../../../../packages/protocol/src/validation.ts';
-import type { CommandResult, ConfigurationCommand, ConfigurationResult } from '../../../../packages/protocol/generated/types.ts';
+import type { CommandResult, ConfigurationCommand, ConfigurationResult, OwnerCommand, OwnerCommandResult, OwnerOperationStatus } from '../../../../packages/protocol/generated/types.ts';
 
 export class APIError extends Error {
   readonly code: string;
@@ -39,6 +39,24 @@ export async function recover(command: ConfigurationCommand): Promise<Configurat
   if (receipt.status === 'unknown') return submit(command);
   if (receipt.control_version === undefined) throw new UncertainError();
   return receipt;
+}
+export async function submitOwnerExecution(command: OwnerCommand): Promise<OwnerCommandResult> {
+  const result = await request<OwnerCommandResult>('/v1/owner/commands', 'OwnerCommandResult', command);
+  if (result.request_id !== command.request_id || result.status === 'unknown') throw new UncertainError();
+  return result;
+}
+export async function recoverOwnerExecution(command: OwnerCommand): Promise<OwnerCommandResult> {
+  let result: OwnerCommandResult;
+  try { result = await request<OwnerCommandResult>(`/v1/owner/scopes/${command.scope_id}/commands/${command.request_id}`, 'OwnerCommandResult'); }
+  catch (error) {
+    if (error instanceof APIError && error.code === 'unauthorized') throw error;
+    throw new UncertainError();
+  }
+  if (result.request_id !== command.request_id) throw new UncertainError();
+  return result.status === 'unknown' ? submitOwnerExecution(command) : result;
+}
+export function ownerOperation(taskId: string, operationId: string): Promise<OwnerOperationStatus> {
+  return request<OwnerOperationStatus>(`/v1/owner/tasks/${taskId}/operations/${operationId}`, 'OwnerOperationStatus');
 }
 export async function logout(): Promise<void> {
   let response: Response;
