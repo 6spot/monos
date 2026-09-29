@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 17
+- **Total Sessions**: 18
 - **Last Active**: 2026-09-30
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~390 | Active |
+| `journal-1.md` | ~412 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 18 | 2026-09-30 | Explicit Task Start and native initial planning | `edc7bea` | `feat/stage-a-boundary-probe` |
 | 17 | 2026-09-30 | Canonical serial Task workspaces and native recovery | `97cf6a9` | `feat/stage-a-boundary-probe` |
 | 16 | 2026-09-30 | Capture and Discussion integrated acceptance | `a5b990a473b8bf031740a325d5e343b0406f48ba` | `feat/stage-a-boundary-probe` |
 | 15 | 2026-09-30 | Exact Task preview and creation | `61f140b2df821e1647f64e7ee4f418404fcb66bc` | `feat/stage-a-boundary-probe` |

@@ -388,3 +388,25 @@ Implemented migration16 canonical Project-backed serial workspaces, scoped repos
 ### Status
 
 [OK] **Completed**
+
+
+## Session 18: Explicit Task Start and native initial planning
+<!-- trellis-session: v=2 fp=236923ffaf5d0417 -->
+
+**Date**: 2026-09-30
+**Task**: Explicit Task Start and native initial planning
+**Branch**: `feat/stage-a-boundary-probe`
+
+### Summary
+
+Implemented migration17 durable Task-only initial planning, source-bound Plan/issue tools, exact Owner Start/Stop/Retry/Cancel and scoped reads. Passed217 TS,183 real PostgreSQL in17 files,142 Python, full Linux Go race/vet/build, lint/typecheck/protocol/build/imports and independent final audit. Existing18444 installation upgraded with preserved historical receipts and prior Capture Task. Real Owner-created Task verified zero execution before Start, native issue, exact answer/Retry and one immutable PENDING Node;3 Planner processes settled, no workspace/Node execution. Fixed finite original Stop recovery, Unicode validation, correctable ID collisions and harness queued timing; retained failed build/preflight evidence. Next: single-Node execution/Artifacts/recovery; reuse canonical pending no-resource Task e14ad4bb-4688-4647-981c-70911889e17b.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `edc7bea` | feat: add explicit Task Start and initial planning |
+
+### Status
+
+[OK] **Completed**
