@@ -19,7 +19,7 @@ server-authenticated binding:
 
 `POST /v1/commands` receives `CommandSubmission { envelope_json, sha256 }`. `GET /v1/commands/:request_id` reads the authenticated Attempt's receipt. Runner recovery uses `/v1/recovery/attempts/:attempt_id/commands/:request_id` or `/v1/recovery/operations/:operation_id`; its service credential never permits Agent command admission.
 
-The bundled [monos](../../../runner/cmd/monos/main.go) supports immutable retry/status, `open_workspace`, `inspect_repository`, `complete_node` and `commit_task_turn`. Consult its help and the [protocol README](../../../packages/protocol/README.md) for exact CLI argument syntax. Task-scoped Owner confirmation uses separate Owner routes described in [Owner commands](../backend/owner-commands.md); delivery execution remains separate work.
+The bundled [monos](../../../runner/cmd/monos/main.go) supports immutable retry/status, `open_workspace`, `inspect_repository`, `complete_node` and `commit_task_turn`. Consult its help and the [protocol README](../../../packages/protocol/README.md) for exact CLI argument syntax. Task-scoped Owner confirmation, Stop and recovery use separate Owner routes described in [Owner commands](../backend/owner-commands.md); delivery execution remains separate work.
 
 ## 3. Contracts
 
@@ -36,6 +36,11 @@ The bundled [monos](../../../runner/cmd/monos/main.go) supports immutable retry/
 - Canonical envelope input rejects malformed Unicode instead of hashing a replacement string differently in TS and Go.
 - Complete every inventory page under the same snapshot before reconciliation; a partial page never proves process absence.
 - Owner acceptance serializes with message admission; later conversation cannot route execution changes into the accepted batch.
+- Owner execution commands bind Task, Attempt, control version and, for Nodes,
+  activation. A queued Stop commits without an operation; a running Stop returns
+  a stable admitted operation. Continue/Retry requires verified process absence,
+  physical release and settled effects. The Owner command receipt is immutable;
+  the scoped operation read reports later settlement or recovery attention.
 
 ## 4. Validation & Error Matrix
 
@@ -63,7 +68,7 @@ Bad: trusting an environment Attempt ID or retrying with a fresh current version
 
 Use common TS/Go fixtures for versions, optional/null fields and malformed messages. Assert replay/conflict, stale authority, concurrent same-UID CLI attribution, lost response, changed input file, journal failure and expired-credential recovery. Real Linux/CLI tests are required for the socket/cgroup/permission boundary.
 
-Backend coverage: [auth.test.ts](../../../apps/server/test/auth.test.ts), [app.test.ts](../../../apps/server/test/app.test.ts) and [postgres.test.ts](../../../apps/server/test/postgres.test.ts). They exercise strict authentication, queue/disconnect behavior and real database admission/recovery. The shared schema corpus lives in [validation.json](../../../packages/protocol/fixtures/validation.json).
+Backend coverage: [auth.test.ts](../../../apps/server/test/auth.test.ts), [app.test.ts](../../../apps/server/test/app.test.ts), [postgres.test.ts](../../../apps/server/test/postgres.test.ts) and [postgres-owner-execution.test.ts](../../../apps/server/test/postgres-owner-execution.test.ts). They exercise strict authentication, queue/disconnect behavior and real database admission/recovery. The shared schema corpus lives in [validation.json](../../../packages/protocol/fixtures/validation.json).
 
 ## 7. Wrong vs Correct
 

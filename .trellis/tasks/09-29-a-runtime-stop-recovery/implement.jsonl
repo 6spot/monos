@@ -1,0 +1,6 @@
+{"file": ".trellis/spec/backend/index.md", "reason": "Owner Stop receipts, Task/Node state and dispatch reservation rules"}
+{"file": ".trellis/spec/backend/dispatch-queue.md", "reason": "Queued cancellation, successor eligibility and Runner capacity"}
+{"file": ".trellis/spec/protocol/index.md", "reason": "Generated Owner action and operation-result contracts"}
+{"file": ".trellis/spec/runner/index.md", "reason": "Supervised Stop, inventory and changed-boot reconciliation"}
+{"file": ".trellis/tasks/09-29-a-runtime-stop-recovery/design.md", "reason": "Approved cross-layer ordering and recovery design"}
+{"file": ".trellis/tasks/archive/2026-09/09-29-a-runtime-runner-logs/verification.md", "reason": "Previous selected CLI and missing-result host evidence"}

@@ -64,6 +64,37 @@ Neither script overwrites earlier evidence. A failed or interrupted trial may
 still own processes; inspect and settle it before installing another Runner
 binary or reusing the host.
 
+## Owner Stop and reboot recovery
+
+`stop_probe.py` uses the selected native CLI fixture and authenticated Owner
+commands. The Node trial holds a live execution through a task backend and
+Runner service restart, checks its process identity and physical reservation,
+then submits Stop. It checks same-request replay, changed-payload rejection,
+whole-tree absence, released ownership and Continue of the same Node without
+automatically admitting another Attempt. The Planner trial starts before an
+initial Plan exists, stops its held execution and checks Retry restores planning
+eligibility without manufacturing a Plan or successor Attempt. Each step writes
+root-private evidence under the chosen directory and refuses overwrite.
+
+```sh
+python3 infra/probe/stop_probe.py --evidence /root/monos-stop-evidence --password-file /etc/monos-probe/owner-password --kind node stop-node-01
+python3 infra/probe/stop_probe.py --evidence /root/monos-stop-evidence --password-file /etc/monos-probe/owner-password --kind planner stop-planner-01
+```
+
+For the separately authorized host reboot, first confirm that neither this
+task nor unrelated services have unresolved work. Use a fresh selected Node ID
+and preserve the `reboot-before` checkpoint. Reboot the host while the recorded
+hold remains live, reconnect, then perform read-only verification. The verifier
+requires a changed boot ID, unchanged original dispatch and receipts, absent
+old writers, a BLOCKED interrupted Node, and physical release. These commands
+do not initiate the reboot themselves.
+
+```sh
+python3 infra/probe/stop_probe.py --evidence /root/monos-stop-evidence --action reboot-hold reboot-stop-01
+# Explicit host reboot by the authorized operator within the recorded hold.
+python3 infra/probe/stop_probe.py --evidence /root/monos-stop-evidence --action reboot-verify reboot-stop-01
+```
+
 ## Recommended sequence
 
 First run native Linux `go test -race ./...` with CGO enabled and the isolated

@@ -1,0 +1,6 @@
+{"file": ".trellis/spec/backend/index.md", "reason": "Backend transaction and authorization quality gate"}
+{"file": ".trellis/spec/protocol/index.md", "reason": "Protocol compatibility and generated artifact quality gate"}
+{"file": ".trellis/spec/runner/index.md", "reason": "Physical Stop and journal recovery quality gate"}
+{"file": ".trellis/spec/frontend/index.md", "reason": "Owner command status and canonical browser state quality gate"}
+{"file": "docs/08-principles-and-non-goals.md", "reason": "Formal Tool Protocol and physical writer isolation invariants"}
+{"file": ".trellis/tasks/09-29-a-runtime-stop-recovery/prd.md", "reason": "Acceptance scope and authorized reboot boundary"}
