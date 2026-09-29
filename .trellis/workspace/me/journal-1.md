@@ -344,3 +344,25 @@ Completed exact Project-bound confirmations, one independent PLANNING Task per D
 ### Status
 
 [OK] **Completed**
+
+
+## Session 16: Capture and Discussion integrated acceptance
+<!-- trellis-session: v=2 fp=6efc57ebb11e70b0 -->
+
+**Date**: 2026-09-30
+**Task**: Capture and Discussion integrated acceptance
+**Branch**: `feat/stage-a-boundary-probe`
+
+### Summary
+
+Accepted Capture/Discussion package from exact source-bound native/browser/database evidence. Added distinct concurrent input lock-contention regression (1/1), final Python90/90. Existing backend and Runner restarted once each; strict validation distinguished delayed exit facts from immutable Task/receipt state. Preserved failed evidence and verified Runner-only continuation.24 Owner receipts and one PLANNING Task retained;6 trial processes and2 known children absent, all global guards0. Continuing to real Project repository and serial Task workspaces; next-package research remains separate.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `a5b990a473b8bf031740a325d5e343b0406f48ba` | test: verify Capture and Discussion integration |
+
+### Status
+
+[OK] **Completed**
