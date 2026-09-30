@@ -20,7 +20,7 @@
 8. [x] Freeze source, run full local/Linux PG/Go/image gates, back up and install into
    existing host services; prove native exact proposals/authorization/private-work/
    new-revision sources and service restart with immutable historical evidence.
-9. [ ] Final independent acceptance, scoped feature commit, task archive and session
+9. [x] Final independent acceptance, scoped feature commit, task archive and session
    journal; continue next leaf `09-30-a-single-node-replan` automatically.
 
 ## Ownership
