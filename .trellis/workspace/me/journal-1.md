@@ -468,3 +468,33 @@ Specified Multica-style layout and shadcn Base UI component coverage, aligned se
 ### Next Steps
 
 - Plan the existing-screen migration separately and coordinate shared shell/primitives with the execution UI task before integrated visual acceptance.
+
+
+## Session 21: Ordered Task Conversation and guidance accepted
+<!-- trellis-session: v=2 fp=074356972c097092 -->
+
+**Date**: 2026-09-30
+**Task**: Ordered Task Conversation and guidance accepted
+**Branch**: `feat/stage-a-boundary-probe`
+
+### Summary
+
+Implemented ordered Task input, scoped replies, explicit Retry/Withdraw, guidance Stop/continuation and v2 completion handling. Full Linux PG254, TS263, Python162 and Go gates passed; migration19 deployed to existing host, native private Git/terminal recovery and backend/Runner restart independently accepted. Preserved all failed harness observations and history.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `609e392` | feat: add ordered Task Conversation and guidance handling |
+
+### Testing
+
+- [OK] Full PG254/22 files; TS263; Python162; Linux Go module/race/vet/four builds; installed native and restart ACCEPT
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- Continue 09-30-a-specification-changes under standing authorization
