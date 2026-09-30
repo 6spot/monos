@@ -498,3 +498,25 @@ Implemented ordered Task input, scoped replies, explicit Retry/Withdraw, guidanc
 ### Next Steps
 
 - Continue 09-30-a-specification-changes under standing authorization
+
+
+## Session 22: Exact Specification revisions and native settlement acceptance
+<!-- trellis-session: v=2 fp=164fafba13ad896f -->
+
+**Date**: 2026-10-01
+**Task**: Exact Specification revisions and native settlement acceptance
+**Branch**: `feat/stage-a-boundary-probe`
+
+### Summary
+
+Completed exact immutable Specification proposals and Owner authorization, physical settlement and atomic publication, source applicability, replacement/withdrawal/deferral and bounded reads. Verified269 unit tests,292 real PG tests across27 files,179 Python probes and Linux Go race/vet/four binaries. Installed frozen318-file v2 on existing test services; native pre-Start edit, canonical prepare/attachment, exact confirmation/apply, Stop/private checkpoint, new-Spec completion, carry and backend/Runner restart passed independent acceptance. Preserved v1 enum build failure and strict raw-log restart failure with exact read-only exit-log reconciliation. Continue next single-Node Replan leaf.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `f4114bf` | feat: add exact Specification revisions and settlement |
+
+### Status
+
+[OK] **Completed**
