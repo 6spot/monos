@@ -2,7 +2,7 @@
 
 ## Result
 
-Documentation implementation and independent full-scope review passed on 2026-09-30. AC1–AC6 are satisfied. The Owner approved the Phase 3.4 commit batch on 2026-09-30; commit/archive bookkeeping follows.
+Documentation implementation and independent full-scope review passed on 2026-09-30. AC1–AC6 are satisfied. The Owner approved the Phase 3.4 commit batch on 2026-09-30. Work commit: `99dc7b7` (`docs: align frontend standards and tasks with Multica`). The task was archived through `task.py archive`; inbound/outbound links and task-local JSONL references were adjusted for its archive location.
 
 - 96 relative Markdown links and 20 JSONL file references resolve across scoped files.
 - `git diff --check` passed.
@@ -20,6 +20,8 @@ Documentation implementation and independent full-scope review passed on 2026-09
 - AC5: quality gate requires inspected reference-based desktop/mobile screenshots tied to actual source/build/state.
 - AC6: reference/format checks and scoped independent review passed.
 
-## Remaining bookkeeping
+## Completion
 
-Commit plan is recorded in `commit-plan.md`; do not stage unrelated work or prior parent-PRD edits. Commit approval is recorded; commit the scoped diff, archive this task and record the journal. Recheck links after archive. Existing-screen migration remains a separately planned future deliverable.
+The approved scope is recorded in `commit-plan.md`. Only the scoped changes were committed; unrelated work and pre-existing parent-PRD edits were retained. Existing-screen migration remains a separately planned future deliverable. Archive link checks and the session journal complete the finish workflow.
+
+Post-archive validation: 96 relative links and 20 JSONL references resolve; task status is completed; 74 unrelated dirty file snapshots are unchanged.

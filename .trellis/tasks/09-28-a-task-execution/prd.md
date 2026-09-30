@@ -40,7 +40,7 @@ Research: [decomposition](research/decomposition.md) and [workspace design](rese
 
 ## Visual requirements
 
-Require the [visual contract](../../spec/frontend/visual-design.md) across execution UI and its integration with existing Todo/preview surfaces. Track the separately planned [existing-screen migration](../09-30-frontend-visual-standards/migration-handoff.md) as an integrated visual evidence dependency; backend leaves remain independently verifiable.
+Require the [visual contract](../../spec/frontend/visual-design.md) across execution UI and its integration with existing Todo/preview surfaces. Track the separately planned [existing-screen migration](../archive/2026-09/09-30-frontend-visual-standards/migration-handoff.md) as an integrated visual evidence dependency; backend leaves remain independently verifiable.
 
 ## Acceptance criteria
 

@@ -11,7 +11,7 @@ The Owner selected standards/task alignment first on 2026-09-30. Existing-screen
 - Todo list/detail, Original Capture, Discussion and composers.
 - Task preview and existing minimal Task detail.
 
-Use the [visual contract](../../spec/frontend/visual-design.md), [component rules](../../spec/frontend/component-guidelines.md) and [quality gate](../../spec/frontend/quality-guidelines.md). Preserve all current command identity, drafts, session, conflict and recovery behavior. Do not add backend capabilities or claim unimplemented execution controls.
+Use the [visual contract](../../../../spec/frontend/visual-design.md), [component rules](../../../../spec/frontend/component-guidelines.md) and [quality gate](../../../../spec/frontend/quality-guidelines.md). Preserve all current command identity, drafts, session, conflict and recovery behavior. Do not add backend capabilities or claim unimplemented execution controls.
 
 ## Ordering and shared seams
 

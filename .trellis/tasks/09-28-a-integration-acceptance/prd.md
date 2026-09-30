@@ -27,7 +27,7 @@ Child decomposition is deferred until upstream evidence is available. Before imp
 
 ## Visual requirements
 
-Apply the [visual contract](../../spec/frontend/visual-design.md) to the combined Todo→Task→Review flow. Require completed evidence from the [existing-screen migration](../09-30-frontend-visual-standards/migration-handoff.md) and new execution/review surfaces before closing integrated visual acceptance.
+Apply the [visual contract](../../spec/frontend/visual-design.md) to the combined Todo→Task→Review flow. Require completed evidence from the [existing-screen migration](../archive/2026-09/09-30-frontend-visual-standards/migration-handoff.md) and new execution/review surfaces before closing integrated visual acceptance.
 
 ## Acceptance criteria
 

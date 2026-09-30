@@ -36,4 +36,4 @@ Existing-screen migration, installing components/dependencies, building a design
 
 ## Artifact status
 
-The Owner explicitly approved the final plan. The task was activated, shared specifications and all mapped active tasks were updated, and migration ownership/evidence dependencies were recorded. Final documentation review and verification are recorded in this task; commit/archive bookkeeping follows the project workflow. Existing-screen implementation remains deferred.
+The Owner explicitly approved the final plan. The task was activated, shared specifications and all mapped active tasks were updated, and migration ownership/evidence dependencies were recorded. Final documentation review and verification passed; work was committed as `99dc7b7` and this task was archived through the project workflow. Existing-screen implementation remains deferred.

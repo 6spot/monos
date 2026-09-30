@@ -13,7 +13,7 @@ Verify the full real Task execution package through Owner and native Runner entr
 
 ## Visual requirements
 
-Apply the [visual contract](../../spec/frontend/visual-design.md) to the actual capture→preview→Task→local REVIEW browser flow. Integrated visual acceptance waits for both execution UI and the separately planned [existing-screen migration](../09-30-frontend-visual-standards/migration-handoff.md).
+Apply the [visual contract](../../spec/frontend/visual-design.md) to the actual capture→preview→Task→local REVIEW browser flow. Integrated visual acceptance waits for both execution UI and the separately planned [existing-screen migration](../archive/2026-09/09-30-frontend-visual-standards/migration-handoff.md).
 
 ## Acceptance criteria
 

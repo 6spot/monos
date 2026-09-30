@@ -13,7 +13,7 @@ Expose real Task progress and controls through responsive canonical views.
 
 ## Visual requirements
 
-Build Board and full Task surfaces using the [visual contract](../../spec/frontend/visual-design.md) and [owned component rules](../../spec/frontend/component-guidelines.md). Coordinate shared shell/primitives with the separately planned [existing-screen migration](../09-30-frontend-visual-standards/migration-handoff.md); this leaf owns new execution surfaces, not the entire existing Settings/Todo migration.
+Build Board and full Task surfaces using the [visual contract](../../spec/frontend/visual-design.md) and [owned component rules](../../spec/frontend/component-guidelines.md). Coordinate shared shell/primitives with the separately planned [existing-screen migration](../archive/2026-09/09-30-frontend-visual-standards/migration-handoff.md); this leaf owns new execution surfaces, not the entire existing Settings/Todo migration.
 
 ## Acceptance criteria
 
