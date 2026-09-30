@@ -24,7 +24,13 @@ These are completion/evidence gates, not automatic scheduler dependencies. Paren
 
 Child decomposition is deferred until upstream evidence is available. Before implementation, split this package into independently verifiable behavior slices; do not start the entire package as one implementation task.
 
+## Visual requirements
+
+First-run and Settings UI follow the [visual contract](../../spec/frontend/visual-design.md) and shared component family. Future frontend leaf implementation/check contexts include visual, component and quality specs.
+
 ## Acceptance criteria
+
+- [ ] First-run, Settings and operational recovery UI satisfy the [visual quality gate](../../spec/frontend/quality-guidelines.md) with inspected desktop/mobile states and accessible actions.
 
 - [ ] Empty product state supports Owner authentication, Runner enrollment and required settings without database edits.
 - [ ] Provider polling works without webhooks; managed artifacts remain accessible after cleanup; credential, tool and disk failures have actionable recovery.

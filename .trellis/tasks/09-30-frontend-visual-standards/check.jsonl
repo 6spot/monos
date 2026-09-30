@@ -1,0 +1,7 @@
+{"file": "docs/07-owner-review-and-ui.md", "reason": "Canonical product surfaces"}
+{"file": "docs/08-principles-and-non-goals.md", "reason": "Architecture invariants"}
+{"file": "docs/11-technology-and-deployment.md", "reason": "Selected UI stack and native control rule"}
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "Current component baseline"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "Current browser evidence gate"}
+{"file": ".trellis/tasks/09-30-frontend-visual-standards/research/frontend-audit.md", "reason": "Source-backed gaps and task alignment map"}
+{"file": ".trellis/spec/frontend/visual-design.md", "reason": "Mandatory Multica-derived tokens, layout, responsive and visual states"}

@@ -37,6 +37,14 @@ Test the user-visible behavior introduced by a change. Prefer focused interactio
 
 Use shadcn Base UI consistently. Check keyboard/focus, labels, error association, responsive layout and reduced motion. Review generated component imports and lockfile changes; do not add Radix, another UI suite or unused components. Check actual bundle impact before making size claims.
 
+## Visual acceptance
+
+Apply the [visual contract](visual-design.md) to every new or visually changed surface. Retain inspected screenshots at 1440×1000 desktop and 390×844 mobile, tied to the tested build/source revision, route and fixture/data state. Cover the changed surface's populated and empty views, errors, loading/queued/disabled states, and long titles/messages where applicable; record why a state is not applicable instead of inventing backend behavior. Review the mobile navigation, focus, overflow, composer and action reachability in the browser.
+
+Compare the screenshots to the reference-derived surface hierarchy, typography, gutters, header/toolbar geometry and component treatments. Record the reference source/revision or reference image, inspection result and intentional monos-specific differences. A saved screenshot without inspection is not acceptance. Pixel-diff automation is optional and cannot replace the initial reference review; avoid broad brittle markup snapshots.
+
+The combined Todo→Task→Review flow must look coherent across shared shell and controls, not just pass isolated-page checks. Existing-screen migration evidence and new execution UI evidence are both required before integrated visual acceptance. A documentation-only standards update does not establish either.
+
 ## Reporting
 
 Run affected lint/type/unit/browser checks after scaffolding makes them available. Distinguish mocked UI results from real CLI/GitHub evidence. Documentation-only changes use links, consistency and formatting checks.

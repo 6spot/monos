@@ -17,7 +17,7 @@ Architecture modules remain authoritative. The existing boundary probe implement
 ## Dependencies and order
 
 - [GitHub review and correction](../09-28-a-review-delivery/prd.md)
-- [Owner access and minimum configuration](../09-28-a-owner-configuration/prd.md)
+- [Owner access and minimum configuration](../archive/2026-09/09-28-a-owner-configuration/prd.md)
 
 These are completion/evidence gates, not automatic scheduler dependencies. Parent/child links express scope ownership only. Evidence inspection and planning may proceed earlier; implementation must resolve upstream failures first.
 
@@ -25,7 +25,13 @@ These are completion/evidence gates, not automatic scheduler dependencies. Paren
 
 Child decomposition is deferred until upstream evidence is available. Before implementation, split this package into independently verifiable behavior slices; do not start the entire package as one implementation task.
 
+## Visual requirements
+
+Apply the [visual contract](../../spec/frontend/visual-design.md) to the combined Todo→Task→Review flow. Require completed evidence from the [existing-screen migration](../09-30-frontend-visual-standards/migration-handoff.md) and new execution/review surfaces before closing integrated visual acceptance.
+
 ## Acceptance criteria
+
+- [ ] The [visual quality gate](../../spec/frontend/quality-guidelines.md) has inspected desktop/mobile evidence from the integrated build; shared shell, typography, controls and representative recovery states remain consistent across the flow.
 
 - [ ] Module-09 Stage A and conversation-closure matrices map to tests and real-run evidence.
 - [ ] Crash windows, capacity saturation, browser reconnect, requirement/review races and provider uncertainty pass without false completion.

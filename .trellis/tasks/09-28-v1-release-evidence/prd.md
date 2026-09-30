@@ -24,7 +24,13 @@ These are completion/evidence gates, not automatic scheduler dependencies. Paren
 
 Child decomposition is deferred until upstream evidence is available. Before implementation, split this package into independently verifiable behavior slices; do not start the entire package as one implementation task.
 
+## Visual requirements
+
+Include the [visual contract](../../spec/frontend/visual-design.md) in release acceptance for Login, Settings, Todos, Discussion, Board and Task/review surfaces. Inherit completed existing-screen migration and new UI evidence; do not count a standards-only change as migration.
+
 ## Acceptance criteria
+
+- [ ] The release build has traceable inspected desktop/mobile visual coverage under the [quality gate](../../spec/frontend/quality-guidelines.md), including reference comparison, representative states and documented deviations.
 
 - [ ] Every release-matrix row has versioned reproduction, actual evidence and pass/fail status.
 - [ ] Full capacity leaves authenticated control exits usable; supported restart and resource failures preserve work.

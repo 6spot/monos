@@ -8,6 +8,16 @@ Select Base UI explicitly in shadcn setup and retain the generated configuration
 
 Use shared semantic Tailwind/theme tokens for spacing, surfaces and status. Put product behavior in feature components; primitives should not know Task lifecycle or issue backend commands.
 
+## Required component coverage
+
+Follow the [visual contract](visual-design.md). Use owned shadcn Button, Input, Textarea, Label, Checkbox and selection primitives for the corresponding visible controls, adding each only when its slice needs it. Use the selected Base UI family for Dialog, Sheet, Menu, Select and similar focus/keyboard interactions. Do not hand-build an overlay or alternate control suite to avoid installing a needed primitive. A semantic native select can use the owned shadcn NativeSelect when its simpler behavior suffices; choose searchable/complex selection only for an actual requirement.
+
+Native `form`, `fieldset`, headings, lists, links and layout elements remain appropriate. Domain-specific interactive rows may compose native buttons when a generic Button is a poor fit; keep shared tokens, focus treatment and consistent row styling, and record the reason in the task's implementation notes. Native inputs inside owned primitives are expected. These exceptions do not permit one-off form skins in feature files.
+
+Variants and sizes belong to the owned component API. Do not globally override `[data-slot=button]` padding/height or add feature-specific palettes; an intentional shared component change must preserve its variants and be reviewed on affected compositions. Product behavior stays outside `components/ui`.
+
+Current legacy forms and green styles are migration work, not examples to propagate. The target does not mean every listed component is already installed.
+
 ## Composition
 
 Follow the selected Base UI component's current API. Do not copy Radix-only `asChild` usage into Base UI examples blindly. Official composition sketch:

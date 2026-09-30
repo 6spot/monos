@@ -25,7 +25,13 @@ These are completion/evidence gates, not automatic scheduler dependencies. Paren
 
 Child decomposition is deferred until upstream evidence is available. Before implementation, split this package into independently verifiable behavior slices; do not start the entire package as one implementation task.
 
+## Visual requirements
+
+Review/diff, exact acceptance, correction and delivery recovery UI follow the [visual contract](../../spec/frontend/visual-design.md). Future frontend leaves load visual/component/quality specs in both implementation and check contexts.
+
 ## Acceptance criteria
+
+- [ ] Review and recovery views pass the [visual quality gate](../../spec/frontend/quality-guidelines.md), including inspected desktop/mobile exact-result, failure and retryable states without changing delivery guards.
 
 - [ ] Private ancestry is excluded; publication-range checks precede remote writes; local REVIEW remains accessible after provider failure.
 - [ ] Request Changes reworks the same Node/PR with new evidence; exact-result acceptance uses expected-head merge.

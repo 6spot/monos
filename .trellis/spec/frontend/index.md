@@ -2,8 +2,11 @@
 
 Status: protected Owner configuration, Todo capture/organization, ordered Discussion and scoped execution reads are implemented in `apps/web`. Exact Task preview/creation and a minimal read-only Task detail are implemented; the full execution workflow remains later work. Sources: [UI](../../../docs/07-owner-review-and-ui.md), [technology](../../../docs/11-technology-and-deployment.md).
 
+The [visual contract](visual-design.md) is the target for new UI and separately planned migration; existing screens have not yet been visually migrated.
+
 ## Pre-Development Checklist
 
+- [Visual design](visual-design.md): Multica reference, measurable tokens/layout and responsive states.
 - [Structure](directory-structure.md): destinations and dependency boundaries.
 - [Components](component-guidelines.md): shadcn/ui + Base UI, accessibility.
 - [Hooks](hook-guidelines.md): queries, commands and stream cleanup.

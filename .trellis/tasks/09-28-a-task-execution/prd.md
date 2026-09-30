@@ -38,7 +38,13 @@ The Owner authorized routine planning, implementation, testing and task transiti
 without repeated approval. This parent coordinates acceptance, not bulk code edits.
 Research: [decomposition](research/decomposition.md) and [workspace design](research/workspace-design.md).
 
+## Visual requirements
+
+Require the [visual contract](../../spec/frontend/visual-design.md) across execution UI and its integration with existing Todo/preview surfaces. Track the separately planned [existing-screen migration](../09-30-frontend-visual-standards/migration-handoff.md) as an integrated visual evidence dependency; backend leaves remain independently verifiable.
+
 ## Acceptance criteria
+
+- [ ] Shared shell and Todo→Task→local REVIEW presentation pass the [visual quality gate](../../spec/frontend/quality-guidelines.md) using both existing-screen migration and new execution UI evidence; standards documentation alone does not close this criterion.
 
 - [ ] Ordered Task input and Planner routing distinguish replies, guidance and authorized requirement revisions.
 - [ ] One-Node initial/replacement Plans, lazy workspace opening and recoverable Git completion preserve Task identity and produce REVIEW.

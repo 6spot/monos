@@ -22,6 +22,12 @@ The four settings views use URL hash navigation in `app/app.tsx`. Hidden mounted
 
 Todo list + selected Discussion remain one desktop workspace, responsive to small screens. Execution Board owns execution attention. Task detail separates Conversation, Overview, Timeline and diagnostics. Settings owns Roles/Planner/Runtime configuration. Do not add a duplicate Activity dashboard, a normal-user DAG or a business Team layer.
 
+## Shared visual ownership
+
+Apply the [visual contract](visual-design.md) through the app shell and shared page header/toolbar primitives under `components/`; keep owned shadcn primitives in `components/ui/`. `styles.css` owns semantic theme and typography tokens plus document-level resets. Feature components compose these primitives and own domain-specific list, Board and conversation layouts; they must not redefine the global palette or page chrome. These are target responsibilities for migration/new UI, not a claim those shared layout components already exist.
+
+Keep Todo selection/drafts and Task routes intact when changing layout. Visual similarity to Multica must not introduce a new route, state store or product entity by itself.
+
 ## Dependency rules
 
 Use shadcn with Base UI and Tailwind. Add only necessary components and inspect generated changes. Do not create an empty universal design-system package before reuse warrants it. A client router or rendering library must be chosen for concrete requirements, not assumed installed by this spec.

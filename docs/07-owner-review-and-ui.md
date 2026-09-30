@@ -1,5 +1,13 @@
 # Owner Review & UI
 
+## Visual and layout direction
+
+Use the Multica **application workspace** as the reference for monos layout and visual style: neutral layered surfaces, compact navigation and page chrome, consistent typography, restrained borders, and clear list/detail and conversation workspaces. Translate that reference into the monos surfaces below. Projects, Todos, Execution Board and Task sections retain their own meaning; Multica organization/team abstractions and unrelated features are not part of this direction.
+
+The [frontend visual contract](../.trellis/spec/frontend/visual-design.md) defines measurable layout, typography, token and responsive conventions. The selected component baseline remains shadcn/ui + Base UI + Tailwind. Visual acceptance requires inspected desktop/mobile evidence against that contract, not just the presence of shadcn configuration or saved screenshots.
+
+This is the target for new UI and planned visual migration. Existing green-theme screens are not evidence of compliance; their migration is a separate deliverable from documenting this standard.
+
 ## UI principle
 
 Do not expose orchestration internals as the primary product experience.

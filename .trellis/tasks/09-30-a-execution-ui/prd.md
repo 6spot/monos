@@ -11,7 +11,13 @@ Expose real Task progress and controls through responsive canonical views.
 - Preserve source/Task navigation, per-scope drafts and uncertain request identity; terminal conversation and local REVIEW remain correctly labeled.
 - Use normal work/progress presentation; keep DAG and raw logs in diagnostics and do not infer state from prose.
 
+## Visual requirements
+
+Build Board and full Task surfaces using the [visual contract](../../spec/frontend/visual-design.md) and [owned component rules](../../spec/frontend/component-guidelines.md). Coordinate shared shell/primitives with the separately planned [existing-screen migration](../09-30-frontend-visual-standards/migration-handoff.md); this leaf owns new execution surfaces, not the entire existing Settings/Todo migration.
+
 ## Acceptance criteria
+
+- [ ] Board and Task sections meet the [visual quality gate](../../spec/frontend/quality-guidelines.md): inspected desktop/mobile screenshots cover populated, empty, queued, disabled, error and long-content states with reference comparison and recorded deviations.
 
 - [ ] Browser reload/two clients/lost response preserve canonical results and recover the original command rather than duplicate it.
 - [ ] All backend Owner exits are reachable with clear unavailable/queued/settling behavior and keyboard/mobile accessibility.
