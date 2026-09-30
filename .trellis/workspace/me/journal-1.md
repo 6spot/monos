@@ -432,3 +432,39 @@ Implemented canonical single-Node scheduling, immutable text Artifacts and compl
 ### Status
 
 [OK] **Completed**
+
+
+## Session 20: Frontend visual standards and task alignment
+<!-- trellis-session: v=2 fp=a72705dc1a0f2c77 -->
+
+**Date**: 2026-09-30
+**Task**: Frontend visual standards and task alignment
+**Branch**: `feat/stage-a-boundary-probe`
+
+### Summary
+
+Specified Multica-style layout and shadcn Base UI component coverage, aligned seven active tasks and visual evidence gates, and recorded deferred existing-screen migration.
+
+### Main Changes
+
+- Added concrete visual tokens, layout, responsive and component rules; aligned task acceptance and execution UI contexts.
+- Archived the standards task with repaired inbound/outbound links; preserved unrelated backend and Runner work.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `99dc7b7` | docs: align frontend standards and tasks with Multica |
+
+### Testing
+
+- [OK] Independent documentation review, 96 relative links, 20 JSONL references and git diff --check passed.
+- [OK] Post-archive checks passed; 74 unrelated dirty file snapshots preserved. No application tests or rendered-compliance claim for this documentation-only task.
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- Plan the existing-screen migration separately and coordinate shared shell/primitives with the execution UI task before integrated visual acceptance.
