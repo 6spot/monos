@@ -1,3 +1,4 @@
+import { TaskSpecification } from './task-specification.ts';
 import { TaskConversation } from './task-conversation.ts';
 import { readFile } from 'node:fs/promises';
 import { database } from '../../../packages/db/src/index.ts';
@@ -15,6 +16,7 @@ const db = database(databaseURL);
 await migrate(db);
 const signingKey = (await readFile(required('MONOS_SIGNING_KEY_FILE'), 'utf8')).trim();
 const service = new BoundaryService(db, { signingKey });
+const specifications=new TaskSpecification(db);
 const execution = new NodeExecution(db, service.instanceId);
 const planning = new TaskPlanning(db, service.instanceId);
 const discussion = new Discussion(db, service.instanceId);
@@ -25,7 +27,7 @@ const app = createApp(service, {
 let scheduling: Promise<void> | undefined;
 let discussionTimer: ReturnType<typeof setInterval> | undefined = undefined;
 const conversation = new TaskConversation(db,service.instanceId);
-const pump = () => scheduling ??= Promise.allSettled([discussion.pump(), planning.pump(), execution.pump(), conversation.pump()]).then((results) => { if (results.some((result) => result.status === 'rejected')) app.log.warn('Scheduling pass failed; durable input retained'); }).finally(() => { scheduling = undefined; });
+const pump = () => scheduling ??= Promise.allSettled([discussion.pump(), planning.pump(), execution.pump(), conversation.pump(), specifications.pump()]).then((results) => { if (results.some((result) => result.status === 'rejected')) app.log.warn('Scheduling pass failed; durable input retained'); }).finally(() => { scheduling = undefined; });
 app.addHook('onClose', async () => { clearInterval(discussionTimer); await scheduling; });
 await app.listen({ host: process.env.MONOS_LISTEN_HOST ?? '127.0.0.1', port: Number(process.env.MONOS_PORT ?? 18443) });
 discussionTimer = setInterval(() => { void pump(); }, 1000); discussionTimer.unref();

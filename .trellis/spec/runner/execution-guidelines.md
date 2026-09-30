@@ -128,6 +128,17 @@ result -> claim release, plus stale source/authorization, duplicate inventory,
 occupied keys, hard/missing evidence and TLS Ready ordering. A database terminal
 Attempt or process-absence report alone cannot replace successful Stop settlement.
 
+## Specification commands
+
+Canonical non-reply-only Task Conversation also permits
+`prepare_specification_revision` and `apply_specification_revision`. Persist exact
+payload bytes in the attributed journal before transport. Initial Planner, Node,
+Todo, legacy Planner and reply-only sources receive no such authority. Preparation
+does not close the turn; attach only with `commit_task_turn` specification routing.
+Apply references an existing Owner confirmation and still requires the final reply;
+the Runner cannot infer permission, wait for settlement to manufacture a reply, or
+invent graph changes. Backend settlement uses existing Stop/completion effects.
+
 ## Installation discovery
 
 The constrained helper additionally accepts `{action:"discover",attempt_id:""}`

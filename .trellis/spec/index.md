@@ -2,7 +2,7 @@
 
 ## Status and authority
 
-The Stage A foundations implement `apps/server`, `packages/{domain,db,protocol}`, the Go `runner`, Owner configuration in `apps/web`, and deployment recipes under `infra`. Production Runtime integration passed combined real-host acceptance on 2026-09-29. Todo capture/Discussion, exact Task creation, initial planning and Single-Node execution with Artifacts/recovery are implemented. Task Conversation, revision workflows, execution UI and delivery remain later work. These specs connect accepted decisions to implementation; task verification reports distinguish deterministic tests from real Linux/CLI acceptance.
+The Stage A foundations implement `apps/server`, `packages/{domain,db,protocol}`, the Go `runner`, Owner configuration in `apps/web`, and deployment recipes under `infra`. Production Runtime integration passed combined real-host acceptance on 2026-09-29. Todo capture/Discussion, exact Task creation, initial planning, Single-Node execution with Artifacts/recovery, ordered Task Conversation/guidance and exact Specification revisions are implemented. Replacement Plans, execution UI and delivery remain later work. These specs connect accepted decisions to implementation; task verification reports distinguish deterministic tests from real Linux/CLI acceptance.
 
 Read [ARCHITECTURE.md](../../ARCHITECTURE.md), the relevant [module](../../docs/README.md), and [invariants](../../docs/08-principles-and-non-goals.md) first. Domain rules belong there; this tree specifies implementation and verification. Update both when an accepted decision changes.
 

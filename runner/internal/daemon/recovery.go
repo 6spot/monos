@@ -66,7 +66,7 @@ func (d *Daemon) prepareRecovery(ctx context.Context, inventory protocol.RunnerI
 	retainedDispatches := map[string]protocol.Dispatch{}
 	seen := map[string]protocol.Operation{}
 	for _, op := range inventory.Operations {
-		if op.State != protocol.Recovery {
+		if op.State != protocol.PurpleRecovery {
 			continue
 		}
 		dispatch, exists := dispatches[op.AttemptID]

@@ -1,3 +1,5 @@
+import { eligibleRequirement, requirementProposal } from './task-specification-state.ts';
+import type { SpecificationTask } from './task-specification-state.ts';
 import { randomBytes, randomUUID } from 'node:crypto';
 import { transaction } from '../../../packages/db/src/index.ts';
 import type { Database, Transaction } from '../../../packages/db/src/index.ts';
@@ -90,9 +92,11 @@ export class OwnerCommands {
       if (basis.control_version !== command.expected_control_version) throw new CommandError('version_conflict', 'Task control basis changed', basis.control_version);
       const row = await proposal(tx, confirmationCommand.payload.proposal_id);
       current(row, command.scope_id, confirmationCommand.payload.content_digest, basis);
+      if((await tx.query('SELECT 1 FROM requirement_proposals WHERE id=$1',[row.id])).rowCount){const task=(await tx.query<SpecificationTask>('SELECT * FROM tasks WHERE id=$1',[command.scope_id])).rows[0]!;await eligibleRequirement(tx,task,await requirementProposal(tx,row.id,task.id));}
       const existing = (await tx.query<{ id: string }>('SELECT id FROM authorization_receipts WHERE proposal_id=$1', [row.id])).rows[0];
       const confirmation = existing?.id ?? randomUUID();
       if (!existing) await tx.query('INSERT INTO authorization_receipts(id,proposal_id) VALUES($1,$2)', [confirmation, row.id]);
+      if(!existing && (await tx.query('SELECT 1 FROM requirement_proposals WHERE id=$1',[row.id])).rowCount)await tx.query('INSERT INTO requirement_authorization_commands(authorization_id,task_id,request_id) VALUES($1,$2,$3)',[confirmation,command.scope_id,command.request_id]);
       const response: OwnerCommandResult = { schema_version: 1, request_id: command.request_id, status: 'committed', confirmation_id: confirmation, proposal_id: row.id };
       validate('OwnerCommandResult', response);
       await tx.query('INSERT INTO owner_command_receipts(scope_id,request_id,digest,envelope_json,response) VALUES($1,$2,$3,$4,$5)', [command.scope_id, command.request_id, hash, envelope, response]);

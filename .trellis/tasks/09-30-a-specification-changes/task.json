@@ -3,7 +3,7 @@
   "name": "a-specification-changes",
   "title": "Exact Specification changes and settlement",
   "description": "Authorize exact requirement and impact changes, settle old writers and publish revisions without changing a sufficient graph.",
-  "status": "planning",
+  "status": "in_progress",
   "dev_type": "backend",
   "scope": null,
   "package": null,
@@ -21,9 +21,9 @@
   "children": [],
   "parent": "09-28-a-task-execution",
   "relatedFiles": [],
-  "notes": "",
+  "notes": "Sequentially authorized after accepted Task Conversation609e392. Design/source/settlement research converged; preserve existing services, no push.",
   "meta": {
     "roadmap_level": "leaf",
-    "planning_maturity": "backlog"
+    "planning_maturity": "ready"
   }
 }

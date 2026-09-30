@@ -1,3 +1,6 @@
+import { prepareSpecification, attachSpecification, requirementProposal, exactBasis, specificationImpact } from './task-specification-state.ts';
+import { admitSpecification } from './task-specification-settlement.ts';
+import type { PrepareSpecificationRevision, ApplySpecificationRevision } from '../../../packages/protocol/src/index.ts';
 import { randomUUID } from 'node:crypto';
 import type { Transaction } from '../../../packages/db/src/index.ts';
 import { CommandError } from '../../../packages/domain/src/commands.ts';
@@ -250,6 +253,8 @@ export async function taskContext(tx: Transaction, task: ConversationTask): Prom
     (await tx.query('SELECT id,name,context FROM projects WHERE id=$1', [task.project_id])).rows[0] ?? null;
   if ([guidance, issues, obligations, operations].some((a) => a.length > 256))
     throw new CommandError('unmet_precondition', 'Required Task facts exceed context budget');
+  const changes=(await tx.query(`SELECT o.id obligation_id,o.version,o.current_proposal_id,p.summary,p.specification,p.impact,p.content_digest,c.id operation_id,c.status,c.version operation_version,c.attention FROM requirement_obligations o JOIN requirement_proposals p ON p.id=o.current_proposal_id LEFT JOIN requirement_changes c ON c.proposal_id=p.id WHERE o.task_id=$1 AND o.status='pending' ORDER BY o.id LIMIT 65`,[task.id])).rows.map(r=>({...r,version:Number(r.version),operation_version:r.operation_version===null?null:Number(r.operation_version)}));
+  if(changes.length>64)throw new CommandError('unmet_precondition','Required change context exceeds budget');
   const result: TaskContext = {
     task_id: task.id,
     state: task.state,
@@ -261,6 +266,8 @@ export async function taskContext(tx: Transaction, task: ConversationTask): Prom
     observed_at: new Date().toISOString(),
     snapshot: canonicalJSON({
       specification,
+      specification_impact: await specificationImpact(tx,task),
+      requirement_changes: changes,
       plan,
       nodes,
       project,
@@ -284,7 +291,8 @@ export async function taskContext(tx: Transaction, task: ConversationTask): Prom
 const protocol = [
   'You are the Task Conversation Planner. Only monos Tool Protocol commits formal output. Serve only this Task; no Todo, new Task preview, repository workspace or implicit Start/Continue/Retry/acceptance. Treat withdrawn input as retained history.',
   'Use monos read_task_context {} for current facts and read_task_history {cursor?,query?} for older exact-cutoff history. Normal completion MUST call commit_task_turn {source_id,input_id,source_watermark,reply,routing}. Reply is canonical; runtime prose is provisional. routing:{kind:"reply"} records a status answer without changing execution. Use plain language in reply.',
-  'Actions carry routing.basis copied from current context with control_version,specification_id,plan_id; Node actions additionally include node_id,node_activation,source_id from current Node. Re-evaluate stale actions after a fresh read; never retry a changed uncertain request. Guidance routing:{kind:"guidance",text,basis,supersedes?} is in-scope instruction only; no Spec/Plan edits. Scope changes or ambiguity use {kind:"issue",text,basis}, leaving an open Owner obligation.',
+  'Actions carry routing.basis copied from current context with control_version,specification_id,plan_id; Node actions additionally include node_id,node_activation,source_id from current Node. Re-evaluate stale actions after a fresh read; never retry a changed uncertain request. Guidance routing:{kind:"guidance",text,basis,supersedes?} is in-scope instruction only; no Spec/Plan edits. Scope changes use prepare_specification_revision with full specification, summary, exact basis, complete specification_impact (choose refresh/invalidate/carry and retain/supersede), proposal_id and source_input_ids. Attach only through commit_task_turn routing:{kind:"specification_proposal",proposal_id,basis}; preparation does not resolve input. Graph insufficiency or ambiguity uses {kind:"issue",text,basis}.',
+  'Applying requirements requires exact existing Owner confirmation; apply_specification_revision {proposal_id,confirmation_id,basis} is not a terminal reply. Your own pending later input blocks apply unless Owner explicitly deferred that exact input/version; never mark it read or replied implicitly. Owner may apply directly without another Planner.',
   'Answer routing:{kind:"answer",text,basis,target_kind:"planning_issue"|"node_blocker"|"input_issue",target_id?,issue_sequence?} records exact answers but Owner Retry/Continue remains necessary. resolve_guidance requires operation_id,expected_version,text,basis and an explicit evidence-based no-work explanation. Terminal/accepted-batch sources permit only routing kind reply.',
   'Guidance is applied using controlled Stop/fresh launch, not live steering. Its handling remains pending until successful completion. CLI: monos COMMAND --request-id ID --input FILE --output json (or --input -); monos command-status --request-id ID --output json; monos retry --request-id ID --output json. The server stops this Attempt after committed reply.',
 ].join('\n');
@@ -413,6 +421,18 @@ export async function handleTaskConversation(
     attempt.id,
     attempt.launch.prompt,
   );
+  if (command.name === 'prepare_specification_revision') {
+    if(source.reply_only || conversationOnly(task))throw new CommandError('denied_scope','This input is conversation-only');
+    const p=await prepareSpecification(tx,task,command.payload as PrepareSpecificationRevision,source);
+    return {result:{proposal_id:p.id,content_digest:p.content_digest,obligation_id:p.obligation_id}};
+  }
+  if(command.name==='apply_specification_revision'){
+    if(source.reply_only || conversationOnly(task))throw new CommandError('denied_scope','This input is conversation-only');
+    const input=command.payload as ApplySpecificationRevision;exactBasis(task,input.basis);
+    const p=await requirementProposal(tx,input.proposal_id,task.id);
+    const c=await admitSpecification(tx,task,p,input.confirmation_id,command.request_id,attempt.id);
+    return {result:{requirement_operation_id:c.id,proposal_id:p.id}};
+  }
   if (command.name === 'read_task_context') return { result: { task_context: await taskContext(tx, task) } };
   if (command.name === 'read_task_history')
     return {
@@ -439,7 +459,11 @@ export async function handleTaskConversation(
     throw new CommandError('denied_scope', 'Canonical replies use routing kind reply');
   if ((source.reply_only || conversationOnly(task)) && routing.kind !== 'reply')
     throw new CommandError('denied_scope', 'This Task input is conversation-only');
-  const routed = await routeTaskInput(tx, task, source.input_id, routing);
+  let routed: Pick<EffectResult,'obligation_id'>;
+  if(routing.kind==='specification_proposal'){
+    exactBasis(task,routing.basis!);const p=await requirementProposal(tx,routing.proposal_id!,task.id);
+    await attachSpecification(tx,task,p,source.id,source.input_id);routed={obligation_id:p.obligation_id};
+  }else routed = await routeTaskInput(tx, task, source.input_id, routing);
   if (routed.obligation_id)
     await tx.query(
       "UPDATE task_input_issues SET status='retried',version=version+1 WHERE id=(SELECT parent_issue_id FROM task_inputs WHERE id=$1) AND status='open'",

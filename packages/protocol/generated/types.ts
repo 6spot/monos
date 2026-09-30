@@ -30,20 +30,24 @@ export interface CommandEnvelope {
     scope_id:                 string;
 }
 
-export type CommandEnvelopeName = "open_workspace" | "inspect_repository" | "complete_node" | "commit_task_turn" | "commit_discussion_turn" | "read_discussion" | "update_working_requirement_state" | "publish_execution_plan" | "raise_planning_issue" | "publish_artifact" | "read_artifact" | "block_node" | "read_task_context" | "read_task_history";
+export type CommandEnvelopeName = "open_workspace" | "inspect_repository" | "complete_node" | "commit_task_turn" | "commit_discussion_turn" | "read_discussion" | "update_working_requirement_state" | "publish_execution_plan" | "raise_planning_issue" | "publish_artifact" | "read_artifact" | "block_node" | "read_task_context" | "read_task_history" | "prepare_specification_revision" | "apply_specification_revision";
 
 export interface CommandPayload {
     artifact_id?:               string;
     artifact_ids?:              string[];
+    basis?:                     TaskActionBasis;
+    confirmation_id?:           string;
     content?:                   ArtifactContent;
     cursor?:                    string;
     handled_guidance_ids?:      string[];
+    impact?:                    SpecificationImpact;
     input_id?:                  string;
     nodes?:                     [ExecutionPlanNode, ...ExecutionPlanNode[]];
     plan_id?:                   string;
     planning_intent_id?:        string;
     project_context_digest?:    string;
     project_context_version?:   number;
+    proposal_id?:               string;
     query?:                     string;
     reason?:                    string;
     references?:                ArtifactReference[];
@@ -52,8 +56,10 @@ export interface CommandPayload {
     resource_id?:               string;
     routing?:                   TaskTurnRouting;
     source_id?:                 string;
+    source_input_ids?:          string[];
     source_message_id?:         string;
     source_watermark?:          number;
+    specification?:             string;
     summary?:                   string;
     supersedes?:                string;
     task_preview?:              TaskPreview;
@@ -61,10 +67,44 @@ export interface CommandPayload {
     working_requirement_state?: string;
 }
 
+export interface TaskActionBasis {
+    control_version:  number;
+    node_activation?: number;
+    node_id?:         string;
+    plan_id:          null | string;
+    source_id?:       null | string;
+    specification_id: string;
+}
+
 export interface ArtifactContent {
     media_type: string;
     text:       string;
 }
+
+export interface SpecificationImpact {
+    graph_sufficient: boolean;
+    guidance:         Guidance[];
+    nodes:            SpecificationImpactNode[];
+}
+
+export interface Guidance {
+    disposition: GuidanceDisposition;
+    guidance_id: string;
+    version:     number;
+}
+
+export type GuidanceDisposition = "retain" | "supersede";
+
+export interface SpecificationImpactNode {
+    completion_manifest_digest: null | string;
+    completion_operation_id:    null | string;
+    disposition:                SpecificationImpactNodeDisposition;
+    node_activation:            number;
+    node_id:                    string;
+    source_id:                  null | string;
+}
+
+export type SpecificationImpactNodeDisposition = "refresh" | "invalidate" | "carry";
 
 export interface ExecutionPlanNode {
     consumes?:          string[];
@@ -87,22 +127,14 @@ export interface TaskTurnRouting {
     issue_sequence?:   number;
     kind:              TaskTurnRoutingKind;
     operation_id?:     string;
+    proposal_id?:      string;
     supersedes?:       string;
     target_id?:        string;
     target_kind?:      TargetKind;
     text?:             string;
 }
 
-export interface TaskActionBasis {
-    control_version:  number;
-    node_activation?: number;
-    node_id?:         string;
-    plan_id:          null | string;
-    source_id?:       null | string;
-    specification_id: string;
-}
-
-export type TaskTurnRoutingKind = "reply_only" | "reply" | "guidance" | "issue" | "answer" | "resolve_guidance";
+export type TaskTurnRoutingKind = "reply_only" | "reply" | "guidance" | "issue" | "answer" | "resolve_guidance" | "specification_proposal";
 
 export type TargetKind = "planning_issue" | "node_blocker" | "input_issue";
 
@@ -139,6 +171,7 @@ export interface EffectResult {
     artifact_id?:                  string;
     blocker_id?:                   string;
     cache_updated?:                boolean;
+    content_digest?:               string;
     discussion_page?:              DiscussionPage;
     git_commit?:                   string;
     git_tree?:                     string;
@@ -149,7 +182,9 @@ export interface EffectResult {
     obligation_id?:                string;
     path?:                         string;
     planning_outcome?:             PlanningOutcome;
+    proposal_id?:                  string;
     reply?:                        string;
+    requirement_operation_id?:     string;
     resolved_watermark?:           number;
     source_id?:                    string;
     source_watermark?:             number;
@@ -1618,3 +1653,168 @@ export interface TaskConversationStatusAttempt {
     process_released: boolean;
     state:            string;
 }
+
+export interface PrepareSpecificationRevision {
+    basis:            TaskActionBasis;
+    impact:           SpecificationImpact;
+    proposal_id:      string;
+    source_input_ids: string[];
+    specification:    string;
+    summary:          string;
+    supersedes?:      string;
+}
+
+export interface ApplySpecificationRevision {
+    basis:           TaskActionBasis;
+    confirmation_id: string;
+    proposal_id:     string;
+}
+
+export interface TaskSpecificationCommand {
+    name:           TaskSpecificationCommandName;
+    payload:        { [key: string]: unknown };
+    request_id:     string;
+    schema_version: number;
+    task_id:        string;
+}
+
+export type TaskSpecificationCommandName = "edit_specification" | "confirm_specification" | "apply_specification_revision" | "withdraw_specification" | "retry_specification" | "defer_specification_inputs";
+
+export interface TaskSpecificationResult {
+    confirmation_id?:  string;
+    content_digest?:   string;
+    operation_id?:     string;
+    proposal_id?:      string;
+    request_id:        string;
+    schema_version:    number;
+    specification_id?: string;
+    status:            OwnerCommandResultStatus;
+    version?:          number;
+}
+
+export interface TaskSpecificationStatus {
+    basis:              TaskActionBasis;
+    changes:            RequirementChangeSummary[];
+    changes_has_more:   boolean;
+    impact:             SpecificationImpact;
+    proposals:          RequirementProposalSummary[];
+    proposals_has_more: boolean;
+    schema_version:     number;
+    task_id:            string;
+}
+
+export interface RequirementChangeSummary {
+    attention:        null | string;
+    operation_id:     string;
+    proposal_id:      string;
+    specification_id: string;
+    status:           RequirementChangeSummaryStatus;
+    version:          number;
+}
+
+export type RequirementChangeSummaryStatus = "settling" | "withdrawing" | "published" | "withdrawn" | "cancelled";
+
+export interface RequirementProposalSummary {
+    attached:              boolean;
+    base_specification_id: string;
+    content_digest:        string;
+    current:               boolean;
+    expired:               boolean;
+    expires_at:            string;
+    obligation_id:         string;
+    proposal_id:           string;
+    revoked:               boolean;
+    status:                RequirementProposalSummaryStatus;
+    summary:               string;
+    version:               number;
+}
+
+export type RequirementProposalSummaryStatus = "pending" | "published" | "withdrawn" | "cancelled";
+
+export interface RequirementProposalDetail {
+    basis:                TaskActionBasis;
+    confirmation_id:      null | string;
+    impact:               SpecificationImpact;
+    impact_digest:        string;
+    input_cutoff:         number;
+    input_id:             null | string;
+    operation:            RequirementChangeSummary | null;
+    predecessor_id:       null | string;
+    proposal:             RequirementProposalSummary;
+    schema_version:       number;
+    source_id:            null | string;
+    source_input_ids:     string[];
+    specification:        string;
+    specification_digest: string;
+    task_id:              string;
+}
+
+export interface SpecificationHistoryQuery {
+    cursor?: string;
+}
+
+export interface RequirementHistoryPage {
+    next_cursor:    null | string;
+    proposals:      RequirementProposalSummary[];
+    schema_version: number;
+    task_id:        string;
+}
+
+export interface SpecificationRevisionPage {
+    next_cursor:    null | string;
+    revisions:      SpecificationRevisionSummary[];
+    schema_version: number;
+    task_id:        string;
+}
+
+export interface SpecificationRevisionSummary {
+    authorization_id: null | string;
+    change_id:        null | string;
+    content_digest:   null | string;
+    parent_id:        null | string;
+    specification_id: string;
+}
+
+export interface SpecificationRevisionDetail {
+    applicability:  Applicability[];
+    content_json:   string;
+    revision:       SpecificationRevisionSummary;
+    schema_version: number;
+    task_id:        string;
+}
+
+export interface Applicability {
+    completion_manifest_digest: null | string;
+    completion_operation_id:    null | string;
+    disposition:                SpecificationImpactNodeDisposition;
+    node_activation:            number;
+    node_id:                    string;
+    parent_id:                  string;
+    plan_id:                    string;
+}
+
+export interface RequirementChangeDetail {
+    attempts:          AttemptElement[];
+    attempts_has_more: boolean;
+    effects:           RequirementChangeEffect[];
+    next_cursor:       null | string;
+    operation:         RequirementChangeSummary;
+    schema_version:    number;
+    task_id:           string;
+}
+
+export interface AttemptElement {
+    attempt_id:       string;
+    process_released: boolean;
+}
+
+export interface RequirementChangeEffect {
+    attempt_id:       string;
+    failure_kind:     null | string;
+    kind:             OperationKind;
+    operation_id:     string;
+    process_released: boolean;
+    state:            RequirementChangeEffectState;
+}
+
+export type RequirementChangeEffectState = "admitted" | "running" | "succeeded" | "cancelled" | "recovery";

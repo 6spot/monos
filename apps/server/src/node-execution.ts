@@ -1,3 +1,5 @@
+import { assertCurrentNode } from './task-records.ts';
+import { specificationFrozen } from './task-specification-state.ts';
 import { cancelTaskInputEffects } from './task-guidance.ts';
 import { reactivateSettledNodes } from './task-records.ts';
 import { randomUUID } from 'node:crypto';
@@ -21,7 +23,7 @@ import type { ExecutionNode, NodeSource, NodeTask } from './node-execution-state
 import { admitWorkspaceEffect, lockAttemptWorkspace } from './workspaces.ts';
 import type { WorkspaceAttempt } from './workspaces.ts';
 
-interface Attempt extends WorkspaceAttempt {
+export interface Attempt extends WorkspaceAttempt {
   state: string;
   specification_id: string;
   plan_id: string;
@@ -44,7 +46,7 @@ export interface CompletionOperation {
   failure_kind: string | null | undefined;
   completion_operation_id: string | null;
   completion_identity_digest: string | null;
-  settlement_purpose: 'correct' | 'cancel_task' | null;
+  settlement_purpose: 'correct' | 'cancel_task' | 'specification_change' | null;
 }
 export function completionIdentity(operation: CompletionOperation, dispatchId: string): string {
   return digest(
@@ -71,7 +73,7 @@ export async function admitCompletionSettlement(
   attempt: Attempt,
   original: CompletionOperation,
   requestId: string,
-  purpose: 'correct' | 'cancel_task'
+  purpose: 'correct' | 'cancel_task' | 'specification_change'
 ): Promise<string> {
   if (
     !original.workspace_descriptor ||
@@ -173,7 +175,7 @@ export class NodeExecution {
           const node = (
             await tx.query<ExecutionNode>('SELECT * FROM nodes WHERE id=$1 FOR UPDATE', [candidate.node_id])
           ).rows[0]!;
-          if (task.state === 'RUNNING' && node.state === 'PENDING' && !node.execution_source_id)
+          if (!(await specificationFrozen(tx,task.id)) && task.state === 'RUNNING' && node.state === 'PENDING' && !node.execution_source_id)
             await prepareNodeSource(tx, task, node, version);
         });
       const sources = (
@@ -243,7 +245,7 @@ export class NodeExecution {
           ).rows[0]!;
           const node = (await tx.query<ExecutionNode>('SELECT * FROM nodes WHERE id=$1', [source.node_id])).rows[0]!;
           const guidanceOwned=(await tx.query("SELECT 1 FROM task_guidance_followups WHERE source_id=$1 AND status='waiting'",[source.id])).rowCount;
-          if (!guidanceOwned && task.state === 'RUNNING' && node.state === 'RUNNING' && node.execution_source_id === source.id)
+          if (!(await specificationFrozen(tx,task.id)) && attempt.end_reason!=='specification_change' && !guidanceOwned && task.state === 'RUNNING' && node.state === 'RUNNING' && node.execution_source_id === source.id)
             await blockNodeSource(tx, source, 'factual', attempt.end_reason ?? 'missing_formal_outcome', attempt.id);
         });
     } finally {
@@ -362,7 +364,7 @@ export class NodeExecution {
             await tx.query<NodeSource>('SELECT * FROM node_execution_outbox WHERE id=$1', [node.execution_source_id])
           ).rows[0]!;
           if (source.specification_id !== task.specification_id || source.plan_id !== task.plan_id)
-            throw new CommandError('version_conflict', 'Node revision differs');
+            await assertCurrentNode(tx,{task_id:task.id,node_id:node.id,node_activation:Number(node.activation)});
           const attempt = (
             await tx.query<Attempt>('SELECT * FROM attempts WHERE id=$1 FOR UPDATE', [source.planned_attempt_id])
           ).rows[0];

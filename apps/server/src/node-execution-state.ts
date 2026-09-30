@@ -1,3 +1,4 @@
+import { assertSpecificationUnfrozen } from './task-specification-state.ts';
 import { guidanceContext, assignGuidance } from './task-guidance.ts';
 import { randomUUID } from 'node:crypto';
 import type { Transaction } from '../../../packages/db/src/index.ts';
@@ -57,6 +58,7 @@ export async function assertNodeSource(
   attemptId: string,
   prompt?: string
 ): Promise<NodeSource> {
+  await assertSpecificationUnfrozen(tx,taskId);
   const row = (
     await tx.query<NodeSource>(
       `SELECT s.* FROM node_execution_outbox s JOIN tasks t ON t.id=s.task_id JOIN nodes n ON n.id=s.node_id
@@ -89,6 +91,7 @@ export async function prepareNodeSource(
   configurationVersion: number,
   options: { request_id?: string; recovery?: object } = {}
 ): Promise<NodeSource> {
+  await assertSpecificationUnfrozen(tx,task.id);
   const id = randomUUID(),
     attemptId = randomUUID();
   const definition = (

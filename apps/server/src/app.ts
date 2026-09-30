@@ -1,3 +1,4 @@
+import { TaskSpecification } from './task-specification.ts';
 import { TaskConversation } from './task-conversation.ts';
 import Fastify from 'fastify';
 import { WebSocketServer, WebSocket } from 'ws';
@@ -72,6 +73,7 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
   const todos = new Todos(service.db);
   const discussion = new Discussion(service.db, service.instanceId);
   const todoAttempts = new TodoAttemptReads(service.db);
+  const specifications = new TaskSpecification(service.db);
   const execution = new NodeExecution(service.db,service.instanceId);
   const conversation = new TaskConversation(service.db,service.instanceId);
   const planning = new TaskPlanning(service.db, service.instanceId);
@@ -130,7 +132,15 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
   app.get<{ Params: { task_id: string; artifact_id:string } }>('/v1/owner/tasks/:task_id/artifacts/:artifact_id', async (request,reply) => {reply.header('cache-control','no-store').header('x-content-type-options','nosniff');return ownerArtifact(service.db,ownerCredential(request),request.params.task_id,request.params.artifact_id);});
   app.get<{Params:{task_id:string};Querystring:{cursor?:string}}>('/v1/owner/tasks/:task_id/conversation/operations',async request=>{validate('AttemptListQuery',request.query);return conversation.operations(ownerCredential(request),request.params.task_id,request.query.cursor);});
   app.get<{Params:{task_id:string;guidance_id:string};Querystring:{cursor?:string}}>('/v1/owner/tasks/:task_id/conversation/guidance/:guidance_id/recipients',async request=>{validate('AttemptListQuery',request.query);return conversation.recipients(ownerCredential(request),request.params.task_id,request.params.guidance_id,request.query.cursor);});
-  app.post('/v1/owner/tasks/conversation/commands',async request=>conversation.command(ownerCredential(request),request.body));
+  app.get<{Params:{task_id:string};Querystring:{cursor?:string}}>('/v1/owner/tasks/:task_id/specification/proposals',async request=>{validate('SpecificationHistoryQuery',request.query);return specifications.history(ownerCredential(request),request.params.task_id,'proposals',request.query.cursor);});
+  app.get<{Params:{task_id:string};Querystring:{cursor?:string}}>('/v1/owner/tasks/:task_id/specification/revisions',async request=>{validate('SpecificationHistoryQuery',request.query);return specifications.history(ownerCredential(request),request.params.task_id,'revisions',request.query.cursor);});
+  app.get<{Params:{task_id:string;revision_id:string}}>('/v1/owner/tasks/:task_id/specification/revisions/:revision_id',async request=>specifications.history(ownerCredential(request),request.params.task_id,'revisions',undefined,request.params.revision_id));
+  app.get<{Params:{task_id:string;change_id:string};Querystring:{cursor?:string}}>('/v1/owner/tasks/:task_id/specification/changes/:change_id',async request=>{validate('SpecificationHistoryQuery',request.query);return specifications.change(ownerCredential(request),request.params.task_id,request.params.change_id,request.query.cursor);});
+  app.post('/v1/owner/tasks/specification/commands',async request=>specifications.command(ownerCredential(request),request.body));
+  app.get<{Params:{task_id:string}}>('/v1/owner/tasks/:task_id/specification',async request=>specifications.status(ownerCredential(request),request.params.task_id));
+  app.get<{Params:{task_id:string;proposal_id:string}}>('/v1/owner/tasks/:task_id/specification/proposals/:proposal_id',async request=>specifications.status(ownerCredential(request),request.params.task_id,request.params.proposal_id));
+  app.get<{Params:{task_id:string;request_id:string}}>('/v1/owner/tasks/:task_id/specification/commands/:request_id',async request=>specifications.receipt(ownerCredential(request),request.params.task_id,request.params.request_id));
+  app.post('/v1/owner/tasks/conversation/commands' ,async request=>conversation.command(ownerCredential(request),request.body));
   app.get<{Params:{task_id:string}}>('/v1/owner/tasks/:task_id/conversation',async request=>conversation.status(ownerCredential(request),request.params.task_id));
   app.get<{Params:{task_id:string};Querystring:{cursor?:string;query?:string}}>('/v1/owner/tasks/:task_id/conversation/messages',async request=>{validate('TaskHistoryQuery',request.query);return conversation.messages(ownerCredential(request),request.params.task_id,request.query.cursor,request.query.query);});
   app.get<{Params:{task_id:string;request_id:string}}>('/v1/owner/tasks/:task_id/conversation/commands/:request_id',async request=>conversation.receipt(ownerCredential(request),request.params.task_id,request.params.request_id));

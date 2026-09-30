@@ -22,6 +22,8 @@ func TestPlannerCLIUsesNativeJournalChannel(t *testing.T) {
 		{"read_artifact", `{"artifact_id":"artifact"}`},
 		{"block_node", `{"reason":"Owner answer needed"}`},
 		{"complete_node", `{"summary":"Complete","artifact_ids":[]}`},
+		{"prepare_specification_revision", `{"proposal_id":"proposal","specification":"# Exact requirements\n保留内容","summary":"Clarify requirement","basis":{"control_version":93,"specification_id":"spec","plan_id":null},"impact":{"graph_sufficient":true,"nodes":[],"guidance":[]},"source_input_ids":["input"]}`},
+		{"apply_specification_revision", `{"proposal_id":"proposal","confirmation_id":"owner-receipt","basis":{"control_version":93,"specification_id":"spec","plan_id":null}}`},
 		{"read_task_context", `{}`},
 		{"read_task_history", `{"query":"earlier decision"}`},
 		{"commit_task_turn", `{"source_id":"source","input_id":"input","source_watermark":3,"reply":"The current Task status","routing":{"kind":"reply"}}`},

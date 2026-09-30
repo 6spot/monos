@@ -33,37 +33,73 @@ type CommandEnvelope struct {
 }
 
 type CommandPayload struct {
-	ArtifactID              *string             `json:"artifact_id,omitempty"`
-	ArtifactIDS             []string            `json:"artifact_ids,omitempty"`
-	Content                 *ArtifactContent    `json:"content,omitempty"`
-	Cursor                  *string             `json:"cursor,omitempty"`
-	HandledGuidanceIDS      []string            `json:"handled_guidance_ids,omitempty"`
-	InputID                 *string             `json:"input_id,omitempty"`
-	Nodes                   []ExecutionPlanNode `json:"nodes,omitempty"`
-	PlanID                  *string             `json:"plan_id,omitempty"`
-	PlanningIntentID        *string             `json:"planning_intent_id,omitempty"`
-	ProjectContextDigest    *string             `json:"project_context_digest,omitempty"`
-	ProjectContextVersion   *int64              `json:"project_context_version,omitempty"`
-	Query                   *string             `json:"query,omitempty"`
-	Reason                  *string             `json:"reason,omitempty"`
-	References              []ArtifactReference `json:"references,omitempty"`
-	Reply                   *string             `json:"reply,omitempty"`
-	ResolvedWatermark       *int64              `json:"resolved_watermark,omitempty"`
-	ResourceID              *string             `json:"resource_id,omitempty"`
-	Routing                 *TaskTurnRouting    `json:"routing,omitempty"`
-	SourceID                *string             `json:"source_id,omitempty"`
-	SourceMessageID         *string             `json:"source_message_id,omitempty"`
-	SourceWatermark         *int64              `json:"source_watermark,omitempty"`
-	Summary                 *string             `json:"summary,omitempty"`
-	Supersedes              *string             `json:"supersedes,omitempty"`
-	TaskPreview             *TaskPreview        `json:"task_preview,omitempty"`
-	Title                   *string             `json:"title,omitempty"`
-	WorkingRequirementState *string             `json:"working_requirement_state,omitempty"`
+	ArtifactID              *string              `json:"artifact_id,omitempty"`
+	ArtifactIDS             []string             `json:"artifact_ids,omitempty"`
+	Basis                   *TaskActionBasis     `json:"basis,omitempty"`
+	ConfirmationID          *string              `json:"confirmation_id,omitempty"`
+	Content                 *ArtifactContent     `json:"content,omitempty"`
+	Cursor                  *string              `json:"cursor,omitempty"`
+	HandledGuidanceIDS      []string             `json:"handled_guidance_ids,omitempty"`
+	Impact                  *SpecificationImpact `json:"impact,omitempty"`
+	InputID                 *string              `json:"input_id,omitempty"`
+	Nodes                   []ExecutionPlanNode  `json:"nodes,omitempty"`
+	PlanID                  *string              `json:"plan_id,omitempty"`
+	PlanningIntentID        *string              `json:"planning_intent_id,omitempty"`
+	ProjectContextDigest    *string              `json:"project_context_digest,omitempty"`
+	ProjectContextVersion   *int64               `json:"project_context_version,omitempty"`
+	ProposalID              *string              `json:"proposal_id,omitempty"`
+	Query                   *string              `json:"query,omitempty"`
+	Reason                  *string              `json:"reason,omitempty"`
+	References              []ArtifactReference  `json:"references,omitempty"`
+	Reply                   *string              `json:"reply,omitempty"`
+	ResolvedWatermark       *int64               `json:"resolved_watermark,omitempty"`
+	ResourceID              *string              `json:"resource_id,omitempty"`
+	Routing                 *TaskTurnRouting     `json:"routing,omitempty"`
+	SourceID                *string              `json:"source_id,omitempty"`
+	SourceInputIDS          []string             `json:"source_input_ids,omitempty"`
+	SourceMessageID         *string              `json:"source_message_id,omitempty"`
+	SourceWatermark         *int64               `json:"source_watermark,omitempty"`
+	Specification           *string              `json:"specification,omitempty"`
+	Summary                 *string              `json:"summary,omitempty"`
+	Supersedes              *string              `json:"supersedes,omitempty"`
+	TaskPreview             *TaskPreview         `json:"task_preview,omitempty"`
+	Title                   *string              `json:"title,omitempty"`
+	WorkingRequirementState *string              `json:"working_requirement_state,omitempty"`
+}
+
+type TaskActionBasis struct {
+	ControlVersion  int64   `json:"control_version"`
+	NodeActivation  *int64  `json:"node_activation,omitempty"`
+	NodeID          *string `json:"node_id,omitempty"`
+	PlanID          *string `json:"plan_id"`
+	SourceID        *string `json:"source_id"`
+	SpecificationID string  `json:"specification_id"`
 }
 
 type ArtifactContent struct {
 	MediaType string `json:"media_type"`
 	Text      string `json:"text"`
+}
+
+type SpecificationImpact struct {
+	GraphSufficient bool                      `json:"graph_sufficient"`
+	Guidance        []Guidance                `json:"guidance"`
+	Nodes           []SpecificationImpactNode `json:"nodes"`
+}
+
+type Guidance struct {
+	Disposition GuidanceDisposition `json:"disposition"`
+	GuidanceID  string              `json:"guidance_id"`
+	Version     int64               `json:"version"`
+}
+
+type SpecificationImpactNode struct {
+	CompletionManifestDigest *string                            `json:"completion_manifest_digest"`
+	CompletionOperationID    *string                            `json:"completion_operation_id"`
+	Disposition              SpecificationImpactNodeDisposition `json:"disposition"`
+	NodeActivation           int64                              `json:"node_activation"`
+	NodeID                   string                             `json:"node_id"`
+	SourceID                 *string                            `json:"source_id"`
 }
 
 type ExecutionPlanNode struct {
@@ -87,19 +123,11 @@ type TaskTurnRouting struct {
 	IssueSequence   *int64              `json:"issue_sequence,omitempty"`
 	Kind            TaskTurnRoutingKind `json:"kind"`
 	OperationID     *string             `json:"operation_id,omitempty"`
+	ProposalID      *string             `json:"proposal_id,omitempty"`
 	Supersedes      *string             `json:"supersedes,omitempty"`
 	TargetID        *string             `json:"target_id,omitempty"`
 	TargetKind      *TargetKind         `json:"target_kind,omitempty"`
 	Text            *string             `json:"text,omitempty"`
-}
-
-type TaskActionBasis struct {
-	ControlVersion  int64   `json:"control_version"`
-	NodeActivation  *int64  `json:"node_activation,omitempty"`
-	NodeID          *string `json:"node_id,omitempty"`
-	PlanID          *string `json:"plan_id"`
-	SourceID        *string `json:"source_id"`
-	SpecificationID string  `json:"specification_id"`
 }
 
 type TaskPreview struct {
@@ -133,6 +161,7 @@ type EffectResult struct {
 	ArtifactID                 *string                     `json:"artifact_id,omitempty"`
 	BlockerID                  *string                     `json:"blocker_id,omitempty"`
 	CacheUpdated               *bool                       `json:"cache_updated,omitempty"`
+	ContentDigest              *string                     `json:"content_digest,omitempty"`
 	DiscussionPage             *DiscussionPage             `json:"discussion_page,omitempty"`
 	GitCommit                  *string                     `json:"git_commit,omitempty"`
 	GitTree                    *string                     `json:"git_tree,omitempty"`
@@ -143,7 +172,9 @@ type EffectResult struct {
 	ObligationID               *string                     `json:"obligation_id,omitempty"`
 	Path                       *string                     `json:"path,omitempty"`
 	PlanningOutcome            *PlanningOutcome            `json:"planning_outcome,omitempty"`
+	ProposalID                 *string                     `json:"proposal_id,omitempty"`
 	Reply                      *string                     `json:"reply,omitempty"`
+	RequirementOperationID     *string                     `json:"requirement_operation_id,omitempty"`
 	ResolvedWatermark          *int64                      `json:"resolved_watermark,omitempty"`
 	SourceID                   *string                     `json:"source_id,omitempty"`
 	SourceWatermark            *int64                      `json:"source_watermark,omitempty"`
@@ -1481,34 +1512,209 @@ type TaskConversationStatusAttempt struct {
 	State           string  `json:"state"`
 }
 
+type PrepareSpecificationRevision struct {
+	Basis          TaskActionBasis     `json:"basis"`
+	Impact         SpecificationImpact `json:"impact"`
+	ProposalID     string              `json:"proposal_id"`
+	SourceInputIDS []string            `json:"source_input_ids"`
+	Specification  string              `json:"specification"`
+	Summary        string              `json:"summary"`
+	Supersedes     *string             `json:"supersedes,omitempty"`
+}
+
+type ApplySpecificationRevision struct {
+	Basis          TaskActionBasis `json:"basis"`
+	ConfirmationID string          `json:"confirmation_id"`
+	ProposalID     string          `json:"proposal_id"`
+}
+
+type TaskSpecificationCommand struct {
+	Name          TaskSpecificationCommandName `json:"name"`
+	Payload       map[string]interface{}       `json:"payload"`
+	RequestID     string                       `json:"request_id"`
+	SchemaVersion int64                        `json:"schema_version"`
+	TaskID        string                       `json:"task_id"`
+}
+
+type TaskSpecificationResult struct {
+	ConfirmationID  *string                  `json:"confirmation_id,omitempty"`
+	ContentDigest   *string                  `json:"content_digest,omitempty"`
+	OperationID     *string                  `json:"operation_id,omitempty"`
+	ProposalID      *string                  `json:"proposal_id,omitempty"`
+	RequestID       string                   `json:"request_id"`
+	SchemaVersion   int64                    `json:"schema_version"`
+	SpecificationID *string                  `json:"specification_id,omitempty"`
+	Status          OwnerCommandResultStatus `json:"status"`
+	Version         *int64                   `json:"version,omitempty"`
+}
+
+type TaskSpecificationStatus struct {
+	Basis            TaskActionBasis              `json:"basis"`
+	Changes          []RequirementChangeSummary   `json:"changes"`
+	ChangesHasMore   bool                         `json:"changes_has_more"`
+	Impact           SpecificationImpact          `json:"impact"`
+	Proposals        []RequirementProposalSummary `json:"proposals"`
+	ProposalsHasMore bool                         `json:"proposals_has_more"`
+	SchemaVersion    int64                        `json:"schema_version"`
+	TaskID           string                       `json:"task_id"`
+}
+
+type RequirementChangeSummary struct {
+	Attention       *string                        `json:"attention"`
+	OperationID     string                         `json:"operation_id"`
+	ProposalID      string                         `json:"proposal_id"`
+	SpecificationID string                         `json:"specification_id"`
+	Status          RequirementChangeSummaryStatus `json:"status"`
+	Version         int64                          `json:"version"`
+}
+
+type RequirementProposalSummary struct {
+	Attached            bool                             `json:"attached"`
+	BaseSpecificationID string                           `json:"base_specification_id"`
+	ContentDigest       string                           `json:"content_digest"`
+	Current             bool                             `json:"current"`
+	Expired             bool                             `json:"expired"`
+	ExpiresAt           string                           `json:"expires_at"`
+	ObligationID        string                           `json:"obligation_id"`
+	ProposalID          string                           `json:"proposal_id"`
+	Revoked             bool                             `json:"revoked"`
+	Status              RequirementProposalSummaryStatus `json:"status"`
+	Summary             string                           `json:"summary"`
+	Version             int64                            `json:"version"`
+}
+
+type RequirementProposalDetail struct {
+	Basis               TaskActionBasis            `json:"basis"`
+	ConfirmationID      *string                    `json:"confirmation_id"`
+	Impact              SpecificationImpact        `json:"impact"`
+	ImpactDigest        string                     `json:"impact_digest"`
+	InputCutoff         int64                      `json:"input_cutoff"`
+	InputID             *string                    `json:"input_id"`
+	Operation           *RequirementChangeSummary  `json:"operation"`
+	PredecessorID       *string                    `json:"predecessor_id"`
+	Proposal            RequirementProposalSummary `json:"proposal"`
+	SchemaVersion       int64                      `json:"schema_version"`
+	SourceID            *string                    `json:"source_id"`
+	SourceInputIDS      []string                   `json:"source_input_ids"`
+	Specification       string                     `json:"specification"`
+	SpecificationDigest string                     `json:"specification_digest"`
+	TaskID              string                     `json:"task_id"`
+}
+
+type SpecificationHistoryQuery struct {
+	Cursor *string `json:"cursor,omitempty"`
+}
+
+type RequirementHistoryPage struct {
+	NextCursor    *string                      `json:"next_cursor"`
+	Proposals     []RequirementProposalSummary `json:"proposals"`
+	SchemaVersion int64                        `json:"schema_version"`
+	TaskID        string                       `json:"task_id"`
+}
+
+type SpecificationRevisionPage struct {
+	NextCursor    *string                        `json:"next_cursor"`
+	Revisions     []SpecificationRevisionSummary `json:"revisions"`
+	SchemaVersion int64                          `json:"schema_version"`
+	TaskID        string                         `json:"task_id"`
+}
+
+type SpecificationRevisionSummary struct {
+	AuthorizationID *string `json:"authorization_id"`
+	ChangeID        *string `json:"change_id"`
+	ContentDigest   *string `json:"content_digest"`
+	ParentID        *string `json:"parent_id"`
+	SpecificationID string  `json:"specification_id"`
+}
+
+type SpecificationRevisionDetail struct {
+	Applicability []Applicability              `json:"applicability"`
+	ContentJSON   string                       `json:"content_json"`
+	Revision      SpecificationRevisionSummary `json:"revision"`
+	SchemaVersion int64                        `json:"schema_version"`
+	TaskID        string                       `json:"task_id"`
+}
+
+type Applicability struct {
+	CompletionManifestDigest *string                            `json:"completion_manifest_digest"`
+	CompletionOperationID    *string                            `json:"completion_operation_id"`
+	Disposition              SpecificationImpactNodeDisposition `json:"disposition"`
+	NodeActivation           int64                              `json:"node_activation"`
+	NodeID                   string                             `json:"node_id"`
+	ParentID                 string                             `json:"parent_id"`
+	PlanID                   string                             `json:"plan_id"`
+}
+
+type RequirementChangeDetail struct {
+	Attempts        []AttemptElement          `json:"attempts"`
+	AttemptsHasMore bool                      `json:"attempts_has_more"`
+	Effects         []RequirementChangeEffect `json:"effects"`
+	NextCursor      *string                   `json:"next_cursor"`
+	Operation       RequirementChangeSummary  `json:"operation"`
+	SchemaVersion   int64                     `json:"schema_version"`
+	TaskID          string                    `json:"task_id"`
+}
+
+type AttemptElement struct {
+	AttemptID       string `json:"attempt_id"`
+	ProcessReleased bool   `json:"process_released"`
+}
+
+type RequirementChangeEffect struct {
+	AttemptID       string                       `json:"attempt_id"`
+	FailureKind     *string                      `json:"failure_kind"`
+	Kind            OperationKind                `json:"kind"`
+	OperationID     string                       `json:"operation_id"`
+	ProcessReleased bool                         `json:"process_released"`
+	State           RequirementChangeEffectState `json:"state"`
+}
+
 type CommandEnvelopeName string
 
 const (
-	BlockNode                     CommandEnvelopeName = "block_node"
-	CommitDiscussionTurn          CommandEnvelopeName = "commit_discussion_turn"
-	CommitTaskTurn                CommandEnvelopeName = "commit_task_turn"
-	NameCompleteNode              CommandEnvelopeName = "complete_node"
-	NameInspectRepository         CommandEnvelopeName = "inspect_repository"
-	NameOpenWorkspace             CommandEnvelopeName = "open_workspace"
-	PublishArtifact               CommandEnvelopeName = "publish_artifact"
-	PublishExecutionPlan          CommandEnvelopeName = "publish_execution_plan"
-	RaisePlanningIssue            CommandEnvelopeName = "raise_planning_issue"
-	ReadArtifact                  CommandEnvelopeName = "read_artifact"
-	ReadDiscussion                CommandEnvelopeName = "read_discussion"
-	ReadTaskContext               CommandEnvelopeName = "read_task_context"
-	ReadTaskHistory               CommandEnvelopeName = "read_task_history"
-	UpdateWorkingRequirementState CommandEnvelopeName = "update_working_requirement_state"
+	BlockNode                        CommandEnvelopeName = "block_node"
+	CommitDiscussionTurn             CommandEnvelopeName = "commit_discussion_turn"
+	CommitTaskTurn                   CommandEnvelopeName = "commit_task_turn"
+	NameCompleteNode                 CommandEnvelopeName = "complete_node"
+	NameInspectRepository            CommandEnvelopeName = "inspect_repository"
+	NameOpenWorkspace                CommandEnvelopeName = "open_workspace"
+	NamePrepareSpecificationRevision CommandEnvelopeName = "prepare_specification_revision"
+	PublishArtifact                  CommandEnvelopeName = "publish_artifact"
+	PublishExecutionPlan             CommandEnvelopeName = "publish_execution_plan"
+	PurpleApplySpecificationRevision CommandEnvelopeName = "apply_specification_revision"
+	RaisePlanningIssue               CommandEnvelopeName = "raise_planning_issue"
+	ReadArtifact                     CommandEnvelopeName = "read_artifact"
+	ReadDiscussion                   CommandEnvelopeName = "read_discussion"
+	ReadTaskContext                  CommandEnvelopeName = "read_task_context"
+	ReadTaskHistory                  CommandEnvelopeName = "read_task_history"
+	UpdateWorkingRequirementState    CommandEnvelopeName = "update_working_requirement_state"
+)
+
+type GuidanceDisposition string
+
+const (
+	Retain    GuidanceDisposition = "retain"
+	Supersede GuidanceDisposition = "supersede"
+)
+
+type SpecificationImpactNodeDisposition string
+
+const (
+	Carry      SpecificationImpactNodeDisposition = "carry"
+	Invalidate SpecificationImpactNodeDisposition = "invalidate"
+	Refresh    SpecificationImpactNodeDisposition = "refresh"
 )
 
 type TaskTurnRoutingKind string
 
 const (
-	Answer          TaskTurnRoutingKind = "answer"
-	PurpleGuidance  TaskTurnRoutingKind = "guidance"
-	PurpleIssue     TaskTurnRoutingKind = "issue"
-	Reply           TaskTurnRoutingKind = "reply"
-	ReplyOnly       TaskTurnRoutingKind = "reply_only"
-	ResolveGuidance TaskTurnRoutingKind = "resolve_guidance"
+	Answer                TaskTurnRoutingKind = "answer"
+	PurpleGuidance        TaskTurnRoutingKind = "guidance"
+	PurpleIssue           TaskTurnRoutingKind = "issue"
+	Reply                 TaskTurnRoutingKind = "reply"
+	ReplyOnly             TaskTurnRoutingKind = "reply_only"
+	ResolveGuidance       TaskTurnRoutingKind = "resolve_guidance"
+	SpecificationProposal TaskTurnRoutingKind = "specification_proposal"
 )
 
 type TargetKind string
@@ -1545,7 +1751,7 @@ const (
 type DiscussionMessageDisposition string
 
 const (
-	Withdrawn DiscussionMessageDisposition = "withdrawn"
+	DispositionWithdrawn DiscussionMessageDisposition = "withdrawn"
 )
 
 type InstructionFile string
@@ -1633,10 +1839,10 @@ const (
 type OperationState string
 
 const (
+	FluffyAdmitted  OperationState = "admitted"
 	PurpleCancelled OperationState = "cancelled"
-	Recovery        OperationState = "recovery"
-	StateAdmitted   OperationState = "admitted"
-	Succeeded       OperationState = "succeeded"
+	PurpleRecovery  OperationState = "recovery"
+	PurpleSucceeded OperationState = "succeeded"
 )
 
 type FailureKind string
@@ -1683,9 +1889,9 @@ const (
 type TaskProposalAction string
 
 const (
-	AcceptDelivery             TaskProposalAction = "accept_delivery"
-	ApplyRework                TaskProposalAction = "apply_rework"
-	ApplySpecificationRevision TaskProposalAction = "apply_specification_revision"
+	AcceptDelivery                               TaskProposalAction = "accept_delivery"
+	ApplyRework                                  TaskProposalAction = "apply_rework"
+	TaskProposalActionApplySpecificationRevision TaskProposalAction = "apply_specification_revision"
 )
 
 type OwnerCommandName string
@@ -1712,9 +1918,9 @@ const (
 type OwnerCommandResultStatus string
 
 const (
-	FluffyAdmitted  OwnerCommandResultStatus = "admitted"
-	FluffyCommitted OwnerCommandResultStatus = "committed"
-	FluffyUnknown   OwnerCommandResultStatus = "unknown"
+	FluffyCommitted   OwnerCommandResultStatus = "committed"
+	FluffyUnknown     OwnerCommandResultStatus = "unknown"
+	TentacledAdmitted OwnerCommandResultStatus = "admitted"
 )
 
 type ConfigurationCommandName string
@@ -1768,7 +1974,7 @@ const (
 	Failed             AttemptStatusState = "FAILED"
 	FluffyRUNNING      AttemptStatusState = "RUNNING"
 	Queued             AttemptStatusState = "QUEUED"
-	StateSUCCEEDED     AttemptStatusState = "SUCCEEDED"
+	Succeeded          AttemptStatusState = "SUCCEEDED"
 	TentacledCANCELLED AttemptStatusState = "CANCELLED"
 )
 
@@ -1992,10 +2198,10 @@ const (
 	FluffyProcessing  TaskPlanningStatusStatus = "processing"
 	FluffyQueued      TaskPlanningStatusStatus = "queued"
 	FluffySettling    TaskPlanningStatusStatus = "settling"
+	IndigoCancelled   TaskPlanningStatusStatus = "cancelled"
 	NotStarted        TaskPlanningStatusStatus = "not_started"
-	Pending           TaskPlanningStatusStatus = "pending"
-	Published         TaskPlanningStatusStatus = "published"
-	StatusCancelled   TaskPlanningStatusStatus = "cancelled"
+	PurplePending     TaskPlanningStatusStatus = "pending"
+	PurplePublished   TaskPlanningStatusStatus = "published"
 	StatusIssue       TaskPlanningStatusStatus = "issue"
 	StatusUnavailable TaskPlanningStatusStatus = "unavailable"
 	Stopped           TaskPlanningStatusStatus = "stopped"
@@ -2018,11 +2224,11 @@ const (
 type NodeExecutionStatusState string
 
 const (
-	FluffyBLOCKED    NodeExecutionStatusState = "BLOCKED"
-	FluffyCOMPLETED  NodeExecutionStatusState = "COMPLETED"
-	IndigoCANCELLED  NodeExecutionStatusState = "CANCELLED"
-	StatePENDING     NodeExecutionStatusState = "PENDING"
-	TentacledRUNNING NodeExecutionStatusState = "RUNNING"
+	FluffyBLOCKED     NodeExecutionStatusState = "BLOCKED"
+	FluffyCOMPLETED   NodeExecutionStatusState = "COMPLETED"
+	IndecentCANCELLED NodeExecutionStatusState = "CANCELLED"
+	Pending           NodeExecutionStatusState = "PENDING"
+	TentacledRUNNING  NodeExecutionStatusState = "RUNNING"
 )
 
 type TaskConversationCommandName string
@@ -2056,4 +2262,44 @@ const (
 	IncludedInLaunch LaunchStatus = "included_in_launch"
 	IncludedInSource LaunchStatus = "included_in_source"
 	LaunchStarted    LaunchStatus = "launch_started"
+)
+
+type TaskSpecificationCommandName string
+
+const (
+	ConfirmSpecification             TaskSpecificationCommandName = "confirm_specification"
+	DeferSpecificationInputs         TaskSpecificationCommandName = "defer_specification_inputs"
+	EditSpecification                TaskSpecificationCommandName = "edit_specification"
+	FluffyApplySpecificationRevision TaskSpecificationCommandName = "apply_specification_revision"
+	RetrySpecification               TaskSpecificationCommandName = "retry_specification"
+	WithdrawSpecification            TaskSpecificationCommandName = "withdraw_specification"
+)
+
+type RequirementChangeSummaryStatus string
+
+const (
+	AmbitiousCancelled RequirementChangeSummaryStatus = "cancelled"
+	FluffyWithdrawn    RequirementChangeSummaryStatus = "withdrawn"
+	TentacledPublished RequirementChangeSummaryStatus = "published"
+	TentacledSettling  RequirementChangeSummaryStatus = "settling"
+	Withdrawing        RequirementChangeSummaryStatus = "withdrawing"
+)
+
+type RequirementProposalSummaryStatus string
+
+const (
+	FluffyPending      RequirementProposalSummaryStatus = "pending"
+	FluffyPublished    RequirementProposalSummaryStatus = "published"
+	HilariousCancelled RequirementProposalSummaryStatus = "cancelled"
+	PurpleWithdrawn    RequirementProposalSummaryStatus = "withdrawn"
+)
+
+type RequirementChangeEffectState string
+
+const (
+	CunningCancelled RequirementChangeEffectState = "cancelled"
+	FluffyRecovery   RequirementChangeEffectState = "recovery"
+	FluffySucceeded  RequirementChangeEffectState = "succeeded"
+	Running          RequirementChangeEffectState = "running"
+	StickyAdmitted   RequirementChangeEffectState = "admitted"
 )

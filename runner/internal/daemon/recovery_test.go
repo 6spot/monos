@@ -39,7 +39,7 @@ func recoveryFixture(t *testing.T, suffix string, kind protocol.OperationKind) (
 	if kind == protocol.KindOpenWorkspace {
 		id = w.OpenOperationID
 	}
-	op := protocol.Operation{SchemaVersion: 1, OperationID: id, RequestID: "request-" + suffix, AttemptID: dispatch.AttemptID, DispatchID: dispatch.DispatchID, Kind: kind, State: protocol.Recovery, Workspace: &w, WorkspaceDigest: &digest, ResourceID: &resource}
+	op := protocol.Operation{SchemaVersion: 1, OperationID: id, RequestID: "request-" + suffix, AttemptID: dispatch.AttemptID, DispatchID: dispatch.DispatchID, Kind: kind, State: protocol.PurpleRecovery, Workspace: &w, WorkspaceDigest: &digest, ResourceID: &resource}
 	return dispatch, op
 }
 
@@ -49,7 +49,7 @@ func retainRecovery(t *testing.T, db *journal.DB, dispatch protocol.Dispatch, op
 		t.Fatal(err)
 	}
 	admitted := op
-	admitted.State = protocol.StateAdmitted
+	admitted.State = protocol.FluffyAdmitted
 	if err := db.BeginEffect(admitted); err != nil {
 		t.Fatal(err)
 	}

@@ -31,7 +31,7 @@ func TestOnlyTypedCaptureFailureIsBlocking(t *testing.T) {
 				t.Fatal(err)
 			}
 			daemon := Daemon{DB: db, Host: &fakeSupervisor{Err: test.err}, Control: &control.Client{}}
-			_ = daemon.effect(context.Background(), protocol.Operation{SchemaVersion: 1, OperationID: "o", AttemptID: "a", DispatchID: "d", RequestID: "r", Kind: protocol.KindCompleteNode, ResourceID: ptr("repo"), State: protocol.StateAdmitted})
+			_ = daemon.effect(context.Background(), protocol.Operation{SchemaVersion: 1, OperationID: "o", AttemptID: "a", DispatchID: "d", RequestID: "r", Kind: protocol.KindCompleteNode, ResourceID: ptr("repo"), State: protocol.FluffyAdmitted})
 			result, err := db.Effect("o")
 			if err != nil || result == nil || result.Success || result.FailureKind == nil || *result.FailureKind != test.kind {
 				t.Fatalf("classification %+v %v", result, err)

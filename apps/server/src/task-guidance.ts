@@ -1,3 +1,4 @@
+import { specificationFrozen } from './task-specification-state.ts';
 import { randomUUID } from 'node:crypto';
 import type { Transaction } from '../../../packages/db/src/index.ts';
 import { CommandError } from '../../../packages/domain/src/commands.ts';
@@ -188,6 +189,7 @@ export async function routeTaskInput(
     );
   if (['COMPLETED', 'CANCELLED'].includes(task.state) || task.accepted_delivery_operation_id)
     throw new CommandError('denied_scope', 'Task is conversation-only');
+  if(await specificationFrozen(tx,task.id) && !['issue','answer'].includes(routing.kind))throw new CommandError('unmet_precondition','Requirement settlement requires refreshed guidance assessment');
   const text = routing.text!;
   if (!text.trim() || Buffer.byteLength(text) > 262144)
     throw new CommandError('invalid_input', 'Action text must be nonblank and bounded');
@@ -318,6 +320,7 @@ export async function advanceGuidanceFollowup(
   node: ExecutionNode,
   configurationVersion: number,
 ): Promise<void> {
+  if(await specificationFrozen(tx,task.id))return;
   const pending = (
     await tx.query(
       "SELECT f.* FROM task_guidance_followups f WHERE f.task_id=$1 AND f.node_id=$2 AND f.status='waiting' ORDER BY f.obligation_id FOR UPDATE",
@@ -412,12 +415,14 @@ export async function taskInputGuards(tx: Transaction, taskId: string): Promise<
     return [];
   return (
     await tx.query<{ id: string }>(
-      `SELECT id FROM task_inputs WHERE task_id=$1 AND status IN ('pending','failed') AND accepted_delivery_operation_id IS NULL UNION SELECT id FROM task_input_issues WHERE task_id=$1 AND status='open' UNION SELECT g.id FROM task_guidance g WHERE g.task_id=$1 AND g.status='active' AND (NOT EXISTS(SELECT 1 FROM task_guidance_obligations o WHERE o.guidance_id=g.id) OR EXISTS(SELECT 1 FROM task_guidance_obligations o WHERE o.guidance_id=g.id AND o.status='pending')) ORDER BY id LIMIT 257`,
+      `SELECT id FROM task_inputs WHERE task_id=$1 AND status IN ('pending','failed') AND accepted_delivery_operation_id IS NULL UNION SELECT id FROM requirement_obligations WHERE task_id=$1 AND status='pending' AND current_proposal_id IS NOT NULL UNION SELECT id FROM task_input_issues WHERE task_id=$1 AND status='open' UNION SELECT g.id FROM task_guidance g WHERE g.task_id=$1 AND g.status='active' AND (NOT EXISTS(SELECT 1 FROM task_guidance_obligations o WHERE o.guidance_id=g.id) OR EXISTS(SELECT 1 FROM task_guidance_obligations o WHERE o.guidance_id=g.id AND o.status='pending')) ORDER BY id LIMIT 257`,
       [taskId],
     )
   ).rows.map((r) => r.id);
 }
 export async function cancelTaskInputEffects(tx: Transaction, taskId: string): Promise<void> {
+  await tx.query("UPDATE requirement_changes SET status='withdrawing',version=version+1 WHERE task_id=$1 AND status='settling'",[taskId]);
+  await tx.query("UPDATE requirement_obligations SET status='cancelled',version=version+1 WHERE task_id=$1 AND status='pending'",[taskId]);
   await tx.query(
     "UPDATE task_guidance SET status='cancelled',version=version+1 WHERE task_id=$1 AND status='active'",
     [taskId],

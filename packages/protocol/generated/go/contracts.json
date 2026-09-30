@@ -50,7 +50,9 @@
             "read_artifact",
             "block_node",
             "read_task_context",
-            "read_task_history"
+            "read_task_history",
+            "prepare_specification_revision",
+            "apply_specification_revision"
           ]
         },
         "scope_id": {
@@ -521,6 +523,42 @@
               }
             }
           }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "const": "prepare_specification_revision"
+              }
+            }
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "payload": {
+                "$ref": "#/definitions/PrepareSpecificationRevision"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "const": "apply_specification_revision"
+              }
+            }
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "payload": {
+                "$ref": "#/definitions/ApplySpecificationRevision"
+              }
+            }
+          }
         }
       ]
     },
@@ -635,6 +673,32 @@
           "type": "string",
           "maxLength": 256,
           "pattern": "^[^\\x00]*$"
+        },
+        "proposal_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "specification": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 65536,
+          "pattern": "^[^\\x00]*$"
+        },
+        "basis": {
+          "$ref": "#/definitions/TaskActionBasis"
+        },
+        "impact": {
+          "$ref": "#/definitions/SpecificationImpact"
+        },
+        "source_input_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Id"
+          },
+          "maxItems": 256,
+          "uniqueItems": true
+        },
+        "confirmation_id": {
+          "$ref": "#/definitions/Id"
         }
       }
     },
@@ -778,6 +842,16 @@
           "$ref": "#/definitions/Id"
         },
         "obligation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "proposal_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "content_digest": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "requirement_operation_id": {
           "$ref": "#/definitions/Id"
         }
       }
@@ -7381,7 +7455,8 @@
             "guidance",
             "issue",
             "answer",
-            "resolve_guidance"
+            "resolve_guidance",
+            "specification_proposal"
           ]
         },
         "basis": {
@@ -7414,6 +7489,9 @@
           "$ref": "#/definitions/Counter"
         },
         "supersedes": {
+          "$ref": "#/definitions/Id"
+        },
+        "proposal_id": {
           "$ref": "#/definitions/Id"
         }
       },
@@ -7555,6 +7633,29 @@
               "text",
               "operation_id",
               "expected_version"
+            ]
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "const": "specification_proposal"
+              }
+            }
+          },
+          "then": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "kind": {},
+              "basis": {},
+              "proposal_id": {}
+            },
+            "required": [
+              "basis",
+              "proposal_id"
             ]
           }
         }
@@ -8166,6 +8267,1061 @@
         "acceptance_guards",
         "acceptance_guards_has_more",
         "available_actions"
+      ]
+    },
+    "SpecificationImpactNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "node_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "node_activation": {
+          "$ref": "#/definitions/Counter"
+        },
+        "source_id": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "completion_operation_id": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "completion_manifest_digest": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "disposition": {
+          "enum": [
+            "refresh",
+            "invalidate",
+            "carry"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "node_id",
+        "node_activation",
+        "source_id",
+        "completion_operation_id",
+        "completion_manifest_digest",
+        "disposition"
+      ]
+    },
+    "SpecificationImpact": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "graph_sufficient": {
+          "type": "boolean",
+          "const": true
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SpecificationImpactNode"
+          },
+          "maxItems": 1,
+          "uniqueItems": true
+        },
+        "guidance": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "guidance_id": {
+                "$ref": "#/definitions/Id"
+              },
+              "version": {
+                "$ref": "#/definitions/Counter"
+              },
+              "disposition": {
+                "type": "string",
+                "enum": [
+                  "retain",
+                  "supersede"
+                ]
+              }
+            },
+            "required": [
+              "guidance_id",
+              "version",
+              "disposition"
+            ]
+          },
+          "maxItems": 256,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "graph_sufficient",
+        "nodes",
+        "guidance"
+      ]
+    },
+    "PrepareSpecificationRevision": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "proposal_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "specification": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 65536,
+          "pattern": "^[^\\x00]*$"
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "basis": {
+          "$ref": "#/definitions/TaskActionBasis"
+        },
+        "impact": {
+          "$ref": "#/definitions/SpecificationImpact"
+        },
+        "source_input_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Id"
+          },
+          "maxItems": 256,
+          "uniqueItems": true
+        },
+        "supersedes": {
+          "$ref": "#/definitions/Id"
+        }
+      },
+      "required": [
+        "proposal_id",
+        "specification",
+        "summary",
+        "basis",
+        "impact",
+        "source_input_ids"
+      ]
+    },
+    "ApplySpecificationRevision": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "proposal_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "confirmation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "basis": {
+          "$ref": "#/definitions/TaskActionBasis"
+        }
+      },
+      "required": [
+        "proposal_id",
+        "confirmation_id",
+        "basis"
+      ]
+    },
+    "TaskSpecificationCommand": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "request_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "task_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "name": {
+          "type": "string",
+          "enum": [
+            "edit_specification",
+            "confirm_specification",
+            "apply_specification_revision",
+            "withdraw_specification",
+            "retry_specification",
+            "defer_specification_inputs"
+          ]
+        },
+        "payload": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "schema_version",
+        "request_id",
+        "task_id",
+        "name",
+        "payload"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "const": "edit_specification"
+              }
+            }
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "payload": {
+                "$ref": "#/definitions/PrepareSpecificationRevision"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "const": "confirm_specification"
+              }
+            }
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "payload": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "proposal_id": {
+                    "$ref": "#/definitions/Id"
+                  },
+                  "content_digest": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  }
+                },
+                "required": [
+                  "proposal_id",
+                  "content_digest"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "const": "apply_specification_revision"
+              }
+            }
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "payload": {
+                "$ref": "#/definitions/ApplySpecificationRevision"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "const": "withdraw_specification"
+              }
+            }
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "payload": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "proposal_id": {
+                    "$ref": "#/definitions/Id"
+                  },
+                  "expected_version": {
+                    "$ref": "#/definitions/Counter"
+                  }
+                },
+                "required": [
+                  "proposal_id",
+                  "expected_version"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "const": "retry_specification"
+              }
+            }
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "payload": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "operation_id": {
+                    "$ref": "#/definitions/Id"
+                  },
+                  "expected_version": {
+                    "$ref": "#/definitions/Counter"
+                  }
+                },
+                "required": [
+                  "operation_id",
+                  "expected_version"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "const": "defer_specification_inputs"
+              }
+            }
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "payload": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "proposal_id": {
+                    "$ref": "#/definitions/Id"
+                  },
+                  "inputs": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "input_id": {
+                          "$ref": "#/definitions/Id"
+                        },
+                        "version": {
+                          "$ref": "#/definitions/Counter"
+                        }
+                      },
+                      "required": [
+                        "input_id",
+                        "version"
+                      ]
+                    },
+                    "maxItems": 256,
+                    "uniqueItems": true
+                  }
+                },
+                "required": [
+                  "proposal_id",
+                  "inputs"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "TaskSpecificationResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "request_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "committed",
+            "admitted",
+            "unknown"
+          ]
+        },
+        "proposal_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "content_digest": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "confirmation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "operation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "specification_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "version": {
+          "$ref": "#/definitions/Counter"
+        }
+      },
+      "required": [
+        "schema_version",
+        "request_id",
+        "status"
+      ]
+    },
+    "RequirementProposalSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "proposal_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "obligation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "summary": {
+          "type": "string",
+          "maxLength": 4096
+        },
+        "content_digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "base_specification_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "pending",
+            "published",
+            "withdrawn",
+            "cancelled"
+          ]
+        },
+        "version": {
+          "$ref": "#/definitions/Counter"
+        },
+        "current": {
+          "type": "boolean"
+        },
+        "attached": {
+          "type": "boolean"
+        },
+        "revoked": {
+          "type": "boolean"
+        },
+        "expired": {
+          "type": "boolean"
+        },
+        "expires_at": {
+          "type": "string",
+          "maxLength": 64
+        }
+      },
+      "required": [
+        "proposal_id",
+        "obligation_id",
+        "summary",
+        "content_digest",
+        "base_specification_id",
+        "status",
+        "version",
+        "current",
+        "attached",
+        "revoked",
+        "expired",
+        "expires_at"
+      ]
+    },
+    "RequirementChangeSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "operation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "proposal_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "settling",
+            "withdrawing",
+            "published",
+            "withdrawn",
+            "cancelled"
+          ]
+        },
+        "version": {
+          "$ref": "#/definitions/Counter"
+        },
+        "specification_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "attention": {
+          "oneOf": [
+            {
+              "type": "string",
+              "maxLength": 4096
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "operation_id",
+        "proposal_id",
+        "status",
+        "version",
+        "specification_id",
+        "attention"
+      ]
+    },
+    "TaskSpecificationStatus": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "task_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "basis": {
+          "$ref": "#/definitions/TaskActionBasis"
+        },
+        "impact": {
+          "$ref": "#/definitions/SpecificationImpact"
+        },
+        "proposals": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/RequirementProposalSummary"
+          },
+          "maxItems": 64
+        },
+        "proposals_has_more": {
+          "type": "boolean"
+        },
+        "changes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/RequirementChangeSummary"
+          },
+          "maxItems": 64
+        },
+        "changes_has_more": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "schema_version",
+        "task_id",
+        "basis",
+        "impact",
+        "proposals",
+        "proposals_has_more",
+        "changes",
+        "changes_has_more"
+      ]
+    },
+    "RequirementProposalDetail": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "task_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "proposal": {
+          "$ref": "#/definitions/RequirementProposalSummary"
+        },
+        "specification": {
+          "type": "string",
+          "maxLength": 65536
+        },
+        "specification_digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "impact": {
+          "$ref": "#/definitions/SpecificationImpact"
+        },
+        "impact_digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "basis": {
+          "$ref": "#/definitions/TaskActionBasis"
+        },
+        "source_id": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "input_id": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_input_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Id"
+          },
+          "maxItems": 256
+        },
+        "input_cutoff": {
+          "$ref": "#/definitions/Counter"
+        },
+        "predecessor_id": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "confirmation_id": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "operation": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/RequirementChangeSummary"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schema_version",
+        "task_id",
+        "proposal",
+        "specification",
+        "specification_digest",
+        "impact",
+        "impact_digest",
+        "basis",
+        "source_id",
+        "input_id",
+        "source_input_ids",
+        "input_cutoff",
+        "predecessor_id",
+        "confirmation_id",
+        "operation"
+      ]
+    },
+    "SpecificationHistoryQuery": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "cursor": {
+          "$ref": "#/definitions/Id"
+        }
+      }
+    },
+    "RequirementHistoryPage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "task_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "proposals": {
+          "type": "array",
+          "maxItems": 32,
+          "items": {
+            "$ref": "#/definitions/RequirementProposalSummary"
+          }
+        },
+        "next_cursor": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schema_version",
+        "task_id",
+        "proposals",
+        "next_cursor"
+      ]
+    },
+    "SpecificationRevisionSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "specification_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "parent_id": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "content_digest": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "authorization_id": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "change_id": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "specification_id",
+        "parent_id",
+        "content_digest",
+        "authorization_id",
+        "change_id"
+      ]
+    },
+    "SpecificationRevisionPage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "task_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "revisions": {
+          "type": "array",
+          "maxItems": 32,
+          "items": {
+            "$ref": "#/definitions/SpecificationRevisionSummary"
+          }
+        },
+        "next_cursor": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schema_version",
+        "task_id",
+        "revisions",
+        "next_cursor"
+      ]
+    },
+    "SpecificationRevisionDetail": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "task_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "revision": {
+          "$ref": "#/definitions/SpecificationRevisionSummary"
+        },
+        "content_json": {
+          "type": "string",
+          "maxLength": 1048576
+        },
+        "applicability": {
+          "type": "array",
+          "maxItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "node_id": {
+                "$ref": "#/definitions/Id"
+              },
+              "node_activation": {
+                "$ref": "#/definitions/Counter"
+              },
+              "plan_id": {
+                "$ref": "#/definitions/Id"
+              },
+              "parent_id": {
+                "$ref": "#/definitions/Id"
+              },
+              "disposition": {
+                "type": "string",
+                "enum": [
+                  "refresh",
+                  "carry",
+                  "invalidate"
+                ]
+              },
+              "completion_operation_id": {
+                "oneOf": [
+                  {
+                    "$ref": "#/definitions/Id"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "completion_manifest_digest": {
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "node_id",
+              "node_activation",
+              "plan_id",
+              "parent_id",
+              "disposition",
+              "completion_operation_id",
+              "completion_manifest_digest"
+            ]
+          }
+        }
+      },
+      "required": [
+        "schema_version",
+        "task_id",
+        "revision",
+        "content_json",
+        "applicability"
+      ]
+    },
+    "RequirementChangeEffect": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "operation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "attempt_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "open_workspace",
+            "inspect_repository",
+            "complete_node",
+            "stop",
+            "settle_completion"
+          ]
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "admitted",
+            "running",
+            "succeeded",
+            "cancelled",
+            "recovery"
+          ]
+        },
+        "failure_kind": {
+          "oneOf": [
+            {
+              "type": "string",
+              "maxLength": 128
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "process_released": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "operation_id",
+        "attempt_id",
+        "kind",
+        "state",
+        "failure_kind",
+        "process_released"
+      ]
+    },
+    "RequirementChangeDetail": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "task_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "operation": {
+          "$ref": "#/definitions/RequirementChangeSummary"
+        },
+        "effects": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/definitions/RequirementChangeEffect"
+          }
+        },
+        "next_cursor": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "attempts": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "attempt_id": {
+                "$ref": "#/definitions/Id"
+              },
+              "process_released": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "attempt_id",
+              "process_released"
+            ]
+          }
+        },
+        "attempts_has_more": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "schema_version",
+        "task_id",
+        "operation",
+        "effects",
+        "next_cursor",
+        "attempts",
+        "attempts_has_more"
       ]
     }
   }

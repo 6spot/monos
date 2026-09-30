@@ -1,3 +1,4 @@
+import { assertSpecificationUnfrozen } from './task-specification-state.ts';
 import { randomUUID } from 'node:crypto';
 import { transaction } from '../../../packages/db/src/index.ts';
 import type { Database, Transaction } from '../../../packages/db/src/index.ts';
@@ -48,6 +49,7 @@ export class DispatchQueue {
     if (!runner.rowCount) throw new CommandError('denied_scope', 'Unknown Runner');
     const task = (await tx.query<{ state: string; control_version: string; specification_id: string; plan_id: string | null; project_id: string | null }>('SELECT state,control_version,specification_id,plan_id,project_id FROM tasks WHERE id=$1 FOR UPDATE', [input.task_id])).rows[0];
     if (!task) throw new CommandError('denied_scope', 'Unknown Task');
+    if(!input.task_conversation_source)await assertSpecificationUnfrozen(tx,input.task_id);
     if (input.task_conversation_source) {
       if(input.kind!=='planner'||input.legacy_probe||input.node_id||input.resource_id||input.task_planning_source||input.node_execution_source)throw new CommandError('denied_scope','Conversation source requires scratch-only Planner');
       await assertConversationSource(tx,input.task_id,input.task_conversation_source,input.attempt_id,input.prompt);
@@ -180,6 +182,7 @@ export class DispatchQueue {
               await assertPlanningSource(tx, row.task_id!, row.launch.task_planning_source, row.id, row.launch.prompt);
             } catch (error) { if (!(error instanceof CommandError)) throw error; current = false; }
           }
+          if(current && row.task_id && !row.launch.task_conversation_source){try{await assertSpecificationUnfrozen(tx,row.task_id);}catch(error){if(!(error instanceof CommandError))throw error;current=false;}}
           if(current && row.launch.node_execution_source) {try { await assertNodeSource(tx,row.task_id!,row.launch.node_execution_source,row.id,row.launch.prompt); } catch(error){if(!(error instanceof CommandError))throw error;current=false;} }
           if (current && row.node_id) {
             try { current = (await assertCurrentNode(tx, { task_id: row.task_id!, node_id: row.node_id, node_activation: row.launch.node_activation })).state === (row.launch.node_execution_source ? 'RUNNING' : 'PENDING') && await this.dependenciesReady(tx, row.plan_id!, row.node_id); }

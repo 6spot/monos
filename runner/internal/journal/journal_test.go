@@ -27,7 +27,7 @@ func openTest(t *testing.T) *DB {
 func TestOperationReplayComparesResourceValuesAndAbsence(t *testing.T) {
 	for _, resource := range []*string{nil, testString("repo")} {
 		db := openTest(t)
-		op := protocol.Operation{OperationID: "op", AttemptID: "attempt", DispatchID: "dispatch", Kind: protocol.Stop, RequestID: "request", ResourceID: resource, SchemaVersion: 1, State: protocol.StateAdmitted}
+		op := protocol.Operation{OperationID: "op", AttemptID: "attempt", DispatchID: "dispatch", Kind: protocol.Stop, RequestID: "request", ResourceID: resource, SchemaVersion: 1, State: protocol.FluffyAdmitted}
 		if err := db.BeginEffect(op); err != nil {
 			t.Fatal(err)
 		}

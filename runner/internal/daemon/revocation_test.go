@@ -13,7 +13,7 @@ import (
 
 func revokedInventory() (protocol.Operation, protocol.RunnerInventory) {
 	dispatch := protocol.Dispatch{AttemptID: "a", DispatchID: "d", RunnerID: "runner", TaskID: ptr("task"), ResourceID: ptr("repo"), Kind: protocol.Node, RuntimeID: protocol.Opencode, Model: protocol.OpencodeMIMOV26FlashFree, MutationAllowed: false}
-	op := protocol.Operation{SchemaVersion: 1, OperationID: "stop-a", AttemptID: "a", DispatchID: "d", RequestID: "r", ResourceID: ptr("repo"), Kind: protocol.Stop, State: protocol.StateAdmitted}
+	op := protocol.Operation{SchemaVersion: 1, OperationID: "stop-a", AttemptID: "a", DispatchID: "d", RequestID: "r", ResourceID: ptr("repo"), Kind: protocol.Stop, State: protocol.FluffyAdmitted}
 	return op, protocol.RunnerInventory{SchemaVersion: 1, SnapshotID: "snapshot", Dispatches: []protocol.Dispatch{dispatch}, Operations: []protocol.Operation{op}}
 }
 func TestNeverDeliveredRevokeWritesTombstoneBeforeStopAndRejectsLateStart(t *testing.T) {

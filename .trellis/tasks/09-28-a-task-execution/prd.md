@@ -28,7 +28,7 @@ Execute in order; each leaf has an independent API/Runner or browser acceptance:
 1. [Authorized Project repositories and serial Task workspaces](../archive/2026-09/09-30-a-serial-workspaces/prd.md).
 2. [Explicit Task Start and initial planning](../archive/2026-09/09-30-a-task-start-planning/prd.md).
 3. [Single-Node execution, artifacts and recovery](../archive/2026-09/09-30-a-node-execution/prd.md).
-4. [Ordered Task Conversation and guidance](../09-30-a-task-conversation/prd.md).
+4. [Ordered Task Conversation and guidance](../archive/2026-09/09-30-a-task-conversation/prd.md).
 5. [Exact Specification changes and settlement](../09-30-a-specification-changes/prd.md).
 6. [One-Node replacement Plan and Replan exits](../09-30-a-single-node-replan/prd.md).
 7. [Execution Board and Task control UI](../09-30-a-execution-ui/prd.md).

@@ -1,3 +1,4 @@
+import { specificationFrozen } from './task-specification-state.ts';
 import { handleTaskConversation } from './task-conversation-state.ts';
 import { lockConfiguration } from './configuration-guards.ts';
 import { randomUUID } from 'node:crypto';
@@ -32,7 +33,7 @@ export interface AttemptRow {
   mutation_allowed: boolean; process_released: boolean; process_absent: boolean; started: boolean; exit_observed: boolean; launch: Dispatch;
   state: 'QUEUED' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'CANCELLED';
 }
-export interface OperationRow extends WorkspaceOperation { repository_free:boolean|null; completion_manifest_digest:string|null; completion_operation_id:string|null; completion_identity_digest:string|null; completion_settlement:OperationResult['completion_settlement']|null; settlement_purpose:'correct'|'cancel_task'|null; schema_version: number; resource_id: string | null; failure_kind: OperationResult['failure_kind'] | null }
+export interface OperationRow extends WorkspaceOperation { repository_free:boolean|null; completion_manifest_digest:string|null; completion_operation_id:string|null; completion_identity_digest:string|null; completion_settlement:OperationResult['completion_settlement']|null; settlement_purpose:'correct'|'cancel_task'|'specification_change'|null; schema_version: number; resource_id: string | null; failure_kind: OperationResult['failure_kind'] | null }
 interface ReceiptRow { digest: string; command_name: string; response: CommandResult; operation_id: string | null }
 interface Locked { runner: RunnerRow; task: TaskRow | null; discussion: DiscussionControl | null; attempt: AttemptRow }
 
@@ -219,7 +220,13 @@ export class BoundaryService {
     const { envelope: command, submission } = request;
     const result = await transaction(this.db, async (tx) => {
       await lockConfiguration(tx);
+      // Specification apply may settle every Task execution owner. Discover and
+      // lock the complete Runner set before taking any Task lock.
+      const applyTask=command.name==='apply_specification_revision'?(await tx.query<{task_id:string}>('SELECT task_id FROM attempts WHERE id=$1',[identity.attempt_id])).rows[0]?.task_id:undefined;
+      const applyRunners=applyTask?(await tx.query<{runner_id:string}>('SELECT DISTINCT runner_id FROM attempts WHERE task_id=$1 ORDER BY runner_id',[applyTask])).rows:[];
+      for(const r of applyRunners)await tx.query('SELECT id FROM runners WHERE id=$1 FOR UPDATE',[r.runner_id]);
       const { runner, task, discussion, attempt } = await lockAttempt(tx, identity.attempt_id);
+      if(applyTask&&canonicalJSON(applyRunners)!==canonicalJSON((await tx.query('SELECT DISTINCT runner_id FROM attempts WHERE task_id=$1 ORDER BY runner_id',[applyTask])).rows))throw new CommandError('control_unavailable','Runner ownership changed; retry exact request');
       checkIdentity(attempt, identity);
       if (command.scope_id !== (attempt.todo_id ?? attempt.task_id)) throw new CommandError('denied_scope', 'Command belongs to another scope');
       const receipt = (await tx.query<ReceiptRow>('SELECT * FROM command_receipts WHERE attempt_id=$1 AND scope_id=$2 AND request_id=$3', [attempt.id, command.scope_id, command.request_id])).rows[0];
@@ -526,7 +533,7 @@ export class BoundaryService {
       } else {
         if (message.result.writer_absent === true) await tx.query('UPDATE attempts SET process_absent=true WHERE id=$1', [attempt.id]);
         await tx.query("UPDATE operations SET state='recovery',result=$2,failure_kind=CASE WHEN failure_kind IN ('capture_hard_limit','invalid_finalization') THEN failure_kind ELSE COALESCE($3,failure_kind) END WHERE id=$1", [operation.id, message.result, message.failure_kind ?? null]);
-        if (captureBlocked && (await tx.query("SELECT 1 FROM tasks WHERE id=$1 AND state IN ('RUNNING','BLOCKED')",[attempt.task_id])).rowCount) {
+        if (captureBlocked && !(await specificationFrozen(tx,attempt.task_id!)) && (await tx.query("SELECT 1 FROM tasks WHERE id=$1 AND state IN ('RUNNING','BLOCKED')",[attempt.task_id])).rowCount) {
           const node = (await tx.query<{ activation: string; state: string }>('SELECT activation,state FROM nodes WHERE id=$1 FOR UPDATE', [attempt.node_id])).rows[0];
           if (!node || Number(node.activation) !== Number(attempt.node_activation) || !['RUNNING', 'BLOCKED'].includes(node.state) || attempt.process_released) throw new CommandError('stale_execution', 'Capture failure activation is no longer current');
           if (node.state === 'RUNNING') {

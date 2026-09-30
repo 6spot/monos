@@ -1,3 +1,4 @@
+import { assertSpecificationUnfrozen } from './task-specification-state.ts';
 import { bindTaskGuidance } from './task-guidance.ts';
 import type { Transaction } from '../../../packages/db/src/index.ts';
 import { CommandError } from '../../../packages/domain/src/commands.ts';
@@ -64,6 +65,7 @@ export async function initializeTask(tx: Transaction, input: { task_id: string; 
 }
 
 export async function publishInitialPlan(tx: Transaction, input: { task_id: string; plan_id: string; expected: ControlBasis; nodes: PlanNode[]; claim: { attempt_id: string; fencing_generation: number } }): Promise<ControlBasis> {
+  await assertSpecificationUnfrozen(tx,input.task_id);
   validate('Id', input.plan_id); validatePlan(input.nodes);
   await lockConfiguration(tx);
   const identity = (await tx.query<{ runner_id: string }>('SELECT runner_id FROM attempts WHERE id=$1 AND task_id=$2', [input.claim.attempt_id, input.task_id])).rows[0];
@@ -89,6 +91,8 @@ export async function publishInitialPlan(tx: Transaction, input: { task_id: stri
 
 export async function publishPlanningSpecification(tx: Transaction, token: string, input: { task_id: string; specification_id: string; specification: unknown; confirmation_id: string; request_id: string; expected: ControlBasis }): Promise<ControlBasis> {
   validate('Id', input.specification_id);
+  if((await tx.query('SELECT 1 FROM authorization_receipts a JOIN requirement_proposals p ON p.id=a.proposal_id WHERE a.id=$1',[input.confirmation_id])).rowCount)throw new CommandError('denied_scope','Requirement authorization requires its settlement operation');
+  await assertSpecificationUnfrozen(tx,input.task_id);
   const json = contentJSON(input.specification);
   // Authentication/session locking must precede the Task lock.
   await consumeTaskConfirmation(tx, token, input.confirmation_id, input.request_id, { scope_id: input.task_id, action: 'apply_specification_revision', content_digest: digest(json) });
@@ -105,7 +109,7 @@ export async function assertCurrentNode(tx: Transaction, input: { task_id: strin
     JOIN plan_nodes pn ON pn.plan_id=t.plan_id AND pn.node_id=n.id
     JOIN node_activations a ON a.node_id=n.id AND a.activation=n.activation
     WHERE n.id=$1 AND n.task_id=$2 AND n.activation=$3
-      AND a.specification_id=t.specification_id AND a.plan_id=t.plan_id`, [input.node_id, input.task_id, input.node_activation])).rows[0];
+      AND (a.specification_id=t.specification_id OR EXISTS(SELECT 1 FROM specification_node_applicability sa JOIN requirement_publications rp ON rp.change_id=sa.change_id WHERE sa.node_id=n.id AND sa.node_activation=n.activation AND sa.specification_id=t.specification_id AND sa.plan_id=t.plan_id AND sa.disposition IN ('refresh','carry'))) AND a.plan_id=t.plan_id`, [input.node_id, input.task_id, input.node_activation])).rows[0];
   if (!row) throw new CommandError('stale_execution', 'Node activation or effective revision membership is no longer current');
   return row;
 }

@@ -17,3 +17,7 @@ One versioned JSON Schema authority generates TS/Go transport types. Authenticat
 Canonical Task conversation adds its own source epoch and exact input watermark;
 execution action basis remains separate. Read [Task Conversation](../backend/task-conversation.md)
 before changing source scopes, reply routing or handled-guidance manifest fields.
+
+Exact prepare/apply payloads, Owner confirmation and settled requirement publication
+follow [Specification revisions](../backend/task-specification.md). Preparation and
+application are nonterminal; preserve the separate canonical reply contract.

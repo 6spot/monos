@@ -184,6 +184,7 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')(
         });
         const route = async (text: string) => {
           await x.send(text);
+          await x.service.touch(x.f.runner,x.f.incarnation,true);
           const turn = await x.turn();
           const receipt = await x.reply(turn, { kind: 'guidance', text, basis: await x.basis() });
           await x.finish(receipt.operation_id!, turn.dispatch.attempt_id);
@@ -320,6 +321,7 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')(
           mode === 'cancelled' ? '0' : '1',
         );
         await x.conversation.pump();
+        await x.service.touch(x.f.runner,x.f.incarnation,true);
         const next = await x.node();
         expect(next.dispatch.node_activation).toBe(mode === 'cancelled' ? 1 : 2);
         expect(next.dispatch.node_execution_source!.source_id).not.toBe(
@@ -525,6 +527,7 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')(
     it('keeps the ordered head recoverable when input summaries overflow and pages retain every target', async () => {
       const inputs: string[] = [];
       for (let i = 0; i < 65; i++) inputs.push((await x.send(`pending ${i}`)).input_id!);
+      await x.service.touch(x.f.runner,x.f.incarnation,true);
       const turn = await x.turn();
       const status = await x.conversation.status(x.token, x.f.task);
       expect(status.inputs).toHaveLength(64);

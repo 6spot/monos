@@ -1,3 +1,4 @@
+import { assertSpecificationUnfrozen } from './task-specification-state.ts';
 import { randomUUID } from 'node:crypto';
 import type { Transaction } from '../../../packages/db/src/index.ts';
 import { CommandError } from '../../../packages/domain/src/commands.ts';
@@ -47,7 +48,8 @@ const protocol = [
   'The server ends this Attempt after either committed outcome. Structural validation can be corrected within this same Attempt. On an uncertain response query or retry the exact same request ID. Natural-language output is provisional. CLI usage: monos COMMAND --request-id ID --input payload.json --output json (or --input - for stdin); monos command-status --request-id ID --output json; monos retry --request-id ID --output json.',
 ].join('\n');
 
-export async function createPlanningIntent(tx: Transaction, task: PlanningTask, requestId: string, configurationVersion: number): Promise<PlanningIntent> {
+export async function createPlanningIntent(tx: Transaction, task: PlanningTask, requestId: string, configurationVersion: number, changeId?: string): Promise<PlanningIntent> {
+  await assertSpecificationUnfrozen(tx,task.id);
   const id = randomUUID(); const attemptId = randomUUID(); const version = Number(task.control_version) + 1;
   const basis = { planning_intent_id: id, task_id: task.id, specification_id: task.specification_id, configuration_version: configurationVersion };
   // Account for all applicable answers before reading them. Budget failure is an
@@ -74,8 +76,8 @@ export async function createPlanningIntent(tx: Transaction, task: PlanningTask, 
   const failure = prompt === null ? 'context_budget_exceeded' : null;
   const hash = digest(prompt ?? canonicalJSON({ ...basis, preparation_failure: failure }));
   await tx.query(`INSERT INTO task_planning_outbox(id,task_id,previous_intent_id,owner_request_id,specification_id,expected_version,
-    planned_attempt_id,configuration_version,context,prompt,context_digest,preparation_failure,waiting_reason)
-    VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$12)`, [id, task.id, task.initial_planning_intent_id, requestId, task.specification_id, version, attemptId, configurationVersion, context, prompt, hash, failure]);
+    planned_attempt_id,configuration_version,context,prompt,context_digest,preparation_failure,waiting_reason,requirement_change_id)
+    VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$12,$13)`, [id, task.id, task.initial_planning_intent_id, changeId ? null : requestId, task.specification_id, version, attemptId, configurationVersion, context, prompt, hash, failure, changeId ?? null]);
   await tx.query("UPDATE tasks SET state='RUNNING',control_version=$2,initial_planning_intent_id=$3,planning_issue_sequence=NULL WHERE id=$1", [task.id, version, id]);
   return { id, task_id: task.id, specification_id: task.specification_id, expected_version: String(version), planned_attempt_id: attemptId, context_digest: hash, prompt, preparation_failure: failure, waiting_reason: failure, done: false };
 }
@@ -86,6 +88,7 @@ export function planningSource(intent: PlanningIntent): TaskPlanningSource {
 // Caller holds configuration/Runner/Task locks as applicable before this source
 // guard. `done` only means selection was consumed; it is not semantic resolution.
 export async function assertPlanningSource(tx: Transaction, taskId: string, source: TaskPlanningSource, attemptId: string, prompt?: string): Promise<PlanningIntent> {
+  await assertSpecificationUnfrozen(tx,taskId);
   const row = (await tx.query<PlanningIntent>(`SELECT p.* FROM task_planning_outbox p JOIN tasks t ON t.id=p.task_id
     WHERE p.id=$1 AND p.task_id=$2 AND t.initial_planning_intent_id=p.id AND t.state='RUNNING' AND t.plan_id IS NULL
       AND t.specification_id=p.specification_id AND t.control_version=p.expected_version AND p.planned_attempt_id=$3`, [source.intent_id, taskId, attemptId])).rows[0];

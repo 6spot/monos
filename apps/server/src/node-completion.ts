@@ -1,3 +1,4 @@
+import { specificationFrozen } from './task-specification-state.ts';
 import { settleHandledGuidance } from './task-guidance.ts';
 import type { Transaction } from '../../../packages/db/src/index.ts';
 import { CommandError } from '../../../packages/domain/src/commands.ts';
@@ -16,6 +17,7 @@ async function taskEvent(tx: Transaction, attempt: AttemptRow, kind: string, bod
   await planningEvent(tx, attempt.task_id!, kind, body, attempt.id, operationId);
 }
 export async function refreshTaskState(tx: Transaction, taskId: string): Promise<void> {
+  if(await specificationFrozen(tx,taskId))return;
   const task = (await tx.query<NodeTask>('SELECT * FROM tasks WHERE id=$1', [taskId])).rows[0]!;
   if (task.plan_id && ['RUNNING', 'BLOCKED', 'REVIEW'].includes(task.state)) {
     const state = await derivedTaskState(tx, task.plan_id);
@@ -34,6 +36,14 @@ export async function projectCompletion(
   if (task.state === 'CANCELLED' && attempt.launch.node_execution_source) {
     await taskEvent(tx, attempt, 'completion_settled_after_cancel', { node_id: attempt.node_id }, operation.id);
     return;
+  }
+  const changeOwned=!!(await tx.query('SELECT 1 FROM requirement_change_attempts ca JOIN task_publication_slots s ON s.operation_id=ca.change_id WHERE ca.attempt_id=$1',[attempt.id])).rowCount;
+  if(changeOwned){
+    const manifest=(await tx.query('SELECT * FROM completion_manifests WHERE operation_id=$1',[operation.id])).rows[0];
+    if(!manifest || manifest.content_digest!==operation.completion_manifest_digest)throw new CommandError('denied_scope','Exact historical completion manifest missing');
+    const result={...message.result,summary:manifest.summary,artifact_ids:manifest.artifact_ids,completion_manifest_digest:manifest.content_digest,...(manifest.manifest_version===2?{handled_guidance_ids:manifest.handled_guidance_ids}:{})};
+    await tx.query('INSERT INTO node_completions(node_id,activation,attempt_id,operation_id,result) VALUES($1,$2,$3,$4,$5) ON CONFLICT(operation_id) DO NOTHING',[attempt.node_id,attempt.node_activation,attempt.id,operation.id,result]);
+    await taskEvent(tx,attempt,'completion_settled_for_specification_change',{node_id:attempt.node_id},operation.id);return;
   }
   await assertCurrentNode(tx, {
     task_id: attempt.task_id!,
@@ -223,7 +233,7 @@ export async function finishCompletionSettlement(
     const task = (await tx.query<NodeTask>('SELECT * FROM tasks WHERE id=$1', [attempt.task_id])).rows[0]!;
     const node = (await tx.query<ExecutionNode>('SELECT * FROM nodes WHERE id=$1', [attempt.node_id])).rows[0]!;
     if (
-      settlement.settlement_purpose === 'correct' &&
+      !(await specificationFrozen(tx,task.id)) && settlement.settlement_purpose === 'correct' &&
       ['RUNNING', 'BLOCKED'].includes(task.state) &&
       task.specification_id === attempt.specification_id &&
       task.plan_id === attempt.plan_id &&

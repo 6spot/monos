@@ -33,6 +33,8 @@ const help = `monos — formal monos Tool Protocol commands
   monos raise_planning_issue --input payload.json [--request-id ID] --output json
   monos read_task_context --input payload.json [--request-id ID] --output json
   monos read_task_history --input payload.json [--request-id ID] --output json
+  monos prepare_specification_revision --input payload.json [--request-id ID] --output json
+  monos apply_specification_revision --input payload.json [--request-id ID] --output json
   monos commit_task_turn --input payload.json [--request-id ID] --output json
   monos read_discussion --input payload.json [--request-id ID] --output json
   monos update_working_requirement_state --input payload.json [--request-id ID] --output json
@@ -65,6 +67,21 @@ Only a canonical Task Conversation source may use these reads or commit this rep
 Its source/version stays fixed; action routing has a separate current execution
 basis. Conversation-only sources permit reply routing alone. Conversation cannot
 Start/Continue/unblock/reopen work or create another Task.
+Specification preparation requires proposal_id, complete specification Markdown, summary,
+basis, full impact and source_input_ids; optional supersedes names the replaced proposal.
+Preparation without a Plan: {"proposal_id":"PROPOSAL","specification":"# Complete requirement","summary":"Change summary","basis":{"control_version":1,"specification_id":"SPEC","plan_id":null},"impact":{"graph_sufficient":true,"nodes":[],"guidance":[]},"source_input_ids":["INPUT"]}
+For a current Node, impact.nodes must cover its exact node_id, node_activation,
+source_id (or null), completion_operation_id (or null), completion_manifest_digest
+(or null), and disposition: refresh, invalidate or carry. Guidance coverage uses
+guidance_id, version and disposition: retain or supersede. Use current formal facts;
+never invent impact identities or substitute a new basis into an old assessment.
+Only an attached proposal is reviewable: commit_task_turn with specification_proposal
+routing after preparation. Preparation does not end the turn or publish requirements.
+Specification apply: {"proposal_id":"PROPOSAL","confirmation_id":"EXACT_OWNER_RECEIPT","basis":{"control_version":1,"specification_id":"SPEC","plan_id":null}}
+Apply consumes an existing exact Owner confirmation; prose is never authorization.
+Its operation reference means admitted settlement, not publication or completed work.
+Apply does not end the turn: still commit_task_turn with your canonical reply.
+Reply-only sources cannot prepare or apply Specification revisions.
 Legacy probe reply: {"reply":"...","source_watermark":1,"routing":{"kind":"reply_only"}}
 Todo history: {} or {"cursor":"CURSOR"}; only this Attempt's input cutoff is readable.
 Todo cache rebuild: {"working_requirement_state":"...","resolved_watermark":0,"project_context_version":1,"project_context_digest":"64-hex-digest-from-context"}
@@ -128,7 +145,7 @@ func run(args []string) (protocol.CommandResult, error) {
 		action = "retry"
 	case "command_status":
 		action = "status"
-	case "publish_artifact", "read_artifact", "block_node", "open_workspace", "inspect_repository", "complete_node", "publish_execution_plan", "raise_planning_issue", "commit_task_turn", "read_task_context", "read_task_history", "read_discussion", "update_working_requirement_state", "commit_discussion_turn":
+	case "publish_artifact", "read_artifact", "block_node", "open_workspace", "inspect_repository", "complete_node", "publish_execution_plan", "raise_planning_issue", "commit_task_turn", "prepare_specification_revision", "apply_specification_revision", "read_task_context", "read_task_history", "read_discussion", "update_working_requirement_state", "commit_discussion_turn":
 	default:
 		return result, fmt.Errorf("unknown command")
 	}

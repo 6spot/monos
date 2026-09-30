@@ -209,7 +209,7 @@ func TestOriginalRedeliveryCannotAutomaticallyRetryHardSettlement(t *testing.T) 
 	if calls.Load() != 0 {
 		t.Fatal("hard settlement retried without explicit admission")
 	}
-	settle.State = protocol.StateAdmitted
+	settle.State = protocol.FluffyAdmitted
 	_ = d.effect(ctx, settle)
 	if calls.Load() != 1 {
 		t.Fatal("explicit same-ID settlement retry failed to reach Host")

@@ -18,7 +18,7 @@ func completionPair(t *testing.T) (protocol.Operation, protocol.Operation, proto
 	hash := strings.Repeat("a", 64)
 	oid := strings.Repeat("a", 40)
 	w := &protocol.WorkspaceDescriptor{SchemaVersion: 1, TaskID: "task", NodeID: "node", NodeActivation: 1, WorkspaceID: "workspace", ResourceID: "resource", ProjectID: "project", RunnerID: "runner", Generation: 1, LeaseID: "lease", OpenOperationID: "open", Resource: protocol.WorkspaceResource{ResourceID: "resource", RepositoryIdentity: "github.com/owner/repo", RemoteURL: "https://github.com/owner/repo.git"}}
-	original := protocol.Operation{SchemaVersion: 1, OperationID: "original", AttemptID: "attempt", DispatchID: "dispatch", RequestID: "complete-request", Kind: protocol.KindCompleteNode, State: protocol.Recovery, ResourceID: testString("resource"), Workspace: w, WorkspaceDigest: &hash, CompletionManifestDigest: &hash}
+	original := protocol.Operation{SchemaVersion: 1, OperationID: "original", AttemptID: "attempt", DispatchID: "dispatch", RequestID: "complete-request", Kind: protocol.KindCompleteNode, State: protocol.PurpleRecovery, ResourceID: testString("resource"), Workspace: w, WorkspaceDigest: &hash, CompletionManifestDigest: &hash}
 	digest, err := wire.OperationIdentity(original)
 	if err != nil {
 		t.Fatal(err)
@@ -93,7 +93,7 @@ func TestCompletionPairIsAtomicAndReplayableAfterRestart(t *testing.T) {
 		t.Fatal("stale worker failure overwrote terminal pair", err)
 	}
 	changed := original
-	changed.State = protocol.StateAdmitted
+	changed.State = protocol.FluffyAdmitted
 	if err = db.BeginEffect(changed); err != nil {
 		t.Fatal("same-ID retry changed identity", err)
 	}

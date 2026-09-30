@@ -276,7 +276,7 @@ class TaskConversationProbe(NodeExecutionProbe):
             result = self.post('/v1/owner/tasks/conversation/commands', body)
         return result
 
-    def conversation_records(self, task):
+    def conversation_records(self, task, extra_tables=None):
         task = checked_id(task)
         tables = {'inputs': 'task_inputs', 'messages': 'task_messages',
             'conversation_sources': 'task_conversation_outbox', 'resolutions': 'task_input_resolutions',
@@ -286,6 +286,8 @@ class TaskConversationProbe(NodeExecutionProbe):
             'planning_sources': 'task_planning_outbox', 'nodes': 'nodes',
             'node_sources': 'node_execution_outbox', 'artifacts': 'artifacts', 'manifests': 'completion_manifests',
             'workspace_records': 'task_workspaces', 'lease_records': 'workspace_leases', 'events': 'task_events'}
+        # Internal probe-owned extensions share this same statement snapshot.
+        tables.update(extra_tables or {})
         fields = ["'task',(SELECT to_jsonb(t) FROM tasks t WHERE id='" + task + "')"]
         for key, table in tables.items():
             fields.append("'" + key + "',(SELECT coalesce(jsonb_agg(to_jsonb(r)),'[]') FROM "

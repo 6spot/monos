@@ -135,6 +135,10 @@ func prepareEnvelope(d protocol.Dispatch, r Request) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	specificationCommand := r.Name == "prepare_specification_revision" || r.Name == "apply_specification_revision"
+	if specificationCommand && d.TaskConversationSource == nil {
+		return nil, fmt.Errorf("Specification commands require exact canonical Task conversation source")
+	}
 	conversationRead := r.Name == "read_task_context" || r.Name == "read_task_history"
 	if conversationRead && d.TaskConversationSource == nil {
 		return nil, fmt.Errorf("Task conversation reads require exact canonical source")
@@ -143,6 +147,10 @@ func prepareEnvelope(d protocol.Dispatch, r Request) ([]byte, error) {
 		s := d.TaskConversationSource
 		switch r.Name {
 		case "read_task_context", "read_task_history":
+		case "prepare_specification_revision", "apply_specification_revision":
+			if s.ReplyOnly {
+				return nil, fmt.Errorf("this Task conversation source permits reply-only routing")
+			}
 		case "commit_task_turn":
 			var payload struct {
 				SourceID        string `json:"source_id"`

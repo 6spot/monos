@@ -50,6 +50,17 @@ Test observable behavior and races, not private-helper mirroring. Documentation-
 
 ## Review exit
 
+Exact Specification revision acceptance (2026-10-01):269 unit/schema tests,
+292 real PG cases across27 files,179 Python probes and Linux Go module/race/vet/
+four-binary checks passed. Native proof covers pre-Start edit, actual prepared and
+attached proposal, exact Owner authorization, private writer Stop/checkpoint,
+Owner Stop preservation, explicit Continue on fresh Spec, actual Git completion,
+completed evidence carry and existing backend/Runner restart. See the Specification
+task's immutable source/native reports. The first strict restart comparison failed
+on late exit-log projections; retained read-only follow-up ties each of4 exact +1
+entries to `exited`, while requiring all other records/receipts/Git unchanged.
+Raw activity/log-visible/exit-observed changes do not themselves change authority.
+
 Report executed checks and untested real-host assumptions. The probe does not prove the complete Stage A flow, full multi-worker claims, GitHub delivery or cancellation during admitted finalization. Keep added regressions at their actual boundary instead of declaring external behavior from fake adapters.
 
 Owner command foundation: 51 local unit/schema cases and 32 real PostgreSQL cases

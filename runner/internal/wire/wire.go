@@ -167,6 +167,11 @@ func Envelope(raw []byte) (protocol.CommandEnvelope, error) {
 	case protocol.CommitTaskTurn:
 		required = []string{"reply", "source_watermark", "routing"}
 		allowed["source_id"], allowed["input_id"] = true, true
+	case "prepare_specification_revision":
+		required = []string{"proposal_id", "specification", "summary", "basis", "impact", "source_input_ids"}
+		allowed["supersedes"] = true
+	case "apply_specification_revision":
+		required = []string{"proposal_id", "confirmation_id", "basis"}
 	case "read_task_context":
 	case "read_task_history":
 		allowed["cursor"], allowed["query"] = true, true
