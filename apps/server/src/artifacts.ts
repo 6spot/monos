@@ -1,3 +1,4 @@
+import { validateHandledGuidance } from './task-guidance.ts';
 import type { Transaction, Database } from '../../../packages/db/src/index.ts';
 import { transaction } from '../../../packages/db/src/index.ts';
 import { CommandError } from '../../../packages/domain/src/commands.ts';
@@ -145,7 +146,10 @@ export async function freezeManifest(
   ).rows;
   if (valid.length !== ids.length)
     throw new CommandError('denied_scope', 'Completion output must belong to this Node activation');
+  const handled=command.payload.handled_guidance_ids??[];
+  await validateHandledGuidance(tx,source.id,handled);
   const manifest = {
+    manifest_version:2,handled_guidance_ids:handled,
     task_id: source.task_id,
     node_id: source.node_id,
     node_activation: Number(source.node_activation),
@@ -164,9 +168,9 @@ export async function storeManifest(
   operationId: string,
   frozen: { manifest: object; hash: string }
 ): Promise<void> {
-  const manifest = frozen.manifest as { summary: string; artifact_ids: string[] };
+  const manifest = frozen.manifest as { summary: string; artifact_ids: string[]; handled_guidance_ids:string[] };
   await tx.query(
-    'INSERT INTO completion_manifests(operation_id,task_id,node_id,node_activation,attempt_id,source_id,specification_id,plan_id,summary,artifact_ids,content_digest) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)',
+    'INSERT INTO completion_manifests(operation_id,task_id,node_id,node_activation,attempt_id,source_id,specification_id,plan_id,summary,artifact_ids,content_digest,manifest_version,handled_guidance_ids) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,2,$12)',
     [
       operationId,
       source.task_id,
@@ -179,6 +183,7 @@ export async function storeManifest(
       manifest.summary,
       JSON.stringify(manifest.artifact_ids),
       frozen.hash,
+      JSON.stringify(manifest.handled_guidance_ids),
     ]
   );
 }

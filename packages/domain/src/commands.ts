@@ -14,6 +14,7 @@ export interface AdmissionBasis {
   resourceId?: string;
   projectResources?: boolean;
   initialPlanning?: boolean;
+  taskConversation?: boolean;
   mutationAllowed: boolean;
   processReleased: boolean;
   controlVersion: number;
@@ -27,6 +28,12 @@ export function guardNewCommand(command: CommandEnvelope, basis: AdmissionBasis)
   if (!basis.mutationAllowed || basis.processReleased) throw new CommandError('stale_execution', 'Attempt mutation authority has ended');
   if (!basis.connectionAvailable) throw new CommandError('control_unavailable', 'Runner control connection is unavailable');
   if (command.expected_control_version !== basis.controlVersion) throw new CommandError('version_conflict', 'Expected control version is stale', basis.controlVersion);
+  if(basis.taskConversation){
+    if(basis.kind!=='planner'||!['commit_task_turn','read_task_context','read_task_history'].includes(command.name))throw new CommandError('denied_scope','Command is outside Task conversation authority');
+    if(command.name==='commit_task_turn'&&command.payload.source_watermark!==basis.sourceWatermark)throw new CommandError('version_conflict','Task input watermark differs');
+    return;
+  }
+  if(['read_task_context','read_task_history'].includes(command.name))throw new CommandError('denied_scope','Task read requires canonical conversation source');
   if (basis.scopeKind === 'todo') {
     if (basis.kind !== 'planner' || !['inspect_repository', 'commit_discussion_turn', 'read_discussion', 'update_working_requirement_state'].includes(command.name)) throw new CommandError('denied_scope', 'Command is outside Todo Planner authority');
     if (command.name === 'commit_discussion_turn' && command.payload.source_watermark !== basis.sourceWatermark) throw new CommandError('version_conflict', 'Discussion source watermark differs');

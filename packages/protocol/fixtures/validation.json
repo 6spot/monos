@@ -2381,7 +2381,7 @@
     "valid": false
   },
   {
-    "name": "Owner rejects mixed or incomplete Retry {'planning_intent_id': 'intent', 'issue_sequence': 1}",
+    "name": "Owner Retry may reference an exact previously recorded issue answer",
     "schema": "OwnerCommand",
     "value": {
       "schema_version": 1,
@@ -2394,7 +2394,7 @@
         "issue_sequence": 1
       }
     },
-    "valid": false
+    "valid": true
   },
   {
     "name": "source bound Task Planner dispatch",
@@ -3471,5 +3471,217 @@
       }
     },
     "valid": false
+  },
+  {
+    "name": "Canonical Task conversation scratch Dispatch",
+    "schema": "Dispatch",
+    "valid": true,
+    "value": {
+      "dispatch_id": "dispatch",
+      "attempt_id": "attempt",
+      "runner_id": "runner",
+      "task_id": "task",
+      "kind": "planner",
+      "fencing_generation": 1,
+      "node_activation": 0,
+      "control_version": 2,
+      "runtime_id": "opencode",
+      "model": "opencode/longcat-2.5-preview-free",
+      "prompt": "context",
+      "source_watermark": 1,
+      "mutation_allowed": true,
+      "process_released": false,
+      "workspace_reservations": {
+        "project_id": "project",
+        "configuration_version": 1,
+        "resources": []
+      },
+      "task_conversation_source": {
+        "source_id": "source",
+        "input_id": "input",
+        "source_watermark": 1,
+        "conversation_version": 2,
+        "context_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "reply_only": false
+      }
+    }
+  },
+  {
+    "name": "Task conversation excludes alternate identity {'node_id': 'node'}",
+    "schema": "Dispatch",
+    "valid": false,
+    "value": {
+      "dispatch_id": "dispatch",
+      "attempt_id": "attempt",
+      "runner_id": "runner",
+      "task_id": "task",
+      "kind": "planner",
+      "fencing_generation": 1,
+      "node_activation": 0,
+      "control_version": 2,
+      "runtime_id": "opencode",
+      "model": "opencode/longcat-2.5-preview-free",
+      "prompt": "context",
+      "source_watermark": 1,
+      "mutation_allowed": true,
+      "process_released": false,
+      "workspace_reservations": {
+        "project_id": "project",
+        "configuration_version": 1,
+        "resources": []
+      },
+      "task_conversation_source": {
+        "source_id": "source",
+        "input_id": "input",
+        "source_watermark": 1,
+        "conversation_version": 2,
+        "context_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "reply_only": false
+      },
+      "node_id": "node"
+    }
+  },
+  {
+    "name": "Task conversation excludes alternate identity {'task_planning_source': {'intent_id': 'intent', 'specification_id': 'spec', 'context_digest': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'}}",
+    "schema": "Dispatch",
+    "valid": false,
+    "value": {
+      "dispatch_id": "dispatch",
+      "attempt_id": "attempt",
+      "runner_id": "runner",
+      "task_id": "task",
+      "kind": "planner",
+      "fencing_generation": 1,
+      "node_activation": 0,
+      "control_version": 2,
+      "runtime_id": "opencode",
+      "model": "opencode/longcat-2.5-preview-free",
+      "prompt": "context",
+      "source_watermark": 1,
+      "mutation_allowed": true,
+      "process_released": false,
+      "workspace_reservations": {
+        "project_id": "project",
+        "configuration_version": 1,
+        "resources": []
+      },
+      "task_conversation_source": {
+        "source_id": "source",
+        "input_id": "input",
+        "source_watermark": 1,
+        "conversation_version": 2,
+        "context_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "reply_only": false
+      },
+      "task_planning_source": {
+        "intent_id": "intent",
+        "specification_id": "spec",
+        "context_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    }
+  },
+  {
+    "name": "Task conversation excludes alternate identity {'resource_id': 'repo'}",
+    "schema": "Dispatch",
+    "valid": false,
+    "value": {
+      "dispatch_id": "dispatch",
+      "attempt_id": "attempt",
+      "runner_id": "runner",
+      "task_id": "task",
+      "kind": "planner",
+      "fencing_generation": 1,
+      "node_activation": 0,
+      "control_version": 2,
+      "runtime_id": "opencode",
+      "model": "opencode/longcat-2.5-preview-free",
+      "prompt": "context",
+      "source_watermark": 1,
+      "mutation_allowed": true,
+      "process_released": false,
+      "workspace_reservations": {
+        "project_id": "project",
+        "configuration_version": 1,
+        "resources": []
+      },
+      "task_conversation_source": {
+        "source_id": "source",
+        "input_id": "input",
+        "source_watermark": 1,
+        "conversation_version": 2,
+        "context_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "reply_only": false
+      },
+      "resource_id": "repo"
+    }
+  },
+  {
+    "name": "Completion explicit handling selection ['guide']",
+    "schema": "CommandEnvelope",
+    "valid": true,
+    "value": {
+      "schema_version": 1,
+      "request_id": "request",
+      "scope_id": "task",
+      "expected_control_version": 1,
+      "name": "complete_node",
+      "payload": {
+        "summary": "done",
+        "handled_guidance_ids": [
+          "guide"
+        ]
+      }
+    }
+  },
+  {
+    "name": "Completion explicit handling selection []",
+    "schema": "CommandEnvelope",
+    "valid": true,
+    "value": {
+      "schema_version": 1,
+      "request_id": "request",
+      "scope_id": "task",
+      "expected_control_version": 1,
+      "name": "complete_node",
+      "payload": {
+        "summary": "done",
+        "handled_guidance_ids": []
+      }
+    }
+  },
+  {
+    "name": "Completion explicit handling selection ['guide', 'guide']",
+    "schema": "CommandEnvelope",
+    "valid": false,
+    "value": {
+      "schema_version": 1,
+      "request_id": "request",
+      "scope_id": "task",
+      "expected_control_version": 1,
+      "name": "complete_node",
+      "payload": {
+        "summary": "done",
+        "handled_guidance_ids": [
+          "guide",
+          "guide"
+        ]
+      }
+    }
+  },
+  {
+    "name": "Completion explicit handling selection None",
+    "schema": "CommandEnvelope",
+    "valid": false,
+    "value": {
+      "schema_version": 1,
+      "request_id": "request",
+      "scope_id": "task",
+      "expected_control_version": 1,
+      "name": "complete_node",
+      "payload": {
+        "summary": "done",
+        "handled_guidance_ids": null
+      }
+    }
   }
 ]

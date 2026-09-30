@@ -6,7 +6,8 @@ Canonical pre-Plan Task Start, Runtime selection, initial Plan/issue publication
 and Owner Stop/Retry/Cancel. Owners are `task-planning.ts`,
 `task-planning-state.ts`, migration 17, the shared dispatch queue and the existing
 backend pump. Architecture modules 02/03/05/06 own domain meaning. Node execution,
-Task Conversation, Specification changes and replacement Plans are separate.
+[Task Conversation](task-conversation.md), Specification changes and replacement Plans
+have separate owners. Conversation and initial planning share the Task Planner claim.
 
 ## 2. Signatures
 
@@ -61,7 +62,10 @@ retains physical ownership until proven Stop. Committed outcome wins over later
 exit. An exit without an outcome remains interrupted/failed and requires Retry.
 Structural validation remains correctable within the same Attempt.
 
-An open issue requires its exact sequence and nonblank answer for Retry. Ordered
+An open issue requires its exact sequence and nonblank answer for Retry. An exact
+answer saved by canonical Task Conversation may supply that answer; only explicit
+Owner Retry consumes it. Chat does not publish or resume planning. Pre-Plan
+guidance does not stale this frozen source; Plan publication binds its recipients. Ordered
 prior answers remain in subsequent contexts for that Specification. Source Retry
 may record a successor while old terminal/fenced cleanup is pending; queue
 promotion waits for all old owner claims/effects. Legacy attempt-targeted Retry

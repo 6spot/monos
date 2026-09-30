@@ -30,7 +30,7 @@ export interface CommandEnvelope {
     scope_id:                 string;
 }
 
-export type CommandEnvelopeName = "open_workspace" | "inspect_repository" | "complete_node" | "commit_task_turn" | "commit_discussion_turn" | "read_discussion" | "update_working_requirement_state" | "publish_execution_plan" | "raise_planning_issue" | "publish_artifact" | "read_artifact" | "block_node";
+export type CommandEnvelopeName = "open_workspace" | "inspect_repository" | "complete_node" | "commit_task_turn" | "commit_discussion_turn" | "read_discussion" | "update_working_requirement_state" | "publish_execution_plan" | "raise_planning_issue" | "publish_artifact" | "read_artifact" | "block_node" | "read_task_context" | "read_task_history";
 
 export interface CommandPayload {
     artifact_id?:               string;
@@ -38,17 +38,20 @@ export interface CommandPayload {
     content?:                   ArtifactContent;
     cursor?:                    string;
     handled_guidance_ids?:      string[];
+    input_id?:                  string;
     nodes?:                     [ExecutionPlanNode, ...ExecutionPlanNode[]];
     plan_id?:                   string;
     planning_intent_id?:        string;
     project_context_digest?:    string;
     project_context_version?:   number;
+    query?:                     string;
     reason?:                    string;
     references?:                ArtifactReference[];
     reply?:                     string;
     resolved_watermark?:        number;
     resource_id?:               string;
-    routing?:                   Routing;
+    routing?:                   TaskTurnRouting;
+    source_id?:                 string;
     source_message_id?:         string;
     source_watermark?:          number;
     summary?:                   string;
@@ -78,11 +81,30 @@ export interface ArtifactReference {
     url:    string;
 }
 
-export interface Routing {
-    kind: RoutingKind;
+export interface TaskTurnRouting {
+    basis?:            TaskActionBasis;
+    expected_version?: number;
+    issue_sequence?:   number;
+    kind:              TaskTurnRoutingKind;
+    operation_id?:     string;
+    supersedes?:       string;
+    target_id?:        string;
+    target_kind?:      TargetKind;
+    text?:             string;
 }
 
-export type RoutingKind = "reply_only";
+export interface TaskActionBasis {
+    control_version:  number;
+    node_activation?: number;
+    node_id?:         string;
+    plan_id:          null | string;
+    source_id?:       null | string;
+    specification_id: string;
+}
+
+export type TaskTurnRoutingKind = "reply_only" | "reply" | "guidance" | "issue" | "answer" | "resolve_guidance";
+
+export type TargetKind = "planning_issue" | "node_blocker" | "input_issue";
 
 export interface TaskPreview {
     project_id?:   string;
@@ -120,14 +142,19 @@ export interface EffectResult {
     discussion_page?:              DiscussionPage;
     git_commit?:                   string;
     git_tree?:                     string;
+    input_id?:                     string;
     instruction_files?:            InstructionFile[];
     message?:                      string;
     message_id?:                   string;
+    obligation_id?:                string;
     path?:                         string;
     planning_outcome?:             PlanningOutcome;
     reply?:                        string;
     resolved_watermark?:           number;
+    source_id?:                    string;
     source_watermark?:             number;
+    task_context?:                 TaskContext;
+    task_history?:                 TaskHistoryPage;
     workspace_id?:                 string;
     workspace_metadata?:           WorkspaceMetadata;
     workspace_unavailable_reason?: WorkspaceUnavailableReason;
@@ -193,6 +220,36 @@ export interface PlanningOutcome {
 
 export type PlanningOutcomeKind = "plan" | "issue";
 
+export interface TaskContext {
+    basis:       TaskActionBasis;
+    observed_at: string;
+    snapshot:    string;
+    state:       string;
+    task_id:     string;
+}
+
+export interface TaskHistoryPage {
+    cursor:         string;
+    has_more:       boolean;
+    messages:       TaskMessage[];
+    schema_version: number;
+    task_id:        string;
+}
+
+export interface TaskMessage {
+    author:                    Author;
+    content:                   string;
+    created_at:                string;
+    disposition?:              string;
+    input_id:                  string;
+    message_id:                string;
+    observed_at?:              string;
+    observed_control_version?: number;
+    sequence:                  number;
+    source_id?:                string;
+    source_watermark?:         number;
+}
+
 export interface WorkspaceMetadata {
     base_commit:                     string;
     checkpoint?:                     WorkspaceCheckpoint;
@@ -254,30 +311,31 @@ export interface Frame {
 }
 
 export interface Dispatch {
-    attempt_id:               string;
-    control_version:          number;
-    dispatch_id:              string;
-    fencing_generation:       number;
-    kind:                     DispatchKind;
-    log_mode?:                LogModeElement;
-    model:                    Model;
-    mutation_allowed:         boolean;
-    node_activation:          number;
-    node_execution_source?:   NodeExecutionSource;
-    node_id?:                 string;
-    process_released:         boolean;
-    project_context_digest?:  string;
-    project_context_version?: number;
-    prompt:                   string;
-    resource_id?:             string;
-    runner_id:                string;
-    runtime_id:               RuntimeID;
-    source_message_id?:       string;
-    source_watermark:         number;
-    task_id?:                 string;
-    task_planning_source?:    TaskPlanningSource;
-    todo_id?:                 string;
-    workspace_reservations?:  WorkspaceReservations;
+    attempt_id:                string;
+    control_version:           number;
+    dispatch_id:               string;
+    fencing_generation:        number;
+    kind:                      DispatchKind;
+    log_mode?:                 LogModeElement;
+    model:                     Model;
+    mutation_allowed:          boolean;
+    node_activation:           number;
+    node_execution_source?:    NodeExecutionSource;
+    node_id?:                  string;
+    process_released:          boolean;
+    project_context_digest?:   string;
+    project_context_version?:  number;
+    prompt:                    string;
+    resource_id?:              string;
+    runner_id:                 string;
+    runtime_id:                RuntimeID;
+    source_message_id?:        string;
+    source_watermark:          number;
+    task_conversation_source?: TaskConversationSource;
+    task_id?:                  string;
+    task_planning_source?:     TaskPlanningSource;
+    todo_id?:                  string;
+    workspace_reservations?:   WorkspaceReservations;
 }
 
 export type DispatchKind = "node" | "planner";
@@ -297,6 +355,15 @@ export interface NodeExecutionSource {
 }
 
 export type RuntimeID = "opencode";
+
+export interface TaskConversationSource {
+    context_digest:       string;
+    conversation_version: number;
+    input_id:             string;
+    reply_only:           boolean;
+    source_id:            string;
+    source_watermark:     number;
+}
 
 export interface TaskPlanningSource {
     context_digest:   string;
@@ -1319,7 +1386,7 @@ export interface OwnerCancelTaskCommandPayload {
 
 export interface TaskPlanningStatus {
     attempt_id?:       string;
-    available_actions: AvailableAction[];
+    available_actions: TaskPlanningStatusAvailableAction[];
     control_version:   number;
     end_reason?:       string;
     issue?:            PlanningIssue;
@@ -1334,7 +1401,7 @@ export interface TaskPlanningStatus {
     waiting_reason?:   string;
 }
 
-export type AvailableAction = "start_task" | "stop_initial_planning" | "retry_initial_planning" | "cancel_task";
+export type TaskPlanningStatusAvailableAction = "start_task" | "stop_initial_planning" | "retry_initial_planning" | "cancel_task";
 
 export interface PlanningIssue {
     issue_sequence: number;
@@ -1380,9 +1447,10 @@ export interface OwnerRecoverCompletionCommandPayload {
 }
 
 export interface NodeExecutionStatus {
-    attempt:          Attempt | null;
+    attempt:          NodeExecutionStatusAttempt | null;
     blocker:          Blocker | null;
     control_version:  number;
+    guidance_paused?: boolean;
     manifest:         CompletionManifest | null;
     node_activation:  number;
     node_id:          string;
@@ -1396,7 +1464,7 @@ export interface NodeExecutionStatus {
     waiting_reason:   null | string;
 }
 
-export interface Attempt {
+export interface NodeExecutionStatusAttempt {
     attempt_id:       string;
     end_reason:       null | string;
     process_released: boolean;
@@ -1412,17 +1480,19 @@ export interface Blocker {
 export type BlockerKind = "semantic" | "factual" | "owner_stopped";
 
 export interface CompletionManifest {
-    artifact_ids:     string[];
-    attempt_id:       string;
-    content_digest:   string;
-    node_activation:  number;
-    node_id:          string;
-    operation_id:     string;
-    plan_id:          string;
-    source_id:        string;
-    specification_id: string;
-    summary:          string;
-    task_id:          string;
+    artifact_ids:          string[];
+    attempt_id:            string;
+    content_digest:        string;
+    handled_guidance_ids?: string[];
+    manifest_version?:     number;
+    node_activation:       number;
+    node_id:               string;
+    operation_id:          string;
+    plan_id:               string;
+    source_id:             string;
+    specification_id:      string;
+    summary:               string;
+    task_id:               string;
 }
 
 export interface NodeExecutionOperationStatus {
@@ -1434,3 +1504,117 @@ export interface NodeExecutionOperationStatus {
 }
 
 export type NodeExecutionStatusState = "PENDING" | "RUNNING" | "BLOCKED" | "COMPLETED" | "CANCELLED";
+
+export interface TaskConversationCommand {
+    expected_version?: number;
+    name:              TaskConversationCommandName;
+    payload:           TaskConversationCommandPayload;
+    request_id:        string;
+    schema_version:    number;
+    task_id:           string;
+}
+
+export type TaskConversationCommandName = "submit_task_message" | "retry_task_input" | "withdraw_task_input" | "stop_task_turn";
+
+export interface TaskConversationCommandPayload {
+    content?:      string;
+    message_id?:   string;
+    operation_id?: string;
+}
+
+export interface TaskConversationCommandResult {
+    input_id?:      string;
+    message_id?:    string;
+    operation_id?:  string;
+    request_id:     string;
+    schema_version: number;
+    source_id?:     string;
+    status:         ConfigurationResultStatus;
+    task_id:        string;
+    version?:       number;
+}
+
+export interface TaskHistoryQuery {
+    cursor?: string;
+    query?:  string;
+}
+
+export interface TaskInputOperationPage {
+    cursor:         string;
+    has_more:       boolean;
+    items:          TaskInputOperation[];
+    schema_version: number;
+    task_id:        string;
+}
+
+export interface TaskInputOperation {
+    accepted_delivery_operation_id?: string;
+    available_actions:               TaskInputOperationAvailableAction[];
+    content?:                        string;
+    id:                              string;
+    kind:                            TaskInputOperationKind;
+    message_id?:                     string;
+    node_id?:                        string;
+    status:                          string;
+    version:                         number;
+}
+
+export type TaskInputOperationAvailableAction = "retry_task_input" | "withdraw_task_input" | "stop_task_turn";
+
+export type TaskInputOperationKind = "input" | "guidance" | "issue";
+
+export interface TaskGuidanceRecipientPage {
+    cursor:         string;
+    guidance_id:    string;
+    has_more:       boolean;
+    items:          TaskGuidanceRecipient[];
+    schema_version: number;
+    task_id:        string;
+}
+
+export interface TaskGuidanceRecipient {
+    attempt_id?:              string;
+    completion_operation_id?: string;
+    context_digest?:          string;
+    dispatch_id?:             string;
+    fencing_generation?:      number;
+    launch_status?:           LaunchStatus;
+    node_activation:          number;
+    node_id:                  string;
+    obligation_id:            string;
+    source_id?:               string;
+    status:                   string;
+    version:                  number;
+}
+
+export type LaunchStatus = "included_in_source" | "included_in_launch" | "launch_started";
+
+export interface TaskConversationStatus {
+    acceptance_guards:          string[];
+    acceptance_guards_has_more: boolean;
+    attempt?:                   TaskConversationStatusAttempt;
+    available_actions:          TaskInputOperationAvailableAction[];
+    conversation_version:       number;
+    guidance:                   TaskInputOperation[];
+    guidance_has_more:          boolean;
+    inputs:                     TaskInputOperation[];
+    inputs_has_more:            boolean;
+    issues:                     TaskInputOperation[];
+    issues_has_more:            boolean;
+    preparation_failure?:       null | string;
+    processed_watermark:        number;
+    schema_version:             number;
+    sequence:                   number;
+    source?:                    TaskConversationSource;
+    task_id:                    string;
+    waiting_reason?:            null | string;
+}
+
+export interface TaskConversationStatusAttempt {
+    end_reason:       null | string;
+    id:               string;
+    mutation_allowed: boolean;
+    process_absent:   boolean;
+    process_released: boolean;
+    state:            string;
+}

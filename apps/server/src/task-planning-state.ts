@@ -64,10 +64,12 @@ export async function createPlanningIntent(tx: Transaction, task: PlanningTask, 
     const guidance = (await tx.query<{ planner_guidance: string }>('SELECT planner_guidance FROM execution_policies')).rows[0]!.planner_guidance;
     const decisions = (await tx.query<{ sequence: string; body: object }>(`SELECT sequence,body FROM task_events WHERE task_id=$1
       AND kind='planning_retried' AND body->>'specification_id'=$2 AND body ? 'answer' ORDER BY sequence`, [task.id, task.specification_id])).rows.map((row) => ({ sequence: Number(row.sequence), ...row.body }));
-    context = { protocol, binding: basis, owner_planner_guidance: guidance, specification, project, roles, issue_answers: decisions };
-    prompt = canonicalJSON(context);
+    const taskGuidance=(await tx.query("SELECT id,text FROM task_guidance WHERE task_id=$1 AND status='active' ORDER BY id LIMIT 257",[task.id])).rows;
+    context = { protocol, binding: basis, owner_planner_guidance: guidance, specification, project, roles, issue_answers: decisions, task_guidance:taskGuidance };
+    if(taskGuidance.length>256)context=null;
+    prompt = context===null?null:canonicalJSON(context);
     // Worst-case encoded Dispatch envelope is larger than the raw prompt.
-    if (Array.from(prompt).length > 262144 || Buffer.byteLength(JSON.stringify({ prompt })) > MAX_ITEM_BYTES - 16384) { context = null; prompt = null; }
+    if (prompt===null || Array.from(prompt).length > 262144 || Buffer.byteLength(JSON.stringify({ prompt })) > MAX_ITEM_BYTES - 16384) { context = null; prompt = null; }
   }
   const failure = prompt === null ? 'context_budget_exceeded' : null;
   const hash = digest(prompt ?? canonicalJSON({ ...basis, preparation_failure: failure }));

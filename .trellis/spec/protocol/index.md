@@ -13,3 +13,7 @@ Canonical Node/Artifact commands and strict completion settlement pairs follow
 and omitted/empty Artifact-selection fixtures for both TS and Go.
 
 One versioned JSON Schema authority generates TS/Go transport types. Authenticate scopes server-side. Keep request replay, operation admission and result completion distinct. Run `pnpm protocol:check`, `pnpm test`, and the Runner's shared-fixture tests after a wire change. Add no new transport/validation framework without a concrete need.
+
+Canonical Task conversation adds its own source epoch and exact input watermark;
+execution action basis remains separate. Read [Task Conversation](../backend/task-conversation.md)
+before changing source scopes, reply routing or handled-guidance manifest fields.

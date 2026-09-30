@@ -1,3 +1,4 @@
+import { guidanceContext, assignGuidance } from './task-guidance.ts';
 import { randomUUID } from 'node:crypto';
 import type { Transaction } from '../../../packages/db/src/index.ts';
 import { CommandError } from '../../../packages/domain/src/commands.ts';
@@ -30,6 +31,7 @@ export interface NodeTask {
   control_version: string;
 }
 export interface ExecutionNode {
+  guidance_paused: boolean;
   id: string;
   task_id: string;
   activation: string;
@@ -76,7 +78,7 @@ const protocol = [
   'You execute exactly the bound Node. Only monos Tool Protocol commands change formal state. Follow the effective Specification, exact Node requirements, current Role instructions and formal Owner answers. Todo, prior Tasks and Runtime memory are not authority.',
   'Use monos open_workspace with resource_id only when repository work is needed. Work freely within that managed workspace; preserve previous private work and fixed Git ancestry. Do not create your own repository as a substitute for managed work.',
   'Optional durable outputs use monos publish_artifact with artifact_id, title, content:{text,media_type}, optional references:[{url,label?}] and supersedes. UTF-8 text is limited to 256 KiB. Artifact publication is not completion. Read exact Task content with monos read_artifact {artifact_id}. HTML is managed data.',
-  'Finish with monos complete_node {summary,artifact_ids?}. Omitted artifact_ids selects outputs from this Attempt; [] selects none; explicit IDs select same Node/activation outputs. No Artifact or repository is mandatory. If a previous Attempt left a private workspace checkpoint, reopen and finalize it before completion. Complete closes mutation authority and the system stops the process and finalizes Git; prose/process exit never completes.',
+  'Finish with monos complete_node {summary,artifact_ids?,handled_guidance_ids?}. Explicitly declare every required_guidance_id you have handled; absence declares none and rejects missing required handling. If blocked, use block_node with the precise reason. Guidance launch is not proof of handling. Omitted artifact_ids selects outputs from this Attempt; [] selects none; explicit IDs select same Node/activation outputs. No Artifact or repository is mandatory. If a previous Attempt left a private workspace checkpoint, reopen and finalize it before completion. Complete closes mutation authority and the system stops the process and finalizes Git; prose/process exit never completes.',
   'If external input prevents this valid Node from continuing, call monos block_node {reason}. This records a precise Owner-answerable blocker and closes this Attempt. Never fabricate Runtime failure.',
   'Use monos COMMAND --request-id ID --input payload.json --output json (or --input -); monos command-status --request-id ID --output json; monos retry --request-id ID --output json. On uncertainty recover the same request, never substitute a new lifecycle command.',
 ].join('\n');
@@ -130,6 +132,8 @@ export async function prepareNodeSource(
     ).rows[0]!.size
   );
   if (!failure && bytes + artifactsBytes > MAX_ITEM_BYTES / 2) failure = 'context_budget_exceeded';
+  let guidance: Awaited<ReturnType<typeof guidanceContext>> = {items:[],required_guidance_ids:[]};
+  if(!failure){try{guidance=await guidanceContext(tx,task.id,node.id,Number(node.activation));}catch(e){if(!(e instanceof CommandError))throw e;failure='context_budget_exceeded';}}
   if (!failure) {
     const specification = (
       await tx.query<{ content: unknown }>('SELECT content FROM specification_revisions WHERE id=$1 AND task_id=$2', [
@@ -162,6 +166,7 @@ export async function prepareNodeSource(
     else {
       context = {
         protocol,
+        guidance,
         binding,
         specification,
         node: definition,
@@ -218,6 +223,7 @@ export async function prepareNodeSource(
       !!failure,
     ]
   );
+  if(!failure)await assignGuidance(tx,id,guidance.items);
   await tx.query('UPDATE nodes SET execution_source_id=$2,blocker_id=NULL WHERE id=$1', [node.id, id]);
   const source: NodeSource = {
     id,

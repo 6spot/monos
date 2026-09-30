@@ -13,6 +13,7 @@ outcomes, Stop and service/host recovery. Startup after that reboot trial was ma
 - Read [execution](execution-guidelines.md), [workspace](workspace-guidelines.md) and [quality](quality-guidelines.md).
 - Read [protocol](../protocol/commands.md) for CLI identity/replay.
 - Read [Node execution](../backend/node-execution.md) for canonical source, repository-free completion and paired recovery contracts.
+- Read [Task Conversation](../backend/task-conversation.md) for source-specific reads/replies, Stop-only effects and explicit guidance declarations.
 - Source contracts: [Runtime](../../../docs/03-runtime-and-execution.md), [Workspace](../../../docs/04-workspace-and-git.md), [host topology](../../../docs/11-technology-and-deployment.md).
 
 ## Quality Check

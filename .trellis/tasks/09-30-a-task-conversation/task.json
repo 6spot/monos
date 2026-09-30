@@ -3,7 +3,7 @@
   "name": "a-task-conversation",
   "title": "Ordered Task Conversation and guidance",
   "description": "Persist ordered Task input and canonical replies with durable guidance obligations and explicit recovery exits.",
-  "status": "planning",
+  "status": "in_progress",
   "dev_type": "backend",
   "scope": null,
   "package": null,
@@ -24,6 +24,6 @@
   "notes": "",
   "meta": {
     "roadmap_level": "leaf",
-    "planning_maturity": "backlog"
+    "planning_maturity": "ready"
   }
 }

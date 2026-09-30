@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"os"
 	"testing"
+
+	protocol "monos.local/protocol"
 )
 
 func TestSharedSchemaFixtures(t *testing.T) {
@@ -27,6 +29,26 @@ func TestSharedSchemaFixtures(t *testing.T) {
 				t.Fatalf("valid=%v error=%v", c.Valid, err)
 			}
 		})
+	}
+}
+
+func TestSharedCompletionIdentityFixtures(t *testing.T) {
+	raw, err := os.ReadFile("../../../packages/protocol/fixtures/completion-identities.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var cases []struct {
+		Operation      protocol.Operation `json:"operation"`
+		IdentityDigest string             `json:"identity_digest"`
+	}
+	if err = json.Unmarshal(raw, &cases); err != nil {
+		t.Fatal(err)
+	}
+	for _, c := range cases {
+		digest, err := OperationIdentity(c.Operation)
+		if err != nil || digest != c.IdentityDigest {
+			t.Fatal("completion identity drift", digest, err)
+		}
 	}
 }
 func TestSharedCanonicalFixtures(t *testing.T) {

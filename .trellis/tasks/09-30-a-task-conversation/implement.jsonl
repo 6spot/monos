@@ -1,0 +1,34 @@
+{"file": "ARCHITECTURE.md", "reason": "Architecture ownership and roadmap boundaries"}
+{"file": "docs/02-planner-and-planning.md", "reason": "Task Planner authority, ordering, guidance and source outcomes"}
+{"file": "docs/03-runtime-and-execution.md", "reason": "Physical ownership, capacity, launch and guidance handling"}
+{"file": "docs/05-tool-protocol.md", "reason": "Exact input, authenticated effects and recovery semantics"}
+{"file": "docs/06-state-and-formal-data.md", "reason": "Versions, per-operation guards and completion race authority"}
+{"file": "docs/08-principles-and-non-goals.md", "reason": "Mandatory architecture invariants"}
+{"file": ".trellis/spec/backend/index.md", "reason": "Backend required reading and quality gate"}
+{"file": ".trellis/spec/backend/directory-structure.md", "reason": "Ownership and native TS runtime"}
+{"file": ".trellis/spec/backend/database-guidelines.md", "reason": "Lock order, migrations, atomic receipt/outbox"}
+{"file": ".trellis/spec/backend/discussion.md", "reason": "Existing ordered turn and source-cutoff conventions"}
+{"file": ".trellis/spec/backend/task-planning.md", "reason": "Single Task Planner and initial source authority"}
+{"file": ".trellis/spec/backend/node-execution.md", "reason": "Node source, manifest and hard correction invariants"}
+{"file": ".trellis/spec/backend/dispatch-queue.md", "reason": "Shared queue, physical exclusion and locality"}
+{"file": ".trellis/spec/backend/runtime-scheduling.md", "reason": "Policy and capacity selection"}
+{"file": ".trellis/spec/backend/task-records.md", "reason": "Immutable revisions and settled reactivation"}
+{"file": ".trellis/spec/backend/owner-commands.md", "reason": "Authentication, exact commands and immutable receipts"}
+{"file": ".trellis/spec/backend/owner-reads.md", "reason": "Canonical bounded reads and cursors"}
+{"file": ".trellis/spec/backend/delivery-contracts.md", "reason": "Actual accepted cutoff and nonblocking later input"}
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "Correctable errors and recovery ownership"}
+{"file": ".trellis/spec/backend/logging-guidelines.md", "reason": "Formal events versus raw logs and private payloads"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Real PostgreSQL independent-process gates"}
+{"file": ".trellis/spec/protocol/index.md", "reason": "Shared schema authority"}
+{"file": ".trellis/spec/protocol/commands.md", "reason": "Source scope and receipt replay"}
+{"file": ".trellis/spec/protocol/schema-generation.md", "reason": "Generated consumers and encoded budgets"}
+{"file": ".trellis/spec/runner/index.md", "reason": "Runner responsibilities"}
+{"file": ".trellis/spec/runner/execution-guidelines.md", "reason": "Native scope, immutable envelope and Stop recovery"}
+{"file": ".trellis/spec/runner/workspace-guidelines.md", "reason": "Physical ownership and workspace preservation"}
+{"file": ".trellis/spec/runner/quality-guidelines.md", "reason": "Linux/native evidence limits"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "Trace admission through persisted effects"}
+{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "Reuse existing owners without generic framework"}
+{"file": ".trellis/tasks/09-30-a-task-conversation/research/backend-seams.md", "reason": "Concrete code anchors and selected technical contracts"}
+{"file": ".trellis/tasks/09-30-a-task-conversation/research/runner-guidance.md", "reason": "Honest native guidance and completion handling"}
+{"file": ".trellis/tasks/09-30-a-task-conversation/research/acceptance.md", "reason": "Required automated and native gates"}
+{"file": ".trellis/spec/backend/task-conversation.md", "reason": "Owning executable Task conversation, source and guidance contract"}

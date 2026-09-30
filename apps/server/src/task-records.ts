@@ -1,3 +1,4 @@
+import { bindTaskGuidance } from './task-guidance.ts';
 import type { Transaction } from '../../../packages/db/src/index.ts';
 import { CommandError } from '../../../packages/domain/src/commands.ts';
 import { canonicalJSON, digest, MAX_BODY_BYTES, validate } from '../../../packages/protocol/src/index.ts';
@@ -81,6 +82,7 @@ export async function publishInitialPlan(tx: Transaction, input: { task_id: stri
     await tx.query('INSERT INTO plan_nodes(task_id,plan_id,node_id,definition) VALUES($1,$2,$3,$4)', [input.task_id, input.plan_id, node.node_id, node]);
     await tx.query("INSERT INTO node_activations(task_id,node_id,activation,specification_id,plan_id,basis_source) VALUES($1,$2,1,$3,$4,'recorded')", [input.task_id, node.node_id, task.specification_id, input.plan_id]);
   }
+  for(const node of input.nodes)await bindTaskGuidance(tx,input.task_id,node.node_id,1);
   await tx.query('UPDATE tasks SET plan_id=$2,control_version=control_version+1 WHERE id=$1', [input.task_id, input.plan_id]);
   return { control_version: Number(task.control_version) + 1, specification_id: task.specification_id, plan_id: input.plan_id };
 }
@@ -126,8 +128,10 @@ export async function reactivateSettledNodes(tx: Transaction, input: { task_id: 
     AND (NOT a.process_released OR EXISTS (SELECT 1 FROM operations o WHERE o.attempt_id=a.id AND o.state NOT IN ('succeeded','cancelled')))`, [input.task_id, ids]);
   if (owners.rowCount) throw new CommandError('unmet_precondition', 'Old writers and admitted operations must settle before reactivation');
   for (const id of ids) {
-    const node = (await tx.query<{ activation: string }>("UPDATE nodes SET activation=activation+1,state='PENDING',result=NULL WHERE id=$1 RETURNING activation", [id])).rows[0]!;
+    const node = (await tx.query<{ activation: string }>("UPDATE nodes SET activation=activation+1,state='PENDING',result=NULL,execution_source_id=NULL,blocker_id=NULL WHERE id=$1 RETURNING activation", [id])).rows[0]!;
     await tx.query("INSERT INTO node_activations(task_id,node_id,activation,specification_id,plan_id,basis_source) VALUES($1,$2,$3,$4,$5,'recorded')", [input.task_id, id, node.activation, task.specification_id, task.plan_id]);
+    await tx.query("UPDATE task_guidance_obligations SET status='carried',version=version+1 WHERE node_id=$1 AND node_activation<$2 AND status='pending'",[id,node.activation]);
+    await bindTaskGuidance(tx,input.task_id,id,Number(node.activation));
   }
   await tx.query("UPDATE tasks SET state='RUNNING',control_version=control_version+1 WHERE id=$1", [input.task_id]);
   return ids;

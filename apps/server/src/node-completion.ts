@@ -1,3 +1,4 @@
+import { settleHandledGuidance } from './task-guidance.ts';
 import type { Transaction } from '../../../packages/db/src/index.ts';
 import { CommandError } from '../../../packages/domain/src/commands.ts';
 import { canonicalJSON } from '../../../packages/protocol/src/index.ts';
@@ -63,8 +64,8 @@ export async function projectCompletion(
     throw new CommandError('stale_execution', 'Completion source differs');
   const manifest = source
     ? (
-        await tx.query<{ summary: string; artifact_ids: string[]; content_digest: string }>(
-          'SELECT summary,artifact_ids,content_digest FROM completion_manifests WHERE operation_id=$1',
+        await tx.query<{ summary: string; artifact_ids: string[]; content_digest: string; handled_guidance_ids:string[]; manifest_version:number }>(
+          'SELECT summary,artifact_ids,content_digest,handled_guidance_ids,manifest_version FROM completion_manifests WHERE operation_id=$1',
           [operation.id]
         )
       ).rows[0]
@@ -75,12 +76,14 @@ export async function projectCompletion(
     ...message.result,
     ...(manifest
       ? {
+          ...(manifest.manifest_version===2?{handled_guidance_ids:manifest.handled_guidance_ids}:{}),
           summary: manifest.summary,
           artifact_ids: manifest.artifact_ids,
           completion_manifest_digest: manifest.content_digest,
         }
       : {}),
   };
+  if(source&&manifest)await settleHandledGuidance(tx,source.source_id,operation.id,manifest.handled_guidance_ids);
   await tx.query(
     'INSERT INTO node_completions(node_id,activation,attempt_id,operation_id,result) VALUES($1,$2,$3,$4,$5)',
     [attempt.node_id, attempt.node_activation, attempt.id, operation.id, result]

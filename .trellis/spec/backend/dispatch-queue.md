@@ -4,8 +4,8 @@
 
 Use `apps/server/src/dispatch-queue.ts` for already selected system work awaiting
 capacity. Runtime/model selection is owned by [Runtime scheduling](runtime-scheduling.md);
-Owner Start and semantic context construction are owned by [Task planning](task-planning.md)
-and [Node execution](node-execution.md). Existing WSS `pending` polling promotes durable
+Owner Start and semantic context construction are owned by [Task planning](task-planning.md),
+[Node execution](node-execution.md) and [Task Conversation](task-conversation.md). Existing WSS `pending` polling promotes durable
 queued rows; memory wakeups are not authoritative.
 
 ## 2. Signatures
@@ -29,7 +29,11 @@ survive later configuration edits unchanged.
 
 Promotion requires a ready connection owned by the current backend and matching
 incarnation, free physical capacity, current Task/revision/activation basis and
-settled previous owner. Lock Runner -> one Task -> Attempt. Filter blocked owners
+settled previous owner. Canonical Conversation validates its independent source
+epoch/input watermark, not the global execution control version; it shares the
+`planner:<task>` owner with initial planning. Its authenticated scratch-only scope
+may overlap a held Task workspace without acquiring writable access, while shared
+capacity, locality and previous Planner settlement still apply. Lock Runner -> one Task -> Attempt. Filter blocked owners
 before LIMIT and never hold several Task locks while scanning. Stage A serializes
 Node writers within one Task until isolated parallel worktrees are implemented.
 Selected production Attempts recheck current installation facts before Start. A complete current report of missing/unavailable Runtime cancels pre-start work; an omitted report or disconnected sole Runner leaves it queued. Stale heads are retried in separate transactions, at most 16 per poll, so one transaction never holds several Task locks.

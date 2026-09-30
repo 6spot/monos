@@ -31,6 +31,8 @@ const help = `monos — formal monos Tool Protocol commands
   monos complete_node --input payload.json [--request-id ID] --output json
   monos publish_execution_plan --input payload.json [--request-id ID] --output json
   monos raise_planning_issue --input payload.json [--request-id ID] --output json
+  monos read_task_context --input payload.json [--request-id ID] --output json
+  monos read_task_history --input payload.json [--request-id ID] --output json
   monos commit_task_turn --input payload.json [--request-id ID] --output json
   monos read_discussion --input payload.json [--request-id ID] --output json
   monos update_working_requirement_state --input payload.json [--request-id ID] --output json
@@ -47,13 +49,23 @@ Node completion: {"summary":"completed work","artifact_ids":[]}
 Omit artifact_ids to select this Attempt's outputs; [] selects none. Artifacts do
 not complete work. Completion or block ends the Attempt. Repository-free work needs
 no fake repository; opened or retained dirty work must be finalized.
+Completion may declare handled_guidance_ids:["GUIDANCE"]. Omission or [] means none;
+never infer handling from launch. Include still-required launch-assigned guidance
+or use block_node for unresolved work. Exact assignments are validated by backend.
 Initial Task Plan: {"planning_intent_id":"INTENT","plan_id":"PLAN","nodes":[{"node_id":"NODE","role_id":"ROLE","goal":"work to perform","dependencies":[]}]}
 Initial planning issue: {"planning_intent_id":"INTENT","reason":"Owner direction needed"}
 Only the source-bound initial Task Planner may publish a Plan or raise an initial
 planning issue. Use its supplied planning_intent_id. Exactly one Node is supported;
 preserve optional hard_requirements and expected_outputs when supplied.
 Only these two commands end initial planning; commit_task_turn does not.
-Planner reply: {"reply":"...","source_watermark":1,"routing":{"kind":"reply_only"}}
+Task context: {}; current formal facts include the separate action basis.
+Task history: {} or {"query":"search text"} or {"cursor":"CURSOR"}; source-cutoff bound.
+Task reply: {"source_id":"SOURCE","input_id":"INPUT","source_watermark":1,"reply":"...","routing":{"kind":"reply"}}
+Only a canonical Task Conversation source may use these reads or commit this reply.
+Its source/version stays fixed; action routing has a separate current execution
+basis. Conversation-only sources permit reply routing alone. Conversation cannot
+Start/Continue/unblock/reopen work or create another Task.
+Legacy probe reply: {"reply":"...","source_watermark":1,"routing":{"kind":"reply_only"}}
 Todo history: {} or {"cursor":"CURSOR"}; only this Attempt's input cutoff is readable.
 Todo cache rebuild: {"working_requirement_state":"...","resolved_watermark":0,"project_context_version":1,"project_context_digest":"64-hex-digest-from-context"}
 Todo reply: {"reply":"...","working_requirement_state":"...","source_message_id":"MESSAGE","source_watermark":1}
@@ -116,7 +128,7 @@ func run(args []string) (protocol.CommandResult, error) {
 		action = "retry"
 	case "command_status":
 		action = "status"
-	case "publish_artifact", "read_artifact", "block_node", "open_workspace", "inspect_repository", "complete_node", "publish_execution_plan", "raise_planning_issue", "commit_task_turn", "read_discussion", "update_working_requirement_state", "commit_discussion_turn":
+	case "publish_artifact", "read_artifact", "block_node", "open_workspace", "inspect_repository", "complete_node", "publish_execution_plan", "raise_planning_issue", "commit_task_turn", "read_task_context", "read_task_history", "read_discussion", "update_working_requirement_state", "commit_discussion_turn":
 	default:
 		return result, fmt.Errorf("unknown command")
 	}

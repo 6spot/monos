@@ -1,3 +1,6 @@
+import { cancelTaskInputEffects } from './task-guidance.ts';
+import { stopConversationAttempt } from './task-conversation-state.ts';
+import type { AttemptRow } from './service.ts';
 import type { Database } from '../../../packages/db/src/index.ts';
 import { transaction } from '../../../packages/db/src/index.ts';
 import { CommandError } from '../../../packages/domain/src/commands.ts';
@@ -34,10 +37,13 @@ export class TaskPlanning {
         // source is immutable, and is checked again after acquiring the Task lock.
         const head = (await tx.query<{ initial_planning_intent_id: string | null }>('SELECT initial_planning_intent_id FROM tasks WHERE id=$1', [command.scope_id])).rows[0]?.initial_planning_intent_id ?? null;
         const selected = head ? (await tx.query<{ id: string; runner_id: string }>('SELECT a.id,a.runner_id FROM attempts a JOIN task_planning_outbox p ON p.planned_attempt_id=a.id WHERE p.id=$1 AND p.task_id=$2', [head, command.scope_id])).rows[0] : undefined;
+        const allRunners=(await tx.query<{runner_id:string}>('SELECT DISTINCT runner_id FROM attempts WHERE task_id=$1 ORDER BY runner_id',[command.scope_id])).rows;
+        for(const r of allRunners)await tx.query('SELECT id FROM runners WHERE id=$1 FOR UPDATE',[r.runner_id]);
         if (selected) await tx.query('SELECT id FROM runners WHERE id=$1 FOR UPDATE', [selected.runner_id]);
         const task = await planningTask(tx, command.scope_id);
         const lockedReceipt = (await tx.query<{ digest: string; response: OwnerCommandResult }>('SELECT digest,response FROM owner_command_receipts WHERE scope_id=$1 AND request_id=$2', [command.scope_id, command.request_id])).rows[0];
         if (lockedReceipt) { if (lockedReceipt.digest !== hash) throw new CommandError('payload_conflict', 'Request ID has different immutable content'); return lockedReceipt.response; }
+        if(canonicalJSON(allRunners)!==canonicalJSON((await tx.query('SELECT DISTINCT runner_id FROM attempts WHERE task_id=$1 ORDER BY runner_id',[task.id])).rows))return retryLocks;
         if (task.initial_planning_intent_id !== head) return retryLocks;
         const intent = head ? (await tx.query<PlanningIntent>('SELECT * FROM task_planning_outbox WHERE id=$1 AND task_id=$2 FOR UPDATE', [head, task.id])).rows[0] : undefined;
         const attempt = intent ? (await tx.query<PlanningAttempt>('SELECT * FROM attempts WHERE id=$1 AND task_id=$2 FOR UPDATE', [intent.planned_attempt_id, task.id])).rows[0] : undefined;
@@ -65,6 +71,7 @@ export class TaskPlanning {
             if (task.state === 'PLANNING' && !await startEligibility(tx, task)) throw new CommandError('unmet_precondition', 'Restart requires an active Project and selected available Role');
             let issue: { reason: string } | undefined;
             if (task.planning_issue_sequence !== null) {
+              if(target.answer===undefined&&target.issue_sequence===Number(task.planning_issue_sequence))target.answer=(await tx.query<{answer:string}>("SELECT answer FROM task_input_answers WHERE task_id=$1 AND target_kind='planning_issue' AND target_id=$2 ORDER BY created_at DESC,id DESC LIMIT 1",[task.id,String(task.planning_issue_sequence)])).rows[0]?.answer;
               if (target.issue_sequence !== Number(task.planning_issue_sequence) || target.answer === undefined) throw new CommandError('unmet_precondition', 'Retry requires the exact open issue and an Owner answer');
               planningText(target.answer);
               issue = (await tx.query<{ body: { reason: string } }>("SELECT body FROM task_events WHERE task_id=$1 AND sequence=$2 AND kind='planning_issue_raised'", [task.id, task.planning_issue_sequence])).rows[0]?.body;
@@ -84,6 +91,12 @@ export class TaskPlanning {
               operationId = await stopPlanningAttempt(tx, attempt, command.request_id);
               // A committed issue stays a successful historical outcome.
               await tx.query("UPDATE attempts SET mutation_allowed=false,state=CASE WHEN state='RUNNING' THEN 'CANCELLED' ELSE state END,end_reason=CASE WHEN state='SUCCEEDED' THEN end_reason ELSE $2 END WHERE id=$1", [attempt.id, command.name === 'cancel_task' ? 'owner_cancelled' : 'owner_stopped']);
+            }
+            if(command.name==='cancel_task'){
+              if((await tx.query('SELECT 1 FROM tasks WHERE id=$1 AND accepted_delivery_operation_id IS NOT NULL',[task.id])).rowCount)throw new CommandError('unmet_precondition','Accepted delivery requires delivery cancellation');
+              const conversations=(await tx.query<AttemptRow>('SELECT * FROM attempts WHERE task_id=$1 AND task_conversation_source_id IS NOT NULL FOR UPDATE',[task.id])).rows;
+              for(const a of conversations){await stopConversationAttempt(tx,a,command.request_id);await tx.query('UPDATE attempts SET mutation_allowed=false WHERE id=$1',[a.id]);}
+              await cancelTaskInputEffects(tx,task.id);
             }
             endReason = command.name === 'cancel_task' ? 'owner_cancelled' : 'owner_stopped';
             await tx.query('UPDATE tasks SET state=$2,control_version=control_version+1,planning_issue_sequence=NULL WHERE id=$1', [task.id, command.name === 'cancel_task' ? 'CANCELLED' : 'PLANNING']);

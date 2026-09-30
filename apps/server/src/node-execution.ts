@@ -1,3 +1,5 @@
+import { cancelTaskInputEffects } from './task-guidance.ts';
+import { reactivateSettledNodes } from './task-records.ts';
 import { randomUUID } from 'node:crypto';
 import { transaction } from '../../../packages/db/src/index.ts';
 import type { Database, Transaction } from '../../../packages/db/src/index.ts';
@@ -225,7 +227,7 @@ export class NodeExecution {
       // A factual prelaunch rejection has no live writer. Preserve its source and expose Retry.
       const ended = (
         await this.db.pool.query<{ id: string; runner_id: string; task_id: string }>(
-          `SELECT a.id,a.runner_id,a.task_id FROM attempts a JOIN nodes n ON n.execution_source_id=a.node_execution_source_id WHERE n.state='RUNNING' AND a.state IN ('FAILED','CANCELLED') AND NOT a.mutation_allowed AND a.node_execution_source_id IS NOT NULL ORDER BY a.id LIMIT $1`,
+          `SELECT a.id,a.runner_id,a.task_id FROM attempts a JOIN nodes n ON n.execution_source_id=a.node_execution_source_id WHERE n.state='RUNNING' AND a.state IN ('FAILED','CANCELLED') AND NOT a.mutation_allowed AND a.node_execution_source_id IS NOT NULL AND NOT EXISTS(SELECT 1 FROM task_guidance_followups f WHERE f.source_id=a.node_execution_source_id AND f.status='waiting') ORDER BY a.id LIMIT $1`,
           [limit]
         )
       ).rows;
@@ -240,7 +242,8 @@ export class NodeExecution {
             ])
           ).rows[0]!;
           const node = (await tx.query<ExecutionNode>('SELECT * FROM nodes WHERE id=$1', [source.node_id])).rows[0]!;
-          if (task.state === 'RUNNING' && node.state === 'RUNNING' && node.execution_source_id === source.id)
+          const guidanceOwned=(await tx.query("SELECT 1 FROM task_guidance_followups WHERE source_id=$1 AND status='waiting'",[source.id])).rowCount;
+          if (!guidanceOwned && task.state === 'RUNNING' && node.state === 'RUNNING' && node.execution_source_id === source.id)
             await blockNodeSource(tx, source, 'factual', attempt.end_reason ?? 'missing_formal_outcome', attempt.id);
         });
     } finally {
@@ -312,15 +315,8 @@ export class NodeExecution {
         if (command.name === 'cancel_task') {
           if (target.specification_id !== task.specification_id || target.plan_id !== task.plan_id)
             throw new CommandError('version_conflict', 'Cancel requires exact Specification and Plan');
-          if (
-            (
-              await tx.query(
-                "SELECT 1 FROM authorization_receipts r JOIN task_command_proposals p ON p.id=r.proposal_id WHERE p.task_id=$1 AND p.action='accept_delivery'",
-                [task.id]
-              )
-            ).rowCount
-          )
-            throw new CommandError('unmet_precondition', 'Delivery cancellation is outside local execution');
+          if((await tx.query('SELECT 1 FROM tasks WHERE id=$1 AND accepted_delivery_operation_id IS NOT NULL',[task.id])).rowCount)throw new CommandError('unmet_precondition','Accepted delivery requires delivery cancellation');
+          await cancelTaskInputEffects(tx,task.id);
           await tx.query("UPDATE tasks SET state='CANCELLED',control_version=control_version+1 WHERE id=$1", [task.id]);
           await tx.query("UPDATE nodes SET state='CANCELLED' WHERE task_id=$1 AND state<>'COMPLETED'", [task.id]);
           await tx.query(
@@ -413,14 +409,18 @@ export class NodeExecution {
               operationId
             );
           } else if (command.name === 'stop_node') {
-            if (!['PENDING', 'RUNNING'].includes(node.state))
+            await tx.query('UPDATE nodes SET guidance_paused=true WHERE id=$1',[node.id]);
+            const pendingGuidance=(await tx.query("SELECT 1 FROM task_guidance_followups WHERE node_id=$1 AND status='waiting'",[node.id])).rowCount;
+            if (!['PENDING', 'RUNNING'].includes(node.state) && !(node.state==='COMPLETED'&&pendingGuidance))
               throw new CommandError('unmet_precondition', 'Node is not stoppable');
+            if(node.state==='COMPLETED'){await tx.query('UPDATE tasks SET control_version=control_version+1 WHERE id=$1',[task.id]);return this.receipt(tx,command,hash,json,{schema_version:1,request_id:command.request_id,status:'committed',task_id:task.id,control_version:Number(task.control_version)+1,source_id:source.id});}
             if (attempt) {
               operationId = await stopAttempt(tx, attempt, command.request_id, 'owner_stopped');
               const original = (
                 await tx.query("SELECT 1 FROM operations WHERE id=$1 AND kind='complete_node'", [operationId])
               ).rowCount;
-              if (original)
+              if (original){
+                await tx.query('UPDATE tasks SET control_version=control_version+1 WHERE id=$1',[task.id]);
                 return this.receipt(tx, command, hash, json, {
                   schema_version: 1,
                   request_id: command.request_id,
@@ -428,13 +428,23 @@ export class NodeExecution {
                   attempt_id: attempt.id,
                   task_id: task.id,
                   operation_id: operationId,
-                  control_version: Number(task.control_version),
+                  control_version: Number(task.control_version)+1,
                   source_id: source.id,
                 });
+              }
             }
             blockerId = await blockNodeSource(tx, source, 'owner_stopped', 'owner_stopped', attempt?.id);
             await tx.query('UPDATE tasks SET control_version=control_version+1 WHERE id=$1', [task.id]);
           } else if (command.name === 'retry_node' || command.name === 'continue_node') {
+            const paused=(await tx.query('SELECT guidance_paused FROM nodes WHERE id=$1',[node.id])).rows[0].guidance_paused;
+            if(command.name==='continue_node'&&node.state==='COMPLETED'&&paused){
+              if(!(await tx.query("SELECT 1 FROM task_guidance_followups WHERE node_id=$1 AND status='waiting'",[node.id])).rowCount)throw new CommandError('unmet_precondition','No paused guidance followup needs continuation');
+              await reactivateSettledNodes(tx,{task_id:task.id,expected:{control_version:Number(task.control_version),specification_id:task.specification_id,plan_id:task.plan_id},node_ids:[node.id]});
+              await tx.query('UPDATE nodes SET guidance_paused=false WHERE id=$1',[node.id]);
+              const freshTask=(await tx.query<NodeTask>('SELECT * FROM tasks WHERE id=$1',[task.id])).rows[0]!;const freshNode=(await tx.query<ExecutionNode>('SELECT * FROM nodes WHERE id=$1',[node.id])).rows[0]!;
+              const next=await prepareNodeSource(tx,freshTask,freshNode,config,{request_id:command.request_id,recovery:{owner_continued_guidance:true}});
+              return this.receipt(tx,command,hash,json,{schema_version:1,request_id:command.request_id,status:'committed',task_id:task.id,control_version:Number(freshTask.control_version),source_id:next.id});
+            }
             if (node.state !== 'BLOCKED') throw new CommandError('unmet_precondition', 'Node is not blocked');
             const blocker = node.blocker_id
               ? (
@@ -450,6 +460,7 @@ export class NodeExecution {
               throw new CommandError('unmet_precondition', 'Continue requires Owner Stop');
             if (command.name === 'retry_node' && blocker?.kind === 'owner_stopped')
               throw new CommandError('unmet_precondition', 'Owner Stop requires Continue');
+            if(blocker?.kind==='semantic'&&!target.answer){target.answer=(await tx.query<{answer:string}>("SELECT answer FROM task_input_answers WHERE task_id=$1 AND target_kind='node_blocker' AND target_id=$2 ORDER BY created_at DESC,id DESC LIMIT 1",[task.id,blocker.id])).rows[0]?.answer;}
             if (blocker?.kind === 'semantic') {
               if (!target.answer)
                 throw new CommandError('unmet_precondition', 'Semantic blocker needs exact Owner answer');
@@ -469,6 +480,7 @@ export class NodeExecution {
               throw new CommandError('unmet_precondition', 'Recover original completion before a fresh Attempt');
             await tx.query('UPDATE node_execution_outbox SET done=true WHERE id=$1', [source.id]);
             await tx.query("UPDATE tasks SET state='RUNNING',control_version=control_version+1 WHERE id=$1", [task.id]);
+            await tx.query('UPDATE nodes SET guidance_paused=false WHERE id=$1',[node.id]);
             await tx.query("UPDATE nodes SET state='PENDING',blocker_id=NULL WHERE id=$1", [node.id]);
             const next = await prepareNodeSource(
               tx,
@@ -587,6 +599,7 @@ export class NodeExecution {
         specification_id: task.specification_id,
         plan_id: task.plan_id,
         state: node.state,
+        guidance_paused:node.guidance_paused,
         source: source ? nodeSource(source) : null,
         waiting_reason: source?.waiting_reason ?? null,
         attempt: attempt

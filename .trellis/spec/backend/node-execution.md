@@ -2,7 +2,8 @@
 
 Sources: `apps/server/src/{node-execution,node-execution-state,node-completion,artifacts}.ts`,
 `packages/db/migrations/0018_node_execution.sql` and the shared protocol schema.
-Conversation, Spec/Plan changes and delivery are separate roadmap tasks.
+Task Conversation extends these contracts via [guidance handling](task-conversation.md).
+Spec/Plan changes and delivery remain separate roadmap tasks.
 
 ## 1. Scope / Trigger
 
@@ -17,8 +18,11 @@ Natural-language output and process exit never complete a Node.
   source, planned Attempt and configuration version.
 - `publish_artifact {artifact_id,title,content:{text,media_type},references?,supersedes?}`;
   `read_artifact {artifact_id}`; `block_node {reason}`.
-- `complete_node {summary,artifact_ids?,handled_guidance_ids?:[]}` freezes
-  `completion_manifests`; nonempty handled guidance remains unsupported.
+- `complete_node {summary,artifact_ids?,handled_guidance_ids?}` freezes
+  `completion_manifests`. Version2 includes bounded unique launch-assigned guidance
+  IDs; omitted/[] means none. Required active assignments must be declared before
+  fencing; successful trusted completion alone settles handling. Preserve historical
+  version1 hashes and operation identities unchanged.
 - Authenticated Owner GETs: `/v1/owner/tasks/:task_id/artifacts`,
   `/v1/owner/tasks/:task_id/artifacts/:artifact_id`, and
   `/v1/owner/tasks/:task_id/nodes/:node_id/execution`.
@@ -35,8 +39,9 @@ provenance. Arbitrary PENDING fixture Nodes confer no production authority.
 Under configuration SHARE and Task/Node locks, freeze effective Spec, exact Node,
 full current referenced Role (including archived Role), Project map **and matching
 workspace reservations**, resolved initial-planning answers and bounded historical
-Artifact/recovery metadata. Exclude Todo/cache/sessions, Planner Guidance, other
-Roles/Tasks, raw logs and Git bytes. Historical Artifact publication is not current
+Artifact/recovery metadata, plus active applicable Task guidance and exact source
+assignments. Exclude Todo/cache/sessions, Planner Guidance, other Roles/Tasks, raw
+logs and Git bytes. Historical Artifact publication is not current
 completion. Queue identity and prompt cannot refresh after configuration changes.
 
 Queue admission makes Node RUNNING. Offline/no-Runner/stale observation waits

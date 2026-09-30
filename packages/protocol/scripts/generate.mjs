@@ -56,7 +56,17 @@ const responses = (name) => ({
   default: { description: 'Deterministic protocol error.', content: { 'application/json': { schema: reference('CommandResult') } } },
 });
 const security = (auth) => auth === 'OwnerAuth' ? [{ OwnerAuth: [] }, { OwnerCookie: [] }] : [{ [auth]: [] }];
-const get = (name, auth, parameters = []) => ({ security: security(auth), parameters: parameters.map((name) => ({ name, in: 'path', required: true, schema: reference('Id') })), responses: responses(name) });
+const get = (name, auth, parameters = [], querySchema) => ({
+  security: security(auth),
+  parameters: [
+    ...parameters.map((name) => ({ name, in: 'path', required: true, schema: reference('Id') })),
+    ...Object.entries(querySchema ? schema.definitions[querySchema].properties : {}).map(([name, shape]) => ({
+      name, in: 'query', required: false,
+      schema: JSON.parse(JSON.stringify(shape).replaceAll('#/definitions/', '#/components/schemas/')),
+    })),
+  ],
+  responses: responses(name),
+});
 artifacts.set('generated/openapi.json', `${JSON.stringify({
   openapi: '3.1.0', info: { title: 'monos boundary probe', version: '1.0.0' },
   paths: {
@@ -87,6 +97,12 @@ artifacts.set('generated/openapi.json', `${JSON.stringify({
     '/v1/owner/login': { post: { description: 'Same-origin password login; sets Secure HttpOnly __Host-monos cookie.', requestBody: { required: true, content: { 'application/json': { schema: reference('OwnerLogin') } } }, responses: responses('OwnerSessionStatus') } },
     '/v1/owner/session': { get: get('OwnerSessionStatus', 'OwnerAuth') },
     '/v1/owner/logout': { post: { security: security('OwnerAuth'), description: 'Revokes current session and clears its cookie; cookie writes require same Origin.', responses: responses('OwnerSessionStatus') } },
+    '/v1/owner/tasks/conversation/commands': { post: { security: security('OwnerAuth'), requestBody: { required: true, content: { 'application/json': { schema: reference('TaskConversationCommand') } } }, responses: responses('TaskConversationCommandResult') } },
+    '/v1/owner/tasks/{task_id}/conversation': { get: get('TaskConversationStatus','OwnerAuth',['task_id']) },
+    '/v1/owner/tasks/{task_id}/conversation/messages': { get: get('TaskHistoryPage','OwnerAuth',['task_id'],'TaskHistoryQuery') },
+    '/v1/owner/tasks/{task_id}/conversation/operations': { get: get('TaskInputOperationPage','OwnerAuth',['task_id'],'AttemptListQuery') },
+    '/v1/owner/tasks/{task_id}/conversation/guidance/{guidance_id}/recipients': { get: get('TaskGuidanceRecipientPage','OwnerAuth',['task_id','guidance_id'],'AttemptListQuery') },
+    '/v1/owner/tasks/{task_id}/conversation/commands/{request_id}': { get: get('TaskConversationCommandResult','OwnerAuth',['task_id','request_id']) },
     '/v1/owner/tasks/{task_id}/planning': { get: get('TaskPlanningStatus', 'OwnerAuth', ['task_id']) },
     '/v1/owner/tasks/{task_id}/plans/{plan_id}': { get: get('TaskPlanRevision', 'OwnerAuth', ['task_id', 'plan_id']) },
     '/v1/owner/tasks/{task_id}': { get: get('TaskOverview', 'OwnerAuth', ['task_id']) },

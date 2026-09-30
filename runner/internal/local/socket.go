@@ -135,6 +135,53 @@ func prepareEnvelope(d protocol.Dispatch, r Request) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	conversationRead := r.Name == "read_task_context" || r.Name == "read_task_history"
+	if conversationRead && d.TaskConversationSource == nil {
+		return nil, fmt.Errorf("Task conversation reads require exact canonical source")
+	}
+	if d.TaskConversationSource != nil {
+		s := d.TaskConversationSource
+		switch r.Name {
+		case "read_task_context", "read_task_history":
+		case "commit_task_turn":
+			var payload struct {
+				SourceID        string `json:"source_id"`
+				InputID         string `json:"input_id"`
+				SourceWatermark int64  `json:"source_watermark"`
+				Routing         struct {
+					Kind string `json:"kind"`
+				} `json:"routing"`
+			}
+			if err := json.Unmarshal(r.Payload, &payload); err != nil || payload.SourceID != s.SourceID || payload.InputID != s.InputID || payload.SourceWatermark != s.SourceWatermark {
+				return nil, fmt.Errorf("Task turn source does not match this Attempt")
+			}
+			if s.ReplyOnly && payload.Routing.Kind != "reply" {
+				return nil, fmt.Errorf("this Task conversation source permits reply-only routing")
+			}
+		default:
+			return nil, fmt.Errorf("command unavailable to Task conversation")
+		}
+	} else if r.Name == "commit_task_turn" {
+		if d.TodoID != nil {
+			return nil, fmt.Errorf("Task reply is unavailable to Todo Discussion")
+		}
+		var payload map[string]json.RawMessage
+		if err := json.Unmarshal(r.Payload, &payload); err != nil {
+			return nil, err
+		}
+		if _, ok := payload["source_id"]; ok {
+			return nil, fmt.Errorf("canonical Task turn requires a conversation source")
+		}
+		if _, ok := payload["input_id"]; ok {
+			return nil, fmt.Errorf("canonical Task turn requires a conversation source")
+		}
+		var routing struct {
+			Kind string `json:"kind"`
+		}
+		if err := json.Unmarshal(payload["routing"], &routing); err != nil || routing.Kind != "reply_only" {
+			return nil, fmt.Errorf("canonical Task routing requires a conversation source")
+		}
+	}
 	nodeCommand := r.Name == "publish_artifact" || r.Name == "read_artifact" || r.Name == "block_node"
 	if nodeCommand && d.NodeExecutionSource == nil {
 		return nil, fmt.Errorf("command requires canonical Node execution source")

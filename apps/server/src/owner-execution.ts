@@ -90,7 +90,7 @@ export async function executeOwnerAction(db: Database, token: string, command: O
       if (attempt.kind !== 'node' || attempt.node_id !== target.node_id || Number(attempt.node_activation) !== target.node_activation) throw new CommandError('denied_scope', 'Node Attempt binding differs');
       if (!task.plan_id || attempt.plan_id !== task.plan_id || attempt.specification_id !== task.specification_id) throw new CommandError('version_conflict', 'Attempt revision basis changed', Number(task.control_version));
       await assertCurrentNode(tx, { task_id: task.id, node_id: target.node_id!, node_activation: target.node_activation! });
-    } else if (attempt.kind !== 'planner' || task.plan_id !== null || attempt.specification_id !== task.specification_id) {
+    } else if ((attempt.launch as {task_conversation_source?:unknown}).task_conversation_source || attempt.kind !== 'planner' || task.plan_id !== null || attempt.specification_id !== task.specification_id) {
       throw new CommandError('unmet_precondition', 'Initial Planner is no longer current');
     }
     if (action.startsWith('stop_')) {

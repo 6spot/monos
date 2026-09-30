@@ -28,6 +28,15 @@ Single-Node execution adds `publish_artifact`, `read_artifact`, `block_node`,
 `settle_completion` pairs. See [Node execution](../backend/node-execution.md) for
 strict payloads, omitted/empty Artifact selection and canonical Owner controls.
 
+Canonical Task Conversation adds `Dispatch.task_conversation_source`,
+`read_task_context`, `read_task_history` and source-bound `commit_task_turn` with
+routing kind `reply` or exact action basis. Its envelope version binds conversation
+authority; execution mutations separately validate current control/Spec/Plan/Node.
+Reply-only observations survive unrelated Node progress. Node completion version2
+manifests include explicit handled guidance IDs; version1 digests remain unchanged.
+See [Task Conversation](../backend/task-conversation.md) for strict scopes and
+independent Owner input controls.
+
 - Schemas/versioned generated types own wire fields; domain services own transitions.
 - Backend derives caller identity and scope. Owner flags, socket paths and claimed Attempt IDs cannot grant authority.
 - Owner, Runner and Attempt credentials are separate. Never expose secrets in logs/prompts/arguments.

@@ -1,3 +1,4 @@
+import { handleTaskConversation } from './task-conversation-state.ts';
 import { lockConfiguration } from './configuration-guards.ts';
 import { randomUUID } from 'node:crypto';
 import { runnerForCredential, transaction } from '../../../packages/db/src/index.ts';
@@ -76,6 +77,12 @@ async function taskEvent(tx: Transaction, attempt: AttemptRow, kind: string, bod
 
 async function missingFormalOutcome(tx: Transaction, attempt: AttemptRow, observation: string, exitCode?: number): Promise<void> {
   if (!attempt.mutation_allowed) return;
+  if(attempt.launch.task_conversation_source){
+    await tx.query("UPDATE attempts SET mutation_allowed=false,state='FAILED',end_reason='missing_formal_outcome' WHERE id=$1",[attempt.id]);
+    await tx.query("UPDATE task_inputs SET status='failed',version=version+1 WHERE id=$1 AND status='pending'",[attempt.launch.task_conversation_source.input_id]);
+    await tx.query('UPDATE tasks SET conversation_version=conversation_version+1 WHERE id=$1',[attempt.task_id]);
+    await admitEffect(tx,attempt,'stop',randomUUID());return;
+  }
   if (attempt.todo_id) {
     await tx.query("UPDATE attempts SET mutation_allowed=false,state='FAILED',end_reason='missing_formal_outcome' WHERE id=$1", [attempt.id]);
     await tx.query('UPDATE todo_discussion_controls SET version=version+1 WHERE todo_id=$1', [attempt.todo_id]);
@@ -229,6 +236,15 @@ export class BoundaryService {
       }
       if (!task) throw new CommandError('denied_scope', 'Attempt owner is missing');
       if (command.name === 'commit_discussion_turn' || command.name === 'read_discussion' || command.name === 'update_working_requirement_state') throw new CommandError('denied_scope', 'Todo command requires Todo Planner authority');
+      if(attempt.launch.task_conversation_source){
+        const current=(await tx.query<{conversation_version:string}>('SELECT conversation_version FROM tasks WHERE id=$1',[task.id])).rows[0]!;
+        guardNewCommand(command,{kind:attempt.kind,taskId:task.id,taskConversation:true,mutationAllowed:attempt.mutation_allowed,processReleased:attempt.process_released,controlVersion:Number(current.conversation_version),sourceWatermark:attempt.launch.source_watermark,connectionAvailable:runner.available&&runner.connection_instance===this.instanceId});
+        const outcome=await handleTaskConversation(tx,attempt,command);
+        const response:CommandResult={schema_version:1,request_id:command.request_id,status:'committed',result:outcome.result,...(outcome.operation_id?{operation_id:outcome.operation_id}:{})};
+        validate('CommandResult',response);
+        await tx.query('INSERT INTO command_receipts(attempt_id,scope_id,request_id,command_name,digest,schema_version,envelope_json,response,operation_id) VALUES($1,$2,$3,$4,$5,1,$6,$7,$8)',[attempt.id,task.id,command.request_id,command.name,submission.sha256,submission.envelope_json,response,outcome.operation_id??null]);
+        this.options.beforeAdmissionCommit?.();return response;
+      }
       const legacy = await explicitLegacyAttempt(tx, attempt.id);
       guardNewCommand(command, { kind: attempt.kind, taskId: attempt.task_id!, resourceId: legacy ? attempt.launch.resource_id : undefined, projectResources: !legacy, initialPlanning: !!attempt.planning_intent_id && !legacy, mutationAllowed: attempt.mutation_allowed, processReleased: attempt.process_released, controlVersion: Number(task.control_version), sourceWatermark: attempt.launch.source_watermark, connectionAvailable: runner.available && runner.connection_instance === this.instanceId });
       if (command.name === 'publish_execution_plan' || command.name === 'raise_planning_issue') {
@@ -238,6 +254,7 @@ export class BoundaryService {
         await tx.query('INSERT INTO command_receipts(attempt_id,scope_id,request_id,command_name,digest,schema_version,envelope_json,response,operation_id) VALUES($1,$2,$3,$4,$5,1,$6,$7,$8)', [attempt.id, task.id, command.request_id, command.name, submission.sha256, submission.envelope_json, response, outcome.operation_id]);
         this.options.beforeAdmissionCommit?.(); return response;
       }
+      if(command.name==='commit_task_turn'&&(!legacy||command.payload.source_id||command.payload.input_id||command.payload.routing?.kind!=='reply_only'))throw new CommandError('denied_scope','Canonical Task reply requires its input source');
       if (!legacy && command.name === 'inspect_repository') throw new CommandError('unmet_precondition', 'Canonical Planner repository inspection is unavailable in Stage A');
       if (!legacy && !attempt.launch.workspace_reservations) throw new CommandError('denied_scope', 'Fresh canonical effects require Project workspace reservations');
       if (task.project_id && (command.name === 'open_workspace' || command.name === 'inspect_repository')) {
@@ -426,7 +443,10 @@ export class BoundaryService {
       if (event.kind === 'capture_failed' && !attempt.process_released) {
         const completion = (await tx.query("SELECT 1 FROM operations WHERE attempt_id=$1 AND kind='complete_node'", [attempt.id])).rowCount;
         if (!completion && attempt.mutation_allowed) {
-          if (attempt.todo_id) {
+          if(attempt.launch.task_conversation_source){
+            await missingFormalOutcome(tx,attempt,'capture_failed');
+            await tx.query("UPDATE attempts SET end_reason='capture_failed' WHERE id=$1",[attempt.id]);
+          } else if (attempt.todo_id) {
             await tx.query("UPDATE attempts SET mutation_allowed=false,state='FAILED',end_reason='capture_failed' WHERE id=$1", [attempt.id]);
             await tx.query('UPDATE todo_discussion_controls SET version=version+1 WHERE todo_id=$1', [attempt.todo_id]);
             await admitEffect(tx, attempt, 'stop', randomUUID());

@@ -8,7 +8,15 @@ Owner acceptance, Task messages, provider workers, explicit correction/cancellat
 
 ## 2. Signatures
 
-The probe implements `commit_task_turn(reply, source_watermark, routing)` and `complete_node(summary, artifact_ids?, handled_guidance_ids?)` through the versioned `POST /v1/commands` envelope. `submit_task_message`, Owner Accept, Request Changes, Cancel and delivery Retry remain conceptual full-product contracts; their routes and records are not implemented by this boundary probe.
+Canonical Task Conversation implements source-bound `commit_task_turn` and Owner
+`submit_task_message`, Retry/Withdraw/Stop through the routes in
+[Task Conversation](task-conversation.md). Canonical Node completion implements
+`complete_node(summary, artifact_ids?, handled_guidance_ids?)`; source-aware local
+pre-delivery Cancel is also implemented. Owner Accept, Request Changes and delivery
+Retry remain future product contracts. The paired accepted-operation/input-cutoff
+fields are a guarded internal seam with no public acceptance setter; proposal
+confirmation does not constitute acceptance. The delivery behavior below describes
+requirements for that future implementation, not completed provider integration.
 
 ## 3. Contracts
 

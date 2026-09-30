@@ -47,6 +47,10 @@ func (d *Daemon) retainedRecovery(op protocol.Operation, dispatch protocol.Dispa
 		if dispatch.NodeExecutionSource == nil || dispatch.MutationAllowed || dispatch.ProcessReleased || !reflect.DeepEqual(start.Dispatch.TaskID, dispatch.TaskID) || !reflect.DeepEqual(start.Dispatch.NodeExecutionSource, dispatch.NodeExecutionSource) || !reflect.DeepEqual(start.Dispatch.WorkspaceReservations, dispatch.WorkspaceReservations) {
 			return false, fmt.Errorf("Node recovery source or authorization changed")
 		}
+	} else if dispatch.TaskConversationSource != nil || start.Dispatch.TaskConversationSource != nil {
+		if dispatch.TaskConversationSource == nil || dispatch.MutationAllowed || dispatch.ProcessReleased || !reflect.DeepEqual(start.Dispatch.TaskID, dispatch.TaskID) || !reflect.DeepEqual(start.Dispatch.TaskConversationSource, dispatch.TaskConversationSource) || !reflect.DeepEqual(start.Dispatch.WorkspaceReservations, dispatch.WorkspaceReservations) {
+			return false, fmt.Errorf("Task conversation recovery source or authorization changed")
+		}
 	} else if op.Workspace == nil {
 		if dispatch.TaskPlanningSource == nil || dispatch.MutationAllowed || dispatch.ProcessReleased ||
 			!reflect.DeepEqual(start.Dispatch.TaskID, dispatch.TaskID) ||
@@ -68,7 +72,8 @@ func (d *Daemon) prepareRecovery(ctx context.Context, inventory protocol.RunnerI
 		dispatch, exists := dispatches[op.AttemptID]
 		// Only exact source-bound terminal effects gain repository-free replay.
 		nodeFree := dispatch.NodeExecutionSource != nil && (op.Kind == protocol.Stop || op.Kind == protocol.KindCompleteNode && op.RepositoryFree != nil && *op.RepositoryFree)
-		if op.Workspace == nil && !nodeFree && (op.Kind != protocol.Stop || dispatch.TaskPlanningSource == nil) {
+		conversationStop := dispatch.TaskConversationSource != nil && op.Kind == protocol.Stop
+		if op.Workspace == nil && !nodeFree && !conversationStop && (op.Kind != protocol.Stop || dispatch.TaskPlanningSource == nil) {
 			continue
 		}
 		if prior, exists := seen[op.OperationID]; exists {

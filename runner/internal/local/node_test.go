@@ -18,6 +18,8 @@ func TestNodeToolsKeepOutputSelectionAndScope(t *testing.T) {
 	}{
 		{"publish_artifact", `{"artifact_id":"artifact","title":"Output","content":{"text":"","media_type":"text/plain"}}`},
 		{"read_artifact", `{"artifact_id":"artifact"}`}, {"block_node", `{"reason":"Need Owner direction"}`},
+		{"complete_node", `{"summary":"Done","handled_guidance_ids":["assigned-guidance"]}`},
+		{"complete_node", `{"summary":"Done","handled_guidance_ids":[]}`},
 		{"complete_node", `{"summary":"Done"}`}, {"complete_node", `{"summary":"Done","artifact_ids":[]}`}, {"complete_node", `{"summary":"Done","artifact_ids":["earlier-attempt-output"]}`},
 	} {
 		raw, err := prepareEnvelope(d, Request{Name: entry.name, RequestID: "request", Payload: json.RawMessage(entry.payload)})
