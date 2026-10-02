@@ -2,40 +2,59 @@
 
 ## Goal
 
-Make existing Login, Settings and Todo/preview interiors coherent with the neutral
-shared shell and controls delivered by the Execution UI leaf.
+Make Login, Settings and Todo/preview interiors coherent with the accepted neutral
+Execution Board and Task workspace, while retaining all existing command/recovery
+and scoped-draft behavior.
 
-## Scope and ordering
+## Background and ownership
 
-This separately planned leaf follows [Execution UI](../archive/2026-10/09-30-a-execution-ui/prd.md)
-and precedes [execution integration acceptance](../09-30-a-task-execution-acceptance/prd.md).
-It implements the outstanding interiors from the
+Follows [Execution UI](../archive/2026-10/09-30-a-execution-ui/prd.md), accepted in
+`d28fd8b`, and precedes [execution integration acceptance](../09-30-a-task-execution-acceptance/prd.md).
+This leaf completes the outstanding interiors from the
 [original migration handoff](../archive/2026-09/09-30-frontend-visual-standards/migration-handoff.md).
-The execution leaf owns shared shell/tokens/chrome/mobile navigation and primitives
-needed for Board/full Task. This leaf owns Login, Projects/Roles/Execution/GitHub
-settings, Todo list/detail, Original Capture, Discussion, preview and remaining
-legacy forms/styles. Shared files may be refined after the execution leaf is closed.
+The predecessor supplied shared neutral tokens, shell/mobile navigation, PageHeader
+and owned controls. Remaining green skins, oversized headings and native field
+skins are in existing interiors. The Owner's standing authorization covers routine
+planning, implementation, review, test and commit decisions without repeat approval.
 
 ## Requirements
 
-- Apply the frontend visual contract to these existing interiors, retaining their
-  exact authenticated command, conflict, uncertainty and scoped draft behavior.
-- Preserve Todo capture/open without Planner execution, source navigation, selection,
-  mounted editors and terminal independent-Task semantics.
-- Remove remaining legacy visual overrides in this scope; use owned shadcn Base UI
-  controls and the shared neutral palette/chrome rather than feature palettes.
-- Keep backend execution capabilities unchanged; this is not a delivery feature.
+1. Reuse the frontend visual contract and owned shadcn Base UI controls for Login,
+   Projects, Roles, Execution/GitHub settings, Todo list/detail, Original Capture,
+   Discussion and preview. Consolidate obsolete global styles; retain one semantic
+   token authority, compact chrome and meaningful flat sections/bounded groups.
+2. Preserve authenticated session behavior, exact immutable requests/receipts,
+   two-client conflict handling, original command basis and per-record/Todo drafts.
+   Keep existing views/controllers mounted; no new command on navigation/mount.
+3. Keep Todo list and selected workspace together on desktop; mobile list/detail
+   back and navigation remain accessible. Original Capture is distinct from chat;
+   full important messages/proposed Specification remain readable. Compose quiet
+   empty, queued, unavailable, error and uncertainty states with reachable actions.
+4. Retain Project/Role/policy/provider meaning, private-key clearing and keep-current
+   behavior, fieldset locking while saves are uncertain, labelled keyboard controls
+   and explicit reload/save. Use existing snapshots without new configuration APIs.
+5. Verify Login/Settings/Todo/preview and downstream Task/local REVIEW share coherent
+   typography, surfaces, chrome and controls at desktop and mobile widths. Preserve
+   all accepted Task recovery/control semantics and honest local-result labels.
 
-## Acceptance
+## Acceptance criteria
 
-- [ ] Inspected desktop 1440×1000 and mobile 390×844 screenshots cover populated,
-  empty, error/uncertain and long-content states against the Multica-derived contract.
-- [ ] Keyboard/focus, mobile navigation, original drafts, version conflicts and
-  immutable request recovery pass the full existing browser regression suite.
-- [ ] Combined Todo→preview→Task→local REVIEW presentation is coherent alongside
-  accepted new-execution UI evidence; no screenshot-only claim of native execution.
+- [x] All scoped interiors use neutral semantic surfaces, shared compact headings
+  and owned controls; obsolete global primitive overrides/green skins are removed.
+- [x] Actual-build1440×1000 and390×844 screenshots are inspected for populated,
+  empty, loading/queued/disabled, error/uncertain and long-content states, with
+  source/build identity, reference comparison and intentional differences recorded.
+- [x] Existing browser regression passes: keyboard/focus/mobile back/menu, passive
+  capture, scoped drafts, exact uncertain recovery, conflicts, session cleanup and
+  downstream Task controls. Added checkbox integration preserves disabled locking.
+- [x] Combined Todo→preview→Task→local REVIEW presentation is coherent with accepted
+  execution evidence; fixture screenshots are not claimed as native execution.
+- [x] Relevant lint/type/unit/protocol/build checks and independent full-scope review
+  pass; test schemas are cleaned and no new permanent service is introduced.
 
-## Planning status
+## Out of scope
 
-Backlog only. Complete research, design, implementation plan and curated context
-before activation. Standing Owner authorization covers routine task progression.
+No backend execution/API/schema capability, Task lifecycle/command-hook redesign,
+Todo persistent storage, new routing/state library, Role/team taxonomy, delivery
+feature, Runtime installation or native integration acceptance. Existing product
+contracts decide behavior; this leaf changes presentation and its verification.

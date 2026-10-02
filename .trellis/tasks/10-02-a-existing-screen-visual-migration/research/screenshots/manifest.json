@@ -1,0 +1,3356 @@
+{
+  "predecessor_commit": "333c9e3d7a86ece3ece09e2eaa012192d50e0735",
+  "product_revision": "predecessor plus Web source files with exact hashes below, committed in this leaf",
+  "reference_head": "44ea3b40c8b4f54f4c76d1dd3e3c92e0c0cabd19",
+  "assets": [
+    {
+      "file": "apps/web/dist/assets/index-CIqFVtS4.css",
+      "sha256": "6a2266335a48d2301ad4b94d338e3e06b9f21837c2661f1417ee1f08b410b76c"
+    },
+    {
+      "file": "apps/web/dist/assets/index-DVkmoQ-z.js",
+      "sha256": "bfa74cc434579f2669e355fc81f27f64d71ee9f4a787687b46881d1fe0aa8bca"
+    }
+  ],
+  "source_files": [
+    {
+      "file": "apps/web/index.html",
+      "sha256": "43ad3ae62f1d067159740d6f5fbe3ba340d1742b9888234ab9a2b1ebdf7eb658"
+    },
+    {
+      "file": "apps/web/package.json",
+      "sha256": "2e5929bf63764c0d19d2998516d83ce3d57a9a61f87f2aedb203bb291a497cfa"
+    },
+    {
+      "file": "apps/web/src/app/app.tsx",
+      "sha256": "5fe13ac6c5fd6e90ad3ab084e5e297e59d614660102aa86fad54399df5fbf8ab"
+    },
+    {
+      "file": "apps/web/src/components/forms.tsx",
+      "sha256": "47ef7a738b37acfd8e292e5c918683fa5c8d0d1a44b6934e073731c98443f763"
+    },
+    {
+      "file": "apps/web/src/components/page-header.tsx",
+      "sha256": "dad3dcd13be5af829867659a8198ecdf213542f07829c1c67061a941803ef713"
+    },
+    {
+      "file": "apps/web/src/components/ui/button.tsx",
+      "sha256": "45cdd2a87ec353feab3145cb0342205a6314db8c339b0bc5b9f70938694c3c2f"
+    },
+    {
+      "file": "apps/web/src/components/ui/checkbox.tsx",
+      "sha256": "618c349e15065e189e8007d96b0d0eb3caf39e5b8cd875a21d5162ba397c5960"
+    },
+    {
+      "file": "apps/web/src/components/ui/dialog.tsx",
+      "sha256": "f59b3f81018c56cb2c7f77ed38a04be67cdfc12f23f323f283c947527728f2b0"
+    },
+    {
+      "file": "apps/web/src/components/ui/input.tsx",
+      "sha256": "feaffe8d386ab8273eb0da9590f4e69d2e4e8eada17769dbe3d338e8f7594811"
+    },
+    {
+      "file": "apps/web/src/components/ui/label.tsx",
+      "sha256": "94f7b1d79727725b54271d7fe771f46613c54bf302b5570a646f319d6dd2abf0"
+    },
+    {
+      "file": "apps/web/src/components/ui/native-select.tsx",
+      "sha256": "f6fe86d6430edd1b99b81e3660302aaea2f39d9228227e328ce5a4804a2aa550"
+    },
+    {
+      "file": "apps/web/src/components/ui/textarea.tsx",
+      "sha256": "f23ee3caddc6eb8b8c2d515ec3a1b1dc0457687d1199429707d249dc0caf1570"
+    },
+    {
+      "file": "apps/web/src/features/discussion.tsx",
+      "sha256": "63bb7c8accbc71e11b30108a613db95a7b686436ab5e20f359263fefeabc5347"
+    },
+    {
+      "file": "apps/web/src/features/execution-board.tsx",
+      "sha256": "e83e1fc0e98a4ca349739f70dc64d1df8a70a210ff13ba4f1ac1100a67ea643b"
+    },
+    {
+      "file": "apps/web/src/features/execution.tsx",
+      "sha256": "006a8abcab53f393f4bf3490d2e33b68d036a0ecb51136832aa6e4d348d8f431"
+    },
+    {
+      "file": "apps/web/src/features/github.tsx",
+      "sha256": "414ad8b0004b631fc0d1af09266a4706de292dd9de31fe0077a21b0eee9aff06"
+    },
+    {
+      "file": "apps/web/src/features/policy-editor.tsx",
+      "sha256": "8a3d619389e8336339af5da857eebd0ec0c08920d2bc429b4ef5010915eb8a95"
+    },
+    {
+      "file": "apps/web/src/features/projects.tsx",
+      "sha256": "f63b1a5e90c6613973803117aee2b09c8030e4bb3db3cfeb129847a836f3ec07"
+    },
+    {
+      "file": "apps/web/src/features/roles.tsx",
+      "sha256": "79a26301ee60a322eefa2b2a77ce984922003497accaeb3dd776924ed35ec6c9"
+    },
+    {
+      "file": "apps/web/src/features/task-controls.tsx",
+      "sha256": "e1ad4590b88777b0fced35810d78e7567f8af25eae272a6073625717d15f18e1"
+    },
+    {
+      "file": "apps/web/src/features/task-conversation.tsx",
+      "sha256": "d3f5a8d380785db14716fa22b741ed6326fb269389fb810b7f72e775b7068062"
+    },
+    {
+      "file": "apps/web/src/features/task-decisions.tsx",
+      "sha256": "f1054709550ad770ebd7ab73c7a61b2f7c50b70b517230c501f799be903cbf71"
+    },
+    {
+      "file": "apps/web/src/features/task-detail.tsx",
+      "sha256": "2d423c5edb733c322e7f8c7b560756e7b53314894c366d094e66a7c2344eae27"
+    },
+    {
+      "file": "apps/web/src/features/task-execution.tsx",
+      "sha256": "e9b48facdd22059e15bb1ba453830acc9a39e0e62ae6f78d79664b7d6d506299"
+    },
+    {
+      "file": "apps/web/src/features/task-overview.tsx",
+      "sha256": "8a8f37c8ca76e5400aa17425bf70832add12359c6868719b70e3cdea84e864ba"
+    },
+    {
+      "file": "apps/web/src/features/task-preview.tsx",
+      "sha256": "f45812c435f82d4d60eccf47a07e58882134b185f87bf5584550d9bc676ef9f1"
+    },
+    {
+      "file": "apps/web/src/features/task-shared.tsx",
+      "sha256": "6390fd963ef479ad145a6de91c8cc46f9f5549589fded2e18869f201f354f636"
+    },
+    {
+      "file": "apps/web/src/features/task-timeline.tsx",
+      "sha256": "a0219dee15780699bdebc9c33a6439375b1c0c2a859074e1c5ade9eaa8219725"
+    },
+    {
+      "file": "apps/web/src/features/task-ui.css",
+      "sha256": "3e14410eb1554a1938f3bf08cf813e2860112a102f23cbd7690b8e46a11ed061"
+    },
+    {
+      "file": "apps/web/src/features/todos.tsx",
+      "sha256": "1ceb102b55afd295c23508cd2776b9995a470e843b42b0f553eb13e683a7d57e"
+    },
+    {
+      "file": "apps/web/src/lib/api.test.ts",
+      "sha256": "f29ae5794ab0246cae9c42fb428b430cdbe7c84ca8e37e290a456d1b4491b425"
+    },
+    {
+      "file": "apps/web/src/lib/api.ts",
+      "sha256": "7f25429988b800efd907ae879980f32baee5dcd3d10c332e9b4c89f7f3c1dedb"
+    },
+    {
+      "file": "apps/web/src/lib/attempt-logs.test.ts",
+      "sha256": "d87d16de73b007a9afb8c35fc7391d147c7311f96bfff9ecf0996ddb01d15877"
+    },
+    {
+      "file": "apps/web/src/lib/attempt-logs.ts",
+      "sha256": "9709bbabdea90199b251b80af21ab12ad7f1c7860e5dc3a445a3fa9a309170c2"
+    },
+    {
+      "file": "apps/web/src/lib/discussion-api.test.ts",
+      "sha256": "be536898f5db8e8fa45d1d9a5b762c41af7281ef6e0a76a084976e3620e3df48"
+    },
+    {
+      "file": "apps/web/src/lib/discussion-api.ts",
+      "sha256": "9c851908e8bb24852ca18711bd2cab09919dc2a8fcdace1ea7b5319d2cc4a38a"
+    },
+    {
+      "file": "apps/web/src/lib/task-api.test.ts",
+      "sha256": "bfb51df1a2017df367074cd973601cbebd5002a1e738abd3316fd9242c822c5b"
+    },
+    {
+      "file": "apps/web/src/lib/task-api.ts",
+      "sha256": "b0ed134a7c64969a39f039f151e4d512203a7b5e8ca9451c389f42cca6db515e"
+    },
+    {
+      "file": "apps/web/src/lib/task-preview-api.test.ts",
+      "sha256": "06540f69ac8b7f632f9b5a1d88cae5940a3a4a82898e1add3969b12efab15e2f"
+    },
+    {
+      "file": "apps/web/src/lib/task-preview-api.ts",
+      "sha256": "232fe219c040fbc05face370f9b4955feb6e1e92546fc42ad026aca9204ba302"
+    },
+    {
+      "file": "apps/web/src/lib/task-storage.test.ts",
+      "sha256": "45212fde670eb23586f3f1fe6a1c6fb2040d97febe41bd17aef283b9be4fc7b8"
+    },
+    {
+      "file": "apps/web/src/lib/task-storage.ts",
+      "sha256": "4c4078eb95fae9fa71eff84279dbc358d55db6e63ab5e3dbbb137f5b0a7fc696"
+    },
+    {
+      "file": "apps/web/src/lib/todo-api.test.ts",
+      "sha256": "2c62ebb5ca0a5ee8e483ad2b8433c74cad8db8eafe4ea339dce1061c1c290d50"
+    },
+    {
+      "file": "apps/web/src/lib/todo-api.ts",
+      "sha256": "b7e1057ea55fa9d2caf19825058071630348a1a5d4a5c51ccebcda2ea7921582"
+    },
+    {
+      "file": "apps/web/src/lib/use-command.ts",
+      "sha256": "168128c07e422b76fbc90924f1e77753a4f9c6105a5977d4abaa726112c91cf9"
+    },
+    {
+      "file": "apps/web/src/lib/use-discussion.ts",
+      "sha256": "ea6be9eb644d0b9620ff7ad4ea653832728f1d66891a6d82c4ca2d4c2e6cecc9"
+    },
+    {
+      "file": "apps/web/src/lib/use-task-command.ts",
+      "sha256": "a97d0608182f3e84a55980ed4421869285d1959529e13e39713926cdbb361ba5"
+    },
+    {
+      "file": "apps/web/src/lib/use-task-previews.ts",
+      "sha256": "4aa154213dc5a8489042bd5e2e5fc561874d8f7ed0097b861ead3df07f82f2e4"
+    },
+    {
+      "file": "apps/web/src/lib/use-todo-command.ts",
+      "sha256": "8cb637bcb5f9f6361967b6f88d91b2717d3104df8f0f17b1dd5a526f511bfd93"
+    },
+    {
+      "file": "apps/web/src/lib/utils.ts",
+      "sha256": "14300d758170c270c75b057f38fedb3793a5920ea872f0477e29fb131185e8a7"
+    },
+    {
+      "file": "apps/web/src/main.tsx",
+      "sha256": "27f7fed310729a70b858120bb4c026117b3bbe5365a41c84a738a2dc3ace8661"
+    },
+    {
+      "file": "apps/web/src/styles.css",
+      "sha256": "047555a7aac4c05f2bb4be8cd25267a0b9a73aa9b463f5a25059e92a0e6c2a23"
+    },
+    {
+      "file": "apps/web/vite.config.ts",
+      "sha256": "57a7347577617d60dbdd88adcb24c8cb2f0b570bc3fc4690110e52c0afa27d86"
+    },
+    {
+      "file": "package.json",
+      "sha256": "b246f3789577c7545a65e0f12a4ce7ce64988545b5684639ac76c09830f31dd8"
+    },
+    {
+      "file": "packages/protocol/generated/types.ts",
+      "sha256": "8e04e96cf21eea785fe61d315c582a21ddff4a10135801fef34bf1b41553b31b"
+    }
+  ],
+  "sources_digest": "43a1f4f2b5a4dfb98c755751271ba886aa0c75d657424f51f4c579c2cc4e1f27",
+  "captures": [
+    {
+      "file": "board-empty-desktop.png",
+      "state": "board-empty",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "56ba394c74404aa4954508419dc0d6e4247fa3e0f28c8b97a0afa60b33f267be",
+      "test_output": "execution.e2e.ts-Board-can-2f99f-w-and-responsive-navigation",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#board (fixture filter/history state from test)",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "board-empty-desktop-full.png",
+      "state": "board-empty",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "56ba394c74404aa4954508419dc0d6e4247fa3e0f28c8b97a0afa60b33f267be",
+      "test_output": "execution.e2e.ts-Board-can-2f99f-w-and-responsive-navigation",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#board (fixture filter/history state from test)",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "board-empty-mobile.png",
+      "state": "board-empty",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        844
+      ],
+      "sha256": "a0e1a9343ddee72177fc18b960c9f4165d19acdba4f68cb2728602b9bde563a7",
+      "test_output": "execution.e2e.ts-Board-can-2f99f-w-and-responsive-navigation",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#board (fixture filter/history state from test)",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "board-empty-mobile-full.png",
+      "state": "board-empty",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        844
+      ],
+      "sha256": "a0e1a9343ddee72177fc18b960c9f4165d19acdba4f68cb2728602b9bde563a7",
+      "test_output": "execution.e2e.ts-Board-can-2f99f-w-and-responsive-navigation",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#board (fixture filter/history state from test)",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "board-populated-queued-desktop.png",
+      "state": "board-populated-queued",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "9aa9aeb3053c938dec4b130b633b94f2580f257ab4fd93d7fb6b1bd2afb36195",
+      "test_output": "execution.e2e.ts-Board-can-2f99f-w-and-responsive-navigation",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#board (fixture filter/history state from test)",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "board-populated-queued-desktop-full.png",
+      "state": "board-populated-queued",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "9aa9aeb3053c938dec4b130b633b94f2580f257ab4fd93d7fb6b1bd2afb36195",
+      "test_output": "execution.e2e.ts-Board-can-2f99f-w-and-responsive-navigation",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#board (fixture filter/history state from test)",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "board-populated-queued-mobile.png",
+      "state": "board-populated-queued",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        844
+      ],
+      "sha256": "fa82794861afd8c909983d7a0050f5684c1b42fa36ab0ec39a26f1d0530ee00b",
+      "test_output": "execution.e2e.ts-Board-can-2f99f-w-and-responsive-navigation",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#board (fixture filter/history state from test)",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "board-populated-queued-mobile-full.png",
+      "state": "board-populated-queued",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        844
+      ],
+      "sha256": "fa82794861afd8c909983d7a0050f5684c1b42fa36ab0ec39a26f1d0530ee00b",
+      "test_output": "execution.e2e.ts-Board-can-2f99f-w-and-responsive-navigation",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#board (fixture filter/history state from test)",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "discussion-populated-desktop.png",
+      "state": "discussion-populated",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "90d408e4b02206da0724180bd7be66db77c73e6a5748756339040783a85b5895",
+      "test_output": "discussion.e2e.ts-canonica-71a7d-ed-replies-across-reconnect",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "discussion-populated-desktop-full.png",
+      "state": "discussion-populated",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1538
+      ],
+      "sha256": "d6e69ac0251d2f8cf25d2adf592e90f3c263ab9b1ba4e934f1b8678166af084f",
+      "test_output": "discussion.e2e.ts-canonica-71a7d-ed-replies-across-reconnect",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "discussion-populated-mobile.png",
+      "state": "discussion-populated",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        844
+      ],
+      "sha256": "92b898931ba0c85e9e4ce0eceb790416c635fe17ab7e73cc407755bda9569d86",
+      "test_output": "discussion.e2e.ts-canonica-71a7d-ed-replies-across-reconnect",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "discussion-populated-mobile-full.png",
+      "state": "discussion-populated",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        1744
+      ],
+      "sha256": "84c8b06625d4c2222571d78b30fedea96faa0ffbd66fca3201338be3fa54fc6d",
+      "test_output": "discussion.e2e.ts-canonica-71a7d-ed-replies-across-reconnect",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "discussion-queued-desktop.png",
+      "state": "discussion-queued",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "6efa2c94a0153ca725782c064f2bd1cdeb8d3bfe04efdb66d4d521b2f37f687b",
+      "test_output": "discussion.e2e.ts-real-per-7de49-gation-does-not-submit-them",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "discussion-queued-desktop-full.png",
+      "state": "discussion-queued",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1188
+      ],
+      "sha256": "b15f64b21885acbf589fbb3d2b12168aa480b1f99545d5f32d450e08bd49e8a1",
+      "test_output": "discussion.e2e.ts-real-per-7de49-gation-does-not-submit-them",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "discussion-queued-mobile.png",
+      "state": "discussion-queued",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        844
+      ],
+      "sha256": "c1910ee817f448f59ac56dff45b3c01c64140fe91bc5ae911724c7232650755e",
+      "test_output": "discussion.e2e.ts-real-per-7de49-gation-does-not-submit-them",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "discussion-queued-mobile-full.png",
+      "state": "discussion-queued",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        1316
+      ],
+      "sha256": "89866cc825eeaf9d484530b79b16ccf4a531982afc56856598b8d232b7f67cd3",
+      "test_output": "discussion.e2e.ts-real-per-7de49-gation-does-not-submit-them",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "discussion-read-error-desktop.png",
+      "state": "discussion-read-error",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "93cde1c1c1fddbc2b7a2c25e5ff3f61a8eae88c314c9e50ee802d593cf80bf57",
+      "test_output": "discussion.e2e.ts-canonica-71a7d-ed-replies-across-reconnect",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "discussion-read-error-desktop-full.png",
+      "state": "discussion-read-error",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1294
+      ],
+      "sha256": "7cf3088125c2b22247b057db68e3c73be6d892df43aa9a176b75d8326c7491ad",
+      "test_output": "discussion.e2e.ts-canonica-71a7d-ed-replies-across-reconnect",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "discussion-read-error-mobile.png",
+      "state": "discussion-read-error",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        844
+      ],
+      "sha256": "d80ccf7e53db3f08edc4246da553763f0b4dc727f0afc3888b4010790293fb98",
+      "test_output": "discussion.e2e.ts-canonica-71a7d-ed-replies-across-reconnect",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "discussion-read-error-mobile-full.png",
+      "state": "discussion-read-error",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        1454
+      ],
+      "sha256": "7c8c8905b73856204fe741508b6268b0cdd6a15d090ed0e693765d5c66c6ff5c",
+      "test_output": "discussion.e2e.ts-canonica-71a7d-ed-replies-across-reconnect",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "discussion-unavailable-desktop.png",
+      "state": "discussion-unavailable",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "d1c6df68b90e1a757e382f8af70e0303b33903445557cf453f6c359a8968dbb6",
+      "test_output": "discussion.e2e.ts-queued-D-8a1aa-ning-saved-input-and-drafts",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "discussion-unavailable-desktop-full.png",
+      "state": "discussion-unavailable",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1149
+      ],
+      "sha256": "bcabd3455af73872de66dada4038dc66192d84380481675bbd7af8a24ec86c23",
+      "test_output": "discussion.e2e.ts-queued-D-8a1aa-ning-saved-input-and-drafts",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "discussion-unavailable-mobile.png",
+      "state": "discussion-unavailable",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        844
+      ],
+      "sha256": "b13b07486b48df08a4eb7a03fa04cd90bf148282a1a060f28525a428b1fd1afe",
+      "test_output": "discussion.e2e.ts-queued-D-8a1aa-ning-saved-input-and-drafts",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "discussion-unavailable-mobile-full.png",
+      "state": "discussion-unavailable",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        1295
+      ],
+      "sha256": "a0a5a20bc8f0d376d82c26c79d77c37558e8ed67cec864ad388d392bb040ec38",
+      "test_output": "discussion.e2e.ts-queued-D-8a1aa-ning-saved-input-and-drafts",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "discussion-uncertain-desktop.png",
+      "state": "discussion-uncertain",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "cd52e66450bb6451c6cf07264d26e17d1caee4c35bc595a9d176d0fd440ecd18",
+      "test_output": "discussion.e2e.ts-lost-Dis-6569e-e-other-Todos-remain-usable",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "discussion-uncertain-desktop-full.png",
+      "state": "discussion-uncertain",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1050
+      ],
+      "sha256": "341efb960b10848688094fc5dd140a1ab5923a34e983503387ce770212befa09",
+      "test_output": "discussion.e2e.ts-lost-Dis-6569e-e-other-Todos-remain-usable",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "discussion-uncertain-mobile.png",
+      "state": "discussion-uncertain",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        844
+      ],
+      "sha256": "cfd963e71d0076fc22bc53b9804a00274e5ca18493f5a224011930bcb2d68e25",
+      "test_output": "discussion.e2e.ts-lost-Dis-6569e-e-other-Todos-remain-usable",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "discussion-uncertain-mobile-full.png",
+      "state": "discussion-uncertain",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        1184
+      ],
+      "sha256": "d8c7c744944b646aaa507f38d80869dae3fefc15ac35f5765aabaed4bc70a349",
+      "test_output": "discussion.e2e.ts-lost-Dis-6569e-e-other-Todos-remain-usable",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "execution-empty-desktop.png",
+      "state": "execution-empty",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "e9537c48e86d7cc0f108d3151cf5e4409842a5c9f119f3d14a57c6dc8b518fb5",
+      "test_output": "configuration.e2e.ts-real--6bf16-fts-and-responsive-controls",
+      "run": "focused-9-pass",
+      "route": "#execution",
+      "route_pattern": "#execution",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "execution-empty-desktop-full.png",
+      "state": "execution-empty",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "e9537c48e86d7cc0f108d3151cf5e4409842a5c9f119f3d14a57c6dc8b518fb5",
+      "test_output": "configuration.e2e.ts-real--6bf16-fts-and-responsive-controls",
+      "run": "focused-9-pass",
+      "route": "#execution",
+      "route_pattern": "#execution",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "execution-empty-mobile.png",
+      "state": "execution-empty",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        844
+      ],
+      "sha256": "369a3a6e93a17e074340ce49a7c66398b485eed054381aac3f343e92d2038168",
+      "test_output": "configuration.e2e.ts-real--6bf16-fts-and-responsive-controls",
+      "run": "focused-9-pass",
+      "route": "#execution",
+      "route_pattern": "#execution",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "execution-empty-mobile-full.png",
+      "state": "execution-empty",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        1161
+      ],
+      "sha256": "e36277f6863cff5c8353e6ae73540a50c5c1460007810d4de98a9b476b049371",
+      "test_output": "configuration.e2e.ts-real--6bf16-fts-and-responsive-controls",
+      "run": "focused-9-pass",
+      "route": "#execution",
+      "route_pattern": "#execution",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "execution-policy-desktop.png",
+      "state": "execution-policy",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "395afcf108ab0fc567ca7ad3ae77375f76522ad1d30ecb3e436b3c5922524fbc",
+      "test_output": "configuration.e2e.ts-real--6bf16-fts-and-responsive-controls",
+      "run": "focused-9-pass",
+      "route": "#execution",
+      "route_pattern": "#execution",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "execution-policy-desktop-full.png",
+      "state": "execution-policy",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1405
+      ],
+      "sha256": "026ed155f3a0639135a971b9802cf62080bfd7ebc8c073738892727af3fe40fb",
+      "test_output": "configuration.e2e.ts-real--6bf16-fts-and-responsive-controls",
+      "run": "focused-9-pass",
+      "route": "#execution",
+      "route_pattern": "#execution",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "execution-policy-mobile.png",
+      "state": "execution-policy",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        844
+      ],
+      "sha256": "0ad5000d2b76f63c19a88c81293c4449defec6509bd32d0cdcb40827c1d82bfb",
+      "test_output": "configuration.e2e.ts-real--6bf16-fts-and-responsive-controls",
+      "run": "focused-9-pass",
+      "route": "#execution",
+      "route_pattern": "#execution",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "execution-policy-mobile-full.png",
+      "state": "execution-policy",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        1753
+      ],
+      "sha256": "aa1a1d829f757ecd95b247e45186adede0beb0584bc94377011d31dca03265fc",
+      "test_output": "configuration.e2e.ts-real--6bf16-fts-and-responsive-controls",
+      "run": "focused-9-pass",
+      "route": "#execution",
+      "route_pattern": "#execution",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "execution-read-error-desktop.png",
+      "state": "execution-read-error",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "835e200b820e7ba895ea33186d1835f9a9f67abc45e3310d1bcf0861b56fcba0",
+      "test_output": "migration.e2e.ts-source-To-2b2ce-the-migrated-visual-handoff",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#execution",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "execution-read-error-desktop-full.png",
+      "state": "execution-read-error",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1513
+      ],
+      "sha256": "2549bd486ec8793155577fb522496fb1e6523b78ce8cfb1b5674989a3f815201",
+      "test_output": "migration.e2e.ts-source-To-2b2ce-the-migrated-visual-handoff",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#execution",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "execution-read-error-mobile.png",
+      "state": "execution-read-error",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        844
+      ],
+      "sha256": "3b76f4a530b39d8c8aad4485101110a40deac9dc02d7f9ca991b293ec0458aec",
+      "test_output": "migration.e2e.ts-source-To-2b2ce-the-migrated-visual-handoff",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#execution",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "execution-read-error-mobile-full.png",
+      "state": "execution-read-error",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        1868
+      ],
+      "sha256": "9d20ecae058366c4d2a1a7c1dce35adb1febda701cfeb64d7720a5f3875a75bf",
+      "test_output": "migration.e2e.ts-source-To-2b2ce-the-migrated-visual-handoff",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#execution",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "execution-runner-observed-desktop.png",
+      "state": "execution-runner-observed",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "6dd2e550df282638070eb0dcb4722844b039c277c68ec65ca682b29a677ecb45",
+      "test_output": "migration.e2e.ts-source-To-2b2ce-the-migrated-visual-handoff",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#execution",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "execution-runner-observed-desktop-full.png",
+      "state": "execution-runner-observed",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1477
+      ],
+      "sha256": "1034d293949b8c5f70045dd3a3bf74500d6fbb5315bae89f6c0091a1f69e6fec",
+      "test_output": "migration.e2e.ts-source-To-2b2ce-the-migrated-visual-handoff",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#execution",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "execution-runner-observed-mobile.png",
+      "state": "execution-runner-observed",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        844
+      ],
+      "sha256": "77b4deea64e14b746f33e54435502389936759ad6e2f12401bbb1a804be4bb6f",
+      "test_output": "migration.e2e.ts-source-To-2b2ce-the-migrated-visual-handoff",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#execution",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "execution-runner-observed-mobile-full.png",
+      "state": "execution-runner-observed",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        1832
+      ],
+      "sha256": "8e0a39b69221ea6ead0858e2839b0b22d5300a2d4cc37016c2e9841320a6e3ad",
+      "test_output": "migration.e2e.ts-source-To-2b2ce-the-migrated-visual-handoff",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#execution",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "github-access-error-desktop.png",
+      "state": "github-access-error",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "d02fe97829ad4d1515471a7ed19bbc420766c761fccea38c3c6c545401da2666",
+      "test_output": "configuration.e2e.ts-real--6bf16-fts-and-responsive-controls",
+      "run": "focused-9-pass",
+      "route": "#github",
+      "route_pattern": "#github",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "github-access-error-desktop-full.png",
+      "state": "github-access-error",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "f010efa05b9feae56cac6d24622a5ab4b03a1f139a917ae274fb56761d8b2816",
+      "test_output": "configuration.e2e.ts-real--6bf16-fts-and-responsive-controls",
+      "run": "focused-9-pass",
+      "route": "#github",
+      "route_pattern": "#github",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "github-access-error-mobile.png",
+      "state": "github-access-error",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        844
+      ],
+      "sha256": "7e338519a780a958551026af23f83f90bc34157ca7d6a1b017b3218a37691f0d",
+      "test_output": "configuration.e2e.ts-real--6bf16-fts-and-responsive-controls",
+      "run": "focused-9-pass",
+      "route": "#github",
+      "route_pattern": "#github",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "github-access-error-mobile-full.png",
+      "state": "github-access-error",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        1490
+      ],
+      "sha256": "3ac925a0c16707a950721e4570c21a20e799453ba6078a135329c878e8aea3ca",
+      "test_output": "configuration.e2e.ts-real--6bf16-fts-and-responsive-controls",
+      "run": "focused-9-pass",
+      "route": "#github",
+      "route_pattern": "#github",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "github-configured-desktop.png",
+      "state": "github-configured",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "ea79bf9d42ad6d04c7020d1c6fba0cec30098b1054c2dd9688bbee1f7427593d",
+      "test_output": "configuration.e2e.ts-real--6bf16-fts-and-responsive-controls",
+      "run": "focused-9-pass",
+      "route": "#github",
+      "route_pattern": "#github",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "github-configured-desktop-full.png",
+      "state": "github-configured",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "8bc9ed9cd4794a01cbb200f532080f0687d473b10d7ef8e502984c05750a3005",
+      "test_output": "configuration.e2e.ts-real--6bf16-fts-and-responsive-controls",
+      "run": "focused-9-pass",
+      "route": "#github",
+      "route_pattern": "#github",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "github-configured-mobile.png",
+      "state": "github-configured",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        844
+      ],
+      "sha256": "7e338519a780a958551026af23f83f90bc34157ca7d6a1b017b3218a37691f0d",
+      "test_output": "configuration.e2e.ts-real--6bf16-fts-and-responsive-controls",
+      "run": "focused-9-pass",
+      "route": "#github",
+      "route_pattern": "#github",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "github-configured-mobile-full.png",
+      "state": "github-configured",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        1490
+      ],
+      "sha256": "80aa0a7131c6278647188076f3deae73a47e9506362f18c8b8f42b065a4a78b2",
+      "test_output": "configuration.e2e.ts-real--6bf16-fts-and-responsive-controls",
+      "run": "focused-9-pass",
+      "route": "#github",
+      "route_pattern": "#github",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "github-empty-desktop.png",
+      "state": "github-empty",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "266bd4078c2d06994741bdd2eb85bc9cc10aa82c52718cdf3f9d5dce4bab6452",
+      "test_output": "configuration.e2e.ts-real--6bf16-fts-and-responsive-controls",
+      "run": "focused-9-pass",
+      "route": "#github",
+      "route_pattern": "#github",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "github-empty-desktop-full.png",
+      "state": "github-empty",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "266bd4078c2d06994741bdd2eb85bc9cc10aa82c52718cdf3f9d5dce4bab6452",
+      "test_output": "configuration.e2e.ts-real--6bf16-fts-and-responsive-controls",
+      "run": "focused-9-pass",
+      "route": "#github",
+      "route_pattern": "#github",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "github-empty-mobile.png",
+      "state": "github-empty",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        844
+      ],
+      "sha256": "c645a1a8ce0e0a80b7f9f495d8c95c7a82307660ad7496ac0ae05a3465cbec19",
+      "test_output": "configuration.e2e.ts-real--6bf16-fts-and-responsive-controls",
+      "run": "focused-9-pass",
+      "route": "#github",
+      "route_pattern": "#github",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "github-empty-mobile-full.png",
+      "state": "github-empty",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        1248
+      ],
+      "sha256": "c935bafbc36f8f5ab379a3d0b2d2076389e81a2990103ea906f8fe49092ff5c6",
+      "test_output": "configuration.e2e.ts-real--6bf16-fts-and-responsive-controls",
+      "run": "focused-9-pass",
+      "route": "#github",
+      "route_pattern": "#github",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "integrated-local-review-desktop.png",
+      "state": "integrated-local-review",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "b1cfed29a328526338a056c61646089c7dcbfb3d0443eee997cb6528281ca2b6",
+      "test_output": "migration.e2e.ts-source-To-2b2ce-the-migrated-visual-handoff",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#task?task_id=<fixture>&section=overview",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "integrated-local-review-desktop-full.png",
+      "state": "integrated-local-review",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1201
+      ],
+      "sha256": "461f7a61aa81a3cb6a0f2a24e41ad083801509fdab11ee0fe1b90d1a97b0f610",
+      "test_output": "migration.e2e.ts-source-To-2b2ce-the-migrated-visual-handoff",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#task?task_id=<fixture>&section=overview",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "integrated-local-review-mobile.png",
+      "state": "integrated-local-review",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        844
+      ],
+      "sha256": "fabec47ab404c6522bf4432e2a9572c74c2f6a95a44e588474054582d1ae5fbf",
+      "test_output": "migration.e2e.ts-source-To-2b2ce-the-migrated-visual-handoff",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#task?task_id=<fixture>&section=overview",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "integrated-local-review-mobile-full.png",
+      "state": "integrated-local-review",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        1377
+      ],
+      "sha256": "0d1b4b5dc0454ee1a44b228b7bd0322ecb990e999d666bea450443f0a845568a",
+      "test_output": "migration.e2e.ts-source-To-2b2ce-the-migrated-visual-handoff",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#task?task_id=<fixture>&section=overview",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "integrated-todo-created-desktop.png",
+      "state": "integrated-todo-created",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "478e56193341f063d6b40481f05727f589cf319ba7fa870256c85234aeb0aedf",
+      "test_output": "migration.e2e.ts-source-To-2b2ce-the-migrated-visual-handoff",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "integrated-todo-created-desktop-full.png",
+      "state": "integrated-todo-created",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        3464
+      ],
+      "sha256": "2c80342527a6fbeba0189d64636b1f63615a00d06afe3d3e974979a476b8dae8",
+      "test_output": "migration.e2e.ts-source-To-2b2ce-the-migrated-visual-handoff",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "integrated-todo-created-mobile.png",
+      "state": "integrated-todo-created",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        844
+      ],
+      "sha256": "e5150753833d86f079cb8fb82e04ab42b3612c2c0b0680248721156b032714bf",
+      "test_output": "migration.e2e.ts-source-To-2b2ce-the-migrated-visual-handoff",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "integrated-todo-created-mobile-full.png",
+      "state": "integrated-todo-created",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        1276
+      ],
+      "sha256": "61a9f9365cdf5d25c21ccdc40c8ad0901c44b9fbb9ea33cf7495061c64774299",
+      "test_output": "migration.e2e.ts-source-To-2b2ce-the-migrated-visual-handoff",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "login-busy-desktop.png",
+      "state": "login-busy",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "81b3942b63e630ab82e812e2e89ef1bba6a3855e37cf369f3ba15ff3c3744e00",
+      "test_output": "configuration.e2e.ts-real--6bf16-fts-and-responsive-controls",
+      "run": "focused-9-pass",
+      "route": "#projects",
+      "route_pattern": "#projects (unauthenticated)",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "login-busy-desktop-full.png",
+      "state": "login-busy",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "81b3942b63e630ab82e812e2e89ef1bba6a3855e37cf369f3ba15ff3c3744e00",
+      "test_output": "configuration.e2e.ts-real--6bf16-fts-and-responsive-controls",
+      "run": "focused-9-pass",
+      "route": "#projects",
+      "route_pattern": "#projects (unauthenticated)",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "login-busy-mobile.png",
+      "state": "login-busy",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        844
+      ],
+      "sha256": "c15d754e3a848146c3d021f424628c24eaca2979a48539858676df5e62e38653",
+      "test_output": "configuration.e2e.ts-real--6bf16-fts-and-responsive-controls",
+      "run": "focused-9-pass",
+      "route": "#projects",
+      "route_pattern": "#projects (unauthenticated)",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "login-busy-mobile-full.png",
+      "state": "login-busy",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        844
+      ],
+      "sha256": "c15d754e3a848146c3d021f424628c24eaca2979a48539858676df5e62e38653",
+      "test_output": "configuration.e2e.ts-real--6bf16-fts-and-responsive-controls",
+      "run": "focused-9-pass",
+      "route": "#projects",
+      "route_pattern": "#projects (unauthenticated)",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "login-empty-desktop.png",
+      "state": "login-empty",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "2d0c94d65696609f7be98c097a22a31716d3523a24cc0668fae8e797617c9801",
+      "test_output": "configuration.e2e.ts-real--6bf16-fts-and-responsive-controls",
+      "run": "focused-9-pass",
+      "route": "#projects",
+      "route_pattern": "#projects (unauthenticated)",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "login-empty-desktop-full.png",
+      "state": "login-empty",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "2d0c94d65696609f7be98c097a22a31716d3523a24cc0668fae8e797617c9801",
+      "test_output": "configuration.e2e.ts-real--6bf16-fts-and-responsive-controls",
+      "run": "focused-9-pass",
+      "route": "#projects",
+      "route_pattern": "#projects (unauthenticated)",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "login-empty-mobile.png",
+      "state": "login-empty",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        844
+      ],
+      "sha256": "e650ed1be67c8e0b9313a0ac369437a447c42c3f76edb0d3cb60d17b746499d7",
+      "test_output": "configuration.e2e.ts-real--6bf16-fts-and-responsive-controls",
+      "run": "focused-9-pass",
+      "route": "#projects",
+      "route_pattern": "#projects (unauthenticated)",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "login-empty-mobile-full.png",
+      "state": "login-empty",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        844
+      ],
+      "sha256": "e650ed1be67c8e0b9313a0ac369437a447c42c3f76edb0d3cb60d17b746499d7",
+      "test_output": "configuration.e2e.ts-real--6bf16-fts-and-responsive-controls",
+      "run": "focused-9-pass",
+      "route": "#projects",
+      "route_pattern": "#projects (unauthenticated)",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "login-error-desktop.png",
+      "state": "login-error",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "656275d1fab1292d06cc4e1bf95e62ad288038108ed7ee44ee0626a0542ee1e6",
+      "test_output": "configuration.e2e.ts-real--6bf16-fts-and-responsive-controls",
+      "run": "focused-9-pass",
+      "route": "#projects",
+      "route_pattern": "#projects (unauthenticated)",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "login-error-desktop-full.png",
+      "state": "login-error",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "656275d1fab1292d06cc4e1bf95e62ad288038108ed7ee44ee0626a0542ee1e6",
+      "test_output": "configuration.e2e.ts-real--6bf16-fts-and-responsive-controls",
+      "run": "focused-9-pass",
+      "route": "#projects",
+      "route_pattern": "#projects (unauthenticated)",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "login-error-mobile.png",
+      "state": "login-error",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        844
+      ],
+      "sha256": "1c40787a2920ec4e173a06beda8e4f1514cbc4f40feeb65f3787f1eb5e1bb40e",
+      "test_output": "configuration.e2e.ts-real--6bf16-fts-and-responsive-controls",
+      "run": "focused-9-pass",
+      "route": "#projects",
+      "route_pattern": "#projects (unauthenticated)",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "login-error-mobile-full.png",
+      "state": "login-error",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        844
+      ],
+      "sha256": "1c40787a2920ec4e173a06beda8e4f1514cbc4f40feeb65f3787f1eb5e1bb40e",
+      "test_output": "configuration.e2e.ts-real--6bf16-fts-and-responsive-controls",
+      "run": "focused-9-pass",
+      "route": "#projects",
+      "route_pattern": "#projects (unauthenticated)",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "preview-created-desktop.png",
+      "state": "preview-created",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "e52ee5ea7878e3adc3f5ff61fc21a1df1b0f1eaed64d1d8b9133710939b38b6c",
+      "test_output": "task-preview.e2e.ts-exact--3c181-s-and-current-Specification",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "preview-created-desktop-full.png",
+      "state": "preview-created",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        3533
+      ],
+      "sha256": "5e5ebfede615fd13c7ca09a9ebc414ace8f158d7b352671dde068cdb0df3850d",
+      "test_output": "task-preview.e2e.ts-exact--3c181-s-and-current-Specification",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "preview-created-mobile.png",
+      "state": "preview-created",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        844
+      ],
+      "sha256": "aed38ebb366b50fcf197c8725c6ef0492b05d149dd40d5c81c0984f054f6e281",
+      "test_output": "task-preview.e2e.ts-exact--3c181-s-and-current-Specification",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "preview-created-mobile-full.png",
+      "state": "preview-created",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        1388
+      ],
+      "sha256": "2832ccc54fa2644a9120dc01abb30ded92c2b7f28cb6e02b3b52bbca0e5da176",
+      "test_output": "task-preview.e2e.ts-exact--3c181-s-and-current-Specification",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "preview-exact-eligible-desktop.png",
+      "state": "preview-exact-eligible",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "059e41c06abd70b9195f67bec1fac1cc79a3487589fb90dd28dc47ad97f44078",
+      "test_output": "task-preview.e2e.ts-exact--3c181-s-and-current-Specification",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "preview-exact-eligible-desktop-full.png",
+      "state": "preview-exact-eligible",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        3533
+      ],
+      "sha256": "a939854ff4800102d397b8e06fef4bbae211a1e989b1f488987a83cd7f451cfc",
+      "test_output": "task-preview.e2e.ts-exact--3c181-s-and-current-Specification",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "preview-exact-eligible-mobile.png",
+      "state": "preview-exact-eligible",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        844
+      ],
+      "sha256": "2ad102ebf125e2c628ae005c15825b19b1611ccee595d3205a38cdc127383400",
+      "test_output": "task-preview.e2e.ts-exact--3c181-s-and-current-Specification",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "preview-exact-eligible-mobile-full.png",
+      "state": "preview-exact-eligible",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        1523
+      ],
+      "sha256": "c957cb7185867b43ec8f51a74524a878097a865c7e51ef4e0cba9cf6000de279",
+      "test_output": "task-preview.e2e.ts-exact--3c181-s-and-current-Specification",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "preview-long-content-desktop.png",
+      "state": "preview-long-content",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "3c2ade6ed3724ba735381f33f825dd391c56db1b2c99ebd4b0ba80437ac7bf47",
+      "test_output": "migration.e2e.ts-long-exac-2b8f1-reason-and-discussion-draft",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "preview-long-content-desktop-full.png",
+      "state": "preview-long-content",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        3395
+      ],
+      "sha256": "924763a8837957799a4ab6a48c0d9974d0b519e2704f0230d33b13bffc94d744",
+      "test_output": "migration.e2e.ts-long-exac-2b8f1-reason-and-discussion-draft",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "preview-long-content-mobile.png",
+      "state": "preview-long-content",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        844
+      ],
+      "sha256": "17ca0512f041e1cae872d3aeab7d6acfef6c9d937f67ddb528270dc3316e0579",
+      "test_output": "migration.e2e.ts-long-exac-2b8f1-reason-and-discussion-draft",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "preview-long-content-mobile-full.png",
+      "state": "preview-long-content",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        3067
+      ],
+      "sha256": "7f3b5c5e374c86006b6a7410f3c1e3ca5abd4ee4d33f82760f7df761e4d40e4e",
+      "test_output": "migration.e2e.ts-long-exac-2b8f1-reason-and-discussion-draft",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "preview-project-required-desktop.png",
+      "state": "preview-project-required",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "e8eea201959856bec78e8bd8b781b96e07c11fbb41e82844e004051b1fca74d4",
+      "test_output": "task-preview.e2e.ts-exact--3c181-s-and-current-Specification",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "preview-project-required-desktop-full.png",
+      "state": "preview-project-required",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        3533
+      ],
+      "sha256": "541e17f3d200ff77a96241a3daabfbec74837155d0ec9d419e45e0f5a89fefe0",
+      "test_output": "task-preview.e2e.ts-exact--3c181-s-and-current-Specification",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "preview-project-required-mobile.png",
+      "state": "preview-project-required",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        844
+      ],
+      "sha256": "cd4cc8f533d402e503c8b804ca80d58ac2e29385ce2326d1bf97c2e90562636d",
+      "test_output": "task-preview.e2e.ts-exact--3c181-s-and-current-Specification",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "preview-project-required-mobile-full.png",
+      "state": "preview-project-required",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        1557
+      ],
+      "sha256": "3438bce79d81abc23bf616f45b671ae096eee038546c90f0c62ebe37d482259d",
+      "test_output": "task-preview.e2e.ts-exact--3c181-s-and-current-Specification",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "preview-task-overview-desktop.png",
+      "state": "preview-task-overview",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "a7b8eadb39b89a1e73ebaebeefabde883bfa2b53ab14d97c500cac9b1f88317c",
+      "test_output": "task-preview.e2e.ts-exact--3c181-s-and-current-Specification",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#task?task_id=<fixture>&section=overview",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "preview-task-overview-desktop-full.png",
+      "state": "preview-task-overview",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "a7b8eadb39b89a1e73ebaebeefabde883bfa2b53ab14d97c500cac9b1f88317c",
+      "test_output": "task-preview.e2e.ts-exact--3c181-s-and-current-Specification",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#task?task_id=<fixture>&section=overview",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "preview-task-overview-mobile.png",
+      "state": "preview-task-overview",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        844
+      ],
+      "sha256": "10ef75e0478a912fab8a838839377d6be73ded2c5edcbb05c21e4d284e98db8f",
+      "test_output": "task-preview.e2e.ts-exact--3c181-s-and-current-Specification",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#task?task_id=<fixture>&section=overview",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "preview-task-overview-mobile-full.png",
+      "state": "preview-task-overview",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        1163
+      ],
+      "sha256": "b944b5e9b33c24cc7b353612e86eea484775ffb5c344cef2eb0010cd3b64eed1",
+      "test_output": "task-preview.e2e.ts-exact--3c181-s-and-current-Specification",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#task?task_id=<fixture>&section=overview",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "projects-empty-desktop.png",
+      "state": "projects-empty",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "f81cfac029731fc2f7fe6411e0cbf621cf77e18cebb9e8d97a30768f963c8cce",
+      "test_output": "configuration.e2e.ts-real--6bf16-fts-and-responsive-controls",
+      "run": "focused-9-pass",
+      "route": "#projects",
+      "route_pattern": "#projects",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "projects-empty-desktop-full.png",
+      "state": "projects-empty",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "f81cfac029731fc2f7fe6411e0cbf621cf77e18cebb9e8d97a30768f963c8cce",
+      "test_output": "configuration.e2e.ts-real--6bf16-fts-and-responsive-controls",
+      "run": "focused-9-pass",
+      "route": "#projects",
+      "route_pattern": "#projects",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "projects-empty-mobile.png",
+      "state": "projects-empty",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        844
+      ],
+      "sha256": "ae84d913fa3e411f8739d3c37ab08cb89aa906b52136a400047e75d38e528c15",
+      "test_output": "configuration.e2e.ts-real--6bf16-fts-and-responsive-controls",
+      "run": "focused-9-pass",
+      "route": "#projects",
+      "route_pattern": "#projects",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "projects-empty-mobile-full.png",
+      "state": "projects-empty",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        844
+      ],
+      "sha256": "ae84d913fa3e411f8739d3c37ab08cb89aa906b52136a400047e75d38e528c15",
+      "test_output": "configuration.e2e.ts-real--6bf16-fts-and-responsive-controls",
+      "run": "focused-9-pass",
+      "route": "#projects",
+      "route_pattern": "#projects",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "projects-populated-desktop.png",
+      "state": "projects-populated",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "25747630abee948dc92b8f8d516e1c1473f593d62e3a448deb02d1aaa19d3cc5",
+      "test_output": "configuration.e2e.ts-real--6bf16-fts-and-responsive-controls",
+      "run": "focused-9-pass",
+      "route": "#projects",
+      "route_pattern": "#projects",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "projects-populated-desktop-full.png",
+      "state": "projects-populated",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1305
+      ],
+      "sha256": "7edc39079d2d035ac29415565b3a3980f81c1bc1bd83111a6dfedbbaa371675a",
+      "test_output": "configuration.e2e.ts-real--6bf16-fts-and-responsive-controls",
+      "run": "focused-9-pass",
+      "route": "#projects",
+      "route_pattern": "#projects",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "projects-populated-mobile.png",
+      "state": "projects-populated",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        844
+      ],
+      "sha256": "36553304af8731db53d40c887b08b3c4186c3e4eab04a0038334260bc5939b70",
+      "test_output": "configuration.e2e.ts-real--6bf16-fts-and-responsive-controls",
+      "run": "focused-9-pass",
+      "route": "#projects",
+      "route_pattern": "#projects",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "projects-populated-mobile-full.png",
+      "state": "projects-populated",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        1802
+      ],
+      "sha256": "5423f92511154199cf1cb687d6bb962d7fabfa81c9d192a160ca244d0469fb20",
+      "test_output": "configuration.e2e.ts-real--6bf16-fts-and-responsive-controls",
+      "run": "focused-9-pass",
+      "route": "#projects",
+      "route_pattern": "#projects",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "roles-empty-desktop.png",
+      "state": "roles-empty",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "a5e03771cd486ac64a2f494060b58b8945aacbb310b34858722a9c3f901e32ca",
+      "test_output": "configuration.e2e.ts-real--6bf16-fts-and-responsive-controls",
+      "run": "focused-9-pass",
+      "route": "#roles",
+      "route_pattern": "#roles",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "roles-empty-desktop-full.png",
+      "state": "roles-empty",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "a5e03771cd486ac64a2f494060b58b8945aacbb310b34858722a9c3f901e32ca",
+      "test_output": "configuration.e2e.ts-real--6bf16-fts-and-responsive-controls",
+      "run": "focused-9-pass",
+      "route": "#roles",
+      "route_pattern": "#roles",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "roles-empty-mobile.png",
+      "state": "roles-empty",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        844
+      ],
+      "sha256": "a7c28f77440d483d73eac5cadc62d47cf95593f56f09482b68db2332b898d2e7",
+      "test_output": "configuration.e2e.ts-real--6bf16-fts-and-responsive-controls",
+      "run": "focused-9-pass",
+      "route": "#roles",
+      "route_pattern": "#roles",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "roles-empty-mobile-full.png",
+      "state": "roles-empty",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        844
+      ],
+      "sha256": "a7c28f77440d483d73eac5cadc62d47cf95593f56f09482b68db2332b898d2e7",
+      "test_output": "configuration.e2e.ts-real--6bf16-fts-and-responsive-controls",
+      "run": "focused-9-pass",
+      "route": "#roles",
+      "route_pattern": "#roles",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "roles-long-draft-desktop.png",
+      "state": "roles-long-draft",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "e4095737ce7f9fa7bc5c195c03581bf610fa7ec6f53a8af4ddc724e55fe72c6a",
+      "test_output": "configuration.e2e.ts-real--6bf16-fts-and-responsive-controls",
+      "run": "focused-9-pass",
+      "route": "#roles",
+      "route_pattern": "#roles",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "roles-long-draft-desktop-full.png",
+      "state": "roles-long-draft",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "e4095737ce7f9fa7bc5c195c03581bf610fa7ec6f53a8af4ddc724e55fe72c6a",
+      "test_output": "configuration.e2e.ts-real--6bf16-fts-and-responsive-controls",
+      "run": "focused-9-pass",
+      "route": "#roles",
+      "route_pattern": "#roles",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "roles-long-draft-mobile.png",
+      "state": "roles-long-draft",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        844
+      ],
+      "sha256": "56eebcc5579ed8f36909027f0480e0fc953926f66f6fd5c2e1fdf5b11ab2a4d9",
+      "test_output": "configuration.e2e.ts-real--6bf16-fts-and-responsive-controls",
+      "run": "focused-9-pass",
+      "route": "#roles",
+      "route_pattern": "#roles",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "roles-long-draft-mobile-full.png",
+      "state": "roles-long-draft",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        1193
+      ],
+      "sha256": "3250bc235c41aec247270b8ce3ab5dd87c60d6fd32dde1c58ba47120df3ed0f7",
+      "test_output": "configuration.e2e.ts-real--6bf16-fts-and-responsive-controls",
+      "run": "focused-9-pass",
+      "route": "#roles",
+      "route_pattern": "#roles",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "roles-populated-desktop.png",
+      "state": "roles-populated",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "8603946de5fc225942efac232d78b720b4fbf9adaf0744f9674f14fe10505654",
+      "test_output": "configuration.e2e.ts-real--6bf16-fts-and-responsive-controls",
+      "run": "focused-9-pass",
+      "route": "#roles",
+      "route_pattern": "#roles",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "roles-populated-desktop-full.png",
+      "state": "roles-populated",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "8603946de5fc225942efac232d78b720b4fbf9adaf0744f9674f14fe10505654",
+      "test_output": "configuration.e2e.ts-real--6bf16-fts-and-responsive-controls",
+      "run": "focused-9-pass",
+      "route": "#roles",
+      "route_pattern": "#roles",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "roles-populated-mobile.png",
+      "state": "roles-populated",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        844
+      ],
+      "sha256": "e2251ccc099f6e731b7949becd6176531425028154f74acffcfff27419e3d42c",
+      "test_output": "configuration.e2e.ts-real--6bf16-fts-and-responsive-controls",
+      "run": "focused-9-pass",
+      "route": "#roles",
+      "route_pattern": "#roles",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "roles-populated-mobile-full.png",
+      "state": "roles-populated",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        1193
+      ],
+      "sha256": "acd16f4f863ddde0a897372677b6161ae3d1dd7071c12dd2214b50fcae3191be",
+      "test_output": "configuration.e2e.ts-real--6bf16-fts-and-responsive-controls",
+      "run": "focused-9-pass",
+      "route": "#roles",
+      "route_pattern": "#roles",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "settings-save-uncertain-desktop.png",
+      "state": "settings-save-uncertain",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "6a18370e8e2aaf1b993a434f703ea43c550dc01bd951b85f4367d13294e8457c",
+      "test_output": "configuration.e2e.ts-a-los-888d1-eipt-without-a-second-write",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#roles",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "settings-save-uncertain-desktop-full.png",
+      "state": "settings-save-uncertain",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "6a18370e8e2aaf1b993a434f703ea43c550dc01bd951b85f4367d13294e8457c",
+      "test_output": "configuration.e2e.ts-a-los-888d1-eipt-without-a-second-write",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#roles",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "settings-save-uncertain-mobile.png",
+      "state": "settings-save-uncertain",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        844
+      ],
+      "sha256": "16d3400c58354ff40fd327a9667dab0f8b9e7fb733a463e93df6442e09c4044a",
+      "test_output": "configuration.e2e.ts-a-los-888d1-eipt-without-a-second-write",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#roles",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "settings-save-uncertain-mobile-full.png",
+      "state": "settings-save-uncertain",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        1265
+      ],
+      "sha256": "b9febaeef7936426c62030f398e0284caeb73c9d85519bdb7a358d87ed373e93",
+      "test_output": "configuration.e2e.ts-a-los-888d1-eipt-without-a-second-write",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#roles",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "settings-version-conflict-desktop.png",
+      "state": "settings-version-conflict",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "6461cde86cebddc34d8ff08fa64b4a70834fd476d981bca64e1e47c287211fce",
+      "test_output": "configuration.e2e.ts-two-t-a6106-ly-reload-the-saved-version",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#projects",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "settings-version-conflict-desktop-full.png",
+      "state": "settings-version-conflict",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1029
+      ],
+      "sha256": "c448dbae99e4badbf09004b9a52f3d22bda87fb59683ef0d15ebb5e00578a55e",
+      "test_output": "configuration.e2e.ts-two-t-a6106-ly-reload-the-saved-version",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#projects",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "settings-version-conflict-mobile.png",
+      "state": "settings-version-conflict",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        844
+      ],
+      "sha256": "a910522722fba38a86a48130823a64e4d5adde47b8d6ee463771678f8ff79b23",
+      "test_output": "configuration.e2e.ts-two-t-a6106-ly-reload-the-saved-version",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#projects",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "settings-version-conflict-mobile-full.png",
+      "state": "settings-version-conflict",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        1308
+      ],
+      "sha256": "b657a8dd1e82fdb96904a2338cf7a2ee905b8e4d2527930cacbcdbb19225ea07",
+      "test_output": "configuration.e2e.ts-two-t-a6106-ly-reload-the-saved-version",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#projects",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "task-exact-requirements-desktop.png",
+      "state": "task-exact-requirements",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "92c89a9cfe1839c080daac2446a4f1a381ac0279dff60fd7a9731c5f82fbaa20",
+      "test_output": "execution.e2e.ts-exact-Spe-9b1e3-s-the-same-applied-revision",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#task?task_id=<fixture>&section=conversation",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "task-exact-requirements-desktop-full.png",
+      "state": "task-exact-requirements",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1494
+      ],
+      "sha256": "54d8e9ceb1f19b880bbc73a98304ffb3780803a86545cc7f314671e959fa7990",
+      "test_output": "execution.e2e.ts-exact-Spe-9b1e3-s-the-same-applied-revision",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#task?task_id=<fixture>&section=conversation",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "task-exact-requirements-mobile.png",
+      "state": "task-exact-requirements",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        844
+      ],
+      "sha256": "7d3df776b03ef28fb1f458691dae2204446894a42024de561988679a2c65ae0c",
+      "test_output": "execution.e2e.ts-exact-Spe-9b1e3-s-the-same-applied-revision",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#task?task_id=<fixture>&section=conversation",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "task-exact-requirements-mobile-full.png",
+      "state": "task-exact-requirements",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        2016
+      ],
+      "sha256": "42db8ef53f5d1e78004ce8769bb8e59e2429211abe0b5ee25a40e7777259d71a",
+      "test_output": "execution.e2e.ts-exact-Spe-9b1e3-s-the-same-applied-revision",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#task?task_id=<fixture>&section=conversation",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "task-execution-blocked-desktop.png",
+      "state": "task-execution-blocked",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "361b753169cc6a0d0ebff53a9a445cf7d68652720ebe87d18c648fbbb8835a4b",
+      "test_output": "execution.e2e.ts-Node-bloc-e8317-parate-from-formal-Timeline",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#task?task_id=<fixture>&section=execution",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "task-execution-blocked-desktop-full.png",
+      "state": "task-execution-blocked",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1366
+      ],
+      "sha256": "e29e6895666bc28d9e33d324461174bc7a19f1cc5a25d458bf414f63dd76c37a",
+      "test_output": "execution.e2e.ts-Node-bloc-e8317-parate-from-formal-Timeline",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#task?task_id=<fixture>&section=execution",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "task-execution-blocked-mobile.png",
+      "state": "task-execution-blocked",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        844
+      ],
+      "sha256": "7bd1282b65d16df14d6feefc26b2901f44ba903805cc1de559bdc59284996400",
+      "test_output": "execution.e2e.ts-Node-bloc-e8317-parate-from-formal-Timeline",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#task?task_id=<fixture>&section=execution",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "task-execution-blocked-mobile-full.png",
+      "state": "task-execution-blocked",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        1572
+      ],
+      "sha256": "92595312bc5f141acc683fe5abed7c71984ec7a754f8e55f93cdbd7f543db1be",
+      "test_output": "execution.e2e.ts-Node-bloc-e8317-parate-from-formal-Timeline",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#task?task_id=<fixture>&section=execution",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "task-local-review-desktop.png",
+      "state": "task-local-review",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "5c58dadbe033f2cb3a2f9150005f1a6ae2a61240cfa81bce154c230362d08190",
+      "test_output": "execution.e2e.ts-Board-can-2f99f-w-and-responsive-navigation",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#task?task_id=<fixture>&section=overview",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "task-local-review-desktop-full.png",
+      "state": "task-local-review",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1201
+      ],
+      "sha256": "ee4ddef5998c9fbcc2e7f5b19f9a796e0982487c0246923a3930dfe3a8ca344a",
+      "test_output": "execution.e2e.ts-Board-can-2f99f-w-and-responsive-navigation",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#task?task_id=<fixture>&section=overview",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "task-local-review-mobile.png",
+      "state": "task-local-review",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        844
+      ],
+      "sha256": "d4572cdf849d895cfa1b49fc7fcb26b1e3bf1c26cb5a925f9ef766fa9ab10e3e",
+      "test_output": "execution.e2e.ts-Board-can-2f99f-w-and-responsive-navigation",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#task?task_id=<fixture>&section=overview",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "task-local-review-mobile-full.png",
+      "state": "task-local-review",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        1377
+      ],
+      "sha256": "9311afc4745a8c4786630939d8f48b2a67671ad7f271826e821829c467270b2a",
+      "test_output": "execution.e2e.ts-Board-can-2f99f-w-and-responsive-navigation",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#task?task_id=<fixture>&section=overview",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "task-timeline-desktop.png",
+      "state": "task-timeline",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "c8059fa8903beafe9634a23f24245185522520e0ece00eadf6dd6726fb256751",
+      "test_output": "execution.e2e.ts-Node-bloc-e8317-parate-from-formal-Timeline",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#task?task_id=<fixture>&section=timeline",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "task-timeline-desktop-full.png",
+      "state": "task-timeline",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1181
+      ],
+      "sha256": "796d419ce2e84273a4495bbbc7be4d82353ce7bdc5375b57493f4f2a09518999",
+      "test_output": "execution.e2e.ts-Node-bloc-e8317-parate-from-formal-Timeline",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#task?task_id=<fixture>&section=timeline",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "task-timeline-mobile.png",
+      "state": "task-timeline",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        844
+      ],
+      "sha256": "22fe527600a430f981e8bb7fadd79e143066ca079d1d0c9896dbe86c57bed290",
+      "test_output": "execution.e2e.ts-Node-bloc-e8317-parate-from-formal-Timeline",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#task?task_id=<fixture>&section=timeline",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "task-timeline-mobile-full.png",
+      "state": "task-timeline",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        1369
+      ],
+      "sha256": "a5edb370722616afd18faf49332f9ef1a9bcd8f0eba2e7c2821288abe6bfc957",
+      "test_output": "execution.e2e.ts-Node-bloc-e8317-parate-from-formal-Timeline",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#task?task_id=<fixture>&section=timeline",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "task-uncertain-desktop.png",
+      "state": "task-uncertain",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "afb3fe24d46cb5eda7769d2fcea5b99e52d1a9317e96f1ab309ac6d7acccc04e",
+      "test_output": "execution.e2e.ts-Task-draf-05d9a-e-recovers-the-same-receipt",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#task?task_id=<fixture>&section=conversation",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "task-uncertain-desktop-full.png",
+      "state": "task-uncertain",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "8fdc3ead6dbbeeba611b9de5a98ffd8c360dec822c05a3c036cb945e3bf057f4",
+      "test_output": "execution.e2e.ts-Task-draf-05d9a-e-recovers-the-same-receipt",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#task?task_id=<fixture>&section=conversation",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "task-uncertain-mobile.png",
+      "state": "task-uncertain",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        844
+      ],
+      "sha256": "e6d4c8ebfe0f838ed80a9bd66137dfba01bc8b744d6cf4189da658e5373f1cf2",
+      "test_output": "execution.e2e.ts-Task-draf-05d9a-e-recovers-the-same-receipt",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#task?task_id=<fixture>&section=conversation",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "task-uncertain-mobile-full.png",
+      "state": "task-uncertain",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        1194
+      ],
+      "sha256": "4534e330b82c37904a2de104d80e82c18623ad2a4ea2c3f7d5bc01a418a1e641",
+      "test_output": "execution.e2e.ts-Task-draf-05d9a-e-recovers-the-same-receipt",
+      "run": "full-41-pass-3-failed-6-not-run",
+      "route": null,
+      "route_pattern": "#task?task_id=<fixture>&section=conversation",
+      "route_evidence": "test source/state matrix; original helper body was not retained",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "todo-long-content-desktop.png",
+      "state": "todo-long-content",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "2ba3f8d738d7025635890b55c4aad9c610babf46e6e0c69586b29d203e64d666",
+      "test_output": "todos.e2e.ts-long-capture--13b07-ough-mobile-back-navigation",
+      "run": "focused-9-pass",
+      "route": "",
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "todo-long-content-desktop-full.png",
+      "state": "todo-long-content",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1415
+      ],
+      "sha256": "4feea39cbc50e3d3034406db324a3166f2d673059281c0db10147989b419a9a0",
+      "test_output": "todos.e2e.ts-long-capture--13b07-ough-mobile-back-navigation",
+      "run": "focused-9-pass",
+      "route": "",
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "todo-long-content-mobile.png",
+      "state": "todo-long-content",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        844
+      ],
+      "sha256": "c4771d6503050587a9fa541b8a688d11bc642d516a79c81fdc04dafeae9ab8d4",
+      "test_output": "todos.e2e.ts-long-capture--13b07-ough-mobile-back-navigation",
+      "run": "focused-9-pass",
+      "route": "",
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "todo-long-content-mobile-full.png",
+      "state": "todo-long-content",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        1650
+      ],
+      "sha256": "64089b72e88b5f69a533d3a374761350377d499d70f1f0b9e8aec0f4e46eee09",
+      "test_output": "todos.e2e.ts-long-capture--13b07-ough-mobile-back-navigation",
+      "run": "focused-9-pass",
+      "route": "",
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "todos-archived-loading-desktop.png",
+      "state": "todos-archived-loading",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "2bd88d35919fe01dc80a1da05293855c003118dea420dbb7d50aeb45d1de9ef6",
+      "test_output": "todos.e2e.ts-capture-and-k-6d9a3-itial-selection-stays-empty",
+      "run": "focused-9-pass",
+      "route": "#todos?scope=archived",
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "todos-archived-loading-desktop-full.png",
+      "state": "todos-archived-loading",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "2bd88d35919fe01dc80a1da05293855c003118dea420dbb7d50aeb45d1de9ef6",
+      "test_output": "todos.e2e.ts-capture-and-k-6d9a3-itial-selection-stays-empty",
+      "run": "focused-9-pass",
+      "route": "#todos?scope=archived",
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "todos-archived-loading-mobile.png",
+      "state": "todos-archived-loading",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        844
+      ],
+      "sha256": "8853669d80db57aee91c77d27fee1d9d1a18ed0b478179e24e0dad3fba2a14f2",
+      "test_output": "todos.e2e.ts-capture-and-k-6d9a3-itial-selection-stays-empty",
+      "run": "focused-9-pass",
+      "route": "#todos?scope=archived",
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "todos-archived-loading-mobile-full.png",
+      "state": "todos-archived-loading",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        844
+      ],
+      "sha256": "8853669d80db57aee91c77d27fee1d9d1a18ed0b478179e24e0dad3fba2a14f2",
+      "test_output": "todos.e2e.ts-capture-and-k-6d9a3-itial-selection-stays-empty",
+      "run": "focused-9-pass",
+      "route": "#todos?scope=archived",
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "todos-empty-scope-desktop.png",
+      "state": "todos-empty-scope",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "6cadace50bb756128ca90111d227688080d7e4c686c64d485a456c2bede50453",
+      "test_output": "todos.e2e.ts-capture-and-k-6d9a3-itial-selection-stays-empty",
+      "run": "empty-state-1-pass",
+      "route": "#todos?scope=archived",
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "todos-empty-scope-desktop-full.png",
+      "state": "todos-empty-scope",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "6cadace50bb756128ca90111d227688080d7e4c686c64d485a456c2bede50453",
+      "test_output": "todos.e2e.ts-capture-and-k-6d9a3-itial-selection-stays-empty",
+      "run": "empty-state-1-pass",
+      "route": "#todos?scope=archived",
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "todos-empty-scope-mobile.png",
+      "state": "todos-empty-scope",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        844
+      ],
+      "sha256": "22b90492457a613bf373b3877ec9d325a787cb0b1c0c95c736b9130ba18e0bbf",
+      "test_output": "todos.e2e.ts-capture-and-k-6d9a3-itial-selection-stays-empty",
+      "run": "empty-state-1-pass",
+      "route": "#todos?scope=archived",
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "todos-empty-scope-mobile-full.png",
+      "state": "todos-empty-scope",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        844
+      ],
+      "sha256": "22b90492457a613bf373b3877ec9d325a787cb0b1c0c95c736b9130ba18e0bbf",
+      "test_output": "todos.e2e.ts-capture-and-k-6d9a3-itial-selection-stays-empty",
+      "run": "empty-state-1-pass",
+      "route": "#todos?scope=archived",
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "todos-no-selection-desktop.png",
+      "state": "todos-no-selection",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "4910f8e0fb4035102e2fd713d65d7777d912743b9a465f685def5f8ce0a8d6ad",
+      "test_output": "todos.e2e.ts-capture-and-k-6d9a3-itial-selection-stays-empty",
+      "run": "empty-state-1-pass",
+      "route": "",
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "todos-no-selection-desktop-full.png",
+      "state": "todos-no-selection",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "4910f8e0fb4035102e2fd713d65d7777d912743b9a465f685def5f8ce0a8d6ad",
+      "test_output": "todos.e2e.ts-capture-and-k-6d9a3-itial-selection-stays-empty",
+      "run": "empty-state-1-pass",
+      "route": "",
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "todos-no-selection-mobile.png",
+      "state": "todos-no-selection",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        844
+      ],
+      "sha256": "5ad13d31a4940e0065c30c843555236ca12087c82f75fe13f2957399677b2603",
+      "test_output": "todos.e2e.ts-capture-and-k-6d9a3-itial-selection-stays-empty",
+      "run": "empty-state-1-pass",
+      "route": "",
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "todos-no-selection-mobile-full.png",
+      "state": "todos-no-selection",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        844
+      ],
+      "sha256": "5ad13d31a4940e0065c30c843555236ca12087c82f75fe13f2957399677b2603",
+      "test_output": "todos.e2e.ts-capture-and-k-6d9a3-itial-selection-stays-empty",
+      "run": "empty-state-1-pass",
+      "route": "",
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "todos-selected-empty-discussion-desktop.png",
+      "state": "todos-selected-empty-discussion",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "a7e5f7f12c8c38044c9ccd19944e6aa00e7def669f71394a47d97f77758892dc",
+      "test_output": "todos.e2e.ts-capture-and-k-6d9a3-itial-selection-stays-empty",
+      "run": "empty-state-1-pass",
+      "route": "#todos?scope=all",
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "todos-selected-empty-discussion-desktop-full.png",
+      "state": "todos-selected-empty-discussion",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "image_size": [
+        1440,
+        1000
+      ],
+      "sha256": "5f91f3dbcac19a5e6d3df3c1c233945c94fa31076bc659a3fc4561ceb47a68a2",
+      "test_output": "todos.e2e.ts-capture-and-k-6d9a3-itial-selection-stays-empty",
+      "run": "empty-state-1-pass",
+      "route": "#todos?scope=all",
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page image"
+    },
+    {
+      "file": "todos-selected-empty-discussion-mobile.png",
+      "state": "todos-selected-empty-discussion",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        844
+      ],
+      "sha256": "9bded99c104ea313e7b0f607d81d2e8dab342b4fad9454df3859b3d13c2d11ba",
+      "test_output": "todos.e2e.ts-capture-and-k-6d9a3-itial-selection-stays-empty",
+      "run": "empty-state-1-pass",
+      "route": "#todos?scope=all",
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page desktop/mobile pair; viewport companion retained"
+    },
+    {
+      "file": "todos-selected-empty-discussion-mobile-full.png",
+      "state": "todos-selected-empty-discussion",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "image_size": [
+        390,
+        968
+      ],
+      "sha256": "6af51db37b31445a9788e0533f77e6543b8f8d43d708dc3bf6de8c19ad531cb5",
+      "test_output": "todos.e2e.ts-capture-and-k-6d9a3-itial-selection-stays-empty",
+      "run": "empty-state-1-pass",
+      "route": "#todos?scope=all",
+      "route_pattern": "#todos (selection/scope from test)",
+      "route_evidence": "persisted helper metadata",
+      "inspection": "root inspected full-page image"
+    }
+  ]
+}

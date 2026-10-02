@@ -24,7 +24,8 @@ Todo list + selected Discussion remain one desktop workspace, responsive to smal
 
 ## Shared visual ownership
 
-Apply the [visual contract](visual-design.md) through the app shell and shared page header/toolbar primitives under `components/`; keep owned shadcn primitives in `components/ui/`. `styles.css` owns semantic theme and typography tokens plus document-level resets. Feature components compose these primitives and own domain-specific list, Board and conversation layouts; they must not redefine the global palette or page chrome. These are target responsibilities for migration/new UI, not a claim those shared layout components already exist.
+Apply the [visual contract](visual-design.md) through the app shell and shared page header/toolbar primitives under `components/`; keep owned shadcn primitives in `components/ui/`. `styles.css` owns semantic theme and typography tokens plus document-level resets. Feature components compose these primitives and own domain-specific list, Board and conversation layouts; they must not redefine the global palette or page chrome. Shared PageHeader/forms and neutral shell/tokens implement these responsibilities.
+Screen-specific visual acceptance remains recorded in the owning task.
 
 Keep Todo selection/drafts and Task routes intact when changing layout. Visual similarity to Multica must not introduce a new route, state store or product entity by itself.
 

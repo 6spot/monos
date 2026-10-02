@@ -38,7 +38,8 @@ Follow the selected Base UI component's current API. Do not copy Radix-only `asC
 </Dialog>
 ```
 
-This illustrates the official API; only `components/ui/button.tsx` is currently installed. Add other primitives only when needed. `components.json` records the explicit `base-nova` preset.
+This illustrates the official API. Owned Button, Input, Textarea, Label, NativeSelect,
+Checkbox and Dialog primitives are installed; add others only when needed. `components.json` records the explicit `base-nova` preset.
 
 ## Interaction and accessibility
 
@@ -53,3 +54,13 @@ This illustrates the official API; only `components/ui/button.tsx` is currently 
 ## Verification
 
 Check keyboard navigation, focus return, repeated open/close, mobile layout and server-error recovery. Adding a primitive does not require re-testing every upstream implementation detail; test the behavior introduced by our composition.
+
+## Migrated shared form composition
+
+`components/forms.tsx` keeps domain field props/IDs stable and delegates visual
+controls to owned primitives. Field errors connect through aria-invalid and
+aria-describedby. CheckField connects an owned Checkbox and Label by useId;
+Checkbox renders a native type=button inside Base UI so disabled fieldsets also
+block native activation. Forward the screen's disabled state explicitly. Verify
+label click, keyboard Space and blocked activation during uncertain saves.
+Keep EditorActions inside the original form/fieldset and preserve draft basis.

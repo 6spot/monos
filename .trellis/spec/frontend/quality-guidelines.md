@@ -16,7 +16,9 @@ Implemented evidence covers login/logout/revocation, Role/Project/policy/provide
 persistence, record/view drafts, two-tab version conflict, repeated submit,
 interrupted write/receipt recovery, keyboard navigation and mobile overflow.
 Provider repository responses are explicit fixtures, not live GitHub evidence.
-The following Todo/Task matrix remains for future packages.
+Todo/preview and Board/Task interactions are implemented and verified by their
+owning tasks. The matrix below also includes later delivery requirements; those
+remain unaccepted until the corresponding backend/product scope exists.
 
 ## Required interaction evidence
 
@@ -32,6 +34,12 @@ The following Todo/Task matrix remains for future packages.
 - Preserve terminal history and report partial delivery honestly.
 
 Test the user-visible behavior introduced by a change. Prefer focused interaction/integration tests to markup snapshots or tests that mirror private state.
+
+For sequential decisions, await the visible canonical result before submitting a
+dependent command (for example, `Exact requirements confirmed.` before sending a
+later input). A completed click does not imply the command has committed. When a
+test holds a request for a busy-state screenshot, release it and await the result
+before removing its route handler; early `unroute` can race `route.continue`.
 
 ## Component and dependency checks
 

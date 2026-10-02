@@ -40,7 +40,7 @@ export function TaskPreviewCard({ todoId, message, snapshot, controller, continu
     {query.error && <div className="notice error" role="alert"><span>{query.error.message}</span><Button variant="outline" onClick={() => { void query.refetch(); }}>Refresh Task preview</Button></div>}
     {task ? <>
       <p className="hint">{projectName}{task.created_at && <> · Created <time dateTime={task.created_at}>{new Date(task.created_at).toLocaleString()}</time></>}</p>
-      <p><span className="tag positive">{task.state === 'PLANNING' ? 'Ready to start' : task.state}</span></p>
+      <p><span className="tag">{task.state === 'PLANNING' ? 'Ready to start' : task.state}</span></p>
       <a className="task-link" href={`#task?${new URLSearchParams({ task_id: task.task_id })}`}>View Task →</a>
     </> : <>
       <p className="hint">Proposed Task · Review the exact specification before creating.</p>

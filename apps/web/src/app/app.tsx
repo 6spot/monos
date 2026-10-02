@@ -23,7 +23,12 @@ function currentView() { const id = location.hash.slice(1).split('?')[0]; return
 function Brand() { return <div className="brand"><span className="brand-mark" aria-hidden="true">m</span><span>monos</span></div>; }
 function Login({ refresh }: { refresh: () => Promise<unknown> }) {
   const [password, setPassword] = useState(''); const [busy, setBusy] = useState(false); const [error, setError] = useState('');
-  return <main className="login-layout"><section className="login-intro"><Brand /><div><p className="eyebrow">YOUR PERSONAL DEVELOPMENT WORKSPACE</p><h1>A little context.<br />A lot of possibility.</h1><p>Bring your ideas, repositories, and agents together in one place.</p></div><span className="login-footer">Built around your work.</span></section><section className="login-main"><form className="login-form" onSubmit={async (event) => { event.preventDefault(); setBusy(true); setError(''); try { await request('/v1/owner/login', 'OwnerSessionStatus', { schema_version: 1, password }); setPassword(''); await refresh(); } catch (error) { setError(error instanceof Error ? error.message : 'Unable to sign in.'); } finally { setBusy(false); } }}><p className="eyebrow">WELCOME BACK</p><h2>Sign in to monos</h2><p>Use your Owner password to open your workspace.</p><Field label="Password" type="password" value={password} onChange={setPassword} required minLength={12} maxLength={1024} autoComplete="current-password" disabled={busy} />{error && <p className="form-error" role="alert">{error}</p>}<Button type="submit" disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}</Button><p className="hint">First time here? Initialize the Owner password using the local setup command on your server.</p></form></section></main>;
+  return <main className="login-layout"><div className="login-main"><Brand /><form className="login-form" aria-label="Sign in" onSubmit={async (event) => { event.preventDefault(); setBusy(true); setError(''); try { await request('/v1/owner/login', 'OwnerSessionStatus', { schema_version: 1, password }); setPassword(''); await refresh(); } catch (error) { setError(error instanceof Error ? error.message : 'Unable to sign in.'); } finally { setBusy(false); } }}>
+    <h1>Sign in to monos</h1><p className="login-description">Use your Owner password to open your workspace.</p>
+    <Field label="Password" type="password" value={password} onChange={setPassword} required minLength={12} maxLength={1024} autoComplete="current-password" disabled={busy} error={error || undefined} />
+    <Button type="submit" disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}</Button>
+    <p className="hint login-setup">First time here? Initialize the Owner password using the local setup command on your server.</p>
+  </form></div></main>;
 }
 function Workspace({ sessionId, onUnauthorized }: { sessionId: string; onUnauthorized: () => void }) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -47,7 +52,7 @@ function Workspace({ sessionId, onUnauthorized }: { sessionId: string; onUnautho
     <main id="main" tabIndex={-1} className="workspace-main"><div className="topbar">
       <Dialog open={menuOpen} onOpenChange={setMenuOpen}><DialogTrigger render={<Button variant="ghost" size="icon" className="mobile-menu-trigger" aria-label="Open navigation" />}><Menu size={19} /></DialogTrigger><DialogContent side="left" className="navigation-sheet"><DialogTitle className="sr-only">Workspace navigation</DialogTitle><Brand /><p className="nav-label">Workspace</p>{navigation}{footer}</DialogContent></Dialog>
       <span>Workspace / {view === 'todos' ? 'Todos' : view === 'task' ? 'Task' : view === 'board' ? 'Execution Board' : 'Settings'}</span><span className="private-label">Private workspace</span>
-    </div><div className={`page-content ${view === 'board' || view === 'task' ? 'execution-page' : 'legacy-page'}`}>
+    </div><div className={`page-content ${view === 'board' || view === 'task' ? 'execution-page' : 'workspace-page'}`}>
       {logoutError && <p className="notice error" role="alert">{logoutError}</p>}
       {command.notice && <div className={`notice ${command.notice.kind}`} role={command.notice.kind === 'success' ? 'status' : 'alert'}><span>{command.notice.text}</span>{command.notice.kind === 'uncertain' ? <Button disabled={command.busy} variant="outline" onClick={() => { void command.recover(); }}>Check save result</Button> : <Button variant="ghost" onClick={command.dismiss}>Dismiss</Button>}</div>}
       {command.busy && <p className="save-progress" role="status">Saving changes…</p>}
@@ -57,11 +62,11 @@ function Workspace({ sessionId, onUnauthorized }: { sessionId: string; onUnautho
         {(view === 'task' || view === 'board') && taskCommands.storageError && <div className="notice error" role="alert"><div><p>{taskCommands.storageError}</p><p>Signing out clears this tab’s drafts and recovery data; messages already saved remain on the server.</p></div><Button variant="outline" onClick={taskCommands.retryStorage}>Retry local recovery</Button></div>}
         {view === 'task' && <TaskDetail taskId={taskId} snapshot={configuration.data} onUnauthorized={onUnauthorized} commands={taskCommands} />}
         {view === 'board' && <ExecutionBoard snapshot={configuration.data} onUnauthorized={onUnauthorized} commands={taskCommands} />}
-        <section hidden={view !== 'todos'}><Todos snapshot={configuration.data} onUnauthorized={onUnauthorized} /></section>
-        <section hidden={view !== 'projects'}><Projects snapshot={configuration.data} save={save} disabled={disabled} committed={command.committed} /></section>
-        <section hidden={view !== 'roles'}><Roles snapshot={configuration.data} infrastructure={infrastructure.data} save={save} disabled={disabled} committed={command.committed} /></section>
-        <section hidden={view !== 'execution'}><Execution snapshot={configuration.data} infrastructure={infrastructure.data} infrastructureError={infrastructure.error} refresh={() => { void infrastructure.refetch(); }} save={save} disabled={disabled} committed={command.committed} /></section>
-        <section hidden={view !== 'github'}><GitHubSettings snapshot={configuration.data} save={save} disabled={disabled} committed={command.committed} /></section>
+        <section className="todos-page" hidden={view !== 'todos'}><Todos snapshot={configuration.data} onUnauthorized={onUnauthorized} /></section>
+        <section className="settings-page" hidden={view !== 'projects'}><Projects snapshot={configuration.data} save={save} disabled={disabled} committed={command.committed} /></section>
+        <section className="settings-page" hidden={view !== 'roles'}><Roles snapshot={configuration.data} infrastructure={infrastructure.data} save={save} disabled={disabled} committed={command.committed} /></section>
+        <section className="settings-page" hidden={view !== 'execution'}><Execution snapshot={configuration.data} infrastructure={infrastructure.data} infrastructureError={infrastructure.error} refresh={() => { void infrastructure.refetch(); }} save={save} disabled={disabled} committed={command.committed} /></section>
+        <section className="settings-page" hidden={view !== 'github'}><GitHubSettings snapshot={configuration.data} save={save} disabled={disabled} committed={command.committed} /></section>
       </>}
     </div></main></div>;
 }

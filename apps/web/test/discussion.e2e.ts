@@ -1,6 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import { test, expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
+import { captureView } from './visual.ts';
+
+test.setTimeout(90000);
 import type { DiscussionCommand, DiscussionMessage, DiscussionStatus } from '../../../packages/protocol/generated/types.ts';
 
 async function signIn(page: Page) {
@@ -22,7 +25,7 @@ async function send(page: Page, text: string) {
   await expect(page.locator('.discussion-content').filter({ hasText: text })).toHaveCount(1);
 }
 
-test('real persisted input stays queued, drafts follow each Todo, and navigation does not submit them', async ({ page }) => {
+test('real persisted input stays queued, drafts follow each Todo, and navigation does not submit them', async ({ page }, info) => {
   await signIn(page);
   await capture(page, 'Discussion draft first'); await page.getByLabel('Message Planner', { exact: true }).fill('First unfinished discussion');
   await capture(page, 'Discussion draft second'); await expect(page.getByLabel('Message Planner', { exact: true })).toHaveValue('');
@@ -36,12 +39,13 @@ test('real persisted input stays queued, drafts follow each Todo, and navigation
   await expect(page.locator('.discussion-messages > li')).toHaveCount(2);
   await expect(page.locator('.discussion-attention')).toContainText('Planner queued');
   await expect(page.locator('.discussion-messages > li').last()).toContainText('Queued');
+  await captureView(page, info, 'discussion-queued');
   await page.getByRole('button', { name: /^Discussion draft second/ }).click();
   await expect(page.getByLabel('Message Planner', { exact: true })).toHaveValue('Second unfinished discussion');
   await expect(page.locator('.discussion-messages > li')).toHaveCount(0); expect(writes).toBe(2);
 });
 
-test('queued Discussion explains required changes while retaining saved input and drafts', async ({ page }) => {
+test('queued Discussion explains required changes while retaining saved input and drafts', async ({ page }, info) => {
   // Status reasons are fixtures; message persistence and the displayed controls are real.
   await signIn(page); const todoId = await capture(page, 'Discussion waiting reasons');
   await send(page, 'Saved question awaiting Planner');
@@ -67,9 +71,10 @@ test('queued Discussion explains required changes while retaining saved input an
     await expect(page.locator('.discussion-content').filter({ hasText: 'Saved question awaiting Planner' })).toHaveCount(1);
   }
   expect(writes).toBe(0);
+  await captureView(page, info, 'discussion-unavailable');
 });
 
-test('lost Discussion responses preserve a Todo-scoped request while other Todos remain usable', async ({ page }) => {
+test('lost Discussion responses preserve a Todo-scoped request while other Todos remain usable', async ({ page }, info) => {
   await signIn(page); const first = await capture(page, 'Uncertain discussion first');
   await capture(page, 'Uncertain discussion second');
   await page.getByRole('button', { name: /^Uncertain discussion first/ }).click();
@@ -87,6 +92,7 @@ test('lost Discussion responses preserve a Todo-scoped request while other Todos
   await page.getByRole('button', { name: /^Uncertain discussion first/ }).click();
   await expect(page.getByLabel('Message Planner', { exact: true })).toHaveValue('  Original uncertain source\n');
   await expect(page.getByLabel('Message Planner', { exact: true })).toBeDisabled();
+  await captureView(page, info, 'discussion-uncertain');
   await page.route('**/v1/owner/todos/discussion/commands/*', (route) => route.fulfill({ json: { malformed: true } }));
   await page.getByRole('button', { name: 'Check Discussion result', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Check Discussion result', exact: true })).toBeEnabled();
@@ -160,6 +166,7 @@ test('canonical status fixtures drive exact recovery exits and attributed replie
   await page.getByLabel('Message Planner', { exact: true }).fill('Draft during reconnect');
   offline = true; await page.getByRole('button', { name: 'Refresh Discussion', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Retry Discussion connection', exact: true })).toBeVisible();
+  await captureView(page, info, 'discussion-read-error');
   await page.route(`**/v1/owner/todos/${todoId}/task-previews/*`, (route) => { const proposal = messages.find((message) => message.task_preview); return route.fulfill({ json: { schema_version: 1, todo_id: todoId, proposal_message_id: proposal?.message_id, preview: proposal?.task_preview, source_message_id: laterId, source_watermark: 2, project_context_version: 1, state: 'project_required' } }); });
   messages.push({ message_id: randomUUID(), sequence: 3, author: 'assistant', content: 'Committed Planner reply', source_message_id: laterId, source_watermark: 2, project_context_version: 1, created_at: '2026-09-30T00:00:02.000Z', task_preview: { title: 'A proposed improvement', specification: 'A small independently reviewable change.' } });
   delete status.current_source; status.latest_sequence = 3; status.resolved_watermark = 2; status.working_requirement_state = 'Current understood requirement';
@@ -172,11 +179,6 @@ test('canonical status fixtures drive exact recovery exits and attributed replie
   await expect(page.locator('.discussion-content').filter({ hasText: 'Committed Planner reply' })).toHaveCount(1);
   await expect(page.getByLabel('Todo Project', { exact: true })).not.toBeVisible();
   await expect(page.locator('.discussion-attention')).toHaveCount(0);
-  await page.evaluate(() => scrollTo(0, 0));
-  await page.screenshot({ path: info.outputPath('discussion-populated-desktop.png'), fullPage: true });
-  await page.setViewportSize({ width: 390, height: 844 });
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-  await expect(page.getByLabel('Message Planner', { exact: true })).toHaveValue('Draft during reconnect');
-  await page.evaluate(() => scrollTo(0, 0));
-  await page.screenshot({ path: info.outputPath('discussion-populated-mobile.png'), fullPage: true });
+  await captureView(page, info, 'discussion-populated');
+
 });

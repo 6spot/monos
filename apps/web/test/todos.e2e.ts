@@ -1,6 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import { test, expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
+import { captureView } from './visual.ts';
+
+test.setTimeout(90000);
 import type { TodoCommand } from '../../../packages/protocol/generated/types.ts';
 
 async function signIn(page: Page) {
@@ -38,6 +41,12 @@ test('capture and keyboard opening preserve exact text without AI work; initial 
   await expect(page.getByRole('heading', { name: 'No Todo selected', exact: true })).toBeVisible();
   await expect(page.getByRole('textbox')).toHaveCount(1);
   await expect(page.getByLabel('Message Planner', { exact: true })).toHaveCount(0);
+  await captureView(page, info, 'todos-no-selection');
+  await page.getByLabel('Todo scope', { exact: true }).selectOption('archived');
+  await expect(page.locator('.todo-row')).toHaveCount(0);
+  await expect(page.getByText('No archived Todos.', { exact: true })).toBeVisible();
+  await captureView(page, info, 'todos-empty-scope');
+  await page.getByLabel('Todo scope', { exact: true }).selectOption('all');
   const writes: string[] = [];
   page.on('request', (request) => { if (request.method() === 'POST') writes.push(new URL(request.url()).pathname); });
   await page.getByRole('button', { name: 'Create Todo', exact: true }).click();
@@ -55,7 +64,7 @@ test('capture and keyboard opening preserve exact text without AI work; initial 
   await expect(page.getByRole('textbox')).toHaveCount(2);
   await expect(page.getByLabel('Message Planner', { exact: true })).toHaveValue('');
   expect(writes).toEqual(['/v1/owner/todos/commands']);
-  await page.screenshot({ path: info.outputPath('todos-desktop.png'), fullPage: true });
+  await captureView(page, info, 'todos-selected-empty-discussion');
 });
 
 test('Inbox, Project, archive and restore preserve capture and scoped drafts', async ({ page }) => {
@@ -200,4 +209,22 @@ test('mobile returns from detail to the list with capture drafts intact and no h
   await page.keyboard.press('Enter');
   await expect(page.getByLabel('Capture an idea', { exact: true })).toBeFocused();
   await expect(page.getByLabel('Capture an idea', { exact: true })).toHaveValue('Mobile unfinished capture');
+});
+
+
+test('long capture and discussion draft remain readable through mobile back navigation', async ({ page }, info) => {
+  await signIn(page);
+  const original = 'A detailed captured workflow with long requirements '.repeat(5) + '\n\n' + 'Keep all original text and 中文 examples available.\n'.repeat(18);
+  await page.getByLabel('Capture an idea', { exact: true }).fill(original);
+  await page.getByRole('button', { name: 'Capture Todo', exact: true }).click();
+  await expect(page.getByRole('region', { name: 'Original Capture', exact: true }).locator('.todo-original')).toHaveText(original);
+  const draft = 'An unfinished question with a long quoted requirement. 中文保持可读。\n'.repeat(12);
+  await page.getByLabel('Message Planner', { exact: true }).fill(draft);
+  await captureView(page, info, 'todo-long-content');
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole('button', { name: '← Back to Todos', exact: true }).click();
+  await expect(page.getByLabel('Capture an idea', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: /^A detailed captured workflow/ })).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(page.getByLabel('Message Planner', { exact: true })).toHaveValue(draft);
 });

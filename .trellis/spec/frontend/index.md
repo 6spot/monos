@@ -2,7 +2,9 @@
 
 Status: protected Owner configuration, Todo capture/organization, ordered Discussion and scoped execution reads are implemented in `apps/web`. Exact Task preview/creation, Execution Board and the Task workspace are implemented; current-task functional and visual gates remain recorded in task verification artifacts. Sources: [UI](../../../docs/07-owner-review-and-ui.md), [technology](../../../docs/11-technology-and-deployment.md).
 
-The [visual contract](visual-design.md) is the target for new UI and separately planned migration; existing screens have not yet been visually migrated.
+The [visual contract](visual-design.md) governs the shared neutral shell, controls
+and screen interiors. Board/Task and existing-screen migration have separate task
+evidence; source changes alone do not establish their final visual acceptance.
 
 ## Pre-Development Checklist
 

@@ -3,8 +3,8 @@
   "name": "a-existing-screen-visual-migration",
   "title": "Existing-screen visual migration",
   "description": "Migrate existing Login, Settings and Todo/preview interiors onto the shared neutral shell and controls delivered by execution UI; independently verify the combined visual flow.",
-  "status": "planning",
-  "dev_type": null,
+  "status": "in_progress",
+  "dev_type": "frontend",
   "scope": null,
   "package": null,
   "priority": "P2",
@@ -12,7 +12,7 @@
   "assignee": "me",
   "createdAt": "2026-10-02",
   "completedAt": null,
-  "branch": null,
+  "branch": "feat/stage-a-boundary-probe",
   "base_branch": "main",
   "worktree_path": null,
   "commit": null,
@@ -21,9 +21,9 @@
   "children": [],
   "parent": "09-28-a-task-execution",
   "relatedFiles": [],
-  "notes": "",
+  "notes": "Presentation-only successor to accepted Execution UI; scoped research/design/context complete under standing sequential authorization.",
   "meta": {
     "roadmap_level": "leaf",
-    "planning_maturity": "backlog"
+    "planning_maturity": "implementation_ready"
   }
 }

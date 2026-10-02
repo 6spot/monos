@@ -362,6 +362,7 @@ test('direct Owner edit retains original basis on reload and waits for running w
 test('a later input must be explicitly deferred before the exact requirements can apply', async ({ page }) => {
   await signIn(page); const f = await scenario(page, 'specification'); await openTask(page, f);
   await page.getByRole('button', { name: 'Confirm requirements', exact: true }).click();
+  await expect(page.getByText('Exact requirements confirmed.', { exact: true })).toBeVisible();
   await page.getByLabel('Message to Planner', { exact: true }).fill('A later independent question remains outside this exact change.');
   await page.getByRole('button', { name: 'Send message', exact: true }).click();
   await expect(page.getByLabel('Message to Planner', { exact: true })).toHaveValue('');

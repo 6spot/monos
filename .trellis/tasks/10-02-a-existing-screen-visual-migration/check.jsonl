@@ -1,0 +1,16 @@
+{"file": "ARCHITECTURE.md", "reason": "Architecture and subsystem boundaries"}
+{"file": "docs/07-owner-review-and-ui.md", "reason": "UI contracts; read relevant sections beyond injection limit"}
+{"file": "docs/08-principles-and-non-goals.md", "reason": "Preserve explicit invariants"}
+{"file": ".trellis/spec/frontend/index.md", "reason": "Frontend executable convention"}
+{"file": ".trellis/spec/frontend/visual-design.md", "reason": "Frontend executable convention"}
+{"file": ".trellis/spec/frontend/directory-structure.md", "reason": "Frontend executable convention"}
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "Frontend executable convention"}
+{"file": ".trellis/spec/frontend/hook-guidelines.md", "reason": "Frontend executable convention"}
+{"file": ".trellis/spec/frontend/state-management.md", "reason": "Frontend executable convention"}
+{"file": ".trellis/spec/frontend/type-safety.md", "reason": "Frontend executable convention"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "Frontend executable convention"}
+{"file": ".trellis/spec/frontend/execution-ui.md", "reason": "Frontend executable convention"}
+{"file": ".trellis/tasks/10-02-a-existing-screen-visual-migration/prd.md", "reason": "Task requirements/design and researched seams"}
+{"file": ".trellis/tasks/10-02-a-existing-screen-visual-migration/design.md", "reason": "Task requirements/design and researched seams"}
+{"file": ".trellis/tasks/10-02-a-existing-screen-visual-migration/implement.md", "reason": "Task requirements/design and researched seams"}
+{"file": ".trellis/tasks/10-02-a-existing-screen-visual-migration/research/frontend-migration.md", "reason": "Task requirements/design and researched seams"}

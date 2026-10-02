@@ -1,6 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import { test, expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
+import { captureView } from './visual.ts';
+
+test.setTimeout(90000);
 import type { ConfigurationSnapshot, TaskOverview, TaskPreviewCommand, TaskPreviewStatus, TodoRecord } from '../../../packages/protocol/generated/types.ts';
 
 const markdown = '  # Exact task\n\nKeep <markup> & 中文 literally.\n- Preserve this boundary\n';
@@ -42,6 +45,7 @@ test('exact Project confirmation creates a ready Task; read-only navigation pres
   await open(page, todoId); const card = page.getByRole('complementary', { name: 'Proposed Task', exact: true });
   expect(await card.locator('.discussion-content').textContent()).toBe(markdown);
   await expect(page.getByRole('button', { name: 'Create Task', exact: true })).toBeDisabled();
+  await captureView(page, info, 'preview-project-required');
   await choose(page, first); const firstPreview = await get<TaskPreviewStatus>(page, `/v1/owner/todos/${todoId}/task-previews/${proposal.proposal_message_id}?project_id=${first}`);
   let releaseSelection: () => void = () => {}; const selectionRead = new Promise<void>((resolve) => { releaseSelection = resolve; });
   await page.route(`**/task-previews/${proposal.proposal_message_id}?project_id=${second}`, async (route) => { await selectionRead; await route.continue(); });
@@ -53,11 +57,9 @@ test('exact Project confirmation creates a ready Task; read-only navigation pres
   await page.getByLabel('Message Planner', { exact: true }).fill('Keep this discussion draft');
   await page.getByRole('button', { name: 'Continue discussing', exact: true }).click();
   await expect(page.getByLabel('Message Planner', { exact: true })).toBeFocused(); expect(discussionWrites).toBe(0);
-  await page.evaluate(() => scrollTo(0, 0)); await page.screenshot({ path: info.outputPath('task-preview-desktop.png'), fullPage: true });
-  await page.setViewportSize({ width: 390, height: 844 });
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-  await page.evaluate(() => scrollTo(0, 0)); await page.screenshot({ path: info.outputPath('task-preview-mobile.png'), fullPage: true });
+  await captureView(page, info, 'preview-exact-eligible');
   await page.getByRole('button', { name: 'Create Task', exact: true }).click(); await created(page);
+  await captureView(page, info, 'preview-created');
   expect(commands.map((command) => command.name)).toEqual(['confirm_task_preview', 'create_execution_task']);
   expect(commands[0]?.payload.project_id).toBe(second); expect(commands[0]?.payload.content_digest).not.toBe(firstPreview.content_digest);
   expect(commands[1]?.payload.content_digest).toBe(commands[0]?.payload.content_digest);
@@ -70,8 +72,7 @@ test('exact Project confirmation creates a ready Task; read-only navigation pres
   await page.getByRole('link', { name: 'Overview', exact: true }).click();
   expect(await page.getByRole('region', { name: 'Task Specification', exact: true }).locator('.discussion-content').textContent()).toBe(markdown);
   expect((await get<TaskOverview>(page, `/v1/owner/tasks/${taskId}`)).state).toBe('PLANNING');
-  await page.evaluate(() => scrollTo(0, 0)); await page.screenshot({ path: info.outputPath('task-detail-mobile.png'), fullPage: true });
-  await page.setViewportSize({ width: 1440, height: 1000 }); await page.evaluate(() => scrollTo(0, 0)); await page.screenshot({ path: info.outputPath('task-detail-desktop.png'), fullPage: true });
+  await captureView(page, info, 'preview-task-overview');
   await page.getByRole('link', { name: '← Back to Todo', exact: true }).click();
   await expect(page.getByLabel('Message Planner', { exact: true })).toHaveValue('Keep this discussion draft');
   await page.getByRole('link', { name: 'View Task →', exact: true }).click(); await page.reload();

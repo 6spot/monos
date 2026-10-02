@@ -2,7 +2,10 @@
 
 ## Scope and reference
 
-The [product UI contract](../../../docs/07-owner-review-and-ui.md) selects Multica's application workspace as the visual/layout reference. Apply this spec to new frontend work and explicitly scoped migration. Existing green-theme screens are legacy presentation; writing this standard does not migrate them.
+The [product UI contract](../../../docs/07-owner-review-and-ui.md) selects Multica's application workspace as the visual/layout reference. Apply this spec to new frontend work and explicitly scoped migration. The existing
+screen migration now implements neutral interiors alongside Board/Task; acceptance
+is recorded with inspected current-build evidence in the owning task. The previous
+green-theme presentation is historical, not a pattern to reintroduce.
 
 Reference inspected on 2026-09-30: local Multica checkout, HEAD `44ea3b40c8b4f54f4c76d1dd3e3c92e0c0cabd19`. The observations below came from working files; they are not a guarantee the checkout was clean. Reference paths:
 

@@ -1,6 +1,9 @@
 import { generateKeyPairSync } from 'node:crypto';
 import { test, expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
+import { captureView } from './visual.ts';
+
+test.setTimeout(90000);
 
 async function navigate(page: Page, name: string) {
   if (await page.getByRole('button', { name: 'Open navigation', exact: true }).isVisible()) await page.getByRole('button', { name: 'Open navigation', exact: true }).click();
@@ -19,13 +22,37 @@ async function save(page: Page) {
 
 test('real login, Role/Project/policy/provider persistence, drafts and responsive controls', async ({ page }, info) => {
   await page.goto('/#projects');
+  await expect(page.getByLabel('Password', { exact: true })).toBeVisible();
+  await captureView(page, info, 'login-empty');
   await page.getByLabel('Password', { exact: true }).fill('incorrect-test-password'); await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await expect(page.getByRole('alert')).toContainText('Invalid Owner credentials');
+  await expect(page.getByLabel('Password', { exact: true })).toHaveAttribute('aria-invalid', 'true');
+  const errorId = await page.getByLabel('Password', { exact: true }).getAttribute('aria-describedby');
+  expect(errorId).toBeTruthy();
+  await expect(page.locator(`[id="${errorId}"]`)).toContainText('Invalid Owner credentials');
+  await captureView(page, info, 'login-error');
+  let releaseLogin: () => void = () => {}; const loginBarrier = new Promise<void>((resolve) => { releaseLogin = resolve; });
+  await page.route('**/v1/owner/login', async (route) => { await loginBarrier; await route.continue(); });
   await page.getByLabel('Password', { exact: true }).fill('monos-browser-test-password'); await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+  await expect(page.locator('.login-form button[type=submit]')).toBeDisabled();
+  await captureView(page, info, 'login-busy');
+  releaseLogin();
   await expect(page.getByRole('heading', { name: 'Projects', exact: true })).toBeVisible();
-  await navigate(page, 'Roles'); await page.getByRole('button', { name: 'New role', exact: true }).click();
+  await page.unroute('**/v1/owner/login');
+  await captureView(page, info, 'projects-empty');
+  await navigate(page, 'Roles');
+  await captureView(page, info, 'roles-empty'); await page.getByRole('button', { name: 'New role', exact: true }).click();
   await page.getByLabel('Role name', { exact: true }).fill('Product engineer'); await page.getByLabel('Description', { exact: true }).fill('Build thoughtful, tested product changes.');
-  await page.getByLabel('Instructions', { exact: true }).fill('Read Project context. Implement the smallest complete change and verify it.'); await save(page);
+  await page.getByLabel('Instructions', { exact: true }).fill('Read Project context. Implement the smallest complete change and verify it.');
+  const hidden = page.getByRole('checkbox', { name: 'Hide from new selections', exact: true });
+  await hidden.focus(); await page.keyboard.press('Space'); await expect(hidden).toBeChecked();
+  await page.keyboard.press('Space'); await expect(hidden).not.toBeChecked();
+  await page.getByText('Hide from new selections', { exact: true }).click(); await expect(hidden).toBeChecked();
+  await page.getByText('Hide from new selections', { exact: true }).click(); await expect(hidden).not.toBeChecked();
+  await save(page); await captureView(page, info, 'roles-populated');
+  await page.getByLabel('Instructions', { exact: true }).fill('Long instructions with 中文 and exact examples. Keep each requirement independently readable.\n'.repeat(25));
+  await captureView(page, info, 'roles-long-draft');
+  await page.getByRole('button', { name: 'Reload saved version', exact: true }).click();
   await navigate(page, 'Projects'); await page.getByRole('button', { name: 'New project', exact: true }).click();
   await page.getByLabel('Project name', { exact: true }).fill('Personal website'); await page.getByLabel('Project context', { exact: true }).fill('A calm, accessible home for writing and selected work. Keep dependencies small.');
   await page.getByRole('button', { name: 'Add Git repository', exact: true }).click(); await page.getByLabel('Repository 1 remote URL', { exact: true }).fill('https://github.com/example/personal-website.git');
@@ -35,8 +62,11 @@ test('real login, Role/Project/policy/provider persistence, drafts and responsiv
   await expect(page.getByLabel('Project name', { exact: true })).toHaveValue('Unsaved website draft'); await page.getByRole('button', { name: 'Reload saved version', exact: true }).click();
   await expect(page.getByLabel('Project name', { exact: true })).toHaveValue('Personal website');
   await page.evaluate(() => scrollTo(0, 0));
-  await page.screenshot({ path: info.outputPath('projects-desktop.png'), fullPage: true });
-  await navigate(page, 'Execution'); await page.getByRole('checkbox', { name: 'Set a global default policy' }).check();
+  await captureView(page, info, 'projects-populated');
+  await navigate(page, 'Execution');
+  await expect(page.getByText('No Runner enrolled yet.', { exact: false })).toBeVisible();
+  await captureView(page, info, 'execution-empty');
+  await page.getByRole('checkbox', { name: 'Set a global default policy' }).check();
   await page.getByLabel('Default model', { exact: true }).fill('provider/new-manual-model'); await save(page); await page.reload(); await expect(page.getByLabel('Default model', { exact: true })).toHaveValue('provider/new-manual-model');
   await page.getByLabel('Planner guidance', { exact: true }).fill('Ask focused questions. Keep each Todo discussion independent.');
   await page.getByRole('button', { name: 'Save Planner guidance', exact: true }).click();
@@ -47,13 +77,21 @@ test('real login, Role/Project/policy/provider persistence, drafts and responsiv
   await expect(page.getByLabel('Planner guidance', { exact: true })).toHaveValue('Unfinished Planner guidance');
   await page.getByRole('button', { name: 'Reload saved guidance', exact: true }).click();
   await expect(page.getByLabel('Planner guidance', { exact: true })).toHaveValue('Ask focused questions. Keep each Todo discussion independent.');
+  await captureView(page, info, 'execution-policy');
   await navigate(page, 'GitHub');
+  await captureView(page, info, 'github-empty');
   const key = generateKeyPairSync('rsa', { modulusLength: 2048 }).privateKey.export({ type: 'pkcs8', format: 'pem' }).toString();
   await page.getByLabel('GitHub App ID', { exact: true }).fill('123'); await page.getByLabel('Installation ID', { exact: true }).fill('456'); await page.getByLabel('App private key', { exact: true }).fill(key); await save(page);
   await expect(page.getByLabel('App private key', { exact: true })).toHaveValue('');
+  await page.route('**/v1/owner/github/repositories?*', (route) => route.fulfill({ status: 503, json: { schema_version: 1, status: 'error', error: { code: 'control_unavailable', message: 'Synthetic repository access is temporarily unavailable' } } }));
+  await page.getByRole('button', { name: 'Check repository access', exact: true }).click();
+  await expect(page.getByRole('alert')).toContainText('Synthetic repository access is temporarily unavailable');
+  await captureView(page, info, 'github-access-error');
+  await page.unroute('**/v1/owner/github/repositories?*');
   // Provider response fixture: this proves UI behavior, not live GitHub readiness.
   await page.route('**/v1/owner/github/repositories?*', (route) => route.fulfill({ json: { schema_version: 1, repositories: [{ provider_repo_id: '42', full_name: 'example/personal-website', remote_url: 'https://github.com/example/personal-website.git', default_branch: 'main', private: true }] } }));
   await page.getByRole('button', { name: 'Check repository access', exact: true }).click(); await expect(page.getByText(/Read access confirmed/)).toBeVisible();
+  await captureView(page, info, 'github-configured');
   await page.setViewportSize({ width: 390, height: 844 }); await navigate(page, 'Projects');
   await page.getByRole('button', { name: 'Reload saved version', exact: true }).click();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
@@ -64,22 +102,28 @@ test('real login, Role/Project/policy/provider persistence, drafts and responsiv
   await page.reload(); await expect(page.getByRole('heading', { name: 'Sign in to monos' })).toBeVisible();
 });
 
-test('two tabs reject stale edits and explicitly reload the saved version', async ({ page, context }) => {
+test('two tabs reject stale edits and explicitly reload the saved version', async ({ page, context }, info) => {
   await signIn(page); await page.getByRole('button', { name: 'New project', exact: true }).click(); await page.getByLabel('Project name', { exact: true }).fill('Concurrent project'); await save(page);
   const other = await context.newPage(); await other.goto('/#projects'); await other.getByRole('button', { name: 'Concurrent project', exact: false }).click();
   await other.getByLabel('Project name', { exact: true }).fill('Second tab draft');
   await page.getByLabel('Project name', { exact: true }).fill('First tab saved'); await save(page);
   await other.getByRole('button', { name: 'Save changes', exact: true }).click(); await expect(other.getByRole('alert')).toContainText('Configuration changed');
   await expect(other.getByLabel('Project name', { exact: true })).toHaveValue('Second tab draft');
+  await captureView(other, info, 'settings-version-conflict');
   await other.getByRole('button', { name: 'Reload saved version', exact: true }).click(); await expect(other.getByLabel('Project name', { exact: true })).toHaveValue('First tab saved');
 });
 
-test('a lost save reply recovers the original receipt without a second write', async ({ page }) => {
+test('a lost save reply recovers the original receipt without a second write', async ({ page }, info) => {
   await signIn(page); await navigate(page, 'Roles'); await page.getByRole('button', { name: 'New role', exact: true }).click();
   await page.getByLabel('Role name', { exact: true }).fill('Recovered role'); let writes = 0;
   await page.route('**/v1/owner/configuration/commands', async (route) => { writes++; const response = await route.fetch(); expect(response.status()).toBe(200); await route.abort('failed'); });
   await page.getByRole('button', { name: 'Save changes', exact: true }).click(); await expect(page.getByRole('button', { name: 'Check save result', exact: true })).toBeVisible();
   await expect(page.getByLabel('Role name', { exact: true })).toBeDisabled();
+  const policy = page.getByRole('checkbox', { name: 'Use a custom execution policy', exact: true });
+  await expect(policy).toBeDisabled();
+  await policy.evaluate((control) => (control as HTMLElement).click());
+  await expect(policy).not.toBeChecked();
+  await captureView(page, info, 'settings-save-uncertain');
   await page.route('**/v1/owner/configuration/commands/*', (route) => route.fulfill({ json: { broken: true } }));
   await page.getByRole('button', { name: 'Check save result', exact: true }).click();
   await expect(page.getByLabel('Role name', { exact: true })).toBeDisabled();

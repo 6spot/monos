@@ -2,6 +2,8 @@ import { useEffect, useId, useRef } from 'react';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import type { ConfigurationSnapshot, DiscussionCommand, TodoRecord } from '../../../../packages/protocol/generated/types.ts';
 import { Button } from '../components/ui/button.tsx';
+import { Label } from '../components/ui/label.tsx';
+import { Textarea } from '../components/ui/textarea.tsx';
 import { APIError } from '../lib/api.ts';
 import { readDiscussion, readDiscussionPage } from '../lib/discussion-api.ts';
 import { useDiscussion } from '../lib/use-discussion.ts';
@@ -64,7 +66,7 @@ export function Discussion({ todo, snapshot, onUnauthorized }: { todo?: TodoReco
         ...(name === 'stop_discussion_turn' ? { attempt_id: current.attempt_id } : {}) } };
     void local.execute(command);
   }
-  return <section className="card editor todo-discussion" aria-label="Todo Discussion">
+  return <section className="todo-discussion" aria-label="Todo Discussion">
     <div className="section-label"><h2>Discussion</h2><Button variant="ghost" disabled={status.isFetching || history.isFetching} onClick={refresh}>Refresh Discussion</Button></div>
     {state?.notice && <div id={noticeId} className={`notice ${state.notice.kind}`} role={state.notice.kind === 'success' ? 'status' : 'alert'}><span>{state.notice.text}</span>
       {state.notice.kind === 'uncertain' ? <Button variant="outline" disabled={state.busy} onClick={() => { void local.recover(id); }}>Check Discussion result</Button> : <Button variant="ghost" onClick={() => local.dismiss(id)}>Dismiss</Button>}
@@ -98,7 +100,7 @@ export function Discussion({ todo, snapshot, onUnauthorized }: { todo?: TodoReco
     </div>}
     {status.data?.working_requirement_state && <details className="subsection"><summary>Current understanding</summary><p className="discussion-content">{status.data.working_requirement_state}</p></details>}
     <form className="discussion-composer subsection" aria-label="Discussion composer" onSubmit={(event) => { event.preventDefault(); void local.execute({ schema_version: 1, request_id: crypto.randomUUID(), todo_id: id, name: 'submit_discussion_message', payload: { message_id: crypto.randomUUID(), content: state?.draft ?? '' } }); }}>
-      <div className="field"><label htmlFor={composerId}>Message Planner</label><textarea id={composerId} ref={composer} rows={4} required maxLength={65536} disabled={disabled} value={state?.draft ?? ''} onChange={(event) => local.setDraft(id, event.target.value)} aria-describedby={`${composerId}-hint${state?.notice ? ` ${noticeId}` : ''}`} /><p id={`${composerId}-hint`} className="hint">{current ? 'New messages are saved and queued behind this request.' : 'Sending a message starts a Planner discussion for this Todo.'}</p></div>
+      <div className="field"><Label htmlFor={composerId}>Message Planner</Label><Textarea id={composerId} ref={composer} rows={4} required maxLength={65536} disabled={disabled} value={state?.draft ?? ''} onChange={(event) => local.setDraft(id, event.target.value)} aria-describedby={`${composerId}-hint${state?.notice ? ` ${noticeId}` : ''}`} /><p id={`${composerId}-hint`} className="hint">{current ? 'New messages are saved and queued behind this request.' : 'Sending a message starts a Planner discussion for this Todo.'}</p></div>
       <Button type="submit" disabled={disabled || !state?.draft.trim()}>{state?.busy ? 'Saving message…' : 'Send message'}</Button>
     </form>
   </section>;

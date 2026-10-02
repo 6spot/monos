@@ -2,7 +2,8 @@
 
 A same-origin React/Vite SPA for Todo capture/organization and Planner Discussion,
 Owner login, Projects/repositories, reusable Roles, Planner guidance, execution
-policies, Runner installation observations and GitHub App configuration.
+policies, Runner installation observations, GitHub App configuration, Execution
+Board and full Task Conversation/Overview/Timeline/Execution details.
 The backend remains authoritative; UI writes use versioned commands and immutable
 receipts. Session cookies and provider keys never enter browser persistent storage.
 
@@ -41,9 +42,12 @@ Screenshots and failure traces are local ignored `test-results/` artifacts.
 
 `src/lib/api.ts` consumes generated protocol types and the shared browser-safe AJV
 entry. Never import DB/server code or the Node crypto protocol entry into Web.
-The source-owned shadcn Button uses Base UI (`base-nova`); add primitives only when
-needed. Todos is the default view. Explicit settings routes and Todo scopes use
-native hash navigation; mounted views retain scoped memory-only drafts.
+The source-owned shadcn controls use Base UI (`base-nova`): Button, Input,
+Textarea, Label, NativeSelect, Checkbox and Dialog. Shared neutral chrome/tokens
+serve Login, Settings, Todo/preview and Task/Board; add primitives only when needed. Todos is the default view. Explicit settings routes and Todo scopes use
+native hash navigation; mounted configuration/Todo views retain scoped memory-only
+drafts. Task drafts and pending envelopes additionally use bounded, validated
+sessionStorage tied to the non-authenticating Owner session UUID.
 
 Todo capture preserves the exact original text and invokes no model. The workspace
 provides All active, Inbox, Project and Archived scopes, bounded list pagination,
@@ -79,7 +83,8 @@ backend and isolated PostgreSQL schema.
 
 Save conflicts retain the draft/version for explicit review. Unknown write outcomes
 retain the original request for Check save result; keep the tab open to recover it.
-Reloading the whole page discards local drafts/pending requests. Installation detected
+Reloading the whole page discards configuration/Todo/preview drafts and pending
+requests; the separately bounded Task journal survives reload in the same session. Installation detected
 means a reported version check, not CLI login/model/tool readiness. Stored policies
 are consumed by future production Runtime integration, not the fixed boundary probe.
 
@@ -92,11 +97,21 @@ Check Task result first recovers the original receipt and replays only after unk
 A created association always shows the actual Task Project, even when another client
 chose differently. A proposal creates at most one independent PLANNING Task.
 
-View Task opens the authenticated read-only `#task?task_id=...` route; direct reload
-works and Back to Todo selects its source while preserving mounted editor drafts.
-Task detail reads the current Specification; unavailable legacy Markdown is stated
-explicitly. Creation/viewing do not Start execution. Browser acceptance uses real
-committed Discussion proposals in an isolated test fixture and covers two clients,
-lost confirmation/create responses, cancellation, stale input, Project choices,
-current revisions, navigation, keyboard focus and desktop/mobile layouts. The test
-fixture alone provides proposal/revision seed routes; production has neither.
+View Task opens the authenticated `#task?task_id=...` workspace, defaulting to
+Conversation; `section=overview|timeline|execution` selects the other sections.
+Back to Todo selects its source while preserving mounted editor drafts. `#board`
+shows canonical Task columns, Project/attention filters and terminal history.
+Creation/viewing do not Start execution; explicit controls use existing exact
+Tool Protocol commands. Local REVIEW reports a local result, not remote delivery.
+
+Task-only pending envelopes are persisted before sending, recovered through the
+original receipt and replayed only after authoritative unknown. Session replacement
+or logout clears private Task state and fences late callbacks. Task requests carry
+`X-Monos-Session` so cookie replacement cannot reuse another session's local intent.
+See `.trellis/spec/frontend/execution-ui.md` for bounds and failure behavior.
+
+Browser acceptance covers real committed proposals, exact decisions, two clients,
+response loss/reload, independent exits, session changes and scoped histories.
+Fixture-only scenario helpers simulate Runtime/effect acknowledgements; production
+has no seed routes. Actual-build desktop/mobile screenshots and source/route/build
+identity are retained in the owning task's research artifacts after inspection.

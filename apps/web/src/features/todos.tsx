@@ -2,6 +2,8 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import type { ConfigurationSnapshot, TodoPage, TodoRecord } from '../../../../packages/protocol/generated/types.ts';
 import { Button } from '../components/ui/button.tsx';
+import { Label } from '../components/ui/label.tsx';
+import { Textarea } from '../components/ui/textarea.tsx';
 import { PageHeading, Select } from '../components/forms.tsx';
 import { APIError, request } from '../lib/api.ts';
 import { useTodoCommand } from '../lib/use-todo-command.ts';
@@ -101,7 +103,7 @@ export function Todos({ snapshot, onUnauthorized }: { snapshot: ConfigurationSna
   function backToList() { const id = selected; setSelected(undefined); requestAnimationFrame(() => document.getElementById(`todo-row-${id}`)?.focus()); }
 
   return <>
-    <PageHeading eyebrow="YOUR IDEAS" title="Todos" description="Capture an idea now. Give it room to develop." />
+    <PageHeading title="Todos" description="Capture ideas and discuss each one with Planner." />
     {command.notice && <div id={noticeId} className={`notice ${command.notice.kind}`} role={command.notice.kind === 'success' ? 'status' : 'alert'}>
       <span>{command.notice.text}</span>{command.notice.kind === 'uncertain' ? <Button variant="outline" disabled={command.busy} onClick={() => { void command.recover(); }}>Check Todo result</Button> : <Button variant="ghost" onClick={command.dismiss}>Dismiss</Button>}
     </div>}
@@ -112,11 +114,11 @@ export function Todos({ snapshot, onUnauthorized }: { snapshot: ConfigurationSna
           <option value="all">All active</option><option value="inbox">Inbox</option><option value="archived">Archived</option>
           {snapshot.projects.filter((project) => !project.archived || project.id === filter.projectId).map((project) => <option key={project.id} value={`project:${project.id}`}>{project.name}{project.archived ? ' (archived)' : ''}</option>)}
         </Select>
-        <form className="todo-capture card" aria-label="Quick capture" onSubmit={(event) => {
+        <form className="todo-capture" aria-label="Quick capture" onSubmit={(event) => {
           event.preventDefault(); void command.execute({ schema_version: 1, request_id: crypto.randomUUID(), name: 'capture_todo', payload: { todo_id: crypto.randomUUID(), original_capture: capture, ...(captureProject ? { project_id: captureProject } : {}) } });
         }}>
           <fieldset disabled={disabled}>
-            <div className="field"><label htmlFor={captureId}>Capture an idea</label><textarea id={captureId} ref={captureInput} rows={3} required maxLength={65536} value={capture} onChange={(event) => setCapture(event.target.value)} placeholder="What's on your mind?" aria-describedby={`${captureId}-hint${command.notice ? ` ${noticeId}` : ''}`} /><p id={`${captureId}-hint`} className="hint">Your original words stay intact.</p></div>
+            <div className="field"><Label htmlFor={captureId}>Capture an idea</Label><Textarea id={captureId} ref={captureInput} rows={3} required maxLength={65536} value={capture} onChange={(event) => setCapture(event.target.value)} placeholder="What's on your mind?" aria-describedby={`${captureId}-hint${command.notice ? ` ${noticeId}` : ''}`} /><p id={`${captureId}-hint`} className="hint">Your original words stay intact.</p></div>
             <Select label="Capture Project (optional)" value={captureProject} onChange={(event) => setCaptureProject(event.target.value)}>
               <option value="">Inbox — no Project</option>{activeProjects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
               {captureProject && !activeProjects.some((project) => project.id === captureProject) && <option value={captureProject} disabled>{projectName(captureProject)} (unavailable)</option>}
@@ -138,7 +140,7 @@ export function Todos({ snapshot, onUnauthorized }: { snapshot: ConfigurationSna
           <Button className="todo-back" variant="ghost" onClick={backToList}>← Back to Todos</Button>
           {detail.isPending && <p className="loading-state" role="status">Opening Todo…</p>}
           {detail.error && <div className="card editor"><p role="alert">{detail.error.message}</p><Button variant="outline" onClick={() => { void detail.refetch(); }}>Retry opening Todo</Button></div>}
-          {todo && inScope(todo, filter) && <article className="card editor todo-detail">
+          {todo && inScope(todo, filter) && <article className="todo-detail">
             <div className="section-label"><h2 ref={heading} tabIndex={-1}>{todo.label}</h2><span className="tag">{todo.archived ? 'Archived' : 'Active'}</span></div>
             <p className="hint">{projectName(todo.project_id)}{snapshot.projects.find((project) => project.id === todo.project_id)?.archived ? ' (archived Project)' : ''}</p>
             <section className="subsection" aria-label="Original Capture"><h3>Original Capture</h3><p className="todo-original">{todo.original_capture}</p><p className="hint">Captured <time dateTime={todo.created_at}>{new Date(todo.created_at).toLocaleString()}</time></p></section>
@@ -152,7 +154,7 @@ export function Todos({ snapshot, onUnauthorized }: { snapshot: ConfigurationSna
             <div className="subsection"><p className="hint">{todo.archived ? 'Restore this Todo to your active ideas.' : 'Archive this Todo when you want to set it aside.'}</p><Button variant="outline" disabled={disabled} onClick={() => { void command.execute({ schema_version: 1, request_id: crypto.randomUUID(), name: 'set_todo_archived', expected_control_version: todo.control_version, payload: { todo_id: todo.todo_id, archived: !todo.archived } }); }}>{todo.archived ? 'Restore Todo' : 'Archive Todo'}</Button></div>
             </details>
           </article>}
-        </> : <div className="card empty-state"><span className="empty-symbol" aria-hidden="true">↗</span><h2>No Todo selected</h2><p>Select an idea from the list to see its original capture and organize it.</p><Button variant="outline" onClick={() => captureInput.current?.focus()}>Create Todo</Button></div>}
+        </> : <div className="empty-state"><h2>No Todo selected</h2><p>Select a Todo from the list to view its original capture or start a discussion.</p><Button variant="outline" onClick={() => captureInput.current?.focus()}>Create Todo</Button></div>}
         <Discussion todo={todo && inScope(todo, filter) ? todo : undefined} snapshot={snapshot} onUnauthorized={onUnauthorized} />
       </section>
     </div>
