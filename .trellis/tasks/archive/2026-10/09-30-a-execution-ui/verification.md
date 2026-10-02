@@ -14,7 +14,7 @@ service, production deployment or real provider delivery was performed here.
 
 | Gate | Result |
 | --- | --- |
-| Full lint and TypeScript | PASS after final app Task-identity refresh; new browser test lint PASS |
+| Full lint and TypeScript | PASS after app Task-identity refresh; late-added joint test needed the subsequent narrowing correction below |
 | Full default unit/schema suite | 290 PASS;334 database tests SKIPPED without DB opt-in |
 | Protocol generation drift | PASS |
 | Native server module import | PASS |
@@ -107,3 +107,14 @@ owned input, cancels created Tasks and settles exact synthetic workspace effects
 SIGTERM drops only that run's unique schema. No arbitrary schema cleanup occurred.
 No native Runtime/model availability, remote PR, merge, delivery, Owner acceptance
 or Stage A/V1 release is established by this browser evidence.
+
+## Post-archive test-source correction
+
+The successor's first Web TypeScript run exposed11 unchecked array-index accesses
+in the final joint recovery test, which was added after the preceding TypeScript
+run. Its browser4/4 and lint evidence remain valid, but the earlier wording
+incorrectly implied that final test source had also passed TypeScript. Added
+explicit missing-evidence guards and checked destructuring without changing any
+runtime assertion. Root and independent reviewer reran Web TypeScript and targeted
+ESLint successfully. No product code/build/image changed for this correction;
+the successor's full browser regression will also retain this case.

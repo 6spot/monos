@@ -385,3 +385,23 @@ leaf only**. It does not accept existing-screen interior migration, native runti
 integration, remote Git delivery, Owner delivery acceptance or Stage A/V1 release.
 Root may mark this leaf's gates complete, commit/archive it and continue the
 separately planned existing-screen visual migration under the standing sequence.
+
+## Verification erratum — final browser-test source types
+
+During the next leaf, Web TypeScript checking found 11
+`noUncheckedIndexedAccess` errors in the last-minute three-stage joint recovery
+test added after the previous full type-check. The final 4/4 browser run had
+passed, but this review's blanket final TypeScript PASS overstated coverage of
+that newly added test source. The earlier claim is corrected here.
+
+Root added explicit missing-evidence guards before indexed command/result access
+and named the three checked command/result pairs. Reviewer verified that all
+receipt-read, no-additional-POST, exact proposal/confirmation, publication and
+post-reload Plan assertions remain intact; missing evidence now fails explicitly.
+No assertion was relaxed, no type suppression was added, and no product source,
+runtime behavior, schema or screenshot build changed in this correction.
+
+Reviewer reran `pnpm --filter @monos/web typecheck` and targeted ESLint on
+`apps/web/test/execution.e2e.ts`: both PASS. The prior runtime/visual evidence stays
+valid; the test-source type gap is now repaired. This erratum does not extend
+acceptance to the next migration leaf.

@@ -194,7 +194,8 @@ test('joint approvals and publication recover their original receipts across res
     await page.getByRole('button', { name: label, exact: true }).click();
     await expect(page.getByText(/The result is not confirmed/)).toBeVisible();
     expect(writes).toHaveLength(index + 1);
-    const command = writes[index];
+    const command = writes[index], result = results[index];
+    if (!command || !result) throw new Error('Committed command evidence is missing');
     await page.reload();
     await page.getByRole('button', { name: 'Check request result', exact: true }).click();
     await expect(page.getByRole('button', { name: 'Check request result', exact: true })).toHaveCount(0);
@@ -202,22 +203,25 @@ test('joint approvals and publication recover their original receipts across res
     expect(receiptReads.some((url) => url.endsWith(`/commands/${command.request_id}`))).toBe(true);
     const overview = await get<TaskOverview>(page, `/v1/owner/tasks/${f.task}`);
     if (index < 2) expect([overview.specification_id, overview.plan_id]).toEqual([f.spec, f.plan]);
-    else expect([overview.specification_id, overview.plan_id]).toEqual([results[2].specification_id, results[2].plan_id]);
+    else expect([overview.specification_id, overview.plan_id]).toEqual([result.specification_id, result.plan_id]);
   }
   expect(writes.map((command) => command.name)).toEqual(['confirm_specification', 'confirm_replan', 'publish_replan']);
   expect(new Set(writes.map((command) => command.request_id)).size).toBe(3);
-  expect(writes[0].payload.proposal_id).toBe(f.requirement_proposal_id);
-  expect(writes[1].payload.proposal_id).toBe(f.proposal_id);
-  expect(writes[2].payload).toMatchObject({ proposal_id: f.proposal_id, confirmation_id: results[1].confirmation_id, requirement_confirmation_id: results[0].confirmation_id });
+  const [requirementCommand, planCommand, publicationCommand] = writes;
+  const [requirementResult, planResult, publicationResult] = results;
+  if (!requirementCommand || !planCommand || !publicationCommand || !requirementResult || !planResult || !publicationResult) throw new Error('Joint approval/publication evidence is incomplete');
+  expect(requirementCommand.payload.proposal_id).toBe(f.requirement_proposal_id);
+  expect(planCommand.payload.proposal_id).toBe(f.proposal_id);
+  expect(publicationCommand.payload).toMatchObject({ proposal_id: f.proposal_id, confirmation_id: planResult.confirmation_id, requirement_confirmation_id: requirementResult.confirmation_id });
   const proposal = await get<ReplanProposalDetail>(page, `/v1/owner/tasks/${f.task}/replan/proposals/${f.proposal_id}`);
-  expect(proposal.confirmation_id).toBe(results[1].confirmation_id);
+  expect(proposal.confirmation_id).toBe(planResult.confirmation_id);
   const status = await get<TaskReplanStatus>(page, `/v1/owner/tasks/${f.task}/replan`);
   expect(status.current_request).toBeNull();
-  expect(status.requests.filter((request) => request.status === 'published').map((request) => request.id)).toEqual([results[2].replan_request_id]);
+  expect(status.requests.filter((request) => request.status === 'published').map((request) => request.id)).toEqual([publicationResult.replan_request_id]);
   await page.reload();
   await expect(page.getByRole('article', { name: 'Task detail', exact: true })).toBeVisible();
   expect(writes).toHaveLength(3);
-  expect((await get<TaskOverview>(page, `/v1/owner/tasks/${f.task}`)).plan_id).toBe(results[2].plan_id);
+  expect((await get<TaskOverview>(page, `/v1/owner/tasks/${f.task}`)).plan_id).toBe(publicationResult.plan_id);
 });
 
 test('late response after logout cannot resurrect private Task recovery data', async ({ page }) => {
