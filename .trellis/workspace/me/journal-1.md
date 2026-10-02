@@ -564,3 +564,26 @@ Implemented bounded Board/results/workspace reads, exact Task controls and sessi
 ### Status
 
 [OK] **Completed**
+
+
+## Session 25: Existing-screen visual migration accepted
+<!-- trellis-session: v=2 fp=c64e4a5488a3dc5f -->
+
+**Date**: 2026-10-03
+**Task**: Existing-screen visual migration accepted
+**Branch**: `feat/stage-a-boundary-probe`
+
+### Summary
+
+Unified Login/Settings/Todo/Discussion/preview with neutral shared controls. Independent ACCEPT;290 unit passes,50 distinct browser cases across41+9 passing results plus final1-case empty-state capture,164 retained PNGs with verified hashes;zero browser schemas. Preserved three test-coordination failures and predecessor typecheck errata honestly. No native deployment. Next: final task execution native acceptance.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `333c9e3` | test: narrow joint recovery evidence and correct verification record |
+| `d5530ea` | feat: unify existing screens with neutral execution workspace |
+
+### Status
+
+[OK] **Completed**
