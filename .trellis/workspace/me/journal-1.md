@@ -542,3 +542,25 @@ Completed exact one-Node Replan, Specification/Plan joint publication, issue and
 ### Status
 
 [OK] **Completed**
+
+
+## Session 24: Execution Board and Task UI accepted
+<!-- trellis-session: v=2 fp=e691cfff51edc192 -->
+
+**Date**: 2026-10-02
+**Task**: Execution Board and Task UI accepted
+**Branch**: `feat/stage-a-boundary-probe`
+
+### Summary
+
+Implemented bounded Board/results/workspace reads, exact Task controls and session-bound reload recovery, neutral shell and responsive Task views. Independent ACCEPT:290 default tests, scoped PostgreSQL and Go checks,46 full browser cases plus4 final-build focused cases;60 inspected screenshots retained and test schemas cleaned. Next:existing-screen visual migration, then native Task execution integration.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `d28fd8b` | feat: add execution Board and exact Task control workspace |
+
+### Status
+
+[OK] **Completed**
