@@ -520,3 +520,25 @@ Completed exact immutable Specification proposals and Owner authorization, physi
 ### Status
 
 [OK] **Completed**
+
+
+## Session 23: One-Node Replan full acceptance and independent exits
+<!-- trellis-session: v=2 fp=31d9a271dc4ab1dc -->
+
+**Date**: 2026-10-02
+**Task**: One-Node Replan full acceptance and independent exits
+**Branch**: `feat/stage-a-boundary-probe`
+
+### Summary
+
+Completed exact one-Node Replan, Specification/Plan joint publication, issue and withdrawal exits, and strict Host exit proof. Independent full-scope ACCEPT; native supplement 69/69, final backend/Runner restart audits 132/132 and 136/136, independent final recomputation 144/144. Historical failures and coverage limits retained in archived verification.md. Next leaf: 09-30-a-execution-ui.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `087ac6d` | feat: add exact one-Node Replan and independent exits |
+
+### Status
+
+[OK] **Completed**

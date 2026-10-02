@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 22
-- **Last Active**: 2026-10-01
+- **Total Sessions**: 23
+- **Last Active**: 2026-10-02
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~522 | Active |
+| `journal-1.md` | ~544 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 23 | 2026-10-02 | One-Node Replan full acceptance and independent exits | `087ac6d` | `feat/stage-a-boundary-probe` |
 | 22 | 2026-10-01 | Exact Specification revisions and native settlement acceptance | `f4114bf` | `feat/stage-a-boundary-probe` |
 | 21 | 2026-09-30 | Ordered Task Conversation and guidance accepted | `609e392` | `feat/stage-a-boundary-probe` |
 | 20 | 2026-09-30 | Frontend visual standards and task alignment | `99dc7b7` | `feat/stage-a-boundary-probe` |
