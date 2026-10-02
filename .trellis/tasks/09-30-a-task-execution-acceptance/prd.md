@@ -13,7 +13,7 @@ Verify the full real Task execution package through Owner and native Runner entr
 
 ## Visual requirements
 
-Apply the [visual contract](../../spec/frontend/visual-design.md) to the actual capture→preview→Task→local REVIEW browser flow. Integrated visual acceptance waits for both execution UI and the separately planned [existing-screen migration](../10-02-a-existing-screen-visual-migration/prd.md).
+Apply the [visual contract](../../spec/frontend/visual-design.md) to the actual capture→preview→Task→local REVIEW browser flow. Integrated visual acceptance waits for both execution UI and the separately planned [existing-screen migration](../archive/2026-10/10-02-a-existing-screen-visual-migration/prd.md).
 
 ## Acceptance criteria
 
@@ -26,7 +26,7 @@ Apply the [visual contract](../../spec/frontend/visual-design.md) to the actual 
 ## Dependency and scope
 
 Follows [Execution Board and Task control UI](../archive/2026-10/09-30-a-execution-ui/prd.md) and
-[existing-screen visual migration](../10-02-a-existing-screen-visual-migration/prd.md).
+[existing-screen visual migration](../archive/2026-10/10-02-a-existing-screen-visual-migration/prd.md).
 Parent links express ownership; this ordering is an evidence gate. The Owner has
 authorized sequential execution and routine implementation/test decisions.
 No new permanent service, team model, generic workflow engine, automatic Runtime

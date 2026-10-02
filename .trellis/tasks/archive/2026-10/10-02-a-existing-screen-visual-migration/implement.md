@@ -11,7 +11,7 @@
 - [x] Run lint/type/unit/protocol/build and full actual-build browser regression (41+9 distinct passing cases; see verification).
 - [x] Inspect/retain1440×1000 and390×844 images, reference comparison and hashes.
 - [x] Complete independent full-scope check; fix findings and rerun affected gates.
-- [ ] Sync specs/docs, commit, archive with valid links, journal; continue integration.
+- [x] Sync specs/docs and work commit; archive with valid links and journal before next integration leaf.
 
 ## Validation
 

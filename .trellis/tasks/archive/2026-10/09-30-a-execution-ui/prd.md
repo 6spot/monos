@@ -52,7 +52,7 @@ approval. Architecture modules remain authoritative.
 7. **Visual/accessibility:** use the [neutral visual contract](../../../../spec/frontend/visual-design.md)
    and owned shadcn Base UI controls, compact shared shell/chrome, accessible mobile
    navigation, keyboard focus and full important content. Existing-screen interiors
-   are owned by the separate [migration leaf](../../../10-02-a-existing-screen-visual-migration/prd.md).
+   are owned by the separate [migration leaf](../10-02-a-existing-screen-visual-migration/prd.md).
 
 ## Acceptance criteria
 

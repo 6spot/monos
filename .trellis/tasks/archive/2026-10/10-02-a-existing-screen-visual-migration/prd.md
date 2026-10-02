@@ -8,10 +8,10 @@ and scoped-draft behavior.
 
 ## Background and ownership
 
-Follows [Execution UI](../archive/2026-10/09-30-a-execution-ui/prd.md), accepted in
-`d28fd8b`, and precedes [execution integration acceptance](../09-30-a-task-execution-acceptance/prd.md).
+Follows [Execution UI](../09-30-a-execution-ui/prd.md), accepted in
+`d28fd8b`, and precedes [execution integration acceptance](../../../09-30-a-task-execution-acceptance/prd.md).
 This leaf completes the outstanding interiors from the
-[original migration handoff](../archive/2026-09/09-30-frontend-visual-standards/migration-handoff.md).
+[original migration handoff](../../2026-09/09-30-frontend-visual-standards/migration-handoff.md).
 The predecessor supplied shared neutral tokens, shell/mobile navigation, PageHeader
 and owned controls. Remaining green skins, oversized headings and native field
 skins are in existing interiors. The Owner's standing authorization covers routine

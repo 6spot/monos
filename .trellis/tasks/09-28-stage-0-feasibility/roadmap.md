@@ -8,7 +8,7 @@ Feasibility gates → Stage A product loop → Stage B capabilities → single-h
 
 ## Task tree
 
-- [Stage 0: Feasibility gates](../09-28-stage-0-feasibility/prd.md)
+- [Stage 0: Feasibility gates](prd.md)
   - [Runtime and host feasibility](../09-28-gate-runtime/prd.md)
     - [Existing boundary feasibility probe](../09-28-stage-a-boundary-probe/prd.md) — in progress; unchanged scope.
   - [PostgreSQL concurrency feasibility](../09-28-gate-postgres/prd.md)
