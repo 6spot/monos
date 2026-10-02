@@ -31,10 +31,10 @@
 {"file": ".trellis/spec/backend/task-conversation.md", "reason": "Owning executable Task conversation, source and guidance contract"}
 {"file": "docs/04-workspace-and-git.md", "reason": "Trusted Stop, retained private lineage and completion settlement"}
 {"file": ".trellis/spec/backend/task-specification.md", "reason": "Executable Specification authorization, settlement and native evidence contracts"}
-{"file": ".trellis/tasks/09-30-a-single-node-replan/prd.md", "reason": "Converged one-Node Replan requirements and acceptance"}
-{"file": ".trellis/tasks/09-30-a-single-node-replan/design.md", "reason": "Chosen source phases, joint ordering, workspace and independent guards"}
-{"file": ".trellis/tasks/09-30-a-single-node-replan/implement.md", "reason": "Scoped ownership and ordered gates"}
-{"file": ".trellis/tasks/09-30-a-single-node-replan/research/backend-contracts.md", "reason": "Current backend/SQL authority and scheduling seams"}
-{"file": ".trellis/tasks/09-30-a-single-node-replan/research/runner-workspace.md", "reason": "Canonical Replan phase and physical cross-Node inheritance barriers"}
-{"file": ".trellis/tasks/09-30-a-single-node-replan/research/acceptance-plan.md", "reason": "Independent correctness and native/process proof matrix"}
+{"file": ".trellis/tasks/archive/2026-10/09-30-a-single-node-replan/prd.md", "reason": "Converged one-Node Replan requirements and acceptance"}
+{"file": ".trellis/tasks/archive/2026-10/09-30-a-single-node-replan/design.md", "reason": "Chosen source phases, joint ordering, workspace and independent guards"}
+{"file": ".trellis/tasks/archive/2026-10/09-30-a-single-node-replan/implement.md", "reason": "Scoped ownership and ordered gates"}
+{"file": ".trellis/tasks/archive/2026-10/09-30-a-single-node-replan/research/backend-contracts.md", "reason": "Current backend/SQL authority and scheduling seams"}
+{"file": ".trellis/tasks/archive/2026-10/09-30-a-single-node-replan/research/runner-workspace.md", "reason": "Canonical Replan phase and physical cross-Node inheritance barriers"}
+{"file": ".trellis/tasks/archive/2026-10/09-30-a-single-node-replan/research/acceptance-plan.md", "reason": "Independent correctness and native/process proof matrix"}
 {"file": ".trellis/spec/backend/task-replan.md", "reason": "Exact Replan source/publication/transfer and independent exits contract"}

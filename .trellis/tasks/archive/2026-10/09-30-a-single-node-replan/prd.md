@@ -11,7 +11,7 @@ An explicit dismissal or issue answer must remain usable without an Agent runnin
 Specification changes passed independent acceptance at `f4114bf`, archived
 `1751565`, journal `aa4c91f` Session22. Existing host uses accepted migration20,
 318-file v2 source and existing services; its REVIEW Task and all evidence remain
-untouched. Follow [Specification changes](../archive/2026-10/09-30-a-specification-changes/prd.md).
+untouched. Follow [Specification changes](../09-30-a-specification-changes/prd.md).
 The Owner authorized sequential task execution, routine decisions, tests and the
 existing test host without repeated approval. This existing backlog task now owns
 its full design and implementation; no new task-creation decision is needed.

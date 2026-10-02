@@ -25,7 +25,7 @@ Build Board and full Task surfaces using the [visual contract](../../spec/fronte
 
 ## Dependency and scope
 
-Follows [One-Node replacement Plan and Replan exits](../09-30-a-single-node-replan/prd.md).
+Follows [One-Node replacement Plan and Replan exits](../archive/2026-10/09-30-a-single-node-replan/prd.md).
 Parent links express ownership; this ordering is an evidence gate. The Owner has
 authorized sequential execution and routine implementation/test decisions.
 No new permanent service, team model, generic workflow engine, automatic Runtime
