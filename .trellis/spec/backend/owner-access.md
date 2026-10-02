@@ -38,7 +38,13 @@ keep the frontend same-origin. All Owner responses are no-store.
 
 Expired/revoked sessions cannot read or mutate. Logout is idempotent for a syntactically
 valid token, even after expiry. Runner and Attempt routes still require their own
-Bearer scopes. No session token appears in login JSON.
+Bearer scopes. No session token appears in login JSON. Authenticated `OwnerSessionStatus` includes
+the existing random `session_id` UUID. It is non-authenticating and only partitions
+Task draft/recovery state. Optional `X-Monos-Session` on supplied Owner requests
+authenticates the captured Cookie/Bearer and then checks the UUID before routing;
+a mismatch is `unauthorized`. Header omission retains old automation compatibility.
+A preliminary session GET cannot replace this actual-request check because another
+tab can replace the Cookie before POST.
 
 ## 4. Validation & Error Matrix
 
@@ -50,6 +56,7 @@ Bearer scopes. No session token appears in login JSON.
 | Repeat bootstrap without rotation | `unmet_precondition` |
 | Cross-origin/missing-Origin Cookie write or login | `denied_scope` |
 | Missing, duplicate, expired or revoked session | `unauthorized` |
+| Supplied session UUID differs from authenticated request | `unauthorized`, no route/receipt/effect |
 | Explicit credential rotation | Old sessions revoked; new password required |
 
 ## 5. Good / Base / Bad Cases

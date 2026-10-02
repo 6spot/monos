@@ -47,3 +47,7 @@ authoritative unauthorized responses unmount them. Recheck sessions on window fo
 
 Hash navigation updates the selected view in the click handler and handles history
 changes. The keyboard skip link focuses the main region without changing the view.
+
+Task command persistence and actual-request session binding follow
+[Execution UI](execution-ui.md). Task polls use the same scoped TanStack Query
+cache; no separate Owner SSE endpoint or transport store is introduced.

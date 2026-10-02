@@ -64,3 +64,73 @@ Shared TS/Go fixtures and OpenAPI are generated from the same read schemas.
 Wrong: infer completion from stdout or serve a Runner filesystem path locally.
 Correct: read canonical control and formal events; request Runner-owned content
 through the authenticated service boundary when that feature is implemented.
+
+## Execution UI collection, results and diagnostics
+
+### Scope and signatures
+
+These read-only projections add no lifecycle/receipt/DB model:
+
+- `GET /v1/owner/tasks` → `TaskListPage` (`task-board-reads.ts`).
+- `GET /v1/owner/tasks/:task_id/results?cursor=...` → `TaskResultPage`
+  (`task-result-reads.ts`).
+- `GET /v1/owner/tasks/:task_id/attempts/:attempt_id/workspace` →
+  `AttemptWorkspaceStatus` (`task-workspace-reads.ts`), no query parameters.
+
+### Contracts
+
+Board query fields are `project_id`, `column` (ready/running/review/done/cancelled),
+`attention` (all/needed), `history` (active/all), and `cursor`. Defaults are all
+attention and active history. Canonical keyset cursor binds every filter and the
+exact creation-time/Task-ID position; pages hold at most 32 Tasks and fit the
+2 MiB encoded budget. Counts use effective Plan membership, current activation,
+actual running/queued/held Attempts and open effects. Up to 16 attention targets
+carry explicit overflow; queueing alone is not attention. `canonical_execution`
+is a read hint, never a permission or substitute for command guards.
+
+Results page by original completion operation ID, at most 32 and below 2 MiB.
+Successful exact manifests/effects retain original Spec/Plan/Node/activation/digest.
+`current` additionally requires current completed membership/activation plus an
+exact carry chain through Specification/Replan applicability. Replacement,
+refresh and cancellation cannot grant current applicability. Repository-free
+results have `git:null`. Git metadata matches the original successful operation,
+workspace and lease; do not relabel history using a later workspace head.
+`admitted_at` is completion-operation admission, not the time work completed.
+
+Attempt diagnostics authenticate exact Task+Attempt ownership. `execution` exposes
+only recorded Runtime/model/thinking level, with null for unknown, not current
+configuration or launch prompt/session/token material. Up to 64 workspace leases
+fit the 2 MiB budget; overflow rejects explicitly instead of truncating silently.
+Snapshot metadata comes from identified successful open/settle effects. A successful
+`settle_completion` child may supply retained checkpoint metadata while the
+original completion pointer/state remains; validate the same Attempt, lease and
+immutable descriptor. `metadata_operation_id` identifies the actual source. These
+facts do not establish completed-result applicability. No backend Runner-path read.
+
+### Validation and errors
+
+| Condition | Result |
+| --- | --- |
+| Board cursor bound to other filters / result cursor for other Task | `denied_scope` |
+| Invalid/noncanonical cursor or unknown query | `invalid_input` |
+| Unknown Project/Task or Attempt outside Task | `denied_scope` |
+| Inconsistent exact Git result/metadata or exceeded atomic diagnostic bounds | `unmet_precondition` |
+| Missing/revoked credential or mismatched supplied session UUID | `unauthorized` |
+
+### Cases and regression assertions
+
+Base: repository-free REVIEW has one current manifest and no Git data.
+Good: a carried completion remains current under its new applicable revision,
+while still showing original manifest attribution; a replacement makes it historical.
+Bad: display mutable `task_workspaces.finalized_commit` as every Attempt's result.
+
+`postgres-task-ui-reads.test.ts` exercises canonical columns/filter cursors, tied
+ordering/history/legacy Tasks, UTF-8 limits, independent attention overflow,
+repository-free carry/replacement, Git result identity, exact workspace snapshots,
+session mismatch and access guards. Completion-correction regressions also assert
+successful child-checkpoint attribution. Browser tests verify the reachable page
+controls; they do not establish real Runner/model/provider execution.
+
+Wrong: a generic current workspace head proves historical completion.
+Correct: expose the identified immutable effect plus separate current manifest
+applicability, preserving precise admission/observation timestamps.

@@ -100,10 +100,16 @@ test('lost Discussion responses preserve a Todo-scoped request while other Todos
 
 test('recent bounded history exposes new input without loading every older page', async ({ page }) => {
   await signIn(page); const todoId = await capture(page, 'Discussion history window');
-  const statuses = await page.evaluate(async ({ todoId, seeds }) => Promise.all(seeds.map(async ({ messageId, requestId }, index) => {
-    const response = await fetch('/v1/owner/todos/discussion/commands', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ schema_version: 1, request_id: requestId, todo_id: todoId, name: 'submit_discussion_message', payload: { message_id: messageId, content: `Earlier message ${index}` } }) });
-    return response.status;
-  })), { todoId, seeds: Array.from({ length: 65 }, () => ({ messageId: randomUUID(), requestId: randomUUID() })) });
+  // Seed history in small batches: this tests pagination, not lock-timeout behavior
+  // from 65 simultaneous writes over a remote database tunnel.
+  const statuses = await page.evaluate(async ({ todoId, seeds }) => {
+    const statuses: number[] = [];
+    for (let offset = 0; offset < seeds.length; offset += 5) statuses.push(...await Promise.all(seeds.slice(offset, offset + 5).map(async ({ messageId, requestId }, index) => {
+      const response = await fetch('/v1/owner/todos/discussion/commands', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ schema_version: 1, request_id: requestId, todo_id: todoId, name: 'submit_discussion_message', payload: { message_id: messageId, content: `Earlier message ${offset + index}` } }) });
+      return response.status;
+    })));
+    return statuses;
+  }, { todoId, seeds: Array.from({ length: 65 }, () => ({ messageId: randomUUID(), requestId: randomUUID() })) });
   expect(statuses.every((status) => status === 200)).toBe(true);
   await page.reload(); await page.getByRole('button', { name: /^Discussion history window/ }).click();
   await expect(page.locator('.discussion-messages > li')).toHaveCount(64);

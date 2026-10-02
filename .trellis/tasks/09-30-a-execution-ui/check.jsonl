@@ -1,3 +1,34 @@
-{"file": ".trellis/spec/frontend/visual-design.md", "reason": "Mandatory Multica-derived tokens, layout, responsive and visual states"}
-{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "Owned shadcn Base UI coverage and native exceptions"}
-{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "Inspected visual evidence alongside interaction checks"}
+{"file": "ARCHITECTURE.md", "reason": "Independent whole-scope contract, recovery and quality verification"}
+{"file": "docs/07-owner-review-and-ui.md", "reason": "Independent whole-scope contract, recovery and quality verification"}
+{"file": "docs/08-principles-and-non-goals.md", "reason": "Independent whole-scope contract, recovery and quality verification"}
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "Independent whole-scope contract, recovery and quality verification"}
+{"file": ".trellis/spec/frontend/directory-structure.md", "reason": "Independent whole-scope contract, recovery and quality verification"}
+{"file": ".trellis/spec/frontend/hook-guidelines.md", "reason": "Independent whole-scope contract, recovery and quality verification"}
+{"file": ".trellis/spec/frontend/index.md", "reason": "Independent whole-scope contract, recovery and quality verification"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "Independent whole-scope contract, recovery and quality verification"}
+{"file": ".trellis/spec/frontend/state-management.md", "reason": "Independent whole-scope contract, recovery and quality verification"}
+{"file": ".trellis/spec/frontend/type-safety.md", "reason": "Independent whole-scope contract, recovery and quality verification"}
+{"file": ".trellis/spec/frontend/visual-design.md", "reason": "Independent whole-scope contract, recovery and quality verification"}
+{"file": ".trellis/spec/guides/index.md", "reason": "Independent whole-scope contract, recovery and quality verification"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "Independent whole-scope contract, recovery and quality verification"}
+{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "Independent whole-scope contract, recovery and quality verification"}
+{"file": ".trellis/spec/protocol/index.md", "reason": "Independent whole-scope contract, recovery and quality verification"}
+{"file": ".trellis/spec/protocol/commands.md", "reason": "Independent whole-scope contract, recovery and quality verification"}
+{"file": ".trellis/spec/protocol/schema-generation.md", "reason": "Independent whole-scope contract, recovery and quality verification"}
+{"file": ".trellis/spec/backend/index.md", "reason": "Independent whole-scope contract, recovery and quality verification"}
+{"file": ".trellis/spec/backend/directory-structure.md", "reason": "Independent whole-scope contract, recovery and quality verification"}
+{"file": ".trellis/spec/backend/owner-access.md", "reason": "Independent whole-scope contract, recovery and quality verification"}
+{"file": ".trellis/spec/backend/owner-reads.md", "reason": "Independent whole-scope contract, recovery and quality verification"}
+{"file": ".trellis/spec/backend/owner-commands.md", "reason": "Independent whole-scope contract, recovery and quality verification"}
+{"file": ".trellis/spec/backend/task-planning.md", "reason": "Independent whole-scope contract, recovery and quality verification"}
+{"file": ".trellis/spec/backend/node-execution.md", "reason": "Independent whole-scope contract, recovery and quality verification"}
+{"file": ".trellis/spec/backend/task-conversation.md", "reason": "Independent whole-scope contract, recovery and quality verification"}
+{"file": ".trellis/spec/backend/task-specification.md", "reason": "Independent whole-scope contract, recovery and quality verification"}
+{"file": ".trellis/spec/backend/task-replan.md", "reason": "Independent whole-scope contract, recovery and quality verification"}
+{"file": ".trellis/spec/backend/execution-logs.md", "reason": "Independent whole-scope contract, recovery and quality verification"}
+{"file": ".trellis/spec/backend/delivery-contracts.md", "reason": "Independent whole-scope contract, recovery and quality verification"}
+{"file": ".trellis/spec/backend/database-guidelines.md", "reason": "Independent whole-scope contract, recovery and quality verification"}
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "Independent whole-scope contract, recovery and quality verification"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Independent whole-scope contract, recovery and quality verification"}
+{"file": ".trellis/tasks/09-30-a-execution-ui/research/frontend-seams.md", "reason": "Independent whole-scope contract, recovery and quality verification"}
+{"file": ".trellis/tasks/09-30-a-execution-ui/research/backend-ui-contracts.md", "reason": "Independent whole-scope contract, recovery and quality verification"}

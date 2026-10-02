@@ -23,6 +23,8 @@ type PositiveCounter int64
 
 type PlanningText string
 
+type TaskListCursor string
+
 type CommandEnvelope struct {
 	ExpectedControlVersion int64               `json:"expected_control_version"`
 	Name                   CommandEnvelopeName `json:"name"`
@@ -504,7 +506,7 @@ type Operation struct {
 	ResourceID               *string              `json:"resource_id,omitempty"`
 	Result                   *EffectResult        `json:"result,omitempty"`
 	SchemaVersion            int64                `json:"schema_version"`
-	State                    OperationState       `json:"state"`
+	State                    OpenStateEnum        `json:"state"`
 	Workspace                *WorkspaceDescriptor `json:"workspace,omitempty"`
 	WorkspaceDigest          *string              `json:"workspace_digest,omitempty"`
 }
@@ -689,6 +691,7 @@ type OwnerSessionStatus struct {
 	Authenticated bool    `json:"authenticated"`
 	ExpiresAt     *string `json:"expires_at,omitempty"`
 	SchemaVersion int64   `json:"schema_version"`
+	SessionID     *string `json:"session_id,omitempty"`
 }
 
 type ConfigurationCommand struct {
@@ -970,18 +973,18 @@ type OwnerRetryInitialPlanningCommandPayload struct {
 }
 
 type OwnerOperationStatus struct {
-	AttemptID              string         `json:"attempt_id"`
-	Attention              bool           `json:"attention"`
-	CancelledByOperationID *string        `json:"cancelled_by_operation_id,omitempty"`
-	EndReason              *string        `json:"end_reason,omitempty"`
-	FailureKind            *string        `json:"failure_kind,omitempty"`
-	Kind                   OperationKind  `json:"kind"`
-	OperationID            string         `json:"operation_id"`
-	ProcessAbsent          bool           `json:"process_absent"`
-	ProcessReleased        bool           `json:"process_released"`
-	SchemaVersion          int64          `json:"schema_version"`
-	State                  OperationState `json:"state"`
-	TaskID                 string         `json:"task_id"`
+	AttemptID              string        `json:"attempt_id"`
+	Attention              bool          `json:"attention"`
+	CancelledByOperationID *string       `json:"cancelled_by_operation_id,omitempty"`
+	EndReason              *string       `json:"end_reason,omitempty"`
+	FailureKind            *string       `json:"failure_kind,omitempty"`
+	Kind                   OperationKind `json:"kind"`
+	OperationID            string        `json:"operation_id"`
+	ProcessAbsent          bool          `json:"process_absent"`
+	ProcessReleased        bool          `json:"process_released"`
+	SchemaVersion          int64         `json:"schema_version"`
+	State                  OpenStateEnum `json:"state"`
+	TaskID                 string        `json:"task_id"`
 }
 
 type TodoListQuery struct {
@@ -1211,18 +1214,18 @@ type TodoAttemptLogPage struct {
 }
 
 type TodoOperationStatus struct {
-	AttemptID              string         `json:"attempt_id"`
-	Attention              bool           `json:"attention"`
-	CancelledByOperationID *string        `json:"cancelled_by_operation_id,omitempty"`
-	EndReason              *string        `json:"end_reason,omitempty"`
-	FailureKind            *string        `json:"failure_kind,omitempty"`
-	Kind                   OperationKind  `json:"kind"`
-	OperationID            string         `json:"operation_id"`
-	ProcessAbsent          bool           `json:"process_absent"`
-	ProcessReleased        bool           `json:"process_released"`
-	SchemaVersion          int64          `json:"schema_version"`
-	State                  OperationState `json:"state"`
-	TodoID                 string         `json:"todo_id"`
+	AttemptID              string        `json:"attempt_id"`
+	Attention              bool          `json:"attention"`
+	CancelledByOperationID *string       `json:"cancelled_by_operation_id,omitempty"`
+	EndReason              *string       `json:"end_reason,omitempty"`
+	FailureKind            *string       `json:"failure_kind,omitempty"`
+	Kind                   OperationKind `json:"kind"`
+	OperationID            string        `json:"operation_id"`
+	ProcessAbsent          bool          `json:"process_absent"`
+	ProcessReleased        bool          `json:"process_released"`
+	SchemaVersion          int64         `json:"schema_version"`
+	State                  OpenStateEnum `json:"state"`
+	TodoID                 string        `json:"todo_id"`
 }
 
 type PlannerGuidance struct {
@@ -1421,7 +1424,7 @@ type TaskPlanningStatus struct {
 	SchemaVersion    int64                               `json:"schema_version"`
 	SpecificationID  string                              `json:"specification_id"`
 	State            TaskOverviewState                   `json:"state"`
-	Status           TaskPlanningStatusStatus            `json:"status"`
+	Status           PlanningStatusEnum                  `json:"status"`
 	TaskID           string                              `json:"task_id"`
 	WaitingReason    *string                             `json:"waiting_reason,omitempty"`
 }
@@ -1466,21 +1469,22 @@ type OwnerRecoverCompletionCommandPayload struct {
 }
 
 type NodeExecutionStatus struct {
-	Attempt         *NodeExecutionStatusAttempt    `json:"attempt"`
-	Blocker         *Blocker                       `json:"blocker"`
-	ControlVersion  int64                          `json:"control_version"`
-	GuidancePaused  *bool                          `json:"guidance_paused,omitempty"`
-	Manifest        *CompletionManifest            `json:"manifest"`
-	NodeActivation  int64                          `json:"node_activation"`
-	NodeID          string                         `json:"node_id"`
-	Operations      []NodeExecutionOperationStatus `json:"operations"`
-	PlanID          string                         `json:"plan_id"`
-	SchemaVersion   int64                          `json:"schema_version"`
-	Source          *NodeExecutionSource           `json:"source"`
-	SpecificationID string                         `json:"specification_id"`
-	State           NodeExecutionStatusState       `json:"state"`
-	TaskID          string                         `json:"task_id"`
-	WaitingReason   *string                        `json:"waiting_reason"`
+	Attempt                 *NodeExecutionStatusAttempt    `json:"attempt"`
+	Blocker                 *Blocker                       `json:"blocker"`
+	ControlVersion          int64                          `json:"control_version"`
+	GuidanceFollowupPending *bool                          `json:"guidance_followup_pending,omitempty"`
+	GuidancePaused          *bool                          `json:"guidance_paused,omitempty"`
+	Manifest                *CompletionManifest            `json:"manifest"`
+	NodeActivation          int64                          `json:"node_activation"`
+	NodeID                  string                         `json:"node_id"`
+	Operations              []NodeExecutionOperationStatus `json:"operations"`
+	PlanID                  string                         `json:"plan_id"`
+	SchemaVersion           int64                          `json:"schema_version"`
+	Source                  *NodeExecutionSource           `json:"source"`
+	SpecificationID         string                         `json:"specification_id"`
+	State                   NodeExecutionStatusState       `json:"state"`
+	TaskID                  string                         `json:"task_id"`
+	WaitingReason           *string                        `json:"waiting_reason"`
 }
 
 type NodeExecutionStatusAttempt struct {
@@ -1513,11 +1517,11 @@ type CompletionManifest struct {
 }
 
 type NodeExecutionOperationStatus struct {
-	CompletionIdentityDigest *string        `json:"completion_identity_digest,omitempty"`
-	FailureKind              *string        `json:"failure_kind"`
-	Kind                     OperationKind  `json:"kind"`
-	OperationID              string         `json:"operation_id"`
-	State                    OperationState `json:"state"`
+	CompletionIdentityDigest *string       `json:"completion_identity_digest,omitempty"`
+	FailureKind              *string       `json:"failure_kind"`
+	Kind                     OperationKind `json:"kind"`
+	OperationID              string        `json:"operation_id"`
+	State                    OpenStateEnum `json:"state"`
 }
 
 type TaskConversationCommand struct {
@@ -1919,6 +1923,110 @@ type ReplanReadQuery struct {
 	EffectsCursor *string `json:"effects_cursor,omitempty"`
 }
 
+type TaskListQuery struct {
+	Attention *AttentionEnum `json:"attention,omitempty"`
+	Column    *Column        `json:"column,omitempty"`
+	Cursor    *string        `json:"cursor,omitempty"`
+	History   *History       `json:"history,omitempty"`
+	ProjectID *string        `json:"project_id,omitempty"`
+}
+
+type TaskListPage struct {
+	Cursor        string         `json:"cursor"`
+	HasMore       bool           `json:"has_more"`
+	Items         []TaskListItem `json:"items"`
+	SchemaVersion int64          `json:"schema_version"`
+}
+
+type TaskListItem struct {
+	Attention          []TaskAttention     `json:"attention"`
+	AttentionHasMore   bool                `json:"attention_has_more"`
+	CanonicalExecution bool                `json:"canonical_execution"`
+	ControlVersion     int64               `json:"control_version"`
+	CreatedAt          *string             `json:"created_at"`
+	HeldAttempts       int64               `json:"held_attempts"`
+	Nodes              NodeCounts          `json:"nodes"`
+	OpenOperations     int64               `json:"open_operations"`
+	PlanID             *string             `json:"plan_id"`
+	PlanningReason     *string             `json:"planning_reason"`
+	PlanningStatus     *PlanningStatusEnum `json:"planning_status"`
+	ProjectID          *string             `json:"project_id"`
+	QueuedAttempts     int64               `json:"queued_attempts"`
+	RunningAttempts    int64               `json:"running_attempts"`
+	SpecificationID    string              `json:"specification_id"`
+	State              TaskOverviewState   `json:"state"`
+	TaskID             string              `json:"task_id"`
+	Title              *string             `json:"title"`
+	TodoID             *string             `json:"todo_id"`
+}
+
+type TaskAttention struct {
+	Kind     TaskAttentionKind `json:"kind"`
+	Reason   string            `json:"reason"`
+	TargetID string            `json:"target_id"`
+}
+
+type TaskResultPage struct {
+	Cursor        string            `json:"cursor"`
+	HasMore       bool              `json:"has_more"`
+	Items         []TaskLocalResult `json:"items"`
+	SchemaVersion int64             `json:"schema_version"`
+	TaskID        string            `json:"task_id"`
+}
+
+type TaskLocalResult struct {
+	AdmittedAt             string              `json:"admitted_at"`
+	Current                bool                `json:"current"`
+	CurrentPlanID          *string             `json:"current_plan_id"`
+	CurrentSpecificationID string              `json:"current_specification_id"`
+	Git                    *TaskLocalGitResult `json:"git"`
+	Manifest               CompletionManifest  `json:"manifest"`
+	RepositoryFree         bool                `json:"repository_free"`
+}
+
+type TaskLocalGitResult struct {
+	GitCommit   string            `json:"git_commit"`
+	GitTree     string            `json:"git_tree"`
+	Metadata    WorkspaceMetadata `json:"metadata"`
+	ResourceID  string            `json:"resource_id"`
+	RunnerID    string            `json:"runner_id"`
+	WorkspaceID string            `json:"workspace_id"`
+}
+
+type TaskResultQuery struct {
+	Cursor *string `json:"cursor,omitempty"`
+}
+
+type AttemptWorkspaceStatus struct {
+	AttemptID     string             `json:"attempt_id"`
+	Execution     Execution          `json:"execution"`
+	SchemaVersion int64              `json:"schema_version"`
+	TaskID        string             `json:"task_id"`
+	Workspaces    []AttemptWorkspace `json:"workspaces"`
+}
+
+type Execution struct {
+	ModelID       *string `json:"model_id"`
+	RuntimeID     *string `json:"runtime_id"`
+	ThinkingLevel *string `json:"thinking_level"`
+}
+
+type AttemptWorkspace struct {
+	FailureKind         *string            `json:"failure_kind"`
+	LeaseID             string             `json:"lease_id"`
+	LeaseState          LeaseState         `json:"lease_state"`
+	Metadata            *WorkspaceMetadata `json:"metadata"`
+	MetadataOperationID *string            `json:"metadata_operation_id"`
+	OpenOperationID     string             `json:"open_operation_id"`
+	OpenState           OpenStateEnum      `json:"open_state"`
+	RepositoryIdentity  string             `json:"repository_identity"`
+	ResourceID          string             `json:"resource_id"`
+	RunnerID            string             `json:"runner_id"`
+	SettleOperationID   *string            `json:"settle_operation_id"`
+	SettleState         *OpenStateEnum     `json:"settle_state"`
+	WorkspaceID         string             `json:"workspace_id"`
+}
+
 type CommandEnvelopeName string
 
 const (
@@ -1997,8 +2105,8 @@ const (
 type TargetKind string
 
 const (
-	InputIssue              TargetKind = "input_issue"
-	NodeBlocker             TargetKind = "node_blocker"
+	TargetKindInputIssue    TargetKind = "input_issue"
+	TargetKindNodeBlocker   TargetKind = "node_blocker"
 	TargetKindPlanningIssue TargetKind = "planning_issue"
 )
 
@@ -2121,13 +2229,13 @@ const (
 	Stop                  OperationKind = "stop"
 )
 
-type OperationState string
+type OpenStateEnum string
 
 const (
-	FluffyAdmitted  OperationState = "admitted"
-	PurpleCancelled OperationState = "cancelled"
-	PurpleRecovery  OperationState = "recovery"
-	PurpleSucceeded OperationState = "succeeded"
+	FluffyAdmitted  OpenStateEnum = "admitted"
+	PurpleCancelled OpenStateEnum = "cancelled"
+	PurpleRecovery  OpenStateEnum = "recovery"
+	PurpleSucceeded OpenStateEnum = "succeeded"
 )
 
 type FailureKind string
@@ -2164,10 +2272,10 @@ const (
 	Heartbeat           Type = "heartbeat"
 	Hello               Type = "hello"
 	OperationACK        Type = "operation_ack"
-	Ready               Type = "ready"
 	Start               Type = "start"
 	TypeError           Type = "error"
 	TypeOperationResult Type = "operation_result"
+	TypeReady           Type = "ready"
 	Welcome             Type = "welcome"
 )
 
@@ -2303,10 +2411,10 @@ const (
 type TodoScope string
 
 const (
-	All      TodoScope = "all"
-	Archived TodoScope = "archived"
-	Inbox    TodoScope = "inbox"
-	Project  TodoScope = "project"
+	Archived     TodoScope = "archived"
+	Inbox        TodoScope = "inbox"
+	Project      TodoScope = "project"
+	TodoScopeAll TodoScope = "all"
 )
 
 type TodoCaptureCommandName string
@@ -2477,20 +2585,20 @@ const (
 	AvailableActionStopInitialPlanning  TaskPlanningStatusAvailableAction = "stop_initial_planning"
 )
 
-type TaskPlanningStatusStatus string
+type PlanningStatusEnum string
 
 const (
-	FluffyInterrupted TaskPlanningStatusStatus = "interrupted"
-	FluffyProcessing  TaskPlanningStatusStatus = "processing"
-	FluffyQueued      TaskPlanningStatusStatus = "queued"
-	FluffySettling    TaskPlanningStatusStatus = "settling"
-	IndigoCancelled   TaskPlanningStatusStatus = "cancelled"
-	NotStarted        TaskPlanningStatusStatus = "not_started"
-	PurplePending     TaskPlanningStatusStatus = "pending"
-	PurplePublished   TaskPlanningStatusStatus = "published"
-	StatusIssue       TaskPlanningStatusStatus = "issue"
-	StatusUnavailable TaskPlanningStatusStatus = "unavailable"
-	Stopped           TaskPlanningStatusStatus = "stopped"
+	FluffyInterrupted PlanningStatusEnum = "interrupted"
+	FluffyProcessing  PlanningStatusEnum = "processing"
+	FluffyQueued      PlanningStatusEnum = "queued"
+	FluffySettling    PlanningStatusEnum = "settling"
+	IndigoCancelled   PlanningStatusEnum = "cancelled"
+	NotStarted        PlanningStatusEnum = "not_started"
+	PurplePending     PlanningStatusEnum = "pending"
+	PurplePublished   PlanningStatusEnum = "published"
+	StatusIssue       PlanningStatusEnum = "issue"
+	StatusUnavailable PlanningStatusEnum = "unavailable"
+	Stopped           PlanningStatusEnum = "stopped"
 )
 
 type OwnerRecoverCompletionCommandName string
@@ -2578,7 +2686,7 @@ const (
 	CunningCancelled RequirementChangeEffectState = "cancelled"
 	FluffyRecovery   RequirementChangeEffectState = "recovery"
 	FluffySucceeded  RequirementChangeEffectState = "succeeded"
-	Running          RequirementChangeEffectState = "running"
+	StateRunning     RequirementChangeEffectState = "running"
 	StickyAdmitted   RequirementChangeEffectState = "admitted"
 )
 
@@ -2599,4 +2707,52 @@ const (
 	MagentaCancelled ReplanRequestSummaryStatus = "cancelled"
 	StickyPublished  ReplanRequestSummaryStatus = "published"
 	TentacledPending ReplanRequestSummaryStatus = "pending"
+)
+
+type AttentionEnum string
+
+const (
+	AttentionAll AttentionEnum = "all"
+	Needed       AttentionEnum = "needed"
+)
+
+type Column string
+
+const (
+	ColumnCancelled Column = "cancelled"
+	ColumnReady     Column = "ready"
+	ColumnReview    Column = "review"
+	ColumnRunning   Column = "running"
+	Done            Column = "done"
+)
+
+type History string
+
+const (
+	Active     History = "active"
+	HistoryAll History = "all"
+)
+
+type TaskAttentionKind string
+
+const (
+	GuidancePaused      TaskAttentionKind = "guidance_paused"
+	InputInterrupted    TaskAttentionKind = "input_interrupted"
+	KindInputIssue      TaskAttentionKind = "input_issue"
+	KindNodeBlocker     TaskAttentionKind = "node_blocker"
+	KindPlanningIssue   TaskAttentionKind = "planning_issue"
+	OperationRecovery   TaskAttentionKind = "operation_recovery"
+	PlanningInterrupted TaskAttentionKind = "planning_interrupted"
+	ReplanIssue         TaskAttentionKind = "replan_issue"
+	ReplanRequest       TaskAttentionKind = "replan_request"
+	RequirementProposal TaskAttentionKind = "requirement_proposal"
+	RequirementRecovery TaskAttentionKind = "requirement_recovery"
+)
+
+type LeaseState string
+
+const (
+	Held               LeaseState = "held"
+	LeaseStateSettling LeaseState = "settling"
+	Released           LeaseState = "released"
 )

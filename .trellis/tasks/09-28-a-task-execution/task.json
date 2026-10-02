@@ -26,7 +26,8 @@
     "09-30-a-specification-changes",
     "09-30-a-single-node-replan",
     "09-30-a-execution-ui",
-    "09-30-a-task-execution-acceptance"
+    "09-30-a-task-execution-acceptance",
+    "10-02-a-existing-screen-visual-migration"
   ],
   "parent": "09-28-stage-a-product-loop",
   "relatedFiles": [],

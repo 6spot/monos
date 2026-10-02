@@ -56,9 +56,11 @@ const responses = (name) => ({
   default: { description: 'Deterministic protocol error.', content: { 'application/json': { schema: reference('CommandResult') } } },
 });
 const security = (auth) => auth === 'OwnerAuth' ? [{ OwnerAuth: [] }, { OwnerCookie: [] }] : [{ [auth]: [] }];
+const ownerSessionHeader = { name: 'X-Monos-Session', in: 'header', required: false, description: 'Noncredential expected session identity. Mismatch rejects before reads or effects; this header alone never authenticates.', schema: reference('Id') };
 const get = (name, auth, parameters = [], querySchema) => ({
   security: security(auth),
   parameters: [
+    ...(auth === 'OwnerAuth' ? [ownerSessionHeader] : []),
     ...parameters.map((name) => ({ name, in: 'path', required: true, schema: reference('Id') })),
     ...Object.entries(querySchema ? schema.definitions[querySchema].properties : {}).map(([name, shape]) => ({
       name, in: 'query', required: false,
@@ -70,6 +72,8 @@ const get = (name, auth, parameters = [], querySchema) => ({
 artifacts.set('generated/openapi.json', `${JSON.stringify({
   openapi: '3.1.0', info: { title: 'monos boundary probe', version: '1.0.0' },
   paths: {
+    '/v1/owner/tasks': { get: get('TaskListPage', 'OwnerAuth', [], 'TaskListQuery') },
+    '/v1/owner/tasks/{task_id}/results': { get: get('TaskResultPage', 'OwnerAuth', ['task_id'], 'TaskResultQuery') },
     '/v1/owner/tasks/{task_id}/nodes/{node_id}/execution': { get: get('NodeExecutionStatus', 'OwnerAuth', ['task_id', 'node_id']) },
     '/v1/owner/tasks/{task_id}/artifacts': { get: get('ArtifactPage', 'OwnerAuth', ['task_id']) },
     '/v1/owner/tasks/{task_id}/artifacts/{artifact_id}': { get: get('ArtifactRecord', 'OwnerAuth', ['task_id', 'artifact_id']) },
@@ -114,6 +118,7 @@ artifacts.set('generated/openapi.json', `${JSON.stringify({
     '/v1/owner/tasks/{task_id}/events': { get: { ...get('TaskEventPage', 'OwnerAuth', ['task_id']), parameters: [...get('TaskEventPage', 'OwnerAuth', ['task_id']).parameters, { name: 'cursor', in: 'query', required: false, schema: reference('TaskEventCursor') }] } },
     '/v1/owner/tasks/{task_id}/attempts': { get: { ...get('AttemptListPage', 'OwnerAuth', ['task_id']), parameters: [...get('AttemptListPage', 'OwnerAuth', ['task_id']).parameters, { name: 'cursor', in: 'query', required: false, schema: reference('AttemptListCursor') }] } },
     '/v1/owner/tasks/{task_id}/attempts/{attempt_id}': { get: get('AttemptStatus', 'OwnerAuth', ['task_id', 'attempt_id']) },
+    '/v1/owner/tasks/{task_id}/attempts/{attempt_id}/workspace': { get: get('AttemptWorkspaceStatus', 'OwnerAuth', ['task_id', 'attempt_id']) },
     '/v1/owner/tasks/{task_id}/attempts/{attempt_id}/logs': { get: { ...get('AttemptLogPage', 'OwnerAuth', ['task_id', 'attempt_id']), parameters: [...get('AttemptLogPage', 'OwnerAuth', ['task_id', 'attempt_id']).parameters, { name: 'cursor', in: 'query', required: false, schema: reference('AttemptLogCursor') }] } },
     '/v1/owner/commands': { post: { security: security('OwnerAuth'), requestBody: { required: true, content: { 'application/json': { schema: reference('OwnerCommand') } } }, responses: responses('OwnerCommandResult') } },
     '/v1/owner/scopes/{scope_id}/commands/{request_id}': { get: get('OwnerCommandResult', 'OwnerAuth', ['scope_id', 'request_id']) },
@@ -126,6 +131,13 @@ artifacts.set('generated/openapi.json', `${JSON.stringify({
   },
   components: { schemas: JSON.parse(JSON.stringify(schema.definitions).replaceAll('#/definitions/', '#/components/schemas/')), securitySchemes: { OwnerCookie: { type: 'apiKey', in: 'cookie', name: '__Host-monos', description: 'Secure HttpOnly Owner session; state-changing requests require same Origin.' }, OwnerAuth: { type: 'http', scheme: 'bearer', description: 'Opaque Owner session; neither Runner nor Attempt credentials are accepted.' }, AttemptAuth: { type: 'http', scheme: 'bearer', description: 'Attempt-scoped credential; never a Runner token.' }, RunnerAuth: { type: 'http', scheme: 'bearer', description: 'Service-private enrolled Runner identity.' } } },
 }, null, 2)}\n`);
+const openapi = JSON.parse(artifacts.get('generated/openapi.json'));
+for (const [path, methods] of Object.entries(openapi.paths)) {
+  if (path.startsWith('/v1/owner/') && path !== '/v1/owner/login' && methods.post) {
+    methods.post.parameters = [...(methods.post.parameters ?? []), ownerSessionHeader];
+  }
+}
+artifacts.set('generated/openapi.json', `${JSON.stringify(openapi, null, 2)}\n`);
 for (const [relative, content] of artifacts) {
   const path = new URL(relative, base);
   if (process.argv.includes('--check')) {

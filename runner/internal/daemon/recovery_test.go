@@ -157,7 +157,7 @@ func TestReconnectSkipsUnadmittedTerminalHardAndMissingEvidence(t *testing.T) {
 			result := recoveryFailure(op)
 			switch mode {
 			case "admitted", "succeeded", "cancelled":
-				op.State = protocol.OperationState(mode)
+				op.State = protocol.OpenStateEnum(mode)
 			case "legacy":
 				op.Workspace, op.WorkspaceDigest = nil, nil
 			case "capture_hard_limit", "invalid_finalization":
@@ -537,7 +537,7 @@ func TestReconnectTerminalReplayFollowsReadyOnWireWithoutHostEffect(t *testing.T
 				t.Fatal("lost terminal result was not resent after Ready")
 			}
 			ready, result := <-received, <-received
-			if ready.Type != protocol.Ready || result.Type != protocol.TypeOperationResult || !reflect.DeepEqual(result.OperationResult, &terminal) || effects.Load() != 0 {
+			if ready.Type != protocol.TypeReady || result.Type != protocol.TypeOperationResult || !reflect.DeepEqual(result.OperationResult, &terminal) || effects.Load() != 0 {
 				t.Fatal("terminal replay changed bytes, preceded Ready, or repeated physical work", ready, result, effects.Load())
 			}
 		})

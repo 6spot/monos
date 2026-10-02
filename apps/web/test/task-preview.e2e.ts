@@ -67,14 +67,16 @@ test('exact Project confirmation creates a ready Task; read-only navigation pres
   expect(task.plan_id).toBeUndefined(); expect(Object.values(task.nodes)).toEqual([0, 0, 0, 0, 0]); expect(task.initial_specification_id).toBe(task.specification_id);
   await page.getByRole('link', { name: 'View Task →', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'An independent improvement', exact: true })).toBeFocused();
+  await page.getByRole('link', { name: 'Overview', exact: true }).click();
   expect(await page.getByRole('region', { name: 'Task Specification', exact: true }).locator('.discussion-content').textContent()).toBe(markdown);
-  await expect(page.getByRole('button', { name: /^Start/ })).toHaveCount(0);
+  expect((await get<TaskOverview>(page, `/v1/owner/tasks/${taskId}`)).state).toBe('PLANNING');
   await page.evaluate(() => scrollTo(0, 0)); await page.screenshot({ path: info.outputPath('task-detail-mobile.png'), fullPage: true });
   await page.setViewportSize({ width: 1440, height: 1000 }); await page.evaluate(() => scrollTo(0, 0)); await page.screenshot({ path: info.outputPath('task-detail-desktop.png'), fullPage: true });
   await page.getByRole('link', { name: '← Back to Todo', exact: true }).click();
   await expect(page.getByLabel('Message Planner', { exact: true })).toHaveValue('Keep this discussion draft');
   await page.getByRole('link', { name: 'View Task →', exact: true }).click(); await page.reload();
   await expect(page.getByRole('article', { name: 'Task detail', exact: true })).toContainText('Preview chosen Project'); expect(discussionWrites).toBe(0);
+  await page.getByRole('link', { name: 'Overview', exact: true }).click();
   await post(page, '/__test__/task-specification', { task_id: taskId, specification: '# Revised current specification\n' });
   await page.reload(); await expect(page.getByRole('region', { name: 'Task Specification', exact: true })).toContainText('# Revised current specification');
   const revised = await get<TaskOverview>(page, `/v1/owner/tasks/${taskId}`); expect(revised.initial_specification_id).toBe(task.initial_specification_id); expect(revised.specification_id).not.toBe(task.specification_id);

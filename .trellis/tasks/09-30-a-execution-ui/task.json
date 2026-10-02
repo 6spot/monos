@@ -3,7 +3,7 @@
   "name": "a-execution-ui",
   "title": "Execution Board and Task control UI",
   "description": "Expose canonical Task progress, conversation, outputs and authenticated execution and proposal controls in responsive UI.",
-  "status": "planning",
+  "status": "in_progress",
   "dev_type": "frontend",
   "scope": null,
   "package": null,
@@ -21,9 +21,9 @@
   "children": [],
   "parent": "09-28-a-task-execution",
   "relatedFiles": [],
-  "notes": "",
+  "notes": "Converged UI scope under standing sequential authorization; shared shell/primitives owned here, existing-screen interiors assigned separately before integration.",
   "meta": {
     "roadmap_level": "leaf",
-    "planning_maturity": "backlog"
+    "planning_maturity": "implementation_ready"
   }
 }

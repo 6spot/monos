@@ -76,7 +76,11 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('single Owner access an
       for (const flag of ['Secure', 'HttpOnly', 'SameSite=Strict', 'Path=/']) expect(setCookie).toContain(flag);
       expect(setCookie).not.toContain('Domain='); expect(response.json()).not.toHaveProperty('token'); expect(response.body).not.toContain(password);
       const headers = { ...origin, cookie };
-      expect((await app.inject({ method: 'GET', url: '/v1/owner/session', headers })).statusCode).toBe(200);
+      const sessionRead = await app.inject({ method: 'GET', url: '/v1/owner/session', headers });
+      expect(sessionRead.statusCode).toBe(200);
+      expect(response.json().session_id).toMatch(/^[0-9a-f-]{36}$/);
+      expect(sessionRead.json().session_id).toBe(response.json().session_id);
+      expect(sessionRead.body).not.toContain(cookie.slice('__Host-monos='.length));
       expect((await app.inject({ method: 'GET', url: '/v1/owner/session', headers: { ...headers, cookie: `${cookie}; ${cookie}` } })).statusCode).toBe(401);
       const taskId = randomUUID();
       await transaction(db, (tx) => initializeTask(tx, { task_id: taskId, specification_id: randomUUID(), specification: {} }));

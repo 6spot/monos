@@ -614,6 +614,7 @@ export class NodeExecution {
         plan_id: task.plan_id,
         state: node.state,
         guidance_paused:node.guidance_paused,
+        guidance_followup_pending:!!(await tx.query("SELECT 1 FROM task_guidance_followups WHERE node_id=$1 AND status='waiting'",[nodeId])).rowCount,
         source: source ? nodeSource(source) : null,
         waiting_reason: source?.waiting_reason ?? null,
         attempt: attempt

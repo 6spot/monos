@@ -16,6 +16,7 @@ import { issueOwnerSession, OwnerCommands } from '../src/owner-commands.ts';
 import { enrollFixture } from '../src/fixtures.ts';
 import { Worker } from './fixtures/process-worker.ts';
 import { ownerArtifact, ownerArtifacts } from '../src/artifacts.ts';
+import { attemptWorkspace } from '../src/task-workspace-reads.ts';
 
 const key = 'node-execution-test-signing-key-32';
 const fault = (code: string) => ({ detail: { code } });
@@ -548,6 +549,13 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('canonical Node executi
     expect(lease.settle_operation_id).toBe(c.result.operation_id);
     expect(lease.state).toBe('released');
     expect(lease.checkpoint.completion_operation_id).toBe(c.result.operation_id);
+    const diagnostics = await attemptWorkspace(db, token, w.f.task, w.a.dispatch.attempt_id);
+    expect(diagnostics.workspaces[0]).toMatchObject({
+      lease_state: 'released', settle_operation_id: c.result.operation_id, settle_state: 'cancelled',
+      metadata_operation_id: settlement.operation_id,
+      metadata: pair.result.workspace_metadata,
+    });
+    expect(diagnostics.workspaces[0]!.metadata!.checkpoint!.operation_id).toBe(settlement.operation_id);
     const status = await execution.status(token, w.f.task, w.f.node);
     expect(status).toMatchObject({ node_activation: 1, state: 'PENDING', manifest: null });
     expect(status.source!.source_id).not.toBe(w.a.dispatch.node_execution_source!.source_id);
@@ -590,6 +598,11 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('canonical Node executi
     await service.finishOperation(w.f.runner, w.f.incarnation, pair);
     expect((await execution.status(token, w.f.task, w.f.node)).state).toBe('COMPLETED');
     expect((await db.pool.query('SELECT state FROM tasks WHERE id=$1', [w.f.task])).rows[0].state).toBe('REVIEW');
+    expect((await attemptWorkspace(db, token, w.f.task, w.a.dispatch.attempt_id)).workspaces[0]).toMatchObject({
+      lease_state: 'released', settle_operation_id: c.result.operation_id, settle_state: 'succeeded',
+      metadata_operation_id: c.result.operation_id,
+      metadata: pair.completion_settlement.completion_result.result.workspace_metadata,
+    });
     expect((await db.pool.query('SELECT 1 FROM node_execution_outbox')).rowCount).toBe(1);
   }, 20000);
   it('Cancel during hard completion uses exact pair and never creates successor/current evidence', async () => {
@@ -640,6 +653,11 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('canonical Node executi
     });
     expect((await db.pool.query('SELECT state FROM tasks WHERE id=$1', [w.f.task])).rows[0].state).toBe('CANCELLED');
     expect((await db.pool.query('SELECT 1 FROM node_completions')).rowCount).toBe(0);
+    expect((await attemptWorkspace(db, token, w.f.task, w.a.dispatch.attempt_id)).workspaces[0]).toMatchObject({
+      lease_state: 'released', settle_operation_id: c.result.operation_id, settle_state: 'cancelled',
+      metadata_operation_id: settlement.operation_id,
+      metadata: { checkpoint: { operation_id: settlement.operation_id, completion_operation_id: c.result.operation_id } },
+    });
     expect((await db.pool.query('SELECT 1 FROM node_execution_outbox')).rowCount).toBe(1);
     expect((await execution.status(token, w.f.task, w.f.node)).attempt!.process_released).toBe(true);
   }, 20000);

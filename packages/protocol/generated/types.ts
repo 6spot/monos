@@ -21,6 +21,8 @@ type PositiveCounter = number;
 
 type PlanningText = string;
 
+type TaskListCursor = string;
+
 export interface CommandEnvelope {
     expected_control_version: number;
     name:                     CommandEnvelopeName;
@@ -544,14 +546,14 @@ export interface Operation {
     resource_id?:                string;
     result?:                     EffectResult;
     schema_version:              number;
-    state:                       OperationState;
+    state:                       OpenStateEnum;
     workspace?:                  WorkspaceDescriptor;
     workspace_digest?:           string;
 }
 
 export type OperationKind = "open_workspace" | "inspect_repository" | "complete_node" | "stop" | "settle_completion";
 
-export type OperationState = "admitted" | "succeeded" | "recovery" | "cancelled";
+export type OpenStateEnum = "admitted" | "succeeded" | "recovery" | "cancelled";
 
 export interface WorkspaceDescriptor {
     basis?:            WorkspaceBasis;
@@ -749,6 +751,7 @@ export interface OwnerSessionStatus {
     authenticated:  boolean;
     expires_at?:    string;
     schema_version: number;
+    session_id?:    string;
 }
 
 export interface ConfigurationCommand {
@@ -1066,7 +1069,7 @@ export interface OwnerOperationStatus {
     process_absent:             boolean;
     process_released:           boolean;
     schema_version:             number;
-    state:                      OperationState;
+    state:                      OpenStateEnum;
     task_id:                    string;
 }
 
@@ -1331,7 +1334,7 @@ export interface TodoOperationStatus {
     process_absent:             boolean;
     process_released:           boolean;
     schema_version:             number;
-    state:                      OperationState;
+    state:                      OpenStateEnum;
     todo_id:                    string;
 }
 
@@ -1553,7 +1556,7 @@ export interface TaskPlanningStatus {
     schema_version:    number;
     specification_id:  string;
     state:             TaskOverviewState;
-    status:            TaskPlanningStatusStatus;
+    status:            PlanningStatusEnum;
     task_id:           string;
     waiting_reason?:   string;
 }
@@ -1565,7 +1568,7 @@ export interface PlanningIssue {
     reason:         string;
 }
 
-export type TaskPlanningStatusStatus = "not_started" | "pending" | "unavailable" | "queued" | "processing" | "settling" | "interrupted" | "issue" | "stopped" | "cancelled" | "published";
+export type PlanningStatusEnum = "not_started" | "pending" | "unavailable" | "queued" | "processing" | "settling" | "interrupted" | "issue" | "stopped" | "cancelled" | "published";
 
 export interface TaskPlanRevision {
     content_digest:   string;
@@ -1604,21 +1607,22 @@ export interface OwnerRecoverCompletionCommandPayload {
 }
 
 export interface NodeExecutionStatus {
-    attempt:          NodeExecutionStatusAttempt | null;
-    blocker:          Blocker | null;
-    control_version:  number;
-    guidance_paused?: boolean;
-    manifest:         CompletionManifest | null;
-    node_activation:  number;
-    node_id:          string;
-    operations:       NodeExecutionOperationStatus[];
-    plan_id:          string;
-    schema_version:   number;
-    source:           NodeExecutionSource | null;
-    specification_id: string;
-    state:            NodeExecutionStatusState;
-    task_id:          string;
-    waiting_reason:   null | string;
+    attempt:                    NodeExecutionStatusAttempt | null;
+    blocker:                    Blocker | null;
+    control_version:            number;
+    guidance_followup_pending?: boolean;
+    guidance_paused?:           boolean;
+    manifest:                   CompletionManifest | null;
+    node_activation:            number;
+    node_id:                    string;
+    operations:                 NodeExecutionOperationStatus[];
+    plan_id:                    string;
+    schema_version:             number;
+    source:                     NodeExecutionSource | null;
+    specification_id:           string;
+    state:                      NodeExecutionStatusState;
+    task_id:                    string;
+    waiting_reason:             null | string;
 }
 
 export interface NodeExecutionStatusAttempt {
@@ -1655,7 +1659,7 @@ export interface NodeExecutionOperationStatus {
     failure_kind:                null | string;
     kind:                        OperationKind;
     operation_id:                string;
-    state:                       OperationState;
+    state:                       OpenStateEnum;
 }
 
 export type NodeExecutionStatusState = "PENDING" | "RUNNING" | "BLOCKED" | "COMPLETED" | "CANCELLED";
@@ -2078,3 +2082,117 @@ export interface ReplanReadQuery {
     cursor?:         string;
     effects_cursor?: string;
 }
+
+export interface TaskListQuery {
+    attention?:  Attention;
+    column?:     Column;
+    cursor?:     string;
+    history?:    History;
+    project_id?: string;
+}
+
+export type Attention = "all" | "needed";
+
+export type Column = "ready" | "running" | "review" | "done" | "cancelled";
+
+export type History = "active" | "all";
+
+export interface TaskListPage {
+    cursor:         string;
+    has_more:       boolean;
+    items:          TaskListItem[];
+    schema_version: number;
+}
+
+export interface TaskListItem {
+    attention:           TaskAttention[];
+    attention_has_more:  boolean;
+    canonical_execution: boolean;
+    control_version:     number;
+    created_at:          null | string;
+    held_attempts:       number;
+    nodes:               NodeCounts;
+    open_operations:     number;
+    plan_id:             null | string;
+    planning_reason:     null | string;
+    planning_status:     PlanningStatusEnum | null;
+    project_id:          null | string;
+    queued_attempts:     number;
+    running_attempts:    number;
+    specification_id:    string;
+    state:               TaskOverviewState;
+    task_id:             string;
+    title:               null | string;
+    todo_id:             null | string;
+}
+
+export interface TaskAttention {
+    kind:      TaskAttentionKind;
+    reason:    string;
+    target_id: string;
+}
+
+export type TaskAttentionKind = "planning_issue" | "planning_interrupted" | "node_blocker" | "operation_recovery" | "input_issue" | "input_interrupted" | "guidance_paused" | "requirement_proposal" | "requirement_recovery" | "replan_request" | "replan_issue";
+
+export interface TaskResultPage {
+    cursor:         string;
+    has_more:       boolean;
+    items:          TaskLocalResult[];
+    schema_version: number;
+    task_id:        string;
+}
+
+export interface TaskLocalResult {
+    admitted_at:              string;
+    current:                  boolean;
+    current_plan_id:          null | string;
+    current_specification_id: string;
+    git:                      TaskLocalGitResult | null;
+    manifest:                 CompletionManifest;
+    repository_free:          boolean;
+}
+
+export interface TaskLocalGitResult {
+    git_commit:   string;
+    git_tree:     string;
+    metadata:     WorkspaceMetadata;
+    resource_id:  string;
+    runner_id:    string;
+    workspace_id: string;
+}
+
+export interface TaskResultQuery {
+    cursor?: string;
+}
+
+export interface AttemptWorkspaceStatus {
+    attempt_id:     string;
+    execution:      Execution;
+    schema_version: number;
+    task_id:        string;
+    workspaces:     AttemptWorkspace[];
+}
+
+export interface Execution {
+    model_id:       null | string;
+    runtime_id:     null | string;
+    thinking_level: null | string;
+}
+
+export interface AttemptWorkspace {
+    failure_kind:          null | string;
+    lease_id:              string;
+    lease_state:           LeaseState;
+    metadata:              WorkspaceMetadata | null;
+    metadata_operation_id: null | string;
+    open_operation_id:     string;
+    open_state:            OpenStateEnum;
+    repository_identity:   string;
+    resource_id:           string;
+    runner_id:             string;
+    settle_operation_id:   null | string;
+    settle_state:          OpenStateEnum | null;
+    workspace_id:          string;
+}
+
+export type LeaseState = "held" | "settling" | "released";

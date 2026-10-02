@@ -8,10 +8,12 @@ export class APIError extends Error {
 export class UncertainError extends Error {
   constructor() { super('The response was interrupted. Check the result before making another change.'); }
 }
-export async function request<T>(path: string, schema: string, body?: unknown): Promise<T> {
+export async function request<T>(path: string, schema: string, body?: unknown, sessionId?: string): Promise<T> {
   let response: Response; let raw: unknown;
   try {
-    response = await fetch(path, { credentials: 'same-origin', cache: 'no-store', ...(body !== undefined ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {}) });
+    response = await fetch(path, { credentials: 'same-origin', cache: 'no-store',
+      headers: { ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}), ...(sessionId ? { 'X-Monos-Session': sessionId } : {}) },
+      ...(body !== undefined ? { method: 'POST', body: JSON.stringify(body) } : {}) });
     raw = await response.json();
   } catch { throw body === undefined ? new APIError('unavailable', 'Unable to reach monos. Check your connection and retry.') : new UncertainError(); }
   if (!response.ok) {

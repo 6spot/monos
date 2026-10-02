@@ -53,8 +53,8 @@ export class OwnerAccess {
   async session(token: string) {
     return transaction(this.db, async (tx) => {
       await authenticateOwner(tx, token);
-      const row = (await tx.query<{ expires_at: Date }>('SELECT expires_at FROM owner_sessions WHERE token_digest=$1', [digest(token)])).rows[0]!;
-      return { schema_version: 1 as const, authenticated: true, expires_at: row.expires_at.toISOString() };
+      const row = (await tx.query<{ id: string; expires_at: Date }>('SELECT id,expires_at FROM owner_sessions WHERE token_digest=$1', [digest(token)])).rows[0]!;
+      return { schema_version: 1 as const, authenticated: true, session_id: row.id, expires_at: row.expires_at.toISOString() };
     });
   }
 

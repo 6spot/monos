@@ -8,6 +8,7 @@ import { BoundaryService } from '../../src/service.ts';
 import { prepareProposalFixture, reviseSpecificationFixture } from './task-preview-fixture.ts';
 import { validate } from '../../../../packages/protocol/src/index.ts';
 import type { FastifyRequest } from 'fastify';
+import { ExecutionUIFixture } from './execution-ui-fixture.ts';
 
 // Test-only process: never use an existing schema or deployed Owner credentials.
 const connection = process.env.MONOS_TEST_WEB_DATABASE_URL;
@@ -19,6 +20,7 @@ const url = new URL(connection); url.searchParams.set('options', `-c search_path
 const db = database(url.toString());
 const service = new BoundaryService(db, { signingKey: 'synthetic-browser-test-service-signing-key' });
 const app = createApp(service, undefined, fileURLToPath(new URL('../../../web/dist', import.meta.url)));
+const executionUI = new ExecutionUIFixture(db, service);
 function fixtureOwner(request: FastifyRequest): string {
   if (request.headers.origin !== 'http://127.0.0.1:18555') throw new Error('Test fixture requires same origin');
   return (request.headers.cookie ?? '').split(';').map((value) => value.trim()).find((value) => value.startsWith('__Host-monos='))?.slice('__Host-monos='.length) ?? '';
@@ -30,6 +32,9 @@ app.post<{ Body: { todo_id: string; title: string; specification: string; conten
   return prepared.commit(request.body.title, request.body.specification);
 });
 app.post<{ Body: { task_id: string; specification: unknown } }>('/__test__/task-specification', async (request) => reviseSpecificationFixture(db, fixtureOwner(request), request.body.task_id, request.body.specification));
+app.post<{ Body: Parameters<ExecutionUIFixture['create']>[1] }>('/__test__/execution-scenario', async (request) => executionUI.create(fixtureOwner(request), request.body));
+app.post<{ Body: { task_id: string } }>('/__test__/execution-settle', async (request) => executionUI.settle(fixtureOwner(request), request.body.task_id));
+app.post('/__test__/execution-reset', async (request) => executionUI.reset(fixtureOwner(request)));
 let closing = false;
 async function close() {
   if (closing) return; closing = true;

@@ -284,7 +284,7 @@ func (c *Client) Run(ctx context.Context, boot string, h Handler) error {
 	if err = h.Reconcile(ctx, inventory); err != nil {
 		return err
 	}
-	ready := protocol.Frame{Type: protocol.Ready, LogModes: []protocol.LogModeElement{protocol.PurpleOrderedV1}}
+	ready := protocol.Frame{Type: protocol.TypeReady, LogModes: []protocol.LogModeElement{protocol.PurpleOrderedV1}}
 	if reporter, ok := h.(interface {
 		InstalledRuntimes(context.Context) []protocol.RuntimeInstallation
 	}); ok {

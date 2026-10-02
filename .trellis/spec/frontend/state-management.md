@@ -63,7 +63,8 @@ Project/Role drafts are keyed by stable IDs, retain their original control versi
 and survive record/view switches. Policy/provider drafts are scoped to their form.
 A snapshot refresh never rebases an edited draft. Conflict refreshes canonical data;
 only explicit Reload saved version discards a draft. No browser persistent storage
-contains passwords, keys, session tokens or pending commands. Secrets clear on
+contains passwords, keys, session tokens or configuration commands. The bounded
+Task-only exception is specified in [Execution UI](execution-ui.md). Secrets clear on
 committed save (including recovered receipts), logout and session revocation.
 
 When an organization command removes the selected Todo from the current filter,

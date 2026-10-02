@@ -1,3 +1,34 @@
-{"file": ".trellis/spec/frontend/visual-design.md", "reason": "Mandatory Multica-derived tokens, layout, responsive and visual states"}
-{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "Owned shadcn Base UI coverage and native exceptions"}
-{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "Inspected visual evidence alongside interaction checks"}
+{"file": "ARCHITECTURE.md", "reason": "Implementation contract and researched boundary"}
+{"file": "docs/07-owner-review-and-ui.md", "reason": "Implementation contract and researched boundary"}
+{"file": "docs/08-principles-and-non-goals.md", "reason": "Implementation contract and researched boundary"}
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "Implementation contract and researched boundary"}
+{"file": ".trellis/spec/frontend/directory-structure.md", "reason": "Implementation contract and researched boundary"}
+{"file": ".trellis/spec/frontend/hook-guidelines.md", "reason": "Implementation contract and researched boundary"}
+{"file": ".trellis/spec/frontend/index.md", "reason": "Implementation contract and researched boundary"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "Implementation contract and researched boundary"}
+{"file": ".trellis/spec/frontend/state-management.md", "reason": "Implementation contract and researched boundary"}
+{"file": ".trellis/spec/frontend/type-safety.md", "reason": "Implementation contract and researched boundary"}
+{"file": ".trellis/spec/frontend/visual-design.md", "reason": "Implementation contract and researched boundary"}
+{"file": ".trellis/spec/guides/index.md", "reason": "Implementation contract and researched boundary"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "Implementation contract and researched boundary"}
+{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "Implementation contract and researched boundary"}
+{"file": ".trellis/spec/protocol/index.md", "reason": "Implementation contract and researched boundary"}
+{"file": ".trellis/spec/protocol/commands.md", "reason": "Implementation contract and researched boundary"}
+{"file": ".trellis/spec/protocol/schema-generation.md", "reason": "Implementation contract and researched boundary"}
+{"file": ".trellis/spec/backend/index.md", "reason": "Implementation contract and researched boundary"}
+{"file": ".trellis/spec/backend/directory-structure.md", "reason": "Implementation contract and researched boundary"}
+{"file": ".trellis/spec/backend/owner-access.md", "reason": "Implementation contract and researched boundary"}
+{"file": ".trellis/spec/backend/owner-reads.md", "reason": "Implementation contract and researched boundary"}
+{"file": ".trellis/spec/backend/owner-commands.md", "reason": "Implementation contract and researched boundary"}
+{"file": ".trellis/spec/backend/task-planning.md", "reason": "Implementation contract and researched boundary"}
+{"file": ".trellis/spec/backend/node-execution.md", "reason": "Implementation contract and researched boundary"}
+{"file": ".trellis/spec/backend/task-conversation.md", "reason": "Implementation contract and researched boundary"}
+{"file": ".trellis/spec/backend/task-specification.md", "reason": "Implementation contract and researched boundary"}
+{"file": ".trellis/spec/backend/task-replan.md", "reason": "Implementation contract and researched boundary"}
+{"file": ".trellis/spec/backend/execution-logs.md", "reason": "Implementation contract and researched boundary"}
+{"file": ".trellis/spec/backend/delivery-contracts.md", "reason": "Implementation contract and researched boundary"}
+{"file": ".trellis/spec/backend/database-guidelines.md", "reason": "Implementation contract and researched boundary"}
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "Implementation contract and researched boundary"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Implementation contract and researched boundary"}
+{"file": ".trellis/tasks/09-30-a-execution-ui/research/frontend-seams.md", "reason": "Implementation contract and researched boundary"}
+{"file": ".trellis/tasks/09-30-a-execution-ui/research/backend-ui-contracts.md", "reason": "Implementation contract and researched boundary"}

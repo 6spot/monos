@@ -2766,6 +2766,9 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 64
+        },
+        "session_id": {
+          "$ref": "#/definitions/Id"
         }
       },
       "allOf": [
@@ -2780,18 +2783,23 @@
           },
           "then": {
             "required": [
-              "expires_at"
+              "expires_at",
+              "session_id"
             ],
             "properties": {
               "expires_at": {
                 "type": "string"
+              },
+              "session_id": {
+                "$ref": "#/definitions/Id"
               }
             },
             "type": "object"
           },
           "else": {
             "properties": {
-              "expires_at": false
+              "expires_at": false,
+              "session_id": false
             },
             "type": "object"
           }
@@ -7442,6 +7450,9 @@
         },
         "guidance_paused": {
           "type": "boolean"
+        },
+        "guidance_followup_pending": {
+          "type": "boolean"
         }
       },
       "required": [
@@ -10752,6 +10763,607 @@
           "$ref": "#/definitions/Id"
         }
       }
+    },
+    "TaskListCursor": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096,
+      "pattern": "^[A-Za-z0-9_-]+$"
+    },
+    "TaskListQuery": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "project_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "column": {
+          "type": "string",
+          "enum": [
+            "ready",
+            "running",
+            "review",
+            "done",
+            "cancelled"
+          ]
+        },
+        "attention": {
+          "type": "string",
+          "enum": [
+            "all",
+            "needed"
+          ]
+        },
+        "history": {
+          "type": "string",
+          "enum": [
+            "active",
+            "all"
+          ]
+        },
+        "cursor": {
+          "$ref": "#/definitions/TaskListCursor"
+        }
+      },
+      "required": []
+    },
+    "TaskAttention": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "planning_issue",
+            "planning_interrupted",
+            "node_blocker",
+            "operation_recovery",
+            "input_issue",
+            "input_interrupted",
+            "guidance_paused",
+            "requirement_proposal",
+            "requirement_recovery",
+            "replan_request",
+            "replan_issue"
+          ]
+        },
+        "target_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "reason": {
+          "type": "string",
+          "maxLength": 1024
+        }
+      },
+      "required": [
+        "kind",
+        "target_id",
+        "reason"
+      ]
+    },
+    "TaskListItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "task_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "title": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 256
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "project_id": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "todo_id": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "created_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d\\.\\d{3}Z$",
+              "maxLength": 24
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "PLANNING",
+            "RUNNING",
+            "BLOCKED",
+            "REPLAN_REQUIRED",
+            "REVIEW",
+            "COMPLETED",
+            "CANCELLED"
+          ]
+        },
+        "control_version": {
+          "$ref": "#/definitions/Counter"
+        },
+        "specification_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "plan_id": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "nodes": {
+          "$ref": "#/definitions/NodeCounts"
+        },
+        "queued_attempts": {
+          "$ref": "#/definitions/Counter"
+        },
+        "running_attempts": {
+          "$ref": "#/definitions/Counter"
+        },
+        "held_attempts": {
+          "$ref": "#/definitions/Counter"
+        },
+        "open_operations": {
+          "$ref": "#/definitions/Counter"
+        },
+        "attention": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TaskAttention"
+          },
+          "maxItems": 16
+        },
+        "attention_has_more": {
+          "type": "boolean"
+        },
+        "planning_status": {
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
+                "not_started",
+                "pending",
+                "unavailable",
+                "queued",
+                "processing",
+                "settling",
+                "interrupted",
+                "issue",
+                "stopped",
+                "cancelled",
+                "published"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "planning_reason": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 1024
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "canonical_execution": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "task_id",
+        "title",
+        "project_id",
+        "todo_id",
+        "created_at",
+        "state",
+        "control_version",
+        "specification_id",
+        "plan_id",
+        "nodes",
+        "queued_attempts",
+        "running_attempts",
+        "held_attempts",
+        "open_operations",
+        "attention",
+        "attention_has_more",
+        "planning_status",
+        "planning_reason",
+        "canonical_execution"
+      ]
+    },
+    "TaskListPage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TaskListItem"
+          },
+          "maxItems": 32
+        },
+        "cursor": {
+          "$ref": "#/definitions/TaskListCursor"
+        },
+        "has_more": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "schema_version",
+        "items",
+        "cursor",
+        "has_more"
+      ]
+    },
+    "TaskLocalGitResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "workspace_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "resource_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "runner_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "git_commit": {
+          "$ref": "#/definitions/GitOID"
+        },
+        "git_tree": {
+          "$ref": "#/definitions/GitOID"
+        },
+        "metadata": {
+          "$ref": "#/definitions/WorkspaceMetadata"
+        }
+      },
+      "required": [
+        "workspace_id",
+        "resource_id",
+        "runner_id",
+        "git_commit",
+        "git_tree",
+        "metadata"
+      ]
+    },
+    "TaskLocalResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "manifest": {
+          "$ref": "#/definitions/CompletionManifest"
+        },
+        "current": {
+          "type": "boolean"
+        },
+        "current_specification_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "current_plan_id": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "repository_free": {
+          "type": "boolean"
+        },
+        "git": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/TaskLocalGitResult"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "admitted_at": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d\\.\\d{3}Z$",
+          "maxLength": 24
+        }
+      },
+      "required": [
+        "manifest",
+        "current",
+        "current_specification_id",
+        "current_plan_id",
+        "repository_free",
+        "git",
+        "admitted_at"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "repository_free": {
+                "const": true
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "git": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "git": {
+                "$ref": "#/definitions/TaskLocalGitResult"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "TaskResultPage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "task_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TaskLocalResult"
+          },
+          "maxItems": 32
+        },
+        "cursor": {
+          "$ref": "#/definitions/TaskListCursor"
+        },
+        "has_more": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "schema_version",
+        "task_id",
+        "items",
+        "cursor",
+        "has_more"
+      ]
+    },
+    "TaskResultQuery": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "cursor": {
+          "$ref": "#/definitions/TaskListCursor"
+        }
+      }
+    },
+    "AttemptWorkspace": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "workspace_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "resource_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "runner_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "lease_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "lease_state": {
+          "type": "string",
+          "enum": [
+            "held",
+            "settling",
+            "released"
+          ]
+        },
+        "open_operation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "open_state": {
+          "type": "string",
+          "enum": [
+            "admitted",
+            "succeeded",
+            "recovery",
+            "cancelled"
+          ]
+        },
+        "settle_operation_id": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "settle_state": {
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
+                "admitted",
+                "succeeded",
+                "recovery",
+                "cancelled"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "repository_identity": {
+          "type": "string",
+          "maxLength": 2048
+        },
+        "metadata": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/WorkspaceMetadata"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "metadata_operation_id": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "failure_kind": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 128
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "workspace_id",
+        "resource_id",
+        "runner_id",
+        "lease_id",
+        "lease_state",
+        "open_operation_id",
+        "open_state",
+        "settle_operation_id",
+        "settle_state",
+        "repository_identity",
+        "metadata",
+        "metadata_operation_id",
+        "failure_kind"
+      ]
+    },
+    "AttemptWorkspaceStatus": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "task_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "attempt_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "workspaces": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/AttemptWorkspace"
+          },
+          "maxItems": 64
+        },
+        "execution": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "runtime_id": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Id"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "model_id": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 256,
+              "minLength": 1
+            },
+            "thinking_level": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 64,
+              "minLength": 1
+            }
+          },
+          "required": [
+            "runtime_id",
+            "model_id",
+            "thinking_level"
+          ]
+        }
+      },
+      "required": [
+        "schema_version",
+        "task_id",
+        "attempt_id",
+        "workspaces",
+        "execution"
+      ]
     }
   }
 }

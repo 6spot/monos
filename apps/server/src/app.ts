@@ -10,6 +10,9 @@ import type { CommandResult, Frame, InventoryQuery } from '../../../packages/pro
 import type { BoundaryService } from './service.ts';
 import { OwnerCommands } from './owner-commands.ts';
 import { OwnerReads } from './owner-reads.ts';
+import { taskBoard } from './task-board-reads.ts';
+import { taskResults } from './task-result-reads.ts';
+import { attemptWorkspace } from './task-workspace-reads.ts';
 import { OwnerAccess } from './owner-access.ts';
 import { Configuration } from './configuration.ts';
 import { Todos } from './todos.ts';
@@ -70,6 +73,12 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
   const owner = new OwnerCommands(service.db);
   const reads = new OwnerReads(service.db);
   const access = new OwnerAccess(service.db);
+  app.addHook('onRequest', async request => {
+    if (!request.url.startsWith('/v1/owner/') || request.headers['x-monos-session'] === undefined) return;
+    const expected = validate<string>('Id', request.headers['x-monos-session']);
+    const actual = await access.session(ownerCredential(request));
+    if (expected !== actual.session_id) throw new CommandError('unauthorized', 'Owner session changed; reload the authenticated workspace');
+  });
   const configuration = new Configuration(service.db, new GitHub(service.options.signingKey));
   const todos = new Todos(service.db);
   const discussion = new Discussion(service.db, service.instanceId);
@@ -120,7 +129,7 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
     const body = validate<{ schema_version: 1; password: string }>('OwnerLogin', request.body);
     const session = await access.login(body.password);
     void reply.header('Set-Cookie', sessionCookie(session.token, Math.max(0, Math.floor((Date.parse(session.expires_at) - Date.now()) / 1000))));
-    return validate('OwnerSessionStatus', { schema_version: 1, authenticated: true, expires_at: session.expires_at });
+    return validate('OwnerSessionStatus', { schema_version: 1, authenticated: true, session_id: session.session_id, expires_at: session.expires_at });
   });
   app.get('/v1/owner/session', async (request) => validate('OwnerSessionStatus', await access.session(ownerCredential(request))));
   app.post('/v1/owner/logout', async (request, reply) => {
@@ -128,6 +137,11 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
     await access.logout(ownerCredential(request));
     void reply.header('Set-Cookie', sessionCookie('', 0));
     return { schema_version: 1, authenticated: false };
+  });
+  app.get('/v1/owner/tasks', async request => taskBoard(service.db, ownerCredential(request), request.query));
+  app.get<{ Params: { task_id: string }; Querystring: { cursor?: string } }>('/v1/owner/tasks/:task_id/results', async request => {
+    validate('TaskResultQuery', request.query);
+    return taskResults(service.db, ownerCredential(request), request.params.task_id, request.query.cursor);
   });
   app.get<{ Params: { task_id: string; node_id:string } }>('/v1/owner/tasks/:task_id/nodes/:node_id/execution', async request => execution.status(ownerCredential(request),request.params.task_id,request.params.node_id));
   app.get<{ Params: { task_id: string }; Querystring: { cursor?:string } }>('/v1/owner/tasks/:task_id/artifacts', async request => ownerArtifacts(service.db,ownerCredential(request),request.params.task_id,request.query.cursor));
@@ -163,6 +177,10 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
     return reads.attempts(ownerCredential(request), request.params.task_id, request.query.cursor);
   });
   app.get<{ Params: { task_id: string; attempt_id: string } }>('/v1/owner/tasks/:task_id/attempts/:attempt_id', async (request) => reads.attempt(ownerCredential(request), request.params.task_id, request.params.attempt_id));
+  app.get<{ Params: { task_id: string; attempt_id: string }; Querystring: Record<string, unknown> }>('/v1/owner/tasks/:task_id/attempts/:attempt_id/workspace', async request => {
+    if (Object.keys(request.query).length) throw new CommandError('invalid_input', 'Workspace read does not accept query fields');
+    return attemptWorkspace(service.db, ownerCredential(request), request.params.task_id, request.params.attempt_id);
+  });
   app.get<{ Params: { task_id: string; attempt_id: string }; Querystring: { cursor?: string } }>('/v1/owner/tasks/:task_id/attempts/:attempt_id/logs', async (request) => {
     validate('AttemptLogsQuery', request.query);
     return reads.logs(ownerCredential(request), request.params.task_id, request.params.attempt_id, request.query.cursor);

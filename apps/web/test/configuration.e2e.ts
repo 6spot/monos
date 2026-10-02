@@ -3,6 +3,7 @@ import { test, expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
 async function navigate(page: Page, name: string) {
+  if (await page.getByRole('button', { name: 'Open navigation', exact: true }).isVisible()) await page.getByRole('button', { name: 'Open navigation', exact: true }).click();
   await page.getByRole('link', { name, exact: true }).click();
   await expect(page.getByRole('heading', { name, exact: true })).toBeVisible();
 }
@@ -58,6 +59,7 @@ test('real login, Role/Project/policy/provider persistence, drafts and responsiv
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.evaluate(() => scrollTo(0, 0));
   await page.screenshot({ path: info.outputPath('projects-mobile.png'), fullPage: true });
+  await page.getByRole('button', { name: 'Open navigation', exact: true }).click();
   await page.getByRole('button', { name: 'Sign out', exact: true }).click(); await expect(page.getByRole('heading', { name: 'Sign in to monos' })).toBeVisible();
   await page.reload(); await expect(page.getByRole('heading', { name: 'Sign in to monos' })).toBeVisible();
 });

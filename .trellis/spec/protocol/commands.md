@@ -105,3 +105,9 @@ regeneration must retain the explicit Go marshaling rules.
 
 Wrong: transport timeout -> generate request ID -> repeat effect.
 Correct: retain original envelope -> read receipt -> explicitly retry under still-valid authority.
+
+Execution UI adds `TaskListQuery/TaskListPage`, `TaskResultPage` and
+`AttemptWorkspaceStatus` projections plus authenticated `OwnerSessionStatus.session_id`.
+See [Owner reads](../backend/owner-reads.md) and [Owner access](../backend/owner-access.md)
+for exact fields, encoded bounds and session-header validation. These reads do not
+introduce Owner command names, authorization states or completion timestamps.
