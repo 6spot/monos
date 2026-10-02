@@ -30,5 +30,5 @@
 {"file": ".trellis/spec/backend/database-guidelines.md", "reason": "Implementation contract and researched boundary"}
 {"file": ".trellis/spec/backend/error-handling.md", "reason": "Implementation contract and researched boundary"}
 {"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Implementation contract and researched boundary"}
-{"file": ".trellis/tasks/09-30-a-execution-ui/research/frontend-seams.md", "reason": "Implementation contract and researched boundary"}
-{"file": ".trellis/tasks/09-30-a-execution-ui/research/backend-ui-contracts.md", "reason": "Implementation contract and researched boundary"}
+{"file": ".trellis/tasks/archive/2026-10/09-30-a-execution-ui/research/frontend-seams.md", "reason": "Implementation contract and researched boundary"}
+{"file": ".trellis/tasks/archive/2026-10/09-30-a-execution-ui/research/backend-ui-contracts.md", "reason": "Implementation contract and researched boundary"}

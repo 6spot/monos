@@ -21,7 +21,7 @@
 - [x] Inspect desktop/mobile screenshots and record source/build identity, reference
   comparison, state matrix and limitations in verification.md.
 - [x] Update executable specs for final read/session/Task recovery/UI contracts.
-- [ ] Commit feature, archive leaf with links fixed, record journal, advance to the
+- [x] Commit feature, archive leaf with links fixed, record journal, advance to the
   separately scoped existing-screen migration before integration acceptance.
 
 ## Ownership

@@ -30,5 +30,5 @@
 {"file": ".trellis/spec/backend/database-guidelines.md", "reason": "Independent whole-scope contract, recovery and quality verification"}
 {"file": ".trellis/spec/backend/error-handling.md", "reason": "Independent whole-scope contract, recovery and quality verification"}
 {"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Independent whole-scope contract, recovery and quality verification"}
-{"file": ".trellis/tasks/09-30-a-execution-ui/research/frontend-seams.md", "reason": "Independent whole-scope contract, recovery and quality verification"}
-{"file": ".trellis/tasks/09-30-a-execution-ui/research/backend-ui-contracts.md", "reason": "Independent whole-scope contract, recovery and quality verification"}
+{"file": ".trellis/tasks/archive/2026-10/09-30-a-execution-ui/research/frontend-seams.md", "reason": "Independent whole-scope contract, recovery and quality verification"}
+{"file": ".trellis/tasks/archive/2026-10/09-30-a-execution-ui/research/backend-ui-contracts.md", "reason": "Independent whole-scope contract, recovery and quality verification"}

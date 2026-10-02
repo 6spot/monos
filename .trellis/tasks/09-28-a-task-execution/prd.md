@@ -31,7 +31,7 @@ Execute in order; each leaf has an independent API/Runner or browser acceptance:
 4. [Ordered Task Conversation and guidance](../archive/2026-09/09-30-a-task-conversation/prd.md).
 5. [Exact Specification changes and settlement](../archive/2026-10/09-30-a-specification-changes/prd.md).
 6. [One-Node replacement Plan and Replan exits](../archive/2026-10/09-30-a-single-node-replan/prd.md).
-7. [Execution Board and Task control UI](../09-30-a-execution-ui/prd.md).
+7. [Execution Board and Task control UI](../archive/2026-10/09-30-a-execution-ui/prd.md).
 8. [Existing-screen visual migration](../10-02-a-existing-screen-visual-migration/prd.md).
 9. [Task execution integration acceptance](../09-30-a-task-execution-acceptance/prd.md).
 

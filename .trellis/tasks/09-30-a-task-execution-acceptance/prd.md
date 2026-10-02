@@ -25,7 +25,7 @@ Apply the [visual contract](../../spec/frontend/visual-design.md) to the actual 
 
 ## Dependency and scope
 
-Follows [Execution Board and Task control UI](../09-30-a-execution-ui/prd.md) and
+Follows [Execution Board and Task control UI](../archive/2026-10/09-30-a-execution-ui/prd.md) and
 [existing-screen visual migration](../10-02-a-existing-screen-visual-migration/prd.md).
 Parent links express ownership; this ordering is an evidence gate. The Owner has
 authorized sequential execution and routine implementation/test decisions.

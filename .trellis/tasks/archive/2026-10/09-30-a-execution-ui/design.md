@@ -103,7 +103,7 @@ Use 256px desktop navigation, 48px header/toolbar, 16px gutter, neutral surfaces
 14/20 compact UI and 15/22 conversation, 44px primary mobile targets below 768px.
 Mobile sheet uses Base UI focus management. No extra UI library/router/state store.
 
-The separately created [migration leaf](../10-02-a-existing-screen-visual-migration/prd.md)
+The separately created [migration leaf](../../../10-02-a-existing-screen-visual-migration/prd.md)
 owns Login, Settings and Todo/preview **interiors** and remaining legacy form skins.
 This allocation supersedes the unscheduled shared-file ownership in the original
 handoff; its requirement for separately verified migration is preserved. Full Task

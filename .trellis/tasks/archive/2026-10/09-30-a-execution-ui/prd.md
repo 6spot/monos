@@ -7,7 +7,7 @@ workspace, with trustworthy progress, exact decisions and recoverable requests.
 
 ## Background and boundary
 
-Follows the accepted [one-Node Replan leaf](../archive/2026-10/09-30-a-single-node-replan/prd.md).
+Follows the accepted [one-Node Replan leaf](../09-30-a-single-node-replan/prd.md).
 The backend has canonical execution/conversation/revision/Replan commands and scoped
 reads. Web currently has only a minimal Task detail and Execution settings. Missing
 collection/result read projections and reload-safe Task request identity belong here.
@@ -49,10 +49,10 @@ approval. Architecture modules remain authoritative.
    work ready for review, with no fabricated PR, acceptance, delivery or V1 success.
    Terminal conversation supports read-only questions and points further execution
    back to Todo; merely opening or chatting never Starts/Continues work.
-7. **Visual/accessibility:** use the [neutral visual contract](../../spec/frontend/visual-design.md)
+7. **Visual/accessibility:** use the [neutral visual contract](../../../../spec/frontend/visual-design.md)
    and owned shadcn Base UI controls, compact shared shell/chrome, accessible mobile
    navigation, keyboard focus and full important content. Existing-screen interiors
-   are owned by the separate [migration leaf](../10-02-a-existing-screen-visual-migration/prd.md).
+   are owned by the separate [migration leaf](../../../10-02-a-existing-screen-visual-migration/prd.md).
 
 ## Acceptance criteria
 

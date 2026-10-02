@@ -7,7 +7,7 @@ shared shell and controls delivered by the Execution UI leaf.
 
 ## Scope and ordering
 
-This separately planned leaf follows [Execution UI](../09-30-a-execution-ui/prd.md)
+This separately planned leaf follows [Execution UI](../archive/2026-10/09-30-a-execution-ui/prd.md)
 and precedes [execution integration acceptance](../09-30-a-task-execution-acceptance/prd.md).
 It implements the outstanding interiors from the
 [original migration handoff](../archive/2026-09/09-30-frontend-visual-standards/migration-handoff.md).
