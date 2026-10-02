@@ -298,7 +298,11 @@ class TaskConversationProbe(NodeExecutionProbe):
             "'starts',(SELECT coalesce(jsonb_agg(to_jsonb(o)),'[]') FROM outbox o JOIN attempts a ON a.id=o.attempt_id WHERE a.task_id='" + task + "' AND o.kind='start')",
             "'completions',(SELECT coalesce(jsonb_agg(to_jsonb(c)),'[]') FROM node_completions c JOIN nodes n ON n.id=c.node_id WHERE n.task_id='" + task + "')",
             "'assignments',(SELECT coalesce(jsonb_agg(to_jsonb(a)),'[]') FROM task_guidance_assignments a JOIN node_execution_outbox s ON s.id=a.source_id WHERE s.task_id='" + task + "')"]
-        return self.query('SELECT jsonb_build_object(' + ','.join(fields) + ');')
+        # PostgreSQL permits at most 100 function arguments. Keep extensions in
+        # this same statement snapshot while limiting each object to 40 pairs.
+        objects = ['jsonb_build_object(' + ','.join(fields[i:i + 40]) + ')'
+            for i in range(0, len(fields), 40)]
+        return self.query('SELECT ' + ' || '.join(objects) + ';')
 
     def observe_turns(self, task, input_ids, stage, timeout=300):
         self.claim(stage)

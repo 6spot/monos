@@ -284,13 +284,18 @@ func loadWorkspaceForOpen(op protocol.Operation, storage string) (workspaceRecor
 	w := op.Workspace
 	r, err := readWorkspaceRecord(w.WorkspaceID)
 	if os.IsNotExist(err) {
-		if w.Basis != nil {
+		if w.Basis != nil || w.Transfer != nil {
 			return r, fmt.Errorf("storage_unavailable: initialized workspace marker missing")
 		}
 		return workspaceRecord{Operation: op, Stage: "intent", Metadata: protocol.WorkspaceMetadata{StorageID: storage, Generation: w.Generation, LeaseID: w.LeaseID, RepositoryIdentity: w.Resource.RepositoryIdentity}}, nil
 	}
 	if err != nil {
 		return r, err
+	}
+	if w.Transfer != nil && r.Operation.Workspace.LeaseID != w.LeaseID {
+		if err = validateWorkspaceTransferEvidence(r, op); err != nil {
+			return r, err
+		}
 	}
 	return reuseWorkspaceRecord(r, op, storage)
 }
@@ -323,8 +328,10 @@ func reuseWorkspaceRecord(r workspaceRecord, op protocol.Operation, storage stri
 	if b == nil || b.StorageID != storage || b.RepositoryIdentity != r.Metadata.RepositoryIdentity || b.BaseCommit != r.Metadata.BaseCommit || b.TargetBranch != r.Metadata.TargetBranch || b.FinalizedCommit != r.Metadata.FinalizedCommit || !reflect.DeepEqual(b.ProviderMetadata, r.Metadata.ProviderMetadata) {
 		return r, fmt.Errorf("storage_unavailable: fixed workspace basis changed")
 	}
-	if r.PrivateCheckpoint != nil && (old.NodeID != w.NodeID || old.NodeActivation != w.NodeActivation) {
-		return r, fmt.Errorf("ownership_unresolved: interrupted activation disposition required")
+	if w.Transfer != nil || old.NodeID != w.NodeID || r.PrivateCheckpoint != nil && old.NodeActivation != w.NodeActivation {
+		if err := validateWorkspaceTransfer(r, op); err != nil {
+			return r, err
+		}
 	}
 	r.Operation = op
 	r.Stage = "refresh_intent"

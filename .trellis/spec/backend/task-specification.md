@@ -72,6 +72,14 @@ activation. `invalidate` replaces completed activation. `carry` retains only the
 exact completed evidence through immutable applicability, including prior links.
 No historical source, completion or v1/v2 manifest hash is relabeled.
 
+Migration21 adds the separate [Replan](task-replan.md) provenance and insufficient
+joint branch. Its terminal Replan preparation attaches graph and requirements with
+a genuine `replan_source_id`, never a fabricated Conversation source or Owner edit.
+The requirements approval is separate, but only exact joint `publish_replan` may
+consume it. Standalone apply/pump cannot publish an insufficient impact. Withdrawal
+remains independent and invalidates dependent generation/proposal eligibility;
+graph dismissal does not withdraw its requirement obligation.
+
 Owner apply admits without Runtime availability. Agent apply requires its exact
 current source and Owner receipt; its own pending input must first be explicitly
 Owner-deferred. Apply remains nonterminal and still requires the canonical reply.

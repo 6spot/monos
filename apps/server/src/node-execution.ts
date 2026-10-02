@@ -1,3 +1,4 @@
+import { activateInheritedHold,resolveInheritedHold } from './task-replan-holds.ts';
 import { assertCurrentNode } from './task-records.ts';
 import { specificationFrozen } from './task-specification-state.ts';
 import { cancelTaskInputEffects } from './task-guidance.ts';
@@ -160,9 +161,9 @@ export class NodeExecution {
       const fresh = (
         await this.db.pool.query<{ task_id: string; node_id: string }>(
           `SELECT t.id task_id,n.id node_id FROM tasks t JOIN plan_nodes pn ON pn.plan_id=t.plan_id JOIN nodes n ON n.id=pn.node_id
-    WHERE t.state='RUNNING' AND n.state='PENDING' AND n.execution_source_id IS NULL AND EXISTS(
+    WHERE t.state='RUNNING' AND n.state='PENDING' AND n.execution_source_id IS NULL AND (EXISTS(
      SELECT 1 FROM task_events e JOIN attempts a ON a.id=e.attempt_id JOIN task_planning_outbox p ON p.id=a.planning_intent_id
-     WHERE e.task_id=t.id AND a.task_id=t.id AND p.task_id=t.id AND e.kind='plan_published' AND e.body->>'plan_id'=t.plan_id AND e.body->>'planning_intent_id'=p.id)
+     WHERE e.task_id=t.id AND a.task_id=t.id AND p.task_id=t.id AND e.kind='plan_published' AND e.body->>'plan_id'=t.plan_id AND e.body->>'planning_intent_id'=p.id) OR EXISTS(SELECT 1 FROM replan_publications rp WHERE rp.task_id=t.id AND rp.new_plan_id=t.plan_id))
     ORDER BY t.id,n.id LIMIT $1`,
           [limit]
         )
@@ -306,7 +307,7 @@ export class NodeExecution {
           throw new CommandError('version_conflict', 'Task control basis changed', Number(task.control_version));
         if (
           !task.plan_id ||
-          (!['RUNNING', 'BLOCKED', 'REVIEW'].includes(task.state) &&
+          (!['RUNNING', 'BLOCKED', 'REVIEW','REPLAN_REQUIRED'].includes(task.state) &&
             !(task.state === 'CANCELLED' && command.name === 'recover_completion' && target.mode === 'retry'))
         )
           throw new CommandError('unmet_precondition', 'Task has no active local Plan');
@@ -480,6 +481,15 @@ export class NodeExecution {
               ).rowCount
             )
               throw new CommandError('unmet_precondition', 'Recover original completion before a fresh Attempt');
+            const carriedHold=blocker&&(await tx.query(`SELECT 1 FROM replan_control_holds h JOIN node_completions c ON c.node_id=h.node_id AND c.activation=h.node_activation WHERE h.node_id=$1 AND h.current_blocker_id=$2 AND h.resolved_by IS NULL`,[node.id,blocker.id])).rowCount;
+            if(carriedHold){
+              await resolveInheritedHold(tx,node.id,blocker!.id,command.request_id);
+              const nextBlocker=await activateInheritedHold(tx,source);
+              if(!nextBlocker)await tx.query("UPDATE nodes SET state='COMPLETED',blocker_id=NULL,guidance_paused=false WHERE id=$1",[node.id]);
+              await tx.query('UPDATE tasks SET state=$2,control_version=control_version+1 WHERE id=$1',[task.id,nextBlocker?'BLOCKED':'REVIEW']);
+              await planningEvent(tx,task.id,command.name,{node_id:node.id,node_activation:Number(node.activation),source_id:source.id,blocker_id:blocker!.id,...(target.answer?{answer:target.answer}:{})});
+              return this.receipt(tx,command,hash,json,{schema_version:1,request_id:command.request_id,status:'committed',task_id:task.id,control_version:Number(task.control_version)+1,source_id:source.id,...(nextBlocker?{blocker_id:nextBlocker}:{})});
+            }
             await tx.query('UPDATE node_execution_outbox SET done=true WHERE id=$1', [source.id]);
             await tx.query("UPDATE tasks SET state='RUNNING',control_version=control_version+1 WHERE id=$1", [task.id]);
             await tx.query('UPDATE nodes SET guidance_paused=false WHERE id=$1',[node.id]);
@@ -498,6 +508,8 @@ export class NodeExecution {
                 },
               }
             );
+            await resolveInheritedHold(tx,node.id,blocker?.id,command.request_id);
+            blockerId=await activateInheritedHold(tx,next);
             sourceId = next.id;
             if (attempt)
               await tx.query('UPDATE attempts SET recovery_consumed_by=$2 WHERE id=$1', [

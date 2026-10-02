@@ -1,3 +1,5 @@
+import type { WorkspaceTransfer } from '../../../packages/protocol/src/index.ts';
+import { workspaceTransfer } from './task-replan-state.ts';
 import { randomUUID } from 'node:crypto';
 import type { Transaction } from '../../../packages/db/src/index.ts';
 import { CommandError } from '../../../packages/domain/src/commands.ts';
@@ -84,9 +86,11 @@ export async function admitWorkspaceOpen(tx: Transaction, attempt: WorkspaceAtte
     if (held.attempt_id !== attempt.id || held.node_id !== attempt.node_id || held.node_activation !== attempt.node_activation || held.state !== 'held') throw new CommandError('unmet_precondition', 'ownership_unresolved: prior workspace lease must settle');
     return held.open_operation_id;
   }
+  let transfer: WorkspaceTransfer|undefined;
   if (workspace) {
     const interrupted = (await tx.query<Lease>('SELECT * FROM workspace_leases WHERE workspace_id=$1 ORDER BY created_at DESC,id DESC LIMIT 1', [workspace.id])).rows[0];
-    if (interrupted?.checkpoint && (interrupted.node_id !== attempt.node_id || interrupted.node_activation !== attempt.node_activation)) throw new CommandError('unmet_precondition', 'Interrupted workspace requires explicit activation disposition');
+    if(interrupted&&(interrupted.node_id!==attempt.node_id||interrupted.node_activation!==attempt.node_activation))transfer=await workspaceTransfer(tx,attempt.task_id,attempt.node_id,Number(attempt.node_activation),workspace.id,interrupted.id);
+    if (interrupted && !transfer && ((workspace.ever_materialized && interrupted.node_id !== attempt.node_id) || (interrupted.checkpoint && interrupted.node_activation !== attempt.node_activation))) throw new CommandError('unmet_precondition', 'Interrupted workspace requires explicit activation disposition');
   }
   const id = randomUUID(), leaseId = randomUUID();
   const snapshot = workspace?.ever_materialized ? workspace.resource : resourceSnapshot(resource);
@@ -102,7 +106,7 @@ export async function admitWorkspaceOpen(tx: Transaction, attempt: WorkspaceAtte
   const descriptor: WorkspaceDescriptor = { schema_version: 1, workspace_id: workspace.id, task_id: attempt.task_id,
     project_id: projectId, resource_id: resourceId, runner_id: attempt.runner_id, generation: Number(workspace.generation),
     lease_id: leaseId, node_id: attempt.node_id, node_activation: Number(attempt.node_activation), open_operation_id: id,
-    resource: snapshot, ...(priorBasis ? { basis: priorBasis } : {}) };
+    resource: snapshot, ...(transfer?{transfer}:{}), ...(priorBasis ? { basis: priorBasis } : {}) };
   validate('WorkspaceDescriptor', descriptor);
   return insertOperation(tx, attempt, 'open_workspace', requestId, id, resourceId, descriptor);
 }
@@ -113,6 +117,7 @@ export async function admitWorkspaceEffect(tx: Transaction, attempt: WorkspaceAt
   const lease = (await tx.query<Lease>("SELECT * FROM workspace_leases WHERE attempt_id=$1 AND state<>'released'", [attempt.id])).rows[0];
   if (!lease && kind === 'complete_node') {
     if (!attempt.launch.node_execution_source) throw new CommandError('unmet_precondition','Canonical Node source required for repository-free completion');
+    if((await tx.query(`SELECT 1 FROM replan_workspace_transfers x JOIN workspace_leases l ON l.id=x.descriptor->>'from_lease_id' WHERE x.task_id=$1 AND x.target_node_id=$2 AND x.target_node_activation=$3 AND x.descriptor->>'kind'='checkpoint' AND NOT EXISTS(SELECT 1 FROM workspace_leases later WHERE later.workspace_id=l.workspace_id AND (later.created_at,later.id)>(l.created_at,l.id))`,[attempt.task_id,attempt.node_id,attempt.node_activation])).rowCount)throw new CommandError('unmet_precondition','Open and finalize the approved inherited private workspace before completion');
     if ((await tx.query("SELECT 1 FROM operations WHERE attempt_id=$1 AND kind='open_workspace' AND state NOT IN ('succeeded','cancelled')",[attempt.id])).rowCount || (await tx.query(`SELECT 1 FROM workspace_leases l WHERE l.task_id=$1 AND l.node_id=$2 AND l.node_activation=$3 AND l.checkpoint IS NOT NULL AND NOT EXISTS(SELECT 1 FROM workspace_leases later WHERE later.workspace_id=l.workspace_id AND (later.created_at,later.id)>(l.created_at,l.id))`,[attempt.task_id,attempt.node_id,attempt.node_activation])).rowCount) throw new CommandError('unmet_precondition','Reopen and finalize retained private workspace work before completion');
   }
   const open = lease ? (await tx.query<WorkspaceOperation>('SELECT * FROM operations WHERE id=$1', [lease.open_operation_id])).rows[0]! : undefined;

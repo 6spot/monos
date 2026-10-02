@@ -20,6 +20,9 @@ func TestPlannerCLIUsesNativeJournalChannel(t *testing.T) {
 	for _, command := range []struct{ name, payload string }{
 		{"publish_artifact", `{"artifact_id":"artifact","title":"HTML result","content":{"text":"<h1>Hello</h1>","media_type":"text/html"}}`},
 		{"read_artifact", `{"artifact_id":"artifact"}`},
+		{"request_replan", `{"reason":"Current graph is insufficient"}`},
+		{"prepare_replan", `{"replan_request_id":"replan","source_id":"source","proposal_id":"proposal","plan_id":"new-plan","basis":{"control_version":9,"specification_id":"spec","plan_id":"old-plan"},"nodes":[{"node_id":"new-node","role_id":"role","goal":"修复完整目标","dependencies":[],"expected_outputs":[]}],"summary":"Replace insufficient work","impact":{"node":{"node_id":"old-node","node_activation":1,"source_id":null,"completion_operation_id":null,"completion_manifest_digest":null,"disposition":"replace","target_node_id":"new-node","target_node_activation":1},"guidance":[],"holds":[],"workspaces":[]}}`},
+		{"raise_planning_issue", `{"replan_request_id":"replan","source_id":"source","reason":"Need Owner direction"}`},
 		{"block_node", `{"reason":"Owner answer needed"}`},
 		{"complete_node", `{"summary":"Complete","artifact_ids":[]}`},
 		{"prepare_specification_revision", `{"proposal_id":"proposal","specification":"# Exact requirements\n保留内容","summary":"Clarify requirement","basis":{"control_version":93,"specification_id":"spec","plan_id":null},"impact":{"graph_sufficient":true,"nodes":[],"guidance":[]},"source_input_ids":["input"]}`},

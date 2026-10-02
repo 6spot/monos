@@ -36,6 +36,18 @@ Generate transport types from protocol schemas. Current entrypoints:
 - Missing launch evidence or mismatched process birth is uncertainty, not proof of absence. Persist the process-absence event before releasing local ownership so a daemon crash cannot strand the backend claim.
 - For `ordered_v1`, sync each bounded stdout/stderr write into the supervised spool before the Runner journal allocates an Attempt-wide event order and advances the source offset. Retain source bytes in `data_base64`; display text may replace invalid UTF-8. Hold an incomplete UTF-8 suffix while the worker is running so a read boundary does not corrupt valid display text; after termination preserve even malformed trailing bytes in the raw field. No fixed output truncation is allowed. A write/sync failure cancels the child, leaves a preallocated marker when possible, and uses worker exit code `74` through the validated systemd Attempt unit as the authoritative capture-failure fact. The service account also needs its own fsynced failure marker: a worker-owned `capture.failure` file may be unreadable across the account boundary or after restart. Emit `capture_failed` before `exited`, request whole-tree Stop, and retain the reservation until absence is verified.
 - systemd `MainPID=0` with `ExecMainCode=1` is a completed main process even when `ActiveState=active (exited)` and detached descendants keep the cgroup populated. Journal one `exited` observation and let the backend revoke a missing formal result; keep local phase `running` and the slot held until Stop plus whole-tree absence. `process_absent` is a separate later fact. Do not wait for `!Populated` before reporting a main exit, and do not release ownership on main exit alone.
+- An acknowledged launched transient `active/exited` unit with `RemainAfterExit=yes`
+  and `Restart=no` may outlive its removed kernel cgroup. `statusOfUnit` uses
+  `verifyExitedUnit` for an empty ControlGroup or a missing nonempty cgroup path.
+  Require exact Attempt/dispatch/User/Group/cgroup scope, valid InvocationID,
+  completed main exit, absent old ExecMainPID and expected kernel cgroup, no unit
+  job, and two identical systemd observations. Unknown or malformed facts remain
+  errors. A successful status reports physical absence only; the admitted Tool
+  Protocol operation still owns canonical settlement and release.
+- `Population` maps ENOENT to false. Lstat before it and again after false to route
+  disappearance through the full exited-unit proof. Persist `Acknowledged=true`
+  only after all status validation succeeds; repeated failed observations must
+  never manufacture acknowledgement for later exit recovery.
 - After backend reconnect, a changed Runner connection instance may precede completion of inventory reconciliation and `Ready`. The attributed `monos retry --request-id <same-id>` may briefly return `control_unavailable`; retry the immutable request ID after readiness. Never synthesize a fresh command ID or reread a changed input file.
 - OpenCode model preflight must use the exact Attempt environment and scratch cwd returned by the Adapter, including all XDG paths. For the pinned free-model probe, run `opencode models opencode --pure --refresh --verbose` before `run`, with a 30-second deadline and 4 MiB stdout limit. A fresh XDG cache can otherwise select OpenCode's stale bundled catalog while the Owner's default cache advertises a newer model.
 - Validate the exact selected provider/model entry, active status, native tool-call support and explicit zero input/output/cache-read/cache-write prices, including any pricing tiers. Missing, malformed or nonzero pricing fails closed. OpenCode 1.18.30 can print refresh success after a fetch failure: neither exit zero nor that message substitutes for validating the resulting entry. Never select a fallback or copy Owner credentials to satisfy preflight.
@@ -60,6 +72,8 @@ Generate transport types from protocol schemas. Current entrypoints:
 | Node shell writes/builds in workspace | Works under the normal execution identity without a command allowlist |
 | Selected model missing from Attempt catalog, invalid pricing, refresh failure/timeout or oversized catalog | Sanitized preflight failure; no model invocation |
 | Output write and marker write both fail | Worker exit code `74` survives as the validated systemd capture-failure fact; Stop and retain reservation |
+| Retained exited unit, absent PID/cgroup, stable exact identity | Report physical absence; reconcile original operation normally |
+| Unacknowledged exit, changed identity, live PID/group or pending/unknown jobs | Error; no acknowledgement write or release |
 | Main process exits while descendants remain | Emit `exited` once; backend blocks missing result and admits Stop; keep physical slot until absence |
 
 ## 5. Good / Base / Bad Cases
@@ -79,6 +93,15 @@ envelope cannot be treated as an admitted result.
 Real Linux cgroups/systemd tests: escaped/background descendants, freeze/kill, daemon restart, host reboot, birth identity and two concurrent same-UID Attempts. Probe read-only Planner commands, input files, worktree common-directory grants and completion-triggered CLI termination. Test local journal/spool write failure and receipt recovery after expiry.
 
 For ordered logs, assert byte-complete chunking, UTF-8 split and malformed-tail behavior, stable Attempt order after retransmission, service-owned marker plus worker-exit capture failure across a daemon restart, `active (exited)` with live descendants, one `exited` event before physical absence, and no premature slot release. The selected Node/Planner host probes must use the installed CLI and fresh zero-price catalog check; a missing-formal-result probe must show backend `BLOCKED` plus stopped descendants.
+
+[Exited-unit tests](../../../runner/internal/host/exited_unit_test.go) must exercise
+actual status routing: empty/nonempty removed cgroup, disappearance during
+Population, two failed unacknowledged queries with no manifest write, and live
+acknowledgement only after successful validation. Reject identity changes, live
+PID/group, pending/malformed job inventory and read errors. An installed Linux
+fixture must acknowledge a real live process, let it exit normally, and replay the
+same Stop without external unit cleanup. Label Host-only proof separately from
+Task/daemon canonical settlement.
 
 Verify shell-based snapshot write/chmod/root-replacement attempts fail while Node workspace writes, Planner scratch writes and socket/HTTPS commands succeed. Do not require a whole-host read-only view or same-UID hostile-process containment to pass this baseline.
 
@@ -150,3 +173,7 @@ facts in optional `ready.runtimes`. Missing older-client reports retain history;
 they cannot mark it current for a new incarnation. A detected version establishes
 neither coding-CLI login nor real tool/Stop acceptance. See the backend
 [infrastructure contract](../backend/infrastructure-configuration.md).
+
+Wrong: treat missing cgroup as sufficient absence or acknowledge a failed query.
+Correct: validate the retained exit and kernel facts through the shared status
+path; save acknowledgement only after success and retain formal operation ownership.

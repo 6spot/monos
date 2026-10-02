@@ -27,6 +27,8 @@ const help = `monos — formal monos Tool Protocol commands
   monos inspect_repository --input payload.json [--request-id ID] --output json
   monos publish_artifact --input payload.json [--request-id ID] --output json
   monos read_artifact --input payload.json [--request-id ID] --output json
+  monos request_replan --input payload.json [--request-id ID] --output json
+  monos prepare_replan --input payload.json [--request-id ID] --output json
   monos block_node --input payload.json [--request-id ID] --output json
   monos complete_node --input payload.json [--request-id ID] --output json
   monos publish_execution_plan --input payload.json [--request-id ID] --output json
@@ -145,7 +147,7 @@ func run(args []string) (protocol.CommandResult, error) {
 		action = "retry"
 	case "command_status":
 		action = "status"
-	case "publish_artifact", "read_artifact", "block_node", "open_workspace", "inspect_repository", "complete_node", "publish_execution_plan", "raise_planning_issue", "commit_task_turn", "prepare_specification_revision", "apply_specification_revision", "read_task_context", "read_task_history", "read_discussion", "update_working_requirement_state", "commit_discussion_turn":
+	case "request_replan", "prepare_replan", "publish_artifact", "read_artifact", "block_node", "open_workspace", "inspect_repository", "complete_node", "publish_execution_plan", "raise_planning_issue", "commit_task_turn", "prepare_specification_revision", "apply_specification_revision", "read_task_context", "read_task_history", "read_discussion", "update_working_requirement_state", "commit_discussion_turn":
 	default:
 		return result, fmt.Errorf("unknown command")
 	}

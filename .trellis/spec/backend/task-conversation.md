@@ -28,11 +28,19 @@ workspace handling and existing-service restart evidence.
   Attempt/operation reads remain physical truth. `launch_started` proves transport
   launch only, never provider consumption or successful guidance handling.
 - Agent `commit_task_turn {source_id,input_id,source_watermark,reply,routing}`.
-  Canonical routing uses `reply`, `guidance`, `issue`, `answer`, `resolve_guidance`;
+  Canonical routing uses `reply`, `guidance`, `issue`, `answer`, `resolve_guidance`,
+  `specification_proposal` and `replan`;
   legacy `reply_only` has no canonical conversation authority. Action routing
   carries `TaskActionBasis`, with current execution control/Spec/Plan and applicable
   Node/activation/source. `read_task_context {}` and
   `read_task_history {cursor?,query?}` are source-scoped read commands.
+  Actual graph insufficiency uses `replan` with a concrete reason and exact basis:
+  the reply and request commit together, and a separate quiescent Planner prepares
+  the replacement. Clarification uses `issue`. Keep backend frozen instructions
+  and Runner instructions consistent; Conversation cannot call the Node-only
+  `request_replan` or dedicated-Planner `prepare_replan` directly. Existing source
+  prompts stay immutable when instructions change; explicit same-input Retry
+  creates a fresh source with the current instructions.
 - `Dispatch.task_conversation_source` binds `source_id`, `input_id`,
   `source_watermark`, `conversation_version`, `context_digest`, `reply_only`.
   It is mutually exclusive with Todo, initial-planning and Node sources.

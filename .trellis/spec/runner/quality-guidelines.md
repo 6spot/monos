@@ -117,6 +117,11 @@ state precisely why a corrected check changes the conclusion.
    prior-row retention. Only the appended events may explain changes to
    `activity_at`, `log_visible_sequence` and `exit_observed`; preserve every other
    Attempt field, ownership fact, command receipt and Task/Specification exactly.
+   Keep local journal raw bytes and backend canonical JSON digests distinct:
+   preserve each old local byte string, decode and compare the full event, then
+   hash with the backend's canonical encoder for its digest. Do not assume every
+   historical journal serializer emitted backend-canonical bytes. For a specific
+   claimed identical raw append, verify that byte equality separately.
    Native/local/API reads may precede the raw database event collection; verify
    their retained prefix instead of claiming one cross-process atomic snapshot.
 6. **Tests:** reject lost/changed/reordered events, duplicate sequence or Start,
@@ -127,9 +132,88 @@ state precisely why a corrected check changes the conclusion.
    only the unperformed Runner stage. A native reply without an earlier
    process snapshot still needs exact source/watermark/body and journal/receipt
    provenance; do not invent a historical PID comparison.
+   Validate historical heartbeat/report freshness against its recorded observation
+   time, or retain its original passed boundary check with exact snapshot hashes.
+   Current-wall-clock freshness belongs only to the newly captured live state;
+   elapsed review time must not invalidate a previously observed service boundary.
 7. **Wrong/correct:** persisted `ready=true` alone is not reconnect proof. Verify
    fresh Runtime registration, advanced Runner incarnation and changed backend
    connection or systemd invocation identity, with unchanged retained results.
+
+## Replan native observation contracts
+
+1. **Scope:** `infra/probe/task_replan_driver.py` and `task_replan_probe.py`
+   observe replacement work. Local observer tests are not installed Linux proof.
+2. **Signatures:** replacement driver takes exact Task/resource/old/new Attempt,
+   Node/Plan/Specification and explicit guidance declarations. `--predecessor`
+   selects `unfinished|completed`; completed mode additionally requires exact
+   `--finalized-commit` and `--finalized-tree`. The original workspace fixture's
+   `--replan-reason <file>` performs the actual terminal Node handoff.
+3. **Contracts:** retain request evidence before invoking bundled CLI. Uncertain
+   response never authorizes a new identity. Agent-declared IDs are observations;
+   root-side authority comparison must bind canonical source, publication, exact
+   command receipts and lease descriptor. Compare both graph content/membership
+   and independent saved Owner envelopes. Joint approval has a separate exact
+   requirements confirmation consumed by that same publication.
+   Physical absence can precede the backend's effect-result commit. A readiness
+   predicate must require both native absence and the same SQL snapshot's
+   `process_absent/process_released`, terminal operation state and released leases;
+   `settled_checks(native)` alone is not canonical settlement.
+   Handle a provably never-launched QUEUED→CANCELLED Attempt separately: bind
+   its canonical source/predecessor and exact cancellation receipt, require no
+   admitted Start/outbox/effects/leases/events, no local journal/launch/spool, and
+   actual expected unit/cgroup absence. It has no launched-process identity for
+   `settled_checks`. Missing evidence alone is never this proof, and this narrow
+   branch must not relax checks for any launched or uncertain Attempt.
+   A Planner Stop has `repository_free=NULL` in SQL (omitted on the wire), not
+   `true`: migration0018 and Host scope validation reserve that flag exclusively
+   for repository-free `complete_node`. Require the exact sole Stop receipt,
+   `result.writer_absent=true`, absent resource/workspace/lease/completion fields,
+   and both physical and canonical release. Repository-free phase semantics do
+   not imply the similarly named completion-only database flag.
+4. **Errors:** mismatched predecessor mode/identity, changed private files/lineage,
+   missing root checkpoint, foreign source/lease, reused evidence and lost exact
+   approvals fail observation. A completed driver's `completion_submitting` stage
+   alone is not success: require actual canonical completion and finalized Git.
+   For an unexposed first-open network failure, retain the original recovery
+   record. Current formal recovery is exact Owner Stop, cancellation/lease release,
+   then Continue with a fresh source/Attempt. `monos retry` only replays the receipt;
+   fixture-only `admin retry_operation` is not native product recovery evidence.
+5. **Cases:** unfinished transfer preserves private HEAD/index/files. Completed
+   transfer preserves finalized commit/tree and private file bytes, allowing the
+   earlier HEAD/index to differ. `from_plan_id` names the actual old source Plan,
+   which may precede the most recent applicable Plan. Never rewrite it to satisfy
+   a current-pointer comparison.
+6. **Tests:** real local Git must detect lost ignored files, changed fixed lineage,
+   stale finalized commit and late writers. Negative authority tests substitute
+   graph membership, Task/Runner/source/lease/Plan, approval and consumed request.
+   Snapshot extensions remain one SQL statement: PostgreSQL's 100-argument
+   function limit requires concatenated `jsonb_build_object` chunks once more
+   than 50 key/value pairs are collected. Do not split into inconsistent queries.
+   Preinstall/restart runnable checks must use actual initial-plan or Replan
+   publication authority, as the Node pump does. Historical fixture rows with
+   RUNNING/PENDING labels and no canonical source are not runnable; snapshot
+   and compare their complete records separately rather than deleting them.
+   Probe fixtures must model the actual operation union: reject a Stop carrying
+   completion-only fields, workspace authority, missing writer absence, or a
+   mismatched receipt. A corrected observer uses a separate evidence filename;
+   preserve the original failed report. Observer-only source changes may carry
+   existing build evidence only with an exact hash delta proving every Docker
+   and Go build input unchanged, plus fresh observer tests and a final manifest.
+   Source context/identity is immutable; operational `waiting_reason` can change.
+   A terminal `request_replan` changes the requesting source from no wait to
+   `semantic`. Bind that change to its exact request/blocker/Attempt/receipt;
+   compare all other source fields instead of declaring the entire row immutable
+   or broadly omitting lifecycle fields from the audit.
+   Keep three completion records distinct: the original async receipt remains
+   `admitted`; the successful physical operation result contains Git/workspace
+   facts; the formal completion result adds manifest summary, artifacts, guidance
+   and digest. Compare the complete manifest against the operation's manifest
+   digest column and the formal result, then independently require physical
+   success. Never expect the raw Git result to contain semantic manifest fields.
+7. **Wrong/correct:** matching IDs/nonempty hashes do not establish publication.
+   Verify complete content hashes, normalized members, exact proposal source,
+   independent Owner requests, backend/native journal receipts and actual Git.
 
 ## Test layers
 

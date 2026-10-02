@@ -190,19 +190,35 @@ func prepareEnvelope(d protocol.Dispatch, r Request) ([]byte, error) {
 			return nil, fmt.Errorf("canonical Task routing requires a conversation source")
 		}
 	}
-	nodeCommand := r.Name == "publish_artifact" || r.Name == "read_artifact" || r.Name == "block_node"
+	nodeCommand := r.Name == "publish_artifact" || r.Name == "read_artifact" || r.Name == "block_node" || r.Name == "request_replan"
 	if nodeCommand && d.NodeExecutionSource == nil {
 		return nil, fmt.Errorf("command requires canonical Node execution source")
 	}
 	if d.NodeExecutionSource != nil {
 		switch r.Name {
-		case "publish_artifact", "read_artifact", "block_node", "complete_node", "open_workspace":
+		case "publish_artifact", "read_artifact", "block_node", "request_replan", "complete_node", "open_workspace":
 		default:
 			return nil, fmt.Errorf("command unavailable to Node execution")
 		}
 	}
+	if d.TaskReplanSource != nil {
+		switch r.Name {
+		case "prepare_replan", "raise_planning_issue":
+			var payload struct {
+				RequestID string `json:"replan_request_id"`
+				SourceID  string `json:"source_id"`
+			}
+			if err := json.Unmarshal(r.Payload, &payload); err != nil || payload.RequestID != d.TaskReplanSource.RequestID || payload.SourceID != d.TaskReplanSource.SourceID {
+				return nil, fmt.Errorf("Replan request/source does not match this Attempt")
+			}
+		default:
+			return nil, fmt.Errorf("Task Replan ends only with prepare_replan or raise_planning_issue")
+		}
+	} else if r.Name == "prepare_replan" {
+		return nil, fmt.Errorf("prepare_replan requires a canonical Task Replan source")
+	}
 	initialOutcome := r.Name == protocol.PublishExecutionPlan || r.Name == protocol.RaisePlanningIssue
-	if initialOutcome {
+	if initialOutcome && d.TaskReplanSource == nil {
 		if d.TaskPlanningSource == nil {
 			return nil, fmt.Errorf("initial planning command requires a source-bound Task Planner")
 		}

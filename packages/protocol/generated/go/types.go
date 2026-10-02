@@ -33,38 +33,40 @@ type CommandEnvelope struct {
 }
 
 type CommandPayload struct {
-	ArtifactID              *string              `json:"artifact_id,omitempty"`
-	ArtifactIDS             []string             `json:"artifact_ids,omitempty"`
-	Basis                   *TaskActionBasis     `json:"basis,omitempty"`
-	ConfirmationID          *string              `json:"confirmation_id,omitempty"`
-	Content                 *ArtifactContent     `json:"content,omitempty"`
-	Cursor                  *string              `json:"cursor,omitempty"`
-	HandledGuidanceIDS      []string             `json:"handled_guidance_ids,omitempty"`
-	Impact                  *SpecificationImpact `json:"impact,omitempty"`
-	InputID                 *string              `json:"input_id,omitempty"`
-	Nodes                   []ExecutionPlanNode  `json:"nodes,omitempty"`
-	PlanID                  *string              `json:"plan_id,omitempty"`
-	PlanningIntentID        *string              `json:"planning_intent_id,omitempty"`
-	ProjectContextDigest    *string              `json:"project_context_digest,omitempty"`
-	ProjectContextVersion   *int64               `json:"project_context_version,omitempty"`
-	ProposalID              *string              `json:"proposal_id,omitempty"`
-	Query                   *string              `json:"query,omitempty"`
-	Reason                  *string              `json:"reason,omitempty"`
-	References              []ArtifactReference  `json:"references,omitempty"`
-	Reply                   *string              `json:"reply,omitempty"`
-	ResolvedWatermark       *int64               `json:"resolved_watermark,omitempty"`
-	ResourceID              *string              `json:"resource_id,omitempty"`
-	Routing                 *TaskTurnRouting     `json:"routing,omitempty"`
-	SourceID                *string              `json:"source_id,omitempty"`
-	SourceInputIDS          []string             `json:"source_input_ids,omitempty"`
-	SourceMessageID         *string              `json:"source_message_id,omitempty"`
-	SourceWatermark         *int64               `json:"source_watermark,omitempty"`
-	Specification           *string              `json:"specification,omitempty"`
-	Summary                 *string              `json:"summary,omitempty"`
-	Supersedes              *string              `json:"supersedes,omitempty"`
-	TaskPreview             *TaskPreview         `json:"task_preview,omitempty"`
-	Title                   *string              `json:"title,omitempty"`
-	WorkingRequirementState *string              `json:"working_requirement_state,omitempty"`
+	ArtifactID              *string             `json:"artifact_id,omitempty"`
+	ArtifactIDS             []string            `json:"artifact_ids,omitempty"`
+	Basis                   *TaskActionBasis    `json:"basis,omitempty"`
+	ConfirmationID          *string             `json:"confirmation_id,omitempty"`
+	Content                 *ArtifactContent    `json:"content,omitempty"`
+	Cursor                  *string             `json:"cursor,omitempty"`
+	HandledGuidanceIDS      []string            `json:"handled_guidance_ids,omitempty"`
+	Impact                  *Impact             `json:"impact,omitempty"`
+	InputID                 *string             `json:"input_id,omitempty"`
+	Nodes                   []ExecutionPlanNode `json:"nodes,omitempty"`
+	PlanID                  *string             `json:"plan_id,omitempty"`
+	PlanningIntentID        *string             `json:"planning_intent_id,omitempty"`
+	ProjectContextDigest    *string             `json:"project_context_digest,omitempty"`
+	ProjectContextVersion   *int64              `json:"project_context_version,omitempty"`
+	ProposalID              *string             `json:"proposal_id,omitempty"`
+	Query                   *string             `json:"query,omitempty"`
+	Reason                  *string             `json:"reason,omitempty"`
+	References              []ArtifactReference `json:"references,omitempty"`
+	ReplanRequestID         *string             `json:"replan_request_id,omitempty"`
+	Reply                   *string             `json:"reply,omitempty"`
+	Requirement             *ReplanRequirement  `json:"requirement,omitempty"`
+	ResolvedWatermark       *int64              `json:"resolved_watermark,omitempty"`
+	ResourceID              *string             `json:"resource_id,omitempty"`
+	Routing                 *TaskTurnRouting    `json:"routing,omitempty"`
+	SourceID                *string             `json:"source_id,omitempty"`
+	SourceInputIDS          []string            `json:"source_input_ids,omitempty"`
+	SourceMessageID         *string             `json:"source_message_id,omitempty"`
+	SourceWatermark         *int64              `json:"source_watermark,omitempty"`
+	Specification           *string             `json:"specification,omitempty"`
+	Summary                 *string             `json:"summary,omitempty"`
+	Supersedes              *string             `json:"supersedes,omitempty"`
+	TaskPreview             *TaskPreview        `json:"task_preview,omitempty"`
+	Title                   *string             `json:"title,omitempty"`
+	WorkingRequirementState *string             `json:"working_requirement_state,omitempty"`
 }
 
 type TaskActionBasis struct {
@@ -81,16 +83,44 @@ type ArtifactContent struct {
 	Text      string `json:"text"`
 }
 
-type SpecificationImpact struct {
-	GraphSufficient bool                      `json:"graph_sufficient"`
-	Guidance        []Guidance                `json:"guidance"`
-	Nodes           []SpecificationImpactNode `json:"nodes"`
+type Impact struct {
+	GraphSufficient  *bool                     `json:"graph_sufficient,omitempty"`
+	Guidance         []GuidanceElement         `json:"guidance,omitempty"`
+	Nodes            []SpecificationImpactNode `json:"nodes,omitempty"`
+	Reason           *string                   `json:"reason,omitempty"`
+	ReplanImpact     *ReplanImpact             `json:"replan_impact,omitempty"`
+	ReplanProposalID *string                   `json:"replan_proposal_id,omitempty"`
+	ReplanRequestID  *string                   `json:"replan_request_id,omitempty"`
+	Holds            []ReplanHold              `json:"holds,omitempty"`
+	Node             *ReplanNodeImpact         `json:"node,omitempty"`
+	Workspaces       []ReplanWorkspaceInput    `json:"workspaces,omitempty"`
 }
 
-type Guidance struct {
-	Disposition GuidanceDisposition `json:"disposition"`
-	GuidanceID  string              `json:"guidance_id"`
-	Version     int64               `json:"version"`
+type GuidanceElement struct {
+	Disposition  GuidanceDisposition `json:"disposition"`
+	GuidanceID   string              `json:"guidance_id"`
+	Version      int64               `json:"version"`
+	TargetNodeID *string             `json:"target_node_id,omitempty"`
+}
+
+type ReplanHold struct {
+	BlockerID            *string        `json:"blocker_id"`
+	Kind                 ReplanHoldKind `json:"kind"`
+	OriginNodeActivation int64          `json:"origin_node_activation"`
+	OriginNodeID         string         `json:"origin_node_id"`
+	OwnerRequestID       *string        `json:"owner_request_id"`
+	Reason               string         `json:"reason"`
+}
+
+type ReplanNodeImpact struct {
+	CompletionManifestDigest *string                     `json:"completion_manifest_digest"`
+	CompletionOperationID    *string                     `json:"completion_operation_id"`
+	Disposition              ReplanNodeImpactDisposition `json:"disposition"`
+	NodeActivation           int64                       `json:"node_activation"`
+	NodeID                   string                      `json:"node_id"`
+	SourceID                 *string                     `json:"source_id"`
+	TargetNodeActivation     int64                       `json:"target_node_activation"`
+	TargetNodeID             string                      `json:"target_node_id"`
 }
 
 type SpecificationImpactNode struct {
@@ -100,6 +130,70 @@ type SpecificationImpactNode struct {
 	NodeActivation           int64                              `json:"node_activation"`
 	NodeID                   string                             `json:"node_id"`
 	SourceID                 *string                            `json:"source_id"`
+}
+
+type ReplanImpact struct {
+	Guidance   []ReplanGuidance       `json:"guidance"`
+	Holds      []ReplanHold           `json:"holds"`
+	Node       ReplanNodeImpact       `json:"node"`
+	Workspaces []ReplanWorkspaceInput `json:"workspaces"`
+}
+
+type ReplanGuidance struct {
+	Disposition  GuidanceDisposition `json:"disposition"`
+	GuidanceID   string              `json:"guidance_id"`
+	TargetNodeID string              `json:"target_node_id"`
+	Version      int64               `json:"version"`
+}
+
+type ReplanWorkspaceInput struct {
+	CompletionManifestDigest *string                  `json:"completion_manifest_digest,omitempty"`
+	CompletionOperationID    *string                  `json:"completion_operation_id,omitempty"`
+	FinalizedTree            *string                  `json:"finalized_tree,omitempty"`
+	FromAttemptID            string                   `json:"from_attempt_id"`
+	FromLeaseID              string                   `json:"from_lease_id"`
+	FromNodeActivation       int64                    `json:"from_node_activation"`
+	FromNodeID               string                   `json:"from_node_id"`
+	FromPlanID               string                   `json:"from_plan_id"`
+	Kind                     ReplanWorkspaceInputKind `json:"kind"`
+	Metadata                 WorkspaceMetadata        `json:"metadata"`
+	ResourceID               string                   `json:"resource_id"`
+	RunnerID                 string                   `json:"runner_id"`
+	SettleOperationID        string                   `json:"settle_operation_id"`
+	TaskID                   string                   `json:"task_id"`
+	WorkspaceID              string                   `json:"workspace_id"`
+}
+
+type WorkspaceMetadata struct {
+	BaseCommit                 string                      `json:"base_commit"`
+	Checkpoint                 *WorkspaceCheckpoint        `json:"checkpoint,omitempty"`
+	FinalizedCommit            string                      `json:"finalized_commit"`
+	Generation                 int64                       `json:"generation"`
+	LeaseID                    string                      `json:"lease_id"`
+	ProviderMetadata           *RepositoryProviderMetadata `json:"provider_metadata,omitempty"`
+	RecoveredByStopOperationID *string                     `json:"recovered_by_stop_operation_id,omitempty"`
+	RepositoryIdentity         string                      `json:"repository_identity"`
+	StorageID                  string                      `json:"storage_id"`
+	TargetBranch               string                      `json:"target_branch"`
+	TargetCommit               string                      `json:"target_commit"`
+	TargetObservationLeaseID   *string                     `json:"target_observation_lease_id,omitempty"`
+}
+
+type WorkspaceCheckpoint struct {
+	CommitID                 string  `json:"commit_id"`
+	CompletionIdentityDigest *string `json:"completion_identity_digest,omitempty"`
+	CompletionOperationID    *string `json:"completion_operation_id,omitempty"`
+	HeadCommit               string  `json:"head_commit"`
+	OperationID              string  `json:"operation_id"`
+	TreeID                   string  `json:"tree_id"`
+}
+
+type RepositoryProviderMetadata struct {
+	Github *RepositoryProviderMetadataGithub `json:"github,omitempty"`
+}
+
+type RepositoryProviderMetadataGithub struct {
+	RepositoryID string `json:"repository_id"`
 }
 
 type ExecutionPlanNode struct {
@@ -115,6 +209,12 @@ type ExecutionPlanNode struct {
 type ArtifactReference struct {
 	Label *string `json:"label,omitempty"`
 	URL   string  `json:"url"`
+}
+
+type ReplanRequirement struct {
+	ProposalID    string `json:"proposal_id"`
+	Specification string `json:"specification"`
+	Summary       string `json:"summary"`
 }
 
 type TaskTurnRouting struct {
@@ -173,6 +273,7 @@ type EffectResult struct {
 	Path                       *string                     `json:"path,omitempty"`
 	PlanningOutcome            *PlanningOutcome            `json:"planning_outcome,omitempty"`
 	ProposalID                 *string                     `json:"proposal_id,omitempty"`
+	ReplanOutcome              *ReplanOutcome              `json:"replan_outcome,omitempty"`
 	Reply                      *string                     `json:"reply,omitempty"`
 	RequirementOperationID     *string                     `json:"requirement_operation_id,omitempty"`
 	ResolvedWatermark          *int64                      `json:"resolved_watermark,omitempty"`
@@ -237,6 +338,17 @@ type PlanningOutcome struct {
 	PlanningIntentID string              `json:"planning_intent_id"`
 }
 
+type ReplanOutcome struct {
+	ContentDigest            *string           `json:"content_digest,omitempty"`
+	IssueID                  *string           `json:"issue_id,omitempty"`
+	Kind                     ReplanOutcomeKind `json:"kind"`
+	ProposalID               *string           `json:"proposal_id,omitempty"`
+	ReplanRequestID          string            `json:"replan_request_id"`
+	RequirementContentDigest *string           `json:"requirement_content_digest,omitempty"`
+	RequirementProposalID    *string           `json:"requirement_proposal_id,omitempty"`
+	SourceID                 *string           `json:"source_id,omitempty"`
+}
+
 type TaskContext struct {
 	Basis      TaskActionBasis `json:"basis"`
 	ObservedAt string          `json:"observed_at"`
@@ -265,38 +377,6 @@ type TaskMessage struct {
 	Sequence               int64   `json:"sequence"`
 	SourceID               *string `json:"source_id,omitempty"`
 	SourceWatermark        *int64  `json:"source_watermark,omitempty"`
-}
-
-type WorkspaceMetadata struct {
-	BaseCommit                 string                      `json:"base_commit"`
-	Checkpoint                 *WorkspaceCheckpoint        `json:"checkpoint,omitempty"`
-	FinalizedCommit            string                      `json:"finalized_commit"`
-	Generation                 int64                       `json:"generation"`
-	LeaseID                    string                      `json:"lease_id"`
-	ProviderMetadata           *RepositoryProviderMetadata `json:"provider_metadata,omitempty"`
-	RecoveredByStopOperationID *string                     `json:"recovered_by_stop_operation_id,omitempty"`
-	RepositoryIdentity         string                      `json:"repository_identity"`
-	StorageID                  string                      `json:"storage_id"`
-	TargetBranch               string                      `json:"target_branch"`
-	TargetCommit               string                      `json:"target_commit"`
-	TargetObservationLeaseID   *string                     `json:"target_observation_lease_id,omitempty"`
-}
-
-type WorkspaceCheckpoint struct {
-	CommitID                 string  `json:"commit_id"`
-	CompletionIdentityDigest *string `json:"completion_identity_digest,omitempty"`
-	CompletionOperationID    *string `json:"completion_operation_id,omitempty"`
-	HeadCommit               string  `json:"head_commit"`
-	OperationID              string  `json:"operation_id"`
-	TreeID                   string  `json:"tree_id"`
-}
-
-type RepositoryProviderMetadata struct {
-	Github *RepositoryProviderMetadataGithub `json:"github,omitempty"`
-}
-
-type RepositoryProviderMetadataGithub struct {
-	RepositoryID string `json:"repository_id"`
 }
 
 type Frame struct {
@@ -347,6 +427,7 @@ type Dispatch struct {
 	TaskConversationSource *TaskConversationSource `json:"task_conversation_source,omitempty"`
 	TaskID                 *string                 `json:"task_id,omitempty"`
 	TaskPlanningSource     *TaskPlanningSource     `json:"task_planning_source,omitempty"`
+	TaskReplanSource       *TaskReplanSource       `json:"task_replan_source,omitempty"`
 	TodoID                 *string                 `json:"todo_id,omitempty"`
 	WorkspaceReservations  *WorkspaceReservations  `json:"workspace_reservations,omitempty"`
 }
@@ -373,6 +454,15 @@ type TaskConversationSource struct {
 type TaskPlanningSource struct {
 	ContextDigest   string `json:"context_digest"`
 	IntentID        string `json:"intent_id"`
+	SpecificationID string `json:"specification_id"`
+}
+
+type TaskReplanSource struct {
+	ContextDigest   string `json:"context_digest"`
+	ControlVersion  int64  `json:"control_version"`
+	PlanID          string `json:"plan_id"`
+	RequestID       string `json:"request_id"`
+	SourceID        string `json:"source_id"`
 	SpecificationID string `json:"specification_id"`
 }
 
@@ -420,19 +510,20 @@ type Operation struct {
 }
 
 type WorkspaceDescriptor struct {
-	Basis           *WorkspaceBasis   `json:"basis,omitempty"`
-	Generation      int64             `json:"generation"`
-	LeaseID         string            `json:"lease_id"`
-	NodeActivation  int64             `json:"node_activation"`
-	NodeID          string            `json:"node_id"`
-	OpenOperationID string            `json:"open_operation_id"`
-	ProjectID       string            `json:"project_id"`
-	Resource        WorkspaceResource `json:"resource"`
-	ResourceID      string            `json:"resource_id"`
-	RunnerID        string            `json:"runner_id"`
-	SchemaVersion   int64             `json:"schema_version"`
-	TaskID          string            `json:"task_id"`
-	WorkspaceID     string            `json:"workspace_id"`
+	Basis           *WorkspaceBasis    `json:"basis,omitempty"`
+	Generation      int64              `json:"generation"`
+	LeaseID         string             `json:"lease_id"`
+	NodeActivation  int64              `json:"node_activation"`
+	NodeID          string             `json:"node_id"`
+	OpenOperationID string             `json:"open_operation_id"`
+	ProjectID       string             `json:"project_id"`
+	Resource        WorkspaceResource  `json:"resource"`
+	ResourceID      string             `json:"resource_id"`
+	RunnerID        string             `json:"runner_id"`
+	SchemaVersion   int64              `json:"schema_version"`
+	TaskID          string             `json:"task_id"`
+	Transfer        *WorkspaceTransfer `json:"transfer,omitempty"`
+	WorkspaceID     string             `json:"workspace_id"`
 }
 
 type WorkspaceBasis struct {
@@ -451,6 +542,29 @@ type WorkspaceResource struct {
 	RemoteURL          string                      `json:"remote_url"`
 	RepositoryIdentity string                      `json:"repository_identity"`
 	ResourceID         string                      `json:"resource_id"`
+}
+
+type WorkspaceTransfer struct {
+	CompletionManifestDigest *string                  `json:"completion_manifest_digest,omitempty"`
+	CompletionOperationID    *string                  `json:"completion_operation_id,omitempty"`
+	FinalizedTree            *string                  `json:"finalized_tree,omitempty"`
+	FromAttemptID            string                   `json:"from_attempt_id"`
+	FromLeaseID              string                   `json:"from_lease_id"`
+	FromNodeActivation       int64                    `json:"from_node_activation"`
+	FromNodeID               string                   `json:"from_node_id"`
+	FromPlanID               string                   `json:"from_plan_id"`
+	Kind                     ReplanWorkspaceInputKind `json:"kind"`
+	Metadata                 WorkspaceMetadata        `json:"metadata"`
+	ProposalID               string                   `json:"proposal_id"`
+	PublicationID            string                   `json:"publication_id"`
+	ResourceID               string                   `json:"resource_id"`
+	RunnerID                 string                   `json:"runner_id"`
+	SettleOperationID        string                   `json:"settle_operation_id"`
+	TaskID                   string                   `json:"task_id"`
+	ToNodeActivation         int64                    `json:"to_node_activation"`
+	ToNodeID                 string                   `json:"to_node_id"`
+	ToPlanID                 string                   `json:"to_plan_id"`
+	WorkspaceID              string                   `json:"workspace_id"`
 }
 
 type OperationResult struct {
@@ -1377,9 +1491,9 @@ type NodeExecutionStatusAttempt struct {
 }
 
 type Blocker struct {
-	ID     string      `json:"id"`
-	Kind   BlockerKind `json:"kind"`
-	Reason string      `json:"reason"`
+	ID     string         `json:"id"`
+	Kind   ReplanHoldKind `json:"kind"`
+	Reason string         `json:"reason"`
 }
 
 type CompletionManifest struct {
@@ -1512,14 +1626,36 @@ type TaskConversationStatusAttempt struct {
 	State           string  `json:"state"`
 }
 
+type SpecificationImpact struct {
+	GraphSufficient bool                      `json:"graph_sufficient"`
+	Guidance        []Guidance                `json:"guidance"`
+	Nodes           []SpecificationImpactNode `json:"nodes"`
+}
+
+type Guidance struct {
+	Disposition GuidanceDisposition `json:"disposition"`
+	GuidanceID  string              `json:"guidance_id"`
+	Version     int64               `json:"version"`
+}
+
 type PrepareSpecificationRevision struct {
-	Basis          TaskActionBasis     `json:"basis"`
-	Impact         SpecificationImpact `json:"impact"`
-	ProposalID     string              `json:"proposal_id"`
-	SourceInputIDS []string            `json:"source_input_ids"`
-	Specification  string              `json:"specification"`
-	Summary        string              `json:"summary"`
-	Supersedes     *string             `json:"supersedes,omitempty"`
+	Basis          TaskActionBasis   `json:"basis"`
+	Impact         RequirementImpact `json:"impact"`
+	ProposalID     string            `json:"proposal_id"`
+	SourceInputIDS []string          `json:"source_input_ids"`
+	Specification  string            `json:"specification"`
+	Summary        string            `json:"summary"`
+	Supersedes     *string           `json:"supersedes,omitempty"`
+}
+
+type RequirementImpact struct {
+	GraphSufficient  bool                      `json:"graph_sufficient"`
+	Guidance         []Guidance                `json:"guidance,omitempty"`
+	Nodes            []SpecificationImpactNode `json:"nodes,omitempty"`
+	Reason           *string                   `json:"reason,omitempty"`
+	ReplanImpact     *ReplanImpact             `json:"replan_impact,omitempty"`
+	ReplanProposalID *string                   `json:"replan_proposal_id,omitempty"`
+	ReplanRequestID  *string                   `json:"replan_request_id,omitempty"`
 }
 
 type ApplySpecificationRevision struct {
@@ -1552,7 +1688,7 @@ type TaskSpecificationStatus struct {
 	Basis            TaskActionBasis              `json:"basis"`
 	Changes          []RequirementChangeSummary   `json:"changes"`
 	ChangesHasMore   bool                         `json:"changes_has_more"`
-	Impact           SpecificationImpact          `json:"impact"`
+	Impact           RequirementImpact            `json:"impact"`
 	Proposals        []RequirementProposalSummary `json:"proposals"`
 	ProposalsHasMore bool                         `json:"proposals_has_more"`
 	SchemaVersion    int64                        `json:"schema_version"`
@@ -1586,13 +1722,14 @@ type RequirementProposalSummary struct {
 type RequirementProposalDetail struct {
 	Basis               TaskActionBasis            `json:"basis"`
 	ConfirmationID      *string                    `json:"confirmation_id"`
-	Impact              SpecificationImpact        `json:"impact"`
+	Impact              RequirementImpact          `json:"impact"`
 	ImpactDigest        string                     `json:"impact_digest"`
 	InputCutoff         int64                      `json:"input_cutoff"`
 	InputID             *string                    `json:"input_id"`
 	Operation           *RequirementChangeSummary  `json:"operation"`
 	PredecessorID       *string                    `json:"predecessor_id"`
 	Proposal            RequirementProposalSummary `json:"proposal"`
+	ReplanSourceID      *string                    `json:"replan_source_id"`
 	SchemaVersion       int64                      `json:"schema_version"`
 	SourceID            *string                    `json:"source_id"`
 	SourceInputIDS      []string                   `json:"source_input_ids"`
@@ -1669,6 +1806,119 @@ type RequirementChangeEffect struct {
 	State           RequirementChangeEffectState `json:"state"`
 }
 
+type JointSpecificationImpact struct {
+	GraphSufficient  bool         `json:"graph_sufficient"`
+	Reason           string       `json:"reason"`
+	ReplanImpact     ReplanImpact `json:"replan_impact"`
+	ReplanProposalID string       `json:"replan_proposal_id"`
+	ReplanRequestID  string       `json:"replan_request_id"`
+}
+
+type TaskReplanCommand struct {
+	Name          TaskReplanCommandName  `json:"name"`
+	Payload       map[string]interface{} `json:"payload"`
+	RequestID     string                 `json:"request_id"`
+	SchemaVersion float64                `json:"schema_version"`
+	TaskID        string                 `json:"task_id"`
+}
+
+type TaskReplanResult struct {
+	ConfirmationID            *string                   `json:"confirmation_id,omitempty"`
+	ContentDigest             *string                   `json:"content_digest,omitempty"`
+	OperationID               *string                   `json:"operation_id,omitempty"`
+	PlanID                    *string                   `json:"plan_id,omitempty"`
+	ProposalID                *string                   `json:"proposal_id,omitempty"`
+	PublicationID             *string                   `json:"publication_id,omitempty"`
+	ReplanRequestID           *string                   `json:"replan_request_id,omitempty"`
+	RequestID                 string                    `json:"request_id"`
+	RequirementConfirmationID *string                   `json:"requirement_confirmation_id,omitempty"`
+	RequirementProposalID     *string                   `json:"requirement_proposal_id,omitempty"`
+	SchemaVersion             float64                   `json:"schema_version"`
+	SpecificationID           *string                   `json:"specification_id,omitempty"`
+	Status                    ConfigurationResultStatus `json:"status"`
+	Version                   *int64                    `json:"version,omitempty"`
+}
+
+type TaskReplanStatus struct {
+	CurrentRequest *ReplanRequestSummary  `json:"current_request"`
+	NextCursor     *string                `json:"next_cursor"`
+	Requests       []ReplanRequestSummary `json:"requests"`
+	SchemaVersion  float64                `json:"schema_version"`
+	TaskID         string                 `json:"task_id"`
+}
+
+type ReplanRequestSummary struct {
+	Direction          *string                    `json:"direction"`
+	ID                 string                     `json:"id"`
+	InputID            *string                    `json:"input_id"`
+	IssueID            *string                    `json:"issue_id"`
+	OriginActivation   *int64                     `json:"origin_activation"`
+	OriginNodeID       *string                    `json:"origin_node_id"`
+	PhysicalSettled    bool                       `json:"physical_settled"`
+	ProposalID         *string                    `json:"proposal_id"`
+	Reason             string                     `json:"reason"`
+	RequesterBlockerID *string                    `json:"requester_blocker_id"`
+	SourceID           *string                    `json:"source_id"`
+	Status             ReplanRequestSummaryStatus `json:"status"`
+	TaskID             string                     `json:"task_id"`
+	Version            int64                      `json:"version"`
+}
+
+type ReplanProposalDetail struct {
+	ConfirmationID           *string               `json:"confirmation_id"`
+	Content                  PrepareReplan         `json:"content"`
+	InputCutoff              int64                 `json:"input_cutoff"`
+	Proposal                 ReplanProposalSummary `json:"proposal"`
+	RequirementContentDigest *string               `json:"requirement_content_digest"`
+	SchemaVersion            float64               `json:"schema_version"`
+	TaskID                   string                `json:"task_id"`
+}
+
+type PrepareReplan struct {
+	Basis           TaskActionBasis     `json:"basis"`
+	Impact          ReplanImpact        `json:"impact"`
+	Nodes           []ExecutionPlanNode `json:"nodes"`
+	PlanID          string              `json:"plan_id"`
+	ProposalID      string              `json:"proposal_id"`
+	ReplanRequestID string              `json:"replan_request_id"`
+	Requirement     *ReplanRequirement  `json:"requirement,omitempty"`
+	SourceID        string              `json:"source_id"`
+	Summary         string              `json:"summary"`
+}
+
+type ReplanProposalSummary struct {
+	ContentDigest         string  `json:"content_digest"`
+	Current               bool    `json:"current"`
+	Expired               bool    `json:"expired"`
+	PlanID                string  `json:"plan_id"`
+	ProposalID            string  `json:"proposal_id"`
+	RequestID             string  `json:"request_id"`
+	RequirementProposalID *string `json:"requirement_proposal_id"`
+	Revoked               bool    `json:"revoked"`
+	SourceID              string  `json:"source_id"`
+}
+
+type ReplanRequestDetail struct {
+	AttemptID             *string                      `json:"attempt_id"`
+	Effects               []RequirementChangeEffect    `json:"effects"`
+	EffectsNextCursor     *string                      `json:"effects_next_cursor"`
+	IssueReason           *string                      `json:"issue_reason"`
+	NextCursor            *string                      `json:"next_cursor"`
+	Proposals             []ReplanProposalSummary      `json:"proposals"`
+	RemainingRequirements []RequirementProposalSummary `json:"remaining_requirements"`
+	Request               ReplanRequestSummary         `json:"request"`
+	RequirementsHasMore   bool                         `json:"requirements_has_more"`
+	SchemaVersion         float64                      `json:"schema_version"`
+	Source                *TaskReplanSource            `json:"source"`
+	TaskID                string                       `json:"task_id"`
+	WaitingReason         *string                      `json:"waiting_reason"`
+}
+
+type ReplanReadQuery struct {
+	Cursor        *string `json:"cursor,omitempty"`
+	EffectsCursor *string `json:"effects_cursor,omitempty"`
+}
+
 type CommandEnvelopeName string
 
 const (
@@ -1678,6 +1928,7 @@ const (
 	NameCompleteNode                 CommandEnvelopeName = "complete_node"
 	NameInspectRepository            CommandEnvelopeName = "inspect_repository"
 	NameOpenWorkspace                CommandEnvelopeName = "open_workspace"
+	NamePrepareReplan                CommandEnvelopeName = "prepare_replan"
 	NamePrepareSpecificationRevision CommandEnvelopeName = "prepare_specification_revision"
 	PublishArtifact                  CommandEnvelopeName = "publish_artifact"
 	PublishExecutionPlan             CommandEnvelopeName = "publish_execution_plan"
@@ -1687,6 +1938,7 @@ const (
 	ReadDiscussion                   CommandEnvelopeName = "read_discussion"
 	ReadTaskContext                  CommandEnvelopeName = "read_task_context"
 	ReadTaskHistory                  CommandEnvelopeName = "read_task_history"
+	RequestReplan                    CommandEnvelopeName = "request_replan"
 	UpdateWorkingRequirementState    CommandEnvelopeName = "update_working_requirement_state"
 )
 
@@ -1697,12 +1949,36 @@ const (
 	Supersede GuidanceDisposition = "supersede"
 )
 
+type ReplanHoldKind string
+
+const (
+	Factual      ReplanHoldKind = "factual"
+	OwnerStopped ReplanHoldKind = "owner_stopped"
+	Semantic     ReplanHoldKind = "semantic"
+)
+
+type ReplanNodeImpactDisposition string
+
+const (
+	PurpleCarry      ReplanNodeImpactDisposition = "carry"
+	PurpleInvalidate ReplanNodeImpactDisposition = "invalidate"
+	PurpleRefresh    ReplanNodeImpactDisposition = "refresh"
+	Replace          ReplanNodeImpactDisposition = "replace"
+)
+
 type SpecificationImpactNodeDisposition string
 
 const (
-	Carry      SpecificationImpactNodeDisposition = "carry"
-	Invalidate SpecificationImpactNodeDisposition = "invalidate"
-	Refresh    SpecificationImpactNodeDisposition = "refresh"
+	FluffyCarry      SpecificationImpactNodeDisposition = "carry"
+	FluffyInvalidate SpecificationImpactNodeDisposition = "invalidate"
+	FluffyRefresh    SpecificationImpactNodeDisposition = "refresh"
+)
+
+type ReplanWorkspaceInputKind string
+
+const (
+	Checkpoint ReplanWorkspaceInputKind = "checkpoint"
+	Completed  ReplanWorkspaceInputKind = "completed"
 )
 
 type TaskTurnRoutingKind string
@@ -1711,6 +1987,7 @@ const (
 	Answer                TaskTurnRoutingKind = "answer"
 	PurpleGuidance        TaskTurnRoutingKind = "guidance"
 	PurpleIssue           TaskTurnRoutingKind = "issue"
+	Replan                TaskTurnRoutingKind = "replan"
 	Reply                 TaskTurnRoutingKind = "reply"
 	ReplyOnly             TaskTurnRoutingKind = "reply_only"
 	ResolveGuidance       TaskTurnRoutingKind = "resolve_guidance"
@@ -1766,6 +2043,14 @@ type PlanningOutcomeKind string
 const (
 	FluffyIssue PlanningOutcomeKind = "issue"
 	Plan        PlanningOutcomeKind = "plan"
+)
+
+type ReplanOutcomeKind string
+
+const (
+	Proposal       ReplanOutcomeKind = "proposal"
+	Request        ReplanOutcomeKind = "request"
+	TentacledIssue ReplanOutcomeKind = "issue"
 )
 
 type WorkspaceUnavailableReason string
@@ -1892,6 +2177,7 @@ const (
 	AcceptDelivery                               TaskProposalAction = "accept_delivery"
 	ApplyRework                                  TaskProposalAction = "apply_rework"
 	TaskProposalActionApplySpecificationRevision TaskProposalAction = "apply_specification_revision"
+	TaskProposalActionPublishReplan              TaskProposalAction = "publish_replan"
 )
 
 type OwnerCommandName string
@@ -2213,14 +2499,6 @@ const (
 	FluffyRecoverCompletion OwnerRecoverCompletionCommandName = "recover_completion"
 )
 
-type BlockerKind string
-
-const (
-	Factual      BlockerKind = "factual"
-	OwnerStopped BlockerKind = "owner_stopped"
-	Semantic     BlockerKind = "semantic"
-)
-
 type NodeExecutionStatusState string
 
 const (
@@ -2253,7 +2531,7 @@ type TaskInputOperationKind string
 const (
 	FluffyGuidance TaskInputOperationKind = "guidance"
 	Input          TaskInputOperationKind = "input"
-	TentacledIssue TaskInputOperationKind = "issue"
+	StickyIssue    TaskInputOperationKind = "issue"
 )
 
 type LaunchStatus string
@@ -2302,4 +2580,23 @@ const (
 	FluffySucceeded  RequirementChangeEffectState = "succeeded"
 	Running          RequirementChangeEffectState = "running"
 	StickyAdmitted   RequirementChangeEffectState = "admitted"
+)
+
+type TaskReplanCommandName string
+
+const (
+	ConfirmReplan     TaskReplanCommandName = "confirm_replan"
+	DeferReplanInputs TaskReplanCommandName = "defer_replan_inputs"
+	DismissReplan     TaskReplanCommandName = "dismiss_replan"
+	NamePublishReplan TaskReplanCommandName = "publish_replan"
+	RetryReplan       TaskReplanCommandName = "retry_replan"
+)
+
+type ReplanRequestSummaryStatus string
+
+const (
+	Dismissed        ReplanRequestSummaryStatus = "dismissed"
+	MagentaCancelled ReplanRequestSummaryStatus = "cancelled"
+	StickyPublished  ReplanRequestSummaryStatus = "published"
+	TentacledPending ReplanRequestSummaryStatus = "pending"
 )

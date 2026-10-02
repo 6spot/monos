@@ -1,3 +1,5 @@
+import type { TaskReplanSource } from '../../../packages/protocol/src/index.ts';
+import { assertReplanSource, assertNoReplan } from './task-replan-state.ts';
 import { assertSpecificationUnfrozen } from './task-specification-state.ts';
 import { randomUUID } from 'node:crypto';
 import { transaction } from '../../../packages/db/src/index.ts';
@@ -18,6 +20,7 @@ export interface QueueInput {
   attempt_id: string; runner_id: string; task_id?: string; todo_id?: string; node_id?: string;
   kind: 'node' | 'planner'; expected: ControlBasis | { control_version: number }; resource_id?: string;
   discussion_context?: DiscussionContext;
+  task_replan_source?: TaskReplanSource;
   task_planning_source?: TaskPlanningSource;
   task_conversation_source?: TaskConversationSource;
   node_execution_source?: NodeExecutionSource;
@@ -50,6 +53,8 @@ export class DispatchQueue {
     const task = (await tx.query<{ state: string; control_version: string; specification_id: string; plan_id: string | null; project_id: string | null }>('SELECT state,control_version,specification_id,plan_id,project_id FROM tasks WHERE id=$1 FOR UPDATE', [input.task_id])).rows[0];
     if (!task) throw new CommandError('denied_scope', 'Unknown Task');
     if(!input.task_conversation_source)await assertSpecificationUnfrozen(tx,input.task_id);
+    if(input.kind==='node')await assertNoReplan(tx,input.task_id);
+    if(input.task_replan_source){if(input.source_watermark!==0||input.kind!=='planner'||input.node_id||input.resource_id||input.legacy_probe||input.task_conversation_source||input.task_planning_source||input.node_execution_source)throw new CommandError('denied_scope','Replan source requires exclusive scratch Planner');await assertReplanSource(tx,input.task_id,input.task_replan_source,input.attempt_id,input.prompt);}
     if (input.task_conversation_source) {
       if(input.kind!=='planner'||input.legacy_probe||input.node_id||input.resource_id||input.task_planning_source||input.node_execution_source)throw new CommandError('denied_scope','Conversation source requires scratch-only Planner');
       await assertConversationSource(tx,input.task_id,input.task_conversation_source,input.attempt_id,input.prompt);
@@ -67,7 +72,7 @@ export class DispatchQueue {
       if (existing.queue_digest !== hash) throw new CommandError('payload_conflict', 'Queued Attempt identity has different content');
       return existing.dispatch_id;
     }
-    if (!input.task_conversation_source && task.state !== 'RUNNING') throw new CommandError('unmet_precondition', 'Task is not executing');
+    if (!input.task_conversation_source && task.state !== (input.task_replan_source?'REPLAN_REQUIRED':'RUNNING')) throw new CommandError('unmet_precondition', 'Task is not executing');
     if (input.legacy_probe ? !input.resource_id : !task.project_id || input.resource_id !== undefined) throw new CommandError('denied_scope', 'Canonical Task requires its Project and no fixture resource');
     if (!input.task_conversation_source && (Number(task.control_version) !== input.expected.control_version || task.specification_id !== input.expected.specification_id || task.plan_id !== input.expected.plan_id)) throw new CommandError('version_conflict', 'Queue input revision basis changed');
     await this.checkLocality(tx, input.task_id, input.runner_id);
@@ -93,15 +98,16 @@ export class DispatchQueue {
       } }), runtime_id: input.runtime_id, model: input.model,
       prompt: input.prompt, source_watermark: input.source_watermark, log_mode: 'ordered_v1',
       ...(input.task_conversation_source ? {task_conversation_source:input.task_conversation_source} : {}),
+      ...(input.task_replan_source ? {task_replan_source:input.task_replan_source} : {}),
       ...(input.task_planning_source ? { task_planning_source: input.task_planning_source } : {}),
       ...(input.node_execution_source ? { node_execution_source: input.node_execution_source } : {}),
       mutation_allowed: false, process_released: true,
     };
     validate('Dispatch', launch);
     await tx.query(`INSERT INTO attempts(id,runner_id,task_id,node_id,owner_key,dispatch_id,kind,fencing_generation,node_activation,
-      launch,mutation_allowed,process_released,state,queue_digest,specification_id,plan_id,selection_context,planning_intent_id,node_execution_source_id,task_conversation_source_id)
-      VALUES($1,$2,$3,$4,$5,$6,$7,1,$8,$9,false,true,'QUEUED',$10,$11,$12,$13,$14,$15,$16)`,
-    [input.attempt_id, input.runner_id, input.task_id, input.node_id ?? null, owner, launch.dispatch_id, input.kind, activation, launch, hash, task.specification_id, task.plan_id, input.selection_context ?? null, input.task_planning_source?.intent_id ?? null,input.node_execution_source?.source_id ?? null,input.task_conversation_source?.source_id ?? null]);
+      launch,mutation_allowed,process_released,state,queue_digest,specification_id,plan_id,selection_context,planning_intent_id,node_execution_source_id,task_conversation_source_id,replan_source_id)
+      VALUES($1,$2,$3,$4,$5,$6,$7,1,$8,$9,false,true,'QUEUED',$10,$11,$12,$13,$14,$15,$16,$17)`,
+    [input.attempt_id, input.runner_id, input.task_id, input.node_id ?? null, owner, launch.dispatch_id, input.kind, activation, launch, hash, task.specification_id, task.plan_id, input.selection_context ?? null, input.task_planning_source?.intent_id ?? null,input.node_execution_source?.source_id ?? null,input.task_conversation_source?.source_id ?? null,input.task_replan_source?.source_id??null]);
     if(input.node_execution_source) await tx.query("UPDATE nodes SET state='RUNNING' WHERE id=$1",[input.node_id]);
     if (input.legacy_probe) await tx.query('INSERT INTO legacy_probe_attempts(attempt_id) VALUES($1)', [input.attempt_id]);
     return launch.dispatch_id;
@@ -175,6 +181,8 @@ export class DispatchQueue {
           const row = (await tx.query<Queued>('SELECT * FROM attempts WHERE id=$1 FOR UPDATE', [candidate.id])).rows[0]!;
           if (row.state !== 'QUEUED') return retry;
           let current = discussion ? Number(discussion.version) === row.launch.control_version && discussion.source_message_id === row.launch.source_message_id && discussion.desired_attempt_id === row.id : !!task && task.state === 'RUNNING' && Number(task.control_version) === row.launch.control_version && task.specification_id === row.specification_id && task.plan_id === row.plan_id;
+          if(row.launch.task_replan_source){try{await assertReplanSource(tx,row.task_id!,row.launch.task_replan_source,row.id,row.launch.prompt);current=true;}catch(e){if(!(e instanceof CommandError))throw e;current=false;}}
+          if(current&&row.node_id){try{await assertNoReplan(tx,row.task_id!);}catch(e){if(!(e instanceof CommandError))throw e;current=false;}}
           if(row.launch.task_conversation_source){try{await assertConversationSource(tx,row.task_id!,row.launch.task_conversation_source,row.id,row.launch.prompt);current=true;}catch(e){if(!(e instanceof CommandError))throw e;current=false;}}
           if (current && (row.planning_intent_id || row.launch.task_planning_source)) {
             try {

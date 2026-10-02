@@ -3,6 +3,7 @@ package host
 import (
 	"bytes"
 	"context"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -64,7 +65,7 @@ func ValidateRequest(r Request) error {
 		if err := wire.Validate("Dispatch", raw); err != nil {
 			return err
 		}
-		if r.Dispatch.TaskPlanningSource != nil || r.Dispatch.NodeExecutionSource != nil || r.Dispatch.TaskConversationSource != nil {
+		if r.Dispatch.TaskReplanSource != nil || r.Dispatch.TaskPlanningSource != nil || r.Dispatch.NodeExecutionSource != nil || r.Dispatch.TaskConversationSource != nil {
 			if _, err := wire.ScopeID(*r.Dispatch); err != nil {
 				return err
 			}
@@ -241,7 +242,7 @@ func createTraversalRoot(path string, uid, gid int) error {
 	return nil
 }
 func executionDirectories(d protocol.Dispatch) []string {
-	if d.TodoID != nil || d.TaskPlanningSource != nil || d.TaskConversationSource != nil || d.WorkspaceReservations != nil {
+	if d.TodoID != nil || d.TaskReplanSource != nil || d.TaskPlanningSource != nil || d.TaskConversationSource != nil || d.WorkspaceReservations != nil {
 		return []string{"scratch", "data", "cache", "state", "tmp", "config"}
 	}
 	return []string{"scratch", "workspace", "common", "data", "cache", "state", "tmp", "config"}
@@ -389,7 +390,27 @@ func status(ctx context.Context, id string) (Status, error) {
 	if m.BootID != boot {
 		return s, nil
 	}
-	values, err := unitProperties(ctx, Unit(id))
+	return statusOfUnit(ctx, id, m, boot, unitStatusIO{
+		properties: unitProperties, lstat: os.Lstat, population: Population,
+		identity: Identity, save: saveManifest, exited: verifyExitedUnit,
+	})
+}
+
+// Both live status and retained-exit recovery use this same production routing.
+// The narrow I/O seam lets tests exercise acknowledgement persistence and the
+// Population ENOENT contract without changing privileged paths or global hooks.
+type unitStatusIO struct {
+	properties func(context.Context, string) (map[string]string, error)
+	lstat      func(string) (os.FileInfo, error)
+	population func(string) (bool, error)
+	identity   func(int) (Peer, error)
+	save       func(Manifest) error
+	exited     func(context.Context, string, Manifest, map[string]string) error
+}
+
+func statusOfUnit(ctx context.Context, id string, m Manifest, boot string, io unitStatusIO) (Status, error) {
+	s := Status{Known: true, BootID: boot}
+	values, err := io.properties(ctx, Unit(id))
 	if err != nil {
 		return s, err
 	}
@@ -402,25 +423,43 @@ func status(ctx context.Context, id string) (Status, error) {
 	if err = validateUnit(values, Unit(id), "monos probe attempt "+m.Dispatch.DispatchID); err != nil {
 		return s, err
 	}
-	if !m.Acknowledged {
-		m.Acknowledged = true
-		if err = saveManifest(m); err != nil {
-			return s, err
-		}
-	}
 	s.Exists = true
 	s.Cgroup = values["ControlGroup"]
 	if s.Cgroup != "" {
-		s.Populated, err = Population(s.Cgroup)
-		if err != nil {
-			return s, err
+		path := "/sys/fs/cgroup" + s.Cgroup
+		_, statErr := io.lstat(path)
+		if statErr != nil && !os.IsNotExist(statErr) {
+			return s, statErr
+		}
+		missing := os.IsNotExist(statErr)
+		if !missing {
+			s.Populated, err = io.population(s.Cgroup)
+			if err != nil {
+				return s, err
+			}
+			// Population deliberately maps ENOENT to false. Recheck the kernel
+			// directory after a false result so disappearance cannot bypass proof.
+			if !s.Populated {
+				_, statErr = io.lstat(path)
+				if statErr != nil && !os.IsNotExist(statErr) {
+					return s, statErr
+				}
+				missing = os.IsNotExist(statErr)
+			}
+		}
+		if missing {
+			if err = io.exited(ctx, id, m, values); err != nil {
+				return s, err
+			}
 		}
 	} else if values["ActiveState"] != "inactive" && values["ActiveState"] != "failed" {
-		return s, fmt.Errorf("unit has unresolved cgroup")
+		if err = io.exited(ctx, id, m, values); err != nil {
+			return s, err
+		}
 	}
 	s.PID, _ = strconv.Atoi(values["MainPID"])
 	if s.PID > 0 {
-		p, e := Identity(s.PID)
+		p, e := io.identity(s.PID)
 		if e != nil {
 			return s, e
 		}
@@ -431,7 +470,101 @@ func status(ctx context.Context, id string) (Status, error) {
 	}
 	s.MainExited, s.ExitCode = mainExit(values)
 	s.CaptureFailed = captureFailedExit(values)
+	// Failed status must not promote an unacknowledged historical launch into
+	// authority for a later query. Persist only after every observation passes.
+	if !m.Acknowledged {
+		m.Acknowledged = true
+		if err = io.save(m); err != nil {
+			return s, err
+		}
+	}
 	return s, nil
+}
+
+// RemainAfterExit can retain an active/exited unit after systemd removes its
+// empty cgroup. Main exit alone is not whole-tree absence: require the retained
+// identity, absent kernel group/PID, no pending unit job and a stable second
+// observation. This reports a physical fact; the original Tool Protocol Stop
+// still owns formal settlement and reservation release.
+func verifyExitedUnit(ctx context.Context, id string, m Manifest, initial map[string]string) error {
+	observe := func() (map[string]string, error) {
+		out, err := command(ctx, "/usr/bin/systemctl", "show", Unit(id), "--property=LoadState,ActiveState,SubState,MainPID,ExecMainPID,ControlGroup,Transient,User,Group,Description,Result,ExecMainCode,ExecMainStatus,InvocationID,RemainAfterExit,Restart")
+		if err != nil {
+			return nil, err
+		}
+		values := map[string]string{}
+		for _, line := range strings.Split(string(out), "\n") {
+			if key, value, ok := strings.Cut(line, "="); ok {
+				values[key] = value
+			}
+		}
+		return values, nil
+	}
+	absent := func(path string) error {
+		_, err := os.Lstat(path)
+		if os.IsNotExist(err) {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+		return fmt.Errorf("exited unit still has kernel ownership")
+	}
+	jobs := func() ([]byte, error) {
+		return command(ctx, "/usr/bin/systemctl", "list-jobs", "--no-legend", "--plain", "--no-pager")
+	}
+	return verifyExitedUnitUsing(id, m, initial, observe, absent, jobs)
+}
+
+func verifyExitedUnitUsing(id string, m Manifest, initial map[string]string, observe func() (map[string]string, error), absent func(string) error, jobs func() ([]byte, error)) error {
+	if !m.Launched || !m.Acknowledged || m.Revoked || m.Dispatch.AttemptID != id {
+		return fmt.Errorf("exited unit lacks retained launch acknowledgement")
+	}
+	first, err := observe()
+	if err != nil {
+		return err
+	}
+	for key, value := range initial {
+		if first[key] != value {
+			return fmt.Errorf("exited unit changed during observation")
+		}
+	}
+	if err = validateUnit(first, Unit(id), "monos probe attempt "+m.Dispatch.DispatchID); err != nil {
+		return err
+	}
+	exited, _ := mainExit(first)
+	invocation, invocationErr := hex.DecodeString(first["InvocationID"])
+	pid, pidErr := strconv.Atoi(first["ExecMainPID"])
+	if first["LoadState"] != "loaded" || first["ActiveState"] != "active" || first["SubState"] != "exited" || first["RemainAfterExit"] != "yes" || first["Restart"] != "no" || !exited || invocationErr != nil || len(invocation) != 16 || pidErr != nil || pid <= 0 {
+		return fmt.Errorf("unit has unresolved cgroup")
+	}
+	if err = absent("/sys/fs/cgroup/system.slice/" + Unit(id)); err != nil {
+		return err
+	}
+	if err = absent("/proc/" + strconv.Itoa(pid)); err != nil {
+		return err
+	}
+	pending, err := jobs()
+	if err != nil {
+		return err
+	}
+	for _, line := range strings.Split(strings.TrimSpace(string(pending)), "\n") {
+		if line == "" {
+			continue
+		}
+		fields := strings.Fields(line)
+		if len(fields) < 4 || fields[1] == Unit(id) {
+			return fmt.Errorf("exited unit has unresolved job inventory")
+		}
+	}
+	last, err := observe()
+	if err != nil {
+		return err
+	}
+	if !reflect.DeepEqual(first, last) {
+		return fmt.Errorf("exited unit incarnation or state changed")
+	}
+	return nil
 }
 
 // ExecMainCode is systemd's retained wait result for this single-use unit.

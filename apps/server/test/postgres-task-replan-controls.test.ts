@@ -1,0 +1,53 @@
+import { randomUUID } from 'node:crypto';
+import { describe,it,expect } from 'vitest';
+import { replanFixture } from './fixtures/task-replan-fixture.ts';
+const suite=process.env.MONOS_TEST_DATABASE==='1'?describe:describe.skip;
+suite('Replan exact controls',()=>{
+ it('Owner Stop and active guidance survive new Node identity and require explicit Continue',async()=>{const x=await replanFixture();try{
+  await x.send('Preserve this instruction');const initial=await x.turn();const guidance=await x.reply(initial,{kind:'guidance',basis:await x.basis(),text:'Keep the public interface stable'});await x.finish(guidance.operation_id!,initial.dispatch.attempt_id);
+  await x.start();const old=await x.node();await x.send('The formal Node goal needs replacing');const turn=await x.turn();const request=await x.reply(turn,{kind:'replan',basis:await x.basis(),text:'Replace the formal goal'});await x.finish(request.operation_id!,turn.dispatch.attempt_id);
+  const stopped=await x.owner('stop_node',{node_id:x.f.node,node_activation:1,source_id:old.dispatch.node_execution_source!.source_id});await x.finish(stopped.operation_id!,old.dispatch.attempt_id);
+  await x.service.touch(x.f.runner,x.f.incarnation,true);const p=await x.prepare();await x.publish(p);const node=(await x.db.pool.query('SELECT * FROM nodes WHERE id=$1',[p.payload.nodes[0]!.node_id])).rows[0];expect(node.state).toBe('BLOCKED');expect(node.guidance_paused).toBe(true);expect((await x.db.pool.query('SELECT count(*) FROM task_guidance_obligations WHERE node_id=$1 AND status=\'pending\'',[node.id])).rows[0].count).toBe('1');const hold=(await x.db.pool.query('SELECT * FROM replan_control_holds')).rows[0];expect(hold.origin.owner_request_id).toBeTruthy();
+  const continued=await x.owner('continue_node',{node_id:node.id,node_activation:1,source_id:node.execution_source_id,blocker_id:node.blocker_id});const fresh=await x.node();expect(fresh.dispatch.node_id).toBe(node.id);expect((await x.db.pool.query('SELECT resolved_by FROM replan_control_holds')).rows[0].resolved_by).toBeTruthy();
+  for(const id of [stopped.request_id,continued.request_id])await expect(x.db.pool.query("UPDATE owner_command_receipts SET response=jsonb_set(response,'{status}','\"unknown\"'::jsonb) WHERE scope_id=$1 AND request_id=$2",[x.f.task,id])).rejects.toMatchObject({code:'23514'});
+ }finally{await x.close();}},60000);
+ it('carried completion keeps Owner Stop actionable without rerunning completed activation',async()=>{const x=await replanFixture();try{
+  await x.start();const old=await x.node();const done=await x.agent(old,'complete_node',{summary:'Original completed result'});
+  await x.owner('stop_node',{node_id:x.f.node,node_activation:1,source_id:old.dispatch.node_execution_source!.source_id});await x.finish(done.operation_id!,old.dispatch.attempt_id);
+  await x.send('Reconsider the graph while retaining completed evidence');const turn=await x.turn();const request=await x.reply(turn,{kind:'replan',basis:await x.basis(),text:'Confirm whether the existing formal graph can be retained'});await x.finish(request.operation_id!,turn.dispatch.attempt_id);
+  const p=await x.prepare(false,false);expect(p.payload.impact.node.disposition).toBe('carry');expect(p.payload.impact.holds).toHaveLength(1);await x.publish(p);
+  const n=(await x.db.pool.query('SELECT * FROM nodes WHERE id=$1',[x.f.node])).rows[0];expect(n.state).toBe('BLOCKED');expect(n.blocker_id).toBeTruthy();
+  const count=(await x.db.pool.query('SELECT count(*) FROM node_execution_outbox')).rows[0].count;
+  await x.owner('continue_node',{node_id:n.id,node_activation:1,source_id:n.execution_source_id,blocker_id:n.blocker_id});
+  expect((await x.db.pool.query('SELECT state FROM tasks')).rows[0].state).toBe('REVIEW');expect((await x.db.pool.query('SELECT activation,state FROM nodes WHERE id=$1',[n.id])).rows[0]).toEqual({activation:'1',state:'COMPLETED'});expect((await x.db.pool.query('SELECT count(*) FROM node_execution_outbox')).rows[0].count).toBe(count);
+ }finally{await x.close();}},60000);
+ it('current request remains visible beyond a history cursor and joint detail names its source',async()=>{const x=await replanFixture();try{
+  const id=await x.request();const page=await x.replan.status(x.token,x.f.task,undefined,undefined,id) as {requests:unknown[];current_request:{id:string}};expect(page.requests).toEqual([]);expect(page.current_request.id).toBe(id);
+  const p=await x.prepare(true);const detail=await x.spec.status(x.token,x.f.task,p.payload.requirement!.proposal_id) as {replan_source_id:string};expect(detail.replan_source_id).toBe(p.payload.source_id);
+ }finally{await x.close();}},60000);
+ it('capture failure preserves Replan control and physical ownership until explicit retry and settlement',async()=>{const x=await replanFixture();try{
+  const id=await x.request();await x.replan.pump();const turn=await x.promote();const version=await x.version();
+  await x.service.event(x.f.runner,x.f.incarnation,{attempt_id:turn.dispatch.attempt_id,dispatch_id:turn.dispatch.dispatch_id,stream_id:'replan-events',sequence:1,order_sequence:1,boot_id:'test',kind:'capture_failed',text:''});
+  expect(await x.version()).toBe(version);expect((await x.db.pool.query('SELECT state FROM tasks')).rows[0].state).toBe('REPLAN_REQUIRED');expect((await x.db.pool.query('SELECT process_released FROM attempts WHERE id=$1',[turn.dispatch.attempt_id])).rows[0].process_released).toBe(false);
+  const r=(await x.db.pool.query('SELECT * FROM replan_requests WHERE id=$1',[id])).rows[0];await x.command('retry_replan',{replan_request_id:id,expected_version:Number(r.version)});await x.replan.pump();expect((await x.db.pool.query('SELECT count(*) FROM replan_sources')).rows[0].count).toBe('1');
+  const stop=(await x.db.pool.query("SELECT id FROM operations WHERE attempt_id=$1 AND kind='stop'",[turn.dispatch.attempt_id])).rows[0];await x.finish(stop.id,turn.dispatch.attempt_id);const p=await x.prepare();expect(p.payload.source_id).not.toBe(turn.dispatch.task_replan_source!.source_id);
+ }finally{await x.close();}},60000);
+ it('Conversation request cancels queued Node work and allows quiescent Replan promotion',async()=>{const x=await replanFixture();try{
+  await x.start();await x.execution.pump();const queued=(await x.db.pool.query("SELECT id FROM attempts WHERE kind='node' AND state='QUEUED'")).rows[0];expect(queued).toBeTruthy();
+  await x.send('The graph is insufficient before Node promotion');const turn=await x.turn();expect(turn.dispatch.task_conversation_source).toBeTruthy();const r=await x.reply(turn,{kind:'replan',basis:await x.basis(),text:'Replace queued graph'});await x.finish(r.operation_id!,turn.dispatch.attempt_id);
+  expect((await x.db.pool.query('SELECT state,process_released FROM attempts WHERE id=$1',[queued.id])).rows[0]).toEqual({state:'CANCELLED',process_released:true});const p=await x.prepare();expect(p.turn.dispatch.task_replan_source).toBeTruthy();
+ }finally{await x.close();}},60000);
+ it('stale joint retry preserves immutable source and requirement predecessor chains',async()=>{const x=await replanFixture();try{
+  const request=await x.request();const old=await x.prepare(true);const oldRequirement=(await x.db.pool.query('SELECT * FROM requirement_proposals WHERE id=$1',[old.payload.requirement!.proposal_id])).rows[0];
+  await x.send('A new instruction changes this assessment');const turn=await x.turn();const guidance=await x.reply(turn,{kind:'guidance',basis:await x.basis(),text:'Preserve the external compatibility boundary'});await x.finish(guidance.operation_id!,turn.dispatch.attempt_id);
+  await expect(x.publish(old)).rejects.toMatchObject({detail:{code:'version_conflict'}});
+  const r=(await x.db.pool.query('SELECT * FROM replan_requests WHERE id=$1',[request])).rows[0];await x.command('retry_replan',{replan_request_id:request,expected_version:Number(r.version)});
+  const fresh=await x.prepare(true);expect((await x.db.pool.query('SELECT previous_source_id FROM replan_sources WHERE id=$1',[fresh.payload.source_id])).rows[0].previous_source_id).toBe(old.payload.source_id);
+  const nextRequirement=(await x.db.pool.query('SELECT * FROM requirement_proposals WHERE id=$1',[fresh.payload.requirement!.proposal_id])).rows[0];expect(nextRequirement.obligation_id).toBe(oldRequirement.obligation_id);expect(nextRequirement.predecessor_id).toBe(oldRequirement.id);
+  expect((await x.db.pool.query('SELECT * FROM requirement_proposals WHERE id=$1',[oldRequirement.id])).rows[0]).toEqual(oldRequirement);expect((await x.db.pool.query('SELECT revoked FROM task_command_proposals WHERE id=$1',[old.payload.proposal_id])).rows[0].revoked).toBe(true);
+  await x.publish(fresh);expect((await x.db.pool.query('SELECT count(*) FROM requirement_obligations')).rows[0].count).toBe('1');
+ }finally{await x.close();}},60000);
+ it('new input blocks graph confirmation until exact input-version deferral',async()=>{const x=await replanFixture();try{await x.request();const p=await x.prepare();const input=await x.send('Additional input needing assessment');await expect(x.command('confirm_replan',{proposal_id:p.payload.proposal_id,content_digest:p.result.result!.replan_outcome!.content_digest})).rejects.toMatchObject({detail:{code:'unmet_precondition'}});await x.command('defer_replan_inputs',{proposal_id:p.payload.proposal_id,inputs:[{input_id:input.input_id,version:1}]});await x.publish(p);expect((await x.db.pool.query('SELECT status FROM task_inputs WHERE id=$1',[input.input_id])).rows[0].status).toBe('pending');}finally{await x.close();}},60000);
+ it('a second source cannot steal an existing request or terminalize its own input',async()=>{const x=await replanFixture();try{await x.request();await x.send('A separate new structural request');const turn=await x.turn();await expect(x.reply(turn,{kind:'replan',basis:await x.basis(),text:'Different insufficiency'})).rejects.toMatchObject({detail:{code:'unmet_precondition'}});expect((await x.db.pool.query('SELECT count(*) FROM replan_requests')).rows[0].count).toBe('1');const reply=await x.reply(turn);await x.finish(reply.operation_id!,turn.dispatch.attempt_id);}finally{await x.close();}},60000);
+ it('a published joint graph cannot replay with a substituted requirements approval',async()=>{const x=await replanFixture();try{await x.request();const p=await x.prepare(true);await x.publish(p);const a=(await x.db.pool.query('SELECT * FROM replan_publications')).rows[0];await expect(x.command('publish_replan',{proposal_id:p.payload.proposal_id,confirmation_id:a.authorization_id,requirement_confirmation_id:randomUUID(),basis:p.payload.basis})).rejects.toMatchObject({detail:{code:'payload_conflict'}});}finally{await x.close();}},60000);
+});

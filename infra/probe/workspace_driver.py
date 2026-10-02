@@ -104,8 +104,30 @@ def save(path, report, initial=False):
         os.close(directory)
 
 
+def request_replan(scratch, report_path, report, reason):
+    payload = scratch / 'workspace-replan.json'
+    body = {'reason': reason}
+    payload.write_text(json.dumps(body))
+    report.update(replan_payload=body, replan_submitted_at=time.time())
+    save(report_path, report)
+    code, receipt = formal('request_replan', 'workspace-replan', payload)
+    if code or receipt.get('status') == 'error':
+        raise RuntimeError('Native Replan request failed; inspect retained authority')
+
+
 def run(args):
     scratch = ROOT / 'execution' / args.attempt / 'scratch'
+    replan_reason = getattr(args, 'replan_reason', None)
+    if replan_reason is not None:
+        if args.prior_attempt or pathlib.Path.cwd().resolve() != scratch.resolve():
+            raise RuntimeError('Replan fixture requires a fresh Node in its current scratch')
+        with pathlib.Path(replan_reason).open('rb') as source:
+            raw = source.read(16385)
+        if len(raw) > 16384:
+            raise ValueError('Replan reason exceeds fixture budget')
+        replan_reason = raw.decode().strip()
+        if not replan_reason or '\x00' in replan_reason:
+            raise ValueError('Explicit semantic Replan reason required')
     report_path = scratch / 'workspace-driver.json'
     wid = workspace_id(args.task, args.resource)
     expected = ROOT / 'tasks' / wid / 'worktree'
@@ -201,6 +223,14 @@ def run(args):
     save(report_path, report)
     if not all(checks.values()):
         raise RuntimeError('Workspace first-open evidence failed')
+    if replan_reason is not None:
+        # A bounded fixture observation window lets the root harness record live
+        # descendants before the native terminal handoff stops the whole tree.
+        report['replan_handoff_after'] = time.time() + 10
+        save(report_path, report)
+        time.sleep(10)
+        request_replan(scratch, report_path, report, replan_reason)
+        return
     # Owner Stop should end the cgroup. Expiry is a fixture failure, not a
     # product Runtime silence decision, and never issues completion itself.
     time.sleep(300)
@@ -212,10 +242,12 @@ def main():
     for key in ('attempt', 'task', 'resource'):
         parser.add_argument('--' + key, required=True)
     parser.add_argument('--prior-attempt')
+    parser.add_argument('--replan-reason', help='File containing the Agent semantic insufficiency reason')
     args = parser.parse_args()
     if os.getuid() == 0:
         raise RuntimeError('Run through the native execution account, never root')
-    if any(not re.fullmatch(r'[A-Za-z0-9_-]{1,80}', value) for value in vars(args).values() if value is not None):
+    if any(not re.fullmatch(r'[A-Za-z0-9_-]{1,80}', value) for value in
+            (args.attempt, args.task, args.resource, args.prior_attempt) if value is not None):
         raise RuntimeError('Invalid trial identity')
     run(args)
 

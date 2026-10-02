@@ -23,8 +23,24 @@ func ScopeID(d protocol.Dispatch) (string, error) {
 	if d.TaskConversationSource != nil {
 		sources++
 	}
+	if d.TaskReplanSource != nil {
+		sources++
+	}
 	if sources > 1 {
 		return "", fmt.Errorf("dispatch has conflicting canonical sources")
+	}
+	if d.TaskReplanSource != nil {
+		s := d.TaskReplanSource
+		if d.TaskID == nil || d.Kind != "planner" || d.NodeID != nil || d.NodeActivation != 0 || d.ResourceID != nil || d.SourceMessageID != nil || d.SourceWatermark != 0 || d.ControlVersion != s.ControlVersion || d.WorkspaceReservations == nil || len(d.WorkspaceReservations.Resources) != 0 {
+			return "", fmt.Errorf("invalid Task Replan source ownership")
+		}
+		raw, err := json.Marshal(s)
+		if err != nil {
+			return "", err
+		}
+		if err = Validate("TaskReplanSource", raw); err != nil {
+			return "", err
+		}
 	}
 	if d.TaskConversationSource != nil {
 		s := d.TaskConversationSource

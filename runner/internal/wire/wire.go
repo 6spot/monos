@@ -162,7 +162,7 @@ func Envelope(raw []byte) (protocol.CommandEnvelope, error) {
 		allowed["references"], allowed["supersedes"] = true, true
 	case "read_artifact":
 		required = []string{"artifact_id"}
-	case "block_node":
+	case "block_node", "request_replan":
 		required = []string{"reason"}
 	case protocol.CommitTaskTurn:
 		required = []string{"reply", "source_watermark", "routing"}
@@ -177,8 +177,15 @@ func Envelope(raw []byte) (protocol.CommandEnvelope, error) {
 		allowed["cursor"], allowed["query"] = true, true
 	case "publish_execution_plan":
 		required = []string{"planning_intent_id", "plan_id", "nodes"}
+	case "prepare_replan":
+		required = []string{"replan_request_id", "source_id", "proposal_id", "plan_id", "basis", "nodes", "summary", "impact"}
+		allowed["requirement"] = true
 	case "raise_planning_issue":
-		required = []string{"planning_intent_id", "reason"}
+		if _, replan := payload["replan_request_id"]; replan {
+			required = []string{"replan_request_id", "source_id", "reason"}
+		} else {
+			required = []string{"planning_intent_id", "reason"}
+		}
 	case "commit_discussion_turn":
 		required = []string{"reply", "working_requirement_state", "source_message_id", "source_watermark"}
 		allowed["task_preview"] = true

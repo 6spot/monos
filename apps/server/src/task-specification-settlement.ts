@@ -1,3 +1,4 @@
+import { assertNoReplan } from './task-replan-state.ts';
 import { randomUUID } from 'node:crypto';
 import type { Transaction } from '../../../packages/db/src/index.ts';
 import { CommandError } from '../../../packages/domain/src/commands.ts';
@@ -15,7 +16,8 @@ import { bindTaskGuidance, withdrawGuidance, settleHandledGuidance } from './tas
 export interface RequirementChange {id:string;task_id:string;proposal_id:string;authorization_id:string;status:string;version:string;specification_id:string;admission_control_version:string;attention:string|null}
 export async function admitSpecification(tx:Transaction,task:SpecificationTask,p:RequirementProposal,confirmationId:string,requestId:string,admissionAttemptId?:string):Promise<RequirementChange>{
  const prior=(await tx.query<RequirementChange>('SELECT * FROM requirement_changes WHERE proposal_id=$1',[p.id])).rows[0];if(prior){if(prior.authorization_id!==confirmationId)throw new CommandError('payload_conflict','Applied proposal requires its original confirmation');return prior;}
- await eligibleRequirement(tx,task,p);
+ if(!p.impact.graph_sufficient)throw new CommandError('unmet_precondition','Insufficient graph requires exact joint Replan publication');
+ await assertNoReplan(tx,task.id);await eligibleRequirement(tx,task,p);
  if((await tx.query('SELECT 1 FROM task_publication_slots WHERE task_id=$1',[task.id])).rowCount)throw new CommandError('unmet_precondition','Previous publication must settle before admission');
  const auth=(await tx.query<{consumed_by:string|null}>('SELECT consumed_by FROM authorization_receipts WHERE id=$1 AND proposal_id=$2 FOR UPDATE',[confirmationId,p.id])).rows[0];
  if(!auth||auth.consumed_by)throw new CommandError('denied_scope','Exact unused Owner authorization required');
@@ -48,6 +50,7 @@ export async function advanceSpecification(tx:Transaction,task:SpecificationTask
  const unsettled=await tx.query(`SELECT 1 FROM requirement_change_attempts ca JOIN attempts a ON a.id=ca.attempt_id WHERE ca.change_id=$1 AND (NOT a.process_released OR EXISTS(SELECT 1 FROM operations o WHERE o.attempt_id=a.id AND o.state NOT IN ('succeeded','cancelled')) OR EXISTS(SELECT 1 FROM workspace_leases l WHERE l.attempt_id=a.id AND l.state<>'released')) LIMIT 1`,[c.id]);
  if(unsettled.rowCount){await attention(tx,c,'waiting_for_physical_settlement');return;}
  const p=await requirementProposal(tx,c.proposal_id,task.id);
+ if(!p.impact.graph_sufficient)throw new CommandError('unmet_precondition','Joint requirements cannot publish through Specification settlement');
  const withdrawing=c.status==='withdrawing'||task.state==='CANCELLED';
  if(!withdrawing){
   if(task.specification_id!==p.base_specification_id||task.plan_id!==p.base_plan_id||task.accepted_delivery_operation_id){await attention(tx,c,'assessment_basis_changed');return;}

@@ -53,6 +53,11 @@ func validateWorkspaceScope(d protocol.Dispatch, op protocol.Operation) error {
 	if err != nil || id != w.WorkspaceID || w.TaskID != *d.TaskID || w.RunnerID != d.RunnerID || w.ProjectID != d.WorkspaceReservations.ProjectID || op.ResourceID == nil || w.ResourceID != *op.ResourceID || w.Resource.ResourceID != w.ResourceID || d.NodeID == nil || w.NodeID != *d.NodeID || w.NodeActivation != d.NodeActivation {
 		return fmt.Errorf("workspace ownership mismatch")
 	}
+	if t := w.Transfer; t != nil {
+		if w.Basis == nil || d.NodeExecutionSource == nil || t.ToPlanID != d.NodeExecutionSource.PlanID || t.ToNodeID != w.NodeID || t.ToNodeActivation != w.NodeActivation || t.TaskID != w.TaskID || t.WorkspaceID != w.WorkspaceID || t.ResourceID != w.ResourceID || t.RunnerID != w.RunnerID || t.Metadata.Generation != w.Generation {
+			return fmt.Errorf("workspace transfer target source mismatch")
+		}
+	}
 	for _, r := range d.WorkspaceReservations.Resources {
 		if r.ResourceID == w.ResourceID && r.WorkspaceID == w.WorkspaceID {
 			return nil

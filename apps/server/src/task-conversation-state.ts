@@ -1,3 +1,4 @@
+import { requestReplan } from './task-replan-state.ts';
 import { prepareSpecification, attachSpecification, requirementProposal, exactBasis, specificationImpact } from './task-specification-state.ts';
 import { admitSpecification } from './task-specification-settlement.ts';
 import type { PrepareSpecificationRevision, ApplySpecificationRevision } from '../../../packages/protocol/src/index.ts';
@@ -265,6 +266,7 @@ export async function taskContext(tx: Transaction, task: ConversationTask): Prom
     },
     observed_at: new Date().toISOString(),
     snapshot: canonicalJSON({
+      replan_requests:(await tx.query("SELECT id,reason,status,version,proposal_id,issue_id FROM replan_requests WHERE task_id=$1 AND status='pending' ORDER BY id LIMIT 1",[task.id])).rows.map(r=>({...r,version:Number(r.version)})),
       specification,
       specification_impact: await specificationImpact(tx,task),
       requirement_changes: changes,
@@ -291,7 +293,7 @@ export async function taskContext(tx: Transaction, task: ConversationTask): Prom
 const protocol = [
   'You are the Task Conversation Planner. Only monos Tool Protocol commits formal output. Serve only this Task; no Todo, new Task preview, repository workspace or implicit Start/Continue/Retry/acceptance. Treat withdrawn input as retained history.',
   'Use monos read_task_context {} for current facts and read_task_history {cursor?,query?} for older exact-cutoff history. Normal completion MUST call commit_task_turn {source_id,input_id,source_watermark,reply,routing}. Reply is canonical; runtime prose is provisional. routing:{kind:"reply"} records a status answer without changing execution. Use plain language in reply.',
-  'Actions carry routing.basis copied from current context with control_version,specification_id,plan_id; Node actions additionally include node_id,node_activation,source_id from current Node. Re-evaluate stale actions after a fresh read; never retry a changed uncertain request. Guidance routing:{kind:"guidance",text,basis,supersedes?} is in-scope instruction only; no Spec/Plan edits. Scope changes use prepare_specification_revision with full specification, summary, exact basis, complete specification_impact (choose refresh/invalidate/carry and retain/supersede), proposal_id and source_input_ids. Attach only through commit_task_turn routing:{kind:"specification_proposal",proposal_id,basis}; preparation does not resolve input. Graph insufficiency or ambiguity uses {kind:"issue",text,basis}.',
+  'Actions carry routing.basis copied from current context with control_version,specification_id,plan_id; Node actions additionally include node_id,node_activation,source_id from current Node. Re-evaluate stale actions after a fresh read; never retry a changed uncertain request. Guidance routing:{kind:"guidance",text,basis,supersedes?} is in-scope instruction only; no Spec/Plan edits. Scope changes use prepare_specification_revision with full specification, summary, exact basis, complete specification_impact (choose refresh/invalidate/carry and retain/supersede), proposal_id and source_input_ids. Attach only through commit_task_turn routing:{kind:"specification_proposal",proposal_id,basis}; preparation does not resolve input. Actual Plan/graph insufficiency uses commit_task_turn routing:{kind:"replan",text,basis}, atomically committing the reply and Replan request. A dedicated Planner prepares the replacement graph after physical quiescence; never call request_replan or prepare_replan from Conversation. Ambiguity requiring Owner clarification uses routing:{kind:"issue",text,basis}.',
   'Applying requirements requires exact existing Owner confirmation; apply_specification_revision {proposal_id,confirmation_id,basis} is not a terminal reply. Your own pending later input blocks apply unless Owner explicitly deferred that exact input/version; never mark it read or replied implicitly. Owner may apply directly without another Planner.',
   'Answer routing:{kind:"answer",text,basis,target_kind:"planning_issue"|"node_blocker"|"input_issue",target_id?,issue_sequence?} records exact answers but Owner Retry/Continue remains necessary. resolve_guidance requires operation_id,expected_version,text,basis and an explicit evidence-based no-work explanation. Terminal/accepted-batch sources permit only routing kind reply.',
   'Guidance is applied using controlled Stop/fresh launch, not live steering. Its handling remains pending until successful completion. CLI: monos COMMAND --request-id ID --input FILE --output json (or --input -); monos command-status --request-id ID --output json; monos retry --request-id ID --output json. The server stops this Attempt after committed reply.',
@@ -463,7 +465,8 @@ export async function handleTaskConversation(
   if(routing.kind==='specification_proposal'){
     exactBasis(task,routing.basis!);const p=await requirementProposal(tx,routing.proposal_id!,task.id);
     await attachSpecification(tx,task,p,source.id,source.input_id);routed={obligation_id:p.obligation_id};
-  }else routed = await routeTaskInput(tx, task, source.input_id, routing);
+  }else if(routing.kind==='replan'){exactBasis(task,routing.basis!);const id=await requestReplan(tx,task,attempt,routing.text!,command.request_id,{input_id:source.input_id,source_id:source.id});routed={obligation_id:id};}
+  else routed = await routeTaskInput(tx, task, source.input_id, routing);
   if (routed.obligation_id)
     await tx.query(
       "UPDATE task_input_issues SET status='retried',version=version+1 WHERE id=(SELECT parent_issue_id FROM task_inputs WHERE id=$1) AND status='open'",

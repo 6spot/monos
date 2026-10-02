@@ -52,7 +52,9 @@
             "read_task_context",
             "read_task_history",
             "prepare_specification_revision",
-            "apply_specification_revision"
+            "apply_specification_revision",
+            "request_replan",
+            "prepare_replan"
           ]
         },
         "scope_id": {
@@ -379,20 +381,44 @@
           "then": {
             "properties": {
               "payload": {
-                "type": "object",
-                "additionalProperties": false,
-                "required": [
-                  "planning_intent_id",
-                  "reason"
-                ],
-                "properties": {
-                  "planning_intent_id": {
-                    "$ref": "#/definitions/Id"
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "planning_intent_id",
+                      "reason"
+                    ],
+                    "properties": {
+                      "planning_intent_id": {
+                        "$ref": "#/definitions/Id"
+                      },
+                      "reason": {
+                        "$ref": "#/definitions/PlanningText"
+                      }
+                    }
                   },
-                  "reason": {
-                    "$ref": "#/definitions/PlanningText"
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "replan_request_id": {
+                        "$ref": "#/definitions/Id"
+                      },
+                      "source_id": {
+                        "$ref": "#/definitions/Id"
+                      },
+                      "reason": {
+                        "$ref": "#/definitions/PlanningText"
+                      }
+                    },
+                    "required": [
+                      "replan_request_id",
+                      "source_id",
+                      "reason"
+                    ]
                   }
-                }
+                ]
               }
             },
             "type": "object"
@@ -559,6 +585,51 @@
               }
             }
           }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "request_replan"
+              }
+            },
+            "type": "object"
+          },
+          "then": {
+            "properties": {
+              "payload": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "reason": {
+                    "$ref": "#/definitions/PlanningText"
+                  }
+                },
+                "required": [
+                  "reason"
+                ]
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "prepare_replan"
+              }
+            },
+            "type": "object"
+          },
+          "then": {
+            "properties": {
+              "payload": {
+                "$ref": "#/definitions/PrepareReplan"
+              }
+            },
+            "type": "object"
+          }
         }
       ]
     },
@@ -687,7 +758,14 @@
           "$ref": "#/definitions/TaskActionBasis"
         },
         "impact": {
-          "$ref": "#/definitions/SpecificationImpact"
+          "anyOf": [
+            {
+              "$ref": "#/definitions/RequirementImpact"
+            },
+            {
+              "$ref": "#/definitions/ReplanImpact"
+            }
+          ]
         },
         "source_input_ids": {
           "type": "array",
@@ -699,6 +777,12 @@
         },
         "confirmation_id": {
           "$ref": "#/definitions/Id"
+        },
+        "replan_request_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "requirement": {
+          "$ref": "#/definitions/ReplanRequirement"
         }
       }
     },
@@ -853,6 +937,9 @@
         },
         "requirement_operation_id": {
           "$ref": "#/definitions/Id"
+        },
+        "replan_outcome": {
+          "$ref": "#/definitions/ReplanOutcome"
         }
       }
     },
@@ -1002,6 +1089,9 @@
         },
         "task_conversation_source": {
           "$ref": "#/definitions/TaskConversationSource"
+        },
+        "task_replan_source": {
+          "$ref": "#/definitions/TaskReplanSource"
         }
       },
       "allOf": [
@@ -2269,7 +2359,8 @@
       "enum": [
         "apply_specification_revision",
         "apply_rework",
-        "accept_delivery"
+        "accept_delivery",
+        "publish_replan"
       ]
     },
     "OwnerCommand": {
@@ -5917,6 +6008,9 @@
         },
         "basis": {
           "$ref": "#/definitions/WorkspaceBasis"
+        },
+        "transfer": {
+          "$ref": "#/definitions/WorkspaceTransfer"
         }
       }
     },
@@ -7456,7 +7550,8 @@
             "issue",
             "answer",
             "resolve_guidance",
-            "specification_proposal"
+            "specification_proposal",
+            "replan"
           ]
         },
         "basis": {
@@ -7656,6 +7751,30 @@
             "required": [
               "basis",
               "proposal_id"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "replan"
+              }
+            },
+            "type": "object"
+          },
+          "then": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "kind": {},
+              "basis": {},
+              "text": {}
+            },
+            "required": [
+              "kind",
+              "basis",
+              "text"
             ]
           }
         }
@@ -8402,7 +8521,7 @@
           "$ref": "#/definitions/TaskActionBasis"
         },
         "impact": {
-          "$ref": "#/definitions/SpecificationImpact"
+          "$ref": "#/definitions/RequirementImpact"
         },
         "source_input_ids": {
           "type": "array",
@@ -8835,7 +8954,7 @@
           "$ref": "#/definitions/TaskActionBasis"
         },
         "impact": {
-          "$ref": "#/definitions/SpecificationImpact"
+          "$ref": "#/definitions/RequirementImpact"
         },
         "proposals": {
           "type": "array",
@@ -8892,7 +9011,7 @@
           "pattern": "^[a-f0-9]{64}$"
         },
         "impact": {
-          "$ref": "#/definitions/SpecificationImpact"
+          "$ref": "#/definitions/RequirementImpact"
         },
         "impact_digest": {
           "type": "string",
@@ -8955,6 +9074,16 @@
           "oneOf": [
             {
               "$ref": "#/definitions/RequirementChangeSummary"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "replan_source_id": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Id"
             },
             {
               "type": "null"
@@ -9323,6 +9452,1306 @@
         "attempts",
         "attempts_has_more"
       ]
+    },
+    "TaskReplanSource": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "request_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "source_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "specification_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "plan_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "control_version": {
+          "$ref": "#/definitions/Counter"
+        },
+        "context_digest": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "required": [
+        "request_id",
+        "source_id",
+        "specification_id",
+        "plan_id",
+        "control_version",
+        "context_digest"
+      ]
+    },
+    "ReplanOutcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "request",
+            "proposal",
+            "issue"
+          ]
+        },
+        "replan_request_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "source_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "proposal_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "content_digest": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "issue_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "requirement_proposal_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "requirement_content_digest": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "required": [
+        "kind",
+        "replan_request_id"
+      ]
+    },
+    "ReplanWorkspaceInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "workspace_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "task_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "resource_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "runner_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "from_plan_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "from_node_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "from_attempt_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "from_lease_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "settle_operation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "from_node_activation": {
+          "$ref": "#/definitions/PositiveCounter"
+        },
+        "kind": {
+          "enum": [
+            "checkpoint",
+            "completed"
+          ]
+        },
+        "metadata": {
+          "$ref": "#/definitions/WorkspaceMetadata"
+        },
+        "completion_operation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "completion_manifest_digest": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "finalized_tree": {
+          "$ref": "#/definitions/GitOID"
+        }
+      },
+      "required": [
+        "workspace_id",
+        "task_id",
+        "resource_id",
+        "runner_id",
+        "from_plan_id",
+        "from_node_id",
+        "from_attempt_id",
+        "from_lease_id",
+        "settle_operation_id",
+        "from_node_activation",
+        "kind",
+        "metadata"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "checkpoint"
+              }
+            },
+            "type": "object"
+          },
+          "then": {
+            "properties": {
+              "metadata": {
+                "required": [
+                  "checkpoint"
+                ],
+                "type": "object",
+                "properties": {
+                  "checkpoint": {}
+                }
+              },
+              "completion_operation_id": false,
+              "completion_manifest_digest": false,
+              "finalized_tree": false
+            },
+            "type": "object"
+          },
+          "else": {
+            "required": [
+              "completion_operation_id",
+              "completion_manifest_digest",
+              "finalized_tree"
+            ],
+            "properties": {
+              "metadata": {
+                "properties": {
+                  "checkpoint": false
+                },
+                "type": "object"
+              },
+              "completion_operation_id": {},
+              "completion_manifest_digest": {},
+              "finalized_tree": {}
+            },
+            "type": "object"
+          }
+        }
+      ]
+    },
+    "WorkspaceTransfer": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "workspace_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "task_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "resource_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "runner_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "from_plan_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "from_node_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "from_attempt_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "from_lease_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "settle_operation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "from_node_activation": {
+          "$ref": "#/definitions/PositiveCounter"
+        },
+        "kind": {
+          "enum": [
+            "checkpoint",
+            "completed"
+          ]
+        },
+        "metadata": {
+          "$ref": "#/definitions/WorkspaceMetadata"
+        },
+        "completion_operation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "completion_manifest_digest": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "finalized_tree": {
+          "$ref": "#/definitions/GitOID"
+        },
+        "publication_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "proposal_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "to_plan_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "to_node_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "to_node_activation": {
+          "$ref": "#/definitions/PositiveCounter"
+        }
+      },
+      "required": [
+        "workspace_id",
+        "task_id",
+        "resource_id",
+        "runner_id",
+        "from_plan_id",
+        "from_node_id",
+        "from_attempt_id",
+        "from_lease_id",
+        "settle_operation_id",
+        "from_node_activation",
+        "kind",
+        "metadata",
+        "publication_id",
+        "proposal_id",
+        "to_plan_id",
+        "to_node_id",
+        "to_node_activation"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "checkpoint"
+              }
+            },
+            "type": "object"
+          },
+          "then": {
+            "properties": {
+              "metadata": {
+                "required": [
+                  "checkpoint"
+                ],
+                "type": "object",
+                "properties": {
+                  "checkpoint": {}
+                }
+              },
+              "completion_operation_id": false,
+              "completion_manifest_digest": false,
+              "finalized_tree": false
+            },
+            "type": "object"
+          },
+          "else": {
+            "required": [
+              "completion_operation_id",
+              "completion_manifest_digest",
+              "finalized_tree"
+            ],
+            "properties": {
+              "metadata": {
+                "properties": {
+                  "checkpoint": false
+                },
+                "type": "object"
+              },
+              "completion_operation_id": {},
+              "completion_manifest_digest": {},
+              "finalized_tree": {}
+            },
+            "type": "object"
+          }
+        }
+      ]
+    },
+    "ReplanNodeImpact": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "node_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "node_activation": {
+          "$ref": "#/definitions/PositiveCounter"
+        },
+        "source_id": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "completion_operation_id": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "completion_manifest_digest": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "disposition": {
+          "enum": [
+            "refresh",
+            "carry",
+            "invalidate",
+            "replace"
+          ]
+        },
+        "target_node_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "target_node_activation": {
+          "$ref": "#/definitions/PositiveCounter"
+        }
+      },
+      "required": [
+        "node_id",
+        "node_activation",
+        "source_id",
+        "completion_operation_id",
+        "completion_manifest_digest",
+        "disposition",
+        "target_node_id",
+        "target_node_activation"
+      ]
+    },
+    "ReplanHold": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "blocker_id": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "kind": {
+          "enum": [
+            "semantic",
+            "factual",
+            "owner_stopped"
+          ]
+        },
+        "reason": {
+          "$ref": "#/definitions/PlanningText"
+        },
+        "origin_node_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "origin_node_activation": {
+          "$ref": "#/definitions/PositiveCounter"
+        },
+        "owner_request_id": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "blocker_id",
+        "kind",
+        "reason",
+        "origin_node_id",
+        "origin_node_activation",
+        "owner_request_id"
+      ]
+    },
+    "ReplanGuidance": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "guidance_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "version": {
+          "$ref": "#/definitions/Counter"
+        },
+        "disposition": {
+          "enum": [
+            "retain",
+            "supersede"
+          ]
+        },
+        "target_node_id": {
+          "$ref": "#/definitions/Id"
+        }
+      },
+      "required": [
+        "guidance_id",
+        "version",
+        "disposition",
+        "target_node_id"
+      ]
+    },
+    "ReplanImpact": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "node": {
+          "$ref": "#/definitions/ReplanNodeImpact"
+        },
+        "guidance": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ReplanGuidance"
+          },
+          "maxItems": 256
+        },
+        "holds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ReplanHold"
+          },
+          "maxItems": 32
+        },
+        "workspaces": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ReplanWorkspaceInput"
+          },
+          "maxItems": 1
+        }
+      },
+      "required": [
+        "node",
+        "guidance",
+        "holds",
+        "workspaces"
+      ]
+    },
+    "ReplanRequirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "proposal_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "specification": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 65536,
+          "pattern": "^[^\\x00]*$"
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        }
+      },
+      "required": [
+        "proposal_id",
+        "specification",
+        "summary"
+      ]
+    },
+    "PrepareReplan": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "replan_request_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "source_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "proposal_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "plan_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "basis": {
+          "$ref": "#/definitions/TaskActionBasis"
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ExecutionPlanNode"
+          },
+          "maxItems": 256,
+          "minItems": 1
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "impact": {
+          "$ref": "#/definitions/ReplanImpact"
+        },
+        "requirement": {
+          "$ref": "#/definitions/ReplanRequirement"
+        }
+      },
+      "required": [
+        "replan_request_id",
+        "source_id",
+        "proposal_id",
+        "plan_id",
+        "basis",
+        "nodes",
+        "summary",
+        "impact"
+      ]
+    },
+    "JointSpecificationImpact": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "graph_sufficient": {
+          "const": false
+        },
+        "replan_request_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "replan_proposal_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "reason": {
+          "$ref": "#/definitions/PlanningText"
+        },
+        "replan_impact": {
+          "$ref": "#/definitions/ReplanImpact"
+        }
+      },
+      "required": [
+        "graph_sufficient",
+        "replan_request_id",
+        "replan_proposal_id",
+        "reason",
+        "replan_impact"
+      ]
+    },
+    "TaskReplanCommand": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "request_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "task_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "name": {
+          "enum": [
+            "confirm_replan",
+            "publish_replan",
+            "dismiss_replan",
+            "retry_replan",
+            "defer_replan_inputs"
+          ]
+        },
+        "payload": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "schema_version",
+        "request_id",
+        "task_id",
+        "name",
+        "payload"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "confirm_replan"
+              }
+            },
+            "type": "object"
+          },
+          "then": {
+            "properties": {
+              "payload": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "proposal_id": {
+                    "$ref": "#/definitions/Id"
+                  },
+                  "content_digest": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  }
+                },
+                "required": [
+                  "proposal_id",
+                  "content_digest"
+                ]
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "publish_replan"
+              }
+            },
+            "type": "object"
+          },
+          "then": {
+            "properties": {
+              "payload": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "proposal_id": {
+                    "$ref": "#/definitions/Id"
+                  },
+                  "confirmation_id": {
+                    "$ref": "#/definitions/Id"
+                  },
+                  "requirement_confirmation_id": {
+                    "$ref": "#/definitions/Id"
+                  },
+                  "basis": {
+                    "$ref": "#/definitions/TaskActionBasis"
+                  }
+                },
+                "required": [
+                  "proposal_id",
+                  "confirmation_id",
+                  "basis"
+                ]
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "dismiss_replan"
+              }
+            },
+            "type": "object"
+          },
+          "then": {
+            "properties": {
+              "payload": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "replan_request_id": {
+                    "$ref": "#/definitions/Id"
+                  },
+                  "expected_version": {
+                    "$ref": "#/definitions/Counter"
+                  },
+                  "direction": {
+                    "$ref": "#/definitions/PlanningText"
+                  }
+                },
+                "required": [
+                  "replan_request_id",
+                  "expected_version"
+                ]
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "retry_replan"
+              }
+            },
+            "type": "object"
+          },
+          "then": {
+            "properties": {
+              "payload": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "replan_request_id": {
+                    "$ref": "#/definitions/Id"
+                  },
+                  "expected_version": {
+                    "$ref": "#/definitions/Counter"
+                  },
+                  "issue_id": {
+                    "$ref": "#/definitions/Id"
+                  },
+                  "answer": {
+                    "$ref": "#/definitions/PlanningText"
+                  }
+                },
+                "required": [
+                  "replan_request_id",
+                  "expected_version"
+                ]
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "defer_replan_inputs"
+              }
+            },
+            "type": "object"
+          },
+          "then": {
+            "properties": {
+              "payload": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "proposal_id": {
+                    "$ref": "#/definitions/Id"
+                  },
+                  "inputs": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "input_id": {
+                          "$ref": "#/definitions/Id"
+                        },
+                        "version": {
+                          "$ref": "#/definitions/Counter"
+                        }
+                      },
+                      "required": [
+                        "input_id",
+                        "version"
+                      ]
+                    },
+                    "maxItems": 256
+                  }
+                },
+                "required": [
+                  "proposal_id",
+                  "inputs"
+                ]
+              }
+            },
+            "type": "object"
+          }
+        }
+      ]
+    },
+    "TaskReplanResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "request_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "status": {
+          "enum": [
+            "committed",
+            "unknown"
+          ]
+        },
+        "replan_request_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "proposal_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "content_digest": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "confirmation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "publication_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "plan_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "specification_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "requirement_proposal_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "requirement_confirmation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "operation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "version": {
+          "$ref": "#/definitions/Counter"
+        }
+      },
+      "required": [
+        "schema_version",
+        "request_id",
+        "status"
+      ]
+    },
+    "RequirementImpact": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/SpecificationImpact"
+        },
+        {
+          "$ref": "#/definitions/JointSpecificationImpact"
+        }
+      ]
+    },
+    "ReplanRequestSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/Id"
+        },
+        "task_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "reason": {
+          "$ref": "#/definitions/PlanningText"
+        },
+        "status": {
+          "enum": [
+            "pending",
+            "published",
+            "dismissed",
+            "cancelled"
+          ]
+        },
+        "version": {
+          "$ref": "#/definitions/Counter"
+        },
+        "source_id": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "proposal_id": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "issue_id": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "input_id": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "origin_node_id": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "origin_activation": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Counter"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "requester_blocker_id": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "direction": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/PlanningText"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "physical_settled": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "task_id",
+        "reason",
+        "status",
+        "version",
+        "source_id",
+        "proposal_id",
+        "issue_id",
+        "input_id",
+        "origin_node_id",
+        "origin_activation",
+        "requester_blocker_id",
+        "direction",
+        "physical_settled"
+      ]
+    },
+    "ReplanProposalSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "proposal_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "request_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "source_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "plan_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "content_digest": {
+          "type": "string"
+        },
+        "requirement_proposal_id": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "current": {
+          "type": "boolean"
+        },
+        "revoked": {
+          "type": "boolean"
+        },
+        "expired": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "proposal_id",
+        "request_id",
+        "source_id",
+        "plan_id",
+        "content_digest",
+        "requirement_proposal_id",
+        "current",
+        "revoked",
+        "expired"
+      ]
+    },
+    "TaskReplanStatus": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "task_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "requests": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ReplanRequestSummary"
+          },
+          "maxItems": 64
+        },
+        "next_cursor": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "current_request": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ReplanRequestSummary"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schema_version",
+        "task_id",
+        "requests",
+        "next_cursor",
+        "current_request"
+      ]
+    },
+    "ReplanProposalDetail": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "task_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "proposal": {
+          "$ref": "#/definitions/ReplanProposalSummary"
+        },
+        "content": {
+          "$ref": "#/definitions/PrepareReplan"
+        },
+        "input_cutoff": {
+          "$ref": "#/definitions/Counter"
+        },
+        "requirement_content_digest": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "confirmation_id": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schema_version",
+        "task_id",
+        "proposal",
+        "content",
+        "input_cutoff",
+        "requirement_content_digest",
+        "confirmation_id"
+      ]
+    },
+    "ReplanRequestDetail": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "task_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "request": {
+          "$ref": "#/definitions/ReplanRequestSummary"
+        },
+        "proposals": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ReplanProposalSummary"
+          },
+          "maxItems": 32
+        },
+        "next_cursor": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/TaskReplanSource"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "attempt_id": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "waiting_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "issue_reason": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/PlanningText"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "effects": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/RequirementChangeEffect"
+          },
+          "maxItems": 64
+        },
+        "effects_next_cursor": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "remaining_requirements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/RequirementProposalSummary"
+          },
+          "maxItems": 64
+        },
+        "requirements_has_more": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "schema_version",
+        "task_id",
+        "request",
+        "proposals",
+        "next_cursor",
+        "source",
+        "attempt_id",
+        "waiting_reason",
+        "issue_reason",
+        "effects",
+        "effects_next_cursor",
+        "remaining_requirements",
+        "requirements_has_more"
+      ]
+    },
+    "ReplanReadQuery": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "cursor": {
+          "$ref": "#/definitions/Id"
+        },
+        "effects_cursor": {
+          "$ref": "#/definitions/Id"
+        }
+      }
     }
   }
 }

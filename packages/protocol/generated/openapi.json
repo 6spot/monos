@@ -1258,6 +1258,274 @@
         }
       }
     },
+    "/v1/owner/tasks/replan/commands": {
+      "post": {
+        "security": [
+          {
+            "OwnerAuth": []
+          },
+          {
+            "OwnerCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaskReplanCommand"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authenticated response; admission is distinct from completed effects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskReplanCommandResult"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Deterministic protocol error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/owner/tasks/{task_id}/replan": {
+      "get": {
+        "security": [
+          {
+            "OwnerAuth": []
+          },
+          {
+            "OwnerCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authenticated response; admission is distinct from completed effects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskReplanStatus"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Deterministic protocol error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/owner/tasks/{task_id}/replan/requests/{id}": {
+      "get": {
+        "security": [
+          {
+            "OwnerAuth": []
+          },
+          {
+            "OwnerCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "effects_cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authenticated response; admission is distinct from completed effects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReplanRequestDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Deterministic protocol error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/owner/tasks/{task_id}/replan/proposals/{id}": {
+      "get": {
+        "security": [
+          {
+            "OwnerAuth": []
+          },
+          {
+            "OwnerCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authenticated response; admission is distinct from completed effects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReplanProposalDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Deterministic protocol error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/owner/tasks/{task_id}/replan/commands/{request_id}": {
+      "get": {
+        "security": [
+          {
+            "OwnerAuth": []
+          },
+          {
+            "OwnerCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authenticated response; admission is distinct from completed effects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskReplanCommandResult"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Deterministic protocol error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/owner/tasks/conversation/commands": {
       "post": {
         "security": [
@@ -2352,7 +2620,9 @@
               "read_task_context",
               "read_task_history",
               "prepare_specification_revision",
-              "apply_specification_revision"
+              "apply_specification_revision",
+              "request_replan",
+              "prepare_replan"
             ]
           },
           "scope_id": {
@@ -2679,20 +2949,44 @@
             "then": {
               "properties": {
                 "payload": {
-                  "type": "object",
-                  "additionalProperties": false,
-                  "required": [
-                    "planning_intent_id",
-                    "reason"
-                  ],
-                  "properties": {
-                    "planning_intent_id": {
-                      "$ref": "#/components/schemas/Id"
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "planning_intent_id",
+                        "reason"
+                      ],
+                      "properties": {
+                        "planning_intent_id": {
+                          "$ref": "#/components/schemas/Id"
+                        },
+                        "reason": {
+                          "$ref": "#/components/schemas/PlanningText"
+                        }
+                      }
                     },
-                    "reason": {
-                      "$ref": "#/components/schemas/PlanningText"
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "replan_request_id": {
+                          "$ref": "#/components/schemas/Id"
+                        },
+                        "source_id": {
+                          "$ref": "#/components/schemas/Id"
+                        },
+                        "reason": {
+                          "$ref": "#/components/schemas/PlanningText"
+                        }
+                      },
+                      "required": [
+                        "replan_request_id",
+                        "source_id",
+                        "reason"
+                      ]
                     }
-                  }
+                  ]
                 }
               },
               "type": "object"
@@ -2859,6 +3153,51 @@
                 }
               }
             }
+          },
+          {
+            "if": {
+              "properties": {
+                "name": {
+                  "const": "request_replan"
+                }
+              },
+              "type": "object"
+            },
+            "then": {
+              "properties": {
+                "payload": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "reason": {
+                      "$ref": "#/components/schemas/PlanningText"
+                    }
+                  },
+                  "required": [
+                    "reason"
+                  ]
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "name": {
+                  "const": "prepare_replan"
+                }
+              },
+              "type": "object"
+            },
+            "then": {
+              "properties": {
+                "payload": {
+                  "$ref": "#/components/schemas/PrepareReplan"
+                }
+              },
+              "type": "object"
+            }
           }
         ]
       },
@@ -2987,7 +3326,14 @@
             "$ref": "#/components/schemas/TaskActionBasis"
           },
           "impact": {
-            "$ref": "#/components/schemas/SpecificationImpact"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RequirementImpact"
+              },
+              {
+                "$ref": "#/components/schemas/ReplanImpact"
+              }
+            ]
           },
           "source_input_ids": {
             "type": "array",
@@ -2999,6 +3345,12 @@
           },
           "confirmation_id": {
             "$ref": "#/components/schemas/Id"
+          },
+          "replan_request_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "requirement": {
+            "$ref": "#/components/schemas/ReplanRequirement"
           }
         }
       },
@@ -3153,6 +3505,9 @@
           },
           "requirement_operation_id": {
             "$ref": "#/components/schemas/Id"
+          },
+          "replan_outcome": {
+            "$ref": "#/components/schemas/ReplanOutcome"
           }
         }
       },
@@ -3302,6 +3657,9 @@
           },
           "task_conversation_source": {
             "$ref": "#/components/schemas/TaskConversationSource"
+          },
+          "task_replan_source": {
+            "$ref": "#/components/schemas/TaskReplanSource"
           }
         },
         "allOf": [
@@ -4569,7 +4927,8 @@
         "enum": [
           "apply_specification_revision",
           "apply_rework",
-          "accept_delivery"
+          "accept_delivery",
+          "publish_replan"
         ]
       },
       "OwnerCommand": {
@@ -8217,6 +8576,9 @@
           },
           "basis": {
             "$ref": "#/components/schemas/WorkspaceBasis"
+          },
+          "transfer": {
+            "$ref": "#/components/schemas/WorkspaceTransfer"
           }
         }
       },
@@ -9756,7 +10118,8 @@
               "issue",
               "answer",
               "resolve_guidance",
-              "specification_proposal"
+              "specification_proposal",
+              "replan"
             ]
           },
           "basis": {
@@ -9956,6 +10319,30 @@
               "required": [
                 "basis",
                 "proposal_id"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "replan"
+                }
+              },
+              "type": "object"
+            },
+            "then": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "kind": {},
+                "basis": {},
+                "text": {}
+              },
+              "required": [
+                "kind",
+                "basis",
+                "text"
               ]
             }
           }
@@ -10702,7 +11089,7 @@
             "$ref": "#/components/schemas/TaskActionBasis"
           },
           "impact": {
-            "$ref": "#/components/schemas/SpecificationImpact"
+            "$ref": "#/components/schemas/RequirementImpact"
           },
           "source_input_ids": {
             "type": "array",
@@ -11135,7 +11522,7 @@
             "$ref": "#/components/schemas/TaskActionBasis"
           },
           "impact": {
-            "$ref": "#/components/schemas/SpecificationImpact"
+            "$ref": "#/components/schemas/RequirementImpact"
           },
           "proposals": {
             "type": "array",
@@ -11192,7 +11579,7 @@
             "pattern": "^[a-f0-9]{64}$"
           },
           "impact": {
-            "$ref": "#/components/schemas/SpecificationImpact"
+            "$ref": "#/components/schemas/RequirementImpact"
           },
           "impact_digest": {
             "type": "string",
@@ -11255,6 +11642,16 @@
             "oneOf": [
               {
                 "$ref": "#/components/schemas/RequirementChangeSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "replan_source_id": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Id"
               },
               {
                 "type": "null"
@@ -11623,6 +12020,1306 @@
           "attempts",
           "attempts_has_more"
         ]
+      },
+      "TaskReplanSource": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "request_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "source_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "specification_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "plan_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "control_version": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "context_digest": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        },
+        "required": [
+          "request_id",
+          "source_id",
+          "specification_id",
+          "plan_id",
+          "control_version",
+          "context_digest"
+        ]
+      },
+      "ReplanOutcome": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "enum": [
+              "request",
+              "proposal",
+              "issue"
+            ]
+          },
+          "replan_request_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "source_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "proposal_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "content_digest": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "issue_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "requirement_proposal_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "requirement_content_digest": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        },
+        "required": [
+          "kind",
+          "replan_request_id"
+        ]
+      },
+      "ReplanWorkspaceInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "workspace_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "task_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "resource_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "runner_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "from_plan_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "from_node_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "from_attempt_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "from_lease_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "settle_operation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "from_node_activation": {
+            "$ref": "#/components/schemas/PositiveCounter"
+          },
+          "kind": {
+            "enum": [
+              "checkpoint",
+              "completed"
+            ]
+          },
+          "metadata": {
+            "$ref": "#/components/schemas/WorkspaceMetadata"
+          },
+          "completion_operation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "completion_manifest_digest": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "finalized_tree": {
+            "$ref": "#/components/schemas/GitOID"
+          }
+        },
+        "required": [
+          "workspace_id",
+          "task_id",
+          "resource_id",
+          "runner_id",
+          "from_plan_id",
+          "from_node_id",
+          "from_attempt_id",
+          "from_lease_id",
+          "settle_operation_id",
+          "from_node_activation",
+          "kind",
+          "metadata"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "checkpoint"
+                }
+              },
+              "type": "object"
+            },
+            "then": {
+              "properties": {
+                "metadata": {
+                  "required": [
+                    "checkpoint"
+                  ],
+                  "type": "object",
+                  "properties": {
+                    "checkpoint": {}
+                  }
+                },
+                "completion_operation_id": false,
+                "completion_manifest_digest": false,
+                "finalized_tree": false
+              },
+              "type": "object"
+            },
+            "else": {
+              "required": [
+                "completion_operation_id",
+                "completion_manifest_digest",
+                "finalized_tree"
+              ],
+              "properties": {
+                "metadata": {
+                  "properties": {
+                    "checkpoint": false
+                  },
+                  "type": "object"
+                },
+                "completion_operation_id": {},
+                "completion_manifest_digest": {},
+                "finalized_tree": {}
+              },
+              "type": "object"
+            }
+          }
+        ]
+      },
+      "WorkspaceTransfer": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "workspace_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "task_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "resource_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "runner_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "from_plan_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "from_node_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "from_attempt_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "from_lease_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "settle_operation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "from_node_activation": {
+            "$ref": "#/components/schemas/PositiveCounter"
+          },
+          "kind": {
+            "enum": [
+              "checkpoint",
+              "completed"
+            ]
+          },
+          "metadata": {
+            "$ref": "#/components/schemas/WorkspaceMetadata"
+          },
+          "completion_operation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "completion_manifest_digest": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "finalized_tree": {
+            "$ref": "#/components/schemas/GitOID"
+          },
+          "publication_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "proposal_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "to_plan_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "to_node_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "to_node_activation": {
+            "$ref": "#/components/schemas/PositiveCounter"
+          }
+        },
+        "required": [
+          "workspace_id",
+          "task_id",
+          "resource_id",
+          "runner_id",
+          "from_plan_id",
+          "from_node_id",
+          "from_attempt_id",
+          "from_lease_id",
+          "settle_operation_id",
+          "from_node_activation",
+          "kind",
+          "metadata",
+          "publication_id",
+          "proposal_id",
+          "to_plan_id",
+          "to_node_id",
+          "to_node_activation"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "checkpoint"
+                }
+              },
+              "type": "object"
+            },
+            "then": {
+              "properties": {
+                "metadata": {
+                  "required": [
+                    "checkpoint"
+                  ],
+                  "type": "object",
+                  "properties": {
+                    "checkpoint": {}
+                  }
+                },
+                "completion_operation_id": false,
+                "completion_manifest_digest": false,
+                "finalized_tree": false
+              },
+              "type": "object"
+            },
+            "else": {
+              "required": [
+                "completion_operation_id",
+                "completion_manifest_digest",
+                "finalized_tree"
+              ],
+              "properties": {
+                "metadata": {
+                  "properties": {
+                    "checkpoint": false
+                  },
+                  "type": "object"
+                },
+                "completion_operation_id": {},
+                "completion_manifest_digest": {},
+                "finalized_tree": {}
+              },
+              "type": "object"
+            }
+          }
+        ]
+      },
+      "ReplanNodeImpact": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "node_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "node_activation": {
+            "$ref": "#/components/schemas/PositiveCounter"
+          },
+          "source_id": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Id"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "completion_operation_id": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Id"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "completion_manifest_digest": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "disposition": {
+            "enum": [
+              "refresh",
+              "carry",
+              "invalidate",
+              "replace"
+            ]
+          },
+          "target_node_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "target_node_activation": {
+            "$ref": "#/components/schemas/PositiveCounter"
+          }
+        },
+        "required": [
+          "node_id",
+          "node_activation",
+          "source_id",
+          "completion_operation_id",
+          "completion_manifest_digest",
+          "disposition",
+          "target_node_id",
+          "target_node_activation"
+        ]
+      },
+      "ReplanHold": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "blocker_id": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Id"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "kind": {
+            "enum": [
+              "semantic",
+              "factual",
+              "owner_stopped"
+            ]
+          },
+          "reason": {
+            "$ref": "#/components/schemas/PlanningText"
+          },
+          "origin_node_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "origin_node_activation": {
+            "$ref": "#/components/schemas/PositiveCounter"
+          },
+          "owner_request_id": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Id"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "blocker_id",
+          "kind",
+          "reason",
+          "origin_node_id",
+          "origin_node_activation",
+          "owner_request_id"
+        ]
+      },
+      "ReplanGuidance": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "guidance_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "version": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "disposition": {
+            "enum": [
+              "retain",
+              "supersede"
+            ]
+          },
+          "target_node_id": {
+            "$ref": "#/components/schemas/Id"
+          }
+        },
+        "required": [
+          "guidance_id",
+          "version",
+          "disposition",
+          "target_node_id"
+        ]
+      },
+      "ReplanImpact": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "node": {
+            "$ref": "#/components/schemas/ReplanNodeImpact"
+          },
+          "guidance": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReplanGuidance"
+            },
+            "maxItems": 256
+          },
+          "holds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReplanHold"
+            },
+            "maxItems": 32
+          },
+          "workspaces": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReplanWorkspaceInput"
+            },
+            "maxItems": 1
+          }
+        },
+        "required": [
+          "node",
+          "guidance",
+          "holds",
+          "workspaces"
+        ]
+      },
+      "ReplanRequirement": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "proposal_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "specification": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 65536,
+            "pattern": "^[^\\x00]*$"
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          }
+        },
+        "required": [
+          "proposal_id",
+          "specification",
+          "summary"
+        ]
+      },
+      "PrepareReplan": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "replan_request_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "source_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "proposal_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "plan_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "basis": {
+            "$ref": "#/components/schemas/TaskActionBasis"
+          },
+          "nodes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExecutionPlanNode"
+            },
+            "maxItems": 256,
+            "minItems": 1
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "impact": {
+            "$ref": "#/components/schemas/ReplanImpact"
+          },
+          "requirement": {
+            "$ref": "#/components/schemas/ReplanRequirement"
+          }
+        },
+        "required": [
+          "replan_request_id",
+          "source_id",
+          "proposal_id",
+          "plan_id",
+          "basis",
+          "nodes",
+          "summary",
+          "impact"
+        ]
+      },
+      "JointSpecificationImpact": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "graph_sufficient": {
+            "const": false
+          },
+          "replan_request_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "replan_proposal_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "reason": {
+            "$ref": "#/components/schemas/PlanningText"
+          },
+          "replan_impact": {
+            "$ref": "#/components/schemas/ReplanImpact"
+          }
+        },
+        "required": [
+          "graph_sufficient",
+          "replan_request_id",
+          "replan_proposal_id",
+          "reason",
+          "replan_impact"
+        ]
+      },
+      "TaskReplanCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "const": 1
+          },
+          "request_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "task_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "name": {
+            "enum": [
+              "confirm_replan",
+              "publish_replan",
+              "dismiss_replan",
+              "retry_replan",
+              "defer_replan_inputs"
+            ]
+          },
+          "payload": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "schema_version",
+          "request_id",
+          "task_id",
+          "name",
+          "payload"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "name": {
+                  "const": "confirm_replan"
+                }
+              },
+              "type": "object"
+            },
+            "then": {
+              "properties": {
+                "payload": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "proposal_id": {
+                      "$ref": "#/components/schemas/Id"
+                    },
+                    "content_digest": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{64}$"
+                    }
+                  },
+                  "required": [
+                    "proposal_id",
+                    "content_digest"
+                  ]
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "name": {
+                  "const": "publish_replan"
+                }
+              },
+              "type": "object"
+            },
+            "then": {
+              "properties": {
+                "payload": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "proposal_id": {
+                      "$ref": "#/components/schemas/Id"
+                    },
+                    "confirmation_id": {
+                      "$ref": "#/components/schemas/Id"
+                    },
+                    "requirement_confirmation_id": {
+                      "$ref": "#/components/schemas/Id"
+                    },
+                    "basis": {
+                      "$ref": "#/components/schemas/TaskActionBasis"
+                    }
+                  },
+                  "required": [
+                    "proposal_id",
+                    "confirmation_id",
+                    "basis"
+                  ]
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "name": {
+                  "const": "dismiss_replan"
+                }
+              },
+              "type": "object"
+            },
+            "then": {
+              "properties": {
+                "payload": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "replan_request_id": {
+                      "$ref": "#/components/schemas/Id"
+                    },
+                    "expected_version": {
+                      "$ref": "#/components/schemas/Counter"
+                    },
+                    "direction": {
+                      "$ref": "#/components/schemas/PlanningText"
+                    }
+                  },
+                  "required": [
+                    "replan_request_id",
+                    "expected_version"
+                  ]
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "name": {
+                  "const": "retry_replan"
+                }
+              },
+              "type": "object"
+            },
+            "then": {
+              "properties": {
+                "payload": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "replan_request_id": {
+                      "$ref": "#/components/schemas/Id"
+                    },
+                    "expected_version": {
+                      "$ref": "#/components/schemas/Counter"
+                    },
+                    "issue_id": {
+                      "$ref": "#/components/schemas/Id"
+                    },
+                    "answer": {
+                      "$ref": "#/components/schemas/PlanningText"
+                    }
+                  },
+                  "required": [
+                    "replan_request_id",
+                    "expected_version"
+                  ]
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "name": {
+                  "const": "defer_replan_inputs"
+                }
+              },
+              "type": "object"
+            },
+            "then": {
+              "properties": {
+                "payload": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "proposal_id": {
+                      "$ref": "#/components/schemas/Id"
+                    },
+                    "inputs": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "input_id": {
+                            "$ref": "#/components/schemas/Id"
+                          },
+                          "version": {
+                            "$ref": "#/components/schemas/Counter"
+                          }
+                        },
+                        "required": [
+                          "input_id",
+                          "version"
+                        ]
+                      },
+                      "maxItems": 256
+                    }
+                  },
+                  "required": [
+                    "proposal_id",
+                    "inputs"
+                  ]
+                }
+              },
+              "type": "object"
+            }
+          }
+        ]
+      },
+      "TaskReplanResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "const": 1
+          },
+          "request_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "status": {
+            "enum": [
+              "committed",
+              "unknown"
+            ]
+          },
+          "replan_request_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "proposal_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "content_digest": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "confirmation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "publication_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "plan_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "specification_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "requirement_proposal_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "requirement_confirmation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "operation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "version": {
+            "$ref": "#/components/schemas/Counter"
+          }
+        },
+        "required": [
+          "schema_version",
+          "request_id",
+          "status"
+        ]
+      },
+      "RequirementImpact": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/SpecificationImpact"
+          },
+          {
+            "$ref": "#/components/schemas/JointSpecificationImpact"
+          }
+        ]
+      },
+      "ReplanRequestSummary": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "task_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "reason": {
+            "$ref": "#/components/schemas/PlanningText"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "published",
+              "dismissed",
+              "cancelled"
+            ]
+          },
+          "version": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "source_id": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Id"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "proposal_id": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Id"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "issue_id": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Id"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "input_id": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Id"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "origin_node_id": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Id"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "origin_activation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Counter"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "requester_blocker_id": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Id"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "direction": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlanningText"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "physical_settled": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "task_id",
+          "reason",
+          "status",
+          "version",
+          "source_id",
+          "proposal_id",
+          "issue_id",
+          "input_id",
+          "origin_node_id",
+          "origin_activation",
+          "requester_blocker_id",
+          "direction",
+          "physical_settled"
+        ]
+      },
+      "ReplanProposalSummary": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "proposal_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "request_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "source_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "plan_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "content_digest": {
+            "type": "string"
+          },
+          "requirement_proposal_id": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Id"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "current": {
+            "type": "boolean"
+          },
+          "revoked": {
+            "type": "boolean"
+          },
+          "expired": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "proposal_id",
+          "request_id",
+          "source_id",
+          "plan_id",
+          "content_digest",
+          "requirement_proposal_id",
+          "current",
+          "revoked",
+          "expired"
+        ]
+      },
+      "TaskReplanStatus": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "const": 1
+          },
+          "task_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "requests": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReplanRequestSummary"
+            },
+            "maxItems": 64
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Id"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "current_request": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReplanRequestSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "schema_version",
+          "task_id",
+          "requests",
+          "next_cursor",
+          "current_request"
+        ]
+      },
+      "ReplanProposalDetail": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "const": 1
+          },
+          "task_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "proposal": {
+            "$ref": "#/components/schemas/ReplanProposalSummary"
+          },
+          "content": {
+            "$ref": "#/components/schemas/PrepareReplan"
+          },
+          "input_cutoff": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "requirement_content_digest": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "confirmation_id": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Id"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "schema_version",
+          "task_id",
+          "proposal",
+          "content",
+          "input_cutoff",
+          "requirement_content_digest",
+          "confirmation_id"
+        ]
+      },
+      "ReplanRequestDetail": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "const": 1
+          },
+          "task_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "request": {
+            "$ref": "#/components/schemas/ReplanRequestSummary"
+          },
+          "proposals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReplanProposalSummary"
+            },
+            "maxItems": 32
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Id"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TaskReplanSource"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "attempt_id": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Id"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "waiting_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "issue_reason": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlanningText"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "effects": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RequirementChangeEffect"
+            },
+            "maxItems": 64
+          },
+          "effects_next_cursor": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Id"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "remaining_requirements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RequirementProposalSummary"
+            },
+            "maxItems": 64
+          },
+          "requirements_has_more": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "schema_version",
+          "task_id",
+          "request",
+          "proposals",
+          "next_cursor",
+          "source",
+          "attempt_id",
+          "waiting_reason",
+          "issue_reason",
+          "effects",
+          "effects_next_cursor",
+          "remaining_requirements",
+          "requirements_has_more"
+        ]
+      },
+      "ReplanReadQuery": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "cursor": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "effects_cursor": {
+            "$ref": "#/components/schemas/Id"
+          }
+        }
       }
     },
     "securitySchemes": {

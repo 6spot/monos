@@ -3,7 +3,8 @@
 Status: `apps/server` implements the Stage A foundation, Todo Discussion/Task creation,
 explicit initial planning and canonical Single-Node execution with Artifacts and
 completion recovery, ordered Task Conversation, explicit guidance handling and exact
-Specification revision settlement. Replacement Plans and delivery remain later slices. See [root](../index.md), [quality evidence](quality-guidelines.md)
+Specification revision settlement and independently accepted one-Node replacement
+Plans with standalone/joint publication and independent exits; delivery remains a later slice. See [root](../index.md), [quality evidence](quality-guidelines.md)
 and [technology](../../../docs/11-technology-and-deployment.md).
 
 ## Pre-Development Checklist
@@ -20,6 +21,7 @@ and [technology](../../../docs/11-technology-and-deployment.md).
 - For Single-Node dispatch, Artifacts and completion recovery, read [Node execution](node-execution.md).
 - For ordered Task input, independent conversation authority and guidance handling, read [Task Conversation](task-conversation.md).
 - For exact requirement proposals, authorization and settled publication, read [Specification revisions](task-specification.md).
+- For replacement graphs, joint publication and private-work transfer, read [Replan](task-replan.md).
 - For selected Attempt status, ordered output and resumable log cursors, read [Execution logs](execution-logs.md).
 - For selected Attempt queue/promotion, read [dispatch queue](dispatch-queue.md).
 - For canonical repository admission, serial leases and ephemeral fetch access, read [workspaces](workspaces.md).

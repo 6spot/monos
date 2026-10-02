@@ -21,3 +21,8 @@ before changing source scopes, reply routing or handled-guidance manifest fields
 Exact prepare/apply payloads, Owner confirmation and settled requirement publication
 follow [Specification revisions](../backend/task-specification.md). Preparation and
 application are nonterminal; preserve the separate canonical reply contract.
+
+Dedicated [Replan](../backend/task-replan.md) uses terminal prepare/issue and a
+mutually exclusive source. Its transport watermark is0 while immutable context
+retains the actual input cutoff. Workspace transfer is a system-authored descriptor;
+Agent payloads cannot supply it. Compile all Go consumers after final generation.

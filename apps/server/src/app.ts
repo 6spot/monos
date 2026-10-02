@@ -1,3 +1,4 @@
+import { TaskReplan } from './task-replan.ts';
 import { TaskSpecification } from './task-specification.ts';
 import { TaskConversation } from './task-conversation.ts';
 import Fastify from 'fastify';
@@ -74,6 +75,7 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
   const discussion = new Discussion(service.db, service.instanceId);
   const todoAttempts = new TodoAttemptReads(service.db);
   const specifications = new TaskSpecification(service.db);
+  const replans = new TaskReplan(service.db);
   const execution = new NodeExecution(service.db,service.instanceId);
   const conversation = new TaskConversation(service.db,service.instanceId);
   const planning = new TaskPlanning(service.db, service.instanceId);
@@ -136,6 +138,11 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
   app.get<{Params:{task_id:string};Querystring:{cursor?:string}}>('/v1/owner/tasks/:task_id/specification/revisions',async request=>{validate('SpecificationHistoryQuery',request.query);return specifications.history(ownerCredential(request),request.params.task_id,'revisions',request.query.cursor);});
   app.get<{Params:{task_id:string;revision_id:string}}>('/v1/owner/tasks/:task_id/specification/revisions/:revision_id',async request=>specifications.history(ownerCredential(request),request.params.task_id,'revisions',undefined,request.params.revision_id));
   app.get<{Params:{task_id:string;change_id:string};Querystring:{cursor?:string}}>('/v1/owner/tasks/:task_id/specification/changes/:change_id',async request=>{validate('SpecificationHistoryQuery',request.query);return specifications.change(ownerCredential(request),request.params.task_id,request.params.change_id,request.query.cursor);});
+  app.post('/v1/owner/tasks/replan/commands',async request=>replans.command(ownerCredential(request),request.body));
+  app.get<{Params:{task_id:string};Querystring:{cursor?:string}}>('/v1/owner/tasks/:task_id/replan',async request=>{validate('SpecificationHistoryQuery',request.query);return replans.status(ownerCredential(request),request.params.task_id,undefined,undefined,request.query.cursor);});
+  app.get<{Params:{task_id:string;id:string};Querystring:{cursor?:string;effects_cursor?:string}}>('/v1/owner/tasks/:task_id/replan/requests/:id',async request=>{validate('ReplanReadQuery',request.query);return replans.status(ownerCredential(request),request.params.task_id,request.params.id,undefined,request.query.cursor,request.query.effects_cursor);});
+  app.get<{Params:{task_id:string;id:string}}>('/v1/owner/tasks/:task_id/replan/proposals/:id',async request=>replans.status(ownerCredential(request),request.params.task_id,undefined,request.params.id));
+  app.get<{Params:{task_id:string;request_id:string}}>('/v1/owner/tasks/:task_id/replan/commands/:request_id',async request=>replans.receipt(ownerCredential(request),request.params.task_id,request.params.request_id));
   app.post('/v1/owner/tasks/specification/commands',async request=>specifications.command(ownerCredential(request),request.body));
   app.get<{Params:{task_id:string}}>('/v1/owner/tasks/:task_id/specification',async request=>specifications.status(ownerCredential(request),request.params.task_id));
   app.get<{Params:{task_id:string;proposal_id:string}}>('/v1/owner/tasks/:task_id/specification/proposals/:proposal_id',async request=>specifications.status(ownerCredential(request),request.params.task_id,request.params.proposal_id));

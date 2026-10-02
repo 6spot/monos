@@ -109,7 +109,7 @@ export async function assertCurrentNode(tx: Transaction, input: { task_id: strin
     JOIN plan_nodes pn ON pn.plan_id=t.plan_id AND pn.node_id=n.id
     JOIN node_activations a ON a.node_id=n.id AND a.activation=n.activation
     WHERE n.id=$1 AND n.task_id=$2 AND n.activation=$3
-      AND (a.specification_id=t.specification_id OR EXISTS(SELECT 1 FROM specification_node_applicability sa JOIN requirement_publications rp ON rp.change_id=sa.change_id WHERE sa.node_id=n.id AND sa.node_activation=n.activation AND sa.specification_id=t.specification_id AND sa.plan_id=t.plan_id AND sa.disposition IN ('refresh','carry'))) AND a.plan_id=t.plan_id`, [input.node_id, input.task_id, input.node_activation])).rows[0];
+      AND activation_applies(t.id,n.id,n.activation,t.specification_id,t.plan_id)`, [input.node_id, input.task_id, input.node_activation])).rows[0];
   if (!row) throw new CommandError('stale_execution', 'Node activation or effective revision membership is no longer current');
   return row;
 }

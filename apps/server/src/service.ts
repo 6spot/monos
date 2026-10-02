@@ -1,3 +1,5 @@
+import type { SpecificationTask } from './task-specification-state.ts';
+import { liveReplanAuthority, handleReplanCommand, requestReplan } from './task-replan-state.ts';
 import { specificationFrozen } from './task-specification-state.ts';
 import { handleTaskConversation } from './task-conversation-state.ts';
 import { lockConfiguration } from './configuration-guards.ts';
@@ -25,7 +27,7 @@ import { GitHub } from './github.ts';
 import type { GitHubCredentials } from './github.ts';
 
 interface RunnerRow { id: string; incarnation: string; connected: boolean; ready: boolean; available: boolean; capacity: number; connection_instance: string | null }
-interface TaskRow { id: string; resource_id: string | null; control_version: string; project_id: string | null }
+interface TaskRow extends SpecificationTask { id: string; resource_id: string | null; control_version: string; project_id: string | null }
 export interface AttemptRow {
   planning_intent_id: string | null; specification_id: string | null; plan_id: string | null; recovery_consumed_by: string | null; end_reason: string | null;
   id: string; runner_id: string; task_id: string | null; todo_id: string | null; discussion_context: DiscussionContext | null; node_id: string | null; dispatch_id: string;
@@ -78,6 +80,7 @@ async function taskEvent(tx: Transaction, attempt: AttemptRow, kind: string, bod
 
 async function missingFormalOutcome(tx: Transaction, attempt: AttemptRow, observation: string, exitCode?: number): Promise<void> {
   if (!attempt.mutation_allowed) return;
+  if(attempt.launch.task_replan_source){await tx.query("UPDATE attempts SET mutation_allowed=false,state='FAILED',end_reason='missing_formal_outcome' WHERE id=$1",[attempt.id]);await tx.query("UPDATE replan_sources SET done=true,waiting_reason='missing_formal_outcome' WHERE id=$1",[attempt.launch.task_replan_source.source_id]);await admitEffect(tx,attempt,'stop',randomUUID());return;}
   if(attempt.launch.task_conversation_source){
     await tx.query("UPDATE attempts SET mutation_allowed=false,state='FAILED',end_reason='missing_formal_outcome' WHERE id=$1",[attempt.id]);
     await tx.query("UPDATE task_inputs SET status='failed',version=version+1 WHERE id=$1 AND status='pending'",[attempt.launch.task_conversation_source.input_id]);
@@ -95,7 +98,7 @@ async function missingFormalOutcome(tx: Transaction, attempt: AttemptRow, observ
     else await tx.query("UPDATE nodes SET state='BLOCKED' WHERE id=$1", [attempt.node_id]);
   }
   const state = attempt.node_id ? await derivedTaskState(tx, (await tx.query<{ plan_id: string }>('SELECT plan_id FROM tasks WHERE id=$1', [attempt.task_id])).rows[0]!.plan_id) : null;
-  await tx.query('UPDATE tasks SET state=COALESCE($2,state),control_version=control_version+1 WHERE id=$1', [attempt.task_id, state]);
+  await tx.query("UPDATE tasks SET state=CASE WHEN state='REPLAN_REQUIRED' THEN state ELSE COALESCE($2,state) END,control_version=control_version+1 WHERE id=$1", [attempt.task_id, state]);
   await admitEffect(tx, attempt, 'stop', randomUUID());
   await taskEvent(tx, attempt, 'missing_formal_outcome', { exit_code: exitCode ?? null, observation });
 }
@@ -252,8 +255,10 @@ export class BoundaryService {
         await tx.query('INSERT INTO command_receipts(attempt_id,scope_id,request_id,command_name,digest,schema_version,envelope_json,response,operation_id) VALUES($1,$2,$3,$4,$5,1,$6,$7,$8)',[attempt.id,task.id,command.request_id,command.name,submission.sha256,submission.envelope_json,response,outcome.operation_id??null]);
         this.options.beforeAdmissionCommit?.();return response;
       }
+      if(attempt.launch.task_replan_source){guardNewCommand(command,{kind:attempt.kind,taskId:task.id,taskReplan:true,mutationAllowed:attempt.mutation_allowed,processReleased:attempt.process_released,controlVersion:Number(task.control_version),sourceWatermark:0,connectionAvailable:runner.available&&runner.connection_instance===this.instanceId});const outcome=await handleReplanCommand(tx,task,attempt,command);const response:CommandResult={schema_version:1,request_id:command.request_id,status:'committed',result:outcome.result,operation_id:outcome.operation_id};await tx.query('INSERT INTO command_receipts(attempt_id,scope_id,request_id,command_name,digest,schema_version,envelope_json,response,operation_id) VALUES($1,$2,$3,$4,$5,1,$6,$7,$8)',[attempt.id,task.id,command.request_id,command.name,submission.sha256,submission.envelope_json,response,outcome.operation_id]);this.options.beforeAdmissionCommit?.();return response;}
+      const liveReplan=await liveReplanAuthority(tx,task.id,attempt.id);
       const legacy = await explicitLegacyAttempt(tx, attempt.id);
-      guardNewCommand(command, { kind: attempt.kind, taskId: attempt.task_id!, resourceId: legacy ? attempt.launch.resource_id : undefined, projectResources: !legacy, initialPlanning: !!attempt.planning_intent_id && !legacy, mutationAllowed: attempt.mutation_allowed, processReleased: attempt.process_released, controlVersion: Number(task.control_version), sourceWatermark: attempt.launch.source_watermark, connectionAvailable: runner.available && runner.connection_instance === this.instanceId });
+      guardNewCommand(command, { kind: attempt.kind, taskId: attempt.task_id!, resourceId: legacy ? attempt.launch.resource_id : undefined, projectResources: !legacy, initialPlanning: !!attempt.planning_intent_id && !legacy, mutationAllowed: attempt.mutation_allowed, processReleased: attempt.process_released, controlVersion: liveReplan?attempt.launch.control_version:Number(task.control_version), sourceWatermark: attempt.launch.source_watermark, connectionAvailable: runner.available && runner.connection_instance === this.instanceId });
       if (command.name === 'publish_execution_plan' || command.name === 'raise_planning_issue') {
         const outcome = await handlePlanningCommand(tx, attempt, command);
         const response: CommandResult = { schema_version: 1, request_id: command.request_id, status: 'committed', result: outcome.result, operation_id: outcome.operation_id };
@@ -273,6 +278,7 @@ export class BoundaryService {
       }
       const source = attempt.launch.node_execution_source
         ? await assertNodeSource(tx,task.id,attempt.launch.node_execution_source,attempt.id,attempt.launch.prompt) : undefined;
+      if(command.name==='request_replan'){if(!source||legacy)throw new CommandError('denied_scope','Canonical Node source required');const id=await requestReplan(tx,task,attempt,command.payload.reason!,command.request_id,{node:source});const op=(await tx.query<{id:string}>("SELECT id FROM operations WHERE attempt_id=$1 AND kind='stop'",[attempt.id])).rows[0];const response:CommandResult={schema_version:1,request_id:command.request_id,status:'committed',result:{replan_outcome:{kind:'request',replan_request_id:id}},operation_id:op?.id};await tx.query('INSERT INTO command_receipts(attempt_id,scope_id,request_id,command_name,digest,schema_version,envelope_json,response,operation_id) VALUES($1,$2,$3,$4,$5,1,$6,$7,$8)',[attempt.id,task.id,command.request_id,command.name,submission.sha256,submission.envelope_json,response,op?.id]);this.options.beforeAdmissionCommit?.();return response;}
       if (['publish_artifact','read_artifact','block_node'].includes(command.name)) {
         if (!source || legacy) throw new CommandError('denied_scope','Canonical Node source is required');
         let operationId:string|undefined;
@@ -450,7 +456,7 @@ export class BoundaryService {
       if (event.kind === 'capture_failed' && !attempt.process_released) {
         const completion = (await tx.query("SELECT 1 FROM operations WHERE attempt_id=$1 AND kind='complete_node'", [attempt.id])).rowCount;
         if (!completion && attempt.mutation_allowed) {
-          if(attempt.launch.task_conversation_source){
+          if(attempt.launch.task_conversation_source||attempt.launch.task_replan_source){
             await missingFormalOutcome(tx,attempt,'capture_failed');
             await tx.query("UPDATE attempts SET end_reason='capture_failed' WHERE id=$1",[attempt.id]);
           } else if (attempt.todo_id) {
@@ -461,7 +467,7 @@ export class BoundaryService {
           await tx.query("UPDATE attempts SET mutation_allowed=false,state='FAILED',end_reason='capture_failed' WHERE id=$1", [attempt.id]);
           if (attempt.node_id) await tx.query("UPDATE nodes SET state='BLOCKED' WHERE id=$1 AND activation=$2", [attempt.node_id, attempt.node_activation]);
           const state = attempt.node_id ? await derivedTaskState(tx, (await tx.query<{ plan_id: string }>('SELECT plan_id FROM tasks WHERE id=$1', [attempt.task_id])).rows[0]!.plan_id) : null;
-          await tx.query('UPDATE tasks SET state=COALESCE($2,state),control_version=control_version+1 WHERE id=$1', [attempt.task_id, state]);
+          await tx.query("UPDATE tasks SET state=CASE WHEN state='REPLAN_REQUIRED' THEN state ELSE COALESCE($2,state) END,control_version=control_version+1 WHERE id=$1", [attempt.task_id, state]);
           await admitEffect(tx, attempt, 'stop', randomUUID());
           await taskEvent(tx, attempt, 'execution_capture_failed', { observation: 'capture_failed' });
           }
@@ -479,7 +485,7 @@ export class BoundaryService {
             const changed = await tx.query("UPDATE nodes SET state='BLOCKED' WHERE id=$1 AND activation=$2 AND state='RUNNING'", [attempt.node_id, attempt.node_activation]);
             if (changed.rowCount) {
               const plan = (await tx.query<{ plan_id: string }>('SELECT plan_id FROM tasks WHERE id=$1', [attempt.task_id])).rows[0]!.plan_id;
-              await tx.query('UPDATE tasks SET state=$2,control_version=control_version+1 WHERE id=$1', [attempt.task_id, await derivedTaskState(tx, plan)]);
+              await tx.query("UPDATE tasks SET state=CASE WHEN state='REPLAN_REQUIRED' THEN state ELSE $2 END,control_version=control_version+1 WHERE id=$1", [attempt.task_id, await derivedTaskState(tx, plan)]);
               await taskEvent(tx, attempt, 'node_capture_blocked', { node_id: attempt.node_id, observation: 'completion_recovery_after_absence' }, recovering.id);
             }
           }
@@ -539,7 +545,7 @@ export class BoundaryService {
           if (node.state === 'RUNNING') {
             await tx.query("UPDATE nodes SET state='BLOCKED' WHERE id=$1", [attempt.node_id]);
             const plan = (await tx.query<{ plan_id: string }>('SELECT plan_id FROM tasks WHERE id=$1', [attempt.task_id])).rows[0]!.plan_id;
-            await tx.query('UPDATE tasks SET state=$2,control_version=control_version+1 WHERE id=$1', [attempt.task_id, await derivedTaskState(tx, plan)]);
+            await tx.query("UPDATE tasks SET state=CASE WHEN state='REPLAN_REQUIRED' THEN state ELSE $2 END,control_version=control_version+1 WHERE id=$1", [attempt.task_id, await derivedTaskState(tx, plan)]);
             await taskEvent(tx, attempt, 'node_capture_blocked', { node_id: attempt.node_id, node_activation: Number(attempt.node_activation), failure_kind: message.failure_kind }, operation.id);
           }
         }

@@ -1,13 +1,14 @@
+import { assertNoReplan, eligibleReplan, replanProposal } from './task-replan-state.ts';
 import { assertCurrentNode } from './task-records.ts';
 import { randomUUID } from 'node:crypto';
 import type { Transaction } from '../../../packages/db/src/index.ts';
 import { CommandError } from '../../../packages/domain/src/commands.ts';
 import { canonicalJSON, digest, validate } from '../../../packages/protocol/src/index.ts';
-import type { PrepareSpecificationRevision, SpecificationImpact, TaskActionBasis } from '../../../packages/protocol/src/index.ts';
+import type { PrepareSpecificationRevision, RequirementImpact, SpecificationImpact, TaskActionBasis } from '../../../packages/protocol/src/index.ts';
 import { prepareTaskProposal } from './owner-commands.ts';
 
 export interface SpecificationTask { id:string; specification_id:string; plan_id:string|null; control_version:string; state:string; accepted_delivery_operation_id:string|null; initial_planning_intent_id?:string|null; planning_issue_sequence?:string|null }
-export interface RequirementProposal { id:string; task_id:string; obligation_id:string; predecessor_id:string|null; source_id:string|null; input_id:string|null; specification:string; summary:string; impact:SpecificationImpact; specification_digest:string; impact_digest:string; content_digest:string; base_specification_id:string; base_plan_id:string|null; base_control_version:string; input_cutoff:string }
+export interface RequirementProposal { id:string; task_id:string; obligation_id:string; predecessor_id:string|null; source_id:string|null; input_id:string|null; specification:string; summary:string; impact:SpecificationImpact | (RequirementImpact & {graph_sufficient:false}); specification_digest:string; impact_digest:string; content_digest:string; base_specification_id:string; base_plan_id:string|null; base_control_version:string; input_cutoff:string }
 export async function specificationFrozen(tx:Transaction,taskId:string):Promise<boolean>{return !!(await tx.query('SELECT 1 FROM task_publication_slots WHERE task_id=$1',[taskId])).rowCount;}
 export async function assertSpecificationUnfrozen(tx:Transaction,taskId:string):Promise<void>{if(await specificationFrozen(tx,taskId))throw new CommandError('unmet_precondition','Requirement change owns execution settlement');}
 export function mutableSpecification(task:SpecificationTask):void{if(['COMPLETED','CANCELLED'].includes(task.state)||task.accepted_delivery_operation_id)throw new CommandError('unmet_precondition','Task cannot change accepted or terminal requirements');}
@@ -38,10 +39,11 @@ export async function eligibleRequirement(tx:Transaction,task:SpecificationTask,
  mutableSpecification(task);
  if(!(await tx.query(`SELECT 1 FROM requirement_attachments a JOIN requirement_obligations o ON o.current_proposal_id=a.proposal_id JOIN task_command_proposals g ON g.id=a.proposal_id WHERE a.proposal_id=$1 AND o.status='pending' AND NOT g.revoked AND g.expires_at>clock_timestamp()`,[p.id])).rowCount)throw new CommandError('unmet_precondition','Proposal is unattached, replaced, withdrawn or expired');
  if(task.specification_id!==p.base_specification_id||task.plan_id!==p.base_plan_id||(checkControl&&Number(task.control_version)!==Number(p.base_control_version)))throw new CommandError('version_conflict','Proposal assessment is stale',Number(task.control_version));
+ if(!p.impact.graph_sufficient){const linked=(await tx.query<{id:string}>('SELECT id FROM replan_proposals WHERE requirement_proposal_id=$1',[p.id])).rows[0];if(!linked)throw new CommandError('unmet_precondition','Joint graph proposal missing');await eligibleReplan(tx,task,await replanProposal(tx,task.id,linked.id));return;}
  await checkImpact(tx,task,p.impact);await laterSpecificationInputs(tx,p);
 }
 export async function prepareSpecification(tx:Transaction,task:SpecificationTask,input:PrepareSpecificationRevision,source?:{id:string;input_id:string;source_watermark:string}):Promise<RequirementProposal>{
- validate('PrepareSpecificationRevision',input);if((await tx.query('SELECT 1 FROM task_command_proposals WHERE id=$1',[input.proposal_id])).rowCount)throw new CommandError('payload_conflict','Proposal identity already exists');mutableSpecification(task);exactBasis(task,input.basis);await checkImpact(tx,task,input.impact);
+ validate('PrepareSpecificationRevision',input);if((await tx.query('SELECT 1 FROM task_command_proposals WHERE id=$1',[input.proposal_id])).rowCount)throw new CommandError('payload_conflict','Proposal identity already exists');mutableSpecification(task);exactBasis(task,input.basis);await assertNoReplan(tx,task.id);validate('SpecificationImpact',input.impact);await checkImpact(tx,task,input.impact as SpecificationImpact);
  if(!input.specification.trim()||!input.summary.trim())throw new CommandError('invalid_input','Complete Specification and summary must be nonblank');
  if(new Set(input.source_input_ids).size!==input.source_input_ids.length||source&&!input.source_input_ids.includes(source.input_id))throw new CommandError('invalid_input','Proposal must retain its canonical source input');
  const cutoff=source?Number(source.source_watermark):Number((await tx.query('SELECT COALESCE(max(sequence),0) cutoff FROM task_messages WHERE task_id=$1 AND author=\'owner\'',[task.id])).rows[0].cutoff);
@@ -58,6 +60,7 @@ export async function prepareSpecification(tx:Transaction,task:SpecificationTask
  return requirementProposal(tx,input.proposal_id,task.id);
 }
 export async function attachSpecification(tx:Transaction,task:SpecificationTask,p:RequirementProposal,sourceId:string|null,inputId:string|null):Promise<void>{
+ if(!p.impact.graph_sufficient)throw new CommandError('unmet_precondition','Joint requirements attach only through their exact Replan outcome');
  mutableSpecification(task);exactBasis(task,{control_version:Number(p.base_control_version),specification_id:p.base_specification_id,plan_id:p.base_plan_id});await checkImpact(tx,task,p.impact);
  if(p.source_id!==sourceId||p.input_id!==inputId)throw new CommandError('denied_scope','Draft belongs to a different source');
  const old=(await tx.query<{current_proposal_id:string|null;status:string}>('SELECT current_proposal_id,status FROM requirement_obligations WHERE id=$1 FOR UPDATE',[p.obligation_id])).rows[0]!;

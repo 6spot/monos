@@ -3,7 +3,7 @@
   "name": "a-single-node-replan",
   "title": "One-Node replacement Plan and Replan exits",
   "description": "Publish confirmed replacement Plans or joint Specification and Plan revisions while retaining independent operation guards.",
-  "status": "planning",
+  "status": "in_progress",
   "dev_type": "backend",
   "scope": null,
   "package": null,
@@ -21,9 +21,9 @@
   "children": [],
   "parent": "09-28-a-task-execution",
   "relatedFiles": [],
-  "notes": "",
+  "notes": "Design converged with backend, Runner and independent acceptance review. Activated under standing sequential-execution authorization.",
   "meta": {
     "roadmap_level": "leaf",
-    "planning_maturity": "backlog"
+    "planning_maturity": "implementation_ready"
   }
 }

@@ -1,3 +1,4 @@
+import type { ReplanRequest } from './task-replan-state.ts';
 import { specificationRead,specificationHistory,specificationChangeRead } from './task-specification-reads.ts';
 import { randomUUID } from 'node:crypto';
 import { transaction } from '../../../packages/db/src/index.ts';
@@ -61,6 +62,8 @@ export class TaskSpecification {
    const c=(await tx.query<RequirementChange>('SELECT * FROM requirement_changes WHERE proposal_id=$1',[p.id])).rows[0];
    if(c){if(Number(c.version)!==payload.expected_version||c.status!=='settling')throw new CommandError('version_conflict','Change operation no longer withdrawable');await tx.query("UPDATE requirement_changes SET status='withdrawing',version=version+1 WHERE id=$1",[c.id]);await advanceSpecification(tx,task,{...c,status:'withdrawing'},config);result={...result,operation_id:c.id};}
    else {const o=(await tx.query<{version:string;current_proposal_id:string;status:string}>('SELECT * FROM requirement_obligations WHERE id=$1',[p.obligation_id])).rows[0]!;if(Number(o.version)!==payload.expected_version||o.status!=='pending'||o.current_proposal_id!==p.id)throw new CommandError('version_conflict','Proposal no longer withdrawable');await tx.query("UPDATE requirement_obligations SET status='withdrawn',version=version+1 WHERE id=$1",[p.obligation_id]);}
+   const linked=(await tx.query<{request_id:string}>('SELECT s.request_id FROM requirement_proposals p JOIN replan_sources s ON s.id=p.replan_source_id WHERE p.id=$1',[p.id])).rows[0];
+   if(linked){const {revokeReplanGeneration}=await import('./task-replan.ts');const r=(await tx.query<ReplanRequest>('SELECT * FROM replan_requests WHERE id=$1',[linked.request_id])).rows[0];if(r?.status==='pending'){await revokeReplanGeneration(tx,r,cmd.request_id);await tx.query('UPDATE replan_requests SET source_id=NULL,proposal_id=NULL,issue_id=NULL,version=version+1 WHERE id=$1',[r.id]);}}
    await tx.query('UPDATE task_command_proposals SET revoked=true WHERE id=$1 AND NOT revoked',[p.id]);result={...result,proposal_id:p.id};
   }else if(cmd.name==='retry_specification'){
    const c=(await tx.query<RequirementChange>('SELECT * FROM requirement_changes WHERE id=$1 AND task_id=$2',[payload.operation_id,task.id])).rows[0];if(!c||Number(c.version)!==payload.expected_version||!['settling','withdrawing'].includes(c.status))throw new CommandError('version_conflict','Exact unsettled change operation required');

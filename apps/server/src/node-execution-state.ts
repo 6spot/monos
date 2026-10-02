@@ -1,3 +1,4 @@
+import { liveReplanAuthority, assertNoReplan } from './task-replan-state.ts';
 import { assertSpecificationUnfrozen } from './task-specification-state.ts';
 import { guidanceContext, assignGuidance } from './task-guidance.ts';
 import { randomUUID } from 'node:crypto';
@@ -58,6 +59,7 @@ export async function assertNodeSource(
   attemptId: string,
   prompt?: string
 ): Promise<NodeSource> {
+  if(await liveReplanAuthority(tx,taskId,attemptId)){const live=(await tx.query<NodeSource>('SELECT * FROM node_execution_outbox WHERE id=$1',[source.source_id])).rows[0];if(live&&canonicalJSON(nodeSource(live))===canonicalJSON(source)&&(prompt===undefined||live.prompt===prompt))return live;throw new CommandError('stale_execution','Live Replan source differs');}
   await assertSpecificationUnfrozen(tx,taskId);
   const row = (
     await tx.query<NodeSource>(
@@ -92,6 +94,7 @@ export async function prepareNodeSource(
   options: { request_id?: string; recovery?: object } = {}
 ): Promise<NodeSource> {
   await assertSpecificationUnfrozen(tx,task.id);
+  await assertNoReplan(tx,task.id);
   const id = randomUUID(),
     attemptId = randomUUID();
   const definition = (
@@ -188,6 +191,7 @@ export async function prepareNodeSource(
           validity: 'Historical output candidates only; publication does not establish successful current completion.',
           items: artifacts,
         },
+        replan_history:(await tx.query("SELECT p.id publication_id,a.node_id origin_node_id,a.node_activation origin_activation,a.disposition,c.result historical_result,COALESCE((SELECT jsonb_agg(descriptor ORDER BY id) FROM replan_workspace_transfers w WHERE w.publication_id=p.id AND w.target_node_id=$2),'[]'::jsonb) workspace_dispositions FROM replan_publications p JOIN replan_node_applicability a ON a.publication_id=p.id LEFT JOIN node_completions c ON c.node_id=a.node_id AND c.activation=a.node_activation WHERE p.new_plan_id=$1 AND a.target_node_id=$2 AND a.target_node_activation=$3",[task.plan_id,node.id,node.activation])).rows.map(r=>({...r,origin_activation:Number(r.origin_activation),validity:'Historical input only; never completion of the new activation'})),
         recovery: options.recovery ?? {},
       };
       prompt = canonicalJSON(context);

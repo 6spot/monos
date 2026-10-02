@@ -20,7 +20,7 @@ export async function bindTaskGuidance(
 ): Promise<void> {
   await tx.query(
     `INSERT INTO task_guidance_obligations(id,task_id,guidance_id,node_id,node_activation)
-    SELECT gen_random_uuid()::text,g.task_id,g.id,$2,$3 FROM task_guidance g WHERE g.task_id=$1 AND g.status='active' AND (g.node_id IS NULL OR g.node_id=$2) ON CONFLICT(guidance_id,node_id,node_activation) DO NOTHING`,
+    SELECT gen_random_uuid()::text,g.task_id,g.id,$2,$3 FROM task_guidance g WHERE g.task_id=$1 AND g.status='active' AND (g.node_id IS NULL OR g.node_id=$2 OR EXISTS(SELECT 1 FROM replan_guidance_applicability a WHERE a.task_id=$1 AND a.guidance_id=g.id AND a.node_id=$2)) ON CONFLICT(guidance_id,node_id,node_activation) DO NOTHING`,
     [taskId, nodeId, activation],
   );
 }

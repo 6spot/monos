@@ -18,11 +18,12 @@ async function taskEvent(tx: Transaction, attempt: AttemptRow, kind: string, bod
 }
 export async function refreshTaskState(tx: Transaction, taskId: string): Promise<void> {
   if(await specificationFrozen(tx,taskId))return;
+  if((await tx.query("SELECT 1 FROM replan_requests WHERE task_id=$1 AND status='pending'",[taskId])).rowCount)return;
   const task = (await tx.query<NodeTask>('SELECT * FROM tasks WHERE id=$1', [taskId])).rows[0]!;
   if (task.plan_id && ['RUNNING', 'BLOCKED', 'REVIEW'].includes(task.state)) {
     const state = await derivedTaskState(tx, task.plan_id);
     if (state !== task.state)
-      await tx.query('UPDATE tasks SET state=$2,control_version=control_version+1 WHERE id=$1', [taskId, state]);
+      await tx.query("UPDATE tasks SET state=CASE WHEN state='REPLAN_REQUIRED' THEN state ELSE $2 END,control_version=control_version+1 WHERE id=$1", [taskId, state]);
   }
 }
 export async function projectCompletion(
@@ -60,7 +61,7 @@ export async function projectCompletion(
   if (
     Number(node.activation) !== Number(attempt.node_activation) ||
     (node.state !== 'RUNNING' && !blocked) ||
-    !['RUNNING', 'BLOCKED'].includes(task.state) ||
+    !['RUNNING', 'BLOCKED','REPLAN_REQUIRED'].includes(task.state) ||
     attempt.process_released
   )
     throw new CommandError('stale_execution', 'Completion activation is no longer current');
@@ -99,7 +100,7 @@ export async function projectCompletion(
     [attempt.node_id, attempt.node_activation, attempt.id, operation.id, result]
   );
   await tx.query("UPDATE nodes SET state='COMPLETED',result=$2,blocker_id=NULL WHERE id=$1", [attempt.node_id, result]);
-  await tx.query('UPDATE tasks SET state=$2,control_version=control_version+1 WHERE id=$1', [
+  await tx.query("UPDATE tasks SET state=CASE WHEN state='REPLAN_REQUIRED' THEN state ELSE $2 END,control_version=control_version+1 WHERE id=$1", [
     task.id,
     await derivedTaskState(tx, task.plan_id),
   ]);

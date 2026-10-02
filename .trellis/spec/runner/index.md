@@ -15,6 +15,7 @@ outcomes, Stop and service/host recovery. Startup after that reboot trial was ma
 - Read [Node execution](../backend/node-execution.md) for canonical source, repository-free completion and paired recovery contracts.
 - Read [Task Conversation](../backend/task-conversation.md) for source-specific reads/replies, Stop-only effects and explicit guidance declarations.
 - Read [Specification revisions](../backend/task-specification.md) for canonical prepare/apply and exact Owner authority; neither command adds a physical effect.
+- Read [Replan](../backend/task-replan.md) for its terminal Planner phase and exact cross-Node workspace transfer.
 - Source contracts: [Runtime](../../../docs/03-runtime-and-execution.md), [Workspace](../../../docs/04-workspace-and-git.md), [host topology](../../../docs/11-technology-and-deployment.md).
 
 ## Quality Check

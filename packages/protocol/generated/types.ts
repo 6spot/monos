@@ -30,7 +30,7 @@ export interface CommandEnvelope {
     scope_id:                 string;
 }
 
-export type CommandEnvelopeName = "open_workspace" | "inspect_repository" | "complete_node" | "commit_task_turn" | "commit_discussion_turn" | "read_discussion" | "update_working_requirement_state" | "publish_execution_plan" | "raise_planning_issue" | "publish_artifact" | "read_artifact" | "block_node" | "read_task_context" | "read_task_history" | "prepare_specification_revision" | "apply_specification_revision";
+export type CommandEnvelopeName = "open_workspace" | "inspect_repository" | "complete_node" | "commit_task_turn" | "commit_discussion_turn" | "read_discussion" | "update_working_requirement_state" | "publish_execution_plan" | "raise_planning_issue" | "publish_artifact" | "read_artifact" | "block_node" | "read_task_context" | "read_task_history" | "prepare_specification_revision" | "apply_specification_revision" | "request_replan" | "prepare_replan";
 
 export interface CommandPayload {
     artifact_id?:               string;
@@ -40,7 +40,7 @@ export interface CommandPayload {
     content?:                   ArtifactContent;
     cursor?:                    string;
     handled_guidance_ids?:      string[];
-    impact?:                    SpecificationImpact;
+    impact?:                    Impact;
     input_id?:                  string;
     nodes?:                     [ExecutionPlanNode, ...ExecutionPlanNode[]];
     plan_id?:                   string;
@@ -51,7 +51,9 @@ export interface CommandPayload {
     query?:                     string;
     reason?:                    string;
     references?:                ArtifactReference[];
+    replan_request_id?:         string;
     reply?:                     string;
+    requirement?:               ReplanRequirement;
     resolved_watermark?:        number;
     resource_id?:               string;
     routing?:                   TaskTurnRouting;
@@ -81,19 +83,51 @@ export interface ArtifactContent {
     text:       string;
 }
 
-export interface SpecificationImpact {
-    graph_sufficient: boolean;
-    guidance:         Guidance[];
-    nodes:            SpecificationImpactNode[];
+export interface Impact {
+    graph_sufficient?:   boolean;
+    guidance?:           GuidanceElement[];
+    nodes?:              SpecificationImpactNode[];
+    reason?:             string;
+    replan_impact?:      ReplanImpact;
+    replan_proposal_id?: string;
+    replan_request_id?:  string;
+    holds?:              ReplanHold[];
+    node?:               ReplanNodeImpact;
+    workspaces?:         ReplanWorkspaceInput[];
 }
 
-export interface Guidance {
-    disposition: GuidanceDisposition;
-    guidance_id: string;
-    version:     number;
+export interface GuidanceElement {
+    disposition:     GuidanceDisposition;
+    guidance_id:     string;
+    version:         number;
+    target_node_id?: string;
 }
 
 export type GuidanceDisposition = "retain" | "supersede";
+
+export interface ReplanHold {
+    blocker_id:             null | string;
+    kind:                   ReplanHoldKind;
+    origin_node_activation: number;
+    origin_node_id:         string;
+    owner_request_id:       null | string;
+    reason:                 string;
+}
+
+export type ReplanHoldKind = "semantic" | "factual" | "owner_stopped";
+
+export interface ReplanNodeImpact {
+    completion_manifest_digest: null | string;
+    completion_operation_id:    null | string;
+    disposition:                ReplanNodeImpactDisposition;
+    node_activation:            number;
+    node_id:                    string;
+    source_id:                  null | string;
+    target_node_activation:     number;
+    target_node_id:             string;
+}
+
+export type ReplanNodeImpactDisposition = "refresh" | "carry" | "invalidate" | "replace";
 
 export interface SpecificationImpactNode {
     completion_manifest_digest: null | string;
@@ -105,6 +139,72 @@ export interface SpecificationImpactNode {
 }
 
 export type SpecificationImpactNodeDisposition = "refresh" | "invalidate" | "carry";
+
+export interface ReplanImpact {
+    guidance:   ReplanGuidance[];
+    holds:      ReplanHold[];
+    node:       ReplanNodeImpact;
+    workspaces: ReplanWorkspaceInput[];
+}
+
+export interface ReplanGuidance {
+    disposition:    GuidanceDisposition;
+    guidance_id:    string;
+    target_node_id: string;
+    version:        number;
+}
+
+export interface ReplanWorkspaceInput {
+    completion_manifest_digest?: string;
+    completion_operation_id?:    string;
+    finalized_tree?:             string;
+    from_attempt_id:             string;
+    from_lease_id:               string;
+    from_node_activation:        number;
+    from_node_id:                string;
+    from_plan_id:                string;
+    kind:                        ReplanWorkspaceInputKind;
+    metadata:                    WorkspaceMetadata;
+    resource_id:                 string;
+    runner_id:                   string;
+    settle_operation_id:         string;
+    task_id:                     string;
+    workspace_id:                string;
+}
+
+export type ReplanWorkspaceInputKind = "checkpoint" | "completed";
+
+export interface WorkspaceMetadata {
+    base_commit:                     string;
+    checkpoint?:                     WorkspaceCheckpoint;
+    finalized_commit:                string;
+    generation:                      number;
+    lease_id:                        string;
+    provider_metadata?:              RepositoryProviderMetadata;
+    recovered_by_stop_operation_id?: string;
+    repository_identity:             string;
+    storage_id:                      string;
+    target_branch:                   string;
+    target_commit:                   string;
+    target_observation_lease_id?:    string;
+}
+
+export interface WorkspaceCheckpoint {
+    commit_id:                   string;
+    completion_identity_digest?: string;
+    completion_operation_id?:    string;
+    head_commit:                 string;
+    operation_id:                string;
+    tree_id:                     string;
+}
+
+export interface RepositoryProviderMetadata {
+    github?: RepositoryProviderMetadataGithub;
+}
+
+export interface RepositoryProviderMetadataGithub {
+    repository_id: string;
+}
 
 export interface ExecutionPlanNode {
     consumes?:          string[];
@@ -121,6 +221,12 @@ export interface ArtifactReference {
     url:    string;
 }
 
+export interface ReplanRequirement {
+    proposal_id:   string;
+    specification: string;
+    summary:       string;
+}
+
 export interface TaskTurnRouting {
     basis?:            TaskActionBasis;
     expected_version?: number;
@@ -134,7 +240,7 @@ export interface TaskTurnRouting {
     text?:             string;
 }
 
-export type TaskTurnRoutingKind = "reply_only" | "reply" | "guidance" | "issue" | "answer" | "resolve_guidance" | "specification_proposal";
+export type TaskTurnRoutingKind = "reply_only" | "reply" | "guidance" | "issue" | "answer" | "resolve_guidance" | "specification_proposal" | "replan";
 
 export type TargetKind = "planning_issue" | "node_blocker" | "input_issue";
 
@@ -183,6 +289,7 @@ export interface EffectResult {
     path?:                         string;
     planning_outcome?:             PlanningOutcome;
     proposal_id?:                  string;
+    replan_outcome?:               ReplanOutcome;
     reply?:                        string;
     requirement_operation_id?:     string;
     resolved_watermark?:           number;
@@ -255,6 +362,19 @@ export interface PlanningOutcome {
 
 export type PlanningOutcomeKind = "plan" | "issue";
 
+export interface ReplanOutcome {
+    content_digest?:             string;
+    issue_id?:                   string;
+    kind:                        ReplanOutcomeKind;
+    proposal_id?:                string;
+    replan_request_id:           string;
+    requirement_content_digest?: string;
+    requirement_proposal_id?:    string;
+    source_id?:                  string;
+}
+
+export type ReplanOutcomeKind = "request" | "proposal" | "issue";
+
 export interface TaskContext {
     basis:       TaskActionBasis;
     observed_at: string;
@@ -283,38 +403,6 @@ export interface TaskMessage {
     sequence:                  number;
     source_id?:                string;
     source_watermark?:         number;
-}
-
-export interface WorkspaceMetadata {
-    base_commit:                     string;
-    checkpoint?:                     WorkspaceCheckpoint;
-    finalized_commit:                string;
-    generation:                      number;
-    lease_id:                        string;
-    provider_metadata?:              RepositoryProviderMetadata;
-    recovered_by_stop_operation_id?: string;
-    repository_identity:             string;
-    storage_id:                      string;
-    target_branch:                   string;
-    target_commit:                   string;
-    target_observation_lease_id?:    string;
-}
-
-export interface WorkspaceCheckpoint {
-    commit_id:                   string;
-    completion_identity_digest?: string;
-    completion_operation_id?:    string;
-    head_commit:                 string;
-    operation_id:                string;
-    tree_id:                     string;
-}
-
-export interface RepositoryProviderMetadata {
-    github?: RepositoryProviderMetadataGithub;
-}
-
-export interface RepositoryProviderMetadataGithub {
-    repository_id: string;
 }
 
 export type WorkspaceUnavailableReason = "unsupported_remote" | "unsupported_multiple_workspaces" | "credentials_missing" | "repository_denied" | "ref_unavailable" | "storage_unavailable" | "ownership_unresolved";
@@ -369,6 +457,7 @@ export interface Dispatch {
     task_conversation_source?: TaskConversationSource;
     task_id?:                  string;
     task_planning_source?:     TaskPlanningSource;
+    task_replan_source?:       TaskReplanSource;
     todo_id?:                  string;
     workspace_reservations?:   WorkspaceReservations;
 }
@@ -403,6 +492,15 @@ export interface TaskConversationSource {
 export interface TaskPlanningSource {
     context_digest:   string;
     intent_id:        string;
+    specification_id: string;
+}
+
+export interface TaskReplanSource {
+    context_digest:   string;
+    control_version:  number;
+    plan_id:          string;
+    request_id:       string;
+    source_id:        string;
     specification_id: string;
 }
 
@@ -468,6 +566,7 @@ export interface WorkspaceDescriptor {
     runner_id:         string;
     schema_version:    number;
     task_id:           string;
+    transfer?:         WorkspaceTransfer;
     workspace_id:      string;
 }
 
@@ -487,6 +586,29 @@ export interface WorkspaceResource {
     remote_url:          string;
     repository_identity: string;
     resource_id:         string;
+}
+
+export interface WorkspaceTransfer {
+    completion_manifest_digest?: string;
+    completion_operation_id?:    string;
+    finalized_tree?:             string;
+    from_attempt_id:             string;
+    from_lease_id:               string;
+    from_node_activation:        number;
+    from_node_id:                string;
+    from_plan_id:                string;
+    kind:                        ReplanWorkspaceInputKind;
+    metadata:                    WorkspaceMetadata;
+    proposal_id:                 string;
+    publication_id:              string;
+    resource_id:                 string;
+    runner_id:                   string;
+    settle_operation_id:         string;
+    task_id:                     string;
+    to_node_activation:          number;
+    to_node_id:                  string;
+    to_plan_id:                  string;
+    workspace_id:                string;
 }
 
 export interface OperationResult {
@@ -545,7 +667,7 @@ export interface InventoryQuery {
     snapshot_id?: string;
 }
 
-export type TaskProposalAction = "apply_specification_revision" | "apply_rework" | "accept_delivery";
+export type TaskProposalAction = "apply_specification_revision" | "apply_rework" | "accept_delivery" | "publish_replan";
 
 export interface OwnerCommand {
     expected_control_version: number;
@@ -1508,11 +1630,9 @@ export interface NodeExecutionStatusAttempt {
 
 export interface Blocker {
     id:     string;
-    kind:   BlockerKind;
+    kind:   ReplanHoldKind;
     reason: string;
 }
-
-export type BlockerKind = "semantic" | "factual" | "owner_stopped";
 
 export interface CompletionManifest {
     artifact_ids:          string[];
@@ -1654,14 +1774,36 @@ export interface TaskConversationStatusAttempt {
     state:            string;
 }
 
+export interface SpecificationImpact {
+    graph_sufficient: boolean;
+    guidance:         Guidance[];
+    nodes:            SpecificationImpactNode[];
+}
+
+export interface Guidance {
+    disposition: GuidanceDisposition;
+    guidance_id: string;
+    version:     number;
+}
+
 export interface PrepareSpecificationRevision {
     basis:            TaskActionBasis;
-    impact:           SpecificationImpact;
+    impact:           RequirementImpact;
     proposal_id:      string;
     source_input_ids: string[];
     specification:    string;
     summary:          string;
     supersedes?:      string;
+}
+
+export interface RequirementImpact {
+    graph_sufficient:    boolean;
+    guidance?:           Guidance[];
+    nodes?:              SpecificationImpactNode[];
+    reason?:             string;
+    replan_impact?:      ReplanImpact;
+    replan_proposal_id?: string;
+    replan_request_id?:  string;
 }
 
 export interface ApplySpecificationRevision {
@@ -1696,7 +1838,7 @@ export interface TaskSpecificationStatus {
     basis:              TaskActionBasis;
     changes:            RequirementChangeSummary[];
     changes_has_more:   boolean;
-    impact:             SpecificationImpact;
+    impact:             RequirementImpact;
     proposals:          RequirementProposalSummary[];
     proposals_has_more: boolean;
     schema_version:     number;
@@ -1734,13 +1876,14 @@ export type RequirementProposalSummaryStatus = "pending" | "published" | "withdr
 export interface RequirementProposalDetail {
     basis:                TaskActionBasis;
     confirmation_id:      null | string;
-    impact:               SpecificationImpact;
+    impact:               RequirementImpact;
     impact_digest:        string;
     input_cutoff:         number;
     input_id:             null | string;
     operation:            RequirementChangeSummary | null;
     predecessor_id:       null | string;
     proposal:             RequirementProposalSummary;
+    replan_source_id?:    null | string;
     schema_version:       number;
     source_id:            null | string;
     source_input_ids:     string[];
@@ -1818,3 +1961,120 @@ export interface RequirementChangeEffect {
 }
 
 export type RequirementChangeEffectState = "admitted" | "running" | "succeeded" | "cancelled" | "recovery";
+
+export interface JointSpecificationImpact {
+    graph_sufficient:   boolean;
+    reason:             string;
+    replan_impact:      ReplanImpact;
+    replan_proposal_id: string;
+    replan_request_id:  string;
+}
+
+export interface TaskReplanCommand {
+    name:           TaskReplanCommandName;
+    payload:        { [key: string]: unknown };
+    request_id:     string;
+    schema_version: number;
+    task_id:        string;
+}
+
+export type TaskReplanCommandName = "confirm_replan" | "publish_replan" | "dismiss_replan" | "retry_replan" | "defer_replan_inputs";
+
+export interface TaskReplanResult {
+    confirmation_id?:             string;
+    content_digest?:              string;
+    operation_id?:                string;
+    plan_id?:                     string;
+    proposal_id?:                 string;
+    publication_id?:              string;
+    replan_request_id?:           string;
+    request_id:                   string;
+    requirement_confirmation_id?: string;
+    requirement_proposal_id?:     string;
+    schema_version:               number;
+    specification_id?:            string;
+    status:                       ConfigurationResultStatus;
+    version?:                     number;
+}
+
+export interface TaskReplanStatus {
+    current_request: ReplanRequestSummary | null;
+    next_cursor:     null | string;
+    requests:        ReplanRequestSummary[];
+    schema_version:  number;
+    task_id:         string;
+}
+
+export interface ReplanRequestSummary {
+    direction:            null | string;
+    id:                   string;
+    input_id:             null | string;
+    issue_id:             null | string;
+    origin_activation:    number | null;
+    origin_node_id:       null | string;
+    physical_settled:     boolean;
+    proposal_id:          null | string;
+    reason:               string;
+    requester_blocker_id: null | string;
+    source_id:            null | string;
+    status:               ReplanRequestSummaryStatus;
+    task_id:              string;
+    version:              number;
+}
+
+export type ReplanRequestSummaryStatus = "pending" | "published" | "dismissed" | "cancelled";
+
+export interface ReplanProposalDetail {
+    confirmation_id:            null | string;
+    content:                    PrepareReplan;
+    input_cutoff:               number;
+    proposal:                   ReplanProposalSummary;
+    requirement_content_digest: null | string;
+    schema_version:             number;
+    task_id:                    string;
+}
+
+export interface PrepareReplan {
+    basis:             TaskActionBasis;
+    impact:            ReplanImpact;
+    nodes:             [ExecutionPlanNode, ...ExecutionPlanNode[]];
+    plan_id:           string;
+    proposal_id:       string;
+    replan_request_id: string;
+    requirement?:      ReplanRequirement;
+    source_id:         string;
+    summary:           string;
+}
+
+export interface ReplanProposalSummary {
+    content_digest:          string;
+    current:                 boolean;
+    expired:                 boolean;
+    plan_id:                 string;
+    proposal_id:             string;
+    request_id:              string;
+    requirement_proposal_id: null | string;
+    revoked:                 boolean;
+    source_id:               string;
+}
+
+export interface ReplanRequestDetail {
+    attempt_id:             null | string;
+    effects:                RequirementChangeEffect[];
+    effects_next_cursor:    null | string;
+    issue_reason:           null | string;
+    next_cursor:            null | string;
+    proposals:              ReplanProposalSummary[];
+    remaining_requirements: RequirementProposalSummary[];
+    request:                ReplanRequestSummary;
+    requirements_has_more:  boolean;
+    schema_version:         number;
+    source:                 TaskReplanSource | null;
+    task_id:                string;
+    waiting_reason:         null | string;
+}
+
+export interface ReplanReadQuery {
+    cursor?:         string;
+    effects_cursor?: string;
+}
