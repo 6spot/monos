@@ -2,7 +2,7 @@
 
 ## Status
 
-All functional, contract, real-PG/WSS, actual-Git/Go, built-SPA visual and final independent combined gates pass. The exact local-result leaf is accepted; work commit/archive/journal follow. No package/native delivery acceptance is claimed.
+All functional, contract, real-PG/WSS, actual-Git/Go, built-SPA visual and final independent combined gates pass. The exact local-result leaf is accepted, committed and archived. The journal is the subsequent bookkeeping commit. No package/native delivery acceptance is claimed.
 
 ## Scope and authorization
 
@@ -21,7 +21,7 @@ Work began at 45b5453. Actual dirty source/generated inputs and built assets, ra
 - [x] Applicable lint/type/default tests/build/protocol drift/Go race-vet pass with unchanged-input reuse and final root fixture correction gates.
 - [x] Independent final full-scope disposition, including all eight findings and evidence boundaries.
 - [x] Executable result content contract and layer indexes/Owner cursor lessons updated.
-- [ ] Scoped work committed, completed leaf archived and journal recorded.
+- [x] Scoped work committed as ac2b14237d6530f4f53bf648f9490ca928a6f0b8 and completed leaf archived; the separate journal commit follows this archive.
 
 ## Executed checks
 
@@ -57,3 +57,10 @@ Only [final screenshot manifest](research/screenshots/612e2e1d2fb0-709c322e2807-
 Actual local Git/SQLite, authenticated synthetic PG/WSS and browser fixtures establish their own assertions. They do not prove installed Linux root/service account enforcement, systemd/cgroups, native model behavior, GitHub publication or final package acceptance. The 10-second limit is broker round-trip/physical-reader budget, not an end-to-end HTTP SLA; delayed database authorization never bypasses post-read checks.
 
 AGENTS.md, Trellis workflow/skills/hooks/profiles/configuration and general collaboration/quality-guide edits belong to another session. Preserve and follow current instructions; exclude those paths from this work commit. No broad staging, source push or unrelated task cleanup.
+
+## Archival identity
+
+Captured artifact paths originally began `.trellis/tasks/10-03-a-local-result-review/`.
+They now reside under `.trellis/tasks/archive/2026-10/10-03-a-local-result-review/`.
+Original capture/log manifests and PNG bytes are unchanged; owned Markdown and
+context links were rebased, and the next leaf points to this accepted archive.

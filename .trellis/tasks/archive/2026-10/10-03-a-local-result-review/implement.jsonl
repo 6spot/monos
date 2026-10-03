@@ -22,7 +22,6 @@
 {"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Real DB and bounded evidence quality"}
 {"file": ".trellis/spec/runner/quality-guidelines.md", "reason": "Actual Git and process checks"}
 {"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "Browser interactions and inspected screenshot evidence"}
-{"file": ".trellis/tasks/10-03-a-local-result-review/research/local-result-read-design.md", "reason": "Source-backed exact export/identity/transport/read/test findings"}
-{"file": ".trellis/tasks/10-03-a-local-result-review/research/upstream-and-test-environment.md", "reason": "Accepted upstream proof and isolated test environment"}
-{"file": ".trellis/tasks/10-03-a-local-result-review/research/independent-review-matrix.md", "reason": "Concrete independent cross-layer review boundaries and evidence separation"}
+{"file": ".trellis/tasks/archive/2026-10/10-03-a-local-result-review/research/local-result-read-design.md", "reason": "Source-backed exact export/identity/transport/read/test findings"}
+{"file": ".trellis/tasks/archive/2026-10/10-03-a-local-result-review/research/upstream-and-test-environment.md", "reason": "Accepted upstream proof and isolated test environment"}
 {"file": ".trellis/spec/backend/result-content-reads.md", "reason": "Accepted exact local result cross-layer executable identity/read/auth/bounds/error contract; final combined compliance review"}
