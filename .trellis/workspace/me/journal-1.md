@@ -587,3 +587,37 @@ Unified Login/Settings/Todo/Discussion/preview with neutral shared controls. Ind
 ### Status
 
 [OK] **Completed**
+
+
+## Session 26: Installed native Task execution package acceptance
+<!-- trellis-session: v=2 fp=23b45e7e56b847ac -->
+
+**Date**: 2026-10-03
+**Task**: Installed native Task execution package acceptance
+**Branch**: `feat/stage-a-boundary-probe`
+
+### Summary
+
+Resumed 01a0edc0 under standing authorization. Installed exact accepted candidate; ordinary browser/native repository chain and same-Node correction reached local REVIEW. Independent review accepted; leaf and nine-child package archived; task transport cleaned.
+
+### Main Changes
+
+- Retained actual noncredential requests, native/Git snapshots, 40 inspected PNGs, failure and correction history; updated executable quality specs and archive-relative links.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `bc93600` | test: accept installed native Task execution package |
+
+### Testing
+
+- [OK] Fresh44PG/Linux module race vet build; actual final12/12 and installed-history31/31, all19 ownership counters zero; literal corrected README9/9 and independent22 behavior cases.
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- Plan and execute first GitHub review/correction/delivery leaf; delivery, expected-head merge, Owner acceptance and Stage A/V1 remain open. No source push.

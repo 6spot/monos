@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 25
+- **Total Sessions**: 26
 - **Last Active**: 2026-10-03
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~589 | Active |
+| `journal-1.md` | ~623 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 26 | 2026-10-03 | Installed native Task execution package acceptance | `bc93600` | `feat/stage-a-boundary-probe` |
 | 25 | 2026-10-03 | Existing-screen visual migration accepted | `333c9e3`, `d5530ea` | `feat/stage-a-boundary-probe` |
 | 24 | 2026-10-02 | Execution Board and Task UI accepted | `d28fd8b` | `feat/stage-a-boundary-probe` |
 | 23 | 2026-10-02 | One-Node Replan full acceptance and independent exits | `087ac6d` | `feat/stage-a-boundary-probe` |
