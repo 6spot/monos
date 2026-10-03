@@ -9,7 +9,7 @@ and scoped-draft behavior.
 ## Background and ownership
 
 Follows [Execution UI](../09-30-a-execution-ui/prd.md), accepted in
-`d28fd8b`, and precedes [execution integration acceptance](../../../09-30-a-task-execution-acceptance/prd.md).
+`d28fd8b`, and precedes [execution integration acceptance](../09-30-a-task-execution-acceptance/prd.md).
 This leaf completes the outstanding interiors from the
 [original migration handoff](../../2026-09/09-30-frontend-visual-standards/migration-handoff.md).
 The predecessor supplied shared neutral tokens, shell/mobile navigation, PageHeader

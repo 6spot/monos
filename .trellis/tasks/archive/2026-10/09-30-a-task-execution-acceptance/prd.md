@@ -9,7 +9,7 @@ Task execution package using revision-specific accepted evidence.
 ## Background
 
 Execution UI (`d28fd8b`, test errata `333c9e3`) and
-[existing-screen migration](../archive/2026-10/10-02-a-existing-screen-visual-migration/verification.md)
+[existing-screen migration](../10-02-a-existing-screen-visual-migration/verification.md)
 (`d5530ea`) are independently accepted. They have actual-build browser/DB coverage,
 but were not installed for native execution. Prior Node native v2 already proved a
 real Owner→Git chain with a controlled driver on an older build. This leaf supplies
@@ -53,7 +53,7 @@ routine decisions without another approval gate.
   receipts and independently verified requested output.
 - [x] Actual installed1440×1000 and390×844 browser images are inspected for Todo,
   preview/ready Task and Conversation/Overview/Timeline/Execution Details/Review,
-  against the [visual contract](../../spec/frontend/visual-design.md).
+  against the [visual contract](../../../../spec/frontend/visual-design.md).
 - [x] Reload/continuity and package exit mappings show no duplicate work or lost
   evidence; outstanding trial ownership is zero and prior services/data preserved.
 - [x] Independent full-scope review accepts only this package; parent reflects

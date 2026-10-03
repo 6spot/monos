@@ -18,8 +18,10 @@
   all Task views/reload and inspected desktop/mobile screenshots; settle owned work.
 - [x] Map accepted package recovery/exits with revision limits; targeted supplement
   only if evidence reveals a remaining gap. No repeat Replan/reboot/fault tour.
-- [ ] Independent full-scope check, specs/evidence/parent update, commit/archive/journal;
-  continue next roadmap leaf.
+- [x] Independent full-scope check, specs/evidence/parent update and work commit.
+
+Archive/journal bookkeeping follows the accepted work commit `bc93600`; the next
+roadmap leaf continues after package closure.
 
 Current result correction: first native Node failed CLI input misuse/provider429;
 same-Node Owner Retry after ordinary CLI clarification produced local REVIEW with

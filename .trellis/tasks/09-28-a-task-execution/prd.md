@@ -33,7 +33,7 @@ Execute in order; each leaf has an independent API/Runner or browser acceptance:
 6. [One-Node replacement Plan and Replan exits](../archive/2026-10/09-30-a-single-node-replan/prd.md).
 7. [Execution Board and Task control UI](../archive/2026-10/09-30-a-execution-ui/prd.md).
 8. [Existing-screen visual migration](../archive/2026-10/10-02-a-existing-screen-visual-migration/prd.md).
-9. [Task execution integration acceptance](../09-30-a-task-execution-acceptance/prd.md).
+9. [Task execution integration acceptance](../archive/2026-10/09-30-a-task-execution-acceptance/prd.md).
 
 The Owner authorized routine planning, implementation, testing and task transitions
 without repeated approval. This parent coordinates acceptance, not bulk code edits.
