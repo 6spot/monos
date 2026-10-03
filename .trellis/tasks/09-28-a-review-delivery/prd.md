@@ -16,7 +16,7 @@ Architecture modules remain authoritative. The existing boundary probe implement
 
 ## Dependencies and order
 
-- [Task conversation and single-Node execution](../09-28-a-task-execution/prd.md)
+- [Task conversation and single-Node execution](../archive/2026-10/09-28-a-task-execution/prd.md)
 - [GitHub provider feasibility](../09-28-gate-github/prd.md)
 
 These are completion/evidence gates, not automatic scheduler dependencies. Parent/child links express scope ownership only. Evidence inspection and planning may proceed earlier; implementation must resolve upstream failures first.

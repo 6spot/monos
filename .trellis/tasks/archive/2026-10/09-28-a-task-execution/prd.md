@@ -16,8 +16,8 @@ Architecture modules remain authoritative. The existing boundary probe implement
 
 ## Dependencies and order
 
-- [Capture and Discussion](../archive/2026-09/09-28-a-capture-discussion/prd.md)
-- [Production Runtime integration](../archive/2026-09/09-28-a-runtime-integration/prd.md)
+- [Capture and Discussion](../../2026-09/09-28-a-capture-discussion/prd.md)
+- [Production Runtime integration](../../2026-09/09-28-a-runtime-integration/prd.md)
 
 These are completion/evidence gates, not automatic scheduler dependencies. Parent/child links express scope ownership only. Evidence inspection and planning may proceed earlier; implementation must resolve upstream failures first.
 
@@ -25,15 +25,15 @@ These are completion/evidence gates, not automatic scheduler dependencies. Paren
 
 Execute in order; each leaf has an independent API/Runner or browser acceptance:
 
-1. [Authorized Project repositories and serial Task workspaces](../archive/2026-09/09-30-a-serial-workspaces/prd.md).
-2. [Explicit Task Start and initial planning](../archive/2026-09/09-30-a-task-start-planning/prd.md).
-3. [Single-Node execution, artifacts and recovery](../archive/2026-09/09-30-a-node-execution/prd.md).
-4. [Ordered Task Conversation and guidance](../archive/2026-09/09-30-a-task-conversation/prd.md).
-5. [Exact Specification changes and settlement](../archive/2026-10/09-30-a-specification-changes/prd.md).
-6. [One-Node replacement Plan and Replan exits](../archive/2026-10/09-30-a-single-node-replan/prd.md).
-7. [Execution Board and Task control UI](../archive/2026-10/09-30-a-execution-ui/prd.md).
-8. [Existing-screen visual migration](../archive/2026-10/10-02-a-existing-screen-visual-migration/prd.md).
-9. [Task execution integration acceptance](../archive/2026-10/09-30-a-task-execution-acceptance/prd.md).
+1. [Authorized Project repositories and serial Task workspaces](../../2026-09/09-30-a-serial-workspaces/prd.md).
+2. [Explicit Task Start and initial planning](../../2026-09/09-30-a-task-start-planning/prd.md).
+3. [Single-Node execution, artifacts and recovery](../../2026-09/09-30-a-node-execution/prd.md).
+4. [Ordered Task Conversation and guidance](../../2026-09/09-30-a-task-conversation/prd.md).
+5. [Exact Specification changes and settlement](../09-30-a-specification-changes/prd.md).
+6. [One-Node replacement Plan and Replan exits](../09-30-a-single-node-replan/prd.md).
+7. [Execution Board and Task control UI](../09-30-a-execution-ui/prd.md).
+8. [Existing-screen visual migration](../10-02-a-existing-screen-visual-migration/prd.md).
+9. [Task execution integration acceptance](../09-30-a-task-execution-acceptance/prd.md).
 
 The Owner authorized routine planning, implementation, testing and task transitions
 without repeated approval. This parent coordinates acceptance, not bulk code edits.
@@ -41,11 +41,11 @@ Research: [decomposition](research/decomposition.md) and [workspace design](rese
 
 ## Visual requirements
 
-Require the [visual contract](../../spec/frontend/visual-design.md) across execution UI and its integration with existing Todo/preview surfaces. Track the separately planned [existing-screen migration](../archive/2026-10/10-02-a-existing-screen-visual-migration/prd.md) as an integrated visual evidence dependency; backend leaves remain independently verifiable.
+Require the [visual contract](../../../../spec/frontend/visual-design.md) across execution UI and its integration with existing Todo/preview surfaces. Track the separately planned [existing-screen migration](../10-02-a-existing-screen-visual-migration/prd.md) as an integrated visual evidence dependency; backend leaves remain independently verifiable.
 
 ## Acceptance criteria
 
-- [x] Shared shell and Todo→Task→local REVIEW presentation pass the [visual quality gate](../../spec/frontend/quality-guidelines.md) using both existing-screen migration and new execution UI evidence; standards documentation alone does not close this criterion.
+- [x] Shared shell and Todo→Task→local REVIEW presentation pass the [visual quality gate](../../../../spec/frontend/quality-guidelines.md) using both existing-screen migration and new execution UI evidence; standards documentation alone does not close this criterion.
 
 - [x] Ordered Task input and Planner routing distinguish replies, guidance and authorized requirement revisions.
 - [x] One-Node initial/replacement Plans, lazy workspace opening and recoverable Git completion preserve Task identity and produce REVIEW.
@@ -67,8 +67,8 @@ Review upstream evidence and the current source, refine leaf boundaries and obse
 
 ## Source contracts
 
-- [Architecture](../../../ARCHITECTURE.md)
-- [Implementation sequence and acceptance matrices](../../../docs/09-first-executable-slice.md)
-- [Readiness gates](../../../docs/10-architecture-readiness.md)
-- [Invariants](../../../docs/08-principles-and-non-goals.md)
-- [Engineering specs](../../spec/index.md)
+- [Architecture](../../../../../ARCHITECTURE.md)
+- [Implementation sequence and acceptance matrices](../../../../../docs/09-first-executable-slice.md)
+- [Readiness gates](../../../../../docs/10-architecture-readiness.md)
+- [Invariants](../../../../../docs/08-principles-and-non-goals.md)
+- [Engineering specs](../../../../spec/index.md)

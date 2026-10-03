@@ -12,7 +12,7 @@ single-Node execution/package acceptance; Stage A delivery and V1 remain open.
 | Exact replacement Plan, independent graph/requirement exits | Single-Node Replan |
 | Board/Task controls, narrow reads/session binding | Execution UI |
 | Shared neutral shell/Todo/preview and responsive presentation | Existing-screen migration |
-| Final installed actual Owner→native Planner→real Git→local REVIEW | [Task execution integration](../archive/2026-10/09-30-a-task-execution-acceptance/verification.md) |
+| Final installed actual Owner→native Planner→real Git→local REVIEW | [Task execution integration](../09-30-a-task-execution-acceptance/verification.md) |
 
 Final leaf's independent review accepts the unchanged candidate plus fresh44PG/
 Linux module/race/vet/build, exact installed source/assets/binaries/image/backup,

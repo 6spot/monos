@@ -26,7 +26,7 @@ These are completion/evidence gates, not automatic scheduler dependencies. Paren
 - [Owner access and minimum configuration](../archive/2026-09/09-28-a-owner-configuration/prd.md)
 - [Capture and Discussion](../archive/2026-09/09-28-a-capture-discussion/prd.md)
 - [Production Runtime integration](../archive/2026-09/09-28-a-runtime-integration/prd.md)
-- [Task conversation and single-Node execution](../09-28-a-task-execution/prd.md)
+- [Task conversation and single-Node execution](../archive/2026-10/09-28-a-task-execution/prd.md)
 - [GitHub review and correction](../09-28-a-review-delivery/prd.md)
 - [Stage A integrated acceptance](../09-28-a-integration-acceptance/prd.md)
 
