@@ -1,0 +1,15 @@
+{
+  "at": "2026-10-02T21:53:14.156Z",
+  "path": "/v1/owner/task-previews/commands",
+  "status": 200,
+  "body": {
+    "schema_version": 1,
+    "request_id": "8e9f4a9c-47e8-49ca-b5d4-4550ce1892cd",
+    "status": "committed",
+    "todo_id": "55d48651-d4a1-48f7-8ef3-0d77e62d75f4",
+    "proposal_message_id": "02c6615d-52c4-46e0-add6-a86e39b39eb4",
+    "outcome": "confirmed",
+    "confirmation_id": "a5dac654-db40-4c24-9973-fdaaa6763edf",
+    "content_digest": "0cb639b6c616bdac88c8559e177eafad34ee900bd9c5fa87c3f400ce1d0cd5dc"
+  }
+}

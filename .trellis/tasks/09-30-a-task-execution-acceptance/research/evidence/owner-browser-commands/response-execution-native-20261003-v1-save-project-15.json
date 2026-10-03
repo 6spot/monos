@@ -1,0 +1,12 @@
+{
+  "at": "2026-10-02T21:46:17.725Z",
+  "path": "/v1/owner/configuration/commands",
+  "status": 200,
+  "body": {
+    "schema_version": 1,
+    "request_id": "execution-native-20261003-v1-save-project",
+    "status": "committed",
+    "control_version": 41,
+    "entity_id": "execution-native-20261003-v1-project"
+  }
+}

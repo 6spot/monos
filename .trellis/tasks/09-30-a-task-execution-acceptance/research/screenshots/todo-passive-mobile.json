@@ -1,0 +1,9 @@
+{
+  "route": "https://127.0.0.1:19444/#todos",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "body": "Skip to content\nWorkspace / Todos\nTodos\n\nCapture ideas and discuss each one with Planner.\n\nTodo captured.\nDismiss\n← Back to Todos\nAdd a small Python duration formatting utility with standard-library tests and usage documentation.\nActive\n\nDuration utility native acceptance\n\nOriginal Capture\n\nAdd a small Python duration formatting utility with standard-library tests and usage documentation.\n\nCaptured 10/3/2026, 5:46:25 AM\n\nOrganize Todo\nDiscussion\nRefresh Discussion\n\nSend a message when you’re ready to discuss this idea with Planner.\n\nMessage Planner\n\nSending a message starts a Planner discussion for this Todo.\n\nSend message",
+  "horizontalOverflow": false
+}

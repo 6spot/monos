@@ -45,11 +45,17 @@ Require the [visual contract](../../spec/frontend/visual-design.md) across execu
 
 ## Acceptance criteria
 
-- [ ] Shared shell and Todo→Task→local REVIEW presentation pass the [visual quality gate](../../spec/frontend/quality-guidelines.md) using both existing-screen migration and new execution UI evidence; standards documentation alone does not close this criterion.
+- [x] Shared shell and Todo→Task→local REVIEW presentation pass the [visual quality gate](../../spec/frontend/quality-guidelines.md) using both existing-screen migration and new execution UI evidence; standards documentation alone does not close this criterion.
 
-- [ ] Ordered Task input and Planner routing distinguish replies, guidance and authorized requirement revisions.
-- [ ] One-Node initial/replacement Plans, lazy workspace opening and recoverable Git completion preserve Task identity and produce REVIEW.
-- [ ] Withdrawal, stale proposals and controlled Stop/Continue preserve writer and evidence guards.
+- [x] Ordered Task input and Planner routing distinguish replies, guidance and authorized requirement revisions.
+- [x] One-Node initial/replacement Plans, lazy workspace opening and recoverable Git completion preserve Task identity and produce REVIEW.
+- [x] Withdrawal, stale proposals and controlled Stop/Continue preserve writer and evidence guards.
+
+Package integration accepted2026-10-03: all nine children meet their scoped gates;
+see [integration verification](verification.md). Final installed browser/native
+ordinary repository work and same-Node correction produce local REVIEW. Historical
+fault/restart evidence retains its exact revision/fixture limits. Delivery, Owner
+final acceptance, full Stage A and V1 remain separate open roadmap work.
 
 ## Out of scope
 

@@ -1,0 +1,19 @@
+{
+  "at": "2026-10-03T02:33:49.597Z",
+  "method": "POST",
+  "path": "/v1/owner/commands",
+  "body": {
+    "schema_version": 1,
+    "request_id": "009b1bb2-79aa-44fc-80b7-ddab713fdcf9",
+    "scope_id": "7d51dfb7-3ce9-4258-bb76-b91248a60c8b",
+    "expected_control_version": 4,
+    "name": "retry_node",
+    "payload": {
+      "node_id": "179a7f54-56a9-47f5-97d7-cb59b38c7b85",
+      "node_activation": 1,
+      "source_id": "0be7021f-a53c-4a5c-92c4-421bdf00227f",
+      "blocker_id": "c1af4901-72a4-41ee-b40e-4a025884e7b2"
+    }
+  },
+  "session": "255c7fff-6821-4ab9-863a-8de7b8195d3d"
+}

@@ -1,0 +1,27 @@
+{
+  "at": "2026-10-02T21:46:05.382Z",
+  "method": "POST",
+  "path": "/v1/owner/configuration/commands",
+  "body": {
+    "schema_version": 1,
+    "request_id": "execution-native-20261003-v1-save-role",
+    "expected_control_version": 39,
+    "name": "save_role",
+    "payload": {
+      "id": "execution-native-20261003-v1-role",
+      "name": "Duration utility implementation",
+      "description": "Implement and verify a small Python utility using standard-library tests.",
+      "instructions": "Implement the requested repository change in the authorized workspace. Inspect the actual existing files, keep the change focused, run meaningful tests, and report the exact result through the supplied monos tools. Preserve unrelated files and existing content. Retain the local result for Owner review.",
+      "archived": false,
+      "execution_policy": {
+        "default_target": {
+          "runtime_id": "opencode",
+          "model_id": "opencode/longcat-2.5-preview-free",
+          "runner_id": "runner-a"
+        },
+        "fallback_targets": []
+      }
+    }
+  },
+  "session": "255c7fff-6821-4ab9-863a-8de7b8195d3d"
+}

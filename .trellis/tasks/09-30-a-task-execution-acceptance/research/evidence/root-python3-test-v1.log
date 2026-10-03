@@ -1,0 +1,14 @@
+test_boolean_rejected (test_duration.FormatDurationInvalidInputTest.test_boolean_rejected) ... ok
+test_negative_rejected (test_duration.FormatDurationInvalidInputTest.test_negative_rejected) ... ok
+test_non_integer_rejected (test_duration.FormatDurationInvalidInputTest.test_non_integer_rejected) ... ok
+test_above_99_hours (test_duration.FormatDurationValidInputTest.test_above_99_hours) ... ok
+test_hour_boundary (test_duration.FormatDurationValidInputTest.test_hour_boundary) ... ok
+test_large_duration (test_duration.FormatDurationValidInputTest.test_large_duration) ... ok
+test_minute_boundary (test_duration.FormatDurationValidInputTest.test_minute_boundary) ... ok
+test_single_second (test_duration.FormatDurationValidInputTest.test_single_second) ... ok
+test_zero (test_duration.FormatDurationValidInputTest.test_zero) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 0.001s
+
+OK

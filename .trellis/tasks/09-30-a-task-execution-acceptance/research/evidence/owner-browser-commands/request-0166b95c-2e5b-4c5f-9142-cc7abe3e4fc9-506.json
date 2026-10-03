@@ -1,0 +1,16 @@
+{
+  "at": "2026-10-02T21:53:14.157Z",
+  "method": "POST",
+  "path": "/v1/owner/task-previews/commands",
+  "body": {
+    "schema_version": 1,
+    "request_id": "0166b95c-2e5b-4c5f-9142-cc7abe3e4fc9",
+    "todo_id": "55d48651-d4a1-48f7-8ef3-0d77e62d75f4",
+    "name": "create_execution_task",
+    "payload": {
+      "proposal_message_id": "02c6615d-52c4-46e0-add6-a86e39b39eb4",
+      "confirmation_id": "a5dac654-db40-4c24-9973-fdaaa6763edf",
+      "content_digest": "0cb639b6c616bdac88c8559e177eafad34ee900bd9c5fa87c3f400ce1d0cd5dc"
+    }
+  }
+}

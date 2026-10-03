@@ -95,3 +95,58 @@ cases pass. Local suite is 70 cases after seven shared protocol fixtures. Linux
 Go race/vet and an actual execution-account OpenCode 1.18.30 version probe pass;
 GitHub tests use synthetic RSA keys and injected provider responses, not live App
 credentials or remote write permission evidence.
+
+## Installed native acceptance evidence
+
+### Scope and signatures
+
+Apply when a final installed candidate replaces existing monos components and
+ordinary Owner input exercises native execution. Read-only helpers must run actual
+PostgreSQL/SQLite/native snapshot and JSON serialization paths before admission.
+`monos COMMAND --input FILE --request-id ID --output json` reads a file;
+`--input -` reads stdin. A JSON literal is not a filename.
+
+### Contracts
+
+Bind candidate source, image, assets, binaries, backup and helper hashes. Preserve
+the original failure/intent; resumed work writes a new exclusive artifact linked
+to the original identity. Bootstrap checks require historical Attempt units to be
+reconciled before installation. Unit names carry Attempt IDs, descriptions carry
+dispatch IDs. Match canonical ownership, trusted manifest/journal and physical
+PID/cgroup absence before targeted unit metadata cleanup.
+
+### Validation and errors
+
+| Observation | Required interpretation |
+| --- | --- |
+| SQLite BLOB in proof | Serialize bytes explicitly; predicate success alone is insufficient |
+| JSON passed as CLI filename | Local input error; no Runner receipt or workspace admission |
+| Provider 429 then process exit | Retain provider error and factual missing outcome; do not infer formal completion |
+| Active free model catalog | Eligibility and numeric zero prices; not proof of available provider quota |
+| Snapshot changes during completion | Retain as observation; require a fresh stable final read |
+
+### Cases and assertions
+
+Good: ordinary requested behavior, real native Planner/Node tools, current local
+REVIEW, exact completion/Git private export and independently checked files/tests.
+Base: recover an exact failed Node through Owner Retry after old ownership settles;
+record all clarifications and Attempts. Bad: supply an implementation driver or
+SQL lifecycle write and describe it as autonomous native coding. Existing fault
+proof retains its original revision and fixture/native limits.
+
+### Required checks
+
+Execute actual helper serialization and stable native reads; verify process birth,
+boot, cgroup, UID and whole-tree absence, exact receipts/context digests, same
+Spec/Plan/Node activation on factual Retry, exported Git result and original files.
+Run independent behavior checks as the execution account without modifying the
+result. Record the interpreter spelling and command actually executed; a completion
+summary is not test evidence. Final scope requires zero owned work, old results and
+other services preserved. No repeated reboot/fault tour establishes a newer claim.
+
+### Wrong versus correct
+
+Wrong: `monos open_workspace --input '{"resource_id":"repo"}'` or rerun a successful
+creation because an observer timed out. Correct: save the JSON payload in a file
+or pipe it to `--input -`; recover the retained exact request/receipt before a new
+state-changing action.

@@ -1,0 +1,15 @@
+{
+  "at": "2026-10-02T21:50:17.206Z",
+  "method": "POST",
+  "path": "/v1/owner/todos/discussion/commands",
+  "body": {
+    "schema_version": 1,
+    "request_id": "10e4f9cf-7c16-40c8-b16b-fbba45c55c76",
+    "todo_id": "55d48651-d4a1-48f7-8ef3-0d77e62d75f4",
+    "name": "submit_discussion_message",
+    "payload": {
+      "message_id": "feef3505-4ce9-4d76-ab59-06d260d10698",
+      "content": "Attach the proposed Task preview to your next Discussion reply so I can inspect its exact specification and create it. Use the assigned Duration utility native acceptance Project and preserve the complete agreed format_duration behavior, validation rules, unittest coverage, README requirements and one-Node scope."
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "at": "2026-10-03T02:56:38.710Z",
+  "path": "/v1/owner/tasks/7d51dfb7-3ce9-4258-bb76-b91248a60c8b",
+  "status": 200,
+  "body": {
+    "schema_version": 1,
+    "task_id": "7d51dfb7-3ce9-4258-bb76-b91248a60c8b",
+    "control_version": 10,
+    "state": "REVIEW",
+    "specification_id": "4bf3e831-4659-40ca-b120-fdd5c04cd8e8",
+    "plan_id": "74368623-02ba-413c-8aaa-008033553901",
+    "nodes": {
+      "pending": 0,
+      "running": 0,
+      "blocked": 0,
+      "completed": 1,
+      "cancelled": 0
+    },
+    "queued_attempts": 0,
+    "held_attempts": 0,
+    "open_operations": 0,
+    "title": "Add duration.py format_duration utility with unittest coverage and README docs",
+    "todo_id": "55d48651-d4a1-48f7-8ef3-0d77e62d75f4",
+    "project_id": "execution-native-20261003-v1-project",
+    "initial_specification_id": "4bf3e831-4659-40ca-b120-fdd5c04cd8e8",
+    "created_at": "2026-10-02T21:53:14.183Z",
+    "specification": "## Goal\nAdd a small, dependency-free Python standard-library duration formatting utility to the repository, with meaningful unittest coverage and concise usage/testing documentation.\n\n## Implementation\n- Add `duration.py` exposing `format_duration(total_seconds)`.\n- Accept nonnegative Python integers, including durations above 99 hours.\n- Reject booleans and all non-integers with `TypeError`.\n- Reject negative integers with `ValueError`.\n- Return zero-padded `HH:MM:SS` strings:\n  - `0` → `00:00:00`\n  - `65` → `00:01:05`\n  - `3661` → `01:01:01`\n  - `360000` → `100:00:00`\n\n## Tests\n- Add meaningful standard-library `unittest` coverage for boundaries and invalid inputs (zero, minute/hour boundaries, above-99-hour durations, boolean rejection, non-integer rejection, negative rejection).\n\n## Documentation\n- Update the README with usage examples and the exact test command, preserving its existing content and all existing files.\n\n## Constraints\n- Keep the work in one Node and retain the exact local result for review.\n- Use no external dependencies.",
+    "event_cursor": "eyJhZnRlciI6MTAsInRhc2tfaWQiOiI3ZDUxZGZiNy0zY2U5LTQyNTgtYmI3Ni1iOTEyNDhhNjBjOGIiLCJ2ZXJzaW9uIjoxfQ"
+  }
+}

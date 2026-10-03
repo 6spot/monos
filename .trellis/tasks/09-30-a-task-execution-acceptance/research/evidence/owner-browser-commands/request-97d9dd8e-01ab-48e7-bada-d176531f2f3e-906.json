@@ -1,0 +1,16 @@
+{
+  "at": "2026-10-02T21:54:56.632Z",
+  "method": "POST",
+  "path": "/v1/owner/commands",
+  "body": {
+    "schema_version": 1,
+    "request_id": "97d9dd8e-01ab-48e7-bada-d176531f2f3e",
+    "scope_id": "7d51dfb7-3ce9-4258-bb76-b91248a60c8b",
+    "expected_control_version": 1,
+    "name": "start_task",
+    "payload": {
+      "specification_id": "4bf3e831-4659-40ca-b120-fdd5c04cd8e8"
+    }
+  },
+  "session": "255c7fff-6821-4ab9-863a-8de7b8195d3d"
+}

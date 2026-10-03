@@ -3,7 +3,7 @@
   "name": "a-task-execution-acceptance",
   "title": "Task execution integration acceptance",
   "description": "Verify the real Owner capture-to-Start-to-Plan-to-Node-to-local-REVIEW loop plus conversation, revision and restart recovery.",
-  "status": "planning",
+  "status": "in_progress",
   "dev_type": "backend",
   "scope": null,
   "package": null,
@@ -21,9 +21,9 @@
   "children": [],
   "parent": "09-28-a-task-execution",
   "relatedFiles": [],
-  "notes": "",
+  "notes": "Final no-driver installed-browser native chain; reuse accepted fault evidence. Candidate04c0380. Standing authorization.",
   "meta": {
     "roadmap_level": "leaf",
-    "planning_maturity": "backlog"
+    "planning_maturity": "implementation_ready"
   }
 }

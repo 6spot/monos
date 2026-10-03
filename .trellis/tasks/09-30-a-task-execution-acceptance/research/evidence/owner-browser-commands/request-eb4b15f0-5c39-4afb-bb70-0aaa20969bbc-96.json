@@ -1,0 +1,15 @@
+{
+  "at": "2026-10-02T21:47:37.612Z",
+  "method": "POST",
+  "path": "/v1/owner/todos/discussion/commands",
+  "body": {
+    "schema_version": 1,
+    "request_id": "eb4b15f0-5c39-4afb-bb70-0aaa20969bbc",
+    "todo_id": "55d48651-d4a1-48f7-8ef3-0d77e62d75f4",
+    "name": "submit_discussion_message",
+    "payload": {
+      "message_id": "47eecd5d-a8bc-4241-b357-d8fd56a6edf1",
+      "content": "Please propose one small Task for this Project: add duration.py exposing format_duration(total_seconds), a dependency-free Python utility. Accept nonnegative Python integers, including durations above99hours. Reject booleans and all non-integers with TypeError; reject negative integers with ValueError. Return zero-padded HH:MM:SS, for example0 →00:00:00,65 →00:01:05,3661 →01:01:01 and360000 →100:00:00. Add meaningful standard-library unittest coverage for boundaries and invalid inputs. Update README with usage and the exact test command, preserving its existing content and all existing files. Keep the work in one Node and retain the exact local result for review. Use no external dependencies."
+    }
+  }
+}

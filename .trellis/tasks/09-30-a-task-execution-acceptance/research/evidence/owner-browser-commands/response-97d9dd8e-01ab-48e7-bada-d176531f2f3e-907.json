@@ -1,0 +1,13 @@
+{
+  "at": "2026-10-02T21:54:56.745Z",
+  "path": "/v1/owner/commands",
+  "status": 200,
+  "body": {
+    "schema_version": 1,
+    "request_id": "97d9dd8e-01ab-48e7-bada-d176531f2f3e",
+    "status": "committed",
+    "task_id": "7d51dfb7-3ce9-4258-bb76-b91248a60c8b",
+    "control_version": 2,
+    "planning_intent_id": "636ed396-da19-4c38-9936-9d5536a65bd7"
+  }
+}

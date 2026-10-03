@@ -1,0 +1,74 @@
+{
+  "browser_running_original_sha256": "b08f24b5ccc1ca6fb2d89d75dd3d26f92815017a3f98711ac8aa9510c88a6893",
+  "confirmation_id": "a5dac654-db40-4c24-9973-fdaaa6763edf",
+  "corrected_browser_source_sha256": "513fd39769ce59480c1d2d690531e947911e87d1d7fbdc6c3919c9a38714f8a7",
+  "correction": "create wait and start button exact label Start task; current running process still original source",
+  "limits": "Reconstructed from retained local request/HTTP200 receipt files; no browser action or submission; does not assert Task Start or execution",
+  "outcome": "retained_receipts_recovered",
+  "records": [
+    {
+      "canonical_request_sha256": "2d52de93424c7eb38b9ab3ca88eea4d794d451afb81c2b7bb3ab52cb1222a257",
+      "command_name": "confirm_task_preview",
+      "http_status": 200,
+      "request": {
+        "name": "confirm_task_preview",
+        "payload": {
+          "content_digest": "0cb639b6c616bdac88c8559e177eafad34ee900bd9c5fa87c3f400ce1d0cd5dc",
+          "project_id": "execution-native-20261003-v1-project",
+          "proposal_message_id": "02c6615d-52c4-46e0-add6-a86e39b39eb4"
+        },
+        "request_id": "8e9f4a9c-47e8-49ca-b5d4-4550ce1892cd",
+        "schema_version": 1,
+        "todo_id": "55d48651-d4a1-48f7-8ef3-0d77e62d75f4"
+      },
+      "response": {
+        "confirmation_id": "a5dac654-db40-4c24-9973-fdaaa6763edf",
+        "content_digest": "0cb639b6c616bdac88c8559e177eafad34ee900bd9c5fa87c3f400ce1d0cd5dc",
+        "outcome": "confirmed",
+        "proposal_message_id": "02c6615d-52c4-46e0-add6-a86e39b39eb4",
+        "request_id": "8e9f4a9c-47e8-49ca-b5d4-4550ce1892cd",
+        "schema_version": 1,
+        "status": "committed",
+        "todo_id": "55d48651-d4a1-48f7-8ef3-0d77e62d75f4"
+      },
+      "source_files": {
+        "request-8e9f4a9c-47e8-49ca-b5d4-4550ce1892cd-504.json": "751eea09d0f045fd81c8fa8aca18ef9423f933666e702a567238332887a8ea7b",
+        "response-8e9f4a9c-47e8-49ca-b5d4-4550ce1892cd-505.json": "3331575dd0fb7ee9d218c8f8a1e28569b86b2d8f335ffd427bad9873e09a8c06"
+      }
+    },
+    {
+      "canonical_request_sha256": "25d44efda487dbef81019b22a4e7c3c5af6dd0c7ce25f4ce5121e280b3a934ac",
+      "command_name": "create_execution_task",
+      "http_status": 200,
+      "request": {
+        "name": "create_execution_task",
+        "payload": {
+          "confirmation_id": "a5dac654-db40-4c24-9973-fdaaa6763edf",
+          "content_digest": "0cb639b6c616bdac88c8559e177eafad34ee900bd9c5fa87c3f400ce1d0cd5dc",
+          "proposal_message_id": "02c6615d-52c4-46e0-add6-a86e39b39eb4"
+        },
+        "request_id": "0166b95c-2e5b-4c5f-9142-cc7abe3e4fc9",
+        "schema_version": 1,
+        "todo_id": "55d48651-d4a1-48f7-8ef3-0d77e62d75f4"
+      },
+      "response": {
+        "confirmation_id": "a5dac654-db40-4c24-9973-fdaaa6763edf",
+        "content_digest": "0cb639b6c616bdac88c8559e177eafad34ee900bd9c5fa87c3f400ce1d0cd5dc",
+        "outcome": "created",
+        "proposal_message_id": "02c6615d-52c4-46e0-add6-a86e39b39eb4",
+        "request_id": "0166b95c-2e5b-4c5f-9142-cc7abe3e4fc9",
+        "schema_version": 1,
+        "specification_id": "4bf3e831-4659-40ca-b120-fdd5c04cd8e8",
+        "status": "committed",
+        "task_id": "7d51dfb7-3ce9-4258-bb76-b91248a60c8b",
+        "todo_id": "55d48651-d4a1-48f7-8ef3-0d77e62d75f4"
+      },
+      "source_files": {
+        "request-0166b95c-2e5b-4c5f-9142-cc7abe3e4fc9-506.json": "aad633ae1602c299aced8b06e4948e92313213db44e6eae475ff2cc45975801c",
+        "response-0166b95c-2e5b-4c5f-9142-cc7abe3e4fc9-507.json": "810d0f7fbb0e2ab1922df3cbc5d005f64d0474f5a49962b63a338ae52564f036"
+      }
+    }
+  ],
+  "specification_id": "4bf3e831-4659-40ca-b120-fdd5c04cd8e8",
+  "task_id": "7d51dfb7-3ce9-4258-bb76-b91248a60c8b"
+}

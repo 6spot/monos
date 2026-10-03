@@ -1,0 +1,15 @@
+{
+  "at": "2026-10-02T21:46:25.482Z",
+  "method": "POST",
+  "path": "/v1/owner/todos/commands",
+  "body": {
+    "schema_version": 1,
+    "request_id": "ad99f90b-8cb1-431f-b3c8-a4e4c232911a",
+    "name": "capture_todo",
+    "payload": {
+      "todo_id": "55d48651-d4a1-48f7-8ef3-0d77e62d75f4",
+      "original_capture": "Add a small Python duration formatting utility with standard-library tests and usage documentation.",
+      "project_id": "execution-native-20261003-v1-project"
+    }
+  }
+}

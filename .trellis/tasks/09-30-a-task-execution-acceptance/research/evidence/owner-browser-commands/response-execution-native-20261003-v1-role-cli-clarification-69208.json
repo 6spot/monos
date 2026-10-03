@@ -1,0 +1,12 @@
+{
+  "at": "2026-10-03T02:33:29.987Z",
+  "path": "/v1/owner/configuration/commands",
+  "status": 200,
+  "body": {
+    "schema_version": 1,
+    "request_id": "execution-native-20261003-v1-role-cli-clarification",
+    "status": "committed",
+    "control_version": 42,
+    "entity_id": "execution-native-20261003-v1-role"
+  }
+}

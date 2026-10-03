@@ -1,0 +1,14 @@
+{
+  "at": "2026-10-03T02:40:18.183Z",
+  "path": "/v1/owner/tasks/conversation/commands",
+  "status": 200,
+  "body": {
+    "schema_version": 1,
+    "request_id": "ddd3dd6d-bbb6-4793-b677-75092238256a",
+    "task_id": "7d51dfb7-3ce9-4258-bb76-b91248a60c8b",
+    "status": "committed",
+    "version": 1,
+    "input_id": "cfd9a47b-8e8b-4b85-b6ae-ea1f6e066393",
+    "message_id": "787027a1-6a4e-4bd8-aeaf-fa3f05e86b97"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "at": "2026-10-02T21:50:17.287Z",
+  "path": "/v1/owner/todos/discussion/commands",
+  "status": 200,
+  "body": {
+    "schema_version": 1,
+    "request_id": "10e4f9cf-7c16-40c8-b16b-fbba45c55c76",
+    "status": "committed",
+    "todo_id": "55d48651-d4a1-48f7-8ef3-0d77e62d75f4",
+    "discussion_version": 2,
+    "message_id": "feef3505-4ce9-4d76-ab59-06d260d10698"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "files": {
+    "final.json": {
+      "raw_sha256": "12e8af6988d7aa99fef97b2b162aa1e77f01152c8d215200c468ce362ff31145",
+      "raw_bytes": 3055456,
+      "gzip_sha256": "8e6aa1999abe968d7aab9cd2bde2ad6b00416a43b0fecd747e18df6b0cc22f48",
+      "gzip_bytes": 578971
+    },
+    "final-corrected.json": {
+      "raw_sha256": "615006d61106aed684d9560c0f5d3b08b0ad78bbce729f050552f43f4531d89a",
+      "raw_bytes": 4644807,
+      "gzip_sha256": "405e1327764bd135e2c03ad45de9b32051010cd523d968b29c661ba1507e1eb8",
+      "gzip_bytes": 851400
+    },
+    "final-after-browser.json": {
+      "raw_sha256": "d38f01cd3b0791f51709447204eab0963f6c1e76e41d0a29e0de8661dc858bae",
+      "raw_bytes": 4644807,
+      "gzip_sha256": "6bbdeef03d84985acc3c51fe22f8757b3e29703213720592f8ddcd9c3a1426b1",
+      "gzip_bytes": 851403
+    },
+    "final-preservation-settled.json": {
+      "raw_sha256": "216f70c623170229f31e45fcd82c214547a969070e180db678502f7fc1b74a01",
+      "raw_bytes": 14369975,
+      "gzip_sha256": "44e0f88d582bdff20eb43f476aab9d4158180c05c0ed9df437c857ee2d5c2bb9",
+      "gzip_bytes": 2847578,
+      "contents": "Old Tasks/native/Git, receipt row multiplicities and exact installed state; private config hashes only."
+    }
+  },
+  "credential_scan": "Exact Owner password and Runner token absent in all three raw snapshots; scan ran privately on host without printing secrets."
+}

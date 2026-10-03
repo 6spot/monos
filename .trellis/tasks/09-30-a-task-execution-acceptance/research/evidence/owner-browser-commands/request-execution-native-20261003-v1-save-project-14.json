@@ -1,0 +1,29 @@
+{
+  "at": "2026-10-02T21:46:17.663Z",
+  "method": "POST",
+  "path": "/v1/owner/configuration/commands",
+  "body": {
+    "schema_version": 1,
+    "request_id": "execution-native-20261003-v1-save-project",
+    "expected_control_version": 40,
+    "name": "save_project",
+    "payload": {
+      "id": "execution-native-20261003-v1-project",
+      "name": "Duration utility native acceptance",
+      "context": "A small Python standard-library utility in the actual linked repository. Preserve all existing files and README content; add focused implementation, meaningful unittest coverage and concise usage/testing documentation. No external dependencies. Produce one small Node and retain the exact local result for review.",
+      "archived": false,
+      "role_ids": [
+        "execution-native-20261003-v1-role"
+      ],
+      "resources": [
+        {
+          "id": "execution-native-20261003-v1-repo",
+          "remote_url": "https://github.com/6spot/monolab-feasibility-20260928-160020-public.git",
+          "default_branch": "main",
+          "remote_preparation": "after_acceptance"
+        }
+      ]
+    }
+  },
+  "session": "255c7fff-6821-4ab9-863a-8de7b8195d3d"
+}

@@ -1,0 +1,121 @@
+{
+  "files": {
+    "request-97d9dd8e-01ab-48e7-bada-d176531f2f3e-906.json": {
+      "sha256": "d8470f0d5421dbe6c3950b31b188197188e8d55cc2731c8b9eaddcafe4abb661",
+      "bytes": 449
+    },
+    "request-ad99f90b-8cb1-431f-b3c8-a4e4c232911a-18.json": {
+      "sha256": "4e84efddea38325c6efd0eea04dc4d0b955565bded78c085a8923ea7828e6819",
+      "bytes": 493
+    },
+    "request-execution-native-20261003-v1-save-role-11.json": {
+      "sha256": "80db3c96d11d14f5e4371c91b29ad0ae53df0270bad4c1642336407d440c11f0",
+      "bytes": 1129
+    },
+    "request-0166b95c-2e5b-4c5f-9142-cc7abe3e4fc9-506.json": {
+      "sha256": "aad633ae1602c299aced8b06e4948e92313213db44e6eae475ff2cc45975801c",
+      "bytes": 545
+    },
+    "request-eb4b15f0-5c39-4afb-bb70-0aaa20969bbc-96.json": {
+      "sha256": "c2d26d4e85761ad276fa1266e976bead08c31046408a5c9eed944729bca67e36",
+      "bytes": 1116
+    },
+    "request-8e9f4a9c-47e8-49ca-b5d4-4550ce1892cd-504.json": {
+      "sha256": "751eea09d0f045fd81c8fa8aca18ef9423f933666e702a567238332887a8ea7b",
+      "bytes": 539
+    },
+    "request-execution-native-20261003-v1-role-cli-clarification-69207.json": {
+      "sha256": "fdf79f96c5e3648a03787dc410e5f3fff0bd22f021641900a0a81411c8ffcd4a",
+      "bytes": 1828
+    },
+    "request-ddd3dd6d-bbb6-4793-b677-75092238256a-70671.json": {
+      "sha256": "b4ae4f9d1d562cdc0d904c749379bc7744d1a993146aa5aa2928fa944e76913d",
+      "bytes": 1151
+    },
+    "request-009b1bb2-79aa-44fc-80b7-ddab713fdcf9-69293.json": {
+      "sha256": "696a0d4ef56084dbdd0f11200c3e3279847e62c5b90277e607c594425c1f2543",
+      "bytes": 587
+    },
+    "request-10e4f9cf-7c16-40c8-b16b-fbba45c55c76-270.json": {
+      "sha256": "7cc6ab0eb677713bcc5522e396994ed558f93e29aa79c57a0a9263c0e2136476",
+      "bytes": 721
+    },
+    "request-execution-native-20261003-v1-save-project-14.json": {
+      "sha256": "db39ac7c0054b117fee54e7deb7f42e2caaf16a456981e838400b2f38745bea0",
+      "bytes": 1174
+    },
+    "response-ad99f90b-8cb1-431f-b3c8-a4e4c232911a-19.json": {
+      "sha256": "c767cb6e757872fcbd8703fd126118f87fa54a3623631c23f44427f1a5c48dd3",
+      "bytes": 792
+    },
+    "response-10e4f9cf-7c16-40c8-b16b-fbba45c55c76-271.json": {
+      "sha256": "97b772f049a95dd95d42377e421844287a57ebc72e9cb9a48589be422df35e7a",
+      "bytes": 373
+    },
+    "response-execution-native-20261003-v1-role-cli-clarification-69208.json": {
+      "sha256": "492442e289588c0ba14979ba0b446ec613ea91d85a29d3ff55e64bcf8b86dbdf",
+      "bytes": 324
+    },
+    "response-009b1bb2-79aa-44fc-80b7-ddab713fdcf9-69294.json": {
+      "sha256": "7ad0c7b7f5fc86ce3612ba8bceaec39d0f47b8cb07d51a853216947ec594c1fd",
+      "bytes": 410
+    },
+    "response-eb4b15f0-5c39-4afb-bb70-0aaa20969bbc-97.json": {
+      "sha256": "b6f9e86af6d984c1e41e9dc011c5fb77b11d4179d9039b08060935d33b65fda1",
+      "bytes": 373
+    },
+    "response-8e9f4a9c-47e8-49ca-b5d4-4550ce1892cd-505.json": {
+      "sha256": "3331575dd0fb7ee9d218c8f8a1e28569b86b2d8f335ffd427bad9873e09a8c06",
+      "bytes": 531
+    },
+    "response-execution-native-20261003-v1-save-project-15.json": {
+      "sha256": "119bacd5eed8624512b6686253ab530b1f318608b57b636561d021da02bad2a9",
+      "bytes": 317
+    },
+    "response-0166b95c-2e5b-4c5f-9142-cc7abe3e4fc9-507.json": {
+      "sha256": "810d0f7fbb0e2ab1922df3cbc5d005f64d0474f5a49962b63a338ae52564f036",
+      "bytes": 648
+    },
+    "response-execution-native-20261003-v1-save-role-12.json": {
+      "sha256": "83e1a93aacae8d8e22c1a66b5b7eb5bdeda6c2df870a0396fae604da80daa9ef",
+      "bytes": 311
+    },
+    "response-ddd3dd6d-bbb6-4793-b677-75092238256a-70672.json": {
+      "sha256": "fd2444216d67371bf3038af4d88200f2ee186c7e32b3a350f7fd794c75843d39",
+      "bytes": 420
+    },
+    "response-97d9dd8e-01ab-48e7-bada-d176531f2f3e-907.json": {
+      "sha256": "f45ef341830dddc35df72c88810f8348aea5faaf683b06334d29879e330ca213",
+      "bytes": 361
+    },
+    "intent-execution-native-20261003-v1-role-cli-clarification.json": {
+      "sha256": "f50ad118611b4413fa1ca0dcc7b3199384a4b2ab64fc9d63bd12e7476fc85089",
+      "bytes": 1772
+    },
+    "intent-execution-native-20261003-v1-save-project.json": {
+      "sha256": "48abeb37c49166affc108cd305dbdc09849d780595e25601008f67e4e57be555",
+      "bytes": 1118
+    },
+    "intent-execution-native-20261003-v1-save-role.json": {
+      "sha256": "0706a553886ed3452819f44ff5b59ebeb4b98fe696dce08935942fda327a8e8b",
+      "bytes": 1073
+    },
+    "capture.json": {
+      "sha256": "06867af7d0f802d9cea60418c8f1ff89b91fa7ee566dbf625508489da434427b",
+      "bytes": 1104
+    },
+    "created-recovered-v1.json": {
+      "sha256": "8865b47bb86cf0ba3bba6a5b11387ea0f04182646946aee3e366de8fc2e0827b",
+      "bytes": 3733
+    },
+    "catalog-retry-1.json": {
+      "sha256": "0d2ea8af22918ed05b4115dc5d3fd8cf8a136b371ba4fa4ffc5e47e3b54b7c75",
+      "bytes": 1722
+    },
+    "catalog-retry-1-home-raw.txt": {
+      "sha256": "1f28723bc141b10277424381a02da869c50e2b16a0b682d380af402c571fa76b",
+      "bytes": 11443
+    }
+  },
+  "credential_policy": "No cookies or login body recorded; session UUIDs are nonauthenticating command bindings. Full repeated GET traffic remains private."
+}

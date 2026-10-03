@@ -1,0 +1,32 @@
+{
+  "native-audit-v1.py": {
+    "sha256": "c13e76045145386f179104d388101dbdcd9d9a2211462d8093009a1b2d2b1915",
+    "bytes": 11183,
+    "role": "Retained actual observation source; task-specific frozen host paths and dependencies, not a general-purpose installer or admission tool."
+  },
+  "native-audit-v2.py": {
+    "sha256": "a1d1caf86a4ea0e39a8c5d07d004fba8fe03652ddd818d3e6e0dca61486cf23a",
+    "bytes": 11394,
+    "role": "Retained actual observation source; task-specific frozen host paths and dependencies, not a general-purpose installer or admission tool."
+  },
+  "install-observer-v4.py": {
+    "sha256": "d4c26530d8e90ae3929801e87d0979c6a3da6896937f527b9fd480dffc581a3b",
+    "bytes": 7925,
+    "role": "Retained actual observation source; task-specific frozen host paths and dependencies, not a general-purpose installer or admission tool."
+  },
+  "final-preservation-v1.py": {
+    "sha256": "2c9cf85659356a6a489c27ba7b80fbf7fbbcdcd253ac4ac552bfe4617cdfd3a7",
+    "bytes": 4851,
+    "role": "Retained actual observation source; task-specific frozen host paths and dependencies, not a general-purpose installer or admission tool."
+  },
+  "browser-loaded-original.mjs": {
+    "sha256": "b08f24b5ccc1ca6fb2d89d75dd3d26f92815017a3f98711ac8aa9510c88a6893",
+    "bytes": 10111,
+    "role": "Retained actual observation source; task-specific frozen host paths and dependencies, not a general-purpose installer or admission tool."
+  },
+  "browser-readonly-todo-v2.mjs": {
+    "sha256": "c7d82f721b6516f61c60eccccee4d51b6b61c5adc36f39d2deab661913aedd02",
+    "bytes": 6745,
+    "role": "Retained actual observation source; task-specific frozen host paths and dependencies, not a general-purpose installer or admission tool."
+  }
+}

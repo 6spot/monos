@@ -64,3 +64,16 @@ Configure Playwright webServer.gracefulShutdown with SIGTERM and a bounded deadl
 Without it Playwright kills the fixture directly and skips the schema cleanup handler.
 After fixture lifecycle changes, check that a full browser run leaves zero new test
 schemas. Never clean arbitrary prefix matches without proving fixture ownership.
+
+## Installed browser observations
+
+Use the actual accessible role/name from the built UI for browser automation.
+Task sections are links; the initial button is **Start task**. Keep a successful
+Owner command's retained request/receipt when a later observer wait fails. Recover
+that result and its existing Task instead of submitting another creation command.
+Distinguish the source loaded by a running browser process from a subsequently
+corrected on-disk helper; attribute screenshots and traffic to the loaded source.
+Long JSON commands must bypass a terminal's canonical line limit. Verify that the
+whole request actually reached the browser before treating a terminal echo as
+submission. Retain viewport companions for full-page images captured after scroll,
+and inspect populated result/reload/source-Todo continuity at both required sizes.

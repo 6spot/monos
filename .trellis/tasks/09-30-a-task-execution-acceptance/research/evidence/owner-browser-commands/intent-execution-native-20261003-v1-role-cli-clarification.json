@@ -1,0 +1,25 @@
+{
+  "path": "/v1/owner/configuration/commands",
+  "body": {
+    "schema_version": 1,
+    "request_id": "execution-native-20261003-v1-role-cli-clarification",
+    "expected_control_version": 41,
+    "name": "save_role",
+    "payload": {
+      "id": "execution-native-20261003-v1-role",
+      "name": "Duration utility implementation",
+      "description": "Implement and verify a small Python utility using standard-library tests.",
+      "instructions": "Implement the requested repository change in the authorized workspace. Inspect the actual existing files, keep the change focused, run meaningful tests, and report the exact result through the supplied monos tools. Preserve unrelated files and existing content. Retain the local result for Owner review.\nOperational CLI clarification: --input expects a JSON FILE path, or - to read JSON from stdin. Never pass a JSON literal as the --input argument. Save your payload in a scratch file and call monos COMMAND --input that-file.json --request-id a-stable-unique-id --output json, or pipe the JSON to monos COMMAND --input - --request-id a-stable-unique-id --output json. Open only the resource_id from the supplied context. A local input-file error is not a Runner outage. Do not inspect credentials, service journals or other Tasks. Implement the requirements yourself in the managed workspace, run tests, and use complete_node for formal completion; if genuinely blocked, use block_node.",
+      "archived": false,
+      "execution_policy": {
+        "default_target": {
+          "runtime_id": "opencode",
+          "model_id": "opencode/longcat-2.5-preview-free",
+          "runner_id": "runner-a"
+        },
+        "fallback_targets": []
+      }
+    }
+  },
+  "session": "255c7fff-6821-4ab9-863a-8de7b8195d3d"
+}

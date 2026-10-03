@@ -1,0 +1,71 @@
+{
+  "observed_at": 1790994829.500561,
+  "model": "opencode/longcat-2.5-preview-free",
+  "native_model": {
+    "id": "longcat-2.5-preview-free",
+    "providerID": "opencode",
+    "name": "LongCat 2.5 Preview Free",
+    "family": "longcat",
+    "api": {
+      "id": "longcat-2.5-preview-free",
+      "url": "https://opencode.ai/zen/v1",
+      "npm": "@ai-sdk/openai-compatible"
+    },
+    "status": "active",
+    "headers": {},
+    "options": {},
+    "cost": {
+      "input": 0,
+      "output": 0,
+      "cache": {
+        "read": 0,
+        "write": 0
+      }
+    },
+    "limit": {
+      "context": 1000000,
+      "output": 131072
+    },
+    "capabilities": {
+      "temperature": true,
+      "reasoning": true,
+      "attachment": true,
+      "toolcall": true,
+      "input": {
+        "text": true,
+        "audio": false,
+        "image": true,
+        "video": false,
+        "pdf": false
+      },
+      "output": {
+        "text": true,
+        "audio": false,
+        "image": false,
+        "video": false,
+        "pdf": false
+      },
+      "interleaved": {
+        "field": "reasoning_content"
+      }
+    },
+    "release_date": "2026-09-25",
+    "variants": {
+      "low": {
+        "reasoningEffort": "low"
+      },
+      "medium": {
+        "reasoningEffort": "medium"
+      },
+      "high": {
+        "reasoningEffort": "high"
+      }
+    }
+  },
+  "raw_sha256": "1f28723bc141b10277424381a02da869c50e2b16a0b682d380af402c571fa76b",
+  "environment": {
+    "execution_user": "me",
+    "cwd": "/home/me"
+  },
+  "note": "Initial read-only catalog invocation from /root failed config access; retried from actual execution home, no runtime/config mutation. Catalog active/zero price does not prove provider quota."
+}
