@@ -621,3 +621,39 @@ Resumed 01a0edc0 under standing authorization. Installed exact accepted candidat
 ### Next Steps
 
 - Plan and execute first GitHub review/correction/delivery leaf; delivery, expected-head merge, Owner acceptance and Stage A/V1 remain open. No source push.
+
+
+## Session 27: Exact local result review accepted
+<!-- trellis-session: v=2 fp=5f68b6eaa4a1bc98 -->
+
+**Date**: 2026-10-03
+**Task**: Exact local result review accepted
+**Branch**: `feat/stage-a-boundary-probe`
+
+### Summary
+
+Accepted immutable local result inspection with exact retained Runner identity, bounded reads, fresh applicability and desktop/mobile evidence; archived first Review/delivery leaf.
+
+### Main Changes
+
+- Protocol/WSS and canonical Owner changes/file/diff reads; immutable Runner Git objects; on-demand session-bound Web inspector.
+- Closed eight independent findings, bounded stdout/cancellation, newline regex parity, historical timezone cursor and failed-setup fixture cleanup.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `ac2b14237d6530f4f53bf648f9490ca928a6f0b8` | feat: inspect exact retained local Task results |
+
+### Testing
+
+- [OK] Shared contracts 244; real PG/WSS/UI reads 12; default 331 passed/338 gated skips; Web API 44; browser 30 combined plus 6 final fixture regressions.
+- [OK] Final full Go race/vet, four native macOS arm64 builds, root/backend/Web build; source/build-bound visual inspection and zero scratch schemas.
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- Plan and implement 10-03-a-publication-candidate from the accepted local-result archive; keep remaining delivery leaves ordered and package open.
