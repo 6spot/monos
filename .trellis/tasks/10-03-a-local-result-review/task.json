@@ -1,0 +1,30 @@
+{
+  "id": "a-local-result-review",
+  "name": "a-local-result-review",
+  "title": "Exact local result review",
+  "description": "Expose immutable local REVIEW files and diffs through the owning Runner, with exact result identity and bounded content reads.",
+  "status": "in_progress",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P2",
+  "creator": "me",
+  "assignee": "me",
+  "createdAt": "2026-10-03",
+  "completedAt": null,
+  "branch": "feat/stage-a-boundary-probe",
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "09-28-a-review-delivery",
+  "relatedFiles": [],
+  "notes": "Independent combined local-result acceptance passed 2026-10-03; 12 real PG/WSS reads, current protocol/Go/browser/visual gates. Source work/archival follow; package and native delivery remain open.",
+  "meta": {
+    "roadmap_level": "leaf",
+    "planning_maturity": "accepted",
+    "standing_authorization": "User delegates sequential execution and routine decisions without further permission"
+  }
+}

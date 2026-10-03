@@ -1,0 +1,184 @@
+
+ RUN  v5.0.2 /Users/me/IdeaProjects/monos
+
+ ❯ apps/server/test/postgres-task-ui-reads.test.ts (9 tests | 9 failed) 9ms
+   ❯ Execution UI canonical reads (9)
+     × paginates per-column with exact filter-bound tied positions and legacy records 5ms
+     × paginates legacy epoch records in Singapore's historical minute offset 1ms
+     × keeps normal unavailable planning out of attention, but exposes exact issue and independent request reasons 1ms
+     × lists independent blockers, input issues and Replan requests without deriving semantics from logs 0ms
+     × bounds independent attention without hiding that more exact exits exist 0ms
+     × cuts a UTF-8 heavy Board page by encoded bytes and resumes without skipping a card 0ms
+     × rejects invalid/authless reads and session replacement before a previously prepared command or receipt 0ms
+     × exposes repository-free exact result, carry applicability and retained historical manifest on replacement 0ms
+     × reads exact in-progress workspace snapshots and finalized Git without relabeling a later workspace head 1ms
+ ❯ apps/server/test/postgres-result-reads.test.ts (3 tests | 3 failed) 27ms
+   ❯ Exact local result authenticated reads (3)
+     × drops its owned schema when result setup fails before returning the fixture 22ms
+     × uses correlated authenticated WSS, authenticates again after read, and preserves every canonical record 3ms
+     × resolves selected historical results beyond the first 32 and refuses mutable result relabeling 0ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 12 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  apps/server/test/postgres-result-reads.test.ts > Exact local result authenticated reads > drops its owned schema when result setup fails before returning the fixture
+Error: connect ECONNREFUSED ::1:5432
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/13]⎯
+
+ FAIL  apps/server/test/postgres-result-reads.test.ts > Exact local result authenticated reads > drops its owned schema when result setup fails before returning the fixture
+Error: connect ECONNREFUSED 127.0.0.1:5432
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/13]⎯
+
+ FAIL  apps/server/test/postgres-result-reads.test.ts > Exact local result authenticated reads > uses correlated authenticated WSS, authenticates again after read, and preserves every canonical record
+TypeError: Invalid URL
+ ❯ conversationFixture apps/server/test/fixtures/task-conversation-fixture.ts:17:16
+     15|
+     16| export async function conversationFixture() {
+     17|   const base = new URL(process.env.DATABASE_URL!),
+       |                ^
+     18|     admin = database(base.toString()),
+     19|     namespace = 'conversation_' + randomUUID().replaceAll('-', '');
+ ❯ resultReadFixture apps/server/test/fixtures/result-read-fixture.ts:5:16
+ ❯ apps/server/test/postgres-result-reads.test.ts:31:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/13]⎯
+
+ FAIL  apps/server/test/postgres-result-reads.test.ts > Exact local result authenticated reads > resolves selected historical results beyond the first 32 and refuses mutable result relabeling
+TypeError: Invalid URL
+ ❯ conversationFixture apps/server/test/fixtures/task-conversation-fixture.ts:17:16
+     15|
+     16| export async function conversationFixture() {
+     17|   const base = new URL(process.env.DATABASE_URL!),
+       |                ^
+     18|     admin = database(base.toString()),
+     19|     namespace = 'conversation_' + randomUUID().replaceAll('-', '');
+ ❯ resultReadFixture apps/server/test/fixtures/result-read-fixture.ts:5:16
+ ❯ apps/server/test/postgres-result-reads.test.ts:71:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/13]⎯
+
+ FAIL  apps/server/test/postgres-task-ui-reads.test.ts > Execution UI canonical reads > paginates per-column with exact filter-bound tied positions and legacy records
+TypeError: Invalid URL
+ ❯ conversationFixture apps/server/test/fixtures/task-conversation-fixture.ts:17:16
+     15|
+     16| export async function conversationFixture() {
+     17|   const base = new URL(process.env.DATABASE_URL!),
+       |                ^
+     18|     admin = database(base.toString()),
+     19|     namespace = 'conversation_' + randomUUID().replaceAll('-', '');
+ ❯ apps/server/test/postgres-task-ui-reads.test.ts:22:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/13]⎯
+
+ FAIL  apps/server/test/postgres-task-ui-reads.test.ts > Execution UI canonical reads > paginates legacy epoch records in Singapore's historical minute offset
+TypeError: Invalid URL
+ ❯ conversationFixture apps/server/test/fixtures/task-conversation-fixture.ts:17:16
+     15|
+     16| export async function conversationFixture() {
+     17|   const base = new URL(process.env.DATABASE_URL!),
+       |                ^
+     18|     admin = database(base.toString()),
+     19|     namespace = 'conversation_' + randomUUID().replaceAll('-', '');
+ ❯ apps/server/test/postgres-task-ui-reads.test.ts:107:19
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/13]⎯
+
+ FAIL  apps/server/test/postgres-task-ui-reads.test.ts > Execution UI canonical reads > keeps normal unavailable planning out of attention, but exposes exact issue and independent request reasons
+TypeError: Invalid URL
+ ❯ conversationFixture apps/server/test/fixtures/task-conversation-fixture.ts:17:16
+     15|
+     16| export async function conversationFixture() {
+     17|   const base = new URL(process.env.DATABASE_URL!),
+       |                ^
+     18|     admin = database(base.toString()),
+     19|     namespace = 'conversation_' + randomUUID().replaceAll('-', '');
+ ❯ replanFixture apps/server/test/fixtures/task-replan-fixture.ts:9:16
+ ❯ apps/server/test/postgres-task-ui-reads.test.ts:122:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/13]⎯
+
+ FAIL  apps/server/test/postgres-task-ui-reads.test.ts > Execution UI canonical reads > lists independent blockers, input issues and Replan requests without deriving semantics from logs
+TypeError: Invalid URL
+ ❯ conversationFixture apps/server/test/fixtures/task-conversation-fixture.ts:17:16
+     15|
+     16| export async function conversationFixture() {
+     17|   const base = new URL(process.env.DATABASE_URL!),
+       |                ^
+     18|     admin = database(base.toString()),
+     19|     namespace = 'conversation_' + randomUUID().replaceAll('-', '');
+ ❯ replanFixture apps/server/test/fixtures/task-replan-fixture.ts:9:16
+ ❯ apps/server/test/postgres-task-ui-reads.test.ts:154:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/13]⎯
+
+ FAIL  apps/server/test/postgres-task-ui-reads.test.ts > Execution UI canonical reads > bounds independent attention without hiding that more exact exits exist
+TypeError: Invalid URL
+ ❯ conversationFixture apps/server/test/fixtures/task-conversation-fixture.ts:17:16
+     15|
+     16| export async function conversationFixture() {
+     17|   const base = new URL(process.env.DATABASE_URL!),
+       |                ^
+     18|     admin = database(base.toString()),
+     19|     namespace = 'conversation_' + randomUUID().replaceAll('-', '');
+ ❯ apps/server/test/postgres-task-ui-reads.test.ts:184:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/13]⎯
+
+ FAIL  apps/server/test/postgres-task-ui-reads.test.ts > Execution UI canonical reads > cuts a UTF-8 heavy Board page by encoded bytes and resumes without skipping a card
+TypeError: Invalid URL
+ ❯ conversationFixture apps/server/test/fixtures/task-conversation-fixture.ts:17:16
+     15|
+     16| export async function conversationFixture() {
+     17|   const base = new URL(process.env.DATABASE_URL!),
+       |                ^
+     18|     admin = database(base.toString()),
+     19|     namespace = 'conversation_' + randomUUID().replaceAll('-', '');
+ ❯ apps/server/test/postgres-task-ui-reads.test.ts:206:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/13]⎯
+
+ FAIL  apps/server/test/postgres-task-ui-reads.test.ts > Execution UI canonical reads > rejects invalid/authless reads and session replacement before a previously prepared command or receipt
+TypeError: Invalid URL
+ ❯ conversationFixture apps/server/test/fixtures/task-conversation-fixture.ts:17:16
+     15|
+     16| export async function conversationFixture() {
+     17|   const base = new URL(process.env.DATABASE_URL!),
+       |                ^
+     18|     admin = database(base.toString()),
+     19|     namespace = 'conversation_' + randomUUID().replaceAll('-', '');
+ ❯ apps/server/test/postgres-task-ui-reads.test.ts:252:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/13]⎯
+
+ FAIL  apps/server/test/postgres-task-ui-reads.test.ts > Execution UI canonical reads > exposes repository-free exact result, carry applicability and retained historical manifest on replacement
+TypeError: Invalid URL
+ ❯ conversationFixture apps/server/test/fixtures/task-conversation-fixture.ts:17:16
+     15|
+     16| export async function conversationFixture() {
+     17|   const base = new URL(process.env.DATABASE_URL!),
+       |                ^
+     18|     admin = database(base.toString()),
+     19|     namespace = 'conversation_' + randomUUID().replaceAll('-', '');
+ ❯ replanFixture apps/server/test/fixtures/task-replan-fixture.ts:9:16
+ ❯ apps/server/test/postgres-task-ui-reads.test.ts:354:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/13]⎯
+
+ FAIL  apps/server/test/postgres-task-ui-reads.test.ts > Execution UI canonical reads > reads exact in-progress workspace snapshots and finalized Git without relabeling a later workspace head
+TypeError: Invalid URL
+ ❯ conversationFixture apps/server/test/fixtures/task-conversation-fixture.ts:17:16
+     15|
+     16| export async function conversationFixture() {
+     17|   const base = new URL(process.env.DATABASE_URL!),
+       |                ^
+     18|     admin = database(base.toString()),
+     19|     namespace = 'conversation_' + randomUUID().replaceAll('-', '');
+ ❯ replanFixture apps/server/test/fixtures/task-replan-fixture.ts:9:16
+ ❯ apps/server/test/postgres-task-ui-reads.test.ts:424:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/13]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  12 failed (12)
+   Start at  20:45:32
+   Duration  1.58s (transform 52%, import 47%, tests 1%)

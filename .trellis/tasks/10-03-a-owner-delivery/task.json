@@ -1,0 +1,29 @@
+{
+  "id": "a-owner-delivery",
+  "name": "a-owner-delivery",
+  "title": "Exact Owner delivery acceptance",
+  "description": "Freeze exact Owner-approved delivery batches and finalize expected-head GitHub or verified plain-Git delivery.",
+  "status": "planning",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P2",
+  "creator": "me",
+  "assignee": "me",
+  "createdAt": "2026-10-03",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "09-28-a-review-delivery",
+  "relatedFiles": [],
+  "notes": "",
+  "meta": {
+    "roadmap_level": "leaf",
+    "planning_maturity": "backlog"
+  }
+}

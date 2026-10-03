@@ -1,0 +1,9 @@
+{
+  "at": "2026-10-03T12:41:09.926Z",
+  "custom_schemas": [
+    "conversation_1f1eda14b655492689c06f3193d4a8d3",
+    "conversation_c4017374931c4c45998593d752216803"
+  ],
+  "operation": "read-only pg_namespace check; no cleanup DDL",
+  "baseline_custom_schema_count": 0
+}

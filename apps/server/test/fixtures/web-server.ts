@@ -35,10 +35,11 @@ app.post<{ Body: { task_id: string; specification: unknown } }>('/__test__/task-
 app.post<{ Body: Parameters<ExecutionUIFixture['create']>[1] }>('/__test__/execution-scenario', async (request) => executionUI.create(fixtureOwner(request), request.body));
 app.post<{ Body: { task_id: string } }>('/__test__/execution-settle', async (request) => executionUI.settle(fixtureOwner(request), request.body.task_id));
 app.post('/__test__/execution-reset', async (request) => executionUI.reset(fixtureOwner(request)));
+app.post<{ Body: { task_id: string; action: Parameters<ExecutionUIFixture['readPeer']>[2]; status?: Parameters<ExecutionUIFixture['readPeer']>[3] } }>('/__test__/result-peer', async request => executionUI.readPeer(fixtureOwner(request), request.body.task_id, request.body.action, request.body.status));
 let closing = false;
 async function close() {
   if (closing) return; closing = true;
-  try { await app.close(); } finally {
+  try { await executionUI.closeReadPeers(); await app.close(); } finally {
     try { await db.pool.end(); } finally {
       try { await admin.pool.query(`DROP SCHEMA ${namespace} CASCADE`); } finally { await admin.pool.end(); }
     }

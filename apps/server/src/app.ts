@@ -1,3 +1,5 @@
+import { ResultReadBroker } from "./result-read-broker.ts";
+import { resultContent } from "./result-content-reads.ts";
 import { TaskReplan } from './task-replan.ts';
 import { TaskSpecification } from './task-specification.ts';
 import { TaskConversation } from './task-conversation.ts';
@@ -70,6 +72,7 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
   });
   app.addHook('onRequest', async (request, reply) => { if (request.url.startsWith('/v1/owner/')) void reply.header('Cache-Control', 'no-store'); });
   app.get('/health', async () => { await service.db.pool.query('SELECT 1'); return { schema_version: 1, database: 'ready', probe: true }; });
+  const resultReads = new ResultReadBroker();
   const owner = new OwnerCommands(service.db);
   const reads = new OwnerReads(service.db);
   const access = new OwnerAccess(service.db);
@@ -142,6 +145,10 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
   app.get<{ Params: { task_id: string }; Querystring: { cursor?: string } }>('/v1/owner/tasks/:task_id/results', async request => {
     validate('TaskResultQuery', request.query);
     return taskResults(service.db, ownerCredential(request), request.params.task_id, request.query.cursor);
+  });
+  for (const mode of ['changes','file','diff'] as const) app.get<{Params:{task_id:string;operation_id:string}}>(`/v1/owner/tasks/:task_id/results/:operation_id/${mode}`,async (request,reply)=>{
+    reply.header('Cache-Control','no-store').header('X-Content-Type-Options','nosniff');
+    return resultContent(service,resultReads,ownerCredential(request),request.headers['x-monos-session'] as string|undefined,request.params.task_id,request.params.operation_id,mode,request.query);
   });
   app.get<{ Params: { task_id: string; node_id:string } }>('/v1/owner/tasks/:task_id/nodes/:node_id/execution', async request => execution.status(ownerCredential(request),request.params.task_id,request.params.node_id));
   app.get<{ Params: { task_id: string }; Querystring: { cursor?:string } }>('/v1/owner/tasks/:task_id/artifacts', async request => ownerArtifacts(service.db,ownerCredential(request),request.params.task_id,request.query.cursor));
@@ -224,11 +231,12 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
     let queuedMessages = 0;
     let queuedBytes = 0;
     const send = (frame: Frame) => {
-      if (ws.readyState !== WebSocket.OPEN) return;
+      if (ws.readyState !== WebSocket.OPEN) return false;
       validate('Frame', frame);
       const body = JSON.stringify(frame);
-      if (ws.bufferedAmount + Buffer.byteLength(body) > 4 * MAX_BODY_BYTES) { ws.close(4008, 'Control output backlog exceeded'); return; }
+      if (ws.bufferedAmount + Buffer.byteLength(body) > 4 * MAX_BODY_BYTES) { ws.close(4008, 'Control output backlog exceeded'); return false; }
       ws.send(body);
+      return true;
     };
     const poll = setInterval(() => {
       if (incarnation === undefined || polling || ws.readyState !== WebSocket.OPEN) return;
@@ -261,7 +269,11 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
           switch (frame.type) {
             case 'ready':
               if (!frame.log_modes?.includes('ordered_v1')) throw new CommandError('unmet_precondition', 'Runner does not support ordered execution logs');
-              await service.touch(runnerId, incarnation, true, frame.runtimes); break;
+              await service.touch(runnerId, incarnation, true, frame.runtimes);
+              if (ws.readyState === WebSocket.OPEN) resultReads.register(runnerId,incarnation,ws,frame.result_read_modes?.includes("git_objects_v1") ?? false,send); break;
+            case 'result_read_result':
+              await service.touch(runnerId,incarnation);
+              resultReads.response(runnerId,ws,frame); break;
             case 'heartbeat': await service.touch(runnerId, incarnation); break;
             case 'authorize_dispatch': {
               const grant = await service.authorize(runnerId, incarnation, frame.dispatch_id!);
@@ -285,13 +297,15 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
     });
     ws.on('error', () => { /* Close handler owns reconciliation; no raw errors or credentials logged. */ });
     ws.on('close', () => {
+      resultReads.disconnect(runnerId,ws);
       clearInterval(poll); clearTimeout(helloDeadline);
       if (incarnation !== undefined) void service.disconnect(runnerId, incarnation).catch(() => undefined);
       // A hello already waiting on the database can finish after socket close.
-      void processing.finally(async () => { if (incarnation !== undefined) await service.disconnect(runnerId, incarnation); }).catch(() => undefined);
+      void processing.finally(async () => { if (incarnation !== undefined) { resultReads.disconnect(runnerId,ws); await service.disconnect(runnerId, incarnation); } }).catch(() => undefined);
     });
   }
   app.addHook('onClose', async () => {
+    resultReads.shutdown();
     for (const ws of sockets.clients) ws.terminate();
     await new Promise<void>((resolve) => sockets.close(() => resolve()));
   });

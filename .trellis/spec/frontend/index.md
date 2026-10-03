@@ -14,6 +14,7 @@ evidence; source changes alone do not establish their final visual acceptance.
 - [Hooks](hook-guidelines.md): queries, commands and stream cleanup.
 - [State](state-management.md): canonical facts versus local UI state.
 - [Execution UI](execution-ui.md): scoped storage, exact controls, session binding and histories.
+- [Result content reads](../backend/result-content-reads.md): on-demand exact file/diff inspection, fresh applicability, session fencing and text bounds.
 - [Types](type-safety.md): generated contracts and runtime validation.
 - [Quality](quality-guidelines.md): interaction and reconnect assertions.
 - Command changes also read [protocol](../protocol/commands.md) and [delivery](../backend/delivery-contracts.md).

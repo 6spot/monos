@@ -45,10 +45,10 @@ function positionFor(filters: Filters, cursor?: string): Position {
     if (
       Boolean(value.task_id) !== Boolean(value.created_at) ||
       (value.created_at &&
-        (!/^\d{4}-\d\d-\d\d \d\d:\d\d:\d\d(?:\.\d+)?[+-]\d\d$/.test(
+        (!/^\d{4}-\d\d-\d\d \d\d:\d\d:\d\d(?:\.\d+)?[+-]\d\d(?::[0-5]\d){0,2}$/.test(
           value.created_at,
         ) ||
-          !Number.isFinite(Date.parse(value.created_at))))
+          !Number.isFinite(Date.parse(value.created_at.replace(/([+-]\d\d:[0-5]\d):[0-5]\d$/, "$1")))))
     )
       throw new Error();
     if (

@@ -128,3 +128,31 @@ it('does not mark a legacy Runner ready for ordered-log dispatches', async () =>
     expect(touch).not.toHaveBeenCalled();
   } finally { socket.terminate(); await app.close(); await db.pool.end(); }
 });
+
+it('does not register a Ready socket after close or replace a newer incarnation after its delayed await', async () => {
+  const { ResultReadBroker } = await import('../src/result-read-broker.ts');
+  const register = vi.spyOn(ResultReadBroker.prototype, 'register');
+  const db = database('postgres://unused:unused@127.0.0.1:1/unused');
+  const service = new BoundaryService(db, { signingKey: 'test-only-signing-key-never-for-deployment' });
+  vi.spyOn(service, 'authenticateRunner').mockResolvedValue('runner-test');
+  vi.spyOn(service, 'connect').mockResolvedValueOnce(1).mockResolvedValueOnce(2);
+  vi.spyOn(service, 'pending').mockResolvedValue([]);
+  vi.spyOn(service, 'disconnect').mockResolvedValue();
+  let release!: () => void;
+  const stalled = new Promise<void>(resolve=>{release=resolve;});
+  const touch = vi.spyOn(service, 'touch').mockImplementation((_runner,incarnation)=>incarnation===1?stalled:Promise.resolve());
+  const app=createApp(service);await app.listen({host:'127.0.0.1',port:0});
+  const endpoint=`ws://127.0.0.1:${(app.server.address() as AddressInfo).port}/v1/runner`;
+  const sockets:WebSocket[]=[];
+  const connect=async(inc:number)=>{
+    const socket=new WebSocket(endpoint,{headers:{authorization:'Bearer fixture-only'}});sockets.push(socket);await once(socket,'open');
+    const welcome=once(socket,'message');socket.send(JSON.stringify({schema_version:1,type:'hello',runner_id:'runner-test',boot_id:`boot-${inc}`}));await welcome;
+    socket.send(JSON.stringify({schema_version:1,type:'ready',incarnation:inc,log_modes:['ordered_v1'],result_read_modes:['git_objects_v1']}));return socket;
+  };
+  try {
+    const old=await connect(1);await expect.poll(()=>touch.mock.calls.length).toBe(1);
+    const closed=once(old,'close');old.close();await closed;
+    await connect(2);await expect.poll(()=>register.mock.calls.length).toBe(1);expect(register.mock.calls[0]?.[1]).toBe(2);
+    release();await new Promise(resolve=>setImmediate(resolve));expect(register).toHaveBeenCalledTimes(1);
+  } finally {release();sockets.forEach(s=>s.terminate());await app.close();await db.pool.end();register.mockRestore();}
+});

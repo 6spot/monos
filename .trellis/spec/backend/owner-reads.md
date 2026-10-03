@@ -31,7 +31,8 @@ its event cursor; display unavailable history explicitly. Empty polling retains
 the same position. No history pruning is implemented by this API.
 
 Runner paths in event bodies remain opaque locators. This reader performs database
-queries only; content retrieval must later use the owning Runner/service boundary.
+queries only; [result content retrieval](result-content-reads.md) uses the owning
+Runner/service boundary.
 Browser UI and SSE bindings consume these contracts in their own implementation.
 Selected Attempt status and ordered raw-log cursors use the separate [execution log contract](execution-logs.md); Task event cursors never include raw output.
 
@@ -63,7 +64,7 @@ Shared TS/Go fixtures and OpenAPI are generated from the same read schemas.
 
 Wrong: infer completion from stdout or serve a Runner filesystem path locally.
 Correct: read canonical control and formal events; request Runner-owned content
-through the authenticated service boundary when that feature is implemented.
+through the authenticated service boundary.
 
 ## Execution UI collection, results and diagnostics
 
@@ -88,6 +89,12 @@ actual running/queued/held Attempts and open effects. Up to 16 attention targets
 carry explicit overflow; queueing alone is not attention. `canonical_execution`
 is a read hint, never a permission or substitute for command guards.
 
+Preserve PostgreSQL's exact cursor timestamp text, including valid timezone offsets
+`±HH`, `±HH:mm` and `±HH:mm:ss`. A legacy NULL-created Task normalizes to epoch;
+under historical Singapore timezone that can be `1970-01-01 07:30:00+07:30`.
+Do not assume current whole-hour offsets or change the database timezone to mask
+cursor decoding defects. The real PG regression covers the tied legacy pagination.
+
 Results page by original completion operation ID, at most 32 and below 2 MiB.
 Successful exact manifests/effects retain original Spec/Plan/Node/activation/digest.
 `current` additionally requires current completed membership/activation plus an
@@ -96,6 +103,9 @@ refresh and cancellation cannot grant current applicability. Repository-free
 results have `git:null`. Git metadata matches the original successful operation,
 workspace and lease; do not relabel history using a later workspace head.
 `admitted_at` is completion-operation admission, not the time work completed.
+Git results advertise the canonical full `identity_digest` used by the separate
+[content read contract](result-content-reads.md); historical result attribution
+remains original even when content responses refresh current applicability.
 
 Attempt diagnostics authenticate exact Task+Attempt ownership. `execution` exposes
 only recorded Runtime/model/thinking level, with null for unknown, not current

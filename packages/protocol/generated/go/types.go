@@ -25,6 +25,8 @@ type PlanningText string
 
 type TaskListCursor string
 
+type ResultPath string
+
 type CommandEnvelope struct {
 	ExpectedControlVersion int64               `json:"expected_control_version"`
 	Name                   CommandEnvelopeName `json:"name"`
@@ -382,27 +384,30 @@ type TaskMessage struct {
 }
 
 type Frame struct {
-	Allowed         *bool                 `json:"allowed,omitempty"`
-	AttemptID       *string               `json:"attempt_id,omitempty"`
-	BootID          *string               `json:"boot_id,omitempty"`
-	CorrelationID   *string               `json:"correlation_id,omitempty"`
-	Credential      *string               `json:"credential,omitempty"`
-	Dispatch        *Dispatch             `json:"dispatch,omitempty"`
-	DispatchID      *string               `json:"dispatch_id,omitempty"`
-	Error           *ErrorInfo            `json:"error,omitempty"`
-	Event           *RuntimeEvent         `json:"event,omitempty"`
-	ExpiresAt       *string               `json:"expires_at,omitempty"`
-	Incarnation     *int64                `json:"incarnation,omitempty"`
-	LogModes        []LogModeElement      `json:"log_modes,omitempty"`
-	Operation       *Operation            `json:"operation,omitempty"`
-	OperationID     *string               `json:"operation_id,omitempty"`
-	OperationResult *OperationResult      `json:"operation_result,omitempty"`
-	RunnerID        *string               `json:"runner_id,omitempty"`
-	Runtimes        []RuntimeInstallation `json:"runtimes,omitempty"`
-	SchemaVersion   int64                 `json:"schema_version"`
-	Sequence        *int64                `json:"sequence,omitempty"`
-	StreamID        *string               `json:"stream_id,omitempty"`
-	Type            Type                  `json:"type"`
+	Allowed          *bool                 `json:"allowed,omitempty"`
+	AttemptID        *string               `json:"attempt_id,omitempty"`
+	BootID           *string               `json:"boot_id,omitempty"`
+	CorrelationID    *string               `json:"correlation_id,omitempty"`
+	Credential       *string               `json:"credential,omitempty"`
+	Dispatch         *Dispatch             `json:"dispatch,omitempty"`
+	DispatchID       *string               `json:"dispatch_id,omitempty"`
+	Error            *ErrorInfo            `json:"error,omitempty"`
+	Event            *RuntimeEvent         `json:"event,omitempty"`
+	ExpiresAt        *string               `json:"expires_at,omitempty"`
+	Incarnation      *int64                `json:"incarnation,omitempty"`
+	LogModes         []LogModeElement      `json:"log_modes,omitempty"`
+	Operation        *Operation            `json:"operation,omitempty"`
+	OperationID      *string               `json:"operation_id,omitempty"`
+	OperationResult  *OperationResult      `json:"operation_result,omitempty"`
+	ResultRead       *ResultReadRequest    `json:"result_read,omitempty"`
+	ResultReadModes  []ResultReadMode      `json:"result_read_modes,omitempty"`
+	ResultReadResult *ResultReadResponse   `json:"result_read_result,omitempty"`
+	RunnerID         *string               `json:"runner_id,omitempty"`
+	Runtimes         []RuntimeInstallation `json:"runtimes,omitempty"`
+	SchemaVersion    int64                 `json:"schema_version"`
+	Sequence         *int64                `json:"sequence,omitempty"`
+	StreamID         *string               `json:"stream_id,omitempty"`
+	Type             Type                  `json:"type"`
 }
 
 type Dispatch struct {
@@ -594,6 +599,63 @@ type CompletionOperationResult struct {
 	Success                bool         `json:"success"`
 }
 
+type ResultReadRequest struct {
+	Cursor         *string               `json:"cursor,omitempty"`
+	Identity       ResultReadIdentity    `json:"identity"`
+	IdentityDigest string                `json:"identity_digest"`
+	Mode           ResultReadRequestMode `json:"mode"`
+	Path           *string               `json:"path,omitempty"`
+	Side           *Side                 `json:"side,omitempty"`
+}
+
+type ResultReadIdentity struct {
+	AttemptID               string `json:"attempt_id"`
+	BaseCommit              string `json:"base_commit"`
+	DispatchID              string `json:"dispatch_id"`
+	Generation              int64  `json:"generation"`
+	GitCommit               string `json:"git_commit"`
+	GitTree                 string `json:"git_tree"`
+	LeaseID                 string `json:"lease_id"`
+	ManifestDigest          string `json:"manifest_digest"`
+	NodeActivation          int64  `json:"node_activation"`
+	NodeID                  string `json:"node_id"`
+	OperationID             string `json:"operation_id"`
+	OperationIdentityDigest string `json:"operation_identity_digest"`
+	PlanID                  string `json:"plan_id"`
+	RepositoryIdentity      string `json:"repository_identity"`
+	ResourceID              string `json:"resource_id"`
+	RunnerID                string `json:"runner_id"`
+	SpecificationID         string `json:"specification_id"`
+	StorageID               string `json:"storage_id"`
+	TaskID                  string `json:"task_id"`
+	WorkspaceID             string `json:"workspace_id"`
+}
+
+type ResultReadResponse struct {
+	Changes       []ResultChange           `json:"changes,omitempty"`
+	Current       *bool                    `json:"current,omitempty"`
+	NextCursor    *string                  `json:"next_cursor,omitempty"`
+	Object        *ResultObject            `json:"object,omitempty"`
+	Request       ResultReadRequest        `json:"request"`
+	SchemaVersion int64                    `json:"schema_version"`
+	Status        ResultReadResponseStatus `json:"status"`
+	Text          *string                  `json:"text,omitempty"`
+	TotalChanges  *int64                   `json:"total_changes,omitempty"`
+}
+
+type ResultChange struct {
+	New    *ResultObject      `json:"new,omitempty"`
+	Old    *ResultObject      `json:"old,omitempty"`
+	Path   string             `json:"path"`
+	Status ResultChangeStatus `json:"status"`
+}
+
+type ResultObject struct {
+	Mode ResultObjectMode `json:"mode"`
+	OID  string           `json:"oid"`
+	Size *int64           `json:"size,omitempty"`
+}
+
 type RuntimeInstallation struct {
 	Availability     Availability `json:"availability"`
 	Executable       string       `json:"executable"`
@@ -627,21 +689,21 @@ type OwnerCommand struct {
 }
 
 type OwnerCommandPayload struct {
-	ContentDigest            *string `json:"content_digest,omitempty"`
-	ProposalID               *string `json:"proposal_id,omitempty"`
-	AttemptID                *string `json:"attempt_id,omitempty"`
-	NodeActivation           *int64  `json:"node_activation,omitempty"`
-	NodeID                   *string `json:"node_id,omitempty"`
-	SourceID                 *string `json:"source_id,omitempty"`
-	Answer                   *string `json:"answer,omitempty"`
-	BlockerID                *string `json:"blocker_id,omitempty"`
-	IssueSequence            *int64  `json:"issue_sequence,omitempty"`
-	PlanningIntentID         *string `json:"planning_intent_id,omitempty"`
-	SpecificationID          *string `json:"specification_id,omitempty"`
-	PlanID                   *string `json:"plan_id,omitempty"`
-	CompletionIdentityDigest *string `json:"completion_identity_digest,omitempty"`
-	Mode                     *Mode   `json:"mode,omitempty"`
-	OperationID              *string `json:"operation_id,omitempty"`
+	ContentDigest            *string      `json:"content_digest,omitempty"`
+	ProposalID               *string      `json:"proposal_id,omitempty"`
+	AttemptID                *string      `json:"attempt_id,omitempty"`
+	NodeActivation           *int64       `json:"node_activation,omitempty"`
+	NodeID                   *string      `json:"node_id,omitempty"`
+	SourceID                 *string      `json:"source_id,omitempty"`
+	Answer                   *string      `json:"answer,omitempty"`
+	BlockerID                *string      `json:"blocker_id,omitempty"`
+	IssueSequence            *int64       `json:"issue_sequence,omitempty"`
+	PlanningIntentID         *string      `json:"planning_intent_id,omitempty"`
+	SpecificationID          *string      `json:"specification_id,omitempty"`
+	PlanID                   *string      `json:"plan_id,omitempty"`
+	CompletionIdentityDigest *string      `json:"completion_identity_digest,omitempty"`
+	Mode                     *PayloadMode `json:"mode,omitempty"`
+	OperationID              *string      `json:"operation_id,omitempty"`
 }
 
 type OwnerCommandResult struct {
@@ -1460,12 +1522,12 @@ type OwnerRecoverCompletionCommand struct {
 }
 
 type OwnerRecoverCompletionCommandPayload struct {
-	CompletionIdentityDigest string `json:"completion_identity_digest"`
-	Mode                     Mode   `json:"mode"`
-	NodeActivation           int64  `json:"node_activation"`
-	NodeID                   string `json:"node_id"`
-	OperationID              string `json:"operation_id"`
-	SourceID                 string `json:"source_id"`
+	CompletionIdentityDigest string      `json:"completion_identity_digest"`
+	Mode                     PayloadMode `json:"mode"`
+	NodeActivation           int64       `json:"node_activation"`
+	NodeID                   string      `json:"node_id"`
+	OperationID              string      `json:"operation_id"`
+	SourceID                 string      `json:"source_id"`
 }
 
 type NodeExecutionStatus struct {
@@ -1985,12 +2047,13 @@ type TaskLocalResult struct {
 }
 
 type TaskLocalGitResult struct {
-	GitCommit   string            `json:"git_commit"`
-	GitTree     string            `json:"git_tree"`
-	Metadata    WorkspaceMetadata `json:"metadata"`
-	ResourceID  string            `json:"resource_id"`
-	RunnerID    string            `json:"runner_id"`
-	WorkspaceID string            `json:"workspace_id"`
+	GitCommit      string            `json:"git_commit"`
+	GitTree        string            `json:"git_tree"`
+	IdentityDigest string            `json:"identity_digest"`
+	Metadata       WorkspaceMetadata `json:"metadata"`
+	ResourceID     string            `json:"resource_id"`
+	RunnerID       string            `json:"runner_id"`
+	WorkspaceID    string            `json:"workspace_id"`
 }
 
 type TaskResultQuery struct {
@@ -2025,6 +2088,22 @@ type AttemptWorkspace struct {
 	SettleOperationID   *string            `json:"settle_operation_id"`
 	SettleState         *OpenStateEnum     `json:"settle_state"`
 	WorkspaceID         string             `json:"workspace_id"`
+}
+
+type ResultReadChangesQuery struct {
+	Cursor         *string `json:"cursor,omitempty"`
+	IdentityDigest string  `json:"identity_digest"`
+}
+
+type ResultReadFileQuery struct {
+	IdentityDigest string `json:"identity_digest"`
+	Path           string `json:"path"`
+	Side           Side   `json:"side"`
+}
+
+type ResultReadDiffQuery struct {
+	IdentityDigest string `json:"identity_digest"`
+	Path           string `json:"path"`
 }
 
 type CommandEnvelopeName string
@@ -2253,6 +2332,63 @@ const (
 	DispositionCancelled CompletionSettlementDisposition = "cancelled"
 )
 
+type ResultReadRequestMode string
+
+const (
+	Changes ResultReadRequestMode = "changes"
+	Diff    ResultReadRequestMode = "diff"
+	File    ResultReadRequestMode = "file"
+)
+
+type Side string
+
+const (
+	Base   Side = "base"
+	Result Side = "result"
+)
+
+type ResultReadMode string
+
+const (
+	GitObjectsV1 ResultReadMode = "git_objects_v1"
+)
+
+type ResultObjectMode string
+
+const (
+	The100644 ResultObjectMode = "100644"
+	The100755 ResultObjectMode = "100755"
+	The120000 ResultObjectMode = "120000"
+	The160000 ResultObjectMode = "160000"
+)
+
+type ResultChangeStatus string
+
+const (
+	A ResultChangeStatus = "A"
+	D ResultChangeStatus = "D"
+	M ResultChangeStatus = "M"
+	T ResultChangeStatus = "T"
+)
+
+type ResultReadResponseStatus string
+
+const (
+	Absent            ResultReadResponseStatus = "absent"
+	Available         ResultReadResponseStatus = "available"
+	Binary            ResultReadResponseStatus = "binary"
+	Busy              ResultReadResponseStatus = "busy"
+	IdentityMismatch  ResultReadResponseStatus = "identity_mismatch"
+	NoGit             ResultReadResponseStatus = "no_git"
+	Offline           ResultReadResponseStatus = "offline"
+	Oversized         ResultReadResponseStatus = "oversized"
+	PurpleUnavailable ResultReadResponseStatus = "unavailable"
+	ScanLimit         ResultReadResponseStatus = "scan_limit"
+	Timeout           ResultReadResponseStatus = "timeout"
+	Unsupported       ResultReadResponseStatus = "unsupported"
+	UnsupportedPath   ResultReadResponseStatus = "unsupported_path"
+)
+
 type Availability string
 
 const (
@@ -2272,6 +2408,8 @@ const (
 	Heartbeat           Type = "heartbeat"
 	Hello               Type = "hello"
 	OperationACK        Type = "operation_ack"
+	ResultRead          Type = "result_read"
+	ResultReadResult    Type = "result_read_result"
 	Start               Type = "start"
 	TypeError           Type = "error"
 	TypeOperationResult Type = "operation_result"
@@ -2302,11 +2440,11 @@ const (
 	PurpleStopNode             OwnerCommandName = "stop_node"
 )
 
-type Mode string
+type PayloadMode string
 
 const (
-	Correct Mode = "correct"
-	Retry   Mode = "retry"
+	Correct PayloadMode = "correct"
+	Retry   PayloadMode = "retry"
 )
 
 type OwnerCommandResultStatus string
@@ -2592,12 +2730,12 @@ const (
 	FluffyProcessing  PlanningStatusEnum = "processing"
 	FluffyQueued      PlanningStatusEnum = "queued"
 	FluffySettling    PlanningStatusEnum = "settling"
+	FluffyUnavailable PlanningStatusEnum = "unavailable"
 	IndigoCancelled   PlanningStatusEnum = "cancelled"
 	NotStarted        PlanningStatusEnum = "not_started"
 	PurplePending     PlanningStatusEnum = "pending"
 	PurplePublished   PlanningStatusEnum = "published"
 	StatusIssue       PlanningStatusEnum = "issue"
-	StatusUnavailable PlanningStatusEnum = "unavailable"
 	Stopped           PlanningStatusEnum = "stopped"
 )
 

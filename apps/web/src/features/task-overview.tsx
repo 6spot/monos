@@ -1,3 +1,4 @@
+import { ResultInspector } from "./result-inspector.tsx";
 import { useState } from "react";
 import type {
   ArtifactPage,
@@ -276,10 +277,7 @@ export function TaskResults(props: TaskViewProps) {
             </dl>
           </DetailIDs>
           {r.git && (
-            <p className="task-muted">
-              File diff retrieval is not available. Commit and tree identity
-              come from finalized system Git evidence.
-            </p>
+            <ResultInspector key={`${props.commands.sessionId}:${r.manifest.operation_id}:${r.git.identity_digest}`} props={props} result={r} />
           )}
         </article>
       ))}

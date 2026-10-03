@@ -18,12 +18,19 @@
   "commit": null,
   "pr_url": null,
   "subtasks": [],
-  "children": [],
+  "children": [
+    "10-03-a-local-result-review",
+    "10-03-a-publication-candidate",
+    "10-03-a-remote-preparation",
+    "10-03-a-owner-delivery",
+    "10-03-a-review-correction",
+    "10-03-a-delivery-acceptance"
+  ],
   "parent": "09-28-stage-a-product-loop",
   "relatedFiles": [],
-  "notes": "",
+  "notes": "First local-result leaf independently accepted 2026-10-03. Execute remaining five leaves in recorded order; no package/Stage A/native delivery closure.",
   "meta": {
     "roadmap_level": "work-package",
-    "planning_maturity": "backlog"
+    "planning_maturity": "decomposed"
   }
 }

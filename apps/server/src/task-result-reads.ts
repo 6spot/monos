@@ -3,6 +3,7 @@ import type { Database } from "../../../packages/db/src/index.ts";
 import { CommandError } from "../../../packages/domain/src/commands.ts";
 import {
   canonicalJSON,
+  digest,
   MAX_BODY_BYTES,
   validate,
 } from "../../../packages/protocol/src/index.ts";
@@ -11,7 +12,11 @@ import type {
   EffectResult,
   TaskLocalResult,
   TaskResultPage,
+  Dispatch,
 } from "../../../packages/protocol/src/index.ts";
+import { completionIdentity } from "./node-execution.ts";
+import type { CompletionOperation } from "./node-execution.ts";
+import type { ResultReadIdentity } from "../../../packages/protocol/src/index.ts";
 import { authenticateOwner } from "./owner-commands.ts";
 
 function encode(taskId: string, after: string): string {
@@ -59,6 +64,9 @@ const appliesSQL = `WITH RECURSIVE edges(old_spec,old_plan,new_spec,new_plan) AS
 
 interface ResultRow {
   manifest: CompletionManifest;
+  operation: CompletionOperation;
+  dispatch_id: string;
+  launch: Dispatch;
   result: unknown;
   current: boolean;
   repository_free: boolean;
@@ -80,6 +88,8 @@ export async function taskResults(
   token: string,
   taskId: string,
   cursor?: string,
+  operationId?: string,
+  captured?: {identity?: ResultReadIdentity},
 ): Promise<TaskResultPage> {
   validate("Id", taskId);
   return transaction(db, async (tx) => {
@@ -92,15 +102,15 @@ export async function taskResults(
     let after = decode(taskId, cursor);
     const rows = (
       await tx.query<ResultRow>(
-        `SELECT to_jsonb(m) manifest,o.result,COALESCE(o.repository_free,false) repository_free,o.resource_id,o.workspace_lease_id,a.runner_id,o.created_at,t.specification_id,t.plan_id,
+        `SELECT to_jsonb(m) manifest,to_jsonb(o) operation,a.dispatch_id,a.launch,o.result,COALESCE(o.repository_free,false) repository_free,o.resource_id,o.workspace_lease_id,a.runner_id,o.created_at,t.specification_id,t.plan_id,
       w.id workspace_id,w.storage_id,w.base_commit,w.target_branch,w.repository_identity,
       (t.state<>'CANCELLED' AND n.activation=m.node_activation AND n.state='COMPLETED' AND EXISTS(SELECT 1 FROM plan_nodes pn WHERE pn.plan_id=t.plan_id AND pn.node_id=m.node_id) AND (${appliesSQL})) current
       FROM completion_manifests m JOIN node_completions c ON c.operation_id=m.operation_id AND c.node_id=m.node_id AND c.activation=m.node_activation AND c.attempt_id=m.attempt_id
       JOIN operations o ON o.id=m.operation_id AND o.attempt_id=m.attempt_id AND o.kind='complete_node' AND o.state='succeeded' AND o.completion_manifest_digest=m.content_digest
       JOIN attempts a ON a.id=m.attempt_id AND a.task_id=m.task_id JOIN nodes n ON n.id=m.node_id AND n.task_id=m.task_id JOIN tasks t ON t.id=m.task_id
       LEFT JOIN workspace_leases l ON l.id=o.workspace_lease_id AND l.attempt_id=m.attempt_id LEFT JOIN task_workspaces w ON w.id=l.workspace_id AND w.task_id=m.task_id
-      WHERE m.task_id=$1 AND m.operation_id>$2 ORDER BY m.operation_id LIMIT 33`,
-        [taskId, after],
+      WHERE m.task_id=$1 AND m.operation_id>$2 AND ($3::text IS NULL OR m.operation_id=$3) ORDER BY m.operation_id LIMIT 33`,
+        [taskId, after, operationId ?? null],
       )
     ).rows;
     const items: TaskLocalResult[] = [];
@@ -144,6 +154,8 @@ export async function taskResults(
             "unmet_precondition",
             "Completed result lacks exact finalized workspace evidence",
           );
+        const identity = resultIdentity(row, manifest, effect);
+        if (captured) captured.identity=identity;
         git = {
           workspace_id: row.workspace_id,
           resource_id: row.resource_id,
@@ -151,6 +163,7 @@ export async function taskResults(
           git_commit: effect.git_commit,
           git_tree: effect.git_tree,
           metadata,
+          identity_digest: digest(canonicalJSON(identity)),
         };
       }
       const item = validate<TaskLocalResult>("TaskLocalResult", {
@@ -183,4 +196,29 @@ export async function taskResults(
       has_more: rows.length > items.length,
     });
   });
+}
+
+function resultIdentity(row: ResultRow, m: CompletionManifest, effect: EffectResult): ResultReadIdentity {
+  const w = row.operation.workspace_descriptor, md = effect.workspace_metadata;
+  const d=validate<Dispatch>("Dispatch",row.launch), source=d.node_execution_source;
+  if (!source || d.kind!=='node' || d.todo_id!==undefined || d.node_id!==m.node_id || d.node_activation!==m.node_activation || d.task_planning_source!==undefined || d.task_conversation_source!==undefined || d.task_replan_source!==undefined || d.task_id!==m.task_id || d.attempt_id!==m.attempt_id || d.dispatch_id!==row.dispatch_id || d.runner_id!==row.runner_id || source.node_id!==m.node_id || source.node_activation!==m.node_activation || source.specification_id!==m.specification_id || source.plan_id!==m.plan_id || !effect.writer_absent) throw new CommandError("unmet_precondition", "Result original execution identity is inconsistent");
+  if (!w || !md || w.task_id !== m.task_id || w.node_id !== m.node_id || w.node_activation !== m.node_activation || w.runner_id !== row.runner_id || w.lease_id !== md.lease_id || w.generation !== md.generation || w.workspace_id !== row.workspace_id || w.resource.resource_id !== row.resource_id || row.operation.workspace_digest !== digest(canonicalJSON(w))) throw new CommandError("unmet_precondition", "Result descriptor identity is inconsistent");
+  return validate<ResultReadIdentity>("ResultReadIdentity", {
+    task_id:m.task_id, operation_id:m.operation_id, attempt_id:m.attempt_id, dispatch_id:row.dispatch_id,
+    node_id:m.node_id, node_activation:m.node_activation, specification_id:m.specification_id, plan_id:m.plan_id,
+    manifest_digest:m.content_digest, operation_identity_digest:completionIdentity(row.operation,row.dispatch_id),
+    workspace_id:w.workspace_id, resource_id:row.resource_id, runner_id:row.runner_id,
+    generation:md.generation, storage_id:md.storage_id, lease_id:md.lease_id, repository_identity:md.repository_identity,
+    base_commit:md.base_commit, git_commit:effect.git_commit, git_tree:effect.git_tree
+  });
+}
+export async function selectedTaskResult(db: Database, token: string, taskId: string, operationId: string) {
+  validate("Id", operationId);
+  const captured:{identity?:ResultReadIdentity}={};
+  const page = await taskResults(db,token,taskId,undefined,operationId,captured);
+  const item = page.items[0];
+  if (!item) throw new CommandError("denied_scope", "Unknown Task result");
+  if (!item.git) throw new CommandError("unmet_precondition", "Repository-free result has no Git content");
+  const identity=captured.identity!;
+  return {item,identity};
 }

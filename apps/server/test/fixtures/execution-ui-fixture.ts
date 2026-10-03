@@ -1,8 +1,9 @@
 import { randomUUID } from 'node:crypto';
+import WebSocket from 'ws';
 import { transaction } from '../../../../packages/db/src/index.ts';
 import type { Database } from '../../../../packages/db/src/index.ts';
 import { submission, validate } from '../../../../packages/protocol/src/index.ts';
-import type { CommandEnvelope, Dispatch, OwnerCommand, PrepareReplan, TaskActionBasis, TaskSpecificationStatus, WorkspaceMetadata } from '../../../../packages/protocol/src/index.ts';
+import type { CommandEnvelope, Dispatch, Frame, OwnerCommand, PrepareReplan, ResultChange, ResultObject, ResultReadRequest, ResultReadResponse, TaskActionBasis, TaskSpecificationStatus, WorkspaceMetadata } from '../../../../packages/protocol/src/index.ts';
 import { Todos } from '../../src/todos.ts';
 import { TaskPreviews } from '../../src/task-previews.ts';
 import { prepareProposalFixture } from './task-preview-fixture.ts';
@@ -19,10 +20,26 @@ import { replanImpact } from '../../src/task-replan-state.ts';
 import { initializeTask } from '../../src/task-records.ts';
 import type { BoundaryService } from '../../src/service.ts';
 
-const scenarios = ['ready', 'board_pages', 'queued', 'planning_issue', 'node_queued', 'running', 'running_workspace', 'review_git', 'log_pages', 'blocked', 'review', 'completion_recovery', 'replan', 'replan_issue', 'joint', 'specification', 'guidance', 'input_issue'] as const;
+const scenarios = ['ready', 'board_pages', 'queued', 'planning_issue', 'node_queued', 'running', 'running_workspace', 'review_git', 'result_inspection', 'result_empty', 'log_pages', 'blocked', 'review', 'completion_recovery', 'replan', 'replan_issue', 'joint', 'specification', 'guidance', 'input_issue'] as const;
 type Scenario = typeof scenarios[number];
 interface Context { task: string; spec: string; plan: string; node: string; project: string; role: string; runner: string; incarnation: number }
 interface Agent { dispatch: Dispatch; credential: string }
+
+const literalText = '<script>window.resultInjected = true</script>\n  exact whitespace\n' + 'long code '.repeat(120) + '\n';
+const longPath = 'src/' + 'a-long-literal-path-'.repeat(12) + ': final.txt';
+const blob = (oid = '1'.repeat(40), mode: ResultObject['mode'] = '100644', size = Buffer.byteLength(literalText)): ResultObject => ({ oid, mode, ...(mode === '160000' ? {} : { size }) });
+const resultChanges: ResultChange[] = [
+  { path: 'src/literal.txt', status: 'M', old: blob('1'.repeat(40), '100644', Buffer.byteLength('before\n')), new: blob('2'.repeat(40)) },
+  { path: 'deleted.txt', status: 'D', old: blob('1'.repeat(40), '100644', Buffer.byteLength('before\n')) },
+  { path: 'empty.txt', status: 'A', new: blob('3'.repeat(40), '100644', 0) },
+  { path: 'binary.dat', status: 'A', new: blob('4'.repeat(40), '100644', 12) },
+  { path: 'oversized.txt', status: 'A', new: blob('5'.repeat(40), '100644', 65537) },
+  { path: 'link', status: 'A', new: blob('6'.repeat(40), '120000', 20) },
+  { path: 'submodule', status: 'A', new: blob('7'.repeat(40), '160000') },
+  { path: longPath, status: 'A', new: blob() },
+  ...Array.from({ length: 62 }, (_, index): ResultChange => ({ path: `more/file-${String(index).padStart(2, '0')}.txt`, status: 'A', new: blob() })),
+];
+interface ReadPeer { socket: WebSocket; heartbeat: NodeJS.Timeout; held: Frame[]; hold: boolean; status?: ResultReadResponse['status']; requests: ResultReadRequest[]; empty: boolean }
 
 // Browser-only canonical scenarios with explicitly synthetic Runtime acknowledgements.
 // No Runtime or provider is contacted; fixture Tasks never leave the isolated schema.
@@ -32,13 +49,16 @@ export class ExecutionUIFixture {
   readonly contexts = new Map<string, Context>();
   private readonly workspaceSnapshots = new Map<string, { workspace_id: string; metadata: WorkspaceMetadata }>();
   private readonly legacyBoardTasks: Context[] = [];
+  private readonly runnerCredentials = new Map<string, string>();
+  private readonly readPeers = new Map<string, ReadPeer>();
+  private readonly readCompletions = new Map<string, string>();
   constructor(db: Database, service: BoundaryService) { this.db = db; this.service = service; }
 
   async create(token: string, input: { kind: Scenario; title?: string }) {
     await transaction(this.db, (tx) => authenticateOwner(tx, token));
     if (!scenarios.includes(input.kind) || (input.title !== undefined && (typeof input.title !== 'string' || input.title.length > 256))) throw new Error('Invalid browser scenario');
     const f: Context = { task: randomUUID(), spec: randomUUID(), plan: randomUUID(), node: randomUUID(), project: randomUUID(), role: randomUUID(), runner: randomUUID(), incarnation: 0 };
-    const resource_id = input.kind === 'running_workspace' || input.kind === 'review_git' ? randomUUID() : undefined;
+    const resource_id = ['running_workspace', 'review_git', 'result_inspection', 'result_empty'].includes(input.kind) ? randomUUID() : undefined;
     const config = new Configuration(this.db);
     await config.save(token, { schema_version: 1, request_id: randomUUID(), expected_control_version: (await config.read(token)).control_version, name: 'save_role', payload: { id: f.role, name: 'Careful builder', description: 'Synthetic browser scenario', instructions: 'Implement the exact requirement and report evidence.', archived: false } });
     await config.save(token, { schema_version: 1, request_id: randomUUID(), expected_control_version: (await config.read(token)).control_version, name: 'save_project', payload: { id: f.project, name: `Execution UI · ${input.kind}`, context: 'Isolated browser fixture; no real Runtime execution.', resources: resource_id ? [{ id: resource_id, remote_url: 'https://github.com/example/execution-ui.git', remote_preparation: 'after_acceptance', default_branch: 'main' }] : [], role_ids: [f.role], archived: false } });
@@ -52,7 +72,9 @@ export class ExecutionUIFixture {
     const created = await previews.command(token, { schema_version: 1, request_id: randomUUID(), todo_id, name: 'create_execution_task', payload: { proposal_message_id: proposal.proposal_message_id, confirmation_id: confirmed.confirmation_id, content_digest: preview.content_digest } });
     if (!created.task_id || !created.specification_id) throw new Error('Browser fixture Task creation failed');
     f.task = created.task_id; f.spec = created.specification_id;
-    await enrollFixture(this.db, f.runner, randomUUID(), 2);
+    const runnerCredential = randomUUID();
+    await enrollFixture(this.db, f.runner, runnerCredential, 2);
+    this.runnerCredentials.set(f.runner, runnerCredential);
     f.incarnation = await this.service.connect(f.runner, 'execution-ui-fixture');
     await this.service.touch(f.runner, f.incarnation, true, [{ runtime_id: 'opencode', executable: '/synthetic/opencode', availability: 'detected', supports_model: true, supports_thinking: false, model_ids: [] }]);
     // Pin synthetic preparation to its own fixture Runner; no deployed policy is read.
@@ -136,13 +158,17 @@ export class ExecutionUIFixture {
       const blocked = await this.agent(f, node, 'block_node', { reason: 'Choose the intended fallback behavior before implementation continues.' });
       await this.finish(f, blocked.operation_id!, node.dispatch.attempt_id); return f;
     }
-    if (input.kind === 'review' || input.kind === 'review_git' || input.kind === 'completion_recovery') {
+    if (['review', 'review_git', 'result_inspection', 'result_empty', 'completion_recovery'].includes(input.kind)) {
       const artifact_id = randomUUID();
       await this.agent(f, node, 'publish_artifact', { artifact_id, title: 'Verification notes', content: { media_type: 'text/markdown', text: '# Local verification\n\nThe synthetic fixture completed its formal result. No real Runtime or provider ran.\n\n<script>this must remain inert</script>' } });
       const completed = await this.agent(f, node, 'complete_node', { summary: 'The requested local result is ready for Owner review. Verification notes are attached.', artifact_ids: [artifact_id] });
       if (input.kind === 'completion_recovery') await this.service.finishOperation(f.runner, f.incarnation, { operation_id: completed.operation_id!, attempt_id: node.dispatch.attempt_id, success: false, failure_kind: 'recoverable', result: { writer_absent: true } });
       else await this.finish(f, completed.operation_id!, node.dispatch.attempt_id);
-      return { ...f, artifact_id, ...(resource_id ? { resource_id, attempt_id: node.dispatch.attempt_id, workspace_id: this.workspaceSnapshots.get(node.dispatch.attempt_id)!.workspace_id, git_commit: 'c'.repeat(40), git_tree: 'd'.repeat(40) } : {}) };
+      if (input.kind === 'result_inspection' || input.kind === 'result_empty') {
+        this.readCompletions.set(f.task, completed.operation_id!);
+        await this.connectReadPeer(f, input.kind === 'result_empty');
+      }
+      return { ...f, artifact_id, operation_id: completed.operation_id, ...(resource_id ? { resource_id, attempt_id: node.dispatch.attempt_id, workspace_id: this.workspaceSnapshots.get(node.dispatch.attempt_id)!.workspace_id, git_commit: 'c'.repeat(40), git_tree: 'd'.repeat(40) } : {}) };
     }
     const requested = await this.agent(f, node, 'request_replan', { reason: 'The current work definition needs replacement to satisfy the requested outcome.' });
     await this.finish(f, requested.operation_id!, node.dispatch.attempt_id);
@@ -176,6 +202,7 @@ export class ExecutionUIFixture {
     for (const legacy of this.legacyBoardTasks) await this.owner(token, legacy, 'cancel_task', { specification_id: legacy.spec });
     this.legacyBoardTasks.length = 0;
     for (const f of this.contexts.values()) {
+      await this.closeReadPeer(f.task);
       // Terminal Task questions are intentionally still schedulable. Resolve
       // fixture inputs explicitly so a later scenario cannot dispatch old chat.
       const conversation = new TaskConversation(this.db, this.service.instanceId);
@@ -186,8 +213,91 @@ export class ExecutionUIFixture {
       await this.settle(token, f.task);
       await this.service.disconnect(f.runner, f.incarnation);
     }
-    this.contexts.clear(); this.workspaceSnapshots.clear(); return { reset: true };
+    this.contexts.clear(); this.workspaceSnapshots.clear(); this.runnerCredentials.clear(); this.readCompletions.clear(); return { reset: true };
   }
+
+  // Only this test process owns synthetic read bytes. Authentication, socket
+  // incarnation, broker routing and canonical result identity use createApp.
+  private async connectReadPeer(f: Context, empty = false) {
+    const socket = new WebSocket('ws://127.0.0.1:18555/v1/runner', { headers: { Authorization: `Bearer ${this.runnerCredentials.get(f.runner)}` } });
+    const peer: ReadPeer = { socket, heartbeat: setInterval(() => {
+      if (socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ schema_version: 1, type: 'heartbeat', incarnation: f.incarnation }));
+    }, 1000), held: [], hold: false, requests: [], empty };
+    peer.heartbeat.unref(); this.readPeers.set(f.task, peer);
+    await new Promise<void>((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error('Synthetic read peer handshake timed out')), 5000);
+      socket.once('error', () => { clearTimeout(timer); reject(new Error('Synthetic read peer connection failed')); });
+      socket.on('message', data => {
+        const frame = validate<Frame>('Frame', JSON.parse(data.toString()));
+        if (frame.type === 'welcome') {
+          f.incarnation = frame.incarnation!;
+          socket.send(JSON.stringify({ schema_version: 1, type: 'ready', incarnation: f.incarnation, log_modes: ['ordered_v1'], result_read_modes: ['git_objects_v1'] }));
+          clearTimeout(timer); resolve();
+        } else if (frame.type === 'result_read') {
+          if (frame.result_read?.identity.task_id !== f.task || frame.result_read.identity.runner_id !== f.runner || frame.result_read.identity.operation_id !== this.readCompletions.get(f.task)) {
+            socket.close(4003, 'Synthetic read peer scope mismatch'); return;
+          }
+          peer.requests.push(frame.result_read!);
+          if (peer.hold) peer.held.push(frame); else this.replyRead(peer, frame);
+        }
+      });
+      socket.once('open', () => socket.send(JSON.stringify({ schema_version: 1, type: 'hello', runner_id: f.runner, boot_id: 'synthetic-result-read-peer' })));
+    });
+    for (let index = 0; index < 100; index++) {
+      const row = (await this.db.pool.query('SELECT ready,incarnation FROM runners WHERE id=$1', [f.runner])).rows[0];
+      if (row?.ready && Number(row.incarnation) === f.incarnation) return;
+      await new Promise(resolve => setTimeout(resolve, 10));
+    }
+    throw new Error('Synthetic read peer did not become ready');
+  }
+  private replyRead(peer: ReadPeer, frame: Frame) {
+    const request = frame.result_read!;
+    const response: ResultReadResponse = { schema_version: 1, request, status: peer.status ?? 'available' };
+    if (response.status === 'available') {
+      if (request.mode === 'changes') {
+        const rows = peer.empty ? [] : resultChanges;
+        const start = request.cursor ? (JSON.parse(Buffer.from(request.cursor, 'base64url').toString()).after as number) : 0;
+        response.changes = rows.slice(start, start + 64); response.total_changes = rows.length;
+        if (start + 64 < rows.length) response.next_cursor = Buffer.from(JSON.stringify({ after: start + 64, identity: request.identity_digest, version: 1 })).toString('base64url');
+      } else {
+        const change = resultChanges.find(row => row.path === request.path);
+        const object = request.side === 'base' ? change?.old : change?.new;
+        if (request.mode === 'diff') response.text = `--- a/${request.path}\n+++ b/${request.path}\n@@ -1 +1 @@\n-before\n+${literalText}`;
+        else if (!object) response.status = 'absent';
+        else if (request.path === 'binary.dat') { response.status = 'binary'; response.object = object; }
+        else if (request.path === 'oversized.txt') { response.status = 'oversized'; response.object = object; }
+        else {
+          response.object = object;
+          if (object.mode !== '160000') response.text = request.path === 'empty.txt' ? '' : request.path === 'link' ? '/outside/not-followed' : request.side === 'base' ? 'before\n' : literalText;
+        }
+      }
+    }
+    validate('ResultReadResponse', response);
+    if (peer.socket.readyState === WebSocket.OPEN) peer.socket.send(JSON.stringify({ schema_version: 1, type: 'result_read_result', incarnation: frame.incarnation, correlation_id: frame.correlation_id, result_read_result: response }));
+  }
+  private async closeReadPeer(task: string) {
+    const peer = this.readPeers.get(task); if (!peer) return;
+    clearInterval(peer.heartbeat); this.readPeers.delete(task);
+    if (peer.socket.readyState === WebSocket.CLOSED) return;
+    await new Promise<void>(resolve => { peer.socket.once('close', () => resolve()); peer.socket.close(); });
+  }
+  async readPeer(token: string, task: string, action: 'observe' | 'hold' | 'release' | 'offline' | 'reconnect' | 'status', status?: ResultReadResponse['status']) {
+    await transaction(this.db, tx => authenticateOwner(tx, token));
+    if (!['observe', 'hold', 'release', 'offline', 'reconnect', 'status'].includes(action)) throw new Error('Invalid synthetic read peer action');
+    const f = this.contexts.get(task); if (!f) throw new Error('Unknown synthetic read Task');
+    const peer = this.readPeers.get(task);
+    if (action === 'offline') { await this.closeReadPeer(task); await this.service.disconnect(f.runner, f.incarnation); return { offline: true }; }
+    if (action === 'reconnect') { await this.closeReadPeer(task); await this.connectReadPeer(f); return { reconnected: true }; }
+    if (!peer) throw new Error('Synthetic read peer is offline');
+    if (action === 'hold') peer.hold = true;
+    if (action === 'status') {
+      if (!status || !['available', 'unavailable', 'scan_limit', 'unsupported_path', 'unsupported', 'busy', 'timeout'].includes(status)) throw new Error('Invalid synthetic read status');
+      peer.status = status;
+    }
+    if (action === 'release') { peer.hold = false; for (const frame of peer.held.splice(0)) this.replyRead(peer, frame); }
+    return { held: peer.held.length, requests: peer.requests, synthetic: true };
+  }
+  async closeReadPeers() { for (const task of this.readPeers.keys()) await this.closeReadPeer(task); }
 
   private async basis(f: Context): Promise<TaskActionBasis> {
     const task = (await this.db.pool.query('SELECT * FROM tasks WHERE id=$1', [f.task])).rows[0];

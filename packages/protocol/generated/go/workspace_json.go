@@ -12,6 +12,15 @@ func (value EffectResult) MarshalJSON() ([]byte, error) {
     InstructionFiles *[]InstructionFile `json:"instruction_files,omitempty"`
   }{plain(value), files})
 }
+func (value ResultReadResponse) MarshalJSON() ([]byte, error) {
+  type plain ResultReadResponse
+  var changes *[]ResultChange
+  if value.Changes != nil { changes = &value.Changes }
+  return json.Marshal(struct {
+    plain
+    Changes *[]ResultChange `json:"changes,omitempty"`
+  }{plain(value), changes})
+}
 func (value ExecutionPlanNode) MarshalJSON() ([]byte, error) {
   type plain ExecutionPlanNode
   var consumes, hardRequirements, expectedOutputs *[]string

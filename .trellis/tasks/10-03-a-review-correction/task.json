@@ -1,0 +1,29 @@
+{
+  "id": "a-review-correction",
+  "name": "a-review-correction",
+  "title": "Review correction and delivery recovery",
+  "description": "Route explicit review feedback, revoke eligible undelivered batches and reconcile retry/cancel without losing remote truth.",
+  "status": "planning",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P2",
+  "creator": "me",
+  "assignee": "me",
+  "createdAt": "2026-10-03",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "09-28-a-review-delivery",
+  "relatedFiles": [],
+  "notes": "",
+  "meta": {
+    "roadmap_level": "leaf",
+    "planning_maturity": "backlog"
+  }
+}

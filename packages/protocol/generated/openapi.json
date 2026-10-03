@@ -105,6 +105,249 @@
         }
       }
     },
+    "/v1/owner/tasks/{task_id}/results/{operation_id}/changes": {
+      "get": {
+        "security": [
+          {
+            "OwnerAuth": []
+          },
+          {
+            "OwnerCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "X-Monos-Session",
+            "in": "header",
+            "required": false,
+            "description": "Noncredential expected session identity. Mismatch rejects before reads or effects; this header alone never authenticates.",
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "operation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "identity_digest",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/SHA256"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/TaskListCursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authenticated response; admission is distinct from completed effects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultReadResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Deterministic protocol error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/owner/tasks/{task_id}/results/{operation_id}/file": {
+      "get": {
+        "security": [
+          {
+            "OwnerAuth": []
+          },
+          {
+            "OwnerCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "X-Monos-Session",
+            "in": "header",
+            "required": false,
+            "description": "Noncredential expected session identity. Mismatch rejects before reads or effects; this header alone never authenticates.",
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "operation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "identity_digest",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/SHA256"
+            }
+          },
+          {
+            "name": "path",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ResultPath"
+            }
+          },
+          {
+            "name": "side",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "base",
+                "result"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authenticated response; admission is distinct from completed effects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultReadResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Deterministic protocol error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/owner/tasks/{task_id}/results/{operation_id}/diff": {
+      "get": {
+        "security": [
+          {
+            "OwnerAuth": []
+          },
+          {
+            "OwnerCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "X-Monos-Session",
+            "in": "header",
+            "required": false,
+            "description": "Noncredential expected session identity. Mismatch rejects before reads or effects; this header alone never authenticates.",
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "operation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "identity_digest",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/SHA256"
+            }
+          },
+          {
+            "name": "path",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ResultPath"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authenticated response; admission is distinct from completed effects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultReadResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Deterministic protocol error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/owner/tasks/{task_id}/results": {
       "get": {
         "security": [
@@ -5043,7 +5286,9 @@
               "event_ack",
               "operation_result",
               "operation_ack",
-              "error"
+              "error",
+              "result_read",
+              "result_read_result"
             ]
           },
           "runner_id": {
@@ -5112,6 +5357,23 @@
               "type": "string",
               "enum": [
                 "ordered_v1"
+              ]
+            },
+            "maxItems": 1,
+            "uniqueItems": true
+          },
+          "result_read": {
+            "$ref": "#/components/schemas/ResultReadRequest"
+          },
+          "result_read_result": {
+            "$ref": "#/components/schemas/ResultReadResponse"
+          },
+          "result_read_modes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "git_objects_v1"
               ]
             },
             "maxItems": 1,
@@ -5191,7 +5453,8 @@
                 "type": {},
                 "incarnation": {},
                 "runtimes": {},
-                "log_modes": {}
+                "log_modes": {},
+                "result_read_modes": {}
               },
               "additionalProperties": false,
               "type": "object"
@@ -5491,6 +5754,62 @@
                 "credential": {},
                 "expires_at": {}
               }
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "result_read"
+                }
+              }
+            },
+            "then": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "schema_version": {},
+                "type": {},
+                "incarnation": {},
+                "correlation_id": {},
+                "result_read": {}
+              },
+              "required": [
+                "schema_version",
+                "type",
+                "incarnation",
+                "correlation_id",
+                "result_read"
+              ]
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "result_read_result"
+                }
+              }
+            },
+            "then": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "schema_version": {},
+                "type": {},
+                "incarnation": {},
+                "correlation_id": {},
+                "result_read_result": {}
+              },
+              "required": [
+                "schema_version",
+                "type",
+                "incarnation",
+                "correlation_id",
+                "result_read_result"
+              ]
             }
           }
         ]
@@ -14259,6 +14578,9 @@
           },
           "metadata": {
             "$ref": "#/components/schemas/WorkspaceMetadata"
+          },
+          "identity_digest": {
+            "$ref": "#/components/schemas/SHA256"
           }
         },
         "required": [
@@ -14267,7 +14589,8 @@
           "runner_id",
           "git_commit",
           "git_tree",
-          "metadata"
+          "metadata",
+          "identity_digest"
         ]
       },
       "TaskLocalResult": {
@@ -14568,6 +14891,770 @@
           "attempt_id",
           "workspaces",
           "execution"
+        ]
+      },
+      "ResultReadIdentity": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "task_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "operation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "attempt_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "dispatch_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "node_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "specification_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "plan_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "workspace_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "resource_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "runner_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "storage_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "lease_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "manifest_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "operation_identity_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "node_activation": {
+            "$ref": "#/components/schemas/PositiveCounter"
+          },
+          "generation": {
+            "$ref": "#/components/schemas/PositiveCounter"
+          },
+          "repository_identity": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "base_commit": {
+            "$ref": "#/components/schemas/GitOID"
+          },
+          "git_commit": {
+            "$ref": "#/components/schemas/GitOID"
+          },
+          "git_tree": {
+            "$ref": "#/components/schemas/GitOID"
+          }
+        },
+        "required": [
+          "task_id",
+          "operation_id",
+          "attempt_id",
+          "dispatch_id",
+          "node_id",
+          "specification_id",
+          "plan_id",
+          "workspace_id",
+          "resource_id",
+          "runner_id",
+          "storage_id",
+          "lease_id",
+          "manifest_digest",
+          "operation_identity_digest",
+          "node_activation",
+          "generation",
+          "repository_identity",
+          "base_commit",
+          "git_commit",
+          "git_tree"
+        ]
+      },
+      "ResultPath": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 4096,
+        "allOf": [
+          {
+            "not": {
+              "pattern": "[\u0000\\\\]"
+            }
+          },
+          {
+            "not": {
+              "pattern": "^/"
+            }
+          },
+          {
+            "not": {
+              "pattern": "^[A-Za-z]:"
+            }
+          },
+          {
+            "not": {
+              "pattern": "(^|/)\\.{1,2}/"
+            }
+          },
+          {
+            "not": {
+              "pattern": "//"
+            }
+          },
+          {
+            "if": {
+              "pattern": "[\r\n  ]$"
+            },
+            "then": {},
+            "else": {
+              "allOf": [
+                {
+                  "not": {
+                    "pattern": "(^|/)\\.{1,2}$"
+                  }
+                },
+                {
+                  "not": {
+                    "pattern": "/$"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "ResultReadRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "identity": {
+            "$ref": "#/components/schemas/ResultReadIdentity"
+          },
+          "identity_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "changes",
+              "file",
+              "diff"
+            ]
+          },
+          "path": {
+            "$ref": "#/components/schemas/ResultPath"
+          },
+          "side": {
+            "type": "string",
+            "enum": [
+              "base",
+              "result"
+            ]
+          },
+          "cursor": {
+            "$ref": "#/components/schemas/TaskListCursor"
+          }
+        },
+        "required": [
+          "identity",
+          "identity_digest",
+          "mode"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "mode": {
+                  "const": "changes"
+                }
+              }
+            },
+            "then": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "identity": {},
+                "identity_digest": {},
+                "mode": {},
+                "cursor": {}
+              },
+              "required": [
+                "identity",
+                "identity_digest",
+                "mode"
+              ]
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "mode": {
+                  "const": "file"
+                }
+              }
+            },
+            "then": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "identity": {},
+                "identity_digest": {},
+                "mode": {},
+                "path": {},
+                "side": {}
+              },
+              "required": [
+                "identity",
+                "identity_digest",
+                "mode",
+                "path",
+                "side"
+              ]
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "mode": {
+                  "const": "diff"
+                }
+              }
+            },
+            "then": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "identity": {},
+                "identity_digest": {},
+                "mode": {},
+                "path": {}
+              },
+              "required": [
+                "identity",
+                "identity_digest",
+                "mode",
+                "path"
+              ]
+            }
+          }
+        ]
+      },
+      "ResultReadChangesQuery": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "identity_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "cursor": {
+            "$ref": "#/components/schemas/TaskListCursor"
+          }
+        },
+        "required": [
+          "identity_digest"
+        ]
+      },
+      "ResultReadFileQuery": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "identity_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "path": {
+            "$ref": "#/components/schemas/ResultPath"
+          },
+          "side": {
+            "type": "string",
+            "enum": [
+              "base",
+              "result"
+            ]
+          }
+        },
+        "required": [
+          "identity_digest",
+          "path",
+          "side"
+        ]
+      },
+      "ResultReadDiffQuery": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "identity_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "path": {
+            "$ref": "#/components/schemas/ResultPath"
+          }
+        },
+        "required": [
+          "identity_digest",
+          "path"
+        ]
+      },
+      "ResultObject": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "oid": {
+            "$ref": "#/components/schemas/GitOID"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "100644",
+              "100755",
+              "120000",
+              "160000"
+            ]
+          },
+          "size": {
+            "$ref": "#/components/schemas/Counter"
+          }
+        },
+        "required": [
+          "oid",
+          "mode"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "mode": {
+                  "const": "160000"
+                }
+              }
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "size": false
+              }
+            },
+            "else": {
+              "type": "object",
+              "required": [
+                "size"
+              ],
+              "properties": {
+                "size": {}
+              }
+            }
+          }
+        ]
+      },
+      "ResultChange": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "$ref": "#/components/schemas/ResultPath"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "A",
+              "D",
+              "M",
+              "T"
+            ]
+          },
+          "old": {
+            "$ref": "#/components/schemas/ResultObject"
+          },
+          "new": {
+            "$ref": "#/components/schemas/ResultObject"
+          }
+        },
+        "required": [
+          "path",
+          "status"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "const": "A"
+                }
+              }
+            },
+            "then": {
+              "type": "object",
+              "required": [
+                "new"
+              ],
+              "properties": {
+                "new": {},
+                "old": false
+              }
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "const": "D"
+                }
+              }
+            },
+            "then": {
+              "type": "object",
+              "required": [
+                "old"
+              ],
+              "properties": {
+                "old": {},
+                "new": false
+              }
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "const": "M"
+                }
+              }
+            },
+            "then": {
+              "type": "object",
+              "required": [
+                "old",
+                "new"
+              ],
+              "properties": {
+                "old": {},
+                "new": {}
+              }
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "const": "T"
+                }
+              }
+            },
+            "then": {
+              "type": "object",
+              "required": [
+                "old",
+                "new"
+              ],
+              "properties": {
+                "old": {},
+                "new": {}
+              }
+            }
+          }
+        ]
+      },
+      "ResultReadResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "enum": [
+              1
+            ]
+          },
+          "request": {
+            "$ref": "#/components/schemas/ResultReadRequest"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "available",
+              "absent",
+              "binary",
+              "oversized",
+              "scan_limit",
+              "unsupported_path",
+              "unavailable",
+              "identity_mismatch",
+              "offline",
+              "unsupported",
+              "busy",
+              "timeout",
+              "no_git"
+            ]
+          },
+          "changes": {
+            "type": "array",
+            "maxItems": 64,
+            "items": {
+              "$ref": "#/components/schemas/ResultChange"
+            }
+          },
+          "next_cursor": {
+            "$ref": "#/components/schemas/TaskListCursor"
+          },
+          "total_changes": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "object": {
+            "$ref": "#/components/schemas/ResultObject"
+          },
+          "text": {
+            "type": "string",
+            "maxLength": 65536
+          },
+          "current": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "schema_version",
+          "request",
+          "status"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "request": {
+                  "type": "object",
+                  "properties": {
+                    "mode": {
+                      "const": "changes"
+                    }
+                  }
+                }
+              }
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "object": false,
+                "text": false
+              }
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "request": {
+                  "type": "object",
+                  "properties": {
+                    "mode": {
+                      "const": "file"
+                    }
+                  }
+                }
+              }
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "changes": false,
+                "next_cursor": false,
+                "total_changes": false
+              }
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "request": {
+                  "type": "object",
+                  "properties": {
+                    "mode": {
+                      "const": "diff"
+                    }
+                  }
+                }
+              }
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "changes": false,
+                "next_cursor": false,
+                "total_changes": false,
+                "object": false
+              }
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "const": "available"
+                },
+                "request": {
+                  "type": "object",
+                  "properties": {
+                    "mode": {
+                      "const": "changes"
+                    }
+                  }
+                }
+              }
+            },
+            "then": {
+              "type": "object",
+              "required": [
+                "changes",
+                "total_changes"
+              ],
+              "properties": {
+                "changes": {},
+                "total_changes": {}
+              }
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "const": "available"
+                },
+                "request": {
+                  "type": "object",
+                  "properties": {
+                    "mode": {
+                      "const": "diff"
+                    }
+                  }
+                }
+              }
+            },
+            "then": {
+              "type": "object",
+              "required": [
+                "text"
+              ],
+              "properties": {
+                "text": {}
+              }
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "const": "available"
+                },
+                "request": {
+                  "type": "object",
+                  "properties": {
+                    "mode": {
+                      "const": "file"
+                    }
+                  }
+                }
+              }
+            },
+            "then": {
+              "type": "object",
+              "required": [
+                "object"
+              ],
+              "properties": {
+                "object": {}
+              }
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "const": "available"
+                },
+                "request": {
+                  "type": "object",
+                  "properties": {
+                    "mode": {
+                      "const": "file"
+                    }
+                  }
+                }
+              }
+            },
+            "then": {
+              "if": {
+                "type": "object",
+                "properties": {
+                  "object": {
+                    "type": "object",
+                    "properties": {
+                      "mode": {
+                        "const": "160000"
+                      }
+                    }
+                  }
+                }
+              },
+              "then": {
+                "type": "object",
+                "properties": {
+                  "text": false
+                }
+              },
+              "else": {
+                "type": "object",
+                "required": [
+                  "text"
+                ],
+                "properties": {
+                  "text": {}
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "not": {
+                    "const": "available"
+                  }
+                }
+              }
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "changes": false,
+                "total_changes": false,
+                "next_cursor": false,
+                "text": false
+              }
+            }
+          }
         ]
       }
     },

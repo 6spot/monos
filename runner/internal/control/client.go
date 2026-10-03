@@ -289,6 +289,7 @@ func (c *Client) Run(ctx context.Context, boot string, h Handler) error {
 		InstalledRuntimes(context.Context) []protocol.RuntimeInstallation
 	}); ok {
 		ready.Runtimes = reporter.InstalledRuntimes(ctx)
+		ready.ResultReadModes = []protocol.ResultReadMode{protocol.GitObjectsV1}
 	}
 	if err = c.Send(ctx, ready); err != nil {
 		return err

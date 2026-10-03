@@ -1,0 +1,2 @@
+$ node packages/protocol/scripts/generate.mjs --check
+Protocol generation is current.

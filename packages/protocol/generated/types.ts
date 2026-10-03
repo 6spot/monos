@@ -23,6 +23,8 @@ type PlanningText = string;
 
 type TaskListCursor = string;
 
+type ResultPath = string;
+
 export interface CommandEnvelope {
     expected_control_version: number;
     name:                     CommandEnvelopeName;
@@ -412,27 +414,30 @@ export type WorkspaceUnavailableReason = "unsupported_remote" | "unsupported_mul
 export type CommandResultStatus = "admitted" | "committed" | "error" | "unknown";
 
 export interface Frame {
-    allowed?:          boolean;
-    attempt_id?:       string;
-    boot_id?:          string;
-    correlation_id?:   string;
-    credential?:       string;
-    dispatch?:         Dispatch;
-    dispatch_id?:      string;
-    error?:            ErrorInfo;
-    event?:            RuntimeEvent;
-    expires_at?:       string;
-    incarnation?:      number;
-    log_modes?:        LogModeElement[];
-    operation?:        Operation;
-    operation_id?:     string;
-    operation_result?: OperationResult;
-    runner_id?:        string;
-    runtimes?:         RuntimeInstallation[];
-    schema_version:    number;
-    sequence?:         number;
-    stream_id?:        string;
-    type:              Type;
+    allowed?:            boolean;
+    attempt_id?:         string;
+    boot_id?:            string;
+    correlation_id?:     string;
+    credential?:         string;
+    dispatch?:           Dispatch;
+    dispatch_id?:        string;
+    error?:              ErrorInfo;
+    event?:              RuntimeEvent;
+    expires_at?:         string;
+    incarnation?:        number;
+    log_modes?:          LogModeElement[];
+    operation?:          Operation;
+    operation_id?:       string;
+    operation_result?:   OperationResult;
+    result_read?:        ResultReadRequest;
+    result_read_modes?:  ResultReadMode[];
+    result_read_result?: ResultReadResponse;
+    runner_id?:          string;
+    runtimes?:           RuntimeInstallation[];
+    schema_version:      number;
+    sequence?:           number;
+    stream_id?:          string;
+    type:                Type;
 }
 
 export interface Dispatch {
@@ -642,6 +647,75 @@ export type FailureKind = "recoverable" | "capture_hard_limit" | "invalid_finali
 
 export type CompletionSettlementDisposition = "cancelled" | "already_finalized";
 
+export interface ResultReadRequest {
+    cursor?:         string;
+    identity:        ResultReadIdentity;
+    identity_digest: string;
+    mode:            ResultReadRequestMode;
+    path?:           string;
+    side?:           Side;
+}
+
+export interface ResultReadIdentity {
+    attempt_id:                string;
+    base_commit:               string;
+    dispatch_id:               string;
+    generation:                number;
+    git_commit:                string;
+    git_tree:                  string;
+    lease_id:                  string;
+    manifest_digest:           string;
+    node_activation:           number;
+    node_id:                   string;
+    operation_id:              string;
+    operation_identity_digest: string;
+    plan_id:                   string;
+    repository_identity:       string;
+    resource_id:               string;
+    runner_id:                 string;
+    specification_id:          string;
+    storage_id:                string;
+    task_id:                   string;
+    workspace_id:              string;
+}
+
+export type ResultReadRequestMode = "changes" | "file" | "diff";
+
+export type Side = "base" | "result";
+
+export type ResultReadMode = "git_objects_v1";
+
+export interface ResultReadResponse {
+    changes?:       ResultChange[];
+    current?:       boolean;
+    next_cursor?:   string;
+    object?:        ResultObject;
+    request:        ResultReadRequest;
+    schema_version: number;
+    status:         ResultReadResponseStatus;
+    text?:          string;
+    total_changes?: number;
+}
+
+export interface ResultChange {
+    new?:   ResultObject;
+    old?:   ResultObject;
+    path:   string;
+    status: ResultChangeStatus;
+}
+
+export interface ResultObject {
+    mode:  ResultObjectMode;
+    oid:   string;
+    size?: number;
+}
+
+export type ResultObjectMode = "100644" | "100755" | "120000" | "160000";
+
+export type ResultChangeStatus = "A" | "D" | "M" | "T";
+
+export type ResultReadResponseStatus = "available" | "absent" | "binary" | "oversized" | "scan_limit" | "unsupported_path" | "unavailable" | "identity_mismatch" | "offline" | "unsupported" | "busy" | "timeout" | "no_git";
+
 export interface RuntimeInstallation {
     availability:      Availability;
     executable:        string;
@@ -654,7 +728,7 @@ export interface RuntimeInstallation {
 
 export type Availability = "detected" | "not_found" | "unavailable";
 
-export type Type = "hello" | "welcome" | "ready" | "heartbeat" | "start" | "effect" | "authorize_dispatch" | "authorization" | "event" | "event_ack" | "operation_result" | "operation_ack" | "error";
+export type Type = "hello" | "welcome" | "ready" | "heartbeat" | "start" | "effect" | "authorize_dispatch" | "authorization" | "event" | "event_ack" | "operation_result" | "operation_ack" | "error" | "result_read" | "result_read_result";
 
 export interface RunnerInventory {
     dispatches:     Dispatch[];
@@ -696,11 +770,11 @@ export interface OwnerCommandPayload {
     specification_id?:           string;
     plan_id?:                    string;
     completion_identity_digest?: string;
-    mode?:                       Mode;
+    mode?:                       PayloadMode;
     operation_id?:               string;
 }
 
-export type Mode = "retry" | "correct";
+export type PayloadMode = "retry" | "correct";
 
 export interface OwnerCommandResult {
     attempt_id?:         string;
@@ -1599,7 +1673,7 @@ export type OwnerRecoverCompletionCommandName = "recover_completion";
 
 export interface OwnerRecoverCompletionCommandPayload {
     completion_identity_digest: string;
-    mode:                       Mode;
+    mode:                       PayloadMode;
     node_activation:            number;
     node_id:                    string;
     operation_id:               string;
@@ -2153,12 +2227,13 @@ export interface TaskLocalResult {
 }
 
 export interface TaskLocalGitResult {
-    git_commit:   string;
-    git_tree:     string;
-    metadata:     WorkspaceMetadata;
-    resource_id:  string;
-    runner_id:    string;
-    workspace_id: string;
+    git_commit:      string;
+    git_tree:        string;
+    identity_digest: string;
+    metadata:        WorkspaceMetadata;
+    resource_id:     string;
+    runner_id:       string;
+    workspace_id:    string;
 }
 
 export interface TaskResultQuery {
@@ -2196,3 +2271,19 @@ export interface AttemptWorkspace {
 }
 
 export type LeaseState = "held" | "settling" | "released";
+
+export interface ResultReadChangesQuery {
+    cursor?:         string;
+    identity_digest: string;
+}
+
+export interface ResultReadFileQuery {
+    identity_digest: string;
+    path:            string;
+    side:            Side;
+}
+
+export interface ResultReadDiffQuery {
+    identity_digest: string;
+    path:            string;
+}

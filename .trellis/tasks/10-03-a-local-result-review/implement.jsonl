@@ -1,0 +1,27 @@
+{"file": ".trellis/spec/guides/agent-collaboration.md", "reason": "Latest explicit assignment, non-overlapping ownership, scoped validation and integration contract"}
+{"file": ".trellis/spec/backend/index.md", "reason": "Backend module ownership"}
+{"file": ".trellis/spec/backend/owner-reads.md", "reason": "Exact current/history completion projection and bounded authenticated reads"}
+{"file": ".trellis/spec/backend/workspaces.md", "reason": "Runner-local identity and retained physical facts"}
+{"file": ".trellis/spec/backend/node-execution.md", "reason": "Original completion and settlement manifest provenance"}
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "Established typed domain errors"}
+{"file": ".trellis/spec/backend/database-guidelines.md", "reason": "Transaction and lock boundaries"}
+{"file": ".trellis/spec/backend/delivery-contracts.md", "reason": "Read/capture/publication limits are separate; no delivery implementation"}
+{"file": ".trellis/spec/protocol/index.md", "reason": "Versioned generated shared wire"}
+{"file": ".trellis/spec/protocol/schema-generation.md", "reason": "Strict schemas encoded bounds and generation"}
+{"file": ".trellis/spec/runner/index.md", "reason": "Runner determinism and service boundary"}
+{"file": ".trellis/spec/runner/workspace-guidelines.md", "reason": "Private export/storage ownership and immutable Git facts"}
+{"file": ".trellis/spec/runner/execution-guidelines.md", "reason": "Connection/process ownership"}
+{"file": ".trellis/spec/frontend/index.md", "reason": "Web module standards"}
+{"file": ".trellis/spec/frontend/visual-design.md", "reason": "Neutral responsive layout reference"}
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "Owned accessible Base UI controls"}
+{"file": ".trellis/spec/frontend/execution-ui.md", "reason": "Session scope, current/history and exact selection"}
+{"file": ".trellis/spec/frontend/state-management.md", "reason": "Query keys and canonical state"}
+{"file": ".trellis/spec/frontend/type-safety.md", "reason": "Runtime boundary validation"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "Cross-layer identity and recovery"}
+{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "Smallest reusable mechanisms"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Real DB and bounded evidence quality"}
+{"file": ".trellis/spec/runner/quality-guidelines.md", "reason": "Actual Git and process checks"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "Browser interactions and inspected screenshot evidence"}
+{"file": ".trellis/tasks/10-03-a-local-result-review/research/local-result-read-design.md", "reason": "Source-backed exact export/identity/transport/read/test findings"}
+{"file": ".trellis/tasks/10-03-a-local-result-review/research/upstream-and-test-environment.md", "reason": "Accepted upstream proof and isolated test environment"}
+{"file": ".trellis/spec/backend/result-content-reads.md", "reason": "Accepted exact local result cross-layer executable identity/read/auth/bounds/error contract; final combined compliance review"}

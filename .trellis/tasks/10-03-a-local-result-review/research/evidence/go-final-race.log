@@ -1,0 +1,11 @@
+ok  	monos.local/runner/cmd/monos	(cached)
+?   	monos.local/runner/cmd/monos-probe-exec	[no test files]
+?   	monos.local/runner/cmd/monos-probe-launch	[no test files]
+?   	monos.local/runner/cmd/monos-runner	[no test files]
+ok  	monos.local/runner/internal/adapter	(cached)
+ok  	monos.local/runner/internal/control	(cached)
+ok  	monos.local/runner/internal/daemon	(cached)
+ok  	monos.local/runner/internal/host	37.875s
+ok  	monos.local/runner/internal/journal	(cached)
+ok  	monos.local/runner/internal/local	(cached)
+ok  	monos.local/runner/internal/wire	(cached)

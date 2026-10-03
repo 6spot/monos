@@ -1,0 +1,60 @@
+{
+  "records": [
+    {
+      "log": "contracts-final.log",
+      "raw_copy": "contracts-final.log.raw.gz",
+      "raw_sha256": "978872896544ff6b5a818f2c58eb5901f1feb74161a816d5a8dd68af6588f3d0",
+      "readable_sha256": "2c8540b77511331b00567ba9c919710070f0c1657cb409af40754e65f3c8db19",
+      "operation": "trim trailing display whitespace only; exact original bytes retained in gzip"
+    },
+    {
+      "log": "default-tests-final.log",
+      "raw_copy": "default-tests-final.log.raw.gz",
+      "raw_sha256": "41fc5a2a40b6e5cd27d41cd7be1a49ab25ae12599d2edcb3fade4ac8a04bf874",
+      "readable_sha256": "f7c0dad3db42bd57e35394dc0628614eaca2f54f0c62682cc65f28753e715624",
+      "operation": "trim trailing display whitespace only; exact original bytes retained in gzip"
+    },
+    {
+      "log": "default-tests.log",
+      "raw_copy": "default-tests.log.raw.gz",
+      "raw_sha256": "8f30117554fa469cbdb079934acbedb0a0bc8001078a077a6323c6054493f3b7",
+      "readable_sha256": "14f386fdd5273d39ed3c54b82f685b0b67f6706d586e63455081a39d9c0e820c",
+      "operation": "trim trailing display whitespace only; exact original bytes retained in gzip"
+    },
+    {
+      "log": "main-build.log",
+      "raw_copy": "main-build.log.raw.gz",
+      "raw_sha256": "df12a0336d3b4d5be0ed0d0a0e17d2a754b74eb7745b7b4105f9f12d9b7a20e4",
+      "readable_sha256": "5b9af14ce6180583723fb094a1813a02c21b81fa071e4d5a84b7bd3448ab71b3",
+      "operation": "trim trailing display whitespace only; exact original bytes retained in gzip"
+    },
+    {
+      "log": "main-default-tests.log",
+      "raw_copy": "main-default-tests.log.raw.gz",
+      "raw_sha256": "3fcc33f503c8645ccd065457bc4f14621432107f693fd06aba20da9cbd840c63",
+      "readable_sha256": "2cfd96889a5c92177975b1cd6aa301ed7a45e0fd5f54106a0a8592b0f8e721ef",
+      "operation": "trim trailing display whitespace only; exact original bytes retained in gzip"
+    },
+    {
+      "log": "main-postgres-reads-initial-failed.log",
+      "raw_copy": "main-postgres-reads-initial-failed.log.raw.gz",
+      "raw_sha256": "3e6d480ecfd9ce4843035b5d7b09ec4836678fb38f0dbed5be27e948a41ff65e",
+      "readable_sha256": "a4d51863d5b5b933c0d5f05588e38cde1deb5bf199230ca02f59ce63925e089e",
+      "operation": "trim trailing display whitespace only; exact original bytes retained in gzip"
+    },
+    {
+      "log": "main-postgres-reads.log",
+      "raw_copy": "main-postgres-reads.log.raw.gz",
+      "raw_sha256": "17fab79a9a24e3654bbb4eac325a276e242fbfa653d168911e1141e86142e0b1",
+      "readable_sha256": "8d630d5ea541f66182b98e193bf3a685737c99bd63acb07b174118f48c2dcd41",
+      "operation": "trim trailing display whitespace only; exact original bytes retained in gzip"
+    },
+    {
+      "log": "postgres-reads-final.log",
+      "raw_copy": "postgres-reads-final.log.raw.gz",
+      "raw_sha256": "0c9f5ddee98d366991f701c1ec420b294e3d40b53f13670dbbecb43aa3eabe7c",
+      "readable_sha256": "0f5f54da481cad3392e45bf3ebeff5529fd1a045ce44473d213705537f061fcf",
+      "operation": "trim trailing display whitespace only; exact original bytes retained in gzip"
+    }
+  ]
+}

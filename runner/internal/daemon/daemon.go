@@ -24,15 +24,16 @@ import (
 )
 
 type Daemon struct {
-	DB       *journal.DB
-	Control  *control.Client
-	Host     host.Supervisor
-	Boot     string
-	mu       sync.Mutex
-	queueMu  sync.Mutex
-	queued   map[string]bool
-	workers  sync.WaitGroup
-	recovery *recoveryBatch // protected by queueMu; one complete connection inventory
+	DB        *journal.DB
+	Control   *control.Client
+	Host      host.Supervisor
+	Boot      string
+	mu        sync.Mutex
+	queueMu   sync.Mutex
+	queued    map[string]bool
+	readSlots chan struct{}
+	workers   sync.WaitGroup
+	recovery  *recoveryBatch // protected by queueMu; one complete connection inventory
 }
 
 func (d *Daemon) InstalledRuntimes(ctx context.Context) []protocol.RuntimeInstallation {
@@ -195,6 +196,8 @@ func (d *Daemon) enqueueLocked(ctx context.Context, key string, work func() erro
 }
 func (d *Daemon) Frame(ctx context.Context, frame protocol.Frame) {
 	switch frame.Type {
+	case protocol.ResultRead:
+		d.resultRead(ctx, frame)
 	case protocol.EventACK:
 		if frame.AttemptID != nil && frame.StreamID != nil && frame.Sequence != nil {
 			if err := d.DB.Ack(*frame.AttemptID, *frame.StreamID, *frame.Sequence); err != nil {

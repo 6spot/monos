@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"strconv"
+	"strings"
 	"sync"
 	"unicode/utf8"
 
@@ -26,6 +27,9 @@ var compileErr error
 var mu sync.Mutex
 
 func Validate(name string, raw []byte) error {
+	if name == "ResultReadResponse" && len(raw) > 512*1024 {
+		return fmt.Errorf("result response exceeds limit")
+	}
 	if len(raw) > Limit {
 		return fmt.Errorf("payload exceeds limit")
 	}
@@ -64,7 +68,23 @@ func Validate(name string, raw []byte) error {
 	if decoder.Decode(&extra) != io.EOF {
 		return fmt.Errorf("trailing JSON")
 	}
-	return schema.Validate(v)
+	if err := schema.Validate(v); err != nil {
+		return err
+	}
+	if strings.HasPrefix(name, "Result") || name == "Frame" && resultFrame(v) {
+		if err := resultByteBounds(v, ""); err != nil {
+			return err
+		}
+		if m, ok := v.(map[string]any); ok && name == "Frame" {
+			if reply, ok := m["result_read_result"]; ok {
+				encoded, _ := json.Marshal(reply)
+				if len(encoded) > 512*1024 {
+					return fmt.Errorf("result response exceeds limit")
+				}
+			}
+		}
+	}
+	return nil
 }
 
 func Decode(name string, raw []byte, out any) error {
@@ -208,4 +228,33 @@ func Envelope(raw []byte) (protocol.CommandEnvelope, error) {
 		}
 	}
 	return v, nil
+}
+
+func resultFrame(v any) bool {
+	m, ok := v.(map[string]any)
+	return ok && (m["type"] == "result_read" || m["type"] == "result_read_result")
+}
+func resultByteBounds(v any, key string) error {
+	switch value := v.(type) {
+	case string:
+		if key == "text" && (len(value) > 65536 || strings.ContainsRune(value, 0)) {
+			return fmt.Errorf("result text exceeds raw byte bounds or is binary")
+		}
+		if key == "path" && len(value) > 4096 {
+			return fmt.Errorf("result path exceeds byte bounds")
+		}
+	case []any:
+		for _, item := range value {
+			if err := resultByteBounds(item, key); err != nil {
+				return err
+			}
+		}
+	case map[string]any:
+		for k, item := range value {
+			if err := resultByteBounds(item, k); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }

@@ -1,0 +1,105 @@
+{
+  "dirty_candidate": true,
+  "head": "45b5453ac359cfb1bc00a7939c4d3d5395a52499",
+  "source_sha256": "a8d6c46dc159cb900e9eb974deefefe006647e61bd276e9b3ee885ec2329ed09",
+  "source_files": {
+    "apps/server/src/app.ts": "e3168bd2667226fcbedc4badc685618e23189fff7fbf7563edf55b6573882cd0",
+    "apps/server/src/result-content-reads.ts": "a8f9c185bf2be4debadb50522d710fddf7e76efa25535094da290d006561c670",
+    "apps/server/src/result-read-broker.ts": "6b983363f9a59d54295e72c189b98f56be3b04141f4876ebe8be7dd04f147a68",
+    "apps/server/src/task-result-reads.ts": "1882e36f9be76d3b0d3d2134a341510fb5970143d752e1a362a55a7b1a93ea95",
+    "apps/server/test/fixtures/execution-ui-fixture.ts": "b74bfc814448fc8029c39edf55c160ee989a5a932dc41c04b2acb68a83b568d3",
+    "apps/server/test/fixtures/web-server.ts": "df0bafb650efc0bed990d9fdbea627a2092073a46023f3796bd0a304f82456d5",
+    "apps/web/src/app/app.tsx": "5fe13ac6c5fd6e90ad3ab084e5e297e59d614660102aa86fad54399df5fbf8ab",
+    "apps/web/src/components/forms.tsx": "47ef7a738b37acfd8e292e5c918683fa5c8d0d1a44b6934e073731c98443f763",
+    "apps/web/src/components/page-header.tsx": "dad3dcd13be5af829867659a8198ecdf213542f07829c1c67061a941803ef713",
+    "apps/web/src/components/ui/button.tsx": "45cdd2a87ec353feab3145cb0342205a6314db8c339b0bc5b9f70938694c3c2f",
+    "apps/web/src/components/ui/checkbox.tsx": "618c349e15065e189e8007d96b0d0eb3caf39e5b8cd875a21d5162ba397c5960",
+    "apps/web/src/components/ui/dialog.tsx": "f59b3f81018c56cb2c7f77ed38a04be67cdfc12f23f323f283c947527728f2b0",
+    "apps/web/src/components/ui/input.tsx": "feaffe8d386ab8273eb0da9590f4e69d2e4e8eada17769dbe3d338e8f7594811",
+    "apps/web/src/components/ui/label.tsx": "94f7b1d79727725b54271d7fe771f46613c54bf302b5570a646f319d6dd2abf0",
+    "apps/web/src/components/ui/native-select.tsx": "f6fe86d6430edd1b99b81e3660302aaea2f39d9228227e328ce5a4804a2aa550",
+    "apps/web/src/components/ui/textarea.tsx": "f23ee3caddc6eb8b8c2d515ec3a1b1dc0457687d1199429707d249dc0caf1570",
+    "apps/web/src/features/discussion.tsx": "63bb7c8accbc71e11b30108a613db95a7b686436ab5e20f359263fefeabc5347",
+    "apps/web/src/features/execution-board.tsx": "e83e1fc0e98a4ca349739f70dc64d1df8a70a210ff13ba4f1ac1100a67ea643b",
+    "apps/web/src/features/execution.tsx": "006a8abcab53f393f4bf3490d2e33b68d036a0ecb51136832aa6e4d348d8f431",
+    "apps/web/src/features/github.tsx": "414ad8b0004b631fc0d1af09266a4706de292dd9de31fe0077a21b0eee9aff06",
+    "apps/web/src/features/policy-editor.tsx": "8a3d619389e8336339af5da857eebd0ec0c08920d2bc429b4ef5010915eb8a95",
+    "apps/web/src/features/projects.tsx": "f63b1a5e90c6613973803117aee2b09c8030e4bb3db3cfeb129847a836f3ec07",
+    "apps/web/src/features/result-inspector.tsx": "78df462b7d3a46de3eb6780387e37079ac127092c482b8153a7083778e8f8c0b",
+    "apps/web/src/features/roles.tsx": "79a26301ee60a322eefa2b2a77ce984922003497accaeb3dd776924ed35ec6c9",
+    "apps/web/src/features/task-controls.tsx": "e1ad4590b88777b0fced35810d78e7567f8af25eae272a6073625717d15f18e1",
+    "apps/web/src/features/task-conversation.tsx": "d3f5a8d380785db14716fa22b741ed6326fb269389fb810b7f72e775b7068062",
+    "apps/web/src/features/task-decisions.tsx": "f1054709550ad770ebd7ab73c7a61b2f7c50b70b517230c501f799be903cbf71",
+    "apps/web/src/features/task-detail.tsx": "2d423c5edb733c322e7f8c7b560756e7b53314894c366d094e66a7c2344eae27",
+    "apps/web/src/features/task-execution.tsx": "e9b48facdd22059e15bb1ba453830acc9a39e0e62ae6f78d79664b7d6d506299",
+    "apps/web/src/features/task-overview.tsx": "e788ff7824213659175b013f0f5b31d9fa6b1475e3a7a92c3847b639ccf7a77e",
+    "apps/web/src/features/task-preview.tsx": "f45812c435f82d4d60eccf47a07e58882134b185f87bf5584550d9bc676ef9f1",
+    "apps/web/src/features/task-shared.tsx": "6390fd963ef479ad145a6de91c8cc46f9f5549589fded2e18869f201f354f636",
+    "apps/web/src/features/task-timeline.tsx": "a0219dee15780699bdebc9c33a6439375b1c0c2a859074e1c5ade9eaa8219725",
+    "apps/web/src/features/task-ui.css": "0991ad77b1a20125add2e8d3fdca0e31738ec8295ac8434540488446a3e8173c",
+    "apps/web/src/features/todos.tsx": "1ceb102b55afd295c23508cd2776b9995a470e843b42b0f553eb13e683a7d57e",
+    "apps/web/src/lib/api.test.ts": "f29ae5794ab0246cae9c42fb428b430cdbe7c84ca8e37e290a456d1b4491b425",
+    "apps/web/src/lib/api.ts": "1b720cc71c6f663a1667f780339e7801690a822c3b368d7ec11856a5dc9bc99d",
+    "apps/web/src/lib/attempt-logs.test.ts": "d87d16de73b007a9afb8c35fc7391d147c7311f96bfff9ecf0996ddb01d15877",
+    "apps/web/src/lib/attempt-logs.ts": "9709bbabdea90199b251b80af21ab12ad7f1c7860e5dc3a445a3fa9a309170c2",
+    "apps/web/src/lib/discussion-api.test.ts": "be536898f5db8e8fa45d1d9a5b762c41af7281ef6e0a76a084976e3620e3df48",
+    "apps/web/src/lib/discussion-api.ts": "9c851908e8bb24852ca18711bd2cab09919dc2a8fcdace1ea7b5319d2cc4a38a",
+    "apps/web/src/lib/task-api.test.ts": "bfb51df1a2017df367074cd973601cbebd5002a1e738abd3316fd9242c822c5b",
+    "apps/web/src/lib/task-api.ts": "e82e9dc888b55faabe9586477942c6f1aa2842a2fb178721ee12c6fb770921f3",
+    "apps/web/src/lib/task-preview-api.test.ts": "06540f69ac8b7f632f9b5a1d88cae5940a3a4a82898e1add3969b12efab15e2f",
+    "apps/web/src/lib/task-preview-api.ts": "232fe219c040fbc05face370f9b4955feb6e1e92546fc42ad026aca9204ba302",
+    "apps/web/src/lib/task-storage.test.ts": "45212fde670eb23586f3f1fe6a1c6fb2040d97febe41bd17aef283b9be4fc7b8",
+    "apps/web/src/lib/task-storage.ts": "4c4078eb95fae9fa71eff84279dbc358d55db6e63ab5e3dbbb137f5b0a7fc696",
+    "apps/web/src/lib/todo-api.test.ts": "2c62ebb5ca0a5ee8e483ad2b8433c74cad8db8eafe4ea339dce1061c1c290d50",
+    "apps/web/src/lib/todo-api.ts": "b7e1057ea55fa9d2caf19825058071630348a1a5d4a5c51ccebcda2ea7921582",
+    "apps/web/src/lib/use-command.ts": "168128c07e422b76fbc90924f1e77753a4f9c6105a5977d4abaa726112c91cf9",
+    "apps/web/src/lib/use-discussion.ts": "ea6be9eb644d0b9620ff7ad4ea653832728f1d66891a6d82c4ca2d4c2e6cecc9",
+    "apps/web/src/lib/use-task-command.ts": "a97d0608182f3e84a55980ed4421869285d1959529e13e39713926cdbb361ba5",
+    "apps/web/src/lib/use-task-previews.ts": "4aa154213dc5a8489042bd5e2e5fc561874d8f7ed0097b861ead3df07f82f2e4",
+    "apps/web/src/lib/use-todo-command.ts": "8cb637bcb5f9f6361967b6f88d91b2717d3104df8f0f17b1dd5a526f511bfd93",
+    "apps/web/src/lib/utils.ts": "14300d758170c270c75b057f38fedb3793a5920ea872f0477e29fb131185e8a7",
+    "apps/web/src/main.tsx": "27f7fed310729a70b858120bb4c026117b3bbe5365a41c84a738a2dc3ace8661",
+    "apps/web/src/styles.css": "6102093dee14fdda463ad15810962bce0d274e03d46af813c0f1b86595dc09e6",
+    "apps/web/test/results.e2e.ts": "6560b24dcc96c0ff7a5bdf55a83a7bee9a007679666a7bb1c4eb394e27a3a835",
+    "packages/protocol/generated/types.ts": "4f98863d651e506b4808b4a0d5086f88b27e338e4f4f139a24e5a9cf0183e42d",
+    "packages/protocol/schemas/v1/contracts.json": "415f9bd2f98b08ce4cbf9adfd1ab7876b9537e4b16462af7aaab8a353d1bb03a",
+    "packages/protocol/src/validation.ts": "da577e1ba405f4e176f771864e431055a023bdb042d6f72fd6c6ce46c7793a2f"
+  },
+  "bundle_sha256": "af7f169c1647de906770f3caca925383eb8ddee61dbe02d5998fd8829808a4dd",
+  "assets": {
+    "index-BB6q95a6.js": "72e1019bc430b15336f6572c83b2d8e9c2eff610b168c27fb73a49ad0a378be7",
+    "index-CplncxAA.css": "991321ce4b98254d6566c11144a6139e8f9f604916885bba7972470986cb0c10"
+  },
+  "test": "offline and storage outcomes preserve metadata; explicit Retry reconnects without Task commands",
+  "state": "Exact storage unavailable; no substituted bytes",
+  "evidence": "Built SPA + actual Owner/Runner authenticated WebSocket/PG fixture; Git bytes/OIDs explicitly synthetic, no native Runtime/provider",
+  "route": "http://127.0.0.1:18555/#task?task_id=27c06cf2-af82-4364-b2ed-f1bdc329b832&section=overview",
+  "views": [
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 1000,
+        "label": "desktop"
+      },
+      "scroll": {
+        "x": 0,
+        "y": 750
+      },
+      "body": "Skip to content\nm\nmonos\n\nWorkspace\n\nTodos\nExecution Board\nProjects\nRoles\nExecution\nGitHub\nO\nOwner\nPersonal workspace\nWorkspace / Task\nPrivate workspace\nExecution board\n/\n← Back to Todo\nExact immutable local result\nReview\n\nExecution UI · result_inspection · Created 10/3/2026, 4:14:47 PM\n\nConversation\nOverview\nTimeline\nExecution details\nCancel task\nSpecification\n# Exact execution requirement\n\nPreserve the Owner’s intent, independently verified output and clear recovery.\n\n- Keep current and historical evidence separate.\n- Support keyboard and small-screen use.\nAdvanced details\nRequirement revision history\nCurrent work\nImplement and verify the exact requested behavior\n\nCareful builder\n\nExpected outputs\nA verified local result with a readable summary\n\nCompleted\n\nLocal results\n\nThe local result is ready for review. No PR, delivery or Owner acceptance is recorded by this state.\n\nCurrent result\nThe requested local result is ready for Owner review. Verification notes are attached.\nLocal commit\ncccccccccccccccccccccccccccccccccccccccc\nResult tree\ndddddddddddddddddddddddddddddddddddddddd\nRepository\ngithub.com/example/execution-ui\nTarget branch\nmain\nFixed base\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nAdvanced details\nClose inspection\n\nFixed base → exact local result · Current completion. Renames appear as deletion and addition.\n\nChanged files · 64 of 70 loaded\n\nM\nsrc/literal.txt\nD\ndeleted.txt\nA\nempty.txt\nA\nbinary.dat\nA\noversized.txt\nA\nlink\nA\nsubmodule\nA\nsrc/a-long-literal-path-a-long-literal-path-a-long-literal-path-a-long-literal-path-a-long-literal-path-a-long-literal-path-a-long-literal-path-a-long-literal-path-a-long-literal-path-a-long-literal-path-a-long-literal-path-a-long-literal-path-: final.txt\nA\nmore/file-00.txt\nA\nmore/file-01.txt\nA\nmore/file-02.txt\nA\nmore/file-03.txt\nA\nmore/file-04.txt\nA\nmore/file-05.txt\nA\nmore/file-06.txt\nA\nmore/file-07.txt\nA\nmore/file-08.txt\nA\nmore/file-09.txt\nA\nmore/file-10.txt\nA\nmore/file-11.txt\nA\nmore/file-12.txt\nA\nmore/file-13.txt\nA\nmore/file-14.txt\nA\nmore/file-15.txt\nA\nmore/file-16.txt\nA\nmore/file-17.txt\nA\nmore/file-18.txt\nA\nmore/file-19.txt\nA\nmore/file-20.txt\nA\nmore/file-21.txt\nA\nmore/file-22.txt\nA\nmore/file-23.txt\nA\nmore/file-24.txt\nA\nmore/file-25.txt\nA\nmore/file-26.txt\nA\nmore/file-27.txt\nA\nmore/file-28.txt\nA\nmore/file-29.txt\nA\nmore/file-30.txt\nA\nmore/file-31.txt\nA\nmore/file-32.txt\nA\nmore/file-33.txt\nA\nmore/file-34.txt\nA\nmore/file-35.txt\nA\nmore/file-36.txt\nA\nmore/file-37.txt\nA\nmore/file-38.txt\nA\nmore/file-39.txt\nA\nmore/file-40.txt\nA\nmore/file-41.txt\nA\nmore/file-42.txt\nA\nmore/file-43.txt\nA\nmore/file-44.txt\nA\nmore/file-45.txt\nA\nmore/file-46.txt\nA\nmore/file-47.txt\nA\nmore/file-48.txt\nA\nmore/file-49.txt\nA\nmore/file-50.txt\nA\nmore/file-51.txt\nA\nmore/file-52.txt\nA\nmore/file-53.txt\nA\nmore/file-54.txt\nA\nmore/file-55.txt\nLoad more changes\nempty.txt\nDiff\nResult file\nBase file\n\nThe retained local result storage is unavailable. No other workspace has been substituted.\n\nRetry read\nFormal artifacts\n\nArtifact history includes earlier revisions. Current outputs are identified by the exact current completion manifests above.\n\nVerification notes\ntext/markdown",
+      "codeOverflow": []
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844,
+        "label": "mobile"
+      },
+      "scroll": {
+        "x": 0,
+        "y": 1124
+      },
+      "body": "Skip to content\nWorkspace / Task\nExecution board\n/\n← Back to Todo\nExact immutable local result\nReview\n\nExecution UI · result_inspection · Created 10/3/2026, 4:14:47 PM\n\nConversation\nOverview\nTimeline\nExecution details\nCancel task\nSpecification\n# Exact execution requirement\n\nPreserve the Owner’s intent, independently verified output and clear recovery.\n\n- Keep current and historical evidence separate.\n- Support keyboard and small-screen use.\nAdvanced details\nRequirement revision history\nCurrent work\nImplement and verify the exact requested behavior\n\nCareful builder\n\nExpected outputs\nA verified local result with a readable summary\n\nCompleted\n\nLocal results\n\nThe local result is ready for review. No PR, delivery or Owner acceptance is recorded by this state.\n\nCurrent result\nThe requested local result is ready for Owner review. Verification notes are attached.\nLocal commit\ncccccccccccccccccccccccccccccccccccccccc\nResult tree\ndddddddddddddddddddddddddddddddddddddddd\nRepository\ngithub.com/example/execution-ui\nTarget branch\nmain\nFixed base\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nAdvanced details\nClose inspection\n\nFixed base → exact local result · Current completion. Renames appear as deletion and addition.\n\nChanged files · 64 of 70 loaded\n\nM\nsrc/literal.txt\nD\ndeleted.txt\nA\nempty.txt\nA\nbinary.dat\nA\noversized.txt\nA\nlink\nA\nsubmodule\nA\nsrc/a-long-literal-path-a-long-literal-path-a-long-literal-path-a-long-literal-path-a-long-literal-path-a-long-literal-path-a-long-literal-path-a-long-literal-path-a-long-literal-path-a-long-literal-path-a-long-literal-path-a-long-literal-path-: final.txt\nA\nmore/file-00.txt\nA\nmore/file-01.txt\nA\nmore/file-02.txt\nA\nmore/file-03.txt\nA\nmore/file-04.txt\nA\nmore/file-05.txt\nA\nmore/file-06.txt\nA\nmore/file-07.txt\nA\nmore/file-08.txt\nA\nmore/file-09.txt\nA\nmore/file-10.txt\nA\nmore/file-11.txt\nA\nmore/file-12.txt\nA\nmore/file-13.txt\nA\nmore/file-14.txt\nA\nmore/file-15.txt\nA\nmore/file-16.txt\nA\nmore/file-17.txt\nA\nmore/file-18.txt\nA\nmore/file-19.txt\nA\nmore/file-20.txt\nA\nmore/file-21.txt\nA\nmore/file-22.txt\nA\nmore/file-23.txt\nA\nmore/file-24.txt\nA\nmore/file-25.txt\nA\nmore/file-26.txt\nA\nmore/file-27.txt\nA\nmore/file-28.txt\nA\nmore/file-29.txt\nA\nmore/file-30.txt\nA\nmore/file-31.txt\nA\nmore/file-32.txt\nA\nmore/file-33.txt\nA\nmore/file-34.txt\nA\nmore/file-35.txt\nA\nmore/file-36.txt\nA\nmore/file-37.txt\nA\nmore/file-38.txt\nA\nmore/file-39.txt\nA\nmore/file-40.txt\nA\nmore/file-41.txt\nA\nmore/file-42.txt\nA\nmore/file-43.txt\nA\nmore/file-44.txt\nA\nmore/file-45.txt\nA\nmore/file-46.txt\nA\nmore/file-47.txt\nA\nmore/file-48.txt\nA\nmore/file-49.txt\nA\nmore/file-50.txt\nA\nmore/file-51.txt\nA\nmore/file-52.txt\nA\nmore/file-53.txt\nA\nmore/file-54.txt\nA\nmore/file-55.txt\nLoad more changes\nempty.txt\nDiff\nResult file\nBase file\n\nThe retained local result storage is unavailable. No other workspace has been substituted.\n\nRetry read\nFormal artifacts\n\nArtifact history includes earlier revisions. Current outputs are identified by the exact current completion manifests above.\n\nVerification notes\ntext/markdown",
+      "codeOverflow": []
+    }
+  ]
+}

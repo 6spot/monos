@@ -8,10 +8,10 @@ export class APIError extends Error {
 export class UncertainError extends Error {
   constructor() { super('The response was interrupted. Check the result before making another change.'); }
 }
-export async function request<T>(path: string, schema: string, body?: unknown, sessionId?: string): Promise<T> {
+export async function request<T>(path: string, schema: string, body?: unknown, sessionId?: string, signal?: AbortSignal): Promise<T> {
   let response: Response; let raw: unknown;
   try {
-    response = await fetch(path, { credentials: 'same-origin', cache: 'no-store',
+    response = await fetch(path, { credentials: 'same-origin', cache: 'no-store', signal,
       headers: { ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}), ...(sessionId ? { 'X-Monos-Session': sessionId } : {}) },
       ...(body !== undefined ? { method: 'POST', body: JSON.stringify(body) } : {}) });
     raw = await response.json();

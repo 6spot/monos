@@ -6,7 +6,7 @@ Expose the exact local result, prepare a controlled PR and complete Owner-approv
 
 ## Planning status
 
-Roadmap level: **work-package**. Status: **planning / backlog**, not implementation-ready. The Owner approved the three-level roadmap structure on 2026-09-28. This PRD records scope and acceptance, not approval to start implementation.
+Roadmap level: **work-package**. Coordinate independently verified leaves below; the parent is not a bulk implementation target. The user explicitly delegates successive planning, implementation and routine decisions without further permission requests.
 
 ## Background and scope
 
@@ -19,11 +19,25 @@ Architecture modules remain authoritative. The existing boundary probe implement
 - [Task conversation and single-Node execution](../archive/2026-10/09-28-a-task-execution/prd.md)
 - [GitHub provider feasibility](../09-28-gate-github/prd.md)
 
+The execution package was independently accepted and archived on 2026-10-03. GitHub child reports prove required-check enforcement, stale-SHA rejection and one-effect response-loss reconciliation on the authorized synthetic public repository ([head/check proof](../archive/2026-09/09-28-github-head-checks/research/verification.md), [uncertain outcome proof](../archive/2026-09/09-28-github-uncertain-effects/research/verification.md)); the feasibility parent remains administratively open. These bounded provider trials do not prove production delivery coordination.
+
 These are completion/evidence gates, not automatic scheduler dependencies. Parent/child links express scope ownership only. Evidence inspection and planning may proceed earlier; implementation must resolve upstream failures first.
 
 ## Child tasks
 
-Child decomposition is deferred until upstream evidence is available. Before implementation, split this package into independently verifiable behavior slices; do not start the entire package as one implementation task.
+Execute these leaves in order; later leaves remain backlog until their own source-backed planning and upstream acceptance:
+
+1. [Exact local result review](../10-03-a-local-result-review/prd.md) — accepted 2026-10-03; immutable local reads, current/history, bounded outcomes and desktop/mobile evidence.
+2. [Controlled publication candidate](../10-03-a-publication-candidate/prd.md).
+3. [Automatic review preparation](../10-03-a-remote-preparation/prd.md).
+4. [Exact Owner delivery acceptance](../10-03-a-owner-delivery/prd.md).
+5. [Review correction and delivery recovery](../10-03-a-review-correction/prd.md).
+6. [Review and delivery integration acceptance](../10-03-a-delivery-acceptance/prd.md).
+
+
+## Stage A scope
+
+Implement the module-09 single-repository automatic GitHub delivery loop. Keep collection-shaped identities and frozen-batch guards, but defer multi-repository partial delivery, plain-Git branch-only finalization and after-acceptance remote preparation to later V1 slices. Existing deferred-mode metadata must retain local result access without unauthorized remote writes. Package acceptance does not close those later V1 capabilities.
 
 ## Visual requirements
 
@@ -43,7 +57,7 @@ No team abstractions, generic workflow engine, cross-Runner migration/failover, 
 
 ## Before implementation
 
-Review upstream evidence and the current source, refine leaf boundaries and observable failure cases, and resolve any Owner-owned acceptance choices. For each complex implementation leaf, complete design.md, implement.md and curated implement/check contexts, present the final planning summary, and obtain its approval before task.py start. Stage and work-package records coordinate acceptance and are not bulk implementation targets.
+Review upstream evidence and the current source, refine leaf boundaries and observable failure cases, and resolve any Owner-owned acceptance choices. For each complex implementation leaf, complete design.md, implement.md and curated implement/check contexts, present the final planning summary, and use the user's standing autonomous-execution authorization for task.py start. Stage and work-package records coordinate acceptance and are not bulk implementation targets.
 
 ## Source contracts
 

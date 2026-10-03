@@ -1,0 +1,29 @@
+{
+  "at": "2026-10-03T12:45:31.850Z",
+  "operation": "Exact two proved owned failed-setup schema cleanup; no prefix-wide cleanup",
+  "owned_checks": [
+    {
+      "schema": "conversation_1f1eda14b655492689c06f3193d4a8d3",
+      "projects": [
+        {
+          "name": "Result project",
+          "context": "Exact result fixture"
+        }
+      ]
+    },
+    {
+      "schema": "conversation_c4017374931c4c45998593d752216803",
+      "projects": [
+        {
+          "name": "Result project",
+          "context": "Exact result fixture"
+        }
+      ]
+    }
+  ],
+  "custom_schemas": [],
+  "after_final_pg_gate": {
+    "at": "2026-10-03T12:50:05.764Z",
+    "custom_schemas": []
+  }
+}

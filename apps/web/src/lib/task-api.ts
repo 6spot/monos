@@ -1,4 +1,4 @@
-import type { OwnerCommand, OwnerCommandResult, TaskConversationCommand, TaskConversationCommandResult, TaskSpecificationCommand, TaskSpecificationResult, TaskReplanCommand, TaskReplanResult } from '../../../../packages/protocol/generated/types.ts';
+import type { OwnerCommand, OwnerCommandResult, TaskConversationCommand, TaskConversationCommandResult, TaskSpecificationCommand, TaskSpecificationResult, TaskReplanCommand, TaskReplanResult, ResultReadRequest, ResultReadResponse } from '../../../../packages/protocol/generated/types.ts';
 import { validate } from '../../../../packages/protocol/src/validation.ts';
 import { APIError, UncertainError, request } from './api.ts';
 
@@ -29,11 +29,11 @@ export function validateTaskIntent(value: unknown): TaskIntent {
   return value as TaskIntent;
 }
 
-export async function taskRead<T>(taskId: string, suffix: string, schema: string, query?: Record<string, string | undefined>, sessionId?: string): Promise<T> {
+export async function taskRead<T>(taskId: string, suffix: string, schema: string, query?: Record<string, string | undefined>, sessionId?: string, signal?: AbortSignal): Promise<T> {
   validate('Id', taskId);
   const params = new URLSearchParams();
   for (const [key, value] of Object.entries(query ?? {})) if (value !== undefined) params.set(key, value);
-  const value = await request<T>(`/v1/owner/tasks/${encodeURIComponent(taskId)}${suffix}${params.size ? `?${params}` : ''}`, schema, undefined, sessionId);
+  const value = await request<T>(`/v1/owner/tasks/${encodeURIComponent(taskId)}${suffix}${params.size ? `?${params}` : ''}`, schema, undefined, sessionId, signal);
   if (value && typeof value === 'object' && 'task_id' in value && value.task_id !== taskId) throw new APIError('invalid_response', 'The server returned another Task.');
   return value;
 }
@@ -126,4 +126,22 @@ export async function recoverTaskIntent(intent: TaskIntent, sessionId: string): 
   try { receipt = checkedReceipt(intent, await request<TaskReceipt>(path, families[intent.family].result, undefined, sessionId), true); }
   catch (error) { if (error instanceof APIError && error.code === 'unauthorized') throw error; throw new UncertainError(); }
   return receipt.status === 'unknown' ? submitTaskIntent(intent, sessionId) : receipt;
+}
+
+export async function resultRead(taskId: string, operationId: string, identity: string, mode: ResultReadRequest['mode'], params: Pick<ResultReadRequest, 'cursor'|'path'|'side'>, sessionId: string, signal?: AbortSignal): Promise<ResultReadResponse> {
+  validate('Id', operationId); validate('Id', sessionId);
+  const query = Object.fromEntries(Object.entries({ ...params, identity_digest: identity }).filter(([,value]) => value !== undefined));
+  validate(`ResultRead${mode[0]!.toUpperCase()+mode.slice(1)}Query`, query);
+  const response = await taskRead<ResultReadResponse>(taskId, `/results/${encodeURIComponent(operationId)}/${mode}`, 'ResultReadResponse', query, sessionId, signal);
+  const r = response.request;
+  // The wire response schema is shared with Runner replies, where applicability
+  // is absent. Owner reads must supply the freshly resolved applicability.
+  if (typeof response.current !== 'boolean' || r.identity.task_id !== taskId || r.identity.operation_id !== operationId || r.identity_digest !== identity || r.mode !== mode || r.path !== params.path || r.side !== params.side || r.cursor !== params.cursor) throw new APIError('invalid_response', 'Result response did not match the selected content.');
+  // Identity is a flat generated scalar projection. Verify its complete digest,
+  // rather than accepting an echoed digest beside unrelated identity fields.
+  const canonical = JSON.stringify(Object.fromEntries(Object.entries(r.identity).sort(([a],[b]) => a < b ? -1 : a > b ? 1 : 0)));
+  const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(canonical));
+  signal?.throwIfAborted();
+  if (Array.from(new Uint8Array(hash), byte => byte.toString(16).padStart(2,'0')).join('') !== identity) throw new APIError('invalid_response', 'Result response did not match the selected identity.');
+  return response;
 }

@@ -36,6 +36,15 @@ func (value EffectResult) MarshalJSON() ([]byte, error) {
     InstructionFiles *[]InstructionFile \x60json:"instruction_files,omitempty"\x60
   }{plain(value), files})
 }
+func (value ResultReadResponse) MarshalJSON() ([]byte, error) {
+  type plain ResultReadResponse
+  var changes *[]ResultChange
+  if value.Changes != nil { changes = &value.Changes }
+  return json.Marshal(struct {
+    plain
+    Changes *[]ResultChange \x60json:"changes,omitempty"\x60
+  }{plain(value), changes})
+}
 func (value ExecutionPlanNode) MarshalJSON() ([]byte, error) {
   type plain ExecutionPlanNode
   var consumes, hardRequirements, expectedOutputs *[]string
@@ -63,7 +72,7 @@ const get = (name, auth, parameters = [], querySchema) => ({
     ...(auth === 'OwnerAuth' ? [ownerSessionHeader] : []),
     ...parameters.map((name) => ({ name, in: 'path', required: true, schema: reference('Id') })),
     ...Object.entries(querySchema ? schema.definitions[querySchema].properties : {}).map(([name, shape]) => ({
-      name, in: 'query', required: false,
+      name, in: 'query', required: schema.definitions[querySchema].required?.includes(name) ?? false,
       schema: JSON.parse(JSON.stringify(shape).replaceAll('#/definitions/', '#/components/schemas/')),
     })),
   ],
@@ -73,6 +82,7 @@ artifacts.set('generated/openapi.json', `${JSON.stringify({
   openapi: '3.1.0', info: { title: 'monos boundary probe', version: '1.0.0' },
   paths: {
     '/v1/owner/tasks': { get: get('TaskListPage', 'OwnerAuth', [], 'TaskListQuery') },
+    ...Object.fromEntries(['changes','file','diff'].map(mode=>[`/v1/owner/tasks/{task_id}/results/{operation_id}/${mode}`,{get:get('ResultReadResponse','OwnerAuth',['task_id','operation_id'],`ResultRead${mode[0].toUpperCase()+mode.slice(1)}Query`)}])),
     '/v1/owner/tasks/{task_id}/results': { get: get('TaskResultPage', 'OwnerAuth', ['task_id'], 'TaskResultQuery') },
     '/v1/owner/tasks/{task_id}/nodes/{node_id}/execution': { get: get('NodeExecutionStatus', 'OwnerAuth', ['task_id', 'node_id']) },
     '/v1/owner/tasks/{task_id}/artifacts': { get: get('ArtifactPage', 'OwnerAuth', ['task_id']) },

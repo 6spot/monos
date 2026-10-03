@@ -1,0 +1,162 @@
+{
+  "captured_at": "2026-10-03T08:20:56.655946+00:00",
+  "base_commit": "45b5453ac359cfb1bc00a7939c4d3d5395a52499",
+  "scope": "Backend, protocol, Runner product plus test scope; excludes unrelated current Trellis instructions and separate frontend artifacts",
+  "files": [
+    {
+      "path": "apps/server/src/app.ts",
+      "sha256": "e3168bd2667226fcbedc4badc685618e23189fff7fbf7563edf55b6573882cd0",
+      "bytes": 28861
+    },
+    {
+      "path": "apps/server/src/result-content-reads.ts",
+      "sha256": "a8f9c185bf2be4debadb50522d710fddf7e76efa25535094da290d006561c670",
+      "bytes": 3571
+    },
+    {
+      "path": "apps/server/src/result-read-broker.ts",
+      "sha256": "6b983363f9a59d54295e72c189b98f56be3b04141f4876ebe8be7dd04f147a68",
+      "bytes": 3349
+    },
+    {
+      "path": "apps/server/src/task-board-reads.ts",
+      "sha256": "ce460f85efbbd66c5e6ea2bae02b0e772ab7249170ec752bb2c558afc97d3078",
+      "bytes": 12042
+    },
+    {
+      "path": "apps/server/src/task-result-reads.ts",
+      "sha256": "1c31f7ee978ad51a518dfb1f9cca6ccc62febdb748bc0c3692fc0870892005da",
+      "bytes": 11073
+    },
+    {
+      "path": "apps/server/test/app.test.ts",
+      "sha256": "61dbee5c737ff1a31cb0640297b684ad43bb82868e8ccbe39b3cb87d3174beb8",
+      "bytes": 10704
+    },
+    {
+      "path": "apps/server/test/fixtures/result-read-fixture.ts",
+      "sha256": "9790f09597d9e353c42ce792c0bb8d252201515eddda28aa75b3550cad159ccd",
+      "bytes": 2013
+    },
+    {
+      "path": "apps/server/test/postgres-result-reads.test.ts",
+      "sha256": "e19f9f6c93c7d70bdceb6f935c19113808320186c5781b90f123031196fcf886",
+      "bytes": 8319
+    },
+    {
+      "path": "apps/server/test/postgres-task-ui-reads.test.ts",
+      "sha256": "645b385ce88afe2589b0f5a55c62b5db19b32b0a996425fb997c3452f14f6524",
+      "bytes": 21897
+    },
+    {
+      "path": "apps/server/test/result-read-broker.test.ts",
+      "sha256": "eecb667c05af834f96b978fd0d6fcd64883e14dea77e251db17706d084970020",
+      "bytes": 4977
+    },
+    {
+      "path": "package.json",
+      "sha256": "ee4009e9564bcec479aecbfde904689ac911a774ce4a3a162c35ca7b681a8b6d",
+      "bytes": 2853
+    },
+    {
+      "path": "packages/protocol/fixtures/validation.json",
+      "sha256": "51f41fccb2821d91e903cf2ac51228dfb5ca716b96e3f136513a8f7731fca659",
+      "bytes": 713665
+    },
+    {
+      "path": "packages/protocol/generated/go/contracts.json",
+      "sha256": "415f9bd2f98b08ce4cbf9adfd1ab7876b9537e4b16462af7aaab8a353d1bb03a",
+      "bytes": 288957
+    },
+    {
+      "path": "packages/protocol/generated/go/go.mod",
+      "sha256": "2d8da4db743ff11541b4ee0e40e477f2c184404446ba22a7ed265de9b3d602d2",
+      "bytes": 39
+    },
+    {
+      "path": "packages/protocol/generated/go/schema.go",
+      "sha256": "8e74d5a0b2b3fbcbafbdfd8dc66575110707bc45b4992a48fee07fc515aaa572",
+      "bytes": 182
+    },
+    {
+      "path": "packages/protocol/generated/go/types.go",
+      "sha256": "da7d0ed5bb0a772452137dd451a604f9ed259fb0047b62f976b2ca5b7956c22c",
+      "bytes": 123293
+    },
+    {
+      "path": "packages/protocol/generated/go/workspace_json.go",
+      "sha256": "eaaf048f6e7ce36be22d51a786e10013c6b97659a8f5f846e6be0d53a12589de",
+      "bytes": 1429
+    },
+    {
+      "path": "packages/protocol/generated/openapi.json",
+      "sha256": "04e905c1bebee359326314a577add30d18e967b09861db2663b0af92fcd5dba1",
+      "bytes": 415748
+    },
+    {
+      "path": "packages/protocol/generated/types.ts",
+      "sha256": "4f98863d651e506b4808b4a0d5086f88b27e338e4f4f139a24e5a9cf0183e42d",
+      "bytes": 71328
+    },
+    {
+      "path": "packages/protocol/schemas/v1/contracts.json",
+      "sha256": "415f9bd2f98b08ce4cbf9adfd1ab7876b9537e4b16462af7aaab8a353d1bb03a",
+      "bytes": 288957
+    },
+    {
+      "path": "packages/protocol/scripts/generate.mjs",
+      "sha256": "09f2fe7efc1b21162b086e2cea65724e28791d019667791b5ef2e4e8a416903d",
+      "bytes": 16731
+    },
+    {
+      "path": "packages/protocol/src/validation.ts",
+      "sha256": "da577e1ba405f4e176f771864e431055a023bdb042d6f72fd6c6ce46c7793a2f",
+      "bytes": 2871
+    },
+    {
+      "path": "runner/internal/control/client.go",
+      "sha256": "d9643e1653a9c253a3eb8ae04458b24599f61fb4291346faea0db867a77d4681",
+      "bytes": 12171
+    },
+    {
+      "path": "runner/internal/control/result_read_test.go",
+      "sha256": "eb303e0aaf997d35a2cd3daea4cb4d303c5b882e5b800854efad049f391e5f4b",
+      "bytes": 4391
+    },
+    {
+      "path": "runner/internal/daemon/daemon.go",
+      "sha256": "61c7d06c988219fce0a3f098d3838736c452f3d8c934408cd979d35e21056de0",
+      "bytes": 27462
+    },
+    {
+      "path": "runner/internal/daemon/result_read.go",
+      "sha256": "9efb4a4b88ebed0b1a7236fedee499afdb6dbd74602c3821ca707a0b8d283830",
+      "bytes": 3849
+    },
+    {
+      "path": "runner/internal/daemon/result_read_test.go",
+      "sha256": "16b79b465d10486662dbfd2dd590ebdb11366679840423ef3f6cc018c52c1797",
+      "bytes": 9485
+    },
+    {
+      "path": "runner/internal/host/result_read.go",
+      "sha256": "3a352954a716c0fceb467ad33b9d129be577bc6f33977e0b3f247ab157fbf1de",
+      "bytes": 12874
+    },
+    {
+      "path": "runner/internal/host/result_read_test.go",
+      "sha256": "df5a88c754bf39a681ea0b9fa57f1392a16502a1fd3107d7c8a86004f04e2f27",
+      "bytes": 23115
+    },
+    {
+      "path": "runner/internal/wire/result_read_test.go",
+      "sha256": "1c8453476206efc6e08d363ab45a918c7ec7da494dc95855c48b45074e224056",
+      "bytes": 5511
+    },
+    {
+      "path": "runner/internal/wire/wire.go",
+      "sha256": "5a9eaf2c270b52664a06782bec451947a9e288569ab9f80050d7ed7847c3654a",
+      "bytes": 7420
+    }
+  ]
+}

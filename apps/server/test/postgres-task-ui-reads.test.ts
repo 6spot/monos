@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { describe, it, expect } from "vitest";
-import { transaction } from "../../../packages/db/src/index.ts";
+import { database, transaction } from "../../../packages/db/src/index.ts";
 import { initializeTask } from "../src/task-records.ts";
 import { taskBoard } from "../src/task-board-reads.ts";
 import { taskResults } from "../src/task-result-reads.ts";
@@ -102,6 +102,21 @@ suite("Execution UI canonical reads", () => {
       await x.close();
     }
   }, 60000);
+
+  it("paginates legacy epoch records in Singapore's historical minute offset", async () => {
+    const x=await conversationFixture();
+    const url=new URL(x.databaseUrl);
+    url.searchParams.set('options', `${url.searchParams.get('options')} -c timezone=Asia/Singapore`);
+    const scoped=database(url.toString());
+    try {
+      for(let i=0;i<34;i++) await transaction(x.db, tx=>initializeTask(tx,{task_id:randomUUID(),specification_id:randomUUID(),project_id:x.f.project,specification:'Legacy epoch fixture'}));
+      const first=await taskBoard(scoped,x.token,{column:'ready'});
+      expect(JSON.parse(Buffer.from(first.cursor,'base64url').toString()).created_at).toBe('1970-01-01 07:30:00+07:30');
+      const last=await taskBoard(scoped,x.token,{column:'ready',cursor:first.cursor});
+      expect(new Set([...first.items,...last.items].map(r=>r.task_id)).size).toBe(35);
+      expect(last.has_more).toBe(false);
+    }finally {await scoped.pool.end();await x.close();}
+  });
 
   it("keeps normal unavailable planning out of attention, but exposes exact issue and independent request reasons", async () => {
     const x = await replanFixture();

@@ -1,0 +1,1 @@
+$ eslint apps packages --max-warnings 0

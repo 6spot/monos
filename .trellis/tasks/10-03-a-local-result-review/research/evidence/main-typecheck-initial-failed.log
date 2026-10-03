@@ -1,0 +1,4 @@
+$ tsc --noEmit && pnpm --filter @monos/web typecheck
+apps/server/test/postgres-result-reads.test.ts(22,7): error TS18046: 'input' is of type 'unknown'.
+apps/server/test/postgres-result-reads.test.ts(22,38): error TS18046: 'input' is of type 'unknown'.
+[ELIFECYCLE] Command failed with exit code 2.

@@ -1,0 +1,34 @@
+{
+  "recorded_at": "2026-10-03T12:40:17.185375+00:00",
+  "source_manifest": "implementation-source-manifest-final.json",
+  "platform": "darwin/arm64",
+  "executed_build_command": "sh infra/runner/build.sh /tmp/monos-local-result-runner-binaries-final",
+  "command_owner": "local_result_implement; reported complete before usage-limit interruption",
+  "binaries": [
+    {
+      "path": "/tmp/monos-local-result-runner-binaries-final/monos",
+      "sha256": "b0c86d62e7d76ecb78f5c62d67d6765a81a3296658ab100bf5ff80211bdea1cc",
+      "bytes": 14511122,
+      "file": "/tmp/monos-local-result-runner-binaries-final/monos: Mach-O 64-bit executable arm64"
+    },
+    {
+      "path": "/tmp/monos-local-result-runner-binaries-final/monos-probe-exec",
+      "sha256": "196976d63184192f68a3b62c0d0e109f346ad481ffc7872a5c8e60d485663998",
+      "bytes": 6695890,
+      "file": "/tmp/monos-local-result-runner-binaries-final/monos-probe-exec: Mach-O 64-bit executable arm64"
+    },
+    {
+      "path": "/tmp/monos-local-result-runner-binaries-final/monos-probe-launch",
+      "sha256": "e0eeb7c5e2a2fcdecbab19cd5f32609f954179945e493ddaa5f54a5133260f8f",
+      "bytes": 6851522,
+      "file": "/tmp/monos-local-result-runner-binaries-final/monos-probe-launch: Mach-O 64-bit executable arm64"
+    },
+    {
+      "path": "/tmp/monos-local-result-runner-binaries-final/monos-runner",
+      "sha256": "2d3d89aad215a48fa6f80552a056df02454f80fac359746fdc6261a5a838ce62",
+      "bytes": 15880530,
+      "file": "/tmp/monos-local-result-runner-binaries-final/monos-runner: Mach-O 64-bit executable arm64"
+    }
+  ],
+  "no_install": true
+}

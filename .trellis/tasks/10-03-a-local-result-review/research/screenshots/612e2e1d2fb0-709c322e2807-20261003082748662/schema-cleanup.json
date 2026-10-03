@@ -1,0 +1,7 @@
+{
+  "at": "2026-10-03T08:29:20.777Z",
+  "schemas": [],
+  "observed_previous_combined_run_schema": "web_test_64e5db612532476abfa5d41658d1838c",
+  "previous_combined_run_schema_absent": true,
+  "cleanup": "Fixture graceful SIGTERM drops its own unique schema only; verification performed no DDL."
+}

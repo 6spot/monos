@@ -582,3 +582,20 @@
   margin-top: 6px;
   color: var(--muted-foreground);
 }
+
+/* Immutable result inspection shares the Task surface; only code scrolls. */
+.result-inspector { margin-top: 1rem; min-width: 0; }
+.result-inspection-body { margin-top: .75rem; min-width: 0; }
+.result-file-layout { display: grid; grid-template-columns: minmax(160px, 30%) minmax(0, 1fr); gap: 1rem; margin-top: .75rem; }
+.result-files { display: flex; flex-direction: column; gap: .25rem; min-width: 0; max-height: 30rem; overflow-y: auto; }
+.result-files button { justify-content: flex-start; height: auto; min-height: 2rem; white-space: normal; text-align: left; }
+.result-file-status { flex-shrink: 0; font-family: monospace; color: var(--muted-foreground); }
+.result-file-name, .result-file-content h4 { overflow-wrap: anywhere; white-space: pre-wrap; min-width: 0; }
+.result-file-content { min-width: 0; }
+.result-file-content h4 { font-size: .875rem; margin: 0 0 .75rem; }
+.result-read-controls { display: flex; flex-wrap: wrap; gap: .375rem; margin-bottom: .75rem; }
+.result-code { max-width: 100%; max-height: 32rem; overflow: auto; padding: 1rem; border: 1px solid var(--border); border-radius: .5rem; background: var(--muted); font-size: .75rem; line-height: 1.6; white-space: pre; }
+.result-file-content .task-muted code { overflow-wrap: anywhere; }
+@media (max-width: 640px) { .result-file-layout { grid-template-columns: minmax(0, 1fr); } .result-files { max-height: 12rem; } .result-files button { min-height: 44px; } .result-code { max-height: 24rem; } }
+
+.task-body .result-code, .task-body .result-code code { white-space: pre; overflow-wrap: normal; word-break: normal; }
