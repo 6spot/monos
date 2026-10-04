@@ -2,6 +2,10 @@
 
 Sources: [Stage A](../../../docs/09-first-executable-slice.md), [readiness](../../../docs/10-architecture-readiness.md), [invariants](../../../docs/08-principles-and-non-goals.md).
 
+## Verification scope
+
+Follow the [verification scope and stopping rule](../guides/verification-scope.md). The commands below describe available and final gates, not a requirement to run every suite after every edit. Select affected checks during development, reuse evidence for unchanged inputs, and run missing or invalidated integration gates after writers settle. Historical counts are past evidence, not task requirements.
+
 ## Verification status
 
 The boundary probe has actual scripts in [package.json](../../../package.json): `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm protocol:check`, `pnpm build`, and `pnpm test:db`. Default `pnpm test` deliberately skips the real PostgreSQL suite. On 2026-09-28 the reviewed backend passed 45 unit/schema tests locally and 15 PostgreSQL integration tests in the isolated Node 24/PostgreSQL 17.11 Compose deployment. These tests prove only their asserted probe behavior.
@@ -16,7 +20,7 @@ The real database entrypoint now includes `postgres.test.ts` (16 cases),
 `postgres-claims.test.ts` (6 independent-process cases) and
 `postgres-recovery.test.ts` (3 process-crash/settlement cases). All 25 passed on
 the pinned Linux PostgreSQL deployment. The regular unit entrypoint skips all
-database suites unless `MONOS_TEST_DATABASE=1`; use `pnpm test:db` for this gate.
+database suites unless `MONOS_TEST_DATABASE=1`. Run affected PostgreSQL files during implementation; `pnpm test:db` is the aggregate gate when the final integration scope requires it.
 
 - Test deterministic rules independently of HTTP/Git/Runtime.
 - Use fakes for races, then real Linux/CLI/provider probes for external assumptions.

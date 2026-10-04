@@ -565,7 +565,9 @@ If issues are found → fix → re-check, until green.
 
 [/codex-inline, Kilo, Antigravity, Devin, DeepSeek Harness]
 
-**Final pass (before Phase 3.4 commit)**: the last 2.2 of a task must run full-scope, not just on the latest implement chunk. List all affected packages with `python3 ./.trellis/scripts/get_context.py --mode packages`, then load each package's spec index Quality Check section. This catches cross-layer / multi-package issues a mid-iteration local 2.2 cannot.
+**Final pass (before Phase 3.4 commit)**: review the combined task scope across all affected packages. Use `get_context.py --mode packages` to locate their spec indexes and required quality gates. Account for checks already run against unchanged inputs, and run missing or invalidated integration checks after delegates settle. Full task scope excludes unrelated dirty work; it does not mean rerunning every repository suite for every chunk.
+
+Apply [verification scope and stopping](spec/guides/verification-scope.md): do not add tests or repeat full suites because a new delegate or commit exists. Once the affected claims and required gates have current evidence, proceed to spec sync and delivery.
 
 #### 2.3 Rollback `[on demand]`
 

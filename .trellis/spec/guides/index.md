@@ -4,6 +4,7 @@ These are short review prompts, not another source of domain contracts. Start fr
 
 | Guide | Use when |
 | --- | --- |
+| [Verification scope](verification-scope.md) | Smallest sufficient checks, evidence reuse, final integration and stopping |
 | [Cross-layer changes](cross-layer-thinking-guide.md) | Commands, schema, persistence, Runner effects, delivery or UI |
 | [Reuse and dependencies](code-reuse-thinking-guide.md) | New packages, components, adapters, shared code or configuration |
 

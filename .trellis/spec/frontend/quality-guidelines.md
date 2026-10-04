@@ -2,10 +2,14 @@
 
 Sources: [UI contract](../../../docs/07-owner-review-and-ui.md), [Stage A](../../../docs/09-first-executable-slice.md), [technology](../../../docs/11-technology-and-deployment.md).
 
+## Verification scope
+
+Follow the [verification scope and stopping rule](../guides/verification-scope.md). The commands below describe available and final gates, not a requirement to run every suite after every edit. Select affected checks during development, reuse evidence for unchanged inputs, and run missing or invalidated integration gates after writers settle. Historical counts are past evidence, not task requirements.
+
 ## Current status
 
 `apps/web` uses root lint, a separate TypeScript check, Vite production build,
-Vitest API-boundary tests and Playwright interaction tests. Run `pnpm lint`,
+Vitest API-boundary tests and Playwright interaction tests. The full frontend acceptance gate uses `pnpm lint`,
 `pnpm typecheck`, `pnpm test`, `pnpm protocol:check`, `pnpm build` and
 `pnpm --filter @monos/web test:e2e` with `MONOS_TEST_WEB_DATABASE_URL` set privately.
 The browser fixture migrates a unique test schema, uses synthetic credentials,
@@ -47,7 +51,7 @@ Use shadcn Base UI consistently. Check keyboard/focus, labels, error association
 
 ## Visual acceptance
 
-Apply the [visual contract](visual-design.md) to every new or visually changed surface. Retain inspected screenshots at 1440×1000 desktop and 390×844 mobile, tied to the tested build/source revision, route and fixture/data state. Cover the changed surface's populated and empty views, errors, loading/queued/disabled states, and long titles/messages where applicable; record why a state is not applicable instead of inventing backend behavior. Review the mobile navigation, focus, overflow, composer and action reachability in the browser.
+Apply the [visual contract](visual-design.md) to every new or visually changed surface. Retain inspected screenshots at 1440×1000 desktop and 390×844 mobile, tied to the tested build/source revision, route and fixture/data state. Select representative screenshots for distinct changed layouts: populated/empty, attention, loading and long content where applicable. Verify distinct interaction/authority states with assertions; states sharing the same layout may reuse a representative image from the same build. Do not require a new desktop/mobile/full-page capture for every backend reason or parameter variant. Record inapplicable states instead of inventing backend behavior. Review the mobile navigation, focus, overflow, composer and action reachability in the browser.
 
 Compare the screenshots to the reference-derived surface hierarchy, typography, gutters, header/toolbar geometry and component treatments. Record the reference source/revision or reference image, inspection result and intentional monos-specific differences. A saved screenshot without inspection is not acceptance. Pixel-diff automation is optional and cannot replace the initial reference review; avoid broad brittle markup snapshots.
 

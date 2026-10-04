@@ -2,9 +2,13 @@
 
 Sources: [Stage A](../../../docs/09-first-executable-slice.md), [readiness](../../../docs/10-architecture-readiness.md).
 
+## Verification scope
+
+Follow the [verification scope and stopping rule](../guides/verification-scope.md). The commands below describe available and final gates, not a requirement to run every suite after every edit. Select affected checks during development, reuse evidence for unchanged inputs, and run missing or invalidated integration gates after writers settle. Historical counts are past evidence, not task requirements.
+
 ## Tooling status
 
-From `runner/`, run `go test -race ./...` and `go vet ./...`. The [module](../../../runner/go.mod) requires Go 1.26 or later. SQLite uses CGO, so deploy builds need a C compiler; a `CGO_ENABLED=0` cross-compile is not runtime validation. [build.sh](../../../infra/runner/build.sh) builds the four executables. Do not claim a macOS run, or Linux container unit tests, proves native systemd/cgroup lifecycle behavior.
+For the affected final Runner module gate, run `go test -race ./...` and `go vet ./...` from `runner/`; use affected packages and focused cases during implementation. The [module](../../../runner/go.mod) requires Go 1.26 or later. SQLite uses CGO, so deploy builds need a C compiler; a `CGO_ENABLED=0` cross-compile is not runtime validation. [build.sh](../../../infra/runner/build.sh) builds the four executables. Do not claim a macOS run, or Linux container unit tests, proves native systemd/cgroup lifecycle behavior.
 
 The [installation recipe](../../../infra/runner/README.md) provides a read-only `bootstrap.sh <root-owned-binaries> --check` preflight before task-owned host installation. Never run real CLI trials as root. Record source hashes, CLI/model versions and each failed trial alongside successes in the active task's evidence report.
 
