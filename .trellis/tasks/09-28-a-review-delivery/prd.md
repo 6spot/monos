@@ -28,7 +28,7 @@ These are completion/evidence gates, not automatic scheduler dependencies. Paren
 Execute these leaves in order; later leaves remain backlog until their own source-backed planning and upstream acceptance:
 
 1. [Exact local result review](../archive/2026-10/10-03-a-local-result-review/prd.md) — accepted 2026-10-03; immutable local reads, current/history, bounded outcomes and desktop/mobile evidence.
-2. [Controlled publication candidate](../10-03-a-publication-candidate/prd.md).
+2. [Controlled publication candidate](../archive/2026-10/10-03-a-publication-candidate/prd.md) — accepted2026-10-04; exact-tree public-parent construction, range scans, immutable local receipts and native isolated permissions.
 3. [Automatic review preparation](../10-03-a-remote-preparation/prd.md).
 4. [Exact Owner delivery acceptance](../10-03-a-owner-delivery/prd.md).
 5. [Review correction and delivery recovery](../10-03-a-review-correction/prd.md).
