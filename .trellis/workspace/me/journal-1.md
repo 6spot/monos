@@ -657,3 +657,37 @@ Accepted immutable local result inspection with exact retained Runner identity, 
 ### Next Steps
 
 - Plan and implement 10-03-a-publication-candidate from the accepted local-result archive; keep remaining delivery leaves ordered and package open.
+
+
+## Session 28: Controlled local publication candidate acceptance
+<!-- trellis-session: v=2 fp=025ffdd55768b89d -->
+
+**Date**: 2026-10-04
+**Task**: Controlled local publication candidate acceptance
+**Branch**: `feat/stage-a-boundary-probe`
+
+### Summary
+
+Accepted exact-tree local candidates, complete-range sanitized scans and precise Owner policy receipts. Closed F1/F2/F3 with actual PG13, physical Git, Linux CGO/race/vet and UID isolation, built SPA34/visual evidence; remote delivery remains next.
+
+### Main Changes
+
+- Independent local candidate leaf accepted and archived; review-delivery parent2/6 open
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `1ad5735` | feat: prepare controlled local publication candidates |
+
+### Testing
+
+- [OK] PG13; shared250; root356; browser34; native19 plus retained fixture; execution read/write denial10/10
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- Plan and implement10-03-a-remote-preparation under existing sequential authorization; never push monos source
