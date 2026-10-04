@@ -1,0 +1,17 @@
+{
+  "cwd": "/Users/me/IdeaProjects/monos/.trellis/tasks/10-03-a-remote-preparation/research/evidence/primitives-accepted-protocol-wp_3siyf/runner",
+  "command": [
+    "/Users/me/.local/share/mise/installs/go/1.27.1/bin/go",
+    "test",
+    "./internal/host",
+    "-run",
+    "^TestRemotePreparationNativeRetainedPermissionFixture$",
+    "-count=1"
+  ],
+  "environment": {
+    "MONOS_REMOTE_PREPARATION_EVIDENCE_DIR": "/Users/me/IdeaProjects/monos/.trellis/tasks/10-03-a-remote-preparation/research/evidence/primitives-accepted-protocol-wp_3siyf/runner/internal/host/.native-permission-local-69sswsaq"
+  },
+  "exit_code": 0,
+  "elapsed_seconds": 2.4964660000000003,
+  "scope": "local Darwin same-account retained fixture; not Linux two-account or production App"
+}

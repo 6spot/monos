@@ -3,16 +3,16 @@
   "name": "a-remote-preparation",
   "title": "Automatic review preparation",
   "description": "Prepare and reconcile the same delivery branch and GitHub PR under exact result and input guards.",
-  "status": "planning",
-  "dev_type": null,
-  "scope": null,
-  "package": null,
+  "status": "in_progress",
+  "dev_type": "fullstack",
+  "scope": "delivery",
+  "package": "monos",
   "priority": "P2",
   "creator": "me",
   "assignee": "me",
   "createdAt": "2026-10-03",
   "completedAt": null,
-  "branch": null,
+  "branch": "feat/stage-a-boundary-probe",
   "base_branch": "main",
   "worktree_path": null,
   "commit": null,
@@ -21,9 +21,9 @@
   "children": [],
   "parent": "09-28-a-review-delivery",
   "relatedFiles": [],
-  "notes": "",
+  "notes": "All seven AC independently verified2026-10-05. Final source/evidence reviewREADY; original-operation synthetic GitHub PR4 closed/branchretained, no product source/Accept/merge. Real installed App issuance remains later combined gate. Standing autonomous authorization; scope and evidence in research/integrated-acceptance.md.",
   "meta": {
     "roadmap_level": "leaf",
-    "planning_maturity": "backlog"
+    "planning_maturity": "ready"
   }
 }

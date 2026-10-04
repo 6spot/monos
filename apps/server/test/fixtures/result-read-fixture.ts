@@ -1,8 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import { Configuration } from '../../src/configuration.ts';
 import { conversationFixture } from './task-conversation-fixture.ts';
-export async function resultReadFixture() {
- const x=await conversationFixture();
+export async function resultReadFixture(options:{runnerCredential?:string}={}) {
+ const x=await conversationFixture(options);
  try {
  const resource=randomUUID(),configuration=new Configuration(x.db);
  await configuration.save(x.token,{schema_version:1,request_id:randomUUID(),expected_control_version:(await configuration.read(x.token)).control_version,name:'save_project',payload:{id:x.f.project,name:'Result project',context:'Exact result fixture',resources:[{id:resource,remote_url:'https://github.com/example/result.git',remote_preparation:'after_acceptance',default_branch:'main'}],role_ids:[x.f.role],archived:false}});

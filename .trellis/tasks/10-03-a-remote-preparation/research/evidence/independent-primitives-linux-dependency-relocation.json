@@ -1,0 +1,17 @@
+{
+  "scope": "dependency cache archives remain private outside tracked task tree; no source input changed",
+  "files": [
+    {
+      "trial": "independent-primitives-linux-v1",
+      "original": "/Users/me/IdeaProjects/monos/.trellis/tasks/10-03-a-remote-preparation/research/evidence/independent-primitives-linux-v1/module-cache.tar.gz",
+      "retained_private_path": "/private/tmp/monos-remote-primitives-dependencies-9jd7yew0/independent-primitives-linux-v1-module-cache.tar.gz",
+      "sha256": "8ba6064003e92cdf274928e7eaed6a7d40f8e13c1a9b9b16fccfd430376fca3f"
+    },
+    {
+      "trial": "independent-primitives-linux-v2",
+      "original": "/Users/me/IdeaProjects/monos/.trellis/tasks/10-03-a-remote-preparation/research/evidence/independent-primitives-linux-v2/module-cache.tar.gz",
+      "retained_private_path": "/private/tmp/monos-remote-primitives-dependencies-9jd7yew0/independent-primitives-linux-v2-module-cache.tar.gz",
+      "sha256": "eeb16dee59e1458ef754e8ab812dbe033929df7a0ddfcb3622d0f4e179c13cfb"
+    }
+  ]
+}

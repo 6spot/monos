@@ -1,0 +1,10 @@
+{
+  "scope": "main collected exact-byte isolated accepted-base primitive Linux proof, not final integrated lane",
+  "source_manifest_sha256": "c1ef6a4e4c7ab32d4bcf598b81d4c3321d0710b5f5ebf91fd982bfd0eda0bd38",
+  "result_sha256": "1e446af97083dc25d13a362f99964234ba099a30d834c92a41b78fbe2cb8285d",
+  "steps": 8,
+  "all_step_log_hashes_match": true,
+  "remote_permission_paths": 17,
+  "all_execution_read_write_denied": true,
+  "all_123_worker_input_path_digests_match": true
+}

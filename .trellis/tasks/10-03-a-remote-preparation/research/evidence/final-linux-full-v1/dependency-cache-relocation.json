@@ -1,0 +1,5 @@
+{
+  "archive_path": "/private/tmp/monos-remote-final-dependencies-losfq9fx/module-cache.tar.gz",
+  "sha256": "925f0534e3a4222977c139fdcbe01ce6095d5d8a38c9fef6611330b524131077",
+  "reason": "already uploaded exact offline dependencies; keep large cache outside tracked task artifacts"
+}

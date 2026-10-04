@@ -1,0 +1,15 @@
+{
+  "cwd": "/Users/me/IdeaProjects/monos/.trellis/tasks/10-03-a-remote-preparation/research/evidence/primitives-accepted-protocol-wp_3siyf/runner",
+  "command": [
+    "/Users/me/.local/share/mise/installs/go/1.27.1/bin/go",
+    "test",
+    "-race",
+    "./internal/host",
+    "-run",
+    "^TestRemotePreparation",
+    "-count=1"
+  ],
+  "exit_code": 1,
+  "elapsed_seconds": 7.220974333,
+  "scope": "isolated accepted HEAD product plus four owned primitive/process source files"
+}

@@ -74,6 +74,431 @@
         }
       }
     },
+    "/v1/owner/tasks/{task_id}/remote-preparation": {
+      "get": {
+        "security": [
+          {
+            "OwnerAuth": []
+          },
+          {
+            "OwnerCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "X-Monos-Session",
+            "in": "header",
+            "required": false,
+            "description": "Noncredential expected session identity. Mismatch rejects before reads or effects; this header alone never authenticates.",
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/TaskListCursor"
+            }
+          },
+          {
+            "name": "source_operation_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authenticated response; admission is distinct from completed effects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RemotePreparationPage"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Deterministic protocol error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/owner/tasks/{task_id}/remote-preparation/{item_id}": {
+      "get": {
+        "security": [
+          {
+            "OwnerAuth": []
+          },
+          {
+            "OwnerCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "X-Monos-Session",
+            "in": "header",
+            "required": false,
+            "description": "Noncredential expected session identity. Mismatch rejects before reads or effects; this header alone never authenticates.",
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authenticated response; admission is distinct from completed effects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RemotePreparationRecord"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Deterministic protocol error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/owner/tasks/{task_id}/remote-preparation/{item_id}/checks/{observation_id}": {
+      "get": {
+        "security": [
+          {
+            "OwnerAuth": []
+          },
+          {
+            "OwnerCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "X-Monos-Session",
+            "in": "header",
+            "required": false,
+            "description": "Noncredential expected session identity. Mismatch rejects before reads or effects; this header alone never authenticates.",
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "observation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/TaskListCursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authenticated response; admission is distinct from completed effects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RemotePreparationChecksPage"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Deterministic protocol error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/owner/tasks/remote-preparation/commands": {
+      "post": {
+        "security": [
+          {
+            "OwnerAuth": []
+          },
+          {
+            "OwnerCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RemotePreparationCommand"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authenticated response; admission is distinct from completed effects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RemotePreparationCommandResult"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Deterministic protocol error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "X-Monos-Session",
+            "in": "header",
+            "required": false,
+            "description": "Noncredential expected session identity. Mismatch rejects before reads or effects; this header alone never authenticates.",
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          }
+        ]
+      }
+    },
+    "/v1/owner/tasks/{task_id}/remote-preparation/commands/{request_id}": {
+      "get": {
+        "security": [
+          {
+            "OwnerAuth": []
+          },
+          {
+            "OwnerCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "X-Monos-Session",
+            "in": "header",
+            "required": false,
+            "description": "Noncredential expected session identity. Mismatch rejects before reads or effects; this header alone never authenticates.",
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authenticated response; admission is distinct from completed effects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RemotePreparationCommandResult"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Deterministic protocol error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/runner/remote-preparation/{operation_id}/access": {
+      "post": {
+        "security": [
+          {
+            "RunnerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "operation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublicationAccessRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authenticated response; admission is distinct from completed effects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicationAccessResult"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Deterministic protocol error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/runner/publication-operations/{operation_id}/permission": {
+      "post": {
+        "security": [
+          {
+            "RunnerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "operation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublicationPermissionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authenticated response; admission is distinct from completed effects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicationPermissionResult"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Deterministic protocol error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/owner/tasks/{task_id}/publication-candidates/{candidate_id}": {
       "get": {
         "security": [
@@ -5614,7 +6039,10 @@
               "result_read_result",
               "publication_prepare",
               "publication_result",
-              "publication_ack"
+              "publication_ack",
+              "publication_push",
+              "publication_push_result",
+              "publication_push_ack"
             ]
           },
           "runner_id": {
@@ -5725,6 +6153,25 @@
           },
           "publication_ack": {
             "$ref": "#/components/schemas/PublicationAck"
+          },
+          "remote_preparation_modes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "const": "github_review_v1"
+            },
+            "minItems": 0,
+            "maxItems": 1,
+            "uniqueItems": true
+          },
+          "publication_push": {
+            "$ref": "#/components/schemas/PublicationPushRequest"
+          },
+          "publication_push_result": {
+            "$ref": "#/components/schemas/PublicationPushResult"
+          },
+          "publication_push_ack": {
+            "$ref": "#/components/schemas/PublicationPushAck"
           }
         },
         "allOf": [
@@ -5802,7 +6249,8 @@
                 "runtimes": {},
                 "log_modes": {},
                 "result_read_modes": {},
-                "publication_modes": {}
+                "publication_modes": {},
+                "remote_preparation_modes": {}
               },
               "additionalProperties": false,
               "type": "object"
@@ -6235,6 +6683,84 @@
                 "type",
                 "incarnation",
                 "publication_ack"
+              ]
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "publication_push"
+                }
+              }
+            },
+            "then": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "schema_version": {},
+                "type": {},
+                "incarnation": {},
+                "publication_push": {}
+              },
+              "required": [
+                "schema_version",
+                "type",
+                "incarnation",
+                "publication_push"
+              ]
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "publication_push_result"
+                }
+              }
+            },
+            "then": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "schema_version": {},
+                "type": {},
+                "incarnation": {},
+                "publication_push_result": {}
+              },
+              "required": [
+                "schema_version",
+                "type",
+                "incarnation",
+                "publication_push_result"
+              ]
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "publication_push_ack"
+                }
+              }
+            },
+            "then": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "schema_version": {},
+                "type": {},
+                "incarnation": {},
+                "publication_push_ack": {}
+              },
+              "required": [
+                "schema_version",
+                "type",
+                "incarnation",
+                "publication_push_ack"
               ]
             }
           }
@@ -16143,16 +16669,81 @@
           },
           "observation_digest": {
             "$ref": "#/components/schemas/SHA256"
+          },
+          "published_proof": {
+            "$ref": "#/components/schemas/PublicationPublishedProof"
+          },
+          "published_proof_digest": {
+            "$ref": "#/components/schemas/SHA256"
           }
         },
         "required": [
           "kind",
           "commit",
-          "repository_identity",
-          "observation_operation_id",
-          "workspace",
-          "outcome",
-          "observation_digest"
+          "repository_identity"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "published"
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "published_proof": {},
+                "published_proof_digest": {},
+                "workspace": false,
+                "outcome": false,
+                "observation_operation_id": false,
+                "observation_digest": false
+              },
+              "required": [
+                "published_proof",
+                "published_proof_digest"
+              ]
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "materialization",
+                    "target"
+                  ]
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "required": [
+                "workspace",
+                "outcome",
+                "observation_operation_id",
+                "observation_digest"
+              ],
+              "properties": {
+                "workspace": {},
+                "outcome": {},
+                "observation_operation_id": {},
+                "observation_digest": {},
+                "published_proof": false,
+                "published_proof_digest": false
+              }
+            }
+          }
         ]
       },
       "PublicationConstruction": {
@@ -16358,6 +16949,18 @@
           },
           "configuration_digest": {
             "$ref": "#/components/schemas/SHA256"
+          },
+          "published": {
+            "$ref": "#/components/schemas/PublicationPublishedProof"
+          },
+          "published_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "permission_proof": {
+            "$ref": "#/components/schemas/PublicationPermissionProof"
+          },
+          "permission_proof_digest": {
+            "$ref": "#/components/schemas/SHA256"
           }
         },
         "required": [
@@ -16372,7 +16975,21 @@
           "construction_digest",
           "configuration",
           "configuration_digest"
-        ]
+        ],
+        "dependencies": {
+          "published": [
+            "published_digest"
+          ],
+          "published_digest": [
+            "published"
+          ],
+          "permission_proof": [
+            "permission_proof_digest"
+          ],
+          "permission_proof_digest": [
+            "permission_proof"
+          ]
+        }
       },
       "PublicationCandidateManifest": {
         "type": "object",
@@ -16708,6 +17325,9 @@
           },
           "findings_digest": {
             "$ref": "#/components/schemas/SHA256"
+          },
+          "workflow_changes": {
+            "type": "boolean"
           }
         },
         "required": [
@@ -16769,7 +17389,8 @@
               "prepared",
               "not_applicable",
               "unavailable",
-              "reconciliation_required"
+              "reconciliation_required",
+              "mapped"
             ]
           },
           "candidate": {
@@ -16794,6 +17415,12 @@
               "conflicting_candidate",
               "timeout"
             ]
+          },
+          "mapping": {
+            "$ref": "#/components/schemas/PublishedResultMapping"
+          },
+          "mapping_digest": {
+            "$ref": "#/components/schemas/SHA256"
           }
         },
         "required": [
@@ -16808,9 +17435,15 @@
               "type": "object",
               "properties": {
                 "status": {
-                  "const": "prepared"
+                  "enum": [
+                    "prepared",
+                    "mapped"
+                  ]
                 }
-              }
+              },
+              "required": [
+                "status"
+              ]
             },
             "then": {
               "type": "object",
@@ -16821,11 +17454,11 @@
                 "scan_digest"
               ],
               "properties": {
-                "reason": false,
                 "candidate": {},
                 "candidate_manifest_digest": {},
                 "scan": {},
-                "scan_digest": {}
+                "scan_digest": {},
+                "reason": false
               }
             },
             "else": {
@@ -16834,12 +17467,59 @@
                 "reason"
               ],
               "properties": {
+                "reason": {},
                 "candidate": false,
                 "candidate_manifest_digest": false,
                 "scan": false,
                 "scan_digest": false,
-                "reason": {}
+                "mapping": false,
+                "mapping_digest": false
               }
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "const": "mapped"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "mapping": {},
+                "mapping_digest": {}
+              },
+              "required": [
+                "mapping",
+                "mapping_digest"
+              ]
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "const": "prepared"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "mapping": false,
+                "mapping_digest": false
+              },
+              "required": []
             }
           }
         ]
@@ -16943,7 +17623,8 @@
               "prepared",
               "not_applicable",
               "unavailable",
-              "reconciliation_required"
+              "reconciliation_required",
+              "mapped"
             ]
           },
           "candidate": {
@@ -16991,6 +17672,12 @@
           },
           "known_public_exposure_count": {
             "$ref": "#/components/schemas/Counter"
+          },
+          "mapping": {
+            "$ref": "#/components/schemas/PublishedResultMapping"
+          },
+          "mapping_digest": {
+            "$ref": "#/components/schemas/SHA256"
           }
         },
         "required": [
@@ -17008,7 +17695,15 @@
           "override_receipt_ids",
           "remote_preparation",
           "known_public_exposure_count"
-        ]
+        ],
+        "dependencies": {
+          "mapping": [
+            "mapping_digest"
+          ],
+          "mapping_digest": [
+            "mapping"
+          ]
+        }
       },
       "PublicationCandidatePage": {
         "type": "object",
@@ -17166,6 +17861,9 @@
               },
               "confirmation_id": {
                 "$ref": "#/components/schemas/Id"
+              },
+              "mapping_digest": {
+                "$ref": "#/components/schemas/SHA256"
               }
             },
             "required": []
@@ -17246,6 +17944,9 @@
                       "maxItems": 64,
                       "minItems": 1,
                       "uniqueItems": true
+                    },
+                    "mapping_digest": {
+                      "$ref": "#/components/schemas/SHA256"
                     }
                   },
                   "required": [
@@ -17329,6 +18030,9 @@
                     },
                     "confirmation_id": {
                       "$ref": "#/components/schemas/Id"
+                    },
+                    "mapping_digest": {
+                      "$ref": "#/components/schemas/SHA256"
                     }
                   },
                   "required": [
@@ -17387,6 +18091,2108 @@
           "task_id",
           "request_id",
           "status"
+        ]
+      },
+      "PublicationPermissionGrants": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "contents": {
+            "const": "write",
+            "type": "string"
+          },
+          "metadata": {
+            "const": "read",
+            "type": "string"
+          },
+          "workflows": {
+            "const": "write",
+            "type": "string"
+          }
+        },
+        "required": [
+          "contents",
+          "metadata"
+        ]
+      },
+      "PublicationPermissionProof": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "observation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "resource_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "repository_identity": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "repository_id": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]{0,15}$"
+          },
+          "app_id": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]{0,15}$"
+          },
+          "installation_id": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]{0,15}$"
+          },
+          "key_fingerprint": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "configuration_fingerprint": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "permission_fingerprint": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "permissions": {
+            "$ref": "#/components/schemas/PublicationPermissionGrants"
+          },
+          "observed_at": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(?:\\.\\d{1,3})?Z$",
+            "maxLength": 24
+          },
+          "expires_at": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(?:\\.\\d{1,3})?Z$",
+            "maxLength": 24
+          }
+        },
+        "required": [
+          "schema_version",
+          "observation_id",
+          "resource_id",
+          "repository_identity",
+          "repository_id",
+          "app_id",
+          "installation_id",
+          "key_fingerprint",
+          "configuration_fingerprint",
+          "permission_fingerprint",
+          "permissions",
+          "observed_at",
+          "expires_at"
+        ]
+      },
+      "PublicationPermissionRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "incarnation": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "request_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          }
+        },
+        "required": [
+          "schema_version",
+          "incarnation",
+          "request_digest"
+        ]
+      },
+      "PublicationPermissionResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "operation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "request_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "proof": {
+            "$ref": "#/components/schemas/PublicationPermissionProof"
+          },
+          "proof_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          }
+        },
+        "required": [
+          "schema_version",
+          "operation_id",
+          "request_digest",
+          "proof",
+          "proof_digest"
+        ]
+      },
+      "PublicationRefObservation": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "observation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "operation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "item_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "task_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "resource_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "runner_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "storage_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "repository_identity": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "repository_id": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]{0,15}$"
+          },
+          "delivery_ref": {
+            "type": "string",
+            "pattern": "^refs/heads/monos/task/[0-9a-f-]{36}/[0-9a-f-]{36}$",
+            "maxLength": 128
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "present",
+              "absent",
+              "unavailable"
+            ]
+          },
+          "head": {
+            "$ref": "#/components/schemas/GitOID"
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "credentials_missing",
+              "access_denied",
+              "permission_unknown",
+              "expired_permission",
+              "provider_unavailable",
+              "rate_limited",
+              "invalid_provider_response",
+              "input_pending",
+              "source_changed",
+              "configuration_changed",
+              "mode_deferred",
+              "runner_offline",
+              "runner_unsupported",
+              "scan_incomplete",
+              "findings_blocked",
+              "known_public_exposure",
+              "unverified_parent",
+              "unexpected_head",
+              "possible_publication",
+              "ambiguous_pr",
+              "pr_missing",
+              "pr_closed",
+              "pr_merged",
+              "content_mismatch",
+              "retained_unavailable",
+              "identity_mismatch",
+              "timeout",
+              "cancel_requested"
+            ]
+          },
+          "observed_at": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(?:\\.\\d{1,3})?Z$",
+            "maxLength": 24
+          }
+        },
+        "required": [
+          "schema_version",
+          "observation_id",
+          "operation_id",
+          "item_id",
+          "task_id",
+          "resource_id",
+          "runner_id",
+          "storage_id",
+          "repository_identity",
+          "repository_id",
+          "delivery_ref",
+          "status",
+          "observed_at"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "const": "present"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "head": {},
+                "reason": false
+              },
+              "required": [
+                "head"
+              ]
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "const": "absent"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "head": false,
+                "reason": false
+              },
+              "required": []
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "const": "unavailable"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "reason": {},
+                "head": false
+              },
+              "required": [
+                "reason"
+              ]
+            }
+          }
+        ]
+      },
+      "PublicationPublishedProof": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "operation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "request_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "result_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "item_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "task_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "resource_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "runner_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "storage_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "repository_identity": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "repository_id": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]{0,15}$"
+          },
+          "delivery_ref": {
+            "type": "string",
+            "pattern": "^refs/heads/monos/task/[0-9a-f-]{36}/[0-9a-f-]{36}$",
+            "maxLength": 128
+          },
+          "candidate": {
+            "$ref": "#/components/schemas/PublicationCandidateManifest"
+          },
+          "candidate_manifest_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "observation": {
+            "$ref": "#/components/schemas/PublicationRefObservation"
+          },
+          "observation_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          }
+        },
+        "required": [
+          "schema_version",
+          "operation_id",
+          "request_digest",
+          "result_digest",
+          "item_id",
+          "task_id",
+          "resource_id",
+          "runner_id",
+          "storage_id",
+          "repository_identity",
+          "repository_id",
+          "delivery_ref",
+          "candidate",
+          "candidate_manifest_digest",
+          "observation",
+          "observation_digest"
+        ]
+      },
+      "PublishedResultMapping": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "mapping_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "operation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "request_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "item_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "source": {
+            "$ref": "#/components/schemas/ResultReadIdentity"
+          },
+          "source_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "effective_basis": {
+            "$ref": "#/components/schemas/PublicationEffectiveBasis"
+          },
+          "effective_basis_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "published": {
+            "$ref": "#/components/schemas/PublicationPublishedProof"
+          },
+          "published_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "candidate_manifest_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "reused_head": {
+            "$ref": "#/components/schemas/GitOID"
+          },
+          "result_tree": {
+            "$ref": "#/components/schemas/GitOID"
+          },
+          "configuration_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          }
+        },
+        "required": [
+          "schema_version",
+          "mapping_id",
+          "operation_id",
+          "request_digest",
+          "item_id",
+          "source",
+          "source_digest",
+          "effective_basis",
+          "effective_basis_digest",
+          "published",
+          "published_digest",
+          "candidate_manifest_digest",
+          "reused_head",
+          "result_tree",
+          "configuration_digest"
+        ]
+      },
+      "PublicationOverrideSelection": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "candidate_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "candidate_manifest_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "effective_basis_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "scan_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "finding_ids": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SHA256"
+            },
+            "minItems": 1,
+            "maxItems": 64,
+            "uniqueItems": true
+          },
+          "mapping_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          }
+        },
+        "required": [
+          "candidate_id",
+          "candidate_manifest_digest",
+          "effective_basis_digest",
+          "scan_digest",
+          "finding_ids"
+        ]
+      },
+      "PublicationOverrideProof": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "receipt_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "confirmation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "selection": {
+            "$ref": "#/components/schemas/PublicationOverrideSelection"
+          },
+          "selection_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          }
+        },
+        "required": [
+          "receipt_id",
+          "confirmation_id",
+          "selection",
+          "selection_digest"
+        ]
+      },
+      "PublicationPushRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "operation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "item_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "task_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "resource_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "runner_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "storage_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "repository_identity": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "repository_id": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]{0,15}$"
+          },
+          "remote_url": {
+            "type": "string",
+            "pattern": "^https://github[.]com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+[.]git$",
+            "maxLength": 2048
+          },
+          "delivery_ref": {
+            "type": "string",
+            "pattern": "^refs/heads/monos/task/[0-9a-f-]{36}/[0-9a-f-]{36}$",
+            "maxLength": 128
+          },
+          "target_branch": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1024
+          },
+          "preparation": {
+            "$ref": "#/components/schemas/PublicationPrepareRequest"
+          },
+          "prepared": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PublicationResult"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "const": "prepared"
+                  }
+                }
+              }
+            ]
+          },
+          "preparation_result_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "override_receipts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicationOverrideProof"
+            },
+            "minItems": 0,
+            "maxItems": 64
+          },
+          "permission_proof": {
+            "$ref": "#/components/schemas/PublicationPermissionProof"
+          },
+          "permission_proof_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "workflow_changes": {
+            "type": "boolean"
+          },
+          "expected_head": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GitOID"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "prior_published": {
+            "$ref": "#/components/schemas/PublicationPublishedProof"
+          },
+          "prior_published_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          }
+        },
+        "required": [
+          "schema_version",
+          "operation_id",
+          "item_id",
+          "task_id",
+          "resource_id",
+          "runner_id",
+          "storage_id",
+          "repository_identity",
+          "repository_id",
+          "remote_url",
+          "delivery_ref",
+          "target_branch",
+          "preparation",
+          "prepared",
+          "preparation_result_digest",
+          "override_receipts",
+          "permission_proof",
+          "permission_proof_digest",
+          "workflow_changes",
+          "expected_head"
+        ],
+        "dependencies": {
+          "prior_published": [
+            "prior_published_digest"
+          ],
+          "prior_published_digest": [
+            "prior_published"
+          ]
+        }
+      },
+      "PublicationPushResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "operation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "request_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "item_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "candidate_manifest_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "delivery_ref": {
+            "type": "string",
+            "pattern": "^refs/heads/monos/task/[0-9a-f-]{36}/[0-9a-f-]{36}$",
+            "maxLength": 128
+          },
+          "candidate_head": {
+            "$ref": "#/components/schemas/GitOID"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "published",
+              "blocked",
+              "reconciliation_required"
+            ]
+          },
+          "push_started": {
+            "type": "boolean"
+          },
+          "worker_absent": {
+            "type": "boolean",
+            "const": true
+          },
+          "observation": {
+            "$ref": "#/components/schemas/PublicationRefObservation"
+          },
+          "observation_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "credentials_missing",
+              "access_denied",
+              "permission_unknown",
+              "expired_permission",
+              "provider_unavailable",
+              "rate_limited",
+              "invalid_provider_response",
+              "input_pending",
+              "source_changed",
+              "configuration_changed",
+              "mode_deferred",
+              "runner_offline",
+              "runner_unsupported",
+              "scan_incomplete",
+              "findings_blocked",
+              "known_public_exposure",
+              "unverified_parent",
+              "unexpected_head",
+              "possible_publication",
+              "ambiguous_pr",
+              "pr_missing",
+              "pr_closed",
+              "pr_merged",
+              "content_mismatch",
+              "retained_unavailable",
+              "identity_mismatch",
+              "timeout",
+              "cancel_requested"
+            ]
+          }
+        },
+        "required": [
+          "schema_version",
+          "operation_id",
+          "request_digest",
+          "item_id",
+          "candidate_manifest_digest",
+          "delivery_ref",
+          "candidate_head",
+          "status",
+          "push_started",
+          "worker_absent",
+          "observation",
+          "observation_digest"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "const": "published"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "reason": false,
+                "observation": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "const": "present"
+                    }
+                  }
+                }
+              },
+              "required": []
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "const": "blocked"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "reason": {}
+              },
+              "required": [
+                "reason"
+              ]
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "const": "reconciliation_required"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "reason": {}
+              },
+              "required": [
+                "reason"
+              ]
+            }
+          }
+        ]
+      },
+      "PublicationPushAck": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "operation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "request_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "result_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "item_id": {
+            "$ref": "#/components/schemas/Id"
+          }
+        },
+        "required": [
+          "schema_version",
+          "operation_id",
+          "request_digest",
+          "result_digest",
+          "item_id"
+        ]
+      },
+      "PublicationAccessRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "incarnation": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "request_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "purpose": {
+            "type": "string",
+            "enum": [
+              "observe",
+              "push"
+            ]
+          },
+          "attempt_id": {
+            "$ref": "#/components/schemas/Id"
+          }
+        },
+        "required": [
+          "schema_version",
+          "incarnation",
+          "request_digest",
+          "purpose",
+          "attempt_id"
+        ]
+      },
+      "PublicationAccessResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "operation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "request_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "item_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "purpose": {
+            "type": "string",
+            "enum": [
+              "observe",
+              "push"
+            ]
+          },
+          "attempt_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "claim_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "claim_expires_at": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(?:\\.\\d{1,3})?Z$",
+            "maxLength": 24
+          },
+          "remote_url": {
+            "type": "string",
+            "pattern": "^https://github[.]com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+[.]git$",
+            "maxLength": 2048
+          },
+          "repository_id": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]{0,15}$"
+          },
+          "delivery_ref": {
+            "type": "string",
+            "pattern": "^refs/heads/monos/task/[0-9a-f-]{36}/[0-9a-f-]{36}$",
+            "maxLength": 128
+          },
+          "candidate_head": {
+            "$ref": "#/components/schemas/GitOID"
+          },
+          "expected_head": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GitOID"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "authentication": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RepositoryAuthentication"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "const": "github_installation"
+                  }
+                }
+              }
+            ]
+          },
+          "permission_proof": {
+            "$ref": "#/components/schemas/PublicationPermissionProof"
+          },
+          "permission_proof_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          }
+        },
+        "required": [
+          "schema_version",
+          "operation_id",
+          "request_digest",
+          "item_id",
+          "purpose",
+          "attempt_id",
+          "remote_url",
+          "repository_id",
+          "delivery_ref",
+          "candidate_head",
+          "expected_head",
+          "authentication"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "purpose": {
+                  "const": "push"
+                }
+              },
+              "required": [
+                "purpose"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "claim_id": {},
+                "claim_expires_at": {},
+                "permission_proof": {},
+                "permission_proof_digest": {}
+              },
+              "required": [
+                "claim_id",
+                "claim_expires_at",
+                "permission_proof",
+                "permission_proof_digest"
+              ]
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "purpose": {
+                  "const": "observe"
+                }
+              },
+              "required": [
+                "purpose"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "claim_id": false,
+                "claim_expires_at": false,
+                "permission_proof": false,
+                "permission_proof_digest": false
+              },
+              "required": []
+            }
+          }
+        ]
+      },
+      "PublicationExposure": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "exposure_id": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "item_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "task_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "resource_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "repository_identity": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "published_proof_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "candidate_manifest_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "finding_id": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "published_head": {
+            "$ref": "#/components/schemas/GitOID"
+          },
+          "commit": {
+            "$ref": "#/components/schemas/GitOID"
+          },
+          "blob": {
+            "$ref": "#/components/schemas/GitOID"
+          },
+          "content_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "rule_id": {
+            "type": "string",
+            "enum": [
+              "pem_private_key",
+              "github_classic_token",
+              "github_fine_grained_token",
+              "aws_access_key"
+            ]
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "path_redacted": {
+            "type": "boolean"
+          },
+          "occurrence_ordinal": {
+            "$ref": "#/components/schemas/Counter"
+          }
+        },
+        "required": [
+          "schema_version",
+          "exposure_id",
+          "item_id",
+          "task_id",
+          "resource_id",
+          "repository_identity",
+          "published_proof_digest",
+          "candidate_manifest_digest",
+          "finding_id",
+          "published_head",
+          "commit",
+          "blob",
+          "content_digest",
+          "rule_id",
+          "path",
+          "path_redacted",
+          "occurrence_ordinal"
+        ]
+      },
+      "RemotePreparationOperation": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "operation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "request_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "version": {
+            "$ref": "#/components/schemas/PositiveCounter"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "push",
+              "create_pr",
+              "update_pr",
+              "close_pr"
+            ]
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "started",
+              "unknown",
+              "failed",
+              "settled",
+              "revoked"
+            ]
+          },
+          "may_have_mutated": {
+            "type": "boolean"
+          },
+          "worker_absent": {
+            "type": "boolean"
+          },
+          "reconcile_only": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "credentials_missing",
+              "access_denied",
+              "permission_unknown",
+              "expired_permission",
+              "provider_unavailable",
+              "rate_limited",
+              "invalid_provider_response",
+              "input_pending",
+              "source_changed",
+              "configuration_changed",
+              "mode_deferred",
+              "runner_offline",
+              "runner_unsupported",
+              "scan_incomplete",
+              "findings_blocked",
+              "known_public_exposure",
+              "unverified_parent",
+              "unexpected_head",
+              "possible_publication",
+              "ambiguous_pr",
+              "pr_missing",
+              "pr_closed",
+              "pr_merged",
+              "content_mismatch",
+              "retained_unavailable",
+              "identity_mismatch",
+              "timeout",
+              "cancel_requested"
+            ]
+          },
+          "next_attempt_at": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(?:\\.\\d{1,3})?Z$",
+            "maxLength": 24
+          }
+        },
+        "required": [
+          "operation_id",
+          "request_digest",
+          "version",
+          "kind",
+          "state",
+          "may_have_mutated",
+          "worker_absent",
+          "reconcile_only"
+        ]
+      },
+      "RemotePreparationReview": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "repository_id": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]{0,15}$"
+          },
+          "pr_id": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]{0,15}$"
+          },
+          "pr_number": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "url": {
+            "type": "string",
+            "pattern": "^https://github[.]com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/pull/[1-9][0-9]*$",
+            "maxLength": 2048
+          },
+          "head_ref": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1024
+          },
+          "base_ref": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1024
+          },
+          "marker": {
+            "type": "string",
+            "pattern": "^<!-- monos-delivery-item:[0-9a-f-]{36} -->$",
+            "maxLength": 80
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "open",
+              "closed",
+              "merged"
+            ]
+          }
+        },
+        "required": [
+          "repository_id",
+          "pr_id",
+          "pr_number",
+          "url",
+          "head_ref",
+          "base_ref",
+          "marker",
+          "state"
+        ]
+      },
+      "RemotePreparationCheck": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "check_run",
+              "status"
+            ]
+          },
+          "provider_id": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "head": {
+            "$ref": "#/components/schemas/GitOID"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "success",
+              "failure",
+              "neutral",
+              "skipped",
+              "cancelled",
+              "unknown"
+            ]
+          },
+          "conclusion": {
+            "type": "string",
+            "enum": [
+              "success",
+              "failure",
+              "neutral",
+              "skipped",
+              "cancelled",
+              "timed_out",
+              "action_required",
+              "stale",
+              "startup_failure",
+              "unknown"
+            ]
+          }
+        },
+        "required": [
+          "kind",
+          "provider_id",
+          "head",
+          "name",
+          "state"
+        ]
+      },
+      "RemotePreparationChecks": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "observation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "head": {
+            "$ref": "#/components/schemas/GitOID"
+          },
+          "base_head": {
+            "$ref": "#/components/schemas/GitOID"
+          },
+          "observed_at": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(?:\\.\\d{1,3})?Z$",
+            "maxLength": 24
+          },
+          "complete": {
+            "type": "boolean"
+          },
+          "current": {
+            "type": "boolean"
+          },
+          "stale": {
+            "type": "boolean"
+          },
+          "aggregate": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "success",
+              "failure",
+              "no_checks",
+              "unknown",
+              "incomplete"
+            ]
+          },
+          "mergeability": {
+            "type": "string",
+            "enum": [
+              "mergeable",
+              "conflicting",
+              "unknown"
+            ]
+          },
+          "required_checks": {
+            "type": "string",
+            "const": "unknown"
+          }
+        },
+        "required": [
+          "observation_id",
+          "head",
+          "base_head",
+          "observed_at",
+          "complete",
+          "current",
+          "stale",
+          "aggregate",
+          "mergeability",
+          "required_checks"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "complete": {
+                  "const": false
+                }
+              },
+              "required": [
+                "complete"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "aggregate": {
+                  "enum": [
+                    "unknown",
+                    "incomplete"
+                  ]
+                },
+                "current": {
+                  "const": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "stale": {
+                  "const": true
+                }
+              },
+              "required": [
+                "stale"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "current": {
+                  "const": false
+                }
+              }
+            }
+          }
+        ]
+      },
+      "RemotePreparationRecord": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "item_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "task_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "resource_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "runner_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "repository_identity": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "repository_id": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]{0,15}$"
+          },
+          "delivery_ref": {
+            "type": "string",
+            "pattern": "^refs/heads/monos/task/[0-9a-f-]{36}/[0-9a-f-]{36}$",
+            "maxLength": 128
+          },
+          "target_branch": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1024
+          },
+          "source": {
+            "$ref": "#/components/schemas/ResultReadIdentity"
+          },
+          "source_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "effective_basis": {
+            "$ref": "#/components/schemas/PublicationEffectiveBasis"
+          },
+          "effective_basis_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "candidate": {
+            "$ref": "#/components/schemas/PublicationCandidateManifest"
+          },
+          "candidate_manifest_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "scan_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "mapping": {
+            "$ref": "#/components/schemas/PublishedResultMapping"
+          },
+          "mapping_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "published": {
+            "$ref": "#/components/schemas/PublicationPublishedProof"
+          },
+          "published_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "operation": {
+            "$ref": "#/components/schemas/RemotePreparationOperation"
+          },
+          "review": {
+            "$ref": "#/components/schemas/RemotePreparationReview"
+          },
+          "checks": {
+            "$ref": "#/components/schemas/RemotePreparationChecks"
+          },
+          "remote_preparation": {
+            "type": "string",
+            "enum": [
+              "automatic",
+              "after_acceptance"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "local_only",
+              "preparing",
+              "paused_input",
+              "offline",
+              "unsupported",
+              "access_denied",
+              "reconciling",
+              "prepared",
+              "failed",
+              "cancel_cleanup",
+              "cancelled",
+              "reconciliation_required"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "credentials_missing",
+              "access_denied",
+              "permission_unknown",
+              "expired_permission",
+              "provider_unavailable",
+              "rate_limited",
+              "invalid_provider_response",
+              "input_pending",
+              "source_changed",
+              "configuration_changed",
+              "mode_deferred",
+              "runner_offline",
+              "runner_unsupported",
+              "scan_incomplete",
+              "findings_blocked",
+              "known_public_exposure",
+              "unverified_parent",
+              "unexpected_head",
+              "possible_publication",
+              "ambiguous_pr",
+              "pr_missing",
+              "pr_closed",
+              "pr_merged",
+              "content_mismatch",
+              "retained_unavailable",
+              "identity_mismatch",
+              "timeout",
+              "cancel_requested"
+            ]
+          },
+          "current": {
+            "type": "boolean"
+          },
+          "scan_applicable": {
+            "type": "boolean"
+          },
+          "retry_allowed": {
+            "type": "boolean"
+          },
+          "cleanup_allowed": {
+            "type": "boolean"
+          },
+          "read_retry_allowed": {
+            "type": "boolean"
+          },
+          "known_public_exposure_count": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "cooldown_until": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(?:\\.\\d{1,3})?Z$",
+            "maxLength": 24
+          }
+        },
+        "required": [
+          "schema_version",
+          "item_id",
+          "task_id",
+          "resource_id",
+          "runner_id",
+          "repository_identity",
+          "repository_id",
+          "delivery_ref",
+          "target_branch",
+          "source",
+          "source_digest",
+          "effective_basis",
+          "effective_basis_digest",
+          "candidate",
+          "candidate_manifest_digest",
+          "scan_digest",
+          "remote_preparation",
+          "status",
+          "current",
+          "scan_applicable",
+          "retry_allowed",
+          "cleanup_allowed",
+          "read_retry_allowed",
+          "known_public_exposure_count"
+        ],
+        "dependencies": {
+          "mapping": [
+            "mapping_digest"
+          ],
+          "mapping_digest": [
+            "mapping"
+          ],
+          "published": [
+            "published_digest"
+          ],
+          "published_digest": [
+            "published"
+          ]
+        }
+      },
+      "RemotePreparationQuery": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "cursor": {
+            "$ref": "#/components/schemas/TaskListCursor"
+          },
+          "source_operation_id": {
+            "$ref": "#/components/schemas/Id"
+          }
+        },
+        "required": []
+      },
+      "RemotePreparationPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "task_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RemotePreparationRecord"
+            },
+            "minItems": 0,
+            "maxItems": 32
+          },
+          "next_cursor": {
+            "$ref": "#/components/schemas/TaskListCursor"
+          }
+        },
+        "required": [
+          "schema_version",
+          "task_id",
+          "items"
+        ]
+      },
+      "RemotePreparationChecksQuery": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "cursor": {
+            "$ref": "#/components/schemas/TaskListCursor"
+          }
+        },
+        "required": []
+      },
+      "RemotePreparationChecksPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "task_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "item_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "observation": {
+            "$ref": "#/components/schemas/RemotePreparationChecks"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RemotePreparationCheck"
+            },
+            "minItems": 0,
+            "maxItems": 64
+          },
+          "next_cursor": {
+            "$ref": "#/components/schemas/TaskListCursor"
+          }
+        },
+        "required": [
+          "schema_version",
+          "task_id",
+          "item_id",
+          "observation",
+          "items"
+        ]
+      },
+      "RemotePreparationCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "task_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "request_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "name": {
+            "type": "string",
+            "const": "retry_remote_preparation"
+          },
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "operation_id": {
+                "$ref": "#/components/schemas/Id"
+              },
+              "operation_digest": {
+                "$ref": "#/components/schemas/SHA256"
+              },
+              "expected_version": {
+                "$ref": "#/components/schemas/PositiveCounter"
+              }
+            },
+            "required": [
+              "operation_id",
+              "operation_digest",
+              "expected_version"
+            ]
+          }
+        },
+        "required": [
+          "schema_version",
+          "task_id",
+          "request_id",
+          "name",
+          "payload"
+        ]
+      },
+      "RemotePreparationCommandResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "task_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "request_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "committed",
+              "unknown"
+            ]
+          },
+          "operation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "operation_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "operation_version": {
+            "$ref": "#/components/schemas/PositiveCounter"
+          }
+        },
+        "required": [
+          "schema_version",
+          "task_id",
+          "request_id",
+          "status"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "const": "committed"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "operation_id": {},
+                "operation_digest": {},
+                "operation_version": {}
+              },
+              "required": [
+                "operation_id",
+                "operation_digest",
+                "operation_version"
+              ]
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "const": "unknown"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "operation_id": false,
+                "operation_digest": false,
+                "operation_version": false
+              },
+              "required": []
+            }
+          }
+        ]
+      },
+      "RemotePreparationContent": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "body": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 65536
+          }
+        },
+        "required": [
+          "title",
+          "body"
+        ]
+      },
+      "RemotePreparationProviderRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "operation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "item_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "task_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "resource_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "runner_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "storage_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "repository_identity": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "repository_id": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]{0,15}$"
+          },
+          "remote_url": {
+            "type": "string",
+            "pattern": "^https://github[.]com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+[.]git$",
+            "maxLength": 2048
+          },
+          "delivery_ref": {
+            "type": "string",
+            "pattern": "^refs/heads/monos/task/[0-9a-f-]{36}/[0-9a-f-]{36}$",
+            "maxLength": 128
+          },
+          "target_branch": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1024
+          },
+          "preparation": {
+            "$ref": "#/components/schemas/PublicationPrepareRequest"
+          },
+          "prepared": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PublicationResult"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "enum": [
+                      "prepared",
+                      "mapped"
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          "preparation_result_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "override_receipts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicationOverrideProof"
+            },
+            "minItems": 0,
+            "maxItems": 64
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "create_pr",
+              "update_pr",
+              "close_pr"
+            ]
+          },
+          "review": {
+            "$ref": "#/components/schemas/RemotePreparationReview"
+          },
+          "content": {
+            "$ref": "#/components/schemas/RemotePreparationContent"
+          }
+        },
+        "required": [
+          "schema_version",
+          "operation_id",
+          "item_id",
+          "task_id",
+          "resource_id",
+          "runner_id",
+          "storage_id",
+          "repository_identity",
+          "repository_id",
+          "remote_url",
+          "delivery_ref",
+          "target_branch",
+          "preparation",
+          "prepared",
+          "preparation_result_digest",
+          "override_receipts",
+          "kind"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "create_pr"
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "content": {},
+                "review": false
+              },
+              "required": [
+                "content"
+              ]
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "update_pr"
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "review": {},
+                "content": {}
+              },
+              "required": [
+                "review",
+                "content"
+              ]
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "close_pr"
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "review": {},
+                "content": false
+              },
+              "required": [
+                "review"
+              ]
+            }
+          }
         ]
       }
     },

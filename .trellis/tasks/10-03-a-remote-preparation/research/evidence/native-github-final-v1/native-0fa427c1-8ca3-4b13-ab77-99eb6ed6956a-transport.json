@@ -1,0 +1,1 @@
+{"exit_code":1,"log":"=== RUN   TestRemotePreparationGitHubKernelFixture\n    publication_remote_native_test.go:217: native construction timestamp unavailable\n--- FAIL: TestRemotePreparationGitHubKernelFixture (6.40s)\nFAIL\n","ok":false}

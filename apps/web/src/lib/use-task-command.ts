@@ -90,7 +90,7 @@ export function useTaskCommands(sessionId: string, onUnauthorized: () => void) {
         confirm_publication_override: 'Exact policy override confirmed. Recording it is separate.',
         override_publication_findings: 'Policy override recorded. The findings remain retained.',
       }[intent.command.name] : undefined;
-      notice(taskId, scope, { kind: 'success', text: publicationNotice ?? (receipt.status === 'admitted' || ('operation_id' in receipt && receipt.operation_id) ? 'Decision saved. Execution or cleanup may still be settling.' : intent.command.name === 'submit_task_message' ? 'Message saved. Planner processing is separate.' : 'Decision saved.') });
+      notice(taskId, scope, { kind: 'success', text: intent.family === 'remote-preparation' ? 'Remote recovery requested. Publication, PR reconciliation and cancellation cleanup are separate outcomes.' : publicationNotice ?? (receipt.status === 'admitted' || ('operation_id' in receipt && receipt.operation_id) ? 'Decision saved. Execution or cleanup may still be settling.' : intent.command.name === 'submit_task_message' ? 'Message saved. Planner processing is separate.' : 'Decision saved.') });
       await Promise.all([client.invalidateQueries({ queryKey: ['tasks', taskId] }), client.invalidateQueries({ queryKey: ['board'] })]);
       return receipt;
     } catch (error) {

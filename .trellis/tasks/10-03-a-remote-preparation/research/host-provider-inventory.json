@@ -1,0 +1,28 @@
+{
+  "scope": "Read-only existing monos and retained monolab service/provider prerequisites; no environment/config secret output or mutation. Unrelated container details omitted.",
+  "containers": [
+    [
+      "3c1399070bab",
+      "monos-boundary-probe-server-1",
+      "server"
+    ],
+    [
+      "23d0468cf1b8",
+      "monos-boundary-probe-database-1",
+      "database"
+    ],
+    [
+      "a4a1de22e17d",
+      "monolab-boundary-probe-server-1",
+      "server"
+    ],
+    [
+      "677b500dd740",
+      "monolab-boundary-probe-database-1",
+      "database"
+    ]
+  ],
+  "configured_app_rows": 0,
+  "configuration_inventory": "read verified",
+  "task_transport_closed": true
+}

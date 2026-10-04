@@ -1,0 +1,509 @@
+$ playwright test test/remote-preparation.e2e.ts --grep-invert 'automatic coordinator'
+[WebServer] (node:46149) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:46149) [FSTDEP023] FastifyDeprecation: disableRequestLogging option is deprecated. Use the logController option with disableRequestLogging or isLogDisabled override instead. The disableRequestLogging top-level option will be removed in `fastify@6`.
+
+Running 12 tests using 1 worker
+
+(node:46162) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘   1 test/remote-preparation.e2e.ts:83:13 › remote preparing attention remains separate from local Review (5.9s)
+(node:46216) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘   2 test/remote-preparation.e2e.ts:83:13 › remote offline attention remains separate from local Review (6.0s)
+(node:46266) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘   3 test/remote-preparation.e2e.ts:83:13 › remote unsupported attention remains separate from local Review (5.6s)
+(node:46311) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘   4 test/remote-preparation.e2e.ts:83:13 › remote access_denied attention remains separate from local Review (5.6s)
+(node:46362) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] Synthetic remote fixture pump failed (error, 40P01).
+[WebServer]     at /Users/me/IdeaProjects/monos/node_modules/.pnpm/pg@8.23.0/node_modules/pg/lib/client.js:694:17
+[WebServer]     at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+[WebServer]     at async appendRemoteObservation (file:///Users/me/IdeaProjects/monos/apps/server/src/remote-preparation-state.ts:47:2)
+[WebServer]     at async file:///Users/me/IdeaProjects/monos/apps/server/src/remote-preparation.ts:142:169
+[WebServer]     at async transaction (file:///Users/me/IdeaProjects/monos/packages/db/src/index.ts:24:20)
+[WebServer]     at async RemotePreparation.turn (file:///Users/me/IdeaProjects/monos/apps/server/src/remote-preparation.ts:142:4)
+[WebServer]     at async RemotePreparation.pump (file:///Users/me/IdeaProjects/monos/apps/server/src/remote-preparation.ts:65:25)
+  ✘   5 test/remote-preparation.e2e.ts:83:13 › remote rate_limited attention remains separate from local Review (5.6s)
+(node:46420) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘   6 test/remote-preparation.e2e.ts:83:13 › remote unknown attention remains separate from local Review (5.7s)
+(node:46473) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘   7 test/remote-preparation.e2e.ts:100:1 › a failed before-start push Retry persists exact envelope and recovers original committed receipt after reply loss (5.6s)
+(node:46514) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘   8 test/remote-preparation.e2e.ts:123:1 › selected historical operation never inherits latest item authority and Cancel closes only its owned PR (30.6s)
+(node:46734) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘   9 test/remote-preparation.e2e.ts:153:1 › no checks and unknown mergeability are informational; deferred and repository-free remain local (5.6s)
+(node:46784) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  10 test/remote-preparation.e2e.ts:163:1 › held detail and checks replies cannot restore private data after logout or Task selection change (30.7s)
+(node:46999) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  11 test/remote-preparation.e2e.ts:177:1 › authoritative unknown replays the same persisted Retry and a replaced session cannot adopt its command (5.7s)
+(node:47050) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  12 test/remote-preparation.e2e.ts:206:1 › a fresh continuation marks cached green checks historical without replacing selected immutable head (5.6s)
+
+
+  1) test/remote-preparation.e2e.ts:83:13 › remote preparing attention remains separate from local Review 
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: getByRole('region', { name: 'Remote review preparation', exact: true })
+    Expected substring: "Preparing the remote review branch"
+    Received string:    "Remote review preparationBackground preparation and provider observations do not accept delivery or complete the Task.Current remote evidenceThe exact local scan remains applicable.The recorded remote step failed. Its original evidence is retained.Reason · Rate limitedRepositorygithub.com/example/execution-uiDelivery branchrefs/heads/monos/task/633d5cda-9381-4637-b6d9-b445fe14891f/68d135f5-f923-4faf-9a98-b94df19a9383Fixed targetmainCandidate head61e687ee204beb9b48ba5beb17295b42de5801bdExact result treeddddddddddddddddddddddddddddddddddddddddRecorded step · Push · Pending · Next attempt no earlier than 2026-10-04T14:46:52.525ZAdvanced detailsDelivery item4d854d9d-3725-4f45-a639-628b8d4cc5feResource68d135f5-f923-4faf-9a98-b94df19a9383Original resultddbf24e0-d1b3-4fd7-8b91-c708be13cd3bOriginal Specificationb14e875d-4d5c-411e-a9e5-3e9cf5da37cdOriginal Planba9f3ddc-ee41-4f73-ba2b-a418fa4250d7Effective Specificationb14e875d-4d5c-411e-a9e5-3e9cf5da37cdEffective Planba9f3ddc-ee41-4f73-ba2b-a418fa4250d7Source digest5a1ce8c2edde1905391dda71c6e7cbd4d7254b006199ae3bb4c426811f31ae4eEffective basisd853a296eb7777d449fbdec5a09919f281d78ff857924223e40ccfae1f365637Candidate manifest9384b98f9f99b4982e21ebdea056d09645ce96d2e50ee1159fb34c7f8522959eManifest original source5a1ce8c2edde1905391dda71c6e7cbd4d7254b006199ae3bb4c426811f31ae4ePublic parentsaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaExact scan4b532087cd2b40e6d94717464625faa3cc6fa460a664dc2ba8c43f9caf6d6207Operationaf3ab567-13fb-4d8d-8980-fcf846037278Request digest1cf95ce8412490e1aa3185cabfef847da7fdcdb8b3360c597912207b6c4e8af8Operation version2Physical worker absenceRecorded absentNo provider checks observation is recorded. Missing checks are not passing checks.Retry remote preparation"
+    Timeout: 5000ms
+
+    Call log:
+      - Expect "toContainText" getByRole('region', { name: 'Remote review preparation', exact: true }) with timeout 5000ms
+      - waiting for getByRole('region', { name: 'Remote review preparation', exact: true })
+        - locator resolved to <section aria-label="Remote review preparation" class="task-section remote-preparation">…</section>
+        - unexpected value "Remote review preparationBackground preparation and provider observations do not accept delivery or complete the Task.Reading remote preparation…"
+        9 × locator resolved to <section aria-label="Remote review preparation" class="task-section remote-preparation">…</section>
+          - unexpected value "Remote review preparationBackground preparation and provider observations do not accept delivery or complete the Task.No remote preparation is recorded. Local result inspection remains available."
+        4 × locator resolved to <section aria-label="Remote review preparation" class="task-section remote-preparation">…</section>
+          - unexpected value "Remote review preparationBackground preparation and provider observations do not accept delivery or complete the Task.Current remote evidenceThe exact local scan remains applicable.The recorded remote step failed. Its original evidence is retained.Reason · Rate limitedRepositorygithub.com/example/execution-uiDelivery branchrefs/heads/monos/task/633d5cda-9381-4637-b6d9-b445fe14891f/68d135f5-f923-4faf-9a98-b94df19a9383Fixed targetmainCandidate head61e687ee204beb9b48ba5beb17295b42de5801bdExact result treeddddddddddddddddddddddddddddddddddddddddRecorded step · Push · Pending · Next attempt no earlier than 2026-10-04T14:46:52.525ZAdvanced detailsDelivery item4d854d9d-3725-4f45-a639-628b8d4cc5feResource68d135f5-f923-4faf-9a98-b94df19a9383Original resultddbf24e0-d1b3-4fd7-8b91-c708be13cd3bOriginal Specificationb14e875d-4d5c-411e-a9e5-3e9cf5da37cdOriginal Planba9f3ddc-ee41-4f73-ba2b-a418fa4250d7Effective Specificationb14e875d-4d5c-411e-a9e5-3e9cf5da37cdEffective Planba9f3ddc-ee41-4f73-ba2b-a418fa4250d7Source digest5a1ce8c2edde1905391dda71c6e7cbd4d7254b006199ae3bb4c426811f31ae4eEffective basisd853a296eb7777d449fbdec5a09919f281d78ff857924223e40ccfae1f365637Candidate manifest9384b98f9f99b4982e21ebdea056d09645ce96d2e50ee1159fb34c7f8522959eManifest original source5a1ce8c2edde1905391dda71c6e7cbd4d7254b006199ae3bb4c426811f31ae4ePublic parentsaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaExact scan4b532087cd2b40e6d94717464625faa3cc6fa460a664dc2ba8c43f9caf6d6207Operationaf3ab567-13fb-4d8d-8980-fcf846037278Request digest1cf95ce8412490e1aa3185cabfef847da7fdcdb8b3360c597912207b6c4e8af8Operation version2Physical worker absenceRecorded absentNo provider checks observation is recorded. Missing checks are not passing checks.Retry remote preparation"
+
+
+      83 | ] as const) test(`remote ${mode} attention remains separate from local Review`, async ({ page }, info) => {
+      84 |   await signIn(page); const f = await scenario(page, mode); await open(page, f.task);
+    > 85 |   await expect(section(page)).toContainText(text);
+         |                               ^
+      86 |   await expect(page.getByRole('heading', { name: 'Local publication candidate', exact: true })).toBeVisible();
+      87 |   await capture(page, info, `remote-${mode}`, `Actual coordinator with explicitly synthetic ${mode} transport/provider outcome`);
+      88 |   if (mode === 'unknown') {
+        at /Users/me/IdeaProjects/monos/apps/web/test/remote-preparation.e2e.ts:85:31
+
+    Error Context: test-results/remote-preparation.e2e.ts--d7a87--separate-from-local-Review/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/remote-preparation.e2e.ts--d7a87--separate-from-local-Review/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace test-results/remote-preparation.e2e.ts--d7a87--separate-from-local-Review/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) test/remote-preparation.e2e.ts:83:13 › remote offline attention remains separate from local Review 
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: getByRole('region', { name: 'Remote review preparation', exact: true })
+    Expected substring: "Runner is offline"
+    Received string:    "Remote review preparationBackground preparation and provider observations do not accept delivery or complete the Task.Remote item has no local candidateRetry readingChecking current remote applicability…The retained scan grants no current publication authority.The recorded remote step failed. Its original evidence is retained.Reason · Rate limitedRepositorygithub.com/example/execution-uiDelivery branchrefs/heads/monos/task/ba16ef63-1ce2-406f-8292-4e7b10e00bad/ce8f1d1f-e918-4cd2-b67f-f1ea666b388fFixed targetmainCandidate head71f49297306377939f46c71b9326cef895a59131Exact result treeddddddddddddddddddddddddddddddddddddddddAdvanced detailsDelivery item07872e36-27d9-4a18-beab-35b8826b2706Resourcece8f1d1f-e918-4cd2-b67f-f1ea666b388fOriginal resultdf0f73e6-7829-42c2-a406-66f5abadd28bOriginal Specification19424830-027a-4088-8e54-513bf67c1854Original Plan2386605c-a81f-4717-afec-8e643b09b034Effective Specification19424830-027a-4088-8e54-513bf67c1854Effective Plan2386605c-a81f-4717-afec-8e643b09b034Source digest3f7764f8aea2bfb13e69b77ef25bab2d051545f5898a4b3d6a8a47940d1e71e6Effective basis1b4a2449930303a9774afb7adaef39326bb904f419bcd492642af609899db893Candidate manifest79cec7f2141911afb2774ba171efb2faf1d255482ab180091ca62d1ef86b217bManifest original source3f7764f8aea2bfb13e69b77ef25bab2d051545f5898a4b3d6a8a47940d1e71e6Public parentsaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaExact scan27192736cdde44ce57bf838755d98249d7b38f588382fbc0a7027e3f7deb4e21No provider checks observation is recorded. Missing checks are not passing checks.Historical observations grant no ordinary retry authority. Current applicability is checked independently of the selected bytes."
+    Timeout: 5000ms
+
+    Call log:
+      - Expect "toContainText" getByRole('region', { name: 'Remote review preparation', exact: true }) with timeout 5000ms
+      - waiting for getByRole('region', { name: 'Remote review preparation', exact: true })
+        10 × locator resolved to <section aria-label="Remote review preparation" class="task-section remote-preparation">…</section>
+           - unexpected value "Remote review preparationBackground preparation and provider observations do not accept delivery or complete the Task.No remote preparation is recorded. Local result inspection remains available."
+        4 × locator resolved to <section aria-label="Remote review preparation" class="task-section remote-preparation">…</section>
+          - unexpected value "Remote review preparationBackground preparation and provider observations do not accept delivery or complete the Task.Remote item has no local candidateRetry readingChecking current remote applicability…The retained scan grants no current publication authority.The recorded remote step failed. Its original evidence is retained.Reason · Rate limitedRepositorygithub.com/example/execution-uiDelivery branchrefs/heads/monos/task/ba16ef63-1ce2-406f-8292-4e7b10e00bad/ce8f1d1f-e918-4cd2-b67f-f1ea666b388fFixed targetmainCandidate head71f49297306377939f46c71b9326cef895a59131Exact result treeddddddddddddddddddddddddddddddddddddddddAdvanced detailsDelivery item07872e36-27d9-4a18-beab-35b8826b2706Resourcece8f1d1f-e918-4cd2-b67f-f1ea666b388fOriginal resultdf0f73e6-7829-42c2-a406-66f5abadd28bOriginal Specification19424830-027a-4088-8e54-513bf67c1854Original Plan2386605c-a81f-4717-afec-8e643b09b034Effective Specification19424830-027a-4088-8e54-513bf67c1854Effective Plan2386605c-a81f-4717-afec-8e643b09b034Source digest3f7764f8aea2bfb13e69b77ef25bab2d051545f5898a4b3d6a8a47940d1e71e6Effective basis1b4a2449930303a9774afb7adaef39326bb904f419bcd492642af609899db893Candidate manifest79cec7f2141911afb2774ba171efb2faf1d255482ab180091ca62d1ef86b217bManifest original source3f7764f8aea2bfb13e69b77ef25bab2d051545f5898a4b3d6a8a47940d1e71e6Public parentsaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaExact scan27192736cdde44ce57bf838755d98249d7b38f588382fbc0a7027e3f7deb4e21No provider checks observation is recorded. Missing checks are not passing checks.Historical observations grant no ordinary retry authority. Current applicability is checked independently of the selected bytes."
+
+
+      83 | ] as const) test(`remote ${mode} attention remains separate from local Review`, async ({ page }, info) => {
+      84 |   await signIn(page); const f = await scenario(page, mode); await open(page, f.task);
+    > 85 |   await expect(section(page)).toContainText(text);
+         |                               ^
+      86 |   await expect(page.getByRole('heading', { name: 'Local publication candidate', exact: true })).toBeVisible();
+      87 |   await capture(page, info, `remote-${mode}`, `Actual coordinator with explicitly synthetic ${mode} transport/provider outcome`);
+      88 |   if (mode === 'unknown') {
+        at /Users/me/IdeaProjects/monos/apps/web/test/remote-preparation.e2e.ts:85:31
+
+    Error Context: test-results/remote-preparation.e2e.ts--88212--separate-from-local-Review/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/remote-preparation.e2e.ts--88212--separate-from-local-Review/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace test-results/remote-preparation.e2e.ts--88212--separate-from-local-Review/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) test/remote-preparation.e2e.ts:83:13 › remote unsupported attention remains separate from local Review 
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: getByRole('region', { name: 'Remote review preparation', exact: true })
+    Expected substring: "does not support remote preparation"
+    Received string:    "Remote review preparationBackground preparation and provider observations do not accept delivery or complete the Task.Current remote evidenceThe exact local scan remains applicable.The recorded remote step failed. Its original evidence is retained.Reason · Rate limitedRepositorygithub.com/example/execution-uiDelivery branchrefs/heads/monos/task/cd355f6e-0ccd-4f33-8e1a-eedd170fa46f/10394396-7787-4c28-aa90-35c0f9b4fbddFixed targetmainCandidate head9eae9618bd119cb8feb35c53c1b5edddc06175ccExact result treeddddddddddddddddddddddddddddddddddddddddProvider cooldown until 2026-10-04T14:47:07.131Z. Retry cannot bypass this limit.Recorded step · Push · Pending · Next attempt no earlier than 2026-10-04T14:47:05.360ZAdvanced detailsDelivery item09cf7e20-b758-4776-8b7d-d75b0edd154eResource10394396-7787-4c28-aa90-35c0f9b4fbddOriginal result0b20f612-f99e-4345-9fcd-8ac4591fc636Original Specification6b223ea6-cb7d-462e-b4d1-7fb36b647d7fOriginal Plana605a431-c33f-413b-86f9-5e38582ae6beEffective Specification6b223ea6-cb7d-462e-b4d1-7fb36b647d7fEffective Plana605a431-c33f-413b-86f9-5e38582ae6beSource digest967812b2ac2a7403ba80f47df564a8c1a8ab953ac249ed7f419cb85e09071801Effective basis596a12ba16dce7db08509639bb6b9796cfc655f2221f54cd4bd24715fa887f52Candidate manifest85489fdc70b522226a3f48322379b16f9d079d9f72831e15744454c9722a9e25Manifest original source967812b2ac2a7403ba80f47df564a8c1a8ab953ac249ed7f419cb85e09071801Public parentsaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaExact scan4dcc1591d1781b53b3b372ab7c244dded7a521962b0bf7a5c0469aaef4637c2eOperation35644be4-ca64-4838-af16-2e430aff9658Request digest51ac65a57dbe27598ef57f4712287ce879c9ea045f9f1f7482fce6f417898ed3Operation version2Physical worker absenceRecorded absentNo provider checks observation is recorded. Missing checks are not passing checks.Retry remote preparation"
+    Timeout: 5000ms
+
+    Call log:
+      - Expect "toContainText" getByRole('region', { name: 'Remote review preparation', exact: true }) with timeout 5000ms
+      - waiting for getByRole('region', { name: 'Remote review preparation', exact: true })
+        10 × locator resolved to <section aria-label="Remote review preparation" class="task-section remote-preparation">…</section>
+           - unexpected value "Remote review preparationBackground preparation and provider observations do not accept delivery or complete the Task.No remote preparation is recorded. Local result inspection remains available."
+        4 × locator resolved to <section aria-label="Remote review preparation" class="task-section remote-preparation">…</section>
+          - unexpected value "Remote review preparationBackground preparation and provider observations do not accept delivery or complete the Task.Current remote evidenceThe exact local scan remains applicable.The recorded remote step failed. Its original evidence is retained.Reason · Rate limitedRepositorygithub.com/example/execution-uiDelivery branchrefs/heads/monos/task/cd355f6e-0ccd-4f33-8e1a-eedd170fa46f/10394396-7787-4c28-aa90-35c0f9b4fbddFixed targetmainCandidate head9eae9618bd119cb8feb35c53c1b5edddc06175ccExact result treeddddddddddddddddddddddddddddddddddddddddProvider cooldown until 2026-10-04T14:47:07.131Z. Retry cannot bypass this limit.Recorded step · Push · Pending · Next attempt no earlier than 2026-10-04T14:47:05.360ZAdvanced detailsDelivery item09cf7e20-b758-4776-8b7d-d75b0edd154eResource10394396-7787-4c28-aa90-35c0f9b4fbddOriginal result0b20f612-f99e-4345-9fcd-8ac4591fc636Original Specification6b223ea6-cb7d-462e-b4d1-7fb36b647d7fOriginal Plana605a431-c33f-413b-86f9-5e38582ae6beEffective Specification6b223ea6-cb7d-462e-b4d1-7fb36b647d7fEffective Plana605a431-c33f-413b-86f9-5e38582ae6beSource digest967812b2ac2a7403ba80f47df564a8c1a8ab953ac249ed7f419cb85e09071801Effective basis596a12ba16dce7db08509639bb6b9796cfc655f2221f54cd4bd24715fa887f52Candidate manifest85489fdc70b522226a3f48322379b16f9d079d9f72831e15744454c9722a9e25Manifest original source967812b2ac2a7403ba80f47df564a8c1a8ab953ac249ed7f419cb85e09071801Public parentsaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaExact scan4dcc1591d1781b53b3b372ab7c244dded7a521962b0bf7a5c0469aaef4637c2eOperation35644be4-ca64-4838-af16-2e430aff9658Request digest51ac65a57dbe27598ef57f4712287ce879c9ea045f9f1f7482fce6f417898ed3Operation version2Physical worker absenceRecorded absentNo provider checks observation is recorded. Missing checks are not passing checks.Retry remote preparation"
+
+
+      83 | ] as const) test(`remote ${mode} attention remains separate from local Review`, async ({ page }, info) => {
+      84 |   await signIn(page); const f = await scenario(page, mode); await open(page, f.task);
+    > 85 |   await expect(section(page)).toContainText(text);
+         |                               ^
+      86 |   await expect(page.getByRole('heading', { name: 'Local publication candidate', exact: true })).toBeVisible();
+      87 |   await capture(page, info, `remote-${mode}`, `Actual coordinator with explicitly synthetic ${mode} transport/provider outcome`);
+      88 |   if (mode === 'unknown') {
+        at /Users/me/IdeaProjects/monos/apps/web/test/remote-preparation.e2e.ts:85:31
+
+    Error Context: test-results/remote-preparation.e2e.ts--1ecba--separate-from-local-Review/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/remote-preparation.e2e.ts--1ecba--separate-from-local-Review/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace test-results/remote-preparation.e2e.ts--1ecba--separate-from-local-Review/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  4) test/remote-preparation.e2e.ts:83:13 › remote access_denied attention remains separate from local Review 
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: getByRole('region', { name: 'Remote review preparation', exact: true })
+    Expected substring: "Remote access is unavailable"
+    Received string:    "Remote review preparationBackground preparation and provider observations do not accept delivery or complete the Task.Current remote evidenceThe exact local scan remains applicable.The recorded remote step failed. Its original evidence is retained.Reason · Rate limitedRepositorygithub.com/example/execution-uiDelivery branchrefs/heads/monos/task/aabf468c-d125-48a8-a955-8c9cf99d0db4/1b033e87-9d02-40be-a368-2e12bd490688Fixed targetmainCandidate head45ec3d5afeeb427abfb4da8c95614463393bc0eaExact result treeddddddddddddddddddddddddddddddddddddddddProvider cooldown until 2026-10-04T14:47:13.943Z. Retry cannot bypass this limit.Advanced detailsDelivery item47f70b6a-558b-4cde-b3ae-d40a7172c239Resource1b033e87-9d02-40be-a368-2e12bd490688Original result966f0e87-b20f-4eb1-8657-156ce62cbf37Original Specificationc010b114-5a92-4652-9ef9-7247d907e276Original Planea45a0c8-7fa0-46eb-a1d6-bda608915618Effective Specificationc010b114-5a92-4652-9ef9-7247d907e276Effective Planea45a0c8-7fa0-46eb-a1d6-bda608915618Source digestc3ace1b6eb1b2cd031b945b2c351bc74b4c886496ead5a36371d3219352d22bfEffective basis5f9fd6e5495195fc8ab875a2a2ad6c1d4655eb3aa84294274f2873a8a25bb830Candidate manifest75ec584d44db7187f256d301be934f20811c5aa533a7c8b704aba40f0e1159e2Manifest original sourcec3ace1b6eb1b2cd031b945b2c351bc74b4c886496ead5a36371d3219352d22bfPublic parentsaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaExact scan7b4dd059eaac0cb65975440db6245c37318da13d5dd41a5b8321e13dc5f8f067No provider checks observation is recorded. Missing checks are not passing checks."
+    Timeout: 5000ms
+
+    Call log:
+      - Expect "toContainText" getByRole('region', { name: 'Remote review preparation', exact: true }) with timeout 5000ms
+      - waiting for getByRole('region', { name: 'Remote review preparation', exact: true })
+        10 × locator resolved to <section aria-label="Remote review preparation" class="task-section remote-preparation">…</section>
+           - unexpected value "Remote review preparationBackground preparation and provider observations do not accept delivery or complete the Task.No remote preparation is recorded. Local result inspection remains available."
+        4 × locator resolved to <section aria-label="Remote review preparation" class="task-section remote-preparation">…</section>
+          - unexpected value "Remote review preparationBackground preparation and provider observations do not accept delivery or complete the Task.Current remote evidenceThe exact local scan remains applicable.The recorded remote step failed. Its original evidence is retained.Reason · Rate limitedRepositorygithub.com/example/execution-uiDelivery branchrefs/heads/monos/task/aabf468c-d125-48a8-a955-8c9cf99d0db4/1b033e87-9d02-40be-a368-2e12bd490688Fixed targetmainCandidate head45ec3d5afeeb427abfb4da8c95614463393bc0eaExact result treeddddddddddddddddddddddddddddddddddddddddProvider cooldown until 2026-10-04T14:47:13.943Z. Retry cannot bypass this limit.Advanced detailsDelivery item47f70b6a-558b-4cde-b3ae-d40a7172c239Resource1b033e87-9d02-40be-a368-2e12bd490688Original result966f0e87-b20f-4eb1-8657-156ce62cbf37Original Specificationc010b114-5a92-4652-9ef9-7247d907e276Original Planea45a0c8-7fa0-46eb-a1d6-bda608915618Effective Specificationc010b114-5a92-4652-9ef9-7247d907e276Effective Planea45a0c8-7fa0-46eb-a1d6-bda608915618Source digestc3ace1b6eb1b2cd031b945b2c351bc74b4c886496ead5a36371d3219352d22bfEffective basis5f9fd6e5495195fc8ab875a2a2ad6c1d4655eb3aa84294274f2873a8a25bb830Candidate manifest75ec584d44db7187f256d301be934f20811c5aa533a7c8b704aba40f0e1159e2Manifest original sourcec3ace1b6eb1b2cd031b945b2c351bc74b4c886496ead5a36371d3219352d22bfPublic parentsaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaExact scan7b4dd059eaac0cb65975440db6245c37318da13d5dd41a5b8321e13dc5f8f067No provider checks observation is recorded. Missing checks are not passing checks."
+
+
+      83 | ] as const) test(`remote ${mode} attention remains separate from local Review`, async ({ page }, info) => {
+      84 |   await signIn(page); const f = await scenario(page, mode); await open(page, f.task);
+    > 85 |   await expect(section(page)).toContainText(text);
+         |                               ^
+      86 |   await expect(page.getByRole('heading', { name: 'Local publication candidate', exact: true })).toBeVisible();
+      87 |   await capture(page, info, `remote-${mode}`, `Actual coordinator with explicitly synthetic ${mode} transport/provider outcome`);
+      88 |   if (mode === 'unknown') {
+        at /Users/me/IdeaProjects/monos/apps/web/test/remote-preparation.e2e.ts:85:31
+
+    Error Context: test-results/remote-preparation.e2e.ts--f649b--separate-from-local-Review/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/remote-preparation.e2e.ts--f649b--separate-from-local-Review/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace test-results/remote-preparation.e2e.ts--f649b--separate-from-local-Review/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  5) test/remote-preparation.e2e.ts:83:13 › remote rate_limited attention remains separate from local Review 
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: getByRole('region', { name: 'Remote review preparation', exact: true })
+    Expected substring: "Provider cooldown until"
+    Received string:    "Remote review preparationBackground preparation and provider observations do not accept delivery or complete the Task.Current remote evidenceThe exact local scan remains applicable.The recorded remote step failed. Its original evidence is retained.Reason · Rate limitedRepositorygithub.com/example/execution-uiDelivery branchrefs/heads/monos/task/a1b941f0-fae5-4011-b3af-747e3eee8e56/e6e06aa6-515c-4994-a83d-d25ad7d5a3d3Fixed targetmainCandidate head8a6f1f3d1c68e87f885f8df0992a5acddb0f2047Exact result treeddddddddddddddddddddddddddddddddddddddddRecorded step · Push · Pending · Next attempt no earlier than 2026-10-04T14:47:17.722ZAdvanced detailsDelivery item8485e500-bf8b-47b7-a355-cca100ecbc2dResourcee6e06aa6-515c-4994-a83d-d25ad7d5a3d3Original result5d362c90-fc6e-4d65-a002-e444d2f1e739Original Specification351d85d8-6f36-4537-b5ff-dbadc8342a9aOriginal Plan76ede1ee-778e-4cdc-a385-cfe527d9e096Effective Specification351d85d8-6f36-4537-b5ff-dbadc8342a9aEffective Plan76ede1ee-778e-4cdc-a385-cfe527d9e096Source digest901b895ba78770179b5fa2e9a1ff3edf764b17c49223a9bb1d7c071ddcfcd5ceEffective basisc7449d4ac7c819d53fa10f50a58476329ca53e1b6990c8207202907b69c96bf3Candidate manifest43ae489eaded84ad93e4c3becfc6e74e62f927c5acf615cb19f07f6bacc5887cManifest original source901b895ba78770179b5fa2e9a1ff3edf764b17c49223a9bb1d7c071ddcfcd5cePublic parentsaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaExact scan75f9cee52763f7ff458a0e78c737eebd74db941aeefa046ccdbc8401184cc428Operationf35c2e90-9b4f-4a85-9002-0f2c36f3bbadRequest digest23edd517fcddd824ddfadf8f49a4a8423e233eaddc8e9d7e743f2c75e30fc9a9Operation version2Physical worker absenceRecorded absentNo provider checks observation is recorded. Missing checks are not passing checks.Retry remote preparation"
+    Timeout: 5000ms
+
+    Call log:
+      - Expect "toContainText" getByRole('region', { name: 'Remote review preparation', exact: true }) with timeout 5000ms
+      - waiting for getByRole('region', { name: 'Remote review preparation', exact: true })
+        10 × locator resolved to <section aria-label="Remote review preparation" class="task-section remote-preparation">…</section>
+           - unexpected value "Remote review preparationBackground preparation and provider observations do not accept delivery or complete the Task.No remote preparation is recorded. Local result inspection remains available."
+        4 × locator resolved to <section aria-label="Remote review preparation" class="task-section remote-preparation">…</section>
+          - unexpected value "Remote review preparationBackground preparation and provider observations do not accept delivery or complete the Task.Current remote evidenceThe exact local scan remains applicable.The recorded remote step failed. Its original evidence is retained.Reason · Rate limitedRepositorygithub.com/example/execution-uiDelivery branchrefs/heads/monos/task/a1b941f0-fae5-4011-b3af-747e3eee8e56/e6e06aa6-515c-4994-a83d-d25ad7d5a3d3Fixed targetmainCandidate head8a6f1f3d1c68e87f885f8df0992a5acddb0f2047Exact result treeddddddddddddddddddddddddddddddddddddddddRecorded step · Push · Pending · Next attempt no earlier than 2026-10-04T14:47:17.722ZAdvanced detailsDelivery item8485e500-bf8b-47b7-a355-cca100ecbc2dResourcee6e06aa6-515c-4994-a83d-d25ad7d5a3d3Original result5d362c90-fc6e-4d65-a002-e444d2f1e739Original Specification351d85d8-6f36-4537-b5ff-dbadc8342a9aOriginal Plan76ede1ee-778e-4cdc-a385-cfe527d9e096Effective Specification351d85d8-6f36-4537-b5ff-dbadc8342a9aEffective Plan76ede1ee-778e-4cdc-a385-cfe527d9e096Source digest901b895ba78770179b5fa2e9a1ff3edf764b17c49223a9bb1d7c071ddcfcd5ceEffective basisc7449d4ac7c819d53fa10f50a58476329ca53e1b6990c8207202907b69c96bf3Candidate manifest43ae489eaded84ad93e4c3becfc6e74e62f927c5acf615cb19f07f6bacc5887cManifest original source901b895ba78770179b5fa2e9a1ff3edf764b17c49223a9bb1d7c071ddcfcd5cePublic parentsaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaExact scan75f9cee52763f7ff458a0e78c737eebd74db941aeefa046ccdbc8401184cc428Operationf35c2e90-9b4f-4a85-9002-0f2c36f3bbadRequest digest23edd517fcddd824ddfadf8f49a4a8423e233eaddc8e9d7e743f2c75e30fc9a9Operation version2Physical worker absenceRecorded absentNo provider checks observation is recorded. Missing checks are not passing checks.Retry remote preparation"
+
+
+      83 | ] as const) test(`remote ${mode} attention remains separate from local Review`, async ({ page }, info) => {
+      84 |   await signIn(page); const f = await scenario(page, mode); await open(page, f.task);
+    > 85 |   await expect(section(page)).toContainText(text);
+         |                               ^
+      86 |   await expect(page.getByRole('heading', { name: 'Local publication candidate', exact: true })).toBeVisible();
+      87 |   await capture(page, info, `remote-${mode}`, `Actual coordinator with explicitly synthetic ${mode} transport/provider outcome`);
+      88 |   if (mode === 'unknown') {
+        at /Users/me/IdeaProjects/monos/apps/web/test/remote-preparation.e2e.ts:85:31
+
+    Error Context: test-results/remote-preparation.e2e.ts--abb8d--separate-from-local-Review/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/remote-preparation.e2e.ts--abb8d--separate-from-local-Review/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace test-results/remote-preparation.e2e.ts--abb8d--separate-from-local-Review/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  6) test/remote-preparation.e2e.ts:83:13 › remote unknown attention remains separate from local Review 
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: getByRole('region', { name: 'Remote review preparation', exact: true })
+    Expected substring: "uncertain"
+    Received string:    "Remote review preparationBackground preparation and provider observations do not accept delivery or complete the Task.Current remote evidenceThe exact local scan remains applicable.The recorded remote step failed. Its original evidence is retained.Reason · Rate limitedRepositorygithub.com/example/execution-uiDelivery branchrefs/heads/monos/task/a784427d-fddf-429c-958e-560c651a63ee/92c33606-8874-4dc5-bdf8-d5deb857151dFixed targetmainCandidate head15862ac4e0b4937b956bca8a5ab14089649d631cExact result treeddddddddddddddddddddddddddddddddddddddddProvider cooldown until 2026-10-04T14:49:21.752Z. Retry cannot bypass this limit.Advanced detailsDelivery itembe402c4f-a21b-4653-9f1b-8c0183aae26aResource92c33606-8874-4dc5-bdf8-d5deb857151dOriginal result41fa9a5f-a81b-4b82-81a2-552d01cd4912Original Specification9daca1f1-31be-452c-b61e-0d078ad6bcf7Original Plan75b219f5-afd0-4c84-a02d-e9dc910e9e45Effective Specification9daca1f1-31be-452c-b61e-0d078ad6bcf7Effective Plan75b219f5-afd0-4c84-a02d-e9dc910e9e45Source digest675f9bfb79ee3c1e405d4788eeac9d7d4153388b8c4198d54a15b14c115c3a53Effective basisd463fee89c9eba4c1171b707b66a169c82d932346936c427f845e12d61ccd7d0Candidate manifest67f46fd5902735f6046d77321a43c5623ee3611e28bbe3ee2db202c4a677d9e1Manifest original source675f9bfb79ee3c1e405d4788eeac9d7d4153388b8c4198d54a15b14c115c3a53Public parentsaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaExact scanb52fc07a79d1f65a3e2a221f002e3fe5010e7f94ea4bdacf70fafde319acbcfaNo provider checks observation is recorded. Missing checks are not passing checks."
+    Timeout: 5000ms
+
+    Call log:
+      - Expect "toContainText" getByRole('region', { name: 'Remote review preparation', exact: true }) with timeout 5000ms
+      - waiting for getByRole('region', { name: 'Remote review preparation', exact: true })
+        10 × locator resolved to <section aria-label="Remote review preparation" class="task-section remote-preparation">…</section>
+           - unexpected value "Remote review preparationBackground preparation and provider observations do not accept delivery or complete the Task.No remote preparation is recorded. Local result inspection remains available."
+        4 × locator resolved to <section aria-label="Remote review preparation" class="task-section remote-preparation">…</section>
+          - unexpected value "Remote review preparationBackground preparation and provider observations do not accept delivery or complete the Task.Current remote evidenceThe exact local scan remains applicable.The recorded remote step failed. Its original evidence is retained.Reason · Rate limitedRepositorygithub.com/example/execution-uiDelivery branchrefs/heads/monos/task/a784427d-fddf-429c-958e-560c651a63ee/92c33606-8874-4dc5-bdf8-d5deb857151dFixed targetmainCandidate head15862ac4e0b4937b956bca8a5ab14089649d631cExact result treeddddddddddddddddddddddddddddddddddddddddProvider cooldown until 2026-10-04T14:49:21.752Z. Retry cannot bypass this limit.Advanced detailsDelivery itembe402c4f-a21b-4653-9f1b-8c0183aae26aResource92c33606-8874-4dc5-bdf8-d5deb857151dOriginal result41fa9a5f-a81b-4b82-81a2-552d01cd4912Original Specification9daca1f1-31be-452c-b61e-0d078ad6bcf7Original Plan75b219f5-afd0-4c84-a02d-e9dc910e9e45Effective Specification9daca1f1-31be-452c-b61e-0d078ad6bcf7Effective Plan75b219f5-afd0-4c84-a02d-e9dc910e9e45Source digest675f9bfb79ee3c1e405d4788eeac9d7d4153388b8c4198d54a15b14c115c3a53Effective basisd463fee89c9eba4c1171b707b66a169c82d932346936c427f845e12d61ccd7d0Candidate manifest67f46fd5902735f6046d77321a43c5623ee3611e28bbe3ee2db202c4a677d9e1Manifest original source675f9bfb79ee3c1e405d4788eeac9d7d4153388b8c4198d54a15b14c115c3a53Public parentsaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaExact scanb52fc07a79d1f65a3e2a221f002e3fe5010e7f94ea4bdacf70fafde319acbcfaNo provider checks observation is recorded. Missing checks are not passing checks."
+
+
+      83 | ] as const) test(`remote ${mode} attention remains separate from local Review`, async ({ page }, info) => {
+      84 |   await signIn(page); const f = await scenario(page, mode); await open(page, f.task);
+    > 85 |   await expect(section(page)).toContainText(text);
+         |                               ^
+      86 |   await expect(page.getByRole('heading', { name: 'Local publication candidate', exact: true })).toBeVisible();
+      87 |   await capture(page, info, `remote-${mode}`, `Actual coordinator with explicitly synthetic ${mode} transport/provider outcome`);
+      88 |   if (mode === 'unknown') {
+        at /Users/me/IdeaProjects/monos/apps/web/test/remote-preparation.e2e.ts:85:31
+
+    Error Context: test-results/remote-preparation.e2e.ts--aef40--separate-from-local-Review/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/remote-preparation.e2e.ts--aef40--separate-from-local-Review/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace test-results/remote-preparation.e2e.ts--aef40--separate-from-local-Review/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  7) test/remote-preparation.e2e.ts:100:1 › a failed before-start push Retry persists exact envelope and recovers original committed receipt after reply loss 
+
+    Error: expect(locator).toBeEnabled() failed
+
+    Locator: getByRole('button', { name: 'Retry remote preparation', exact: true })
+    Expected: enabled
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeEnabled" getByRole('button', { name: 'Retry remote preparation', exact: true }) with timeout 5000ms
+      - waiting for getByRole('button', { name: 'Retry remote preparation', exact: true })
+
+
+      100 | test('a failed before-start push Retry persists exact envelope and recovers original committed receipt after reply loss', async ({ page }, info) => {
+      101 |   await signIn(page); const f = await scenario(page, 'blocked'); await open(page, f.task);
+    > 102 |   await expect(page.getByRole('button', { name: 'Retry remote preparation', exact: true })).toBeEnabled();
+          |                                                                                             ^
+      103 |   const before = (await records(page, f)).items.find(row => row.current)!;
+      104 |   const commands: RemotePreparationCommand[] = [], receiptReads: string[] = [];
+      105 |   page.on('request', request => { if (request.method() === 'GET' && request.url().includes('/remote-preparation/commands/')) receiptReads.push(request.url()); });
+        at /Users/me/IdeaProjects/monos/apps/web/test/remote-preparation.e2e.ts:102:93
+
+    Error Context: test-results/remote-preparation.e2e.ts--33593-ed-receipt-after-reply-loss/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/remote-preparation.e2e.ts--33593-ed-receipt-after-reply-loss/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace test-results/remote-preparation.e2e.ts--33593-ed-receipt-after-reply-loss/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  8) test/remote-preparation.e2e.ts:123:1 › selected historical operation never inherits latest item authority and Cancel closes only its owned PR 
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: getByRole('region', { name: 'Remote review preparation', exact: true })
+    Expected substring: "The review request is prepared."
+    Received string:    "Remote review preparationBackground preparation and provider observations do not accept delivery or complete the Task.Current remote evidenceThe exact local scan remains applicable.The recorded remote step failed. Its original evidence is retained.Reason · Rate limitedRepositorygithub.com/example/execution-uiDelivery branchrefs/heads/monos/task/3d32a306-7780-44f9-be9e-31a273162085/7cfa5d6c-c845-4b6b-ae5a-ff8ae2ee46aaFixed targetmainCandidate head0a8d69a7923bfd5031aef6581184ba1b96f094f2Exact result treeddddddddddddddddddddddddddddddddddddddddProvider cooldown until 2026-10-04T14:49:21.752Z. Retry cannot bypass this limit.Advanced detailsDelivery item0448a8e4-4e75-4643-b961-41e7227a7caaResource7cfa5d6c-c845-4b6b-ae5a-ff8ae2ee46aaOriginal result91a9c7dc-0811-465a-aa7f-61670e1177e8Original Specification41dd2de6-995b-4cf7-b841-2cd2024749c8Original Plan4a21cbeb-a8b4-450f-8fbd-97ae0202d449Effective Specification41dd2de6-995b-4cf7-b841-2cd2024749c8Effective Plan4a21cbeb-a8b4-450f-8fbd-97ae0202d449Source digesta0bf641d82cf3b08951003ede92f2a60e85486ffcedb14ee17a29e63fc4e0abfEffective basis65aac8a4754596fd6fae7c16d50e197eb00040afac69c77c6738a597da8128a1Candidate manifestb3277d67f5d97dce11e32503d42300bb354bc0075a6cd387cddfa167b573dd1cManifest original sourcea0bf641d82cf3b08951003ede92f2a60e85486ffcedb14ee17a29e63fc4e0abfPublic parentsaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaExact scan7e7cb59b9e60fb386393e833633c353a38e681462a7c008c30444ae04e2ba95dNo provider checks observation is recorded. Missing checks are not passing checks."
+    Timeout: 30000ms
+
+    Call log:
+      - Expect "toContainText" getByRole('region', { name: 'Remote review preparation', exact: true }) with timeout 30000ms
+      - waiting for getByRole('region', { name: 'Remote review preparation', exact: true })
+        10 × locator resolved to <section aria-label="Remote review preparation" class="task-section remote-preparation">…</section>
+           - unexpected value "Remote review preparationBackground preparation and provider observations do not accept delivery or complete the Task.No remote preparation is recorded. Local result inspection remains available."
+        53 × locator resolved to <section aria-label="Remote review preparation" class="task-section remote-preparation">…</section>
+           - unexpected value "Remote review preparationBackground preparation and provider observations do not accept delivery or complete the Task.Current remote evidenceThe exact local scan remains applicable.The recorded remote step failed. Its original evidence is retained.Reason · Rate limitedRepositorygithub.com/example/execution-uiDelivery branchrefs/heads/monos/task/3d32a306-7780-44f9-be9e-31a273162085/7cfa5d6c-c845-4b6b-ae5a-ff8ae2ee46aaFixed targetmainCandidate head0a8d69a7923bfd5031aef6581184ba1b96f094f2Exact result treeddddddddddddddddddddddddddddddddddddddddProvider cooldown until 2026-10-04T14:49:21.752Z. Retry cannot bypass this limit.Advanced detailsDelivery item0448a8e4-4e75-4643-b961-41e7227a7caaResource7cfa5d6c-c845-4b6b-ae5a-ff8ae2ee46aaOriginal result91a9c7dc-0811-465a-aa7f-61670e1177e8Original Specification41dd2de6-995b-4cf7-b841-2cd2024749c8Original Plan4a21cbeb-a8b4-450f-8fbd-97ae0202d449Effective Specification41dd2de6-995b-4cf7-b841-2cd2024749c8Effective Plan4a21cbeb-a8b4-450f-8fbd-97ae0202d449Source digesta0bf641d82cf3b08951003ede92f2a60e85486ffcedb14ee17a29e63fc4e0abfEffective basis65aac8a4754596fd6fae7c16d50e197eb00040afac69c77c6738a597da8128a1Candidate manifestb3277d67f5d97dce11e32503d42300bb354bc0075a6cd387cddfa167b573dd1cManifest original sourcea0bf641d82cf3b08951003ede92f2a60e85486ffcedb14ee17a29e63fc4e0abfPublic parentsaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaExact scan7e7cb59b9e60fb386393e833633c353a38e681462a7c008c30444ae04e2ba95dNo provider checks observation is recorded. Missing checks are not passing checks."
+
+
+      123 | test('selected historical operation never inherits latest item authority and Cancel closes only its owned PR', async ({ page }, info) => {
+      124 |   await signIn(page); const f = await scenario(page, 'prepared'); await open(page, f.task);
+    > 125 |   await expect(section(page)).toContainText('The review request is prepared.', { timeout: 30000 });
+          |                               ^
+      126 |   await section(page).getByText(/Remote operation history/).click();
+      127 |   await section(page).getByRole('button', { name: /Historical · Push/ }).first().click();
+      128 |   await expect(section(page)).toContainText('Historical remote evidence');
+        at /Users/me/IdeaProjects/monos/apps/web/test/remote-preparation.e2e.ts:125:31
+
+    Error Context: test-results/remote-preparation.e2e.ts--fcef4-el-closes-only-its-owned-PR/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/remote-preparation.e2e.ts--fcef4-el-closes-only-its-owned-PR/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace test-results/remote-preparation.e2e.ts--fcef4-el-closes-only-its-owned-PR/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  9) test/remote-preparation.e2e.ts:153:1 › no checks and unknown mergeability are informational; deferred and repository-free remain local 
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: getByRole('region', { name: 'Remote review preparation', exact: true })
+    Expected substring: "No checks"
+    Received string:    "Remote review preparationBackground preparation and provider observations do not accept delivery or complete the Task.Current remote evidenceThe exact local scan remains applicable.The recorded remote step failed. Its original evidence is retained.Reason · Rate limitedRepositorygithub.com/example/execution-uiDelivery branchrefs/heads/monos/task/2bc3d9fd-9f9e-4915-b136-65425d0abf13/b4ea3e29-13f5-44ed-a085-205b619094a1Fixed targetmainCandidate headfd30f9aedec6f7c5bfd7d3d6714d5b0edbb4651fExact result treeddddddddddddddddddddddddddddddddddddddddProvider cooldown until 2026-10-04T14:49:21.752Z. Retry cannot bypass this limit.Advanced detailsDelivery item2877a89b-dccc-4b3d-9f90-9a4b00a49324Resourceb4ea3e29-13f5-44ed-a085-205b619094a1Original result793001e2-a254-4d0c-adf2-438fa0085e45Original Specificationd21d00d6-2007-4919-9078-3bf7c74b759fOriginal Planc76b1bbe-2799-4eea-9cd3-6076f0be03baEffective Specificationd21d00d6-2007-4919-9078-3bf7c74b759fEffective Planc76b1bbe-2799-4eea-9cd3-6076f0be03baSource digest7cca276d73b9de5d2fbc07ac898f6e817f9d262ba3a4aef8a212c9d835ca852dEffective basis986eac33e89351c29dfcc73ea074c9f6770c20a8a9a1dd8313ea9e6436dd3155Candidate manifest18518c54826c5675c2565fe40377da37f6f58a4fc0af0cdbda53b8133cd0d604Manifest original source7cca276d73b9de5d2fbc07ac898f6e817f9d262ba3a4aef8a212c9d835ca852dPublic parentsaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaExact scancb607fa1bb9c0e4c5dc29176a3390cbcc2938ea89bc8bfdf9f38bd62cb7d9299No provider checks observation is recorded. Missing checks are not passing checks."
+    Timeout: 5000ms
+
+    Call log:
+      - Expect "toContainText" getByRole('region', { name: 'Remote review preparation', exact: true }) with timeout 5000ms
+      - waiting for getByRole('region', { name: 'Remote review preparation', exact: true })
+        10 × locator resolved to <section aria-label="Remote review preparation" class="task-section remote-preparation">…</section>
+           - unexpected value "Remote review preparationBackground preparation and provider observations do not accept delivery or complete the Task.No remote preparation is recorded. Local result inspection remains available."
+        4 × locator resolved to <section aria-label="Remote review preparation" class="task-section remote-preparation">…</section>
+          - unexpected value "Remote review preparationBackground preparation and provider observations do not accept delivery or complete the Task.Current remote evidenceThe exact local scan remains applicable.The recorded remote step failed. Its original evidence is retained.Reason · Rate limitedRepositorygithub.com/example/execution-uiDelivery branchrefs/heads/monos/task/2bc3d9fd-9f9e-4915-b136-65425d0abf13/b4ea3e29-13f5-44ed-a085-205b619094a1Fixed targetmainCandidate headfd30f9aedec6f7c5bfd7d3d6714d5b0edbb4651fExact result treeddddddddddddddddddddddddddddddddddddddddProvider cooldown until 2026-10-04T14:49:21.752Z. Retry cannot bypass this limit.Advanced detailsDelivery item2877a89b-dccc-4b3d-9f90-9a4b00a49324Resourceb4ea3e29-13f5-44ed-a085-205b619094a1Original result793001e2-a254-4d0c-adf2-438fa0085e45Original Specificationd21d00d6-2007-4919-9078-3bf7c74b759fOriginal Planc76b1bbe-2799-4eea-9cd3-6076f0be03baEffective Specificationd21d00d6-2007-4919-9078-3bf7c74b759fEffective Planc76b1bbe-2799-4eea-9cd3-6076f0be03baSource digest7cca276d73b9de5d2fbc07ac898f6e817f9d262ba3a4aef8a212c9d835ca852dEffective basis986eac33e89351c29dfcc73ea074c9f6770c20a8a9a1dd8313ea9e6436dd3155Candidate manifest18518c54826c5675c2565fe40377da37f6f58a4fc0af0cdbda53b8133cd0d604Manifest original source7cca276d73b9de5d2fbc07ac898f6e817f9d262ba3a4aef8a212c9d835ca852dPublic parentsaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaExact scancb607fa1bb9c0e4c5dc29176a3390cbcc2938ea89bc8bfdf9f38bd62cb7d9299No provider checks observation is recorded. Missing checks are not passing checks."
+
+
+      153 | test('no checks and unknown mergeability are informational; deferred and repository-free remain local', async ({ page }, info) => {
+      154 |   await signIn(page); const f = await scenario(page, 'no_checks'); await open(page, f.task);
+    > 155 |   await expect(section(page)).toContainText('No checks'); await expect(section(page)).toContainText('Mergeability · Unknown');
+          |                               ^
+      156 |   await capture(page, info, 'remote-no-checks', 'No provider checks, unknown mergeability, no readiness inference');
+      157 |   const deferred = await post<Fixture>(page, '/__test__/publication-scenario', { mode: 'clean' }); await open(page, deferred.task);
+      158 |   await expect(section(page)).toContainText('deferred'); await capture(page, info, 'remote-deferred', 'after_acceptance local-only, no remote effect admission');
+        at /Users/me/IdeaProjects/monos/apps/web/test/remote-preparation.e2e.ts:155:31
+
+    Error Context: test-results/remote-preparation.e2e.ts--058da-epository-free-remain-local/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/remote-preparation.e2e.ts--058da-epository-free-remain-local/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace test-results/remote-preparation.e2e.ts--058da-epository-free-remain-local/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  10) test/remote-preparation.e2e.ts:163:1 › held detail and checks replies cannot restore private data after logout or Task selection change 
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: getByRole('region', { name: 'Remote review preparation', exact: true })
+    Expected substring: "The review request is prepared."
+    Received string:    "Remote review preparationBackground preparation and provider observations do not accept delivery or complete the Task.Current remote evidenceThe exact local scan remains applicable.The recorded remote step failed. Its original evidence is retained.Reason · Rate limitedRepositorygithub.com/example/execution-uiDelivery branchrefs/heads/monos/task/e9d11f8b-468d-4784-9aae-d746060e3f64/8dc56b31-1902-4a72-89b8-29eb987a559bFixed targetmainCandidate headf68abbfa1d0c06a9024eb11e33f961ca15081c46Exact result treeddddddddddddddddddddddddddddddddddddddddProvider cooldown until 2026-10-04T14:49:21.752Z. Retry cannot bypass this limit.Advanced detailsDelivery itema3b60552-c526-420a-a2c4-911bff80c505Resource8dc56b31-1902-4a72-89b8-29eb987a559bOriginal result2069a9bd-a5dd-4968-8411-ab866eab3d23Original Specification2e0ab761-f008-48f9-b959-66be3b67625aOriginal Plan27944302-85e0-40b3-8d66-9db8daaf4dceEffective Specification2e0ab761-f008-48f9-b959-66be3b67625aEffective Plan27944302-85e0-40b3-8d66-9db8daaf4dceSource digest6e54e1769e9e32d3452ff13becba66532e06a479b96a40522c54701d4acf757fEffective basis5b6ffcc9ec7b98baea000aa3337fcd66538a2d45cd0a19c193765993a7d22c12Candidate manifest5a7d537aa6a7a1c8b47498b7700c82cdc1cae88b2820d304eeb180f567d3e8c8Manifest original source6e54e1769e9e32d3452ff13becba66532e06a479b96a40522c54701d4acf757fPublic parentsaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaExact scan4c1950a9ea63797750de0515fa64797797efa252abb313e9c7f050f7f32e98fdNo provider checks observation is recorded. Missing checks are not passing checks."
+    Timeout: 30000ms
+
+    Call log:
+      - Expect "toContainText" getByRole('region', { name: 'Remote review preparation', exact: true }) with timeout 30000ms
+      - waiting for getByRole('region', { name: 'Remote review preparation', exact: true })
+        10 × locator resolved to <section aria-label="Remote review preparation" class="task-section remote-preparation">…</section>
+           - unexpected value "Remote review preparationBackground preparation and provider observations do not accept delivery or complete the Task.No remote preparation is recorded. Local result inspection remains available."
+        53 × locator resolved to <section aria-label="Remote review preparation" class="task-section remote-preparation">…</section>
+           - unexpected value "Remote review preparationBackground preparation and provider observations do not accept delivery or complete the Task.Current remote evidenceThe exact local scan remains applicable.The recorded remote step failed. Its original evidence is retained.Reason · Rate limitedRepositorygithub.com/example/execution-uiDelivery branchrefs/heads/monos/task/e9d11f8b-468d-4784-9aae-d746060e3f64/8dc56b31-1902-4a72-89b8-29eb987a559bFixed targetmainCandidate headf68abbfa1d0c06a9024eb11e33f961ca15081c46Exact result treeddddddddddddddddddddddddddddddddddddddddProvider cooldown until 2026-10-04T14:49:21.752Z. Retry cannot bypass this limit.Advanced detailsDelivery itema3b60552-c526-420a-a2c4-911bff80c505Resource8dc56b31-1902-4a72-89b8-29eb987a559bOriginal result2069a9bd-a5dd-4968-8411-ab866eab3d23Original Specification2e0ab761-f008-48f9-b959-66be3b67625aOriginal Plan27944302-85e0-40b3-8d66-9db8daaf4dceEffective Specification2e0ab761-f008-48f9-b959-66be3b67625aEffective Plan27944302-85e0-40b3-8d66-9db8daaf4dceSource digest6e54e1769e9e32d3452ff13becba66532e06a479b96a40522c54701d4acf757fEffective basis5b6ffcc9ec7b98baea000aa3337fcd66538a2d45cd0a19c193765993a7d22c12Candidate manifest5a7d537aa6a7a1c8b47498b7700c82cdc1cae88b2820d304eeb180f567d3e8c8Manifest original source6e54e1769e9e32d3452ff13becba66532e06a479b96a40522c54701d4acf757fPublic parentsaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaExact scan4c1950a9ea63797750de0515fa64797797efa252abb313e9c7f050f7f32e98fdNo provider checks observation is recorded. Missing checks are not passing checks."
+
+
+      163 | test('held detail and checks replies cannot restore private data after logout or Task selection change', async ({ page }, info) => {
+      164 |   await signIn(page); const f = await scenario(page, 'prepared'); await open(page, f.task);
+    > 165 |   await expect(section(page)).toContainText('The review request is prepared.', { timeout: 30000 });
+          |                               ^
+      166 |   const item = (await records(page, f)).items.find(row => row.current)!.item_id;
+      167 |   let release = () => {}; const barrier = new Promise<void>(resolve => { release = resolve; });
+      168 |   let entered = () => {}; const held = new Promise<void>(resolve => { entered = resolve; });
+        at /Users/me/IdeaProjects/monos/apps/web/test/remote-preparation.e2e.ts:165:31
+
+    Error Context: test-results/remote-preparation.e2e.ts--5d435-ut-or-Task-selection-change/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/remote-preparation.e2e.ts--5d435-ut-or-Task-selection-change/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace test-results/remote-preparation.e2e.ts--5d435-ut-or-Task-selection-change/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  11) test/remote-preparation.e2e.ts:177:1 › authoritative unknown replays the same persisted Retry and a replaced session cannot adopt its command 
+
+    Error: expect(locator).toBeEnabled() failed
+
+    Locator: getByRole('button', { name: 'Retry remote preparation', exact: true })
+    Expected: enabled
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeEnabled" getByRole('button', { name: 'Retry remote preparation', exact: true }) with timeout 5000ms
+      - waiting for getByRole('button', { name: 'Retry remote preparation', exact: true })
+
+
+      177 | test('authoritative unknown replays the same persisted Retry and a replaced session cannot adopt its command', async ({ page, context }) => {
+      178 |   await signIn(page); const f = await scenario(page, 'blocked'); await open(page, f.task);
+    > 179 |   await expect(page.getByRole('button', { name: 'Retry remote preparation', exact: true })).toBeEnabled();
+          |                                                                                             ^
+      180 |   const writes: RemotePreparationCommand[] = [];
+      181 |   await page.route('**/v1/owner/tasks/remote-preparation/commands', async route => {
+      182 |     writes.push(route.request().postDataJSON());
+        at /Users/me/IdeaProjects/monos/apps/web/test/remote-preparation.e2e.ts:179:93
+
+    Error Context: test-results/remote-preparation.e2e.ts--ce10e-on-cannot-adopt-its-command/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/remote-preparation.e2e.ts--ce10e-on-cannot-adopt-its-command/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace test-results/remote-preparation.e2e.ts--ce10e-on-cannot-adopt-its-command/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  12) test/remote-preparation.e2e.ts:206:1 › a fresh continuation marks cached green checks historical without replacing selected immutable head 
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: getByRole('region', { name: 'Remote review preparation', exact: true })
+    Expected substring: "Current exact-head observations"
+    Received string:    "Remote review preparationBackground preparation and provider observations do not accept delivery or complete the Task.Current remote evidenceThe exact local scan remains applicable.The recorded remote step failed. Its original evidence is retained.Reason · Rate limitedRepositorygithub.com/example/execution-uiDelivery branchrefs/heads/monos/task/be8cc45c-6f84-4853-8b0f-66623aacafbd/4dc8d53e-533c-49ab-8912-1f174db68e83Fixed targetmainCandidate headc5f260f363d2f49698b784fcbfd50ffe40f1318cExact result treeddddddddddddddddddddddddddddddddddddddddProvider cooldown until 2026-10-04T14:49:21.752Z. Retry cannot bypass this limit.Advanced detailsDelivery itemf9a8b157-1ba3-46bc-b200-ddaa280851adResource4dc8d53e-533c-49ab-8912-1f174db68e83Original resulte09b085d-eabd-4fe4-a4ee-c7876910f7c6Original Specificationdb12060b-6870-4f0b-ad83-95bd2dbba90aOriginal Plan5bdffa76-34c6-4fa1-a16d-9e0c700d6e48Effective Specificationdb12060b-6870-4f0b-ad83-95bd2dbba90aEffective Plan5bdffa76-34c6-4fa1-a16d-9e0c700d6e48Source digest390608445cee17d5a4e9cc3ffb598ecf74aca91f6bb2e32b1ff127b132b06fa6Effective basisd735e66de3ab1a93d349089cfa76836aa85e48ac99fc456de472d672a0510d4cCandidate manifest180d1d16ad2471665c17c1f88b1b158a26399c67ef74c2c57f542a5a40f8436eManifest original source390608445cee17d5a4e9cc3ffb598ecf74aca91f6bb2e32b1ff127b132b06fa6Public parentsaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaExact scan8d1266238b62e8bdd02be20192035fb0537d769ad00d9879a06552d64e7b48afNo provider checks observation is recorded. Missing checks are not passing checks."
+    Timeout: 5000ms
+
+    Call log:
+      - Expect "toContainText" getByRole('region', { name: 'Remote review preparation', exact: true }) with timeout 5000ms
+      - waiting for getByRole('region', { name: 'Remote review preparation', exact: true })
+        10 × locator resolved to <section aria-label="Remote review preparation" class="task-section remote-preparation">…</section>
+           - unexpected value "Remote review preparationBackground preparation and provider observations do not accept delivery or complete the Task.No remote preparation is recorded. Local result inspection remains available."
+        4 × locator resolved to <section aria-label="Remote review preparation" class="task-section remote-preparation">…</section>
+          - unexpected value "Remote review preparationBackground preparation and provider observations do not accept delivery or complete the Task.Current remote evidenceThe exact local scan remains applicable.The recorded remote step failed. Its original evidence is retained.Reason · Rate limitedRepositorygithub.com/example/execution-uiDelivery branchrefs/heads/monos/task/be8cc45c-6f84-4853-8b0f-66623aacafbd/4dc8d53e-533c-49ab-8912-1f174db68e83Fixed targetmainCandidate headc5f260f363d2f49698b784fcbfd50ffe40f1318cExact result treeddddddddddddddddddddddddddddddddddddddddProvider cooldown until 2026-10-04T14:49:21.752Z. Retry cannot bypass this limit.Advanced detailsDelivery itemf9a8b157-1ba3-46bc-b200-ddaa280851adResource4dc8d53e-533c-49ab-8912-1f174db68e83Original resulte09b085d-eabd-4fe4-a4ee-c7876910f7c6Original Specificationdb12060b-6870-4f0b-ad83-95bd2dbba90aOriginal Plan5bdffa76-34c6-4fa1-a16d-9e0c700d6e48Effective Specificationdb12060b-6870-4f0b-ad83-95bd2dbba90aEffective Plan5bdffa76-34c6-4fa1-a16d-9e0c700d6e48Source digest390608445cee17d5a4e9cc3ffb598ecf74aca91f6bb2e32b1ff127b132b06fa6Effective basisd735e66de3ab1a93d349089cfa76836aa85e48ac99fc456de472d672a0510d4cCandidate manifest180d1d16ad2471665c17c1f88b1b158a26399c67ef74c2c57f542a5a40f8436eManifest original source390608445cee17d5a4e9cc3ffb598ecf74aca91f6bb2e32b1ff127b132b06fa6Public parentsaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaExact scan8d1266238b62e8bdd02be20192035fb0537d769ad00d9879a06552d64e7b48afNo provider checks observation is recorded. Missing checks are not passing checks."
+
+
+      206 | test('a fresh continuation marks cached green checks historical without replacing selected immutable head', async ({ page }, info) => {
+      207 |   await signIn(page); const f = await scenario(page, 'prepared'); await open(page, f.task);
+    > 208 |   await expect(section(page)).toContainText('Current exact-head observations');
+          |                               ^
+      209 |   const current = (await records(page, f)).items.find(row => row.current)!;
+      210 |   await page.route(`**/v1/owner/tasks/${f.task}/remote-preparation/${current.item_id}/checks/${current.checks!.observation_id}?*`, async route => {
+      211 |     const response = await route.fetch(), body = await response.json();
+        at /Users/me/IdeaProjects/monos/apps/web/test/remote-preparation.e2e.ts:208:31
+
+    Error Context: test-results/remote-preparation.e2e.ts--b41df-ing-selected-immutable-head/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/remote-preparation.e2e.ts--b41df-ing-selected-immutable-head/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace test-results/remote-preparation.e2e.ts--b41df-ing-selected-immutable-head/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  12 failed
+    test/remote-preparation.e2e.ts:83:13 › remote preparing attention remains separate from local Review 
+    test/remote-preparation.e2e.ts:83:13 › remote offline attention remains separate from local Review 
+    test/remote-preparation.e2e.ts:83:13 › remote unsupported attention remains separate from local Review 
+    test/remote-preparation.e2e.ts:83:13 › remote access_denied attention remains separate from local Review 
+    test/remote-preparation.e2e.ts:83:13 › remote rate_limited attention remains separate from local Review 
+    test/remote-preparation.e2e.ts:83:13 › remote unknown attention remains separate from local Review 
+    test/remote-preparation.e2e.ts:100:1 › a failed before-start push Retry persists exact envelope and recovers original committed receipt after reply loss 
+    test/remote-preparation.e2e.ts:123:1 › selected historical operation never inherits latest item authority and Cancel closes only its owned PR 
+    test/remote-preparation.e2e.ts:153:1 › no checks and unknown mergeability are informational; deferred and repository-free remain local 
+    test/remote-preparation.e2e.ts:163:1 › held detail and checks replies cannot restore private data after logout or Task selection change 
+    test/remote-preparation.e2e.ts:177:1 › authoritative unknown replays the same persisted Retry and a replaced session cannot adopt its command 
+    test/remote-preparation.e2e.ts:206:1 › a fresh continuation marks cached green checks historical without replacing selected immutable head 
+[ELIFECYCLE] Command failed with exit code 1.
+Error: ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL
+
+  × "pnpm recursive run" failed in /Users/me/IdeaProjects/monos/apps/web
+

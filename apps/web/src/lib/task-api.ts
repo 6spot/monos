@@ -1,4 +1,4 @@
-import type { OwnerCommand, OwnerCommandResult, TaskConversationCommand, TaskConversationCommandResult, TaskSpecificationCommand, TaskSpecificationResult, TaskReplanCommand, TaskReplanResult, ResultReadRequest, ResultReadResponse, PublicationCommand, PublicationCommandResult } from '../../../../packages/protocol/generated/types.ts';
+import type { OwnerCommand, OwnerCommandResult, TaskConversationCommand, TaskConversationCommandResult, TaskSpecificationCommand, TaskSpecificationResult, TaskReplanCommand, TaskReplanResult, ResultReadRequest, ResultReadResponse, PublicationCommand, PublicationCommandResult, RemotePreparationCommand, RemotePreparationCommandResult } from '../../../../packages/protocol/generated/types.ts';
 import { validate } from '../../../../packages/protocol/src/validation.ts';
 import { APIError, UncertainError, request } from './api.ts';
 
@@ -7,8 +7,9 @@ export type TaskIntent =
   | { family: 'conversation'; command: TaskConversationCommand }
   | { family: 'specification'; command: TaskSpecificationCommand }
   | { family: 'replan'; command: TaskReplanCommand }
-  | { family: 'publication'; command: PublicationCommand };
-export type TaskReceipt = OwnerCommandResult | TaskConversationCommandResult | TaskSpecificationResult | TaskReplanResult | PublicationCommandResult;
+  | { family: 'publication'; command: PublicationCommand }
+  | { family: 'remote-preparation'; command: RemotePreparationCommand };
+export type TaskReceipt = OwnerCommandResult | TaskConversationCommandResult | TaskSpecificationResult | TaskReplanResult | PublicationCommandResult | RemotePreparationCommandResult;
 
 const families = {
   execution: { command: 'OwnerCommand', result: 'OwnerCommandResult', post: '/v1/owner/commands' },
@@ -16,6 +17,7 @@ const families = {
   specification: { command: 'TaskSpecificationCommand', result: 'TaskSpecificationResult', post: '/v1/owner/tasks/specification/commands' },
   replan: { command: 'TaskReplanCommand', result: 'TaskReplanResult', post: '/v1/owner/tasks/replan/commands' },
   publication: { command: 'PublicationCommand', result: 'PublicationCommandResult', post: '/v1/owner/tasks/publication/commands' },
+  'remote-preparation': { command: 'RemotePreparationCommand', result: 'RemotePreparationCommandResult', post: '/v1/owner/tasks/remote-preparation/commands' },
 } as const;
 
 export function intentTask(intent: TaskIntent): string {
@@ -43,6 +45,7 @@ export async function taskRead<T>(taskId: string, suffix: string, schema: string
 function checkedReceipt(intent: TaskIntent, result: TaskReceipt, allowUnknown: boolean): TaskReceipt {
   if (result.request_id !== intent.command.request_id || (!allowUnknown && result.status === 'unknown')) throw new UncertainError();
   if ('task_id' in result && result.task_id !== undefined && result.task_id !== intentTask(intent)) throw new UncertainError();
+  if (intent.family === 'remote-preparation' && (!('task_id' in result) || result.task_id !== intentTask(intent))) throw new UncertainError();
   if (result.status === 'unknown') {
     if (Object.keys(result).some((key) => !['schema_version', 'request_id', 'task_id', 'status'].includes(key))) throw new UncertainError();
     return result;
@@ -94,6 +97,8 @@ function checkedReceipt(intent: TaskIntent, result: TaskReceipt, allowUnknown: b
       // optional joint metadata; when supplied, it must retain exact authority.
       if (fields.requirement_confirmation_id !== undefined) same('requirement_confirmation_id', payload.requirement_confirmation_id);
     }
+  } else if (intent.family === 'remote-preparation') {
+    same('status', 'committed'); requireFields('operation_id', 'operation_digest', 'operation_version');
   } else if (intent.family === 'publication') {
     same('status', 'committed');
     switch (intent.command.name) {

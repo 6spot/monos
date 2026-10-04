@@ -10,6 +10,26 @@ import { repositoryIdentity, validateGitRef } from '../../../packages/domain/src
 const providerKeySaltV1 = Buffer.from('6d6f6e6f6c61622d70726f7669646572', 'hex');
 
 export interface GitHubCredentials { app_id: string; installation_id: string; encrypted_key: string; key_fingerprint: string }
+export function githubExpiry(value:unknown):number {
+  if(typeof value!=='string')return NaN;
+  const parts=/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,3}))?Z$/.exec(value);
+  if(!parts)return NaN;
+  const [,y,m,d,h,min,s]=parts,stamp=Date.parse(value),date=new Date(stamp);
+  return Number.isFinite(stamp)&&date.getUTCFullYear()===Number(y)&&date.getUTCMonth()+1===Number(m)&&date.getUTCDate()===Number(d)&&date.getUTCHours()===Number(h)&&date.getUTCMinutes()===Number(min)&&date.getUTCSeconds()===Number(s)?stamp:NaN;
+}
+export async function githubSecondaryLimit(response:Response):Promise<boolean> {
+  if(response.status!==403){await response.body?.cancel();return false;}
+  const reader=response.body?.getReader();if(!reader)return false;
+  const chunks:Uint8Array[]=[];let size=0;
+  try {while(true){const chunk=await reader.read();if(chunk.done)break;size+=chunk.value.length;if(size>16*1024)return false;chunks.push(chunk.value);}
+    const raw=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(Buffer.concat(chunks))) as {message?:unknown};
+    return typeof raw?.message==='string'&&/\bsecondary rate limit\b/i.test(raw.message);
+  }catch{return false;}finally{await reader.cancel();}
+}
+export class GitHubRequestError extends CommandError {
+  readonly status:number;readonly retry_after_ms:number;
+  constructor(status:number,retry_after_ms:number,message:string) {super('unmet_precondition',message);this.status=status;this.retry_after_ms=retry_after_ms;}
+}
 export class GitHub {
   private readonly key: Buffer;
   private readonly fetcher: typeof fetch;
@@ -47,7 +67,12 @@ export class GitHub {
   private async request(path: string, token?: string, body?: unknown): Promise<unknown> {
     try {
       const response = await this.fetcher(`https://api.github.com${path}`, { method: body ? 'POST' : 'GET', redirect: 'error', signal: AbortSignal.timeout(10000), headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}), Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28', 'User-Agent': 'monos', ...(body ? { 'Content-Type': 'application/json' } : {}) }, ...(body ? { body: JSON.stringify(body) } : {}) });
-      if (!response.ok) { await response.body?.cancel(); throw new CommandError('unmet_precondition', response.status === 401 || response.status === 403 ? 'GitHub access denied; check App installation and repository permissions' : 'GitHub repository access is unavailable; retry later'); }
+      if (!response.ok) {
+        const secondary=await githubSecondaryLimit(response);
+        const retry=response.headers.get('retry-after'),reset=Number(response.headers.get('x-ratelimit-reset'))*1000;
+        const wait=retry ? (/^\d+$/.test(retry)?Number(retry)*1000:Date.parse(retry)-Date.now()) : response.headers.get('x-ratelimit-remaining')==='0'?reset-Date.now():response.status===429||secondary?60_000:0;
+        throw new GitHubRequestError(response.status,Math.max(0,Math.min(86400_000,Number.isFinite(wait)?wait:0)),response.status === 401 || response.status === 403 ? 'GitHub access denied; check App installation and repository permissions' : 'GitHub repository access is unavailable; retry later');
+      }
       if (!response.body) throw new Error();
       const reader = response.body.getReader(); const chunks: Uint8Array[] = []; let size = 0;
       try {
@@ -68,6 +93,18 @@ export class GitHub {
     const now = Math.floor(Date.now() / 1000);
     const unsigned = `${encode({ alg: 'RS256', typ: 'JWT' })}.${encode({ iat: now - 60, exp: now + 540, iss: config.app_id })}`;
     return `${unsigned}.${sign('RSA-SHA256', Buffer.from(unsigned), this.decrypt(config)).toString('base64url')}`;
+  }
+
+  // Separate from workspace read access. The caller selects one frozen minimal
+  // profile; neither a broader issued grant nor a repository alias is accepted.
+  async installationGrant(config:GitHubCredentials,repositoryId:string,identity:string,permissions:Record<string,'read'|'write'>):Promise<{token:string;expires_at:string;repository_id:string;permissions:Record<string,'read'|'write'>}> {
+    if(!/^[1-9][0-9]{0,15}$/.test(repositoryId)||!Number.isSafeInteger(Number(repositoryId))||!/^github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(identity))throw new CommandError('unmet_precondition','Exact GitHub repository scope is required');
+    const raw=await this.request(`/app/installations/${config.installation_id}/access_tokens`,this.jwt(config),{repository_ids:[Number(repositoryId)],permissions}) as Record<string,unknown>;
+    const repos=raw?.repositories,issued=raw?.permissions;
+    if(!raw || typeof raw.token!=='string'||!raw.token||raw.token.length>4096||typeof raw.expires_at!=='string'||!Number.isFinite(githubExpiry(raw.expires_at))||githubExpiry(raw.expires_at)<=Date.now()+30_000||githubExpiry(raw.expires_at)>Date.now()+7200_000||raw.repository_selection!=='selected'||!Array.isArray(repos)||repos.length!==1||!issued||typeof issued!=='object'||JSON.stringify(Object.keys(issued).sort())!==JSON.stringify(Object.keys(permissions).sort())||Object.entries(permissions).some(([k,v])=>(issued as Record<string,unknown>)[k]!==v))throw new CommandError('unmet_precondition','GitHub did not issue the exact repository permission profile');
+    const repo=repos[0] as Record<string,unknown>;
+    if(!Number.isSafeInteger(repo?.id)||Number(repo.id)<1||String(repo.id)!==repositoryId||typeof repo.full_name!=='string'||`github.com/${repo.full_name.toLowerCase()}`!==identity||typeof repo.clone_url!=='string'||repositoryIdentity(repo.clone_url)!==identity)throw new CommandError('unmet_precondition','GitHub grant repository identity differs');
+    return {token:raw.token,expires_at:raw.expires_at,repository_id:repositoryId,permissions};
   }
 
   async repositoryAccess(resource: WorkspaceResource, config?: GitHubCredentials): Promise<Pick<GitHubRepositoryAccessResult, 'remote_url' | 'provider_metadata' | 'default_branch' | 'authentication'>> {

@@ -1,0 +1,101 @@
+{
+  "scope": "isolated native Linux scheduling fix and test-only timestamp fixture delta; previous full process/Git/service-permission gates reused for unchanged behavior",
+  "source_manifest_sha256": "f6c69995f5d2afe55e3b4ad6505d238ddfc6a417f685f20c1e5902be22657741",
+  "reused_gate": {
+    "result_sha256": "5d52cce1b7ac922bdfa444f937442d226955cc36b11bc797fbee854dcda54d68",
+    "source_manifest_sha256": "ea2b9b8bd642ee16bd4f4db265e72bb65cff0ac0670ac555de9d984683a73104",
+    "unchanged_inputs": 134,
+    "changed_paths": [
+      "runner/internal/control/publication_remote.go",
+      "runner/internal/control/publication_remote_test.go",
+      "runner/internal/host/publication_remote.go",
+      "runner/internal/host/publication_remote_native_test.go",
+      "runner/internal/host/publication_remote_test.go"
+    ],
+    "remote_permissions_denials": 42
+  },
+  "steps": [
+    {
+      "name": "scheduling",
+      "exit_code": 0,
+      "seconds": 3.3004446029663086,
+      "log_sha256": "7ea9518f6e83738ccd39cc4de2ccdb4c008be23a310d0e48d47f85fe34758233"
+    },
+    {
+      "name": "scheduling-race",
+      "exit_code": 0,
+      "seconds": 6.2110559940338135,
+      "log_sha256": "cd6fe6c3fa28feafb0a96f8a13a90f00299e54117e1920993973dc98345e6ee7"
+    },
+    {
+      "name": "affected-vet",
+      "exit_code": 0,
+      "seconds": 0.6157984733581543,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "host-build",
+      "exit_code": 0,
+      "seconds": 0.7436754703521729,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "build-monos",
+      "exit_code": 0,
+      "seconds": 1.9460399150848389,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "build-monos-runner",
+      "exit_code": 0,
+      "seconds": 1.7058422565460205,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "build-monos-probe-launch",
+      "exit_code": 0,
+      "seconds": 0.585425853729248,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "build-monos-probe-exec",
+      "exit_code": 0,
+      "seconds": 0.666015625,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "image": "sha256:69a7b9788769bec032d238959b61854e9ae87f57be9029ec04e9885fabf99195",
+  "host": "Linux 6.12.107+deb13-amd64 x86_64",
+  "native_git": "git version 2.47.3",
+  "binaries": {
+    "monos": {
+      "sha256": "9520aa0abe22c8f49f046b01a3e9cf7d86f5833bd32a10ab0c52b82e07553a9c",
+      "bytes": 14879072
+    },
+    "monos-probe-launch": {
+      "sha256": "79b28fabfbfcaece9305459c0392f4f3107b4974cc6c86859d19ac5757bca4eb",
+      "bytes": 7347278
+    },
+    "monos-runner": {
+      "sha256": "0d1610cb79838fbe50c5e0b97f85ec3b29485167a3916738fc9ea14ad6d55d8c",
+      "bytes": 16729344
+    },
+    "monos-probe-exec": {
+      "sha256": "784720ecf2d5509f0fd26765f8a89b5c030383c1d2f429a3de39cba3f45b687a",
+      "bytes": 7150616
+    },
+    "host.test": {
+      "sha256": "20bfa5fe62e8b5dd1e5573dc8b2fa59b2ec1c17ccfcf07961662478b417ecf81",
+      "bytes": 9806448
+    }
+  },
+  "native_bridge": {
+    "fixture": "/var/lib/monos-probe/service/monos-publication-validation-ae82bda877d24491addab09201ff0aae",
+    "service_uid": 997,
+    "execution_uid": 1000,
+    "binary_sha256": "20bfa5fe62e8b5dd1e5573dc8b2fa59b2ec1c17ccfcf07961662478b417ecf81",
+    "scope": "fresh current host.test, native live opt-in effect fixture deferred to exact authorized GitHub trial; previous permission fixture not repeated"
+  },
+  "source_unchanged": true,
+  "complete": true
+}

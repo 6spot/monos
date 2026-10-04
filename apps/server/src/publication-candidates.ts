@@ -8,6 +8,9 @@ import { resolveCanonicalResult } from './task-result-reads.ts';
 import { publicationConfiguration, publicationDigest as hash, credentialPath } from './publication-policy.ts';
 import { lockConfiguration } from './configuration-guards.ts';
 import { specificationFrozen } from './task-specification-state.ts';
+import { retainedPublishedProof } from './remote-preparation-state.ts';
+import type { PublicationPermissionProof } from '../../../packages/protocol/src/index.ts';
+import {permissionConfigurationFingerprint} from './publication-policy.ts';
 
 export interface DeliveryOperation {
  id:string;task_id:string;resource_id:string;workspace_id:string;runner_id:string;source_operation_id:string;
@@ -41,6 +44,8 @@ export async function ensureLocalCandidate(tx:Transaction,taskId:string):Promise
  const {item,identity:source}=await resolveCanonicalResult(tx,taskId,sourceId);
  if(!source || !item.current)return;
  const basis:PublicationEffectiveBasis={task_id:taskId,specification_id:item.current_specification_id,plan_id:item.current_plan_id!,completion_operation_id:source.operation_id,completion_manifest_digest:source.manifest_digest};
+ const published=await retainedPublishedProof(tx,taskId,source.resource_id);
+ if(published&&(published.storage_id!==source.storage_id||published.runner_id!==source.runner_id||published.repository_identity!==source.repository_identity))throw new CommandError('unmet_precondition','Published source storage lineage differs');
  const configuration=await publicationConfiguration(tx,source.resource_id), sourceDigest=hash(source),basisDigest=hash(basis),configDigest=hash(configuration);
  const prior=(await tx.query<DeliveryOperation>("SELECT * FROM delivery_operations WHERE task_id=$1 AND resource_id=$2 ORDER BY created_at DESC,id DESC",[taskId,source.resource_id])).rows;
  for(const p of prior.filter(p=>p.state==='pending' && p.dispatch_active)) {
@@ -52,10 +57,11 @@ export async function ensureLocalCandidate(tx:Transaction,taskId:string):Promise
  const existing=prior.find(p=>p.request.source_digest===sourceDigest);
  const construction=existing?.request.construction ?? validate<PublicationPrepareRequest['construction']>('PublicationConstruction',{
   schema_version:1,construction_id:randomUUID(),candidate_id:randomUUID(),source_digest:sourceDigest,repository_identity:source.repository_identity,
-  target_branch:item.git!.metadata.target_branch,parents:[await sourceParent(tx,source)],author_name:'monos',author_email:'monos@localhost',timestamp:`${Math.floor(Date.now()/1000)} +0000`,message:`monos Task ${taskId} result v1`,
+  target_branch:item.git!.metadata.target_branch,parents:published?[{kind:'published',commit:published.candidate.head,repository_identity:published.repository_identity,published_proof:published,published_proof_digest:hash(published)}]:[await sourceParent(tx,source)],author_name:'monos',author_email:'monos@localhost',timestamp:`${Math.floor(Date.now()/1000)} +0000`,message:`monos Task ${taskId} result v1`,
  });
  const operationId=randomUUID();
- const request=validate<PublicationPrepareRequest>('PublicationPrepareRequest',{schema_version:1,operation_id:operationId,scan_run_id:randomUUID(),source,source_digest:sourceDigest,effective_basis:basis,effective_basis_digest:basisDigest,construction,construction_digest:hash(construction),configuration,configuration_digest:configDigest});
+ const proof=(await tx.query<{proof:PublicationPermissionProof}>('SELECT proof FROM publication_permission_observations WHERE resource_id=$1 AND configuration_fingerprint=$2 ORDER BY observed_at DESC,id DESC LIMIT 1',[source.resource_id,await permissionConfigurationFingerprint(tx,source.resource_id)])).rows[0]?.proof;
+ const request=validate<PublicationPrepareRequest>('PublicationPrepareRequest',{schema_version:1,operation_id:operationId,scan_run_id:randomUUID(),source,source_digest:sourceDigest,effective_basis:basis,effective_basis_digest:basisDigest,construction,construction_digest:hash(construction),configuration,configuration_digest:configDigest,...(published?{published,published_digest:hash(published)}:{}),...(proof?{permission_proof:proof,permission_proof_digest:hash(proof)}:{})});
  const admissionDigest=hash({source_digest:sourceDigest,effective_basis_digest:basisDigest,configuration_digest:configDigest});
  await insertOperation(tx,request,admissionDigest);
  return operationId;
@@ -68,9 +74,13 @@ function reject(message:string):never {throw new CommandError('payload_conflict'
 function verifyResult(request:PublicationPrepareRequest,result:PublicationResult) {
  if(result.operation_id!==request.operation_id || result.request_digest!==hash(request))reject('Publication request identity differs');
  if(result.status==='not_applicable' && result.reason!=='no_change')reject('No-change result reason differs');
- if(result.status!=='prepared')return;
+ if(result.status!=='prepared'&&result.status!=='mapped')return;
  const c=result.candidate!,scan=result.scan!;
- if(c.candidate_id!==request.construction.candidate_id || c.construction_id!==request.construction.construction_id || c.construction_digest!==request.construction_digest || c.source_digest!==request.source_digest || c.tree!==request.source.git_tree || canonicalJSON(c.parents)!==canonicalJSON(request.construction.parents.map(p=>p.commit)) || hash(c)!==result.candidate_manifest_digest || scan.scan_id!==request.scan_run_id || scan.candidate_manifest_digest!==result.candidate_manifest_digest || scan.configuration_digest!==request.configuration_digest || hash(scan)!==result.scan_digest)reject('Publication candidate or scan identity differs');
+ if(hash(c)!==result.candidate_manifest_digest||c.tree!==request.source.git_tree||scan.scan_id!==request.scan_run_id||scan.candidate_manifest_digest!==result.candidate_manifest_digest||scan.configuration_digest!==request.configuration_digest||hash(scan)!==result.scan_digest)reject('Publication candidate or scan identity differs');
+ if(result.status==='mapped') {
+  const m=result.mapping!,p=request.published;
+  if(!p||hash(p)!==request.published_digest||hash(m)!==result.mapping_digest||m.mapping_id!==request.operation_id||m.operation_id!==request.operation_id||m.request_digest!==hash(request)||m.item_id!==p.item_id||canonicalJSON(m.source)!==canonicalJSON(request.source)||m.source_digest!==request.source_digest||canonicalJSON(m.effective_basis)!==canonicalJSON(request.effective_basis)||m.effective_basis_digest!==request.effective_basis_digest||canonicalJSON(m.published)!==canonicalJSON(p)||m.published_digest!==request.published_digest||canonicalJSON(c)!==canonicalJSON(p.candidate)||m.candidate_manifest_digest!==p.candidate_manifest_digest||m.reused_head!==p.candidate.head||m.result_tree!==p.candidate.tree||m.configuration_digest!==request.configuration_digest||scan.coverage.commits!==0)reject('Published result mapping differs');
+ }else if(c.candidate_id!==request.construction.candidate_id||c.construction_id!==request.construction.construction_id||c.construction_digest!==request.construction_digest||c.source_digest!==request.source_digest||canonicalJSON(c.parents)!==canonicalJSON(request.construction.parents.map(p=>p.commit)))reject('Publication construction differs');
 }
 export function verifyPublicationFinding(f:PublicationFinding,request:PublicationPrepareRequest,result:PublicationResult) {
  const {finding_id,...facts}=f;
@@ -78,7 +88,7 @@ export function verifyPublicationFinding(f:PublicationFinding,request:Publicatio
  if(credentialPath(f.path) || f.baseline_path && credentialPath(f.baseline_path) || f.path_redacted && f.path!=='[redacted credential path]' || f.baseline_path_redacted && f.baseline_path!=='[redacted credential path]')reject('Finding path is not safely redacted');
  const messages={tracked_ignore:'Tracked file matches ignore rules.',publication_policy_size:'Blob exceeds local publication policy.',provider_hard_size:'Blob exceeds provider hard limit.',credential_pattern:'Credential pattern matched; value redacted.',published_credential:'Previously published credential exposure requires remediation.',workflow_permission:'Workflow write permission is not verified.'};
  const rules={tracked_ignore:['tracked_ignore'],publication_policy_size:['policy_blob_size'],provider_hard_size:['provider_blob_size'],workflow_permission:['workflow_permission'],credential_pattern:['pem_private_key','github_classic_token','github_fine_grained_token','aws_access_key'],published_credential:['pem_private_key','github_classic_token','github_fine_grained_token','aws_access_key']};
- if(messages[f.kind]!==f.message || !rules[f.kind].includes(f.rule_id) || f.kind==='published_credential' && !request.construction.parents.some(p=>p.commit===f.baseline_commit) || f.kind==='publication_policy_size' && (f.limit!==request.configuration.local_blob_limit || f.size!<=f.limit) || f.kind==='provider_hard_size' && (f.limit!==request.configuration.provider_blob_limit || f.size!<=f.limit) || f.kind==='workflow_permission' && request.configuration.workflow_write==='allowed')reject('Finding rule facts differ');
+ if(messages[f.kind]!==f.message || !rules[f.kind].includes(f.rule_id) || f.kind==='published_credential' && !(result.status==='mapped'?[request.published!.candidate.head]:request.construction.parents.map(p=>p.commit)).includes(f.baseline_commit!) || f.kind==='publication_policy_size' && (f.limit!==request.configuration.local_blob_limit || f.size!<=f.limit) || f.kind==='provider_hard_size' && (f.limit!==request.configuration.provider_blob_limit || f.size!<=f.limit) || f.kind==='workflow_permission' && request.configuration.workflow_write==='allowed')reject('Finding rule facts differ');
  const eligible=['tracked_ignore','publication_policy_size','credential_pattern'].includes(f.kind);
  if(f.override_eligible!==eligible)reject('Finding policy eligibility differs');
 }
@@ -157,12 +167,16 @@ export class PublicationPreparation {
    if(findings.length>op.request.configuration.max_findings || Buffer.byteLength(encoded)>op.request.configuration.max_evidence_bytes || new Set(findings.map(f=>f.finding_id)).size!==findings.length || new Set(findings.map(f=>f.occurrence_ordinal)).size!==findings.length)reject('Publication findings coverage bounds differ');
    if(scan ? scan.findings_count!==findings.length || scan.findings_bytes!==Buffer.byteLength(encoded) || scan.findings_digest!==hash(findings) : findings.length!==0 || page.page_count!==1)reject('Publication complete counts or digest differ');
    if(scan?.status==='complete' && (scan.coverage.commits>op.request.configuration.max_commits || scan.coverage.paths>scan.coverage.versions || scan.coverage.versions>op.request.configuration.max_versions || scan.coverage.unique_blob_bytes>op.request.configuration.max_aggregate_bytes))reject('Complete publication scan exceeds coverage bounds');
-   if(page.result.status==='prepared') {
+   if(page.result.status==='prepared'||page.result.status==='mapped') {
     const r=page.result,c=r.candidate!;
     const item=(await tx.query<{id:string}>(`INSERT INTO delivery_items(id,task_id,resource_id,workspace_id,runner_id,repository_identity,target_branch) VALUES($1,$2,$3,$4,$5,$6,$7)
      ON CONFLICT(task_id,resource_id) DO UPDATE SET task_id=delivery_items.task_id RETURNING id`,[randomUUID(),op.task_id,op.resource_id,op.workspace_id,runnerId,op.request.source.repository_identity,op.request.construction.target_branch])).rows[0]!;
     const candidate=(await tx.query<{manifest_digest:string;construction_digest:string}>('SELECT manifest_digest,construction_digest FROM publication_candidates WHERE id=$1',[c.candidate_id])).rows[0];
-    if(candidate && (candidate.manifest_digest!==r.candidate_manifest_digest || candidate.construction_digest!==op.request.construction_digest))reject('Candidate construction replay conflicts');
+    if(candidate && (candidate.manifest_digest!==r.candidate_manifest_digest || r.status==='prepared'&&candidate.construction_digest!==op.request.construction_digest))reject('Candidate construction replay conflicts');
+    if(r.status==='mapped') {
+     if(!candidate||item.id!==r.mapping!.item_id)reject('Mapped candidate item differs');
+     await tx.query('INSERT INTO published_result_mappings(operation_id,mapping_id,item_id,task_id,candidate_id,source_operation_id,source_digest,effective_basis_digest,mapping,mapping_digest) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)',[op.id,r.mapping!.mapping_id,item.id,op.task_id,c.candidate_id,op.source_operation_id,op.request.source_digest,op.request.effective_basis_digest,r.mapping,r.mapping_digest]);
+    }
     if(!candidate)await tx.query(`INSERT INTO publication_candidates(id,task_id,item_id,construction_id,construction,construction_digest,source_operation_id,source_digest,manifest,manifest_digest,prepared_operation_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,[c.candidate_id,op.task_id,item.id,c.construction_id,op.request.construction,op.request.construction_digest,op.source_operation_id,op.request.source_digest,c,r.candidate_manifest_digest,op.id]);
     await tx.query('INSERT INTO publication_scans(id,candidate_id,operation_id,summary,digest,configuration,configuration_digest,effective_basis,effective_basis_digest) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)',[scan!.scan_id,c.candidate_id,op.id,scan,r.scan_digest,op.request.configuration,op.request.configuration_digest,op.request.effective_basis,op.request.effective_basis_digest]);
     for(const [i,f] of findings.entries())await tx.query('INSERT INTO publication_findings(scan_id,ordinal,id,finding) VALUES($1,$2,$3,$4)',[scan!.scan_id,i,f.finding_id,f]);

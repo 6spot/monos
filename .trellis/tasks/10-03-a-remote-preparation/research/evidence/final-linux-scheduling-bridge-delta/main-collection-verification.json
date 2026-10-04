@@ -1,0 +1,22 @@
+{
+  "scope": "current five-file scheduling/test-only bridge delta; exact previous complete full/process/native-Git/21private-path gates reused for unchanged behavior",
+  "steps_passed": 8,
+  "current_manifest_inputs_verified": 139,
+  "all_original_log_bytes_sha256_verified": true,
+  "reused_gate": {
+    "result_sha256": "5d52cce1b7ac922bdfa444f937442d226955cc36b11bc797fbee854dcda54d68",
+    "source_manifest_sha256": "ea2b9b8bd642ee16bd4f4db265e72bb65cff0ac0670ac555de9d984683a73104",
+    "unchanged_inputs": 134,
+    "changed_paths": [
+      "runner/internal/control/publication_remote.go",
+      "runner/internal/control/publication_remote_test.go",
+      "runner/internal/host/publication_remote.go",
+      "runner/internal/host/publication_remote_native_test.go",
+      "runner/internal/host/publication_remote_test.go"
+    ],
+    "remote_permissions_denials": 42
+  },
+  "source_manifest_sha256": "f6c69995f5d2afe55e3b4ad6505d238ddfc6a417f685f20c1e5902be22657741",
+  "result_sha256": "1eceffe6239b6a6b46c6441372c45004e71a3809190427a85ba335993156b978",
+  "host_test_binary_sha256": "20bfa5fe62e8b5dd1e5573dc8b2fa59b2ec1c17ccfcf07961662478b417ecf81"
+}

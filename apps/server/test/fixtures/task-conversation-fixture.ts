@@ -13,7 +13,7 @@ import { enrollFixture } from '../../src/fixtures.ts';
 import { submission } from '../../../../packages/protocol/src/index.ts';
 import type { CommandEnvelope, Dispatch, OwnerCommand } from '../../../../packages/protocol/src/index.ts';
 
-export async function conversationFixture() {
+export async function conversationFixture(options:{runnerCredential?:string}={}) {
   const base = new URL(process.env.DATABASE_URL!),
     admin = database(base.toString()),
     namespace = 'conversation_' + randomUUID().replaceAll('-', '');
@@ -76,7 +76,7 @@ export async function conversationFixture() {
       specification: 'Build exact result',
     }),
   );
-  await enrollFixture(db, f.runner, randomUUID(), 2);
+  await enrollFixture(db, f.runner, options.runnerCredential??randomUUID(), 2);
   f.incarnation = await service.connect(f.runner, 'conversation-test');
   await service.touch(f.runner, f.incarnation, true, [
     {

@@ -314,8 +314,8 @@ func publicationPinFixture(t *testing.T) (protocol.PublicationParent, protocol.R
 	resultTestGit(t, f.export, nil, "clone", "--bare", "--no-local", f.export, cache)
 	w := protocol.WorkspaceDescriptor{SchemaVersion: 1, WorkspaceID: r.Source.WorkspaceID, TaskID: r.Source.TaskID, ResourceID: r.Source.ResourceID, RunnerID: r.Source.RunnerID, ProjectID: "project", NodeID: r.Source.NodeID, NodeActivation: 1, Generation: r.Source.Generation, LeaseID: "original-lease", OpenOperationID: "original-open", Resource: protocol.WorkspaceResource{ResourceID: r.Source.ResourceID, RepositoryIdentity: r.Source.RepositoryIdentity, RemoteURL: "https://github.com/example/repository.git", ProviderMetadata: &protocol.RepositoryProviderMetadata{Github: &protocol.RepositoryProviderMetadataGithub{RepositoryID: "123"}}}}
 	m := protocol.WorkspaceMetadata{BaseCommit: f.base, FinalizedCommit: f.base, TargetCommit: f.base, TargetBranch: "main", Generation: w.Generation, LeaseID: w.LeaseID, RepositoryIdentity: r.Source.RepositoryIdentity, StorageID: r.Source.StorageID, ProviderMetadata: w.Resource.ProviderMetadata}
-	p := protocol.PublicationParent{Kind: "materialization", Commit: f.base, RepositoryIdentity: r.Source.RepositoryIdentity, ObservationOperationID: w.OpenOperationID, Workspace: w, Outcome: protocol.EffectResult{WorkspaceID: &w.WorkspaceID, WorkspaceMetadata: &m}}
-	p.ObservationDigest = publicationTestDigest(t, map[string]any{"operation_id": p.ObservationOperationID, "workspace": w, "outcome": p.Outcome})
+	p := protocol.PublicationParent{Kind: "materialization", Commit: f.base, RepositoryIdentity: r.Source.RepositoryIdentity, ObservationOperationID: publicationPointer(w.OpenOperationID), Workspace: &w, Outcome: &protocol.EffectResult{WorkspaceID: &w.WorkspaceID, WorkspaceMetadata: &m}}
+	p.ObservationDigest = publicationPointer(publicationTestDigest(t, map[string]any{"operation_id": p.ObservationOperationID, "workspace": w, "outcome": p.Outcome}))
 	// Existing fetch pin JSON was0644 under its0700 parent before this feature;
 	// preserve that contract while new publication records require0600.
 	path := filepath.Join(root, "original-open.json")
@@ -581,12 +581,45 @@ func TestPublicationSHA256ObjectFormatCASReplay(t *testing.T) {
 	f.finish(t)
 	r := publicationTestRequest(t, f)
 	journalRoot := publicationTestRoot(t)
-	pages, e := preparePublicationAt(context.Background(), r, f.export, journalRoot, nil)
-	if e != nil || pages[0].Result.Candidate == nil || len(pages[0].Result.Candidate.Head) != 64 {
+	sourceRefs := resultTestGit(t, f.export, nil, "show-ref")
+	store, e := preparePublicationStore(context.Background(), journalRoot, f.export, r)
+	if e != nil {
+		t.Fatal("SHA256 separate store import failed", e)
+	}
+	if store == f.export || resultTestGit(t, store, nil, "rev-parse", "--show-object-format=storage") != "sha256" {
+		t.Fatal("separate store lost source object format")
+	}
+	if _, e = resultGit(context.Background(), store, 64, "cat-file", "-e", r.Source.GitCommit); e == nil {
+		t.Fatal("private source commit imported")
+	}
+	pages, e := preparePublicationStoredAt(context.Background(), r, f.export, store, journalRoot, nil)
+	if e != nil || len(pages) == 0 || pages[0].Result.Candidate == nil || len(pages[0].Result.Candidate.Head) != 64 {
 		t.Fatal("SHA256 construction/CAS failed", e)
 	}
-	replay, e := preparePublicationAt(context.Background(), r, f.export, journalRoot, nil)
+	reopened, e := preparePublicationStore(context.Background(), journalRoot, f.export, r)
+	if e != nil || reopened != store {
+		t.Fatal("SHA256 store reuse failed", e)
+	}
+	replay, e := preparePublicationStoredAt(context.Background(), r, f.export, reopened, journalRoot, nil)
 	if e != nil || !reflect.DeepEqual(replay, pages) {
 		t.Fatal("SHA256 replay changed identity", e)
+	}
+	if resultTestGit(t, f.export, nil, "show-ref") != sourceRefs {
+		t.Fatal("source refs changed")
+	}
+
+	mismatchRoot := publicationTestRoot(t)
+	mismatchStore := publicationStore(mismatchRoot, r.Source)
+	for _, path := range []string{filepath.Join(mismatchRoot, "stores"), filepath.Dir(mismatchStore), mismatchStore} {
+		if publicationDirectory(path) != nil {
+			t.Fatal("mismatch fixture directory unavailable")
+		}
+	}
+	resultTestGit(t, mismatchRoot, nil, "init", "--bare", "--quiet", "--object-format=sha1", mismatchStore)
+	if _, e = preparePublicationStore(context.Background(), mismatchRoot, f.export, r); e == nil {
+		t.Fatal("mismatching existing store format accepted")
+	}
+	if resultTestGit(t, mismatchStore, nil, "rev-parse", "--show-object-format=storage") != "sha1" {
+		t.Fatal("mismatching store format rewritten")
 	}
 }

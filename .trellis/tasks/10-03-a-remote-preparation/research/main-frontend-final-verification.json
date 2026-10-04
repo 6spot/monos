@@ -1,0 +1,14 @@
+{
+  "captured_at": "2026-10-04T23:00:39.131455+00:00",
+  "scope": "main integration audit of handed-off Web source and representative PNG bytes; no recapture or test rerun",
+  "owned_inputs_verified": 12,
+  "pngs_verified": 14,
+  "independent_main_visual_inspection": [
+    "remote-prepared-checks-mobile.png",
+    "remote-rate_limited-desktop.png"
+  ],
+  "worker_actual_inspection": 14,
+  "manifest_sha256": "19ba9ee108c7e1397a0dd308ce0c352895dbd9af988644dd2f6707042c5afb1a",
+  "observations": "mobile refs wrap within viewport; informational complete failure stays distinct from readiness; desktop rate-limit attention and scoped retry retain local scan inspection",
+  "live_provider_native_claim": false
+}

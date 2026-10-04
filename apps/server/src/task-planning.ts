@@ -1,3 +1,4 @@
+import { requestRemoteCancel } from './remote-preparation-state.ts';
 import { cancelTaskInputEffects } from './task-guidance.ts';
 import { stopConversationAttempt } from './task-conversation-state.ts';
 import type { AttemptRow } from './service.ts';
@@ -97,6 +98,7 @@ export class TaskPlanning {
               const conversations=(await tx.query<AttemptRow>('SELECT * FROM attempts WHERE task_id=$1 AND task_conversation_source_id IS NOT NULL FOR UPDATE',[task.id])).rows;
               for(const a of conversations){await stopConversationAttempt(tx,a,command.request_id);await tx.query('UPDATE attempts SET mutation_allowed=false WHERE id=$1',[a.id]);}
               await cancelTaskInputEffects(tx,task.id);
+              await requestRemoteCancel(tx,task.id);
             }
             endReason = command.name === 'cancel_task' ? 'owner_cancelled' : 'owner_stopped';
             await tx.query('UPDATE tasks SET state=$2,control_version=control_version+1,planning_issue_sequence=NULL WHERE id=$1', [task.id, command.name === 'cancel_task' ? 'CANCELLED' : 'PLANNING']);

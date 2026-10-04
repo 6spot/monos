@@ -1,0 +1,14 @@
+{
+  "cwd": "/Users/me/IdeaProjects/monos/runner",
+  "command": [
+    "/Users/me/.local/share/mise/installs/go/1.27.1/bin/go",
+    "test",
+    "./internal/host",
+    "-run",
+    "^TestRemotePreparation(DurablePush|UnknownResolution|Revert|FreshScan|WorkflowGrant|ImmutableScan|RetainedProof)",
+    "-count=1"
+  ],
+  "exit_code": 0,
+  "elapsed_seconds": 18.430036166999997,
+  "scope": "narrow final permission-context check; earlier whole Go gates remain evidence of other unchanged inputs"
+}

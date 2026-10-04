@@ -63,8 +63,8 @@ func publicationDaemonFixture(t *testing.T, retainOpen bool) (*journal.DB, proto
 	if retainOpen {
 		retainRecovery(t, db, dispatch, open, &originalOutcome)
 	}
-	parent := protocol.PublicationParent{Kind: "materialization", Commit: source.BaseCommit, RepositoryIdentity: source.RepositoryIdentity, ObservationOperationID: open.OperationID, Workspace: original, Outcome: originalOutcome.Result}
-	parent.ObservationDigest = publicationDaemonDigest(t, map[string]any{"operation_id": parent.ObservationOperationID, "workspace": parent.Workspace, "outcome": parent.Outcome})
+	parent := protocol.PublicationParent{Kind: "materialization", Commit: source.BaseCommit, RepositoryIdentity: source.RepositoryIdentity, ObservationOperationID: ptr(open.OperationID), Workspace: &original, Outcome: &originalOutcome.Result}
+	parent.ObservationDigest = ptr(publicationDaemonDigest(t, map[string]any{"operation_id": parent.ObservationOperationID, "workspace": parent.Workspace, "outcome": parent.Outcome}))
 	sd := publicationDaemonDigest(t, source)
 	construction := protocol.PublicationConstruction{SchemaVersion: 1, CandidateID: "candidate", ConstructionID: "construction", SourceDigest: sd, RepositoryIdentity: source.RepositoryIdentity, TargetBranch: "main", Parents: []protocol.PublicationParent{parent}, AuthorName: "monos", AuthorEmail: "monos@localhost", Timestamp: "1790999999 +0000", Message: "monos Task " + task + " result v1"}
 	config := protocol.PublicationScanConfiguration{SchemaVersion: 1, PolicyVersion: "local_publication_v1", RuleVersion: "credential_rules_v1", TraversalVersion: "all_parents_final_tree_v1", LocalBlobLimit: 50 << 20, ProviderBlobLimit: 100 << 20, MaxCommits: 256, MaxPaths: 8192, MaxVersions: 32768, MaxBlobBytes: 128 << 20, MaxAggregateBytes: 512 << 20, MaxFindings: 4096, MaxEvidenceBytes: 8 << 20, DeadlineSeconds: 120, WorkflowWrite: "unknown", PermissionFingerprint: strings.Repeat("e", 64)}
@@ -80,7 +80,7 @@ func TestPublicationRetainedOriginalOpenAndReleasedCompletion(t *testing.T) {
 	if e = retainedPublicationIdentity(db, r); e != nil {
 		t.Fatal("original public open/released source rejected", e)
 	}
-	if r.Construction.Parents[0].ObservationOperationID == "later-open" {
+	if *r.Construction.Parents[0].ObservationOperationID == "later-open" {
 		t.Fatal("fixture did not distinguish original public origin")
 	}
 	after, e := db.Effect(r.Source.OperationID)
@@ -97,7 +97,7 @@ func TestPublicationRetainedRejectsMissingForeignAndPrivateParents(t *testing.T)
 			case "different-outcome":
 				p.Outcome.WorkspaceMetadata.TargetCommit = strings.Repeat("4", 40)
 			case "different-observation":
-				p.ObservationOperationID = "later-open"
+				p.ObservationOperationID = ptr("later-open")
 			case "private-basis":
 				p.Workspace.Basis = &protocol.WorkspaceBasis{StorageID: r.Source.StorageID, RepositoryIdentity: r.Source.RepositoryIdentity, BaseCommit: r.Source.GitCommit, FinalizedCommit: r.Source.GitCommit, TargetBranch: "main"}
 			case "published":
@@ -112,7 +112,7 @@ func TestPublicationRetainedRejectsMissingForeignAndPrivateParents(t *testing.T)
 				r.Configuration.WorkflowWrite = "allowed"
 				r.ConfigurationDigest = publicationDaemonDigest(t, r.Configuration)
 			}
-			p.ObservationDigest = publicationDaemonDigest(t, map[string]any{"operation_id": p.ObservationOperationID, "workspace": p.Workspace, "outcome": p.Outcome})
+			p.ObservationDigest = ptr(publicationDaemonDigest(t, map[string]any{"operation_id": p.ObservationOperationID, "workspace": p.Workspace, "outcome": p.Outcome}))
 			r.ConstructionDigest = publicationDaemonDigest(t, r.Construction)
 			if retainedPublicationIdentity(db, r) == nil {
 				t.Fatal("untrusted publication proof accepted", kind)

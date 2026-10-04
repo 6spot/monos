@@ -1,0 +1,13 @@
+{
+  "directory": "/root/monos-publication-validation-ae82bda877d24491addab09201ff0aae",
+  "control_directory": "/private/tmp/monos-native-github-cdtph4rt",
+  "source_manifest_sha256": "f6c69995f5d2afe55e3b4ad6505d238ddfc6a417f685f20c1e5902be22657741",
+  "reused_original_evidence": "/Users/me/IdeaProjects/monos/.trellis/tasks/10-03-a-remote-preparation/research/evidence/final-linux-sha256-delta",
+  "changed_paths": [
+    "runner/internal/control/publication_remote.go",
+    "runner/internal/control/publication_remote_test.go",
+    "runner/internal/host/publication_remote.go",
+    "runner/internal/host/publication_remote_native_test.go",
+    "runner/internal/host/publication_remote_test.go"
+  ]
+}

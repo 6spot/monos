@@ -1,0 +1,11 @@
+{
+  "cwd": "/Users/me/IdeaProjects/monos/runner",
+  "command": [
+    "/Users/me/.local/share/mise/installs/go/1.27.1/bin/go",
+    "vet",
+    "./internal/host"
+  ],
+  "exit_code": 0,
+  "elapsed_seconds": 0.20551345799999865,
+  "scope": "SHA256 storage fix and existing SHA1 real-store/reuse physical host behavior"
+}

@@ -1,0 +1,12 @@
+{
+  "scope": "relocated after all subprocess gates ended; no tests under private/tmp lineage",
+  "old_root": "/Users/me/IdeaProjects/monos/.trellis/tasks/10-03-a-remote-preparation/research/evidence/primitives-uid-bound-ahz0med9",
+  "new_root": "/private/tmp/monos-remote-primitives-uid-i_odpiqg/source",
+  "base_commit": "2095660a1fe546412430b5d630d4837dc550155b",
+  "source_manifest_sha256": "dbb9f0221e75a1d0bda03f2a53d00923d9421dd678dba5c6b8ec4ffb9ca792d6",
+  "owned_source_archive_sha256": "351076db2dcd37683024ea1f97779a592777c81c1a51b4c1b9b5d75da16d40d2",
+  "full_file_tree_sha256_before": "ea088a7b3c5c09213ff20299b1bf9b637d18af4e85b37036028787eb3685e782",
+  "full_file_tree_sha256_after": "ea088a7b3c5c09213ff20299b1bf9b637d18af4e85b37036028787eb3685e782",
+  "files": 188,
+  "manifest_input_count": 123
+}

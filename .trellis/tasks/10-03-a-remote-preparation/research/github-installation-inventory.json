@@ -1,0 +1,6 @@
+{
+  "observed_at": "2026-10-04T03:52:18.212467+00:00",
+  "scope": "read-only available GitHub App installation inventory; no secret or mutation",
+  "exit_code": 1,
+  "status": "read inventory unavailable; no inference about installation absence"
+}

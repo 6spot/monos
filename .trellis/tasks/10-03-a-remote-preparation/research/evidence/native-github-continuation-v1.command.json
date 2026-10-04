@@ -1,0 +1,19 @@
+{
+  "args": [
+    "node",
+    ".trellis/tasks/10-03-a-remote-preparation/research/native-github-fixture.mjs",
+    "--control-socket",
+    "/private/tmp/monos-native-github-cdtph4rt/s",
+    "--linux-evidence",
+    ".trellis/tasks/10-03-a-remote-preparation/research/evidence/final-linux-scheduling-bridge-delta",
+    "--output",
+    ".trellis/tasks/10-03-a-remote-preparation/research/evidence/native-github-continuation-v1",
+    "--resume-from",
+    ".trellis/tasks/10-03-a-remote-preparation/research/evidence/native-github-final-v1"
+  ],
+  "started_at": "2026-10-04T23:06:47.848423+00:00",
+  "scope": "authorized exact synthetic GitHub lower-kernel original pre-push operation continuation; OAuth-injected, no product source/merge/Accept/installed App claim",
+  "exit_code": 0,
+  "seconds": 38.67389988899231,
+  "finished_at": "2026-10-04T23:07:26.522745+00:00"
+}

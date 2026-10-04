@@ -1,6 +1,11 @@
 import { PublicationPreparation } from './publication-candidates.ts';
 import { PublicationCandidateReads } from './publication-candidate-reads.ts';
 import { PublicationCommands } from './publication-commands.ts';
+import {RemotePreparation} from './remote-preparation.ts';
+import {RemotePreparationReads} from './remote-preparation-reads.ts';
+import {RemotePreparationCommands} from './remote-preparation-commands.ts';
+import {RemotePreparationAccess} from './remote-preparation-access.ts';
+import {GitHubRemote} from './github-remote.ts';
 import { ResultReadBroker } from "./result-read-broker.ts";
 import { resultContent } from "./result-content-reads.ts";
 import { TaskReplan } from './task-replan.ts';
@@ -10,6 +15,7 @@ import Fastify from 'fastify';
 import { WebSocketServer, WebSocket } from 'ws';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { CommandError } from '../../../packages/domain/src/commands.ts';
+import { RemoteProviderWaiting } from './remote-preparation-state.ts';
 import { MAX_BODY_BYTES, MAX_FRAME_BYTES, parseFrame, ProtocolValidationError, ProtocolVersionError, validate } from '../../../packages/protocol/src/index.ts';
 import type { CommandResult, Frame, InventoryQuery } from '../../../packages/protocol/src/index.ts';
 import type { BoundaryService } from './service.ts';
@@ -61,7 +67,7 @@ function errorResult(error: unknown): CommandResult {
   return { schema_version: 1, status: 'error', error: error instanceof CommandError ? error.detail : { code: 'internal_error', message: 'Internal operation failed; reconcile existing request before retry' } };
 }
 
-export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: Buffer }, webRoot?: string) {
+export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: Buffer }, webRoot?: string, options:{remoteProvider?:GitHubRemote}={}) {
   const app = Fastify({ ...(tls ? { https: tls } : {}), bodyLimit: MAX_BODY_BYTES, logger: { level: 'warn', redact: ['req.headers.authorization', 'req.headers.cookie', 'res.headers.set-cookie'] }, disableRequestLogging: true });
   app.setErrorHandler((error: unknown, request: FastifyRequest, reply: FastifyReply) => {
     if (webRoot && (request.url === '/' || request.url.startsWith('/assets/')) && error && typeof error === 'object' && 'statusCode' in error && typeof error.statusCode === 'number' && [400, 403, 404].includes(error.statusCode)) {
@@ -70,15 +76,20 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
     }
     const result = errorResult(error);
     const code = result.error!.code;
-    if (code === 'rate_limited') void reply.header('Retry-After', '60');
+    if (code === 'rate_limited') void reply.header('Retry-After', error instanceof RemoteProviderWaiting ? String(error.retry_after_seconds) : '60');
     void reply.code(code === 'unauthorized' ? 401 : code === 'denied_scope' ? 403 : code === 'rate_limited' ? 429 : code === 'internal_error' ? 500 : 409).send(result);
   });
-  app.addHook('onRequest', async (request, reply) => { if (request.url.startsWith('/v1/owner/')) void reply.header('Cache-Control', 'no-store'); });
+  app.addHook('onRequest', async (request, reply) => { if (request.url.startsWith('/v1/owner/')) {void reply.header('Cache-Control', 'no-store');if(request.url.includes('/remote-preparation'))void reply.header('X-Content-Type-Options','nosniff');} });
   app.get('/health', async () => { await service.db.pool.query('SELECT 1'); return { schema_version: 1, database: 'ready', probe: true }; });
   const resultReads = new ResultReadBroker();
   const publication = new PublicationPreparation(service.db,service.instanceId);
   const publicationReads = new PublicationCandidateReads(service.db,service.instanceId);
   const publicationCommands = new PublicationCommands(service.db);
+  const remoteProvider=options.remoteProvider??new GitHubRemote(service.options.github??new GitHub(service.options.signingKey));
+  const remote=new RemotePreparation(service.db,service.instanceId,remoteProvider);
+  const remoteReads=new RemotePreparationReads(service.db,service.instanceId);
+  const remoteCommands=new RemotePreparationCommands(service.db);
+  const remoteAccess=new RemotePreparationAccess(service,remoteProvider);
   const owner = new OwnerCommands(service.db);
   const reads = new OwnerReads(service.db);
   const access = new OwnerAccess(service.db);
@@ -107,6 +118,13 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
   app.get<{Params:{task_id:string}}>('/v1/owner/tasks/:task_id/publication-candidates', async (request,reply) => {reply.header('X-Content-Type-Options','nosniff');return publicationReads.list(ownerCredential(request),request.params.task_id,request.query);});
   app.get<{Params:{task_id:string;candidate_id:string}}>('/v1/owner/tasks/:task_id/publication-candidates/:candidate_id', async (request,reply) => {reply.header('X-Content-Type-Options','nosniff');return publicationReads.candidate(ownerCredential(request),request.params.task_id,request.params.candidate_id);});
   app.get<{Params:{task_id:string;candidate_id:string}}>('/v1/owner/tasks/:task_id/publication-candidates/:candidate_id/findings', async (request,reply) => {reply.header('X-Content-Type-Options','nosniff');return publicationReads.findings(ownerCredential(request),request.params.task_id,request.params.candidate_id,request.query);});
+  app.get<{Params:{task_id:string}}>('/v1/owner/tasks/:task_id/remote-preparation',async request=>remoteReads.list(ownerCredential(request),request.params.task_id,request.query));
+  app.get<{Params:{task_id:string;item_id:string}}>('/v1/owner/tasks/:task_id/remote-preparation/:item_id',async request=>remoteReads.item(ownerCredential(request),request.params.task_id,request.params.item_id));
+  app.get<{Params:{task_id:string;item_id:string;observation_id:string}}>('/v1/owner/tasks/:task_id/remote-preparation/:item_id/checks/:observation_id',async request=>remoteReads.checks(ownerCredential(request),request.params.task_id,request.params.item_id,request.params.observation_id,request.query));
+  app.post('/v1/owner/tasks/remote-preparation/commands',async request=>remoteCommands.command(ownerCredential(request),request.body));
+  app.get<{Params:{task_id:string;request_id:string}}>('/v1/owner/tasks/:task_id/remote-preparation/commands/:request_id',async request=>remoteCommands.receipt(ownerCredential(request),request.params.task_id,request.params.request_id));
+  app.post<{Params:{operation_id:string}}>('/v1/runner/remote-preparation/:operation_id/access',{bodyLimit:16*1024,onRequest:async(_request,reply)=>{void reply.header('Cache-Control','no-store');}},async request=>remoteAccess.access(bearer(request),request.params.operation_id,request.body));
+  app.post<{Params:{operation_id:string}}>('/v1/runner/publication-operations/:operation_id/permission',{bodyLimit:16*1024,onRequest:async(_request,reply)=>{void reply.header('Cache-Control','no-store');}},async request=>remoteAccess.permission(bearer(request),request.params.operation_id,request.body));
   app.get('/v1/owner/configuration', async (request) => configuration.read(ownerCredential(request)));
   app.get('/v1/owner/todos', async (request) => todos.list(ownerCredential(request), request.query));
   app.post('/v1/owner/task-previews/commands', async (request) => taskPreviews.command(ownerCredential(request), request.body));
@@ -240,6 +258,7 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
     let processing = Promise.resolve();
     let polling = false;
     let publicationSupported = false;
+    let remoteSupported = false;
     let queuedMessages = 0;
     let queuedBytes = 0;
     const send = (frame: Frame) => {
@@ -253,7 +272,7 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
     const poll = setInterval(() => {
       if (incarnation === undefined || polling || ws.readyState !== WebSocket.OPEN) return;
       polling = true;
-      void Promise.all([service.pending(runnerId, incarnation),publication.pending(runnerId,incarnation,publicationSupported)]).then((groups) => groups.flat().forEach(send)).catch(() => ws.close(4001, 'Control connection unavailable')).finally(() => { polling = false; });
+      void Promise.all([service.pending(runnerId, incarnation),publication.pending(runnerId,incarnation,publicationSupported),remote.pending(runnerId,incarnation,remoteSupported)]).then((groups) => groups.flat().forEach(send)).catch(() => ws.close(4001, 'Control connection unavailable')).finally(() => { polling = false; });
     }, 250);
     poll.unref();
     const helloDeadline = setTimeout(() => { if (incarnation === undefined) ws.close(4000, 'Version handshake required'); }, 5000);
@@ -284,6 +303,7 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
               if (!frame.log_modes?.includes('ordered_v1')) throw new CommandError('unmet_precondition', 'Runner does not support ordered execution logs');
               await service.touch(runnerId, incarnation, true, frame.runtimes);
               if(ws.readyState===WebSocket.OPEN){publicationSupported=frame.publication_modes?.includes('local_candidate_v1') ?? false;await service.db.pool.query('UPDATE runners SET publication_supported=$3 WHERE id=$1 AND incarnation=$2 AND connection_instance=$4',[runnerId,incarnation,publicationSupported,service.instanceId]);}
+              if(ws.readyState===WebSocket.OPEN){remoteSupported=frame.remote_preparation_modes?.includes('github_review_v1')??false;await service.db.pool.query('UPDATE runners SET remote_preparation_supported=$3 WHERE id=$1 AND incarnation=$2 AND connection_instance=$4',[runnerId,incarnation,remoteSupported,service.instanceId]);}
               if (ws.readyState === WebSocket.OPEN) resultReads.register(runnerId,incarnation,ws,frame.result_read_modes?.includes("git_objects_v1") ?? false,send); break;
             case 'result_read_result':
               await service.touch(runnerId,incarnation);
@@ -292,6 +312,11 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
               await service.touch(runnerId,incarnation);
               const ack=await publication.finish(runnerId,incarnation,frame.publication_result);
               if(ack)send({schema_version:1,type:'publication_ack',incarnation,publication_ack:ack});break;
+            }
+            case 'publication_push_result': {
+              await service.touch(runnerId,incarnation);
+              const ack=await remote.finish(runnerId,incarnation,frame.publication_push_result);
+              send({schema_version:1,type:'publication_push_ack',incarnation,publication_push_ack:ack});break;
             }
             case 'heartbeat': await service.touch(runnerId, incarnation); break;
             case 'authorize_dispatch': {

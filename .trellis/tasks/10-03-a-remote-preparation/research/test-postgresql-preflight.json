@@ -1,0 +1,7 @@
+{
+  "observed_at": "2026-10-04T04:13:07.669816+00:00",
+  "scope": "read-only isolated test PostgreSQL connection preflight",
+  "exit_code": 0,
+  "connection": "available",
+  "server_version": "17.10"
+}

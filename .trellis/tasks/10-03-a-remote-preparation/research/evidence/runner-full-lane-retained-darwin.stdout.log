@@ -1,0 +1,21 @@
+--- FAIL: TestRemotePreparationNativeRetainedPermissionFixture (0.40s)
+panic: runtime error: invalid memory address or nil pointer dereference [recovered, repanicked]
+[signal SIGSEGV: segmentation violation code=0x2 addr=0x80 pc=0x1005869c4]
+
+goroutine 36 [running]:
+testing.tRunner.func1.2({0x10085b8c8, 0x100917530})
+	/Users/me/.local/share/mise/installs/go/1.27.1/src/testing/testing.go:2123 +0x1a0
+testing.tRunner.func1()
+	/Users/me/.local/share/mise/installs/go/1.27.1/src/testing/testing.go:2126 +0x2c8
+panic({0x10085b8c8?, 0x100917530?})
+	/Users/me/.local/share/mise/installs/go/1.27.1/src/runtime/panic.go:859 +0x120
+monos.local/runner/internal/host.publicationPushTestFixtureAt(0x31f377669208, {0x31f377332026, 0x7b})
+	/Users/me/IdeaProjects/monos/runner/internal/host/publication_remote_test.go:70 +0xe84
+monos.local/runner/internal/host.TestRemotePreparationNativeRetainedPermissionFixture(0x31f377669208)
+	/Users/me/IdeaProjects/monos/runner/internal/host/publication_remote_primitives_test.go:226 +0x164
+testing.tRunner(0x31f377669208, 0x100894778)
+	/Users/me/.local/share/mise/installs/go/1.27.1/src/testing/testing.go:2193 +0xc4
+created by testing.(*T).Run in goroutine 1
+	/Users/me/.local/share/mise/installs/go/1.27.1/src/testing/testing.go:2258 +0x3b8
+FAIL	monos.local/runner/internal/host	0.993s
+FAIL

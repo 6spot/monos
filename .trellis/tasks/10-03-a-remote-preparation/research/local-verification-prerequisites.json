@@ -1,0 +1,14 @@
+{
+  "observed_at": "2026-10-04T04:12:41.114130+00:00",
+  "scope": "read-only local verification prerequisites",
+  "go_path": "/Users/me/.local/share/mise/installs/go/1.27.1/bin/go",
+  "pg_locator_present": true,
+  "pg_root_exists": true,
+  "private_database_url_present": true,
+  "pg_ctl_path": "/opt/homebrew/bin/pg_ctl",
+  "pg_isready_path": "/opt/homebrew/bin/pg_isready",
+  "go_version": "go version go1.27.1 darwin/arm64",
+  "go_version_exit_code": 0,
+  "node_version": "v26.3.0",
+  "pnpm_version": "12.6.0"
+}

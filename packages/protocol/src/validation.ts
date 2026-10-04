@@ -21,9 +21,9 @@ export function validate<T>(name: string, value: unknown): T {
     validators.set(name, validator);
   }
   if (!validator(value)) throw new ProtocolValidationError(`Invalid ${name}: ${ajv.errorsText(validator.errors, { dataVar: 'body' })}`);
-  const limit = name === 'ResultReadResponse' || name.startsWith('Publication') ? 512 * 1024 : name === 'GitHubRepositoryAccessResult' ? 16 * 1024 : ['Frame', 'RunnerInventory'].includes(name) ? MAX_FRAME_BYTES : ['Dispatch', 'Operation', 'OperationResult'].includes(name) ? MAX_ITEM_BYTES : undefined;
+  const limit = ['GitHubRepositoryAccessResult','PublicationAccessRequest','PublicationAccessResult','PublicationPermissionRequest','PublicationPermissionResult'].includes(name) ? 16 * 1024 : name === 'ResultReadResponse' || name.startsWith('Publication') || name.startsWith('PublishedResult') || name.startsWith('RemotePreparation') ? 512 * 1024 : ['Frame', 'RunnerInventory'].includes(name) ? MAX_FRAME_BYTES : ['Dispatch', 'Operation', 'OperationResult'].includes(name) ? MAX_ITEM_BYTES : undefined;
   if (limit !== undefined && new TextEncoder().encode(JSON.stringify(value)).length > limit) throw new ProtocolValidationError(`${name} exceeds the encoded wire byte limit`);
-  if (name.startsWith('Publication') || name.startsWith('Result') || name === 'Frame' && value && typeof value === 'object' && 'type' in value && ['result_read','result_read_result','publication_prepare','publication_result','publication_ack'].includes(String(value.type))) {
+  if (name.startsWith('Publication') || name.startsWith('PublishedResult') || name.startsWith('RemotePreparation') || name.startsWith('Result') || name === 'Frame' && value && typeof value === 'object' && 'type' in value && ['result_read','result_read_result','publication_prepare','publication_result','publication_ack','publication_push','publication_push_result','publication_push_ack'].includes(String(value.type))) {
     resultBytes(value);
     if(name === 'Frame' && value && typeof value === 'object' && 'type' in value && String(value.type).startsWith('publication_') && new TextEncoder().encode(JSON.stringify(value)).length>512*1024)throw new ProtocolValidationError('Publication frame exceeds encoded byte bounds');
     if (name === 'Frame' && value && typeof value === 'object' && 'result_read_result' in value) validate('ResultReadResponse',value.result_read_result);
@@ -37,6 +37,7 @@ function resultBytes(value: unknown, key = ''): void {
     const bytes = new TextEncoder().encode(value).length;
     if (key === 'text' && (bytes > 64*1024 || value.includes('\0'))) throw new ProtocolValidationError('Result text exceeds raw byte bounds or is binary');
     if (['path','baseline_path'].includes(key) && bytes > 4096) throw new ProtocolValidationError('Result path exceeds byte bounds');
+    if (key === 'body' && bytes > 64*1024) throw new ProtocolValidationError('Remote content exceeds raw byte bounds');
   } else if (Array.isArray(value)) value.forEach(v=>resultBytes(v,key));
   else if (value && typeof value === 'object') for (const [k,v] of Object.entries(value)) resultBytes(v,k);
 }

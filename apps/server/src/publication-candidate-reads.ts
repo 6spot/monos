@@ -20,12 +20,14 @@ function cursorDecode(binding:unknown,cursor?:string):number|string {
  }catch(e){if(e instanceof CommandError)throw e;throw new CommandError('invalid_input','Invalid publication cursor');}
 }
 export async function knownPublicExposureCount(tx:Transaction,taskId:string,resourceId:string,repositoryIdentity:string):Promise<number> {
- const exposure=(await tx.query<{n:string}>(`SELECT count(DISTINCT jsonb_build_array(f.finding->>'baseline_commit',f.finding->>'blob',f.finding->>'content_digest',f.finding->>'rule_id')) n FROM publication_findings f JOIN publication_scans s ON s.id=f.scan_id JOIN publication_candidates c ON c.id=s.candidate_id JOIN delivery_items i ON i.id=c.item_id WHERE i.task_id=$1 AND i.resource_id=$2 AND i.repository_identity=$3 AND f.finding->>'kind'='published_credential'`,[taskId,resourceId,repositoryIdentity])).rows[0]!;
+ const exposure=(await tx.query<{n:string}>(`SELECT count(DISTINCT fact) n FROM (
+ SELECT jsonb_build_array(f.finding->>'blob',f.finding->>'content_digest',f.finding->>'rule_id') fact FROM publication_findings f JOIN publication_scans s ON s.id=f.scan_id JOIN publication_candidates c ON c.id=s.candidate_id JOIN delivery_items i ON i.id=c.item_id WHERE i.task_id=$1 AND i.resource_id=$2 AND i.repository_identity=$3 AND f.finding->>'kind'='published_credential'
+ UNION SELECT jsonb_build_array(e.exposure->>'blob',e.exposure->>'content_digest',e.exposure->>'rule_id') FROM remote_published_exposures e JOIN remote_preparation_items i ON i.item_id=e.item_id WHERE i.task_id=$1 AND i.resource_id=$2 AND i.repository_identity=$3) facts`,[taskId,resourceId,repositoryIdentity])).rows[0]!;
  return Number(exposure.n);
 }
 export async function publicationRecord(tx:Transaction,op:DeliveryOperation,instanceId?:string):Promise<PublicationRecord> {
  const effective=await effectiveResult(tx,op.request);
- const latest=(await tx.query<{id:string}>("SELECT id FROM delivery_operations WHERE task_id=$1 AND candidate_id=$2 ORDER BY created_at DESC,id DESC LIMIT 1",[op.task_id,op.request.construction.candidate_id])).rows[0];
+ const latest=(await tx.query<{id:string}>("SELECT id FROM delivery_operations WHERE task_id=$1 AND resource_id=$2 ORDER BY created_at DESC,id DESC LIMIT 1",[op.task_id,op.resource_id])).rows[0];
  const config=await publicationConfiguration(tx,op.resource_id),scanApplicable=latest?.id===op.id && effective.current && hash(config)===op.request.configuration_digest;
  const runner=(await tx.query<{online:boolean;publication_supported:boolean}>("SELECT connected AND ready AND last_seen>clock_timestamp()-interval '15 seconds' AND ($2::text IS NULL OR connection_instance=$2) online,publication_supported FROM runners WHERE id=$1",[op.runner_id,instanceId ?? null])).rows[0];
  const exposure=await knownPublicExposureCount(tx,op.task_id,op.resource_id,op.request.source.repository_identity);
@@ -36,6 +38,7 @@ export async function publicationRecord(tx:Transaction,op:DeliveryOperation,inst
   effective_basis:op.request.effective_basis,effective_basis_digest:op.request.effective_basis_digest,
   status:op.result?.status ?? (runner?.online?(runner.publication_supported?'preparing':'unsupported'):'offline'),
   ...(op.result?.candidate?{candidate:op.result.candidate,candidate_manifest_digest:op.result.candidate_manifest_digest,scan:op.result.scan,scan_digest:op.result.scan_digest}:{}),
+  ...(op.result?.mapping?{mapping:op.result.mapping,mapping_digest:op.result.mapping_digest}:{}),
   ...(op.result?.reason?{reason:op.result.reason}:{}),current:effective.current,scan_applicable:scanApplicable && !!op.result?.scan,
   retry_allowed:allowed && (op.state==='pending' || op.result?.scan?.status==='incomplete'),
   override_allowed:allowed && op.result?.scan?.status==='complete',override_receipt_ids:receipts,known_public_exposure_count:exposure,
@@ -68,7 +71,7 @@ export class PublicationCandidateReads {
   validate('Id',taskId);validate('Id',candidateId);
   return transaction(this.db,async tx=>{
    await authenticateOwner(tx,token);if(!(await tx.query('SELECT id FROM tasks WHERE id=$1 FOR SHARE',[taskId])).rowCount)throw new CommandError('denied_scope','Unknown Task');
-   const op=(await tx.query<DeliveryOperation>("SELECT * FROM delivery_operations WHERE task_id=$1 AND candidate_id=$2 AND state='terminal' AND result->>'status'='prepared' ORDER BY created_at DESC,id DESC LIMIT 1",[taskId,candidateId])).rows[0];
+   const op=(await tx.query<DeliveryOperation>("SELECT o.* FROM delivery_operations o JOIN publication_scans s ON s.operation_id=o.id WHERE o.task_id=$1 AND s.candidate_id=$2 AND o.state='terminal' AND o.result->>'status' IN ('prepared','mapped') ORDER BY o.created_at DESC,o.id DESC LIMIT 1",[taskId,candidateId])).rows[0];
    if(!op)throw new CommandError('denied_scope','Unknown publication candidate');return publicationRecord(tx,op,this.instanceId);
   });
  }

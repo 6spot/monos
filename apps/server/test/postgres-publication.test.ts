@@ -34,7 +34,7 @@ suite('Durable local publication',()=>{
    const command={schema_version:1,request_id:randomUUID(),task_id:x.f.task,name:'edit_specification',payload:{proposal_id:randomUUID(),specification:'Carried exact result under new requirements',summary:'Preserve the canonical completion',impact,basis:await x.basis(),source_input_ids:[]}};
    await blocker.query('BEGIN');await blocker.query('LOCK TABLE delivery_operations IN ACCESS EXCLUSIVE MODE');
    const reads=new PublicationCandidateReads(x.db),reading=reads.candidate(x.token,x.f.task,x.request.construction.candidate_id);pending.push(reading);
-   await expect.poll(async()=>Number((await x.db.pool.query("SELECT count(*) n FROM pg_stat_activity WHERE application_name='monos-boundary-probe' AND wait_event_type='Lock' AND query LIKE 'SELECT * FROM delivery_operations WHERE task_id=%'")).rows[0]!.n)).toBe(1);
+   await expect.poll(async()=>Number((await x.db.pool.query("SELECT count(*) n FROM pg_stat_activity WHERE application_name='monos-boundary-probe' AND wait_event_type='Lock' AND query LIKE 'SELECT o.* FROM delivery_operations o JOIN publication_scans%'")).rows[0]!.n)).toBe(1);
    const changing=new TaskSpecification(x.db).command(x.token,command);pending.push(changing);
    await expect.poll(async()=>Number((await x.db.pool.query("SELECT count(*) n FROM pg_stat_activity WHERE application_name='monos-boundary-probe' AND wait_event_type='Lock' AND query LIKE 'SELECT * FROM tasks WHERE id=%FOR UPDATE'")).rows[0]!.n)).toBe(1);
    await blocker.query('COMMIT');
@@ -104,7 +104,7 @@ suite('Durable local publication',()=>{
    expect((await x.db.pool.query('SELECT count(*) n FROM delivery_operations')).rows[0]!.n).toBe('4');
   }finally{await x.close();}
  },30000);
- it('upgrades actual version21 PostgreSQL with untouched checksums to additive version22',async()=>{
+ it('upgrades actual version21 PostgreSQL with untouched checksums through additive version23',async()=>{
   const url=new URL(process.env.DATABASE_URL!),admin=database(url.toString()),namespace='publication_upgrade_'+randomUUID().replaceAll('-','');
   await admin.pool.query(`CREATE SCHEMA ${namespace}`);url.searchParams.set('options',`-c search_path=${namespace}`);const db=database(url.toString());
   try {
@@ -112,7 +112,7 @@ suite('Durable local publication',()=>{
    const directory=new URL('../../../packages/db/migrations/',import.meta.url),names=(await readdir(directory)).filter(n=>/^00(?:0[1-9]|1[0-9]|2[01])_.*\.sql$/.test(n)).sort();
    expect(names).toHaveLength(21);
    await transaction(db,async tx=>{for(const [i,name] of names.entries()){const sql=await readFile(new URL(name,directory),'utf8');await tx.query(sql);await tx.query('INSERT INTO schema_migrations VALUES($1,$2)',[i+1,createHash('sha256').update(sql).digest('hex')]);}});
-   await migrate(db);await migrate(db);expect((await db.pool.query('SELECT version FROM schema_migrations ORDER BY version DESC LIMIT 1')).rows[0]!.version).toBe(22);
+   await migrate(db);await migrate(db);expect((await db.pool.query('SELECT version FROM schema_migrations ORDER BY version DESC LIMIT 1')).rows[0]!.version).toBe(23);
    expect((await db.pool.query('SELECT * FROM delivery_operations')).rows).toEqual([]);
   }finally{await db.pool.end();await admin.pool.query(`DROP SCHEMA ${namespace} CASCADE`);await admin.pool.end();}
  },30000);
@@ -132,7 +132,7 @@ suite('Durable local publication',()=>{
  it('admits after actual completion, proves original parent, serializes competing workers and rollback/restart',async()=>{
   const x=await publicationFixture();try {
    expect(x.request.construction.parents[0]!.observation_operation_id).toBe(x.descriptor.open_operation_id);
-   expect(x.request.construction.parents[0]!.workspace.basis).toBeUndefined();
+   expect(x.request.construction.parents[0]!.workspace!.basis).toBeUndefined();
    expect((await x.db.pool.query('SELECT * FROM delivery_items')).rows).toHaveLength(0);
    const before=(await x.db.pool.query('SELECT count(*) n FROM attempts')).rows[0]!.n;
    // Relevant permission fingerprint change creates another scan, preserving construction.
@@ -217,7 +217,7 @@ suite('Durable local publication',()=>{
    await x.send('Delete exposed content in a new exact result');await x.service.touch(x.f.runner,x.f.incarnation,true);
    const planner=await x.turn(),reply=await x.reply(planner,{kind:'guidance',text:'Delete exposed content',basis:await x.basis()});await x.finish(reply.operation_id!,planner.dispatch.attempt_id);await x.conversation.pump();
    const node=await x.node(),opened=await x.agent(node,'open_workspace',{resource_id:x.resource}),open=await x.service.recoverOperation(x.f.runner,opened.operation_id!),w=open.workspace!;
-   const metadata={...x.request.construction.parents[0]!.outcome.workspace_metadata!,lease_id:w.lease_id,finalized_commit:x.request.source.git_commit};
+   const metadata={...x.request.construction.parents[0]!.outcome!.workspace_metadata!,lease_id:w.lease_id,finalized_commit:x.request.source.git_commit};
    await x.service.finishOperation(x.f.runner,x.f.incarnation,{operation_id:open.operation_id,attempt_id:node.dispatch.attempt_id,success:true,result:{workspace_id:w.workspace_id,path:'/runner/private/worktree',instruction_files:[],workspace_metadata:metadata}});
    const handled=(await x.db.pool.query('SELECT guidance_id FROM task_guidance_assignments WHERE source_id=$1',[node.dispatch.node_execution_source!.source_id])).rows.map(r=>r.guidance_id);
    const done=await x.agent(node,'complete_node',{summary:'Clean new exact source',handled_guidance_ids:handled});

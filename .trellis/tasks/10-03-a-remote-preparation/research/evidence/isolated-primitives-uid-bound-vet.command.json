@@ -1,0 +1,11 @@
+{
+  "cwd": "/Users/me/IdeaProjects/monos/.trellis/tasks/10-03-a-remote-preparation/research/evidence/primitives-uid-bound-ahz0med9/runner",
+  "command": [
+    "/Users/me/.local/share/mise/installs/go/1.27.1/bin/go",
+    "vet",
+    "./internal/host"
+  ],
+  "exit_code": 0,
+  "elapsed_seconds": 0.22484187500000097,
+  "scope": "isolated accepted HEAD plus four owned files; bounded actual proc UID identity fix"
+}

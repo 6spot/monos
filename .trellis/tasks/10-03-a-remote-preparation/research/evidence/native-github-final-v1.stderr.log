@@ -1,0 +1,10 @@
+file:///Users/me/IdeaProjects/monos/.trellis/tasks/10-03-a-remote-preparation/research/native-github-fixture.mjs:102
+  if (result.ok !== true) throw new Error('Native bridge failed; inspect retained safe transport evidence');
+                                ^
+
+Error: Native bridge failed; inspect retained safe transport evidence
+    at bridge (file:///Users/me/IdeaProjects/monos/.trellis/tasks/10-03-a-remote-preparation/research/native-github-fixture.mjs:102:33)
+    at async NativeProviderKernel.nativePush (file:///Users/me/IdeaProjects/monos/.trellis/tasks/10-03-a-remote-preparation/research/native-provider-kernel.ts:167:22)
+    at async file:///Users/me/IdeaProjects/monos/.trellis/tasks/10-03-a-remote-preparation/research/native-github-fixture.mjs:109:15
+
+Node.js v26.3.0

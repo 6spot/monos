@@ -16,6 +16,7 @@ evidence; source changes alone do not establish their final visual acceptance.
 - [Execution UI](execution-ui.md): scoped storage, exact controls, session binding and histories.
 - [Result content reads](../backend/result-content-reads.md): on-demand exact file/diff inspection, fresh applicability, session fencing and text bounds.
 - [Publication candidates](../backend/publication-candidates.md): current/history scans, exact finding receipts, retained public exposure and local retry.
+- [Remote preparation](../backend/remote-preparation.md): immutable operation history, current-head checks, original-effect reconciliation and terminal cleanup Retry.
 - [Types](type-safety.md): generated contracts and runtime validation.
 - [Quality](quality-guidelines.md): interaction and reconnect assertions.
 - Command changes also read [protocol](../protocol/commands.md) and [delivery](../backend/delivery-contracts.md).

@@ -15,7 +15,7 @@ func publicationPages(r protocol.PublicationPrepareRequest, c protocol.Publicati
 	}
 	findings := []protocol.PublicationFinding{}
 	for _, f := range coverage.Findings {
-		finding := protocol.PublicationFinding{RuleID: protocol.RuleID(f.Rule), Path: f.Path, PathRedacted: f.PathRedacted, OccurrenceOrdinal: int64(f.Ordinal), Commit: f.Commit, OverrideEligible: f.Eligible, Scope: "publication_commit", Kind: "credential_pattern", Message: "Credential pattern matched; value redacted."}
+		finding := protocol.PublicationFinding{RuleID: protocol.PublicationFindingRuleID(f.Rule), Path: f.Path, PathRedacted: f.PathRedacted, OccurrenceOrdinal: int64(f.Ordinal), Commit: f.Commit, OverrideEligible: f.Eligible, Scope: "publication_commit", Kind: "credential_pattern", Message: "Credential pattern matched; value redacted."}
 		if f.Final {
 			finding.Scope = "final_tree"
 		}
@@ -81,7 +81,7 @@ func publicationPages(r protocol.PublicationPrepareRequest, c protocol.Publicati
 			}
 		}
 	}
-	summary := protocol.PublicationScanSummary{SchemaVersion: 1, ScanID: r.ScanRunID, CandidateManifestDigest: cd, ConfigurationDigest: r.ConfigurationDigest, Status: "complete", Coverage: protocol.PublicationCoverage{Commits: int64(len(coverage.Commits)), Paths: int64(coverage.Paths), Versions: int64(coverage.Occurrences), UniqueBlobBytes: coverage.UniqueBytes}, FindingsCount: int64(len(findings)), FindingsBytes: int64(len(raw)), FindingsDigest: fd}
+	summary := protocol.PublicationScanSummary{SchemaVersion: 1, ScanID: r.ScanRunID, CandidateManifestDigest: cd, ConfigurationDigest: r.ConfigurationDigest, Status: "complete", WorkflowChanges: publicationPointer(coverage.WorkflowChanges), Coverage: protocol.PublicationCoverage{Commits: int64(len(coverage.Commits)), Paths: int64(coverage.Paths), Versions: int64(coverage.Occurrences), UniqueBlobBytes: coverage.UniqueBytes}, FindingsCount: int64(len(findings)), FindingsBytes: int64(len(raw)), FindingsDigest: fd}
 	if !coverage.Complete {
 		summary.Status = "incomplete"
 		reason := coverage.Reason

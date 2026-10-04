@@ -1,0 +1,17 @@
+{
+  "cwd": "/Users/me/IdeaProjects/monos/runner",
+  "command": [
+    "/Users/me/.local/share/mise/installs/go/1.27.1/bin/go",
+    "test",
+    "./internal/host",
+    "-run",
+    "^TestRemotePreparationNativeRetainedPermissionFixture$",
+    "-count=1"
+  ],
+  "environment": {
+    "MONOS_REMOTE_PREPARATION_EVIDENCE_DIR": "/Users/me/IdeaProjects/monos/.trellis/tasks/10-03-a-remote-preparation/research/evidence/full-lane-retained-darwin-ne0pxodr"
+  },
+  "exit_code": 1,
+  "elapsed_seconds": 1.597483833,
+  "scope": "full current protocol handwritten lane actual local Git synthetic grants; Darwin same account"
+}

@@ -1,0 +1,6 @@
+--- FAIL: TestRemotePreparationProcessGroupCancellationAndParentExit (2.15s)
+    --- FAIL: TestRemotePreparationProcessGroupCancellationAndParentExit/cancel_connection_false (2.08s)
+        publication_remote_process_test.go:93: parent exit/cancellation manufactured release: {Started:true WorkerAbsent:false Interrupted:false Worker:{PID:1365 Group:1365 UID:501 Birth: BootID:} Output:[]} error=publication remote worker ownership unresolved
+FAIL
+FAIL	monos.local/runner/internal/host	5.699s
+FAIL

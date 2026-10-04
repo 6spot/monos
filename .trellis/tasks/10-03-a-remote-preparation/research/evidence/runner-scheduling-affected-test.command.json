@@ -1,0 +1,15 @@
+{
+  "cwd": "/Users/me/IdeaProjects/monos/runner",
+  "command": [
+    "/Users/me/.local/share/mise/installs/go/1.27.1/bin/go",
+    "test",
+    "./internal/control",
+    "./internal/host",
+    "-run",
+    "^(TestRemotePreparationAccessHTTPBoundScopeAndIncarnation|TestRemotePreparationDurablePushEffectLossAndACKReplay|TestRemotePreparationFreshScanMetadataAndCancellationFence)$",
+    "-count=1"
+  ],
+  "exit_code": 0,
+  "elapsed_seconds": 8.441051542,
+  "scope": "typed429 exact spacing/budget and pending/started intent/denial preservation; affected packages only"
+}

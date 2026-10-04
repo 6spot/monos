@@ -1,0 +1,11 @@
+{
+  "cwd": "/Users/me/IdeaProjects/monos/runner",
+  "command": [
+    "/Users/me/.local/share/mise/installs/go/1.27.1/bin/go",
+    "vet",
+    "./internal/host"
+  ],
+  "exit_code": 0,
+  "elapsed_seconds": 0.20631204200000042,
+  "scope": "narrow final permission-context check; earlier whole Go gates remain evidence of other unchanged inputs"
+}

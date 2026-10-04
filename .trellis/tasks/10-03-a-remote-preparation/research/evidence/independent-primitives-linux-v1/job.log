@@ -1,0 +1,11 @@
+Traceback (most recent call last):
+  File "/root/monos-publication-validation-e2024cdb68c54b7bb5ed328732772d83/remote-validation.py", line 33, in <module>
+    container('primitives',['go','test','./internal/host','-run','^TestRemotePreparation','-count=1'])
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/monos-publication-validation-e2024cdb68c54b7bb5ed328732772d83/remote-validation.py", line 31, in container
+    run(name,args)
+    ~~~^^^^^^^^^^^
+  File "/root/monos-publication-validation-e2024cdb68c54b7bb5ed328732772d83/remote-validation.py", line 18, in run
+    if r.returncode:raise RuntimeError('isolated stage failed: '+name)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: isolated stage failed: primitives

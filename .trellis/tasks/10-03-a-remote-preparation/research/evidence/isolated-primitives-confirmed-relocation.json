@@ -1,0 +1,12 @@
+{
+  "scope": "source copy relocated only after all subprocess gates completed; no tests ran under world-writable /private/tmp lineage",
+  "old_root": "/Users/me/IdeaProjects/monos/.trellis/tasks/10-03-a-remote-preparation/research/evidence/primitives-accepted-protocol-wp_3siyf",
+  "new_root": "/private/tmp/monos-remote-primitives-1_eyz_xt/source",
+  "base_commit": "2095660a1fe546412430b5d630d4837dc550155b",
+  "source_manifest_sha256": "283087363b0b23582b878584ed9ab5ba9ed31abacccb0d82e0d0205710aedbd1",
+  "owned_source_archive_sha256": "97481a02c72df031d69b6b01bc72ab40cf035f5c644cc710dbfea7a1b13795f4",
+  "full_file_tree_sha256_before": "080f89a32b81c2c17e9645ea5f9d99b47d7d7385323e0f8b63a00d5c035c6a72",
+  "full_file_tree_sha256_after": "080f89a32b81c2c17e9645ea5f9d99b47d7d7385323e0f8b63a00d5c035c6a72",
+  "files": 190,
+  "manifest_input_count": 124
+}

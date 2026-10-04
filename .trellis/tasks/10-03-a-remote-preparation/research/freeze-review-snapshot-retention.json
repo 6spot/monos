@@ -1,0 +1,17 @@
+{
+  "scope": "exact reconstructed historical handed-off and reviewed prose preserved before implementation amendment",
+  "snapshots": [
+    {
+      "path": "frozen-contract-step2-original.md",
+      "sha256": "b6a210a9949fb32c7f6d45f82c2d90926ad826741a73d646f2b848d0a7db5e64"
+    },
+    {
+      "path": "frozen-contract-step2-reviewed.md",
+      "sha256": "696d179ace2e234f5f612bc63e68cf362c975427ff275a51b8e1377ce43580b7"
+    },
+    {
+      "path": "design-step2-reviewed.md",
+      "sha256": "cf18d256f01f6617c2890f1dae4792f0e3ea964b9f7bc54102dcbbbac0765314"
+    }
+  ]
+}

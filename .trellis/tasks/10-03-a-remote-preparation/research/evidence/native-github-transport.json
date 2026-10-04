@@ -1,0 +1,7 @@
+{
+  "control_directory": "/private/tmp/monos-native-github-cdtph4rt",
+  "host": "100.120.14.84",
+  "scope": "bounded task-only SSH transport closed after native/provider evidence collection; no installed service or Runtime change",
+  "closed": true,
+  "closed_at": "2026-10-04T23:09:19.017240+00:00"
+}

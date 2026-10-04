@@ -1,0 +1,21 @@
+{
+  "observed_at": "2026-10-04T04:11:26.829213+00:00",
+  "scope": "read-only historical synthetic repository metadata; no mutation",
+  "requested_repository": "6spot/monolab-feasibility-20260928-160020-public",
+  "exit_code": 0,
+  "id": 1393178791,
+  "full_name": "6spot/monolab-feasibility-20260928-160020-public",
+  "name": "monolab-feasibility-20260928-160020-public",
+  "description": "Synthetic MonoLab provider feasibility fixture; no product source.",
+  "private": false,
+  "default_branch": "main",
+  "archived": false,
+  "permissions": {
+    "admin": true,
+    "maintain": true,
+    "push": true,
+    "triage": true,
+    "pull": true
+  },
+  "status": "observed"
+}

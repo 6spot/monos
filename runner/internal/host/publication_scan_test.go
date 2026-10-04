@@ -56,7 +56,7 @@ func TestPublicationMultiRuleFindingOrdinals(t *testing.T) {
 	if pages[0].Result.Scan.Coverage.Versions != 8 || len(pages[0].Findings) != 10 {
 		t.Fatal("finding count changed visited-version coverage", pages[0].Result.Scan)
 	}
-	rules := map[protocol.Scope]map[protocol.RuleID]bool{}
+	rules := map[protocol.Scope]map[protocol.PublicationFindingRuleID]bool{}
 	ids := map[string]bool{}
 	for n, finding := range pages[0].Findings {
 		if finding.OccurrenceOrdinal != int64(n+1) || ids[finding.FindingID] {
@@ -65,13 +65,13 @@ func TestPublicationMultiRuleFindingOrdinals(t *testing.T) {
 		ids[finding.FindingID] = true
 		if finding.Path == "multi-rule.bin" {
 			if rules[finding.Scope] == nil {
-				rules[finding.Scope] = map[protocol.RuleID]bool{}
+				rules[finding.Scope] = map[protocol.PublicationFindingRuleID]bool{}
 			}
 			rules[finding.Scope][finding.RuleID] = true
 		}
 	}
 	for _, scope := range []protocol.Scope{"publication_commit", "final_tree"} {
-		for _, rule := range []protocol.RuleID{"tracked_ignore", "pem_private_key", "github_classic_token", "aws_access_key"} {
+		for _, rule := range []protocol.PublicationFindingRuleID{"tracked_ignore", "pem_private_key", "github_classic_token", "aws_access_key"} {
 			if !rules[scope][rule] {
 				t.Fatalf("missing physical %s rule in %s", rule, scope)
 			}

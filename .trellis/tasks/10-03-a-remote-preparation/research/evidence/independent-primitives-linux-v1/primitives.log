@@ -1,0 +1,8 @@
+--- FAIL: TestRemotePreparationProcessGroupCancellationAndParentExit (7.07s)
+    --- FAIL: TestRemotePreparationProcessGroupCancellationAndParentExit/cancel_connection_false (4.04s)
+        publication_remote_process_test.go:115: parent exit/cancellation manufactured release: {Started:true WorkerAbsent:false Interrupted:false Worker:{PID:2917 Group:2917 UID:0 Birth:41044702 BootID:eb12bbe6-c63c-4e2e-8463-82b3e780aca1} Output:[]} error=publication remote worker ownership unresolved
+    --- FAIL: TestRemotePreparationProcessGroupCancellationAndParentExit/cancel_connection_true (3.03s)
+        publication_remote_process_test.go:115: parent exit/cancellation manufactured release: {Started:true WorkerAbsent:false Interrupted:false Worker:{PID:2930 Group:2930 UID:0 Birth:41045107 BootID:eb12bbe6-c63c-4e2e-8463-82b3e780aca1} Output:[]} error=publication remote worker ownership unresolved
+FAIL
+FAIL	monos.local/runner/internal/host	7.428s
+FAIL

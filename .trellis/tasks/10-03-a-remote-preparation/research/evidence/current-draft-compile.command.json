@@ -1,0 +1,13 @@
+{
+  "cwd": "/Users/me/IdeaProjects/monos/runner",
+  "command": [
+    "/Users/me/.local/share/mise/installs/go/1.27.1/bin/go",
+    "test",
+    "./internal/host",
+    "-run",
+    "^TestRemotePreparation",
+    "-count=1"
+  ],
+  "exit_code": 1,
+  "scope": "current generated protocol draft compile-prerequisite diagnostic; no consumer edits"
+}

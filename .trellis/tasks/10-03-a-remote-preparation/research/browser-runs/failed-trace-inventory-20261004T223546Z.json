@@ -1,0 +1,50 @@
+{
+  "privacy": "Raw traces retained only in private local directory",
+  "files": [
+    {
+      "source": "apps/web/test-results/.last-run.json",
+      "private_retained": "/tmp/monos-remote-browser-failure-20261004T223546Z/.last-run.json",
+      "sha256": "96e960961d78eb59ea19cb7f5891ccf5d366eb80552b0a0e883b58dfa2848b1e"
+    },
+    {
+      "source": "apps/web/test-results/remote-preparation.e2e.ts--058da-epository-free-remain-local/trace.zip",
+      "private_retained": "/tmp/monos-remote-browser-failure-20261004T223546Z/remote-preparation.e2e.ts--058da-epository-free-remain-local/trace.zip",
+      "sha256": "41861943952964ff3066cfa91ce1fc4aa0e0a54da8de67c45f8f048bfce44d36"
+    },
+    {
+      "source": "apps/web/test-results/remote-preparation.e2e.ts--058da-epository-free-remain-local/error-context.md",
+      "private_retained": "/tmp/monos-remote-browser-failure-20261004T223546Z/remote-preparation.e2e.ts--058da-epository-free-remain-local/error-context.md",
+      "sha256": "a1031b7c42e3db6d29c2052637767b844aa27f2c2f9d3c08800f8c57a8e1d080"
+    },
+    {
+      "source": "apps/web/test-results/remote-preparation.e2e.ts--ce10e-on-cannot-adopt-its-command/trace.zip",
+      "private_retained": "/tmp/monos-remote-browser-failure-20261004T223546Z/remote-preparation.e2e.ts--ce10e-on-cannot-adopt-its-command/trace.zip",
+      "sha256": "b7b75ba4ef5b465dabc780a39d9d5d4d91bb2a9ed24e0e5b4b811207d64ee34f"
+    },
+    {
+      "source": "apps/web/test-results/remote-preparation.e2e.ts--ce10e-on-cannot-adopt-its-command/error-context.md",
+      "private_retained": "/tmp/monos-remote-browser-failure-20261004T223546Z/remote-preparation.e2e.ts--ce10e-on-cannot-adopt-its-command/error-context.md",
+      "sha256": "eaa94f245ec1517686a9db59d692c627ff9f612cfa7e7e022b83013d2658d459"
+    },
+    {
+      "source": "apps/web/test-results/remote-preparation.e2e.ts--f649b--separate-from-local-Review/trace.zip",
+      "private_retained": "/tmp/monos-remote-browser-failure-20261004T223546Z/remote-preparation.e2e.ts--f649b--separate-from-local-Review/trace.zip",
+      "sha256": "f74c64f8d36727fbf4ad8fd6f7900c583422edaf198096f746041a267ddac4b1"
+    },
+    {
+      "source": "apps/web/test-results/remote-preparation.e2e.ts--f649b--separate-from-local-Review/error-context.md",
+      "private_retained": "/tmp/monos-remote-browser-failure-20261004T223546Z/remote-preparation.e2e.ts--f649b--separate-from-local-Review/error-context.md",
+      "sha256": "6f6d6a413f769417de307e7e43ebf2c0d439181c5db4da557606b2bcf387c2ea"
+    },
+    {
+      "source": "apps/web/test-results/remote-preparation.e2e.ts--b41df-ing-selected-immutable-head/trace.zip",
+      "private_retained": "/tmp/monos-remote-browser-failure-20261004T223546Z/remote-preparation.e2e.ts--b41df-ing-selected-immutable-head/trace.zip",
+      "sha256": "b7da7b8aadae188a8ec475633aaa5b2499c427c8612945dce3cce002e6041fdc"
+    },
+    {
+      "source": "apps/web/test-results/remote-preparation.e2e.ts--b41df-ing-selected-immutable-head/error-context.md",
+      "private_retained": "/tmp/monos-remote-browser-failure-20261004T223546Z/remote-preparation.e2e.ts--b41df-ing-selected-immutable-head/error-context.md",
+      "sha256": "e962f0fc985b1afa185d6dc17a36690da51b951cd2a51d86a2608fdd3afff169"
+    }
+  ]
+}

@@ -1,0 +1,3 @@
+=== RUN   TestPublicationSHA256ObjectFormatCASReplay
+--- PASS: TestPublicationSHA256ObjectFormatCASReplay (0.25s)
+PASS

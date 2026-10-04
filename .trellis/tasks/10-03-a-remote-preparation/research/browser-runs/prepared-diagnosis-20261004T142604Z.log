@@ -1,0 +1,56 @@
+$ playwright test test/remote-preparation.e2e.ts --grep 'automatic coordinator'
+[WebServer] (node:39498) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:39498) [FSTDEP023] FastifyDeprecation: disableRequestLogging option is deprecated. Use the logController option with disableRequestLogging or isLogDisabled override instead. The disableRequestLogging top-level option will be removed in `fastify@6`.
+
+Running 1 test using 1 worker
+
+(node:39510) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 test/remote-preparation.e2e.ts:63:1 › automatic coordinator prepares a stable PR with paginated exact-head literal checks and preserved local inspection (5.9s)
+
+
+  1) test/remote-preparation.e2e.ts:63:1 › automatic coordinator prepares a stable PR with paginated exact-head literal checks and preserved local inspection 
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: getByRole('region', { name: 'Remote review preparation', exact: true })
+    Expected substring: "The review request is prepared."
+    Received string:    "Remote review preparationBackground preparation and provider observations do not accept delivery or complete the Task.Current remote evidenceThe exact local scan remains applicable.Preparing the remote review branch and pull request.Repositorygithub.com/example/execution-uiDelivery branchrefs/heads/monos/task/34af354d-6d1e-42f6-b2b0-c3f1a80c66bf/043f3e46-2878-49cf-8c71-50f14594d970Fixed targetmainCandidate headf196bd7be1b98aee4bd07cdd0f752d4a390f334aExact result treeddddddddddddddddddddddddddddddddddddddddProvider cooldown until 2026-10-04T14:28:07.335Z. Retry cannot bypass this limit.Recorded step · Push · Pending · Next attempt no earlier than 2026-10-04T14:26:07.590ZAdvanced detailsDelivery item11405bee-7509-4803-a0a9-ec2d34a5b5bfResource043f3e46-2878-49cf-8c71-50f14594d970Original resulte7cfa58d-4935-492f-a014-f4bae80b5232Original Specification7b3ad7f9-fdbf-47a1-af1d-754d0a2666c8Original Plane95f246f-4956-460a-a832-cc6358ce3c3cEffective Specification7b3ad7f9-fdbf-47a1-af1d-754d0a2666c8Effective Plane95f246f-4956-460a-a832-cc6358ce3c3cSource digest050e78db03a46a36fa8f0b192869b6e0be3a633867a4f2281ecd9a26c5813e2bEffective basis53481c4125de368e7986f81ab5eb4c54da85fc2f3f08d7de89db6bfa13136838Candidate manifest95f45b1b404a005072cb6c0b98603e844332a599bfbec155bb3d4189d2288085Manifest original source050e78db03a46a36fa8f0b192869b6e0be3a633867a4f2281ecd9a26c5813e2bPublic parentsaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaExact scan11eef06803091f6d9b403d446e307be73b2792a98ca5bd7c14a37528e1a9a0daOperationb9732e99-a9e0-4d5f-86f8-7841afea7612Request digestbeccd6e938b10f2582ff0545503f5159f5f08c0ed604f26306fd9005fd06ef19Operation version1Physical worker absenceRecorded absentNo provider checks observation is recorded. Missing checks are not passing checks."
+    Timeout: 5000ms
+
+    Call log:
+      - Expect "toContainText" getByRole('region', { name: 'Remote review preparation', exact: true }) with timeout 5000ms
+      - waiting for getByRole('region', { name: 'Remote review preparation', exact: true })
+        10 × locator resolved to <section aria-label="Remote review preparation" class="task-section remote-preparation">…</section>
+           - unexpected value "Remote review preparationBackground preparation and provider observations do not accept delivery or complete the Task.No remote preparation is recorded. Local result inspection remains available."
+        4 × locator resolved to <section aria-label="Remote review preparation" class="task-section remote-preparation">…</section>
+          - unexpected value "Remote review preparationBackground preparation and provider observations do not accept delivery or complete the Task.Current remote evidenceThe exact local scan remains applicable.Preparing the remote review branch and pull request.Repositorygithub.com/example/execution-uiDelivery branchrefs/heads/monos/task/34af354d-6d1e-42f6-b2b0-c3f1a80c66bf/043f3e46-2878-49cf-8c71-50f14594d970Fixed targetmainCandidate headf196bd7be1b98aee4bd07cdd0f752d4a390f334aExact result treeddddddddddddddddddddddddddddddddddddddddProvider cooldown until 2026-10-04T14:28:07.335Z. Retry cannot bypass this limit.Recorded step · Push · Pending · Next attempt no earlier than 2026-10-04T14:26:07.590ZAdvanced detailsDelivery item11405bee-7509-4803-a0a9-ec2d34a5b5bfResource043f3e46-2878-49cf-8c71-50f14594d970Original resulte7cfa58d-4935-492f-a014-f4bae80b5232Original Specification7b3ad7f9-fdbf-47a1-af1d-754d0a2666c8Original Plane95f246f-4956-460a-a832-cc6358ce3c3cEffective Specification7b3ad7f9-fdbf-47a1-af1d-754d0a2666c8Effective Plane95f246f-4956-460a-a832-cc6358ce3c3cSource digest050e78db03a46a36fa8f0b192869b6e0be3a633867a4f2281ecd9a26c5813e2bEffective basis53481c4125de368e7986f81ab5eb4c54da85fc2f3f08d7de89db6bfa13136838Candidate manifest95f45b1b404a005072cb6c0b98603e844332a599bfbec155bb3d4189d2288085Manifest original source050e78db03a46a36fa8f0b192869b6e0be3a633867a4f2281ecd9a26c5813e2bPublic parentsaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaExact scan11eef06803091f6d9b403d446e307be73b2792a98ca5bd7c14a37528e1a9a0daOperationb9732e99-a9e0-4d5f-86f8-7841afea7612Request digestbeccd6e938b10f2582ff0545503f5159f5f08c0ed604f26306fd9005fd06ef19Operation version1Physical worker absenceRecorded absentNo provider checks observation is recorded. Missing checks are not passing checks."
+
+
+      63 | test('automatic coordinator prepares a stable PR with paginated exact-head literal checks and preserved local inspection', async ({ page }, info) => {
+      64 |   await signIn(page); const f = await scenario(page, 'prepared'); await open(page, f.task);
+    > 65 |   await expect(section(page)).toContainText('The review request is prepared.');
+         |                               ^
+      66 |   await expect(page.getByRole('link', { name: /Open PR #/ })).toBeVisible();
+      67 |   await expect(section(page)).toContainText('64 check entries loaded.');
+      68 |   await page.getByRole('button', { name: 'Load more checks', exact: true }).click(); await expect(section(page)).toContainText('70 check entries loaded.');
+        at /Users/me/IdeaProjects/monos/apps/web/test/remote-preparation.e2e.ts:65:31
+
+    Error Context: test-results/remote-preparation.e2e.ts--87b16--preserved-local-inspection/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/remote-preparation.e2e.ts--87b16--preserved-local-inspection/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace test-results/remote-preparation.e2e.ts--87b16--preserved-local-inspection/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    test/remote-preparation.e2e.ts:63:1 › automatic coordinator prepares a stable PR with paginated exact-head literal checks and preserved local inspection 
+[ELIFECYCLE] Command failed with exit code 1.
+Error: ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL
+
+  × "pnpm recursive run" failed in /Users/me/IdeaProjects/monos/apps/web
+

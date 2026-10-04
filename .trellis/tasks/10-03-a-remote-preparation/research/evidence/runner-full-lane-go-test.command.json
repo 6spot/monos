@@ -1,0 +1,12 @@
+{
+  "cwd": "/Users/me/IdeaProjects/monos/runner",
+  "command": [
+    "/Users/me/.local/share/mise/installs/go/1.27.1/bin/go",
+    "test",
+    "./...",
+    "-count=1"
+  ],
+  "exit_code": 0,
+  "elapsed_seconds": 77.576842125,
+  "scope": "current integrated Runner Go sources/generated Go schema/protocol fixtures; all module gate inputs"
+}

@@ -17,11 +17,17 @@ func retainedPublicationIdentity(db *journal.DB, r protocol.PublicationPrepareRe
 		return errors.New("publication source mismatch")
 	}
 	for _, p := range r.Construction.Parents {
-		op, e := db.Operation(p.ObservationOperationID)
+		if p.Kind == "published" {
+			continue
+		}
+		if p.ObservationOperationID == nil || p.Workspace == nil || p.Outcome == nil {
+			return errors.New("publication parent mismatch")
+		}
+		op, e := db.Operation(*p.ObservationOperationID)
 		if e != nil {
 			return errors.New("publication parent unavailable")
 		}
-		outcome, e := db.Effect(p.ObservationOperationID)
+		outcome, e := db.Effect(*p.ObservationOperationID)
 		if e != nil || outcome == nil || !outcome.Success || outcome.OperationID != op.OperationID || outcome.AttemptID != op.AttemptID || op.Kind != protocol.KindOpenWorkspace || op.Workspace == nil || op.WorkspaceDigest == nil {
 			return errors.New("publication parent mismatch")
 		}
@@ -49,9 +55,8 @@ func retainedPublicationIdentity(db *journal.DB, r protocol.PublicationPrepareRe
 			return errors.New("publication parent scope mismatch")
 		}
 	}
-	// No permission observer exists in this leaf. A backend configuration cannot
-	// manufacture a verified workflow grant merely by setting an enum.
-	if r.Configuration.WorkflowWrite == "allowed" {
+	// Permission enums alone cannot establish an authenticated exact grant.
+	if r.Configuration.WorkflowWrite == "allowed" && host.ValidatePublicationPermission(r) != nil {
 		return errors.New("publication permission unavailable")
 	}
 	return nil
@@ -102,10 +107,17 @@ func (d *Daemon) publicationPrepare(ctx context.Context, frame protocol.Frame) {
 	d.enqueuePublication(ctx, "prepare:"+r.OperationID, func() {
 		pages := host.PublicationFailure(r, "reconciliation_required", "identity_mismatch")
 		if retainedPublicationIdentity(d.DB, r) == nil {
+			if permission, e := d.Control.PublicationPermission(ctx, r); e == nil {
+				if host.RetainPublicationPermission(r, permission) != nil {
+					return
+				}
+			} else if r.Configuration.WorkflowWrite != "unknown" {
+				return
+			}
 			deadline, cancel := context.WithTimeout(ctx, time.Duration(r.Configuration.DeadlineSeconds)*time.Second)
 			defer cancel()
 			var e error
-			pages, e = host.PublicationPrepare(deadline, r)
+			pages, e = host.PublicationPrepareWithAccess(deadline, r, d.Control.PublicationAccess)
 			if e != nil {
 				return
 			} // Unfinished local intent is resumed by original outbox request.

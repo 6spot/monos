@@ -34,6 +34,8 @@ type Daemon struct {
 	readSlots         chan struct{}
 	publicationSlots  chan struct{}
 	publicationQueued map[string]bool
+	remoteSlots       chan struct{}
+	remoteQueued      map[string]bool
 	workers           sync.WaitGroup
 	recovery          *recoveryBatch // protected by queueMu; one complete connection inventory
 }
@@ -200,6 +202,12 @@ func (d *Daemon) Frame(ctx context.Context, frame protocol.Frame) {
 	switch frame.Type {
 	case protocol.Type("publication_prepare"):
 		d.publicationPrepare(ctx, frame)
+	case protocol.Type("publication_push"):
+		d.publicationPush(ctx, frame)
+	case protocol.Type("publication_push_ack"):
+		if frame.PublicationPushACK != nil {
+			_ = host.PublicationPushAck(ctx, *frame.PublicationPushACK)
+		}
 	case protocol.Type("publication_ack"):
 		if frame.PublicationACK != nil {
 			d.publicationAck(ctx, *frame.PublicationACK)
@@ -240,7 +248,7 @@ func (d *Daemon) start(ctx context.Context, dispatch protocol.Dispatch) error {
 			return fmt.Errorf("dispatch revoked before launch")
 		}
 		if retained.Phase == "running" {
-			return d.event(ctx, retained, protocol.Started, "retained supervised process")
+			return d.event(ctx, retained, protocol.KindStarted, "retained supervised process")
 		}
 		if retained.Phase == "absent" {
 			return d.event(ctx, retained, protocol.ProcessAbsent, "verified absent retained process")
@@ -281,7 +289,7 @@ func (d *Daemon) recordLaunch(ctx context.Context, retained journal.Start, statu
 	if err := d.DB.SaveStart(retained); err != nil {
 		return err
 	}
-	startErr := d.event(ctx, retained, protocol.Started, "supervised runtime launch")
+	startErr := d.event(ctx, retained, protocol.KindStarted, "supervised runtime launch")
 	// A worker can fail output capture and exit before the helper returns its
 	// first status. Preserve that fact even when the Start send is interrupted;
 	// this path will no longer be polled as running once absence is recorded.
@@ -455,7 +463,7 @@ func (d *Daemon) effect(ctx context.Context, op protocol.Operation) error {
 		result.FailureKind = &kind
 		if op.Workspace != nil {
 			reason := protocol.OwnershipUnresolved
-			for _, candidate := range []protocol.WorkspaceUnavailableReason{protocol.CredentialsMissing, protocol.RepositoryDenied, protocol.RefUnavailable, protocol.StorageUnavailable, protocol.UnsupportedRemote} {
+			for _, candidate := range []protocol.WorkspaceUnavailableReason{protocol.WorkspaceUnavailableReasonCredentialsMissing, protocol.RepositoryDenied, protocol.RefUnavailable, protocol.StorageUnavailable, protocol.UnsupportedRemote} {
 				if strings.Contains(err.Error(), string(candidate)) {
 					reason = candidate
 					break

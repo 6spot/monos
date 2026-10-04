@@ -11,17 +11,17 @@ import { publicationRecord } from './publication-candidate-reads.ts';
 import { publicationDigest as hash } from './publication-policy.ts';
 import { lockConfiguration } from './configuration-guards.ts';
 
-type Selection=Pick<PublicationCommand['payload'],'candidate_id'|'candidate_manifest_digest'|'effective_basis_digest'|'scan_digest'|'finding_ids'>;
+type Selection=Pick<PublicationCommand['payload'],'candidate_id'|'candidate_manifest_digest'|'effective_basis_digest'|'scan_digest'|'finding_ids'|'mapping_digest'>;
 function selection(payload:PublicationCommand['payload']):Selection {
- const {candidate_id,candidate_manifest_digest,effective_basis_digest,scan_digest,finding_ids}=payload;
+ const {candidate_id,candidate_manifest_digest,effective_basis_digest,scan_digest,finding_ids,mapping_digest}=payload;
  if(!finding_ids || canonicalJSON(finding_ids)!==canonicalJSON([...finding_ids].sort()))throw new CommandError('invalid_input','Finding IDs must be sorted and unique');
- return {candidate_id,candidate_manifest_digest,effective_basis_digest,scan_digest,finding_ids};
+ return {candidate_id,candidate_manifest_digest,effective_basis_digest,scan_digest,finding_ids,...(mapping_digest?{mapping_digest}:{})};
 }
 async function validateSelection(tx:Transaction,taskId:string,s:Selection) {
- const op=(await tx.query<DeliveryOperation>("SELECT * FROM delivery_operations WHERE task_id=$1 AND candidate_id=$2 ORDER BY created_at DESC,id DESC LIMIT 1",[taskId,s.candidate_id])).rows[0];
+ const op=(await tx.query<DeliveryOperation>("SELECT o.* FROM delivery_operations o JOIN publication_scans s ON s.operation_id=o.id WHERE o.task_id=$1 AND s.candidate_id=$2 AND s.digest=$3",[taskId,s.candidate_id,s.scan_digest])).rows[0];
  if(!op)throw new CommandError('denied_scope','Unknown publication candidate');
  const record=await publicationRecord(tx,op);
- if(!record.override_allowed || !record.scan_applicable || record.candidate_manifest_digest!==s.candidate_manifest_digest || record.effective_basis_digest!==s.effective_basis_digest || record.scan_digest!==s.scan_digest)throw new CommandError('version_conflict','Publication override basis is stale or incomplete');
+ if(!record.override_allowed || !record.scan_applicable || record.candidate_manifest_digest!==s.candidate_manifest_digest || record.effective_basis_digest!==s.effective_basis_digest || record.scan_digest!==s.scan_digest || record.mapping_digest!==s.mapping_digest)throw new CommandError('version_conflict','Publication override basis is stale or incomplete');
  const findings=(await tx.query<{finding:PublicationFinding}>('SELECT finding FROM publication_findings WHERE scan_id=$1 AND id=ANY($2::text[])',[op.result!.scan!.scan_id,s.finding_ids])).rows.map(r=>r.finding);
  if(findings.length!==s.finding_ids!.length || findings.some(f=>!f.override_eligible || !['tracked_ignore','publication_policy_size','credential_pattern'].includes(f.kind)))throw new CommandError('denied_scope','Every selected finding must be eligible in this exact scan');
  return op;

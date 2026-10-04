@@ -1,0 +1,8 @@
+{
+  "private_trace_evidence": true,
+  "files": {
+    "/tmp/monos-remote-browser-failure-20261004T143948Z/.last-run.json": "36593302a2c3017bdd534f7dbb40f259bd4dea55542ea8d01feae5f62085f2fc",
+    "/tmp/monos-remote-browser-failure-20261004T143948Z/remote-preparation.e2e.ts--87b16--preserved-local-inspection/trace.zip": "78491113d0f38e3f42529328f72b08dfea52e3d4ca20b06b0118faea021dd866",
+    "/tmp/monos-remote-browser-failure-20261004T143948Z/remote-preparation.e2e.ts--87b16--preserved-local-inspection/error-context.md": "68f1863fd831191ded3e41445d0859a7ff3497ec3198a66902bc7a0e679dc25e"
+  }
+}

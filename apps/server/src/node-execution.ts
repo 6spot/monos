@@ -1,3 +1,4 @@
+import { remoteItemQuiescent, requestRemoteCancel } from './remote-preparation-state.ts';
 import { activateInheritedHold,resolveInheritedHold } from './task-replan-holds.ts';
 import { assertCurrentNode } from './task-records.ts';
 import { specificationFrozen } from './task-specification-state.ts';
@@ -320,6 +321,7 @@ export class NodeExecution {
             throw new CommandError('version_conflict', 'Cancel requires exact Specification and Plan');
           if((await tx.query('SELECT 1 FROM tasks WHERE id=$1 AND accepted_delivery_operation_id IS NOT NULL',[task.id])).rowCount)throw new CommandError('unmet_precondition','Accepted delivery requires delivery cancellation');
           await cancelTaskInputEffects(tx,task.id);
+          await requestRemoteCancel(tx,task.id);
           await tx.query("UPDATE tasks SET state='CANCELLED',control_version=control_version+1 WHERE id=$1", [task.id]);
           await tx.query("UPDATE nodes SET state='CANCELLED' WHERE task_id=$1 AND state<>'COMPLETED'", [task.id]);
           await tx.query(
@@ -439,6 +441,7 @@ export class NodeExecution {
             blockerId = await blockNodeSource(tx, source, 'owner_stopped', 'owner_stopped', attempt?.id);
             await tx.query('UPDATE tasks SET control_version=control_version+1 WHERE id=$1', [task.id]);
           } else if (command.name === 'retry_node' || command.name === 'continue_node') {
+            if(!await remoteItemQuiescent(tx,task.id))throw new CommandError('unmet_precondition','Admitted remote effects must reconcile before correction');
             const paused=(await tx.query('SELECT guidance_paused FROM nodes WHERE id=$1',[node.id])).rows[0].guidance_paused;
             if(command.name==='continue_node'&&node.state==='COMPLETED'&&paused){
               if(!(await tx.query("SELECT 1 FROM task_guidance_followups WHERE node_id=$1 AND status='waiting'",[node.id])).rowCount)throw new CommandError('unmet_precondition','No paused guidance followup needs continuation');

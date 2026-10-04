@@ -1,0 +1,21 @@
+{
+  "scope": "Current source SHA256-store delta/native fixture and final binaries, with exact unchanged full Linux gate reuse",
+  "steps_passed": 10,
+  "all_original_log_bytes_sha256_verified": true,
+  "current_manifest_inputs_verified": 139,
+  "reused_full_gate": {
+    "source_manifest_sha256": "5a7ab0b7f59f77ebcd11f7285872d3129acdd0ddc8f10d16bdd07b45a143741a",
+    "result_sha256": "3f72f91dc0c38a851bc3e01e428ae24ff9c3699e346f51d3b11dd0a1a9d62aa3",
+    "unchanged_inputs": 137,
+    "changed_paths": [
+      "runner/internal/host/publication_candidate_test.go",
+      "runner/internal/host/publication_store.go"
+    ],
+    "scope": "original whole Linux module/race/dependency/process gates reused; this job checks only changed store behavior and current native boundary/binaries"
+  },
+  "protected_remote_paths": 21,
+  "remote_execution_uid_denials": 42,
+  "service_uid": 997,
+  "host_test_binary_sha256": "15dd3175d89d4520c7ab9282b25cb38cbe6439ee57b9b79d8858ab2410c8eae7",
+  "source_manifest_sha256": "ea2b9b8bd642ee16bd4f4db265e72bb65cff0ac0670ac555de9d984683a73104"
+}

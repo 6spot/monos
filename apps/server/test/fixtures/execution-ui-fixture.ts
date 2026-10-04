@@ -1,9 +1,9 @@
-import { createHash, randomUUID } from 'node:crypto';
+import { createHash, generateKeyPairSync, randomUUID } from 'node:crypto';
 import WebSocket from 'ws';
 import { transaction } from '../../../../packages/db/src/index.ts';
 import type { Database } from '../../../../packages/db/src/index.ts';
 import { canonicalJSON, submission, validate } from '../../../../packages/protocol/src/index.ts';
-import type { CommandEnvelope, Dispatch, Frame, OwnerCommand, PrepareReplan, PublicationFinding, PublicationPrepareRequest, PublicationResult, PublicationResultPage, ResultChange, ResultObject, ResultReadRequest, ResultReadResponse, TaskActionBasis, TaskSpecificationStatus, WorkspaceMetadata } from '../../../../packages/protocol/src/index.ts';
+import type { CommandEnvelope, Dispatch, Frame, OwnerCommand, PrepareReplan, PublicationAccessResult, PublicationFinding, PublicationPrepareRequest, PublicationPushRequest, PublicationResult, PublicationResultPage, ResultChange, ResultObject, ResultReadRequest, ResultReadResponse, TaskActionBasis, TaskSpecificationStatus, WorkspaceMetadata } from '../../../../packages/protocol/src/index.ts';
 import { Todos } from '../../src/todos.ts';
 import { TaskPreviews } from '../../src/task-previews.ts';
 import { prepareProposalFixture } from './task-preview-fixture.ts';
@@ -22,10 +22,13 @@ import type { BoundaryService } from '../../src/service.ts';
 import { PublicationPreparation } from '../../src/publication-candidates.ts';
 import { PublicationCommands } from '../../src/publication-commands.ts';
 import { credentialPath, publicationDigest } from '../../src/publication-policy.ts';
+import { GitHub } from '../../src/github.ts';
+import { remoteProfile, RemoteProviderError } from '../../src/github-remote.ts';
+import type { AcquireGitHubRemoteGrant } from '../../src/github-remote.ts';
 
 const scenarios = ['ready', 'board_pages', 'queued', 'planning_issue', 'node_queued', 'running', 'running_workspace', 'review_git', 'result_inspection', 'result_empty', 'log_pages', 'blocked', 'review', 'completion_recovery', 'replan', 'replan_issue', 'joint', 'specification', 'guidance', 'input_issue'] as const;
 type Scenario = typeof scenarios[number];
-interface Context { task: string; spec: string; plan: string; node: string; project: string; role: string; runner: string; incarnation: number }
+interface Context { task: string; spec: string; plan: string; node: string; project: string; role: string; runner: string; incarnation: number; resource_id?: string }
 interface Agent { dispatch: Dispatch; credential: string }
 
 const literalText = '<script>window.resultInjected = true</script>\n  exact whitespace\n' + 'long code '.repeat(120) + '\n';
@@ -49,6 +52,9 @@ const publicationCanary = 'ghp_' + 'X'.repeat(36), publicationRawPath = `private
 const publicationRawContent = `synthetic prefix\n${publicationCanary}\nsynthetic suffix\n`;
 type PublicationMode = typeof publicationModes[number];
 interface PublicationPeer { mode: PublicationMode; held: Map<string, Frame>; requests: Map<string, PublicationPrepareRequest>; results: Map<string, PublicationResultPage[]>; unexpected: string[] }
+const remoteModes = ['prepared', 'preparing', 'unsupported', 'offline', 'access_denied', 'rate_limited', 'no_checks', 'unknown', 'blocked'] as const;
+type RemoteMode = typeof remoteModes[number];
+interface RemotePeer { mode: RemoteMode; resource: string; head?: string; review?: Record<string, unknown>; calls: { method: string; path: string }[]; grants: string[]; pushes: Map<string, PublicationPushRequest>; held: Map<string, Frame>; results: Map<string, Frame>; }
 
 // Browser-only canonical scenarios with explicitly synthetic Runtime acknowledgements.
 // No Runtime or provider is contacted; fixture Tasks never leave the isolated schema.
@@ -62,7 +68,112 @@ export class ExecutionUIFixture {
   private readonly readPeers = new Map<string, ReadPeer>();
   private readonly readCompletions = new Map<string, string>();
   private readonly publicationPeers = new Map<string, PublicationPeer>();
+  private readonly remotePeers = new Map<string, RemotePeer>();
+  private remoteInstallation = 10000;
   constructor(db: Database, service: BoundaryService) { this.db = db; this.service = service; }
+
+  // Explicitly synthetic HTTP/grant responses. Real coordinator, Owner commands,
+  // durable PG records and authenticated Runner transport remain in use.
+  readonly remoteGrant: AcquireGitHubRemoteGrant = async (scope, profile) => {
+    const state = [...this.remotePeers.values()].find(peer => peer.resource === scope.resource_id);
+    if (!state || scope.repository_id !== '42' || scope.repository_identity !== 'github.com/example/execution-ui' || !scope.config) throw new RemoteProviderError('access_denied');
+    state.grants.push(profile);
+    if (state.mode === 'access_denied') throw new RemoteProviderError('access_denied');
+    return { token: 'synthetic-browser-ephemeral-grant', expires_at: new Date(Date.now() + 3600000).toISOString(), repository_id: '42', permissions: remoteProfile(scope, profile) };
+  };
+
+  readonly remoteFetch: typeof fetch = async (input, init) => {
+    const url = new URL(String(input)), method = init?.method ?? 'GET';
+    if (url.origin !== 'https://api.github.com' || !url.pathname.startsWith('/repos/example/execution-ui/')) throw new Error('Synthetic provider scope mismatch');
+    const authorization = new Headers(init?.headers).get('Authorization');
+    if (authorization !== 'Bearer synthetic-browser-ephemeral-grant') throw new Error('Synthetic provider grant mismatch');
+    const body = init?.body ? JSON.parse(String(init.body)) : undefined;
+    const branch = url.pathname.includes('/git/ref/') ? decodeURIComponent(url.pathname.split('/git/ref/')[1]!) : method === 'POST' ? body?.head : url.searchParams.get('head')?.split(':')[1];
+    const state = [...this.remotePeers.entries()].find(([task, peer]) => branch?.includes(task) || peer.review && url.pathname.endsWith('/pulls/' + peer.review.number) || peer.head && url.pathname.includes('/commits/' + peer.head + '/'))?.[1];
+    if (!state) throw new Error('Synthetic provider item mismatch');
+    state.calls.push({ method, path: url.pathname + url.search });
+    if (state.mode === 'rate_limited') return new Response('', { status: 429, headers: { 'Retry-After': '60' } });
+    if (url.pathname.includes('/git/ref/')) return state.head ? Response.json({ ref: 'refs/' + branch, object: { type: 'commit', sha: state.head } }) : new Response('', { status: 404 });
+    if (url.pathname.endsWith('/pulls') && method === 'GET') return Response.json(state.review ? [state.review] : []);
+    if (url.pathname.endsWith('/pulls') && method === 'POST') {
+      if (state.review) throw new Error('Synthetic provider duplicate PR create');
+      const number = 100 + [...this.remotePeers.values()].indexOf(state);
+      state.review = { id: 10000 + number, number, title: body.title, body: body.body, state: 'open', merged_at: null, mergeable: null, html_url: `https://github.com/example/execution-ui/pull/${number}`, head: { ref: body.head, sha: state.head, repo: { id: 42 } }, base: { ref: body.base, sha: 'b'.repeat(40), repo: { id: 42 } } };
+      return Response.json(state.review);
+    }
+    if (url.pathname.includes('/pulls/') && state.review) {
+      if (method === 'PATCH') state.review = { ...state.review, ...body };
+      return Response.json(state.review);
+    }
+    if (url.pathname.endsWith('/check-runs')) {
+      const rows = state.mode === 'no_checks' ? [] : Array.from({ length: 70 }, (_, index) => ({ id: index + 1, name: index === 0 ? '<script>window.remoteInjected = true</script>' : index === 1 ? 'long-literal-check-name-'.repeat(10) : `Check ${index}`, head_sha: state.head, status: index % 6 === 0 ? 'in_progress' : 'completed', conclusion: ['success', 'neutral', 'skipped', 'cancelled', 'failure', null][index % 6] }));
+      return Response.json({ total_count: rows.length, check_runs: rows });
+    }
+    if (url.pathname.endsWith('/statuses')) return Response.json([]);
+    throw new Error('Unrecognized synthetic provider route');
+  };
+
+  async createRemote(token: string, input: { mode: RemoteMode }) {
+    if (!remoteModes.includes(input.mode)) throw new Error('Invalid remote scenario');
+    const github = new GitHub('synthetic-browser-test-service-signing-key');
+    const config = new Configuration(this.db, github);
+    const { privateKey } = generateKeyPairSync('rsa', { modulusLength: 2048, privateKeyEncoding: { type: 'pkcs8', format: 'pem' }, publicKeyEncoding: { type: 'spki', format: 'pem' } });
+    // Real cooldowns are installation-scoped. A fresh synthetic installation
+    // isolates each scenario without deleting or bypassing retained cooldowns.
+    await config.save(token, { schema_version: 1, request_id: randomUUID(), expected_control_version: (await config.read(token)).control_version, name: 'save_github', payload: { app_id: '123', installation_id: String(++this.remoteInstallation), private_key: privateKey } });
+    const f = await this.create(token, { kind: 'result_inspection', title: 'Automatic remote review preparation' }, true);
+    await this.closeReadPeer(f.task);
+    const state: RemotePeer = { mode: input.mode, resource: f.resource_id!, calls: [], grants: [], pushes: new Map(), held: new Map(), results: new Map() };
+    this.remotePeers.set(f.task, state);
+    this.publicationPeers.set(f.task, { mode: 'clean', held: new Map(), requests: new Map(), results: new Map(), unexpected: [] });
+    await new PublicationPreparation(this.db, this.service.instanceId).pump();
+    await this.connectReadPeer(this.contexts.get(f.task)!);
+    if (input.mode === 'offline') { await this.waitPublication(f.task); await this.closeReadPeer(f.task); }
+    return f;
+  }
+
+  async remotePeer(token: string, task: string, action: 'observe' | 'mode' | 'release' | 'offline' | 'reconnect' | 'carry', mode?: RemoteMode) {
+    await transaction(this.db, tx => authenticateOwner(tx, token));
+    const state = this.remotePeers.get(task), f = this.contexts.get(task);
+    if (!state || !f) throw new Error('Unknown synthetic remote peer');
+    if (action === 'mode') { if (!mode || !remoteModes.includes(mode)) throw new Error('Unknown remote mode'); state.mode = mode; }
+    if (action === 'release') { state.mode = 'prepared'; for (const frame of state.held.values()) await this.replyPush(this.readPeers.get(task)!, state, frame); state.held.clear(); }
+    if (action === 'offline') await this.closeReadPeer(task);
+    if (action === 'reconnect') { await this.closeReadPeer(task); await this.connectReadPeer(f); }
+    if (action === 'carry') {
+      // Existing formal Owner Specification command; no result/remote rows are
+      // fabricated. The authenticated synthetic Runner handles the fresh scan.
+      const specification = new TaskSpecification(this.db);
+      const status = validate<TaskSpecificationStatus>('TaskSpecificationStatus', await specification.status(token, task));
+      if (!status.impact.nodes?.length) throw new Error('Synthetic carry requires completed Node impact');
+      const impact = { ...status.impact, nodes: status.impact.nodes.map(node => ({ ...node, disposition: 'carry' as const })) };
+      await specification.command(token, { schema_version: 1, request_id: randomUUID(), task_id: task, name: 'edit_specification', payload: { proposal_id: randomUUID(), specification: '# Revised requirement\n\nRetain the verified completed result with its unchanged tree under this explicit requirement revision.', summary: 'Carry the completed result into the new exact Specification.', impact, basis: await this.basis(f), source_input_ids: [] } });
+      await specification.pump();
+      await new PublicationPreparation(this.db, this.service.instanceId).pump();
+    }
+    return { mode: state.mode, calls: state.calls, grants: state.grants, pushes: [...state.pushes.values()].map(request => ({ operation_id: request.operation_id, request_digest: publicationDigest(request), head: request.prepared.candidate!.head })), held: state.held.size, head: state.head, review_number: state.review?.number };
+  }
+
+  private async replyPush(peer: ReadPeer, state: RemotePeer, frame: Frame) {
+    const request = frame.publication_push!;
+    let response = state.results.get(request.operation_id);
+    if (!response) {
+      const blocked = state.mode === 'blocked', uncertain = state.mode === 'unknown';
+      if (!blocked) {
+        // Admission/claim/grant are real authenticated HTTP behavior. The token
+        // reply is consumed privately and is never retained in fixture evidence.
+        const access = await fetch(`http://127.0.0.1:18555/v1/runner/remote-preparation/${request.operation_id}/access`, { method: 'POST', headers: { Authorization: `Bearer ${this.runnerCredentials.get(request.runner_id)}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ schema_version: 1, request_digest: publicationDigest(request), incarnation: frame.incarnation, attempt_id: randomUUID(), purpose: 'push' }) });
+        if (!access.ok) { await access.body?.cancel(); throw new Error(`Synthetic push admission failed ${access.status}`); }
+        const grant = validate<PublicationAccessResult>('PublicationAccessResult', await access.json());
+        if (grant.operation_id !== request.operation_id || grant.request_digest !== publicationDigest(request)) throw new Error('Synthetic push grant scope differs');
+      }
+      if (!blocked && !uncertain) state.head = request.prepared.candidate!.head;
+      const observation = validate('PublicationRefObservation', { schema_version: 1, observation_id: randomUUID(), operation_id: request.operation_id, item_id: request.item_id, task_id: request.task_id, resource_id: request.resource_id, runner_id: request.runner_id, storage_id: request.storage_id, repository_identity: request.repository_identity, repository_id: request.repository_id, delivery_ref: request.delivery_ref, observed_at: new Date().toISOString(), status: state.head ? 'present' : 'absent', ...(state.head ? { head: state.head } : {}) });
+      response = validate<Frame>('Frame', { schema_version: 1, type: 'publication_push_result', incarnation: frame.incarnation, publication_push_result: { schema_version: 1, operation_id: request.operation_id, request_digest: publicationDigest(request), item_id: request.item_id, candidate_manifest_digest: request.prepared.candidate_manifest_digest, candidate_head: request.prepared.candidate!.head, delivery_ref: request.delivery_ref, status: blocked ? 'blocked' : uncertain ? 'reconciliation_required' : 'published', push_started: !blocked, worker_absent: true, ...(blocked ? { reason: 'access_denied' } : uncertain ? { reason: 'provider_unavailable' } : {}), observation, observation_digest: publicationDigest(observation) } });
+      state.results.set(request.operation_id, response);
+    }
+    if (peer.socket.readyState === WebSocket.OPEN) peer.socket.send(JSON.stringify({ ...response, incarnation: frame.incarnation }));
+  }
 
   async createPublication(token: string, input: { mode: PublicationMode }) {
     if (!publicationModes.includes(input.mode)) throw new Error('Invalid publication scenario');
@@ -114,7 +225,8 @@ export class ExecutionUIFixture {
       else if (state.mode === 'unavailable') result = { ...base, status: 'unavailable', reason: 'retained_unavailable' };
       else {
         // Synthetic OIDs/content establish UI and transport binding only, never physical Git construction.
-        const candidate = { schema_version: 1, candidate_id: request.construction.candidate_id, construction_id: request.construction.construction_id, construction_digest: request.construction_digest, source_digest: request.source_digest, head: publicationDigest(request.construction).slice(0, 40), tree: request.source.git_tree, parents: request.construction.parents.map(parent => parent.commit) as [string, ...string[]] };
+        const mappingProof = request.published && request.published.candidate.tree === request.source.git_tree ? request.published : undefined;
+        const candidate = mappingProof?.candidate ?? { schema_version: 1, candidate_id: request.construction.candidate_id, construction_id: request.construction.construction_id, construction_digest: request.construction_digest, source_digest: request.source_digest, head: publicationDigest(request.construction).slice(0, 40), tree: request.source.git_tree, parents: request.construction.parents.map(parent => parent.commit) as [string, ...string[]] };
         const candidateDigest = publicationDigest(candidate);
         if (state.mode !== 'clean') findings = Array.from({ length: 70 }, (_, ordinal) => {
           const kind: PublicationFinding['kind'] = (['credential_pattern', 'published_credential', 'provider_hard_size', 'workflow_permission', 'publication_policy_size'] as const)[ordinal] ?? 'tracked_ignore';
@@ -128,8 +240,9 @@ export class ExecutionUIFixture {
           };
           return { ...facts, finding_id: publicationDigest({ candidate_manifest_digest: candidateDigest, configuration_digest: request.configuration_digest, scan_run_id: request.scan_run_id, finding_facts_without_id: facts }) };
         });
-        const scan = { schema_version: 1, scan_id: request.scan_run_id, candidate_manifest_digest: candidateDigest, configuration_digest: request.configuration_digest, status: state.mode === 'incomplete' ? 'incomplete' as const : 'complete' as const, ...(state.mode === 'incomplete' ? { reason: 'timeout' as const } : {}), coverage: { commits: 1, paths: 70, versions: 70, unique_blob_bytes: 157286420 }, findings_count: findings.length, findings_bytes: Buffer.byteLength(canonicalJSON(findings)), findings_digest: publicationDigest(findings) };
-        result = { ...base, status: 'prepared', candidate, candidate_manifest_digest: candidateDigest, scan, scan_digest: publicationDigest(scan) };
+        const scan = { schema_version: 1, scan_id: request.scan_run_id, candidate_manifest_digest: candidateDigest, configuration_digest: request.configuration_digest, ...(this.remotePeers.has(request.source.task_id) ? { workflow_changes: false } : {}), status: state.mode === 'incomplete' ? 'incomplete' as const : 'complete' as const, ...(state.mode === 'incomplete' ? { reason: 'timeout' as const } : {}), coverage: { commits: mappingProof ? 0 : 1, paths: 70, versions: 70, unique_blob_bytes: this.remotePeers.has(request.source.task_id) ? 70 : 157286420 }, findings_count: findings.length, findings_bytes: Buffer.byteLength(canonicalJSON(findings)), findings_digest: publicationDigest(findings) };
+        const mapping = mappingProof ? { schema_version: 1, mapping_id: request.operation_id, operation_id: request.operation_id, request_digest: base.request_digest, item_id: mappingProof.item_id, source: request.source, source_digest: request.source_digest, effective_basis: request.effective_basis, effective_basis_digest: request.effective_basis_digest, published: mappingProof, published_digest: request.published_digest!, candidate_manifest_digest: candidateDigest, reused_head: mappingProof.candidate.head, result_tree: request.source.git_tree, configuration_digest: request.configuration_digest } : undefined;
+        result = { ...base, status: mapping ? 'mapped' : 'prepared', candidate, candidate_manifest_digest: candidateDigest, scan, scan_digest: publicationDigest(scan), ...(mapping ? { mapping, mapping_digest: publicationDigest(mapping) } : {}) };
       }
       const pageCount = Math.max(1, Math.ceil(findings.length / 64));
       pages = Array.from({ length: pageCount }, (_, index) => {
@@ -141,14 +254,14 @@ export class ExecutionUIFixture {
     for (const page of pages) if (peer.socket.readyState === WebSocket.OPEN) peer.socket.send(JSON.stringify({ schema_version: 1, type: 'publication_result', incarnation: frame.incarnation, publication_result: page }));
   }
 
-  async create(token: string, input: { kind: Scenario; title?: string }) {
+  async create(token: string, input: { kind: Scenario; title?: string }, automatic = false) {
     await transaction(this.db, (tx) => authenticateOwner(tx, token));
     if (!scenarios.includes(input.kind) || (input.title !== undefined && (typeof input.title !== 'string' || input.title.length > 256))) throw new Error('Invalid browser scenario');
     const f: Context = { task: randomUUID(), spec: randomUUID(), plan: randomUUID(), node: randomUUID(), project: randomUUID(), role: randomUUID(), runner: randomUUID(), incarnation: 0 };
     const resource_id = ['running_workspace', 'review_git', 'result_inspection', 'result_empty'].includes(input.kind) ? randomUUID() : undefined;
     const config = new Configuration(this.db);
     await config.save(token, { schema_version: 1, request_id: randomUUID(), expected_control_version: (await config.read(token)).control_version, name: 'save_role', payload: { id: f.role, name: 'Careful builder', description: 'Synthetic browser scenario', instructions: 'Implement the exact requirement and report evidence.', archived: false } });
-    await config.save(token, { schema_version: 1, request_id: randomUUID(), expected_control_version: (await config.read(token)).control_version, name: 'save_project', payload: { id: f.project, name: `Execution UI · ${input.kind}`, context: 'Isolated browser fixture; no real Runtime execution.', resources: resource_id ? [{ id: resource_id, remote_url: 'https://github.com/example/execution-ui.git', remote_preparation: 'after_acceptance', default_branch: 'main' }] : [], role_ids: [f.role], archived: false } });
+    await config.save(token, { schema_version: 1, request_id: randomUUID(), expected_control_version: (await config.read(token)).control_version, name: 'save_project', payload: { id: f.project, name: `Execution UI · ${input.kind}`, context: 'Isolated browser fixture; no real Runtime execution.', resources: resource_id ? [{ id: resource_id, remote_url: 'https://github.com/example/execution-ui.git', remote_preparation: automatic ? 'automatic' : 'after_acceptance', ...(automatic ? { provider: 'github' as const, provider_repo_id: '42' } : {}), default_branch: 'main' }] : [], role_ids: [f.role], archived: false } });
     const todo_id = randomUUID();
     await new Todos(this.db).command(token, { schema_version: 1, request_id: randomUUID(), name: 'capture_todo', payload: { todo_id, original_capture: 'Execution UI browser scenario' } });
     const taskProposal = await prepareProposalFixture(this.db, this.service, token, todo_id);
@@ -300,7 +413,7 @@ export class ExecutionUIFixture {
       await this.settle(token, f.task);
       await this.service.disconnect(f.runner, f.incarnation);
     }
-    this.contexts.clear(); this.workspaceSnapshots.clear(); this.runnerCredentials.clear(); this.readCompletions.clear(); this.publicationPeers.clear(); return { reset: true };
+    this.contexts.clear(); this.workspaceSnapshots.clear(); this.runnerCredentials.clear(); this.readCompletions.clear(); this.publicationPeers.clear(); this.remotePeers.clear(); return { reset: true };
   }
 
   // Only this test process owns synthetic read bytes. Authentication, socket
@@ -319,20 +432,26 @@ export class ExecutionUIFixture {
         if (frame.type === 'welcome') {
           f.incarnation = frame.incarnation!;
           const publication = this.publicationPeers.get(f.task);
-          socket.send(JSON.stringify({ schema_version: 1, type: 'ready', incarnation: f.incarnation, log_modes: ['ordered_v1'], result_read_modes: ['git_objects_v1'], ...(publication && publication.mode !== 'unsupported' ? { publication_modes: ['local_candidate_v1'] } : {}) }));
+          const remote = this.remotePeers.get(f.task);
+          socket.send(JSON.stringify({ schema_version: 1, type: 'ready', incarnation: f.incarnation, log_modes: ['ordered_v1'], result_read_modes: ['git_objects_v1'], ...(publication && publication.mode !== 'unsupported' ? { publication_modes: ['local_candidate_v1'] } : {}), ...(remote && remote.mode !== 'unsupported' ? { remote_preparation_modes: ['github_review_v1'] } : {}) }));
           clearTimeout(timer); resolve();
         } else if (frame.type === 'publication_prepare') {
           const publication = this.publicationPeers.get(f.task), request = frame.publication_prepare!;
           if (!publication || request.source.task_id !== f.task || request.source.runner_id !== f.runner || request.source.operation_id !== this.readCompletions.get(f.task)) { socket.close(4003, 'Synthetic publication peer scope mismatch'); return; }
           publication.requests.set(request.operation_id, request);
           if (publication.mode === 'preparing') publication.held.set(request.operation_id, frame); else this.replyPublication(peer, publication, frame);
+        } else if (frame.type === 'publication_push') {
+          const remote = this.remotePeers.get(f.task), request = frame.publication_push!;
+          if (!remote || request.task_id !== f.task || request.runner_id !== f.runner || request.resource_id !== remote.resource || request.preparation.source.operation_id !== this.readCompletions.get(f.task)) { socket.close(4003, 'Synthetic push peer scope mismatch'); return; }
+          remote.pushes.set(request.operation_id, request);
+          if (remote.mode === 'preparing' || remote.mode === 'offline') remote.held.set(request.operation_id, frame); else void this.replyPush(peer, remote, frame).catch(() => socket.close(4003, 'Synthetic push admission failed'));
         } else if (frame.type === 'result_read') {
           if (frame.result_read?.identity.task_id !== f.task || frame.result_read.identity.runner_id !== f.runner || frame.result_read.identity.operation_id !== this.readCompletions.get(f.task)) {
             socket.close(4003, 'Synthetic read peer scope mismatch'); return;
           }
           peer.requests.push(frame.result_read!);
           if (peer.hold) peer.held.push(frame); else this.replyRead(peer, frame);
-        } else if (!['publication_ack', 'pong', 'ack'].includes(frame.type)) {
+        } else if (!['publication_ack', 'publication_push_ack', 'pong', 'ack'].includes(frame.type)) {
           this.publicationPeers.get(f.task)?.unexpected.push(frame.type);
         }
       });

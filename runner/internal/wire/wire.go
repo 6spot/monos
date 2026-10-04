@@ -27,7 +27,10 @@ var compileErr error
 var mu sync.Mutex
 
 func Validate(name string, raw []byte) error {
-	if (name == "ResultReadResponse" || strings.HasPrefix(name, "Publication")) && len(raw) > 512*1024 {
+	if (name == "PublicationAccessRequest" || name == "PublicationAccessResult" || name == "PublicationPermissionRequest" || name == "PublicationPermissionResult") && len(raw) > 16*1024 {
+		return fmt.Errorf("publication access exceeds limit")
+	}
+	if (name == "ResultReadResponse" || strings.HasPrefix(name, "Publication") || strings.HasPrefix(name, "PublishedResult") || strings.HasPrefix(name, "RemotePreparation")) && len(raw) > 512*1024 {
 		return fmt.Errorf("result response exceeds limit")
 	}
 	if len(raw) > Limit {
@@ -71,7 +74,7 @@ func Validate(name string, raw []byte) error {
 	if err := schema.Validate(v); err != nil {
 		return err
 	}
-	if strings.HasPrefix(name, "Result") || strings.HasPrefix(name, "Publication") || name == "Frame" && (resultFrame(v) || publicationFrame(v)) {
+	if strings.HasPrefix(name, "Result") || strings.HasPrefix(name, "Publication") || strings.HasPrefix(name, "PublishedResult") || strings.HasPrefix(name, "RemotePreparation") || name == "Frame" && (resultFrame(v) || publicationFrame(v)) {
 		if name == "Frame" && publicationFrame(v) && len(raw) > 512*1024 {
 			return fmt.Errorf("publication frame exceeds limit")
 		}
@@ -237,7 +240,7 @@ func Envelope(raw []byte) (protocol.CommandEnvelope, error) {
 
 func publicationFrame(v any) bool {
 	m, ok := v.(map[string]any)
-	return ok && (m["type"] == "publication_prepare" || m["type"] == "publication_result" || m["type"] == "publication_ack")
+	return ok && (m["type"] == "publication_prepare" || m["type"] == "publication_result" || m["type"] == "publication_ack" || m["type"] == "publication_push" || m["type"] == "publication_push_result" || m["type"] == "publication_push_ack")
 }
 
 func resultFrame(v any) bool {
@@ -252,6 +255,9 @@ func resultByteBounds(v any, key string) error {
 		}
 		if (key == "path" || key == "baseline_path") && len(value) > 4096 {
 			return fmt.Errorf("result path exceeds byte bounds")
+		}
+		if key == "body" && len(value) > 64*1024 {
+			return fmt.Errorf("remote content exceeds raw byte bounds")
 		}
 	case []any:
 		for _, item := range value {

@@ -19,7 +19,16 @@ import (
 // PublicationPrepare is an unprivileged service effect, independent of Attempts.
 // The daemon verifies journal authority before entering this disk/Git boundary.
 func PublicationPrepare(ctx context.Context, r protocol.PublicationPrepareRequest) ([]protocol.PublicationResultPage, error) {
+	return PublicationPrepareWithAccess(ctx, r, nil)
+}
+func PublicationPrepareWithAccess(ctx context.Context, r protocol.PublicationPrepareRequest, access PublicationAccess) ([]protocol.PublicationResultPage, error) {
 	if e := ValidatePublicationRequest(r); e != nil {
+		return PublicationFailure(r, "reconciliation_required", "identity_mismatch"), nil
+	}
+	if r.Published != nil && VerifyPublicationPublished(ctx, r, access) != nil {
+		return PublicationFailure(r, "reconciliation_required", "unverified_parent"), nil
+	}
+	if r.Configuration.WorkflowWrite != "unknown" && VerifyRetainedPublicationPermission(r) != nil {
 		return PublicationFailure(r, "reconciliation_required", "identity_mismatch"), nil
 	}
 	dir, status := trustedResultExport(r.Source)
@@ -30,6 +39,9 @@ func PublicationPrepare(ctx context.Context, r protocol.PublicationPrepareReques
 		return PublicationFailure(r, "reconciliation_required", "identity_mismatch"), nil
 	}
 	for _, p := range r.Construction.Parents {
+		if p.Kind == "published" {
+			continue
+		}
 		if e := verifyPublicationPin(ctx, p, r.Source, r.Construction.TargetBranch); e != nil {
 			return PublicationFailure(r, "reconciliation_required", "unverified_parent"), nil
 		}
@@ -38,7 +50,11 @@ func PublicationPrepare(ctx context.Context, r protocol.PublicationPrepareReques
 	if resultParents(filepath.Dir(root), uint32(os.Geteuid())) != nil || serviceDirectory(filepath.Dir(root), true) != nil {
 		return PublicationFailure(r, "unavailable", "retained_unavailable"), nil
 	}
-	return preparePublicationAt(ctx, r, dir, root, nil)
+	store, e := preparePublicationStore(ctx, root, dir, r)
+	if e != nil {
+		return nil, e
+	}
+	return preparePublicationStoredAt(ctx, r, dir, store, root, nil)
 }
 func ValidatePublicationRequest(r protocol.PublicationPrepareRequest) error {
 	raw, e := json.Marshal(r)
@@ -63,13 +79,31 @@ func ValidatePublicationRequest(r protocol.PublicationPrepareRequest) error {
 	if !ValidID(r.OperationID) || !ValidID(c.ConstructionID) || !ValidID(c.CandidateID) || len(c.Parents) < 1 || len(c.Parents) > 2 {
 		return errors.New("publication identity mismatch")
 	}
+	if r.Published != nil && (r.PublishedDigest == nil || publicationDigest(*r.Published) != *r.PublishedDigest || !publicationProofScope(*r.Published, s) || c.Parents[0].Kind != "published") {
+		return errors.New("publication published identity mismatch")
+	}
+	if r.PermissionProof != nil && ValidatePublicationPermission(r) != nil {
+		return errors.New("publication permission mismatch")
+	}
 	seen := map[string]bool{}
 	for n, p := range c.Parents {
-		if p.Kind == "published" || n == 0 && p.Kind != "materialization" || n > 0 && p.Kind != "target" || seen[p.Commit] {
+		if n == 0 && p.Kind != "materialization" && p.Kind != "published" || n > 0 && p.Kind != "target" || seen[p.Commit] {
 			return errors.New("unverified publication parent")
 		}
 		seen[p.Commit] = true
+		if p.Kind == "published" {
+			if r.Published == nil || p.PublishedProof == nil || p.PublishedProofDigest == nil || publicationDigest(*p.PublishedProof) != *p.PublishedProofDigest || publicationDigest(*r.Published) != *p.PublishedProofDigest || p.Commit != p.PublishedProof.Candidate.Head || !publicationProofScope(*p.PublishedProof, s) || r.PermissionProof != nil && r.PermissionProof.RepositoryID != p.PublishedProof.RepositoryID {
+				return errors.New("unverified publication parent")
+			}
+			continue
+		}
+		if p.Outcome == nil || p.Workspace == nil || p.ObservationOperationID == nil || p.ObservationDigest == nil {
+			return errors.New("unverified publication parent")
+		}
 		m := p.Outcome.WorkspaceMetadata
+		if r.PermissionProof != nil && (m == nil || m.ProviderMetadata == nil || m.ProviderMetadata.Github == nil || m.ProviderMetadata.Github.RepositoryID != r.PermissionProof.RepositoryID) {
+			return errors.New("publication permission repository mismatch")
+		}
 		if m == nil || p.Outcome.WorkspaceID == nil || *p.Outcome.WorkspaceID != s.WorkspaceID || m.Generation != p.Workspace.Generation || m.LeaseID != p.Workspace.LeaseID || m.RepositoryIdentity != s.RepositoryIdentity {
 			return errors.New("unverified publication parent")
 		}
@@ -80,8 +114,8 @@ func ValidatePublicationRequest(r protocol.PublicationPrepareRequest) error {
 			OperationID string                       `json:"operation_id"`
 			Workspace   protocol.WorkspaceDescriptor `json:"workspace"`
 			Outcome     protocol.EffectResult        `json:"outcome"`
-		}{p.ObservationOperationID, p.Workspace, p.Outcome})
-		if e != nil || digest != p.ObservationDigest {
+		}{*p.ObservationOperationID, *p.Workspace, *p.Outcome})
+		if e != nil || digest != *p.ObservationDigest {
 			return errors.New("unverified publication parent")
 		}
 		if p.Kind == "materialization" && (p.Workspace.Basis != nil || p.Commit != s.BaseCommit || p.Commit != p.Outcome.WorkspaceMetadata.BaseCommit) {
@@ -109,11 +143,11 @@ func verifyPublicationSource(ctx context.Context, dir string, s protocol.ResultR
 // A public OID must retain the original completed service fetch intent and exact
 // cache pin. Mere presence in the result export never establishes public origin.
 func verifyPublicationPin(ctx context.Context, p protocol.PublicationParent, s protocol.ResultReadIdentity, target string) error {
-	return verifyPublicationPinAt(ctx, p, s, target, filepath.Join(Root, "service", "workspace-operations", p.ObservationOperationID+".json"), resourceCache(s.ResourceID))
+	return verifyPublicationPinAt(ctx, p, s, target, filepath.Join(Root, "service", "workspace-operations", *p.ObservationOperationID+".json"), resourceCache(s.ResourceID))
 }
 func verifyPublicationPinAt(ctx context.Context, p protocol.PublicationParent, s protocol.ResultReadIdentity, target, path, cache string) error {
 	uid := uint32(os.Geteuid())
-	if !ValidID(p.ObservationOperationID) || resultParents(filepath.Dir(path), uid) != nil || trustedFile(path, uid) != nil {
+	if p.ObservationOperationID == nil || !ValidID(*p.ObservationOperationID) || resultParents(filepath.Dir(path), uid) != nil || trustedFile(path, uid) != nil {
 		return errors.New("unverified publication parent")
 	}
 	info, e := os.Lstat(path)
@@ -153,7 +187,7 @@ func verifyPublicationPinAt(ctx context.Context, p protocol.PublicationParent, s
 	if p.Kind == "target" {
 		name = "target"
 	}
-	value, e := resultGit(ctx, cache, 256, "rev-parse", "--verify", "refs/monos/pins/"+p.ObservationOperationID+"/"+name+"^{commit}")
+	value, e := resultGit(ctx, cache, 256, "rev-parse", "--verify", "refs/monos/pins/"+*p.ObservationOperationID+"/"+name+"^{commit}")
 	if e != nil || strings.TrimSpace(string(value)) != p.Commit {
 		return errors.New("unverified publication parent")
 	}
@@ -209,6 +243,10 @@ type publicationConstructionIntent struct {
 // The fault hook is local-test-only; production never exposes a filesystem or
 // parent setter. Persisted construction survives every injected stage boundary.
 func preparePublicationAt(ctx context.Context, r protocol.PublicationPrepareRequest, dir, root string, fault func(string) error) ([]protocol.PublicationResultPage, error) {
+	return preparePublicationStoredAt(ctx, r, dir, dir, root, fault)
+}
+
+func preparePublicationStoredAt(ctx context.Context, r protocol.PublicationPrepareRequest, source, dir, root string, fault func(string) error) ([]protocol.PublicationResultPage, error) {
 	if e := publicationDirectory(root); e != nil {
 		return nil, e
 	}
@@ -240,7 +278,7 @@ func preparePublicationAt(ctx context.Context, r protocol.PublicationPrepareRequ
 		if json.Unmarshal(raw, &pages) != nil || len(pages) == 0 {
 			return nil, errors.New("publication journal unavailable")
 		}
-		if verifyPublicationSource(ctx, dir, r.Source) != nil {
+		if verifyPublicationSource(ctx, source, r.Source) != nil {
 			return PublicationFailure(r, "reconciliation_required", "identity_mismatch"), nil
 		}
 		if pages[0].Result.Candidate != nil && verifyPublicationManifest(ctx, dir, *pages[0].Result.Candidate) != nil {
@@ -249,6 +287,9 @@ func preparePublicationAt(ctx context.Context, r protocol.PublicationPrepareRequ
 		return pages, nil
 	} else if !os.IsNotExist(e) {
 		return nil, errors.New("publication journal unavailable")
+	}
+	if r.Published != nil && r.Source.GitTree == r.Published.Candidate.Tree {
+		return preparePublicationMappingAt(ctx, r, dir, opDir)
 	}
 	intent := publicationConstructionIntent{r.Source, r.Construction, r.ConstructionDigest}
 	if e = savePublicationFile(filepath.Join(constructionDir, "intent.json"), intent); e != nil {
@@ -259,7 +300,7 @@ func preparePublicationAt(ctx context.Context, r protocol.PublicationPrepareRequ
 			return nil, e
 		}
 	}
-	if e = verifyPublicationSource(ctx, dir, r.Source); e != nil {
+	if e = verifyPublicationSource(ctx, source, r.Source); e != nil {
 		return PublicationFailure(r, "reconciliation_required", "identity_mismatch"), nil
 	}
 	c := r.Construction
@@ -276,7 +317,7 @@ func preparePublicationAt(ctx context.Context, r protocol.PublicationPrepareRequ
 		}
 		parents = append(parents, p.Commit)
 	}
-	baseTree, e := resultGit(ctx, dir, 256, "rev-parse", r.Source.BaseCommit+"^{tree}")
+	baseTree, e := resultGit(ctx, dir, 256, "rev-parse", r.Construction.Parents[0].Commit+"^{tree}")
 	if e != nil {
 		return nil, errors.New("publication source unavailable")
 	}
@@ -409,7 +450,7 @@ func equalPublicationStrings(a, b []string) bool {
 }
 func PublicationFailure(r protocol.PublicationPrepareRequest, status, reason string) []protocol.PublicationResultPage {
 	_, digest, _ := wire.Canonical(r)
-	why := protocol.PublicationResultReason(reason)
+	why := protocol.PreparedReason(reason)
 	result := protocol.PublicationResult{SchemaVersion: 1, OperationID: r.OperationID, RequestDigest: digest, Status: protocol.PublicationResultStatus(status), Reason: &why}
 	findings := []protocol.PublicationFinding{}
 	_, pd, _ := wire.Canonical(findings)

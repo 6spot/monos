@@ -1,0 +1,12 @@
+# monos.local/runner/internal/host [monos.local/runner/internal/host.test]
+internal/host/publication_candidate.go:83:5: cannot use p.ObservationOperationID (variable of type *string) as string value in struct literal
+internal/host/publication_candidate.go:83:31: cannot use p.Workspace (variable of type *protocol.WorkspaceDescriptor) as protocol.WorkspaceDescriptor value in struct literal
+internal/host/publication_candidate.go:83:44: cannot use p.Outcome (variable of type *protocol.EffectResult) as protocol.EffectResult value in struct literal
+internal/host/publication_candidate.go:84:28: invalid operation: digest != p.ObservationDigest (mismatched types string and *string)
+internal/host/publication_candidate.go:112:106: invalid operation: p.ObservationOperationID + ".json" (mismatched types *string and untyped string)
+internal/host/publication_candidate.go:116:14: cannot use p.ObservationOperationID (variable of type *string) as string value in argument to ValidID
+internal/host/publication_candidate.go:156:66: invalid operation: "refs/monos/pins/" + p.ObservationOperationID (mismatched types untyped string and *string)
+internal/host/publication_candidate.go:412:18: undefined: protocol.PublicationResultReason
+internal/host/publication_pages.go:18:59: undefined: protocol.RuleID
+internal/host/publication_candidate_test.go:317:148: cannot use w.OpenOperationID (variable of type string) as *string value in struct literal
+internal/host/publication_candidate_test.go:317:148: too many errors

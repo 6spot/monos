@@ -1,0 +1,5 @@
+--- FAIL: TestPublicationSHA256ObjectFormatCASReplay (0.26s)
+    publication_candidate_test.go:587: SHA256 separate store import failed publication object unavailable
+FAIL
+FAIL	monos.local/runner/internal/host	0.866s
+FAIL

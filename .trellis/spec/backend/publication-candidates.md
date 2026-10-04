@@ -66,10 +66,11 @@ First public parent is the original successful Basis-absent materialization,
 including exact operation, workspace, raw outcome and observation digest.
 Runner verifies retained SQLite/journal and trusted pin/cache/storage/repository
 lineage. OID presence or a later open does not establish public provenance.
-Production admission in this slice uses that verified base only. Optional target
-construction requires verified target observation and integrated source ancestry.
-Published-parent reconciliation belongs to the remote preparation slice; prepared
-local heads cannot be labeled published.
+Original construction uses that verified base. Subsequent automatic preparation
+may use the exact reconciled published proof under
+[remote preparation](remote-preparation.md). Additional integration-target transport
+remains deferred; its direct factory checks do not prove the public-store production
+path. Prepared local heads cannot be labeled published.
 
 `PublicationConstruction` freezes construction/candidate IDs, source digest,
 repository, target branch, ordered parent proofs, author `monos`, email
@@ -160,9 +161,11 @@ do not clear that separate guard. No remediation setter exists in this slice.
 | Findings per page / physical deadline | 64 / 120 seconds |
 
 Configuration binds policy/rule/traversal versions and permission fingerprint.
-Workflow add/modify/delete/mode changes require verified workflow write permission;
-production here records `unknown` and blocks eligibility. Existing read tokens
-grant no write permission. Permission observation is later work.
+Workflow add/modify/delete/mode changes require verified workflow write permission.
+Automatic GitHub preparation uses the exact observed App profile; local deferred
+preparation retains unknown permission and does not request write tokens. Existing
+read tokens grant no write permission. New scans retain explicit workflow_changes;
+legacy omitted metadata remains valid history but grants no new remote admission.
 Own deadline or limit exhaustion produces immutable incomplete evidence. External
 connection/context cancellation is interrupted, without terminal cache, so the
 same request resumes. Incomplete/hard findings cannot be waived.
@@ -185,6 +188,12 @@ Commands use schema_version, task_id, request_id, name and strict payload:
 | prepare_publication_override | candidate_id, candidate_manifest_digest, effective_basis_digest, scan_digest, finding_ids |
 | confirm_publication_override | proposal_id, content_digest |
 | override_publication_findings | Exact prepare selection plus confirmation_id |
+
+Mapped-result selections additionally require their exact mapping_digest; ordinary
+selections forbid it. A same-tree mapping retains the old candidate/source manifest
+and runs a new current-source/basis scan. Finding reads and waiver applicability
+follow that scan's operation/mapping, not the manifest's old source. Old receipts
+cannot carry into the new scan or basis.
 
 finding_ids are sorted, unique, nonempty, at most 64. Prepare freezes exact
 candidate/tree/head/parents/source/effective basis/scan/config/finding selection;

@@ -1,0 +1,7 @@
+{
+  "scope": "SHA256 separate-store fix; two owned source hashes",
+  "inputs": {
+    "runner/internal/host/publication_store.go": "139c8ea4d0aa012e7ac475942db84b7c908ba5fe610a2ea2b3712e58f8110205",
+    "runner/internal/host/publication_candidate_test.go": "20182eb61ea58968453187c9db11135d8e6f22b1784a243641ae02ecad5be473"
+  }
+}

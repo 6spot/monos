@@ -1,0 +1,59 @@
+=== RUN   TestRemotePreparationPrivateItemLockAndRetainedIntent
+--- PASS: TestRemotePreparationPrivateItemLockAndRetainedIntent (0.06s)
+=== RUN   TestRemotePreparationRejectsUnsafePrivateStorage
+--- PASS: TestRemotePreparationRejectsUnsafePrivateStorage (0.00s)
+=== RUN   TestRemotePreparationFixedPrePushGuardInputAndTamper
+=== RUN   TestRemotePreparationFixedPrePushGuardInputAndTamper/exact
+=== RUN   TestRemotePreparationFixedPrePushGuardInputAndTamper/wrong_local
+=== RUN   TestRemotePreparationFixedPrePushGuardInputAndTamper/wrong_new
+=== RUN   TestRemotePreparationFixedPrePushGuardInputAndTamper/wrong_old
+=== RUN   TestRemotePreparationFixedPrePushGuardInputAndTamper/wrong_ref
+=== RUN   TestRemotePreparationFixedPrePushGuardInputAndTamper/extra_update
+=== RUN   TestRemotePreparationFixedPrePushGuardInputAndTamper/extra_field
+=== RUN   TestRemotePreparationFixedPrePushGuardInputAndTamper/no_newline
+=== RUN   TestRemotePreparationFixedPrePushGuardInputAndTamper/nul
+=== RUN   TestRemotePreparationFixedPrePushGuardInputAndTamper/bound
+=== RUN   TestRemotePreparationFixedPrePushGuardInputAndTamper/wrong_destination
+--- PASS: TestRemotePreparationFixedPrePushGuardInputAndTamper (0.05s)
+    --- PASS: TestRemotePreparationFixedPrePushGuardInputAndTamper/exact (0.01s)
+    --- PASS: TestRemotePreparationFixedPrePushGuardInputAndTamper/wrong_local (0.00s)
+    --- PASS: TestRemotePreparationFixedPrePushGuardInputAndTamper/wrong_new (0.00s)
+    --- PASS: TestRemotePreparationFixedPrePushGuardInputAndTamper/wrong_old (0.00s)
+    --- PASS: TestRemotePreparationFixedPrePushGuardInputAndTamper/wrong_ref (0.00s)
+    --- PASS: TestRemotePreparationFixedPrePushGuardInputAndTamper/extra_update (0.00s)
+    --- PASS: TestRemotePreparationFixedPrePushGuardInputAndTamper/extra_field (0.00s)
+    --- PASS: TestRemotePreparationFixedPrePushGuardInputAndTamper/no_newline (0.00s)
+    --- PASS: TestRemotePreparationFixedPrePushGuardInputAndTamper/nul (0.00s)
+    --- PASS: TestRemotePreparationFixedPrePushGuardInputAndTamper/bound (0.01s)
+    --- PASS: TestRemotePreparationFixedPrePushGuardInputAndTamper/wrong_destination (0.00s)
+=== RUN   TestRemotePreparationActualGitAdvertisedHeadAndReceiverCAS
+    publication_remote_primitives_test.go:164: synthetic Git push rejected: error: failed to push some refs to '/var/lib/monos-probe/service/monos-publication-validation-57d3e110d17d47d69889d9179aafbd5d/.publication-fixture-37805163/remote.git'
+    publication_remote_primitives_test.go:178: synthetic Git push rejected: remote: error: cannot lock ref 'refs/heads/delivery': is at 75fc9597065b05f4999afb0d4e7b830114f11b78 but expected b41432e2c8f9e890e488d455ce0c0c0da090c1c3        
+        error: failed to push some refs to '/var/lib/monos-probe/service/monos-publication-validation-57d3e110d17d47d69889d9179aafbd5d/.publication-fixture-37805163/remote.git'
+        To /var/lib/monos-probe/service/monos-publication-validation-57d3e110d17d47d69889d9179aafbd5d/.publication-fixture-37805163/remote.git
+        !	26f0f84a4212f7bd3daef18b7d9efd3155ec3049:refs/heads/delivery	[remote rejected] (failed to update ref)
+        Done
+    publication_remote_primitives_test.go:206: synthetic Git push rejected: error: failed to push some refs to '/var/lib/monos-probe/service/monos-publication-validation-57d3e110d17d47d69889d9179aafbd5d/.publication-fixture-37805163/remote.git'
+--- PASS: TestRemotePreparationActualGitAdvertisedHeadAndReceiverCAS (0.17s)
+=== RUN   TestRemotePreparationNativeRetainedPermissionFixture
+    publication_remote_primitives_test.go:217: explicit retained evidence directory required
+--- SKIP: TestRemotePreparationNativeRetainedPermissionFixture (0.00s)
+=== RUN   TestRemotePreparationProcessGroupCancellationAndParentExit
+=== RUN   TestRemotePreparationProcessGroupCancellationAndParentExit/cancel_connection_false
+=== RUN   TestRemotePreparationProcessGroupCancellationAndParentExit/cancel_connection_true
+--- PASS: TestRemotePreparationProcessGroupCancellationAndParentExit (1.12s)
+    --- PASS: TestRemotePreparationProcessGroupCancellationAndParentExit/cancel_connection_false (1.06s)
+    --- PASS: TestRemotePreparationProcessGroupCancellationAndParentExit/cancel_connection_true (0.06s)
+=== RUN   TestRemotePreparationProcessOutputBoundAndNormalAbsence
+=== RUN   TestRemotePreparationProcessOutputBoundAndNormalAbsence/normal
+=== RUN   TestRemotePreparationProcessOutputBoundAndNormalAbsence/output
+--- PASS: TestRemotePreparationProcessOutputBoundAndNormalAbsence (0.02s)
+    --- PASS: TestRemotePreparationProcessOutputBoundAndNormalAbsence/normal (0.01s)
+    --- PASS: TestRemotePreparationProcessOutputBoundAndNormalAbsence/output (0.01s)
+=== RUN   TestRemotePreparationProcessUIDStatusBounds
+--- PASS: TestRemotePreparationProcessUIDStatusBounds (0.00s)
+=== RUN   TestRemotePreparationProcessLinuxUIDBinding
+--- PASS: TestRemotePreparationProcessLinuxUIDBinding (0.01s)
+=== RUN   TestRemotePreparationGuardedPushRevalidatesFixedHook
+--- PASS: TestRemotePreparationGuardedPushRevalidatesFixedHook (0.05s)
+PASS

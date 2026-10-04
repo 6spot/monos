@@ -1,0 +1,153 @@
+{
+  "paths": [
+    {
+      "kind": "root",
+      "matches_recorded_mode": true,
+      "mode": "0700",
+      "symlink": false,
+      "uid": 501
+    },
+    {
+      "kind": "journal",
+      "matches_recorded_mode": true,
+      "mode": "0700",
+      "symlink": false,
+      "uid": 501
+    },
+    {
+      "kind": "item",
+      "matches_recorded_mode": true,
+      "mode": "0700",
+      "symlink": false,
+      "uid": 501
+    },
+    {
+      "kind": "operation",
+      "matches_recorded_mode": true,
+      "mode": "0700",
+      "symlink": false,
+      "uid": 501
+    },
+    {
+      "kind": "intent",
+      "matches_recorded_mode": true,
+      "mode": "0600",
+      "symlink": false,
+      "uid": 501
+    },
+    {
+      "kind": "started",
+      "matches_recorded_mode": true,
+      "mode": "0600",
+      "symlink": false,
+      "uid": 501
+    },
+    {
+      "kind": "worker",
+      "matches_recorded_mode": true,
+      "mode": "0600",
+      "symlink": false,
+      "uid": 501
+    },
+    {
+      "kind": "absence",
+      "matches_recorded_mode": true,
+      "mode": "0600",
+      "symlink": false,
+      "uid": 501
+    },
+    {
+      "kind": "result",
+      "matches_recorded_mode": true,
+      "mode": "0600",
+      "symlink": false,
+      "uid": 501
+    },
+    {
+      "kind": "ack",
+      "matches_recorded_mode": true,
+      "mode": "0600",
+      "symlink": false,
+      "uid": 501
+    },
+    {
+      "kind": "published",
+      "matches_recorded_mode": true,
+      "mode": "0600",
+      "symlink": false,
+      "uid": 501
+    },
+    {
+      "kind": "lock",
+      "matches_recorded_mode": true,
+      "mode": "0600",
+      "symlink": false,
+      "uid": 501
+    },
+    {
+      "kind": "hooks",
+      "matches_recorded_mode": true,
+      "mode": "0700",
+      "symlink": false,
+      "uid": 501
+    },
+    {
+      "kind": "pre_push",
+      "matches_recorded_mode": true,
+      "mode": "0700",
+      "symlink": false,
+      "uid": 501
+    },
+    {
+      "kind": "public_object_store",
+      "matches_recorded_mode": true,
+      "mode": "0700",
+      "symlink": false,
+      "uid": 501
+    },
+    {
+      "kind": "original_source_export",
+      "matches_recorded_mode": true,
+      "mode": "0700",
+      "symlink": false,
+      "uid": 501
+    },
+    {
+      "kind": "synthetic_remote",
+      "matches_recorded_mode": true,
+      "mode": "0755",
+      "symlink": false,
+      "uid": 501
+    },
+    {
+      "kind": "candidate_intent",
+      "matches_recorded_mode": true,
+      "mode": "0600",
+      "symlink": false,
+      "uid": 501
+    },
+    {
+      "kind": "candidate_manifest",
+      "matches_recorded_mode": true,
+      "mode": "0600",
+      "symlink": false,
+      "uid": 501
+    },
+    {
+      "kind": "scan_pages",
+      "matches_recorded_mode": true,
+      "mode": "0600",
+      "symlink": false,
+      "uid": 501
+    },
+    {
+      "kind": "proof",
+      "matches_recorded_mode": true,
+      "mode": "0600",
+      "symlink": false,
+      "uid": 501
+    }
+  ],
+  "proof_sha256": "fc37a4eee8b79a5ffda31f0b6a9fc2f124bfb11874147ece81cdd5ac7b2b71ad",
+  "scope": "file-only independent retained Darwin v2 proof path inspection after successful fixture; not a different-account/native Linux proof"
+}

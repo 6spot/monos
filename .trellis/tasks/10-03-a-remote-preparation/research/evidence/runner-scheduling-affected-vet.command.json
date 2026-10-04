@@ -1,0 +1,12 @@
+{
+  "cwd": "/Users/me/IdeaProjects/monos/runner",
+  "command": [
+    "/Users/me/.local/share/mise/installs/go/1.27.1/bin/go",
+    "vet",
+    "./internal/control",
+    "./internal/host"
+  ],
+  "exit_code": 0,
+  "elapsed_seconds": 0.253276915999999,
+  "scope": "typed429 exact spacing/budget and pending/started intent/denial preservation; affected packages only"
+}

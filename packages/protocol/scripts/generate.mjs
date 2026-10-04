@@ -82,6 +82,13 @@ artifacts.set('generated/openapi.json', `${JSON.stringify({
   openapi: '3.1.0', info: { title: 'monos boundary probe', version: '1.0.0' },
   paths: {
     '/v1/owner/tasks/{task_id}/publication-candidates': { get: get('PublicationCandidatePage','OwnerAuth',['task_id'],'PublicationCandidateQuery') },
+    '/v1/owner/tasks/{task_id}/remote-preparation': { get: get('RemotePreparationPage','OwnerAuth',['task_id'],'RemotePreparationQuery') },
+    '/v1/owner/tasks/{task_id}/remote-preparation/{item_id}': { get: get('RemotePreparationRecord','OwnerAuth',['task_id','item_id']) },
+    '/v1/owner/tasks/{task_id}/remote-preparation/{item_id}/checks/{observation_id}': { get: get('RemotePreparationChecksPage','OwnerAuth',['task_id','item_id','observation_id'],'RemotePreparationChecksQuery') },
+    '/v1/owner/tasks/remote-preparation/commands': { post: { security: security('OwnerAuth'), requestBody: { required: true, content: { 'application/json': { schema: reference('RemotePreparationCommand') } } }, responses: responses('RemotePreparationCommandResult') } },
+    '/v1/owner/tasks/{task_id}/remote-preparation/commands/{request_id}': { get: get('RemotePreparationCommandResult','OwnerAuth',['task_id','request_id']) },
+    '/v1/runner/remote-preparation/{operation_id}/access': { post: { security: security('RunnerAuth'), parameters: [{ name: 'operation_id', in: 'path', required: true, schema: reference('Id') }], requestBody: { required: true, content: { 'application/json': { schema: reference('PublicationAccessRequest') } } }, responses: responses('PublicationAccessResult') } },
+    '/v1/runner/publication-operations/{operation_id}/permission': { post: { security: security('RunnerAuth'), parameters: [{ name: 'operation_id', in: 'path', required: true, schema: reference('Id') }], requestBody: { required: true, content: { 'application/json': { schema: reference('PublicationPermissionRequest') } } }, responses: responses('PublicationPermissionResult') } },
     '/v1/owner/tasks/{task_id}/publication-candidates/{candidate_id}': { get: get('PublicationRecord','OwnerAuth',['task_id','candidate_id']) },
     '/v1/owner/tasks/{task_id}/publication-candidates/{candidate_id}/findings': { get: get('PublicationFindingPage','OwnerAuth',['task_id','candidate_id'],'PublicationFindingsQuery') },
     '/v1/owner/tasks/publication/commands': { post: { security: security('OwnerAuth'),requestBody:{required:true,content:{'application/json':{schema:reference('PublicationCommand')}}},responses:responses('PublicationCommandResult') } },

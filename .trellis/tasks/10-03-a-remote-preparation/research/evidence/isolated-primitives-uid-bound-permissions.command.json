@@ -1,0 +1,17 @@
+{
+  "cwd": "/Users/me/IdeaProjects/monos/.trellis/tasks/10-03-a-remote-preparation/research/evidence/primitives-uid-bound-ahz0med9/runner",
+  "command": [
+    "/Users/me/.local/share/mise/installs/go/1.27.1/bin/go",
+    "test",
+    "./internal/host",
+    "-run",
+    "^TestRemotePreparationNativeRetainedPermissionFixture$",
+    "-count=1"
+  ],
+  "environment": {
+    "MONOS_REMOTE_PREPARATION_EVIDENCE_DIR": "/Users/me/IdeaProjects/monos/.trellis/tasks/10-03-a-remote-preparation/research/evidence/primitives-uid-bound-ahz0med9/runner/internal/host/.native-uid-bound-icp9sxaf"
+  },
+  "exit_code": 0,
+  "elapsed_seconds": 1.618581792,
+  "scope": "local Darwin same-account retained UID-bound primitive fixture; not Linux credentials proof"
+}

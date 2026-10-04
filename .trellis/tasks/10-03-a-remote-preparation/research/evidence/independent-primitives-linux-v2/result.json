@@ -1,0 +1,410 @@
+{
+  "scope": "accepted commit 2095660 plus four independent primitive files; isolated Linux UID/process/Git/permissions proof, not integrated protocol/lane or App proof",
+  "source_manifest_sha256": "c1ef6a4e4c7ab32d4bcf598b81d4c3321d0710b5f5ebf91fd982bfd0eda0bd38",
+  "steps": [
+    {
+      "name": "dependency-verify",
+      "exit_code": 0,
+      "seconds": 0.5449104309082031,
+      "log_sha256": "b4537ed75f533f993f371954de47e42a793b8e5b0587577de7e27fb3e50696bd"
+    },
+    {
+      "name": "primitives",
+      "exit_code": 0,
+      "seconds": 9.085145950317383,
+      "log_sha256": "5c2c656bfc7f4b4536f4520c4e78afed6ee888d88cf11911831f2d02772c4922"
+    },
+    {
+      "name": "race",
+      "exit_code": 0,
+      "seconds": 17.355817079544067,
+      "log_sha256": "1fd99a91e799600057ec967ceb9a8bde68a55fce30a8116766245df0091d7cf3"
+    },
+    {
+      "name": "vet",
+      "exit_code": 0,
+      "seconds": 1.5650334358215332,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "host-build",
+      "exit_code": 0,
+      "seconds": 0.6999967098236084,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "native-git",
+      "exit_code": 0,
+      "seconds": 1.5070819854736328,
+      "log_sha256": "119d59e662f84984d0492836492234fc87251a140b319233e318d9bf17899618"
+    },
+    {
+      "name": "native-retained",
+      "exit_code": 0,
+      "seconds": 0.21497130393981934,
+      "log_sha256": "2cb6a198d34ec097aad609bf19fca9453eac51be706edb778b214fd8dbe046b3"
+    },
+    {
+      "name": "native-remote-retained",
+      "exit_code": 0,
+      "seconds": 0.26543164253234863,
+      "log_sha256": "ce7bd02546010cac3bf3aa8cffd435dbfc1c9012ebeb449b2e04c6ba06cd7a91"
+    }
+  ],
+  "image": "sha256:69a7b9788769bec032d238959b61854e9ae87f57be9029ec04e9885fabf99195",
+  "host": "Linux 6.12.107+deb13-amd64 x86_64",
+  "native_git": "git version 2.47.3",
+  "binaries": {
+    "host.test": {
+      "sha256": "a3401c420330b499b619cbc51fdffdfb52a060e5fffab8416e3c3ff588b8aefe",
+      "bytes": 9393052
+    }
+  },
+  "native_proof": {
+    "candidate_path": "/var/lib/monos-probe/service/monos-publication-validation-57d3e110d17d47d69889d9179aafbd5d/retained/journal/constructions/construction/candidate.json",
+    "construction_id": "construction",
+    "export": "/var/lib/monos-probe/service/monos-publication-validation-57d3e110d17d47d69889d9179aafbd5d/retained/result.git",
+    "head": "2fa5d867bcadd34bac22fec3b04921a6a46c3711",
+    "intent_path": "/var/lib/monos-probe/service/monos-publication-validation-57d3e110d17d47d69889d9179aafbd5d/retained/journal/operations/prepare/intent.json",
+    "journal": "/var/lib/monos-probe/service/monos-publication-validation-57d3e110d17d47d69889d9179aafbd5d/retained/journal",
+    "operation_id": "prepare",
+    "pages_path": "/var/lib/monos-probe/service/monos-publication-validation-57d3e110d17d47d69889d9179aafbd5d/retained/journal/operations/prepare/pages.json",
+    "parents": [
+      "f1f6255cb436592e6cef112ae1970f0f1488eaf6"
+    ],
+    "result_digest": "af220087e5ed59585e76041e3899ebf4b0a1c2189a64634de928e7fc7faed7cc",
+    "scope": "isolated same-account actual Git factory; synthetic baseline; no production Root or remote proof",
+    "source_digest": "8111c477696cb282eb3c708f370dec487d0192acb300e91678fccddab9cd1d6a",
+    "tree": "8cead108e36b7acb5ff0031e5e36a3f0089e7e21"
+  },
+  "remote_native_proof": {
+    "candidate_manifest_digest": "f8df80349108c6028f1cbf42324276206abee179f9f04881ab9be0a15d24643b",
+    "fixture_scope": "actual_candidate_and_remote_primitives_synthetic_baseline",
+    "head": "2fa5d867bcadd34bac22fec3b04921a6a46c3711",
+    "item_id": "item",
+    "observed_head": "2fa5d867bcadd34bac22fec3b04921a6a46c3711",
+    "operation_id": "push",
+    "paths": [
+      {
+        "kind": "root",
+        "mode": "0700",
+        "path": "/var/lib/monos-probe/service/monos-publication-validation-57d3e110d17d47d69889d9179aafbd5d/remote-retained"
+      },
+      {
+        "kind": "journal",
+        "mode": "0700",
+        "path": "/var/lib/monos-probe/service/monos-publication-validation-57d3e110d17d47d69889d9179aafbd5d/remote-retained/remote"
+      },
+      {
+        "kind": "item",
+        "mode": "0700",
+        "path": "/var/lib/monos-probe/service/monos-publication-validation-57d3e110d17d47d69889d9179aafbd5d/remote-retained/remote/items/item"
+      },
+      {
+        "kind": "operation",
+        "mode": "0700",
+        "path": "/var/lib/monos-probe/service/monos-publication-validation-57d3e110d17d47d69889d9179aafbd5d/remote-retained/remote/items/item/operations/push"
+      },
+      {
+        "kind": "intent",
+        "mode": "0600",
+        "path": "/var/lib/monos-probe/service/monos-publication-validation-57d3e110d17d47d69889d9179aafbd5d/remote-retained/remote/items/item/operations/push/intent.json"
+      },
+      {
+        "kind": "started",
+        "mode": "0600",
+        "path": "/var/lib/monos-probe/service/monos-publication-validation-57d3e110d17d47d69889d9179aafbd5d/remote-retained/remote/items/item/operations/push/started.json"
+      },
+      {
+        "kind": "worker",
+        "mode": "0600",
+        "path": "/var/lib/monos-probe/service/monos-publication-validation-57d3e110d17d47d69889d9179aafbd5d/remote-retained/remote/items/item/operations/push/worker.json"
+      },
+      {
+        "kind": "result",
+        "mode": "0600",
+        "path": "/var/lib/monos-probe/service/monos-publication-validation-57d3e110d17d47d69889d9179aafbd5d/remote-retained/remote/items/item/operations/push/result.json"
+      },
+      {
+        "kind": "lock",
+        "mode": "0600",
+        "path": "/var/lib/monos-probe/service/monos-publication-validation-57d3e110d17d47d69889d9179aafbd5d/remote-retained/remote/items/item/lock"
+      },
+      {
+        "kind": "hooks",
+        "mode": "0700",
+        "path": "/var/lib/monos-probe/service/monos-publication-validation-57d3e110d17d47d69889d9179aafbd5d/remote-retained/remote/items/item/operations/push/hooks"
+      },
+      {
+        "kind": "pre_push",
+        "mode": "0700",
+        "path": "/var/lib/monos-probe/service/monos-publication-validation-57d3e110d17d47d69889d9179aafbd5d/remote-retained/remote/items/item/operations/push/hooks/pre-push"
+      },
+      {
+        "kind": "public_object_store",
+        "mode": "0700",
+        "path": "/var/lib/monos-probe/service/monos-publication-validation-57d3e110d17d47d69889d9179aafbd5d/remote-retained/public-object-store.git"
+      },
+      {
+        "kind": "synthetic_remote",
+        "mode": "0700",
+        "path": "/var/lib/monos-probe/service/monos-publication-validation-57d3e110d17d47d69889d9179aafbd5d/remote-retained/synthetic-remote.git"
+      },
+      {
+        "kind": "candidate_intent",
+        "mode": "0600",
+        "path": "/var/lib/monos-probe/service/monos-publication-validation-57d3e110d17d47d69889d9179aafbd5d/remote-retained/publication/constructions/construction/intent.json"
+      },
+      {
+        "kind": "candidate_manifest",
+        "mode": "0600",
+        "path": "/var/lib/monos-probe/service/monos-publication-validation-57d3e110d17d47d69889d9179aafbd5d/remote-retained/publication/constructions/construction/candidate.json"
+      },
+      {
+        "kind": "scan_pages",
+        "mode": "0600",
+        "path": "/var/lib/monos-probe/service/monos-publication-validation-57d3e110d17d47d69889d9179aafbd5d/remote-retained/publication/operations/prepare/pages.json"
+      }
+    ],
+    "remote_ref": "refs/heads/synthetic-delivery",
+    "request_digest": "45a37a856c5d3229c88190277670ad1af8c71f3183eb5d5476f09611c09f4f2d",
+    "result_digest": "0acec4992fe87cd0e6b20236af25dab79a03f99f966aaa095372610c0b57e1c6",
+    "schema_version": 1,
+    "service_uid": 997,
+    "tree": "8cead108e36b7acb5ff0031e5e36a3f0089e7e21"
+  },
+  "remote_permissions": [
+    {
+      "kind": "root",
+      "path": "/var/lib/monos-probe/service/monos-publication-validation-57d3e110d17d47d69889d9179aafbd5d/remote-retained",
+      "uid": 997,
+      "gid": 986,
+      "mode": "0o700",
+      "execution_read_denied": true,
+      "execution_write_denied": true,
+      "sha256": null
+    },
+    {
+      "kind": "journal",
+      "path": "/var/lib/monos-probe/service/monos-publication-validation-57d3e110d17d47d69889d9179aafbd5d/remote-retained/remote",
+      "uid": 997,
+      "gid": 986,
+      "mode": "0o700",
+      "execution_read_denied": true,
+      "execution_write_denied": true,
+      "sha256": null
+    },
+    {
+      "kind": "item",
+      "path": "/var/lib/monos-probe/service/monos-publication-validation-57d3e110d17d47d69889d9179aafbd5d/remote-retained/remote/items/item",
+      "uid": 997,
+      "gid": 986,
+      "mode": "0o700",
+      "execution_read_denied": true,
+      "execution_write_denied": true,
+      "sha256": null
+    },
+    {
+      "kind": "operation",
+      "path": "/var/lib/monos-probe/service/monos-publication-validation-57d3e110d17d47d69889d9179aafbd5d/remote-retained/remote/items/item/operations/push",
+      "uid": 997,
+      "gid": 986,
+      "mode": "0o700",
+      "execution_read_denied": true,
+      "execution_write_denied": true,
+      "sha256": null
+    },
+    {
+      "kind": "intent",
+      "path": "/var/lib/monos-probe/service/monos-publication-validation-57d3e110d17d47d69889d9179aafbd5d/remote-retained/remote/items/item/operations/push/intent.json",
+      "uid": 997,
+      "gid": 986,
+      "mode": "0o600",
+      "execution_read_denied": true,
+      "execution_write_denied": true,
+      "sha256": "45a37a856c5d3229c88190277670ad1af8c71f3183eb5d5476f09611c09f4f2d"
+    },
+    {
+      "kind": "started",
+      "path": "/var/lib/monos-probe/service/monos-publication-validation-57d3e110d17d47d69889d9179aafbd5d/remote-retained/remote/items/item/operations/push/started.json",
+      "uid": 997,
+      "gid": 986,
+      "mode": "0o600",
+      "execution_read_denied": true,
+      "execution_write_denied": true,
+      "sha256": "19d06668078960cd4d83dfdc12573e2f94ee13783cb6e33e83da636867497367"
+    },
+    {
+      "kind": "worker",
+      "path": "/var/lib/monos-probe/service/monos-publication-validation-57d3e110d17d47d69889d9179aafbd5d/remote-retained/remote/items/item/operations/push/worker.json",
+      "uid": 997,
+      "gid": 986,
+      "mode": "0o600",
+      "execution_read_denied": true,
+      "execution_write_denied": true,
+      "sha256": "db4ab5eb6b05c87ecd5f2a59e1617a69bb77c08edcabe5bde12c882353d45cf4"
+    },
+    {
+      "kind": "result",
+      "path": "/var/lib/monos-probe/service/monos-publication-validation-57d3e110d17d47d69889d9179aafbd5d/remote-retained/remote/items/item/operations/push/result.json",
+      "uid": 997,
+      "gid": 986,
+      "mode": "0o600",
+      "execution_read_denied": true,
+      "execution_write_denied": true,
+      "sha256": "0acec4992fe87cd0e6b20236af25dab79a03f99f966aaa095372610c0b57e1c6"
+    },
+    {
+      "kind": "lock",
+      "path": "/var/lib/monos-probe/service/monos-publication-validation-57d3e110d17d47d69889d9179aafbd5d/remote-retained/remote/items/item/lock",
+      "uid": 997,
+      "gid": 986,
+      "mode": "0o600",
+      "execution_read_denied": true,
+      "execution_write_denied": true,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "kind": "hooks",
+      "path": "/var/lib/monos-probe/service/monos-publication-validation-57d3e110d17d47d69889d9179aafbd5d/remote-retained/remote/items/item/operations/push/hooks",
+      "uid": 997,
+      "gid": 986,
+      "mode": "0o700",
+      "execution_read_denied": true,
+      "execution_write_denied": true,
+      "sha256": null
+    },
+    {
+      "kind": "pre_push",
+      "path": "/var/lib/monos-probe/service/monos-publication-validation-57d3e110d17d47d69889d9179aafbd5d/remote-retained/remote/items/item/operations/push/hooks/pre-push",
+      "uid": 997,
+      "gid": 986,
+      "mode": "0o700",
+      "execution_read_denied": true,
+      "execution_write_denied": true,
+      "sha256": "95ca882fad633d6184456aedddff9f08e221ad7da5b3fdf57faec1a26038b692"
+    },
+    {
+      "kind": "public_object_store",
+      "path": "/var/lib/monos-probe/service/monos-publication-validation-57d3e110d17d47d69889d9179aafbd5d/remote-retained/public-object-store.git",
+      "uid": 997,
+      "gid": 986,
+      "mode": "0o700",
+      "execution_read_denied": true,
+      "execution_write_denied": true,
+      "sha256": null
+    },
+    {
+      "kind": "synthetic_remote",
+      "path": "/var/lib/monos-probe/service/monos-publication-validation-57d3e110d17d47d69889d9179aafbd5d/remote-retained/synthetic-remote.git",
+      "uid": 997,
+      "gid": 986,
+      "mode": "0o700",
+      "execution_read_denied": true,
+      "execution_write_denied": true,
+      "sha256": null
+    },
+    {
+      "kind": "candidate_intent",
+      "path": "/var/lib/monos-probe/service/monos-publication-validation-57d3e110d17d47d69889d9179aafbd5d/remote-retained/publication/constructions/construction/intent.json",
+      "uid": 997,
+      "gid": 986,
+      "mode": "0o600",
+      "execution_read_denied": true,
+      "execution_write_denied": true,
+      "sha256": "ebe9e55b28543d06722a5c1cff2a512bdb8fa5b9dbbf4b116d2c7c4805ce9444"
+    },
+    {
+      "kind": "candidate_manifest",
+      "path": "/var/lib/monos-probe/service/monos-publication-validation-57d3e110d17d47d69889d9179aafbd5d/remote-retained/publication/constructions/construction/candidate.json",
+      "uid": 997,
+      "gid": 986,
+      "mode": "0o600",
+      "execution_read_denied": true,
+      "execution_write_denied": true,
+      "sha256": "f8df80349108c6028f1cbf42324276206abee179f9f04881ab9be0a15d24643b"
+    },
+    {
+      "kind": "scan_pages",
+      "path": "/var/lib/monos-probe/service/monos-publication-validation-57d3e110d17d47d69889d9179aafbd5d/remote-retained/publication/operations/prepare/pages.json",
+      "uid": 997,
+      "gid": 986,
+      "mode": "0o600",
+      "execution_read_denied": true,
+      "execution_write_denied": true,
+      "sha256": "5de06a8871d53dd6f36ae3a419744012645ed01f948928aff921a9ad04a2c0f0"
+    },
+    {
+      "kind": "proof",
+      "path": "/var/lib/monos-probe/service/monos-publication-validation-57d3e110d17d47d69889d9179aafbd5d/remote-retained/proof.json",
+      "uid": 997,
+      "gid": 986,
+      "mode": "0o600",
+      "execution_read_denied": true,
+      "execution_write_denied": true,
+      "sha256": "5525ef0e6f33967b460288bc0e92ddab806cc05b22af129b2dbc225a13021fe3"
+    }
+  ],
+  "remote_independent_git": {
+    "head": "2fa5d867bcadd34bac22fec3b04921a6a46c3711",
+    "tree": "8cead108e36b7acb5ff0031e5e36a3f0089e7e21",
+    "parents": [
+      "f1f6255cb436592e6cef112ae1970f0f1488eaf6"
+    ],
+    "scope": "actual retained synthetic bare repository ref/tree/parents, root observation"
+  },
+  "permissions": [
+    {
+      "kind": "export",
+      "path": "/var/lib/monos-probe/service/monos-publication-validation-57d3e110d17d47d69889d9179aafbd5d/retained/result.git",
+      "uid": 997,
+      "gid": 986,
+      "mode": "0o700",
+      "execution_read_denied": true,
+      "execution_write_denied": true,
+      "sha256": null
+    },
+    {
+      "kind": "journal",
+      "path": "/var/lib/monos-probe/service/monos-publication-validation-57d3e110d17d47d69889d9179aafbd5d/retained/journal",
+      "uid": 997,
+      "gid": 986,
+      "mode": "0o700",
+      "execution_read_denied": true,
+      "execution_write_denied": true,
+      "sha256": null
+    },
+    {
+      "kind": "intent_path",
+      "path": "/var/lib/monos-probe/service/monos-publication-validation-57d3e110d17d47d69889d9179aafbd5d/retained/journal/operations/prepare/intent.json",
+      "uid": 997,
+      "gid": 986,
+      "mode": "0o600",
+      "execution_read_denied": true,
+      "execution_write_denied": true,
+      "sha256": "05e69c575d61b3fffcbf9dc33b44327948aaff2932bf7c7c165dae0b76b9ef19"
+    },
+    {
+      "kind": "pages_path",
+      "path": "/var/lib/monos-probe/service/monos-publication-validation-57d3e110d17d47d69889d9179aafbd5d/retained/journal/operations/prepare/pages.json",
+      "uid": 997,
+      "gid": 986,
+      "mode": "0o600",
+      "execution_read_denied": true,
+      "execution_write_denied": true,
+      "sha256": "5de06a8871d53dd6f36ae3a419744012645ed01f948928aff921a9ad04a2c0f0"
+    },
+    {
+      "kind": "candidate_path",
+      "path": "/var/lib/monos-probe/service/monos-publication-validation-57d3e110d17d47d69889d9179aafbd5d/retained/journal/constructions/construction/candidate.json",
+      "uid": 997,
+      "gid": 986,
+      "mode": "0o600",
+      "execution_read_denied": true,
+      "execution_write_denied": true,
+      "sha256": "f8df80349108c6028f1cbf42324276206abee179f9f04881ab9be0a15d24643b"
+    }
+  ],
+  "source_unchanged": true,
+  "complete": true
+}

@@ -18,6 +18,7 @@ outcomes, Stop and service/host recovery. Startup after that reboot trial was ma
 - Read [Replan](../backend/task-replan.md) for its terminal Planner phase and exact cross-Node workspace transfer.
 - Read [Result content reads](../backend/result-content-reads.md) for retained completion identity, immutable Git inspection and bounded read-only WSS.
 - Read [Publication candidates](../backend/publication-candidates.md) for verified public ancestry, durable candidate CAS, range scans and the independent Delivery lane.
+- Read [Remote preparation](../backend/remote-preparation.md) for public object stores, exact nonforce push, private recovery/ACK and permission boundaries.
 - Source contracts: [Runtime](../../../docs/03-runtime-and-execution.md), [Workspace](../../../docs/04-workspace-and-git.md), [host topology](../../../docs/11-technology-and-deployment.md).
 
 ## Quality Check

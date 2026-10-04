@@ -1,0 +1,30 @@
+{
+  "privacy": "Raw traces retained only in private local directory",
+  "files": [
+    {
+      "source": "apps/web/test-results/.last-run.json",
+      "private_retained": "/tmp/monos-remote-browser-failure-20261004T223841Z/.last-run.json",
+      "sha256": "6978f81731291396be5c9be76619943c2e6e91094de427eadf88e57dbdc5a198"
+    },
+    {
+      "source": "apps/web/test-results/remote-preparation.e2e.ts--058da-epository-free-remain-local/trace.zip",
+      "private_retained": "/tmp/monos-remote-browser-failure-20261004T223841Z/remote-preparation.e2e.ts--058da-epository-free-remain-local/trace.zip",
+      "sha256": "0049d11b27a6021ed69f71f90893590cf01eecc32e3401b8ae114e9e5618bb9c"
+    },
+    {
+      "source": "apps/web/test-results/remote-preparation.e2e.ts--058da-epository-free-remain-local/error-context.md",
+      "private_retained": "/tmp/monos-remote-browser-failure-20261004T223841Z/remote-preparation.e2e.ts--058da-epository-free-remain-local/error-context.md",
+      "sha256": "38ed9aaeab4dd563a7d986ec7f94d24b44da45f58b999eb471bc37926e195824"
+    },
+    {
+      "source": "apps/web/test-results/remote-preparation.e2e.ts--fcef4-el-closes-only-its-owned-PR/trace.zip",
+      "private_retained": "/tmp/monos-remote-browser-failure-20261004T223841Z/remote-preparation.e2e.ts--fcef4-el-closes-only-its-owned-PR/trace.zip",
+      "sha256": "36b0e974e0ed46af4c1d76d092b610615fbb71e3f57f30918f4beba1302fbbf0"
+    },
+    {
+      "source": "apps/web/test-results/remote-preparation.e2e.ts--fcef4-el-closes-only-its-owned-PR/error-context.md",
+      "private_retained": "/tmp/monos-remote-browser-failure-20261004T223841Z/remote-preparation.e2e.ts--fcef4-el-closes-only-its-owned-PR/error-context.md",
+      "sha256": "686c8e1d8a0151c999a76b6bae4cb2b05fbdb6ef99d92dc8feb1034458653ba0"
+    }
+  ]
+}

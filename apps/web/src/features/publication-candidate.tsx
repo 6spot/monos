@@ -15,6 +15,7 @@ const statusText: Record<PublicationRecord['status'], string> = {
   pending: 'Waiting for local preparation.', preparing: 'Preparing the local candidate and scanning its publication range.',
   offline: 'The owning Runner is offline. The original preparation is retained.', unsupported: 'The owning Runner does not support local publication preparation.',
   prepared: 'Local candidate retained.', not_applicable: 'No tree changes from the fixed base. No delivery item is needed.',
+  mapped: 'Current result mapped to the unchanged published head. No new candidate was pushed.',
   unavailable: 'Retained source evidence is unavailable. No other result was substituted.', reconciliation_required: 'The original preparation needs reconciliation before it can continue.',
 };
 const incompleteText: Record<NonNullable<PublicationRecord['scan']>['reason'] & string, string> = {
@@ -66,6 +67,7 @@ function Candidate({ props, record }: { props: TaskViewProps; record: Publicatio
     <p role="status">{statusText[record.status]}</p>
     {record.remote_preparation === 'after_acceptance' && <p className="task-muted">Remote preparation is deferred until acceptance. Local checks still run.</p>}
     <p className="task-muted">Local preparation creates no PR, publication or accepted delivery.</p>
+    {record.mapping && <p className="task-notice">Reused published manifest · its original source and public parents stay unchanged. The current source, effective basis and scan below belong to this exact mapping.</p>}
     {record.candidate && <dl>
       <Datum label="Candidate head"><code>{record.candidate.head}</code></Datum>
       <Datum label="Exact result tree"><code>{record.candidate.tree}</code></Datum>
@@ -76,6 +78,7 @@ function Candidate({ props, record }: { props: TaskViewProps; record: Publicatio
       <Datum label="Original Specification">{record.source.specification_id}</Datum><Datum label="Original Plan">{record.source.plan_id}</Datum>
       <Datum label="Effective Specification">{record.effective_basis.specification_id}</Datum><Datum label="Effective Plan">{record.effective_basis.plan_id}</Datum>
       <Datum label="Preparation operation">{record.operation_id}</Datum><Datum label="Source identity">{record.source_digest}</Datum><Datum label="Effective basis">{record.effective_basis_digest}</Datum>
+      {record.mapping && <><Datum label="Exact mapping">{record.mapping_digest}</Datum><Datum label="Reused manifest original source">{record.candidate?.source_digest}</Datum><Datum label="Published proof">{record.mapping.published_digest}</Datum></>}
       {record.candidate && <Datum label="Candidate identity">{record.candidate_manifest_digest}</Datum>}
       {record.scan && <><Datum label="Scan identity">{record.scan_digest}</Datum><Datum label="Configuration identity">{record.scan.configuration_digest}</Datum>
         <Datum label="Observed scan coverage">{record.scan.coverage.commits} commits · {record.scan.coverage.paths} paths · {record.scan.coverage.versions} versions · {record.scan.coverage.unique_blob_bytes} unique blob bytes observed</Datum></>}
@@ -90,7 +93,7 @@ function Candidate({ props, record }: { props: TaskViewProps; record: Publicatio
   </div>;
 }
 
-type Selection = Required<Pick<PublicationCommand['payload'], 'candidate_id' | 'candidate_manifest_digest' | 'effective_basis_digest' | 'scan_digest' | 'finding_ids'>>;
+type Selection = Required<Pick<PublicationCommand['payload'], 'candidate_id' | 'candidate_manifest_digest' | 'effective_basis_digest' | 'scan_digest' | 'finding_ids'>> & Pick<PublicationCommand['payload'], 'mapping_digest'>;
 interface Review { selection: Selection; head: string; tree: string; parents: string[]; configuration_digest: string; step: PublicationCommand; stage: 'prepare' | 'confirm' | 'apply' | 'done'; receipt_id?: string }
 function parseReview(text: string): Review | undefined {
   if (!text) return undefined;
@@ -126,7 +129,7 @@ function Findings({ props, record }: { props: TaskViewProps; record: Publication
   let review: Review | undefined, corrupt = false;
   try { review = parseReview(props.commands.getDraft(task, scope).text); } catch { corrupt = true; }
   const canOverride = record.current && record.scan_applicable && record.override_allowed && scan.status === 'complete';
-  const sameReview = review && review.step.task_id === task && review.selection.candidate_id === candidate.candidate_id && review.selection.candidate_manifest_digest === record.candidate_manifest_digest && review.selection.effective_basis_digest === record.effective_basis_digest && review.selection.scan_digest === scanDigest && review.configuration_digest === scan.configuration_digest && review.head === candidate.head && review.tree === candidate.tree && JSON.stringify(review.parents) === JSON.stringify(candidate.parents);
+  const sameReview = review && review.step.task_id === task && review.selection.mapping_digest === record.mapping_digest && review.selection.candidate_id === candidate.candidate_id && review.selection.candidate_manifest_digest === record.candidate_manifest_digest && review.selection.effective_basis_digest === record.effective_basis_digest && review.selection.scan_digest === scanDigest && review.configuration_digest === scan.configuration_digest && review.head === candidate.head && review.tree === candidate.tree && JSON.stringify(review.parents) === JSON.stringify(candidate.parents);
   function save(value: Review) { props.commands.setDraft(task, scope, JSON.stringify(value)); }
   async function step(value: Review) {
     const receipt = pending?.pending ? await props.commands.recover(task, scope) : await props.commands.execute(task, scope, { family: 'publication', command: value.step });
@@ -151,13 +154,14 @@ function Findings({ props, record }: { props: TaskViewProps; record: Publication
     <More hasMore={query.hasNextPage} busy={query.isFetchingNextPage} load={query.fetchNextPage} label="Load more findings" />
     {corrupt && <p role="alert">Saved override review is incompatible. Resolve existing pending requests before discarding it.</p>}
     {!review && !corrupt && canOverride && <Button variant="outline" disabled={!selected.length || busy || !!pending?.pending} onClick={() => {
-      const selection: Selection = { candidate_id: candidate.candidate_id, candidate_manifest_digest: record.candidate_manifest_digest!, effective_basis_digest: record.effective_basis_digest, scan_digest: scanDigest, finding_ids: [...selected].sort() as Selection['finding_ids'] };
+      const selection: Selection = { candidate_id: candidate.candidate_id, candidate_manifest_digest: record.candidate_manifest_digest!, effective_basis_digest: record.effective_basis_digest, scan_digest: scanDigest, finding_ids: [...selected].sort() as Selection['finding_ids'], ...(record.mapping_digest ? { mapping_digest: record.mapping_digest } : {}) };
       const value: Review = { selection, head: candidate.head, tree: candidate.tree, parents: candidate.parents, configuration_digest: scan.configuration_digest, stage: 'prepare', step: { schema_version: 1, task_id: task, request_id: crypto.randomUUID(), name: 'prepare_publication_override', payload: selection } };
       save(value); void step(value);
     }}>Review selected policy override</Button>}
     {!canOverride && scan.findings_count > 0 && <p className="task-muted">Override unavailable for this evidence. Hard provider limits, unverified workflow permission, published exposure and incomplete scans cannot be waived.</p>}
     {review && <section className="publication-override-review" aria-label="Exact finding override review">
       <h5>Exact policy override</h5><p>Only these selected findings are covered. The findings remain recorded; this grants no publication or acceptance authority.</p>
+      {review.selection.mapping_digest && <p>Exact published-result mapping · <code>{review.selection.mapping_digest}</code></p>}
       <dl><Datum label="Candidate head"><code>{review.head}</code></Datum><Datum label="Result tree"><code>{review.tree}</code></Datum><Datum label="Public parents">{review.parents.map(parent => <code className="publication-parent" key={parent}>{parent}</code>)}</Datum><Datum label="Scan">{review.selection.scan_digest}</Datum><Datum label="Configuration">{review.configuration_digest}</Datum><Datum label="Effective basis">{review.selection.effective_basis_digest}</Datum><Datum label="Selected finding IDs">{review.selection.finding_ids.map(id => <code className="publication-parent" key={id}>{id}</code>)}</Datum></dl>
       {!sameReview && <p role="alert">This review's exact evidence has changed. It cannot authorize the new evidence.</p>}
       {review.stage === 'done' ? <p role="status">Exact override recorded · {review.receipt_id}</p> : <Button variant="outline" disabled={busy || !sameReview || !canOverride} onClick={() => { void step(review!); }}>{pending?.pending || review.stage === 'prepare' ? 'Check original override step' : review.stage === 'confirm' ? 'Confirm exact policy override' : 'Record confirmed override'}</Button>}

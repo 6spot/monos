@@ -142,6 +142,7 @@ func (d *Daemon) prepareRecovery(ctx context.Context, inventory protocol.RunnerI
 // validation alone must not send results or start recovered effects before Ready.
 func (d *Daemon) ConnectionReady(ctx context.Context) {
 	d.replayPublication(ctx)
+	d.replayRemotePublication(ctx)
 	d.queueMu.Lock()
 	defer d.queueMu.Unlock()
 	if d.recovery == nil || d.recovery.ctx.Done() != ctx.Done() || ctx.Err() != nil {

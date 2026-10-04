@@ -1,0 +1,13 @@
+{
+  "scope": "Linux original frozen inputs; two later SHA256 source/test changes require only affected native refresh",
+  "steps_passed": 12,
+  "all_original_log_bytes_sha256_verified": true,
+  "source_changes_after_snapshot": [
+    "runner/internal/host/publication_candidate_test.go",
+    "runner/internal/host/publication_store.go"
+  ],
+  "protected_remote_paths": 21,
+  "remote_execution_uid_denials": 42,
+  "service_uid": 997,
+  "source_manifest_sha256": "5a7ab0b7f59f77ebcd11f7285872d3129acdd0ddc8f10d16bdd07b45a143741a"
+}

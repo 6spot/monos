@@ -1,0 +1,53 @@
+{
+  "scope": "main focused shared workflow amendment review; not final runtime gate",
+  "report_sha256": "b334a9bd9580ceadec63c93b97c2ff4d5ab53431021e73a6c507855812187536",
+  "changed_inputs": [
+    {
+      "path": "packages/protocol/schemas/v1/contracts.json",
+      "expected_sha256": "ab960c4e5f6ddfe1eea0f80d54411ecda4e1d73f04660940930b413b38953c9e",
+      "actual_sha256": "ab960c4e5f6ddfe1eea0f80d54411ecda4e1d73f04660940930b413b38953c9e"
+    },
+    {
+      "path": "packages/protocol/generated/types.ts",
+      "expected_sha256": "834ff3515d9e4b4dc09c5c26b0d47b0c253acd7f12df7082b698ae75a3a78c12",
+      "actual_sha256": "834ff3515d9e4b4dc09c5c26b0d47b0c253acd7f12df7082b698ae75a3a78c12"
+    },
+    {
+      "path": "packages/protocol/generated/go/types.go",
+      "expected_sha256": "dd68abdc5d3227fbedbc73c55debd3e0718d08fe2296ae8950f026e1acd3aa1f",
+      "actual_sha256": "dd68abdc5d3227fbedbc73c55debd3e0718d08fe2296ae8950f026e1acd3aa1f"
+    },
+    {
+      "path": "packages/protocol/generated/go/contracts.json",
+      "expected_sha256": "ab960c4e5f6ddfe1eea0f80d54411ecda4e1d73f04660940930b413b38953c9e",
+      "actual_sha256": "ab960c4e5f6ddfe1eea0f80d54411ecda4e1d73f04660940930b413b38953c9e"
+    },
+    {
+      "path": "packages/protocol/generated/openapi.json",
+      "expected_sha256": "252175e5307537231a1e1a7b2b1c6ca421fde9c132c6ffef0c77a863f1c7793d",
+      "actual_sha256": "252175e5307537231a1e1a7b2b1c6ca421fde9c132c6ffef0c77a863f1c7793d"
+    },
+    {
+      "path": "packages/protocol/fixtures/remote-preparation.json",
+      "expected_sha256": "593f11cdbea043494c98398d087612123866d5f0f33bc3c0e053e2eab0a1d5e8",
+      "actual_sha256": "593f11cdbea043494c98398d087612123866d5f0f33bc3c0e053e2eab0a1d5e8"
+    },
+    {
+      "path": "packages/protocol/test/remote-preparation.test.ts",
+      "expected_sha256": "bc50dc8bd29689ec24e0083ee0ed444198ec9a83ff0fbda417f1008cccbda77f",
+      "actual_sha256": "bc50dc8bd29689ec24e0083ee0ed444198ec9a83ff0fbda417f1008cccbda77f"
+    },
+    {
+      "path": "runner/internal/wire/remote_preparation_test.go",
+      "expected_sha256": "1c081d260f0f2214fc108e2956f57d26e12f052ef9f65fe74cd6c4f04366d37f",
+      "actual_sha256": "1c081d260f0f2214fc108e2956f57d26e12f052ef9f65fe74cd6c4f04366d37f"
+    }
+  ],
+  "all_8_hashes_match": true,
+  "schema_without_new_optional_property_sha256": "16477ae19df48af2bb88d207c2345d7f578fbf8b2ff1227a4380e7b28093fbc8",
+  "original_schema_reconstructed_exactly": true,
+  "legacy_publication_fixture_bytes_unchanged": true,
+  "structural_cases": 55,
+  "producer_evidence_reused": "331 TS cases/full Go wire race + explicit true/false typed canonical round trips; same exact inputs",
+  "remaining": "actual Runner Git semantics, fresh-scan/bootstrap backend domain guards, final combined review"
+}

@@ -1,3 +1,4 @@
+import { remoteItemQuiescent } from './remote-preparation-state.ts';
 import { assertNoReplan } from './task-replan-state.ts';
 import { randomUUID } from 'node:crypto';
 import type { Transaction } from '../../../packages/db/src/index.ts';
@@ -47,6 +48,7 @@ export async function admitSpecification(tx:Transaction,task:SpecificationTask,p
 }
 export async function advanceSpecification(tx:Transaction,task:SpecificationTask,c:RequirementChange,configurationVersion:number):Promise<void>{
  if(!['settling','withdrawing'].includes(c.status))return;
+ if(!await remoteItemQuiescent(tx,task.id)){await attention(tx,c,'waiting_for_remote_settlement');return;}
  const unsettled=await tx.query(`SELECT 1 FROM requirement_change_attempts ca JOIN attempts a ON a.id=ca.attempt_id WHERE ca.change_id=$1 AND (NOT a.process_released OR EXISTS(SELECT 1 FROM operations o WHERE o.attempt_id=a.id AND o.state NOT IN ('succeeded','cancelled')) OR EXISTS(SELECT 1 FROM workspace_leases l WHERE l.attempt_id=a.id AND l.state<>'released')) LIMIT 1`,[c.id]);
  if(unsettled.rowCount){await attention(tx,c,'waiting_for_physical_settlement');return;}
  const p=await requirementProposal(tx,c.proposal_id,task.id);

@@ -414,34 +414,38 @@ export type WorkspaceUnavailableReason = "unsupported_remote" | "unsupported_mul
 export type CommandResultStatus = "admitted" | "committed" | "error" | "unknown";
 
 export interface Frame {
-    allowed?:             boolean;
-    attempt_id?:          string;
-    boot_id?:             string;
-    correlation_id?:      string;
-    credential?:          string;
-    dispatch?:            Dispatch;
-    dispatch_id?:         string;
-    error?:               ErrorInfo;
-    event?:               RuntimeEvent;
-    expires_at?:          string;
-    incarnation?:         number;
-    log_modes?:           LogModeElement[];
-    operation?:           Operation;
-    operation_id?:        string;
-    operation_result?:    OperationResult;
-    publication_ack?:     PublicationACK;
-    publication_modes?:   PublicationMode[];
-    publication_prepare?: PublicationPrepareRequest;
-    publication_result?:  PublicationResultPage;
-    result_read?:         ResultReadRequest;
-    result_read_modes?:   ResultReadMode[];
-    result_read_result?:  ResultReadResponse;
-    runner_id?:           string;
-    runtimes?:            RuntimeInstallation[];
-    schema_version:       number;
-    sequence?:            number;
-    stream_id?:           string;
-    type:                 Type;
+    allowed?:                  boolean;
+    attempt_id?:               string;
+    boot_id?:                  string;
+    correlation_id?:           string;
+    credential?:               string;
+    dispatch?:                 Dispatch;
+    dispatch_id?:              string;
+    error?:                    ErrorInfo;
+    event?:                    RuntimeEvent;
+    expires_at?:               string;
+    incarnation?:              number;
+    log_modes?:                LogModeElement[];
+    operation?:                Operation;
+    operation_id?:             string;
+    operation_result?:         OperationResult;
+    publication_ack?:          PublicationACK;
+    publication_modes?:        PublicationMode[];
+    publication_prepare?:      PublicationPrepareRequest;
+    publication_push?:         PublicationPushRequest;
+    publication_push_ack?:     PublicationPushACK;
+    publication_push_result?:  PublicationPushResult;
+    publication_result?:       PublicationResultPage;
+    remote_preparation_modes?: RemotePreparationMode[];
+    result_read?:              ResultReadRequest;
+    result_read_modes?:        ResultReadMode[];
+    result_read_result?:       ResultReadResponse;
+    runner_id?:                string;
+    runtimes?:                 RuntimeInstallation[];
+    schema_version:            number;
+    sequence?:                 number;
+    stream_id?:                string;
+    type:                      Type;
 }
 
 export interface Dispatch {
@@ -661,17 +665,21 @@ export interface PublicationACK {
 export type PublicationMode = "local_candidate_v1";
 
 export interface PublicationPrepareRequest {
-    configuration:          PublicationScanConfiguration;
-    configuration_digest:   string;
-    construction:           PublicationConstruction;
-    construction_digest:    string;
-    effective_basis:        PublicationEffectiveBasis;
-    effective_basis_digest: string;
-    operation_id:           string;
-    scan_run_id:            string;
-    schema_version:         number;
-    source:                 ResultReadIdentity;
-    source_digest:          string;
+    configuration:            PublicationScanConfiguration;
+    configuration_digest:     string;
+    construction:             PublicationConstruction;
+    construction_digest:      string;
+    effective_basis:          PublicationEffectiveBasis;
+    effective_basis_digest:   string;
+    operation_id:             string;
+    permission_proof?:        PublicationPermissionProof;
+    permission_proof_digest?: string;
+    published?:               PublicationPublishedProof;
+    published_digest?:        string;
+    scan_run_id:              string;
+    schema_version:           number;
+    source:                   ResultReadIdentity;
+    source_digest:            string;
 }
 
 export interface PublicationScanConfiguration {
@@ -720,16 +728,70 @@ export type AuthorEmail = "monos@localhost";
 export type AuthorName = "monos";
 
 export interface PublicationParent {
-    commit:                   string;
-    kind:                     PublicationParentKind;
-    observation_digest:       string;
-    observation_operation_id: string;
-    outcome:                  EffectResult;
-    repository_identity:      string;
-    workspace:                WorkspaceDescriptor;
+    commit:                    string;
+    kind:                      PublicationParentKind;
+    observation_digest?:       string;
+    observation_operation_id?: string;
+    outcome?:                  EffectResult;
+    published_proof?:          PublicationPublishedProof;
+    published_proof_digest?:   string;
+    repository_identity:       string;
+    workspace?:                WorkspaceDescriptor;
 }
 
 export type PublicationParentKind = "materialization" | "target" | "published";
+
+export interface PublicationPublishedProof {
+    candidate:                 PublicationCandidateManifest;
+    candidate_manifest_digest: string;
+    delivery_ref:              string;
+    item_id:                   string;
+    observation:               PublicationRefObservation;
+    observation_digest:        string;
+    operation_id:              string;
+    repository_id:             string;
+    repository_identity:       string;
+    request_digest:            string;
+    resource_id:               string;
+    result_digest:             string;
+    runner_id:                 string;
+    schema_version:            number;
+    storage_id:                string;
+    task_id:                   string;
+}
+
+export interface PublicationCandidateManifest {
+    candidate_id:        string;
+    construction_digest: string;
+    construction_id:     string;
+    head:                string;
+    parents:             [string, ...string[]];
+    schema_version:      number;
+    source_digest:       string;
+    tree:                string;
+}
+
+export interface PublicationRefObservation {
+    delivery_ref:        string;
+    head?:               string;
+    item_id:             string;
+    observation_id:      string;
+    observed_at:         string;
+    operation_id:        string;
+    reason?:             PublicationRefObservationReason;
+    repository_id:       string;
+    repository_identity: string;
+    resource_id:         string;
+    runner_id:           string;
+    schema_version:      number;
+    status:              PublicationRefObservationStatus;
+    storage_id:          string;
+    task_id:             string;
+}
+
+export type PublicationRefObservationReason = "credentials_missing" | "access_denied" | "permission_unknown" | "expired_permission" | "provider_unavailable" | "rate_limited" | "invalid_provider_response" | "input_pending" | "source_changed" | "configuration_changed" | "mode_deferred" | "runner_offline" | "runner_unsupported" | "scan_incomplete" | "findings_blocked" | "known_public_exposure" | "unverified_parent" | "unexpected_head" | "possible_publication" | "ambiguous_pr" | "pr_missing" | "pr_closed" | "pr_merged" | "content_mismatch" | "retained_unavailable" | "identity_mismatch" | "timeout" | "cancel_requested";
+
+export type PublicationRefObservationStatus = "present" | "absent" | "unavailable";
 
 export interface PublicationEffectiveBasis {
     completion_manifest_digest: string;
@@ -738,6 +800,32 @@ export interface PublicationEffectiveBasis {
     specification_id:           string;
     task_id:                    string;
 }
+
+export interface PublicationPermissionProof {
+    app_id:                    string;
+    configuration_fingerprint: string;
+    expires_at:                string;
+    installation_id:           string;
+    key_fingerprint:           string;
+    observation_id:            string;
+    observed_at:               string;
+    permission_fingerprint:    string;
+    permissions:               PublicationPermissionGrants;
+    repository_id:             string;
+    repository_identity:       string;
+    resource_id:               string;
+    schema_version:            number;
+}
+
+export interface PublicationPermissionGrants {
+    contents:   Contents;
+    metadata:   Metadata;
+    workflows?: Contents;
+}
+
+export type Contents = "write";
+
+export type Metadata = "read";
 
 export interface ResultReadIdentity {
     attempt_id:                string;
@@ -761,6 +849,134 @@ export interface ResultReadIdentity {
     task_id:                   string;
     workspace_id:              string;
 }
+
+export interface PublicationPushRequest {
+    delivery_ref:              string;
+    expected_head:             null | string;
+    item_id:                   string;
+    operation_id:              string;
+    override_receipts:         PublicationOverrideProof[];
+    permission_proof:          PublicationPermissionProof;
+    permission_proof_digest:   string;
+    preparation:               PublicationPrepareRequest;
+    preparation_result_digest: string;
+    prepared:                  PublicationPushRequestPrepared;
+    prior_published?:          PublicationPublishedProof;
+    prior_published_digest?:   string;
+    remote_url:                string;
+    repository_id:             string;
+    repository_identity:       string;
+    resource_id:               string;
+    runner_id:                 string;
+    schema_version:            number;
+    storage_id:                string;
+    target_branch:             string;
+    task_id:                   string;
+    workflow_changes:          boolean;
+}
+
+export interface PublicationOverrideProof {
+    confirmation_id:  string;
+    receipt_id:       string;
+    selection:        PublicationOverrideSelection;
+    selection_digest: string;
+}
+
+export interface PublicationOverrideSelection {
+    candidate_id:              string;
+    candidate_manifest_digest: string;
+    effective_basis_digest:    string;
+    finding_ids:               [string, ...string[]];
+    mapping_digest?:           string;
+    scan_digest:               string;
+}
+
+export interface PublicationPushRequestPrepared {
+    candidate?:                 PublicationCandidateManifest;
+    candidate_manifest_digest?: string;
+    mapping?:                   PublishedResultMapping;
+    mapping_digest?:            string;
+    operation_id:               string;
+    reason?:                    PreparedReason;
+    request_digest:             string;
+    scan?:                      PublicationScanSummary;
+    scan_digest?:               string;
+    schema_version:             number;
+    status:                     PurpleStatus;
+}
+
+export interface PublishedResultMapping {
+    candidate_manifest_digest: string;
+    configuration_digest:      string;
+    effective_basis:           PublicationEffectiveBasis;
+    effective_basis_digest:    string;
+    item_id:                   string;
+    mapping_id:                string;
+    operation_id:              string;
+    published:                 PublicationPublishedProof;
+    published_digest:          string;
+    request_digest:            string;
+    result_tree:               string;
+    reused_head:               string;
+    schema_version:            number;
+    source:                    ResultReadIdentity;
+    source_digest:             string;
+}
+
+export type PreparedReason = "no_change" | "retained_unavailable" | "identity_mismatch" | "unverified_parent" | "conflicting_candidate" | "timeout";
+
+export interface PublicationScanSummary {
+    candidate_manifest_digest: string;
+    configuration_digest:      string;
+    coverage:                  PublicationCoverage;
+    findings_bytes:            number;
+    findings_count:            number;
+    findings_digest:           string;
+    reason?:                   PublicationScanSummaryReason;
+    scan_id:                   string;
+    schema_version:            number;
+    status:                    PublicationScanSummaryStatus;
+    workflow_changes?:         boolean;
+}
+
+export interface PublicationCoverage {
+    commits:           number;
+    paths:             number;
+    unique_blob_bytes: number;
+    versions:          number;
+}
+
+export type PublicationScanSummaryReason = "commit_limit" | "path_limit" | "version_limit" | "blob_limit" | "aggregate_limit" | "findings_limit" | "evidence_limit" | "timeout" | "unsupported_path" | "unsupported_ignore" | "missing_object" | "unverified_parent" | "retained_unavailable";
+
+export type PublicationScanSummaryStatus = "complete" | "incomplete";
+
+export type PurpleStatus = "prepared";
+
+export interface PublicationPushACK {
+    item_id:        string;
+    operation_id:   string;
+    request_digest: string;
+    result_digest:  string;
+    schema_version: number;
+}
+
+export interface PublicationPushResult {
+    candidate_head:            string;
+    candidate_manifest_digest: string;
+    delivery_ref:              string;
+    item_id:                   string;
+    observation:               PublicationRefObservation;
+    observation_digest:        string;
+    operation_id:              string;
+    push_started:              boolean;
+    reason?:                   PublicationRefObservationReason;
+    request_digest:            string;
+    schema_version:            number;
+    status:                    PublicationPushResultStatus;
+    worker_absent:             boolean;
+}
+
+export type PublicationPushResultStatus = "published" | "blocked" | "reconciliation_required";
 
 export interface PublicationResultPage {
     findings:       PublicationFinding[];
@@ -786,7 +1002,7 @@ export interface PublicationFinding {
     override_eligible:       boolean;
     path:                    string;
     path_redacted:           boolean;
-    rule_id:                 RuleID;
+    rule_id:                 PublicationFindingRuleID;
     scope:                   Scope;
     size?:                   number;
 }
@@ -795,15 +1011,17 @@ export type PublicationFindingKind = "tracked_ignore" | "publication_policy_size
 
 export type Message = "Tracked file matches ignore rules." | "Blob exceeds local publication policy." | "Blob exceeds provider hard limit." | "Credential pattern matched; value redacted." | "Previously published credential exposure requires remediation." | "Workflow write permission is not verified.";
 
-export type RuleID = "tracked_ignore" | "policy_blob_size" | "provider_blob_size" | "workflow_permission" | "pem_private_key" | "github_classic_token" | "github_fine_grained_token" | "aws_access_key";
+export type PublicationFindingRuleID = "tracked_ignore" | "policy_blob_size" | "provider_blob_size" | "workflow_permission" | "pem_private_key" | "github_classic_token" | "github_fine_grained_token" | "aws_access_key";
 
 export type Scope = "publication_commit" | "final_tree";
 
 export interface PublicationResult {
     candidate?:                 PublicationCandidateManifest;
     candidate_manifest_digest?: string;
+    mapping?:                   PublishedResultMapping;
+    mapping_digest?:            string;
     operation_id:               string;
-    reason?:                    PublicationResultReason;
+    reason?:                    PreparedReason;
     request_digest:             string;
     scan?:                      PublicationScanSummary;
     scan_digest?:               string;
@@ -811,44 +1029,9 @@ export interface PublicationResult {
     status:                     PublicationResultStatus;
 }
 
-export interface PublicationCandidateManifest {
-    candidate_id:        string;
-    construction_digest: string;
-    construction_id:     string;
-    head:                string;
-    parents:             [string, ...string[]];
-    schema_version:      number;
-    source_digest:       string;
-    tree:                string;
-}
+export type PublicationResultStatus = "prepared" | "not_applicable" | "unavailable" | "reconciliation_required" | "mapped";
 
-export type PublicationResultReason = "no_change" | "retained_unavailable" | "identity_mismatch" | "unverified_parent" | "conflicting_candidate" | "timeout";
-
-export interface PublicationScanSummary {
-    candidate_manifest_digest: string;
-    configuration_digest:      string;
-    coverage:                  PublicationCoverage;
-    findings_bytes:            number;
-    findings_count:            number;
-    findings_digest:           string;
-    reason?:                   PublicationScanSummaryReason;
-    scan_id:                   string;
-    schema_version:            number;
-    status:                    PublicationScanSummaryStatus;
-}
-
-export interface PublicationCoverage {
-    commits:           number;
-    paths:             number;
-    unique_blob_bytes: number;
-    versions:          number;
-}
-
-export type PublicationScanSummaryReason = "commit_limit" | "path_limit" | "version_limit" | "blob_limit" | "aggregate_limit" | "findings_limit" | "evidence_limit" | "timeout" | "unsupported_path" | "unsupported_ignore" | "missing_object" | "unverified_parent" | "retained_unavailable";
-
-export type PublicationScanSummaryStatus = "complete" | "incomplete";
-
-export type PublicationResultStatus = "prepared" | "not_applicable" | "unavailable" | "reconciliation_required";
+export type RemotePreparationMode = "github_review_v1";
 
 export interface ResultReadRequest {
     cursor?:         string;
@@ -908,7 +1091,7 @@ export interface RuntimeInstallation {
 
 export type Availability = "detected" | "not_found" | "unavailable";
 
-export type Type = "hello" | "welcome" | "ready" | "heartbeat" | "start" | "effect" | "authorize_dispatch" | "authorization" | "event" | "event_ack" | "operation_result" | "operation_ack" | "error" | "result_read" | "result_read_result" | "publication_prepare" | "publication_result" | "publication_ack";
+export type Type = "hello" | "welcome" | "ready" | "heartbeat" | "start" | "effect" | "authorize_dispatch" | "authorization" | "event" | "event_ack" | "operation_result" | "operation_ack" | "error" | "result_read" | "result_read_result" | "publication_prepare" | "publication_result" | "publication_ack" | "publication_push" | "publication_push_result" | "publication_push_ack";
 
 export interface RunnerInventory {
     dispatches:     Dispatch[];
@@ -2482,6 +2665,8 @@ export interface PublicationRecord {
     effective_basis:             PublicationEffectiveBasis;
     effective_basis_digest:      string;
     known_public_exposure_count: number;
+    mapping?:                    PublishedResultMapping;
+    mapping_digest?:             string;
     operation_id:                string;
     override_allowed:            boolean;
     override_receipt_ids:        string[];
@@ -2497,7 +2682,7 @@ export interface PublicationRecord {
     status:                      PublicationRecordStatus;
 }
 
-export type PublicationRecordStatus = "pending" | "preparing" | "offline" | "unsupported" | "prepared" | "not_applicable" | "unavailable" | "reconciliation_required";
+export type PublicationRecordStatus = "pending" | "preparing" | "offline" | "unsupported" | "prepared" | "not_applicable" | "unavailable" | "reconciliation_required" | "mapped";
 
 export interface PublicationCandidateQuery {
     cursor?:              string;
@@ -2535,6 +2720,7 @@ export interface PublicationCommandPayload {
     content_digest?:            string;
     effective_basis_digest?:    string;
     finding_ids?:               [string, ...string[]];
+    mapping_digest?:            string;
     operation_digest?:          string;
     operation_id?:              string;
     proposal_id?:               string;
@@ -2552,3 +2738,274 @@ export interface PublicationCommandResult {
     status:           ConfigurationResultStatus;
     task_id:          string;
 }
+
+export interface PublicationPermissionRequest {
+    incarnation:    number;
+    request_digest: string;
+    schema_version: number;
+}
+
+export interface PublicationPermissionResult {
+    operation_id:   string;
+    proof:          PublicationPermissionProof;
+    proof_digest:   string;
+    request_digest: string;
+    schema_version: number;
+}
+
+export interface PublicationAccessRequest {
+    attempt_id:     string;
+    incarnation:    number;
+    purpose:        Purpose;
+    request_digest: string;
+    schema_version: number;
+}
+
+export type Purpose = "observe" | "push";
+
+export interface PublicationAccessResult {
+    attempt_id:               string;
+    authentication:           Authentication;
+    candidate_head:           string;
+    claim_expires_at?:        string;
+    claim_id?:                string;
+    delivery_ref:             string;
+    expected_head:            null | string;
+    item_id:                  string;
+    operation_id:             string;
+    permission_proof?:        PublicationPermissionProof;
+    permission_proof_digest?: string;
+    purpose:                  Purpose;
+    remote_url:               string;
+    repository_id:            string;
+    request_digest:           string;
+    schema_version:           number;
+}
+
+export interface Authentication {
+    expires_at?: string;
+    kind:        PurpleKind;
+    token?:      string;
+}
+
+export type PurpleKind = "github_installation";
+
+export interface PublicationExposure {
+    blob:                      string;
+    candidate_manifest_digest: string;
+    commit:                    string;
+    content_digest:            string;
+    exposure_id:               string;
+    finding_id:                string;
+    item_id:                   string;
+    occurrence_ordinal:        number;
+    path:                      string;
+    path_redacted:             boolean;
+    published_head:            string;
+    published_proof_digest:    string;
+    repository_identity:       string;
+    resource_id:               string;
+    rule_id:                   PublicationExposureRuleID;
+    schema_version:            number;
+    task_id:                   string;
+}
+
+export type PublicationExposureRuleID = "pem_private_key" | "github_classic_token" | "github_fine_grained_token" | "aws_access_key";
+
+export interface RemotePreparationQuery {
+    cursor?:              string;
+    source_operation_id?: string;
+}
+
+export interface RemotePreparationPage {
+    items:          RemotePreparationRecord[];
+    next_cursor?:   string;
+    schema_version: number;
+    task_id:        string;
+}
+
+export interface RemotePreparationRecord {
+    candidate:                   PublicationCandidateManifest;
+    candidate_manifest_digest:   string;
+    checks?:                     RemotePreparationChecks;
+    cleanup_allowed:             boolean;
+    cooldown_until?:             string;
+    current:                     boolean;
+    delivery_ref:                string;
+    effective_basis:             PublicationEffectiveBasis;
+    effective_basis_digest:      string;
+    item_id:                     string;
+    known_public_exposure_count: number;
+    mapping?:                    PublishedResultMapping;
+    mapping_digest?:             string;
+    operation?:                  RemotePreparationOperation;
+    published?:                  PublicationPublishedProof;
+    published_digest?:           string;
+    read_retry_allowed:          boolean;
+    reason?:                     PublicationRefObservationReason;
+    remote_preparation:          RemotePreparation;
+    repository_id:               string;
+    repository_identity:         string;
+    resource_id:                 string;
+    retry_allowed:               boolean;
+    review?:                     RemotePreparationReview;
+    runner_id:                   string;
+    scan_applicable:             boolean;
+    scan_digest:                 string;
+    schema_version:              number;
+    source:                      ResultReadIdentity;
+    source_digest:               string;
+    status:                      RemotePreparationRecordStatus;
+    target_branch:               string;
+    task_id:                     string;
+}
+
+export interface RemotePreparationChecks {
+    aggregate:       Aggregate;
+    base_head:       string;
+    complete:        boolean;
+    current:         boolean;
+    head:            string;
+    mergeability:    Mergeability;
+    observation_id:  string;
+    observed_at:     string;
+    required_checks: RequiredChecks;
+    stale:           boolean;
+}
+
+export type Aggregate = "pending" | "success" | "failure" | "no_checks" | "unknown" | "incomplete";
+
+export type Mergeability = "mergeable" | "conflicting" | "unknown";
+
+export type RequiredChecks = "unknown";
+
+export interface RemotePreparationOperation {
+    kind:             RemotePreparationOperationKind;
+    may_have_mutated: boolean;
+    next_attempt_at?: string;
+    operation_id:     string;
+    reason?:          PublicationRefObservationReason;
+    reconcile_only:   boolean;
+    request_digest:   string;
+    state:            RemotePreparationOperationState;
+    version:          number;
+    worker_absent:    boolean;
+}
+
+export type RemotePreparationOperationKind = "push" | "create_pr" | "update_pr" | "close_pr";
+
+export type RemotePreparationOperationState = "pending" | "started" | "unknown" | "failed" | "settled" | "revoked";
+
+export interface RemotePreparationReview {
+    base_ref:      string;
+    head_ref:      string;
+    marker:        string;
+    pr_id:         string;
+    pr_number:     number;
+    repository_id: string;
+    state:         RemotePreparationReviewState;
+    url:           string;
+}
+
+export type RemotePreparationReviewState = "open" | "closed" | "merged";
+
+export type RemotePreparationRecordStatus = "local_only" | "preparing" | "paused_input" | "offline" | "unsupported" | "access_denied" | "reconciling" | "prepared" | "failed" | "cancel_cleanup" | "cancelled" | "reconciliation_required";
+
+export interface RemotePreparationChecksQuery {
+    cursor?: string;
+}
+
+export interface RemotePreparationChecksPage {
+    item_id:        string;
+    items:          RemotePreparationCheck[];
+    next_cursor?:   string;
+    observation:    RemotePreparationChecks;
+    schema_version: number;
+    task_id:        string;
+}
+
+export interface RemotePreparationCheck {
+    conclusion?: Conclusion;
+    head:        string;
+    kind:        RemotePreparationCheckKind;
+    name:        string;
+    provider_id: number;
+    state:       RemotePreparationCheckState;
+}
+
+export type Conclusion = "success" | "failure" | "neutral" | "skipped" | "cancelled" | "timed_out" | "action_required" | "stale" | "startup_failure" | "unknown";
+
+export type RemotePreparationCheckKind = "check_run" | "status";
+
+export type RemotePreparationCheckState = "pending" | "success" | "failure" | "neutral" | "skipped" | "cancelled" | "unknown";
+
+export interface RemotePreparationCommand {
+    name:           RemotePreparationCommandName;
+    payload:        RemotePreparationCommandPayload;
+    request_id:     string;
+    schema_version: number;
+    task_id:        string;
+}
+
+export type RemotePreparationCommandName = "retry_remote_preparation";
+
+export interface RemotePreparationCommandPayload {
+    expected_version: number;
+    operation_digest: string;
+    operation_id:     string;
+}
+
+export interface RemotePreparationCommandResult {
+    operation_digest?:  string;
+    operation_id?:      string;
+    operation_version?: number;
+    request_id:         string;
+    schema_version:     number;
+    status:             ConfigurationResultStatus;
+    task_id:            string;
+}
+
+export interface RemotePreparationProviderRequest {
+    content?:                  RemotePreparationContent;
+    delivery_ref:              string;
+    item_id:                   string;
+    kind:                      RemotePreparationProviderRequestKind;
+    operation_id:              string;
+    override_receipts:         PublicationOverrideProof[];
+    preparation:               PublicationPrepareRequest;
+    preparation_result_digest: string;
+    prepared:                  RemotePreparationProviderRequestPrepared;
+    remote_url:                string;
+    repository_id:             string;
+    repository_identity:       string;
+    resource_id:               string;
+    review?:                   RemotePreparationReview;
+    runner_id:                 string;
+    schema_version:            number;
+    storage_id:                string;
+    target_branch:             string;
+    task_id:                   string;
+}
+
+export interface RemotePreparationContent {
+    body:  string;
+    title: string;
+}
+
+export type RemotePreparationProviderRequestKind = "create_pr" | "update_pr" | "close_pr";
+
+export interface RemotePreparationProviderRequestPrepared {
+    candidate?:                 PublicationCandidateManifest;
+    candidate_manifest_digest?: string;
+    mapping?:                   PublishedResultMapping;
+    mapping_digest?:            string;
+    operation_id:               string;
+    reason?:                    PreparedReason;
+    request_digest:             string;
+    scan?:                      PublicationScanSummary;
+    scan_digest?:               string;
+    schema_version:             number;
+    status:                     FluffyStatus;
+}
+
+export type FluffyStatus = "prepared" | "mapped";

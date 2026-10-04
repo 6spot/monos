@@ -1,0 +1,22 @@
+$ playwright test test/remote-preparation.e2e.ts --grep 'automatic coordinator|remote preparing |rate_limited|selected historical|no checks and unknown'
+[WebServer] (node:51249) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:51249) [FSTDEP023] FastifyDeprecation: disableRequestLogging option is deprecated. Use the logController option with disableRequestLogging or isLogDisabled override instead. The disableRequestLogging top-level option will be removed in `fastify@6`.
+
+Running 5 tests using 1 worker
+
+(node:51262) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Remote screenshot evidence: .trellis/tasks/10-03-a-remote-preparation/research/screenshots/46e2b0662706-3a4f6473e167-20261004224044476/remote-prepared-checks
+  ✓  1 test/remote-preparation.e2e.ts:63:1 › automatic coordinator prepares a stable PR with paginated exact-head literal checks and preserved local inspection (19.9s)
+Remote screenshot evidence: .trellis/tasks/10-03-a-remote-preparation/research/screenshots/46e2b0662706-3a4f6473e167-20261004224044476/remote-preparing
+  ✓  2 test/remote-preparation.e2e.ts:87:13 › remote preparing attention remains separate from local Review (4.1s)
+Remote screenshot evidence: .trellis/tasks/10-03-a-remote-preparation/research/screenshots/46e2b0662706-3a4f6473e167-20261004224044476/remote-rate_limited
+  ✓  3 test/remote-preparation.e2e.ts:87:13 › remote rate_limited attention remains separate from local Review (4.2s)
+Remote screenshot evidence: .trellis/tasks/10-03-a-remote-preparation/research/screenshots/46e2b0662706-3a4f6473e167-20261004224044476/remote-history
+Remote screenshot evidence: .trellis/tasks/10-03-a-remote-preparation/research/screenshots/46e2b0662706-3a4f6473e167-20261004224044476/remote-cancelled
+  ✓  4 test/remote-preparation.e2e.ts:130:1 › selected historical operation never inherits latest item authority and Cancel closes only its owned PR (8.0s)
+Remote screenshot evidence: .trellis/tasks/10-03-a-remote-preparation/research/screenshots/46e2b0662706-3a4f6473e167-20261004224044476/remote-deferred
+  ✓  5 test/remote-preparation.e2e.ts:176:1 › no checks and unknown mergeability are informational; deferred and repository-free remain local (22.6s)
+
+  5 passed (1.0m)

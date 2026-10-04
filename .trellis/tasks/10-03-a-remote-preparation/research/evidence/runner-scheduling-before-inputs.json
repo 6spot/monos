@@ -1,0 +1,6 @@
+{
+  "runner/internal/control/publication_remote.go": "47abbb6bb9a2f081ae4c5f9e8dec67679c7ae589771ac966ecc1b198b7ecb95e",
+  "runner/internal/control/publication_remote_test.go": "f6c22baefdf4f6f98bd9a7e83adc040991eda8b1efa00814b11e788bbb881059",
+  "runner/internal/host/publication_remote.go": "820336c272dceb7a605fa60b5e117e684d3188b77b9a95bf808b3473211a1cf1",
+  "runner/internal/host/publication_remote_test.go": "d165c6bdeeb85497de372d4b74b379fa43470e886231d55a65de94af61d25718"
+}

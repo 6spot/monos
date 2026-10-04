@@ -1,0 +1,25 @@
+#!/bin/sh
+set -eu
+LC_ALL=C
+export LC_ALL
+reject() { exit 78; }
+[ "$#" -eq 2 ] || reject
+[ "$1" = "$MONOS_PUSH_DESTINATION" ] || reject
+[ "$2" = "$MONOS_PUSH_DESTINATION" ] || reject
+payload=$(/bin/dd bs=1 count=4097 2>/dev/null | /usr/bin/tr '\000' '?'; printf '.')
+[ "${#payload}" -le 4097 ] || reject
+lf='
+'
+case "$payload" in *"$lf".) ;; *) reject ;; esac
+line=${payload%"$lf".}
+case "$line" in *"$lf"*) reject ;; esac
+set -f
+old_ifs=$IFS
+IFS=' '
+set -- $line
+IFS=$old_ifs
+[ "$#" -eq 4 ] || reject
+[ "$1" = "$MONOS_PUSH_HEAD" ] || reject
+[ "$2" = "$MONOS_PUSH_HEAD" ] || reject
+[ "$3" = "$MONOS_PUSH_REF" ] || reject
+[ "$4" = "$MONOS_PUSH_EXPECTED" ] || reject

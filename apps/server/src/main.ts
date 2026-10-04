@@ -1,4 +1,7 @@
 import { PublicationPreparation } from './publication-candidates.ts';
+import {RemotePreparation} from './remote-preparation.ts';
+import {GitHubRemote} from './github-remote.ts';
+import {GitHub} from './github.ts';
 import { TaskReplan } from './task-replan.ts';
 import { TaskSpecification } from './task-specification.ts';
 import { TaskConversation } from './task-conversation.ts';
@@ -23,15 +26,17 @@ const replans=new TaskReplan(db,{},service.instanceId);
 const execution = new NodeExecution(db, service.instanceId);
 const planning = new TaskPlanning(db, service.instanceId);
 const discussion = new Discussion(db, service.instanceId);
+const remoteProvider=new GitHubRemote(new GitHub(signingKey));
+const remote=new RemotePreparation(db,service.instanceId,remoteProvider);
 const app = createApp(service, {
   key: await readFile(required('MONOS_TLS_KEY_FILE')),
   cert: await readFile(required('MONOS_TLS_CERT_FILE')),
-}, fileURLToPath(new URL('../../web/dist', import.meta.url)));
+}, fileURLToPath(new URL('../../web/dist', import.meta.url)),{remoteProvider});
 let scheduling: Promise<void> | undefined;
 let discussionTimer: ReturnType<typeof setInterval> | undefined = undefined;
 const publication = new PublicationPreparation(db,service.instanceId);
 const conversation = new TaskConversation(db,service.instanceId);
-const pump = () => scheduling ??= Promise.allSettled([discussion.pump(), planning.pump(), execution.pump(), conversation.pump(), specifications.pump(),replans.pump(),publication.pump()]).then((results) => { if (results.some((result) => result.status === 'rejected')) app.log.warn('Scheduling pass failed; durable input retained'); }).finally(() => { scheduling = undefined; });
+const pump = () => scheduling ??= Promise.allSettled([discussion.pump(), planning.pump(), execution.pump(), conversation.pump(), specifications.pump(),replans.pump(),publication.pump(),remote.pump()]).then((results) => { if (results.some((result) => result.status === 'rejected')) app.log.warn('Scheduling pass failed; durable input retained'); }).finally(() => { scheduling = undefined; });
 app.addHook('onClose', async () => { clearInterval(discussionTimer); await scheduling; });
 await app.listen({ host: process.env.MONOS_LISTEN_HOST ?? '127.0.0.1', port: Number(process.env.MONOS_PORT ?? 18443) });
 discussionTimer = setInterval(() => { void pump(); }, 1000); discussionTimer.unref();

@@ -1,3 +1,4 @@
+import { remoteItemQuiescent } from './remote-preparation-state.ts';
 import { specificationFrozen } from './task-specification-state.ts';
 import { randomUUID } from 'node:crypto';
 import type { Transaction } from '../../../packages/db/src/index.ts';
@@ -372,6 +373,7 @@ export async function advanceGuidanceFollowup(
     return;
   }
   if (node.state === 'COMPLETED') {
+    if (!await remoteItemQuiescent(tx,task.id)) return;
     await reactivateSettledNodes(tx, {
       task_id: task.id,
       expected: {

@@ -1,0 +1,26 @@
+{"file": "ARCHITECTURE.md", "reason": "Module ownership and deterministic orchestration"}
+{"file": "docs/04-workspace-and-git.md", "reason": "Exact public ancestry, automatic preparation, uncertainty and provider guards; oversized injection requires direct relevant sections"}
+{"file": "docs/08-principles-and-non-goals.md", "reason": "Preserve invariants and removed concepts"}
+{"file": ".trellis/spec/backend/publication-candidates.md", "reason": "Accepted local preparation identities/scans/receipt boundary"}
+{"file": ".trellis/spec/backend/delivery-contracts.md", "reason": "Acceptance cutoff and durable remote operation authority"}
+{"file": ".trellis/spec/backend/infrastructure-configuration.md", "reason": "GitHub credential storage and fixed safe provider requests"}
+{"file": ".trellis/spec/guides/index.md", "reason": "Shared guide discovery and scoped verification; explicit delegation/ownership retained in assignments and research"}
+{"file": ".trellis/spec/backend/database-guidelines.md", "reason": "Transactions immutable SQL migration and scoped fixtures"}
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "Typed safe errors"}
+{"file": ".trellis/spec/backend/logging-guidelines.md", "reason": "No credential/raw provider leakage"}
+{"file": ".trellis/spec/protocol/commands.md", "reason": "Canonical digests, schemas and exact receipt replay"}
+{"file": ".trellis/spec/backend/task-conversation.md", "reason": "Canonical input obligations and Task lock"}
+{"file": ".trellis/spec/backend/task-specification.md", "reason": "Revision settlement ownership"}
+{"file": ".trellis/spec/backend/task-replan.md", "reason": "Replan publication/quiescence"}
+{"file": ".trellis/spec/runner/workspace-guidelines.md", "reason": "Service/execution ownership and credentials"}
+{"file": ".trellis/spec/runner/quality-guidelines.md", "reason": "ActualGit/native evidence gates"}
+{"file": ".trellis/spec/frontend/visual-design.md", "reason": "Neutral responsive visual contract"}
+{"file": ".trellis/spec/frontend/execution-ui.md", "reason": "Scoped Task UI/session/pending journals"}
+{"file": ".trellis/spec/frontend/hook-guidelines.md", "reason": "Abort cleanup and late response fences"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "Functional and actualimage gates"}
+{"file": ".trellis/tasks/10-03-a-remote-preparation/research/backend-remote-design.md", "reason": "Source-backed backend/provider contracts"}
+{"file": ".trellis/tasks/10-03-a-remote-preparation/research/runner-remote-design.md", "reason": "Source-backed Git publication and uncertainty"}
+{"file": ".trellis/tasks/10-03-a-remote-preparation/research/guard-and-ui-review.md", "reason": "Owning module fences and UI"}
+{"file": ".trellis/tasks/10-03-a-remote-preparation/research/main-scope-and-prerequisites.md", "reason": "Rootdecisions and externalApp prerequisite"}
+{"file": ".trellis/tasks/10-03-a-remote-preparation/research/frozen-contract.md", "reason": "Exact reviewed shared producer and consumer contract; freeze input hashes and pending integration gates"}
+{"file": ".trellis/spec/guides/verification-scope.md", "reason": "User-requested smallest sufficient verification, valid evidence reuse and stopping rule"}

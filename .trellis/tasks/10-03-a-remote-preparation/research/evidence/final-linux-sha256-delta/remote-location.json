@@ -1,0 +1,10 @@
+{
+  "directory": "/root/monos-publication-validation-e17a612252084a74b0f3d0be1c50ddd0",
+  "control_directory": "/private/tmp/monos-pub-49_h5vft",
+  "source_manifest_sha256": "ea2b9b8bd642ee16bd4f4db265e72bb65cff0ac0670ac555de9d984683a73104",
+  "reused_original_evidence": "/Users/me/IdeaProjects/monos/.trellis/tasks/10-03-a-remote-preparation/research/evidence/final-linux-full-v1",
+  "changed_paths": [
+    "runner/internal/host/publication_candidate_test.go",
+    "runner/internal/host/publication_store.go"
+  ]
+}

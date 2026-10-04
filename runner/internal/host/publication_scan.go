@@ -44,13 +44,14 @@ type publicationFinding struct {
 	Ordinal              int    `json:"ordinal"`
 }
 type publicationCoverage struct {
-	Complete    bool
-	Reason      string
-	Commits     []string
-	Occurrences int
-	Paths       int
-	UniqueBytes int64
-	Findings    []publicationFinding
+	WorkflowChanges bool
+	Complete        bool
+	Reason          string
+	Commits         []string
+	Occurrences     int
+	Paths           int
+	UniqueBytes     int64
+	Findings        []publicationFinding
 }
 type publicationBlob struct {
 	Digest string
@@ -278,6 +279,9 @@ func scanPublication(ctx context.Context, dir, head string, parents []string, pe
 			out.Occurrences++
 			if out.Occurrences > limits.Occurrences {
 				return "occurrence_limit"
+			}
+			if !final && strings.HasPrefix(v.Path, ".github/workflows/") {
+				out.WorkflowChanges = true
 			}
 			if !final && strings.HasPrefix(v.Path, ".github/workflows/") && permission != "allowed" {
 				if !add(v, "workflow_permission", publicationBlob{}, 0, false) {

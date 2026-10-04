@@ -1,0 +1,17 @@
+{
+  "args": [
+    "node",
+    ".trellis/tasks/10-03-a-remote-preparation/research/native-github-fixture.mjs",
+    "--control-socket",
+    "/private/tmp/monos-native-github-q1epu0fg/s",
+    "--linux-evidence",
+    ".trellis/tasks/10-03-a-remote-preparation/research/evidence/final-linux-sha256-delta",
+    "--output",
+    ".trellis/tasks/10-03-a-remote-preparation/research/evidence/native-github-final-v1"
+  ],
+  "started_at": "2026-10-04T22:36:37.434664+00:00",
+  "scope": "authorized exact synthetic GitHub lower-kernel fixture; OAuth-injected, no product source/merge/Accept/installed App claim",
+  "exit_code": 1,
+  "seconds": 10.311529,
+  "finished_at": "2026-10-04T22:36:47.746529+00:00"
+}

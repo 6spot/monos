@@ -1,0 +1,100 @@
+{
+  "scope": "main clarified freeze exact shared input verification",
+  "report_sha256": "696d179ace2e234f5f612bc63e68cf362c975427ff275a51b8e1377ce43580b7",
+  "checked": 15,
+  "all_match": true,
+  "inputs": [
+    {
+      "path": "packages/protocol/schemas/v1/contracts.json",
+      "expected_sha256": "16477ae19df48af2bb88d207c2345d7f578fbf8b2ff1227a4380e7b28093fbc8",
+      "actual_sha256": "16477ae19df48af2bb88d207c2345d7f578fbf8b2ff1227a4380e7b28093fbc8",
+      "match": true
+    },
+    {
+      "path": "packages/protocol/scripts/generate.mjs",
+      "expected_sha256": "1a4bb2c8f8ade7f17f212048563ab1cec1c450bf95f9f81192738bc9bac58746",
+      "actual_sha256": "1a4bb2c8f8ade7f17f212048563ab1cec1c450bf95f9f81192738bc9bac58746",
+      "match": true
+    },
+    {
+      "path": "packages/protocol/src/validation.ts",
+      "expected_sha256": "f10670752da4f5b55bde52f1877ee68cd4dff9e110f2b8baa171cf146c4b4a66",
+      "actual_sha256": "f10670752da4f5b55bde52f1877ee68cd4dff9e110f2b8baa171cf146c4b4a66",
+      "match": true
+    },
+    {
+      "path": "packages/protocol/generated/types.ts",
+      "expected_sha256": "faf9977e27c003a334a6d49ce7b8b86ec9db18839609e521c2f8b7eb72d423f0",
+      "actual_sha256": "faf9977e27c003a334a6d49ce7b8b86ec9db18839609e521c2f8b7eb72d423f0",
+      "match": true
+    },
+    {
+      "path": "packages/protocol/generated/go/types.go",
+      "expected_sha256": "ef7776c8799033d322087153db475518b528089c4a216d90c273a48198f6b49a",
+      "actual_sha256": "ef7776c8799033d322087153db475518b528089c4a216d90c273a48198f6b49a",
+      "match": true
+    },
+    {
+      "path": "packages/protocol/generated/go/contracts.json",
+      "expected_sha256": "16477ae19df48af2bb88d207c2345d7f578fbf8b2ff1227a4380e7b28093fbc8",
+      "actual_sha256": "16477ae19df48af2bb88d207c2345d7f578fbf8b2ff1227a4380e7b28093fbc8",
+      "match": true
+    },
+    {
+      "path": "packages/protocol/generated/openapi.json",
+      "expected_sha256": "0329bee7a6ab2b26e79d8aec0ed31bb1f43710e45b387bd025f698e978a82999",
+      "actual_sha256": "0329bee7a6ab2b26e79d8aec0ed31bb1f43710e45b387bd025f698e978a82999",
+      "match": true
+    },
+    {
+      "path": "packages/protocol/fixtures/remote-preparation.json",
+      "expected_sha256": "066e0c971e9d6005788dbb63ed5e486547dfecef09f639d944fc48e9ce6f5773",
+      "actual_sha256": "066e0c971e9d6005788dbb63ed5e486547dfecef09f639d944fc48e9ce6f5773",
+      "match": true
+    },
+    {
+      "path": "packages/protocol/test/remote-preparation.test.ts",
+      "expected_sha256": "24426b47dd2f2ace01cbcc8418856b15d76188fde728b367f3dec128cb5296b9",
+      "actual_sha256": "24426b47dd2f2ace01cbcc8418856b15d76188fde728b367f3dec128cb5296b9",
+      "match": true
+    },
+    {
+      "path": "runner/internal/wire/wire.go",
+      "expected_sha256": "3b18b0a1c461ef0e19841f5f492b8ae8d919146ed7ae0d2a4761cc37113df4fd",
+      "actual_sha256": "3b18b0a1c461ef0e19841f5f492b8ae8d919146ed7ae0d2a4761cc37113df4fd",
+      "match": true
+    },
+    {
+      "path": "runner/internal/wire/remote_preparation_test.go",
+      "expected_sha256": "942070a13438475eea9bbccecb752f06b6107d68b2c17f38d1e92898da8d8ba1",
+      "actual_sha256": "942070a13438475eea9bbccecb752f06b6107d68b2c17f38d1e92898da8d8ba1",
+      "match": true
+    },
+    {
+      "path": "packages/db/migrations/0023_remote_preparation.sql",
+      "expected_sha256": "44b852add8dc5fed6dce9a510116f94f7e33c0b1d6db647fb7c7488b6aba8d3b",
+      "actual_sha256": "44b852add8dc5fed6dce9a510116f94f7e33c0b1d6db647fb7c7488b6aba8d3b",
+      "match": true
+    },
+    {
+      "path": "packages/db/src/migrate.ts",
+      "expected_sha256": "8a7a951f4b2629188ceb24726ef8c81b23446355d4fb31b3772cb176c7132d61",
+      "actual_sha256": "8a7a951f4b2629188ceb24726ef8c81b23446355d4fb31b3772cb176c7132d61",
+      "match": true
+    },
+    {
+      "path": "apps/server/test/postgres-remote-preparation.test.ts",
+      "expected_sha256": "149c4eea74de9239116eee6ae0dc1cc468c00d41fbf835883484c8505ba92df0",
+      "actual_sha256": "149c4eea74de9239116eee6ae0dc1cc468c00d41fbf835883484c8505ba92df0",
+      "match": true
+    },
+    {
+      "path": "apps/server/test/postgres-publication.test.ts",
+      "expected_sha256": "ad5e6de52f45ee4e2b4b2b0dd845b63831fd724658c8e88ef6b3010445c152ed",
+      "actual_sha256": "ad5e6de52f45ee4e2b4b2b0dd845b63831fd724658c8e88ef6b3010445c152ed",
+      "match": true
+    }
+  ],
+  "prior_report_sha256": "b6a210a9949fb32c7f6d45f82c2d90926ad826741a73d646f2b848d0a7db5e64",
+  "design_sha256": "cf18d256f01f6617c2890f1dae4792f0e3ea964b9f7bc54102dcbbbac0765314"
+}
