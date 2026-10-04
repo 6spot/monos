@@ -1,0 +1,8 @@
+
+ RUN  v5.0.2 /Users/me/IdeaProjects/monos
+
+
+ Test Files  1 passed (1)
+      Tests  250 passed (250)
+   Start at  09:03:20
+   Duration  367ms (tests 70%, import 16%, transform 13%, worker 1%)

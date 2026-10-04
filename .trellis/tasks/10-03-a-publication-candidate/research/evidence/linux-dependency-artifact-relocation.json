@@ -1,0 +1,17 @@
+{
+  "reason": "Exact third-party module cache remains private retained input; tracked go.sum and dependency manifests retain reproducibility without vendoring the cache into task history",
+  "artifacts": [
+    {
+      "original_task_path": ".trellis/tasks/10-03-a-publication-candidate/research/evidence/linux-validation-v2-offline/module-cache.tar.gz",
+      "private_retained_path": "/private/tmp/monos-publication-dependency-evidence-vgehozt7/linux-validation-v2-offline-module-cache.tar.gz",
+      "sha256": "b4e2d75e7f4ee295ffb0395e9c21c53c1b7ffe5bb1496a5b8e12b980d00b8054",
+      "bytes": 11926202
+    },
+    {
+      "original_task_path": ".trellis/tasks/10-03-a-publication-candidate/research/evidence/linux-validation-v3-private-temp/module-cache.tar.gz",
+      "private_retained_path": "/private/tmp/monos-publication-dependency-evidence-vgehozt7/linux-validation-v3-private-temp-module-cache.tar.gz",
+      "sha256": "f014662faaa330ff33e2163a67534ba810872cfa7ab42cd25759bb959cf4a7af",
+      "bytes": 11926202
+    }
+  ]
+}

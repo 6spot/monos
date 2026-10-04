@@ -24,6 +24,7 @@ and [technology](../../../docs/11-technology-and-deployment.md).
 - For replacement graphs, joint publication and private-work transfer, read [Replan](task-replan.md).
 - For selected Attempt status, ordered output and resumable log cursors, read [Execution logs](execution-logs.md).
 - For exact local completed-result files/diffs through Runner, read [Result content reads](result-content-reads.md).
+- For automatic local candidates, immutable scans and exact finding receipts, read [Publication candidates](publication-candidates.md).
 - For selected Attempt queue/promotion, read [dispatch queue](dispatch-queue.md).
 - For canonical repository admission, serial leases and ephemeral fetch access, read [workspaces](workspaces.md).
 - For production Runtime target choice and shared capacity, read [Runtime scheduling](runtime-scheduling.md).

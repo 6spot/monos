@@ -1,0 +1,15 @@
+ok  	monos.local/runner/cmd/monos	0.018s
+?   	monos.local/runner/cmd/monos-probe-exec	[no test files]
+?   	monos.local/runner/cmd/monos-probe-launch	[no test files]
+?   	monos.local/runner/cmd/monos-runner	[no test files]
+ok  	monos.local/runner/internal/adapter	0.044s
+ok  	monos.local/runner/internal/control	0.108s
+ok  	monos.local/runner/internal/daemon	5.892s
+--- FAIL: TestResultReadDirectoryLineageRejectsSymlinkAndWritableParent (0.00s)
+    result_read_test.go:468: trusted lineage rejected: unsafe result lineage
+FAIL
+FAIL	monos.local/runner/internal/host	11.795s
+ok  	monos.local/runner/internal/journal	0.857s
+ok  	monos.local/runner/internal/local	0.217s
+ok  	monos.local/runner/internal/wire	0.296s
+FAIL

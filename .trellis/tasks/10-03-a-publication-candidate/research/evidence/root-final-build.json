@@ -1,0 +1,10 @@
+{
+  "started_at": "2026-10-04T03:38:27.710387+00:00",
+  "command": "pnpm build",
+  "exit_code": 0,
+  "log_sha256": "a6f5218676eec3777cc366d0b95452cda24e47c1c11a2eed9b6115df876ecd80",
+  "original_log_sha256": "e20be54852779f68e953c7bd4563a990c8131373a5adb20c00580c83f800481c",
+  "original_log_gzip": "root-final-build.original.log.gz",
+  "original_gzip_sha256": "6e3ab98513394adf00a322b92b803f2f7dcfa29ab963dda1c7151f20655c7934",
+  "display_normalization": "One trailing-space line removed; exact original retained and decompression verified"
+}

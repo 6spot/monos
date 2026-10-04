@@ -1,0 +1,15 @@
+{
+  "scope": "isolated Linux CGO and service-account actual Git fixture; no installation, Runtime, provider or production state mutation",
+  "source_manifest_sha256": "3e5021e1c6dbc5f181da9166ccd779a510ceb88f02329517016c20e7e534d177",
+  "steps": [
+    {
+      "name": "module",
+      "exit_code": 1,
+      "seconds": 60.57979345321655,
+      "log_sha256": "28c5eb9ade86f7d72bbd74561847cccfad10d4ba618151b872c52f33babbaccb"
+    }
+  ],
+  "image": "sha256:69a7b9788769bec032d238959b61854e9ae87f57be9029ec04e9885fabf99195",
+  "host": "Linux 6.12.107+deb13-amd64 x86_64",
+  "native_git": "git version 2.47.3"
+}

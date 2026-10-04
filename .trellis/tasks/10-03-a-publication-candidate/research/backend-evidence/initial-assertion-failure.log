@@ -1,0 +1,32 @@
+
+ RUN  v5.0.2 /Users/me/IdeaProjects/monos
+
+(node:46588) [FSTDEP023] FastifyDeprecation: disableRequestLogging option is deprecated. Use the logController option with disableRequestLogging or isLogDisabled override instead. The disableRequestLogging top-level option will be removed in `fastify@6`.
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ apps/server/test/postgres-publication.test.ts (6 tests | 1 failed) 2198ms
+   ❯ Durable local publication (6)
+     × persists out-of-order pages without early ack, rejects corruption and recovers exact ack after reconnect 347ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  apps/server/test/postgres-publication.test.ts > Durable local publication > persists out-of-order pages without early ack, rejects corruption and recovers exact ack after reconnect
+AssertionError: expected [Function] to throw error including 'Immutable' but got 'immutable execution record cannot be …'
+
+Expected: "Immutable"
+Received: "immutable execution record cannot be changed"
+
+ ❯ apps/server/test/postgres-publication.test.ts:47:78
+     45|    expect(await restart.finish(x.f.runner,inc,pages[1])).toEqual(ack);
+     46|    await expect(restart.finish(x.f.runner,x.f.incarnation,pages[0])).r…
+     47|    await expect(x.db.pool.query("UPDATE publication_scans SET summary=…
+       |                                                                              ^
+     48|    const reads=new PublicationCandidateReads(x.db),first=await reads.f…
+     49|    expect(first.items).toHaveLength(64);expect(first.next_cursor).toBe…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 5 passed (6)
+   Start at  09:00:04
+   Duration  2.78s (tests 81%, import 11%, transform 8%)

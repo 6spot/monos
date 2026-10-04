@@ -1,0 +1,21 @@
+$ node packages/protocol/scripts/generate.mjs --check
+Protocol generation is current.
+$ vitest run
+
+ RUN  v5.0.2 /Users/me/IdeaProjects/monos
+
+(node:80337) [FSTDEP023] FastifyDeprecation: disableRequestLogging option is deprecated. Use the logController option with disableRequestLogging or isLogDisabled override instead. The disableRequestLogging top-level option will be removed in `fastify@6`.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:80337) [FSTDEP023] FastifyDeprecation: disableRequestLogging option is deprecated. Use the logController option with disableRequestLogging or isLogDisabled override instead. The disableRequestLogging top-level option will be removed in `fastify@6`.
+(node:80337) [FSTDEP023] FastifyDeprecation: disableRequestLogging option is deprecated. Use the logController option with disableRequestLogging or isLogDisabled override instead. The disableRequestLogging top-level option will be removed in `fastify@6`.
+(node:80337) [FSTDEP023] FastifyDeprecation: disableRequestLogging option is deprecated. Use the logController option with disableRequestLogging or isLogDisabled override instead. The disableRequestLogging top-level option will be removed in `fastify@6`.
+(node:80337) [FSTDEP023] FastifyDeprecation: disableRequestLogging option is deprecated. Use the logController option with disableRequestLogging or isLogDisabled override instead. The disableRequestLogging top-level option will be removed in `fastify@6`.
+(node:80337) [FSTDEP023] FastifyDeprecation: disableRequestLogging option is deprecated. Use the logController option with disableRequestLogging or isLogDisabled override instead. The disableRequestLogging top-level option will be removed in `fastify@6`.
+
+ Test Files  23 passed | 33 skipped (56)
+      Tests  356 passed | 349 skipped (705)
+   Start at  09:40:26
+   Duration  2.76s (import 74%, transform 14%, tests 12%, worker 1%)
+
+    Isolate  56 workers spawned · ~83ms startup each (spawn + environment, per file)
+             at least ~338ms faster with isolate: false — reuses workers across files instead of one per file

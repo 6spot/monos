@@ -1,0 +1,48 @@
+$ vitest run
+
+ RUN  v5.0.2 /Users/me/IdeaProjects/monos
+
+(node:75915) [FSTDEP023] FastifyDeprecation: disableRequestLogging option is deprecated. Use the logController option with disableRequestLogging or isLogDisabled override instead. The disableRequestLogging top-level option will be removed in `fastify@6`.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:75915) [FSTDEP023] FastifyDeprecation: disableRequestLogging option is deprecated. Use the logController option with disableRequestLogging or isLogDisabled override instead. The disableRequestLogging top-level option will be removed in `fastify@6`.
+(node:75915) [FSTDEP023] FastifyDeprecation: disableRequestLogging option is deprecated. Use the logController option with disableRequestLogging or isLogDisabled override instead. The disableRequestLogging top-level option will be removed in `fastify@6`.
+(node:75915) [FSTDEP023] FastifyDeprecation: disableRequestLogging option is deprecated. Use the logController option with disableRequestLogging or isLogDisabled override instead. The disableRequestLogging top-level option will be removed in `fastify@6`.
+(node:75915) [FSTDEP023] FastifyDeprecation: disableRequestLogging option is deprecated. Use the logController option with disableRequestLogging or isLogDisabled override instead. The disableRequestLogging top-level option will be removed in `fastify@6`.
+(node:75915) [FSTDEP023] FastifyDeprecation: disableRequestLogging option is deprecated. Use the logController option with disableRequestLogging or isLogDisabled override instead. The disableRequestLogging top-level option will be removed in `fastify@6`.
+ ❯ apps/server/test/app.test.ts (6 tests | 1 failed) 1538ms
+   × does not register a Ready socket after close or replace a newer incarnation after its delayed await 1109ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  apps/server/test/app.test.ts > does not register a Ready socket after close or replace a newer incarnation after its delayed await
+AssertionError: expected +0 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ apps/server/test/app.test.ts:155:72
+    153|     const old=await connect(1);await expect.poll(()=>touch.mock.calls.…
+    154|     const closed=once(old,'close');old.close();await closed;
+    155|     await connect(2);await expect.poll(()=>register.mock.calls.length)…
+       |                                                                        ^
+    156|     release();await new Promise(resolve=>setImmediate(resolve));expect…
+    157|   } finally {release();sockets.forEach(s=>s.terminate());await app.clo…
+
+Caused by: Error: Matcher did not succeed in time.
+ ❯ apps/server/test/app.test.ts:155:22
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 22 passed | 33 skipped (56)
+      Tests  1 failed | 355 passed | 347 skipped (703)
+   Start at  09:18:59
+   Duration  2.85s (import 72%, tests 15%, transform 13%, worker 1%)
+
+    Isolate  56 workers spawned · ~82ms startup each (spawn + environment, per file)
+             at least ~337ms faster with isolate: false — reuses workers across files instead of one per file
+
+[ELIFECYCLE] Test failed. See above for more details.

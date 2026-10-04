@@ -1,0 +1,80 @@
+go: downloading github.com/mattn/go-sqlite3 v1.14.32
+go: downloading github.com/cyberphone/json-canonicalization v0.0.0-20241213102144-19d51d7fe467
+go: downloading github.com/santhosh-tekuri/jsonschema/v6 v6.0.2
+go: downloading github.com/coder/websocket v1.8.14
+# monos.local/runner/cmd/monos
+internal/control/client.go:22:2: github.com/coder/websocket@v1.8.14: Get "https://proxy.golang.org/github.com/coder/websocket/@v/v1.8.14.zip": dial tcp 142.251.45.145:443: i/o timeout
+# monos.local/runner/cmd/monos
+internal/wire/wire.go:16:2: github.com/cyberphone/json-canonicalization@v0.0.0-20241213102144-19d51d7fe467: Get "https://proxy.golang.org/github.com/cyberphone/json-canonicalization/@v/v0.0.0-20241213102144-19d51d7fe467.zip": dial tcp 142.251.45.145:443: i/o timeout
+# monos.local/runner/cmd/monos
+internal/wire/wire.go:17:2: github.com/santhosh-tekuri/jsonschema/v6@v6.0.2: Get "https://proxy.golang.org/github.com/santhosh-tekuri/jsonschema/v6/@v/v6.0.2.zip": dial tcp 142.251.45.145:443: i/o timeout
+# monos.local/runner/cmd/monos
+internal/journal/journal.go:14:2: github.com/mattn/go-sqlite3@v1.14.32: Get "https://proxy.golang.org/github.com/mattn/go-sqlite3/@v/v1.14.32.zip": dial tcp 142.251.45.145:443: i/o timeout
+# monos.local/runner/cmd/monos-probe-exec
+internal/wire/wire.go:16:2: github.com/cyberphone/json-canonicalization@v0.0.0-20241213102144-19d51d7fe467: Get "https://proxy.golang.org/github.com/cyberphone/json-canonicalization/@v/v0.0.0-20241213102144-19d51d7fe467.zip": dial tcp 142.251.45.145:443: i/o timeout
+# monos.local/runner/cmd/monos-probe-exec
+internal/wire/wire.go:17:2: github.com/santhosh-tekuri/jsonschema/v6@v6.0.2: Get "https://proxy.golang.org/github.com/santhosh-tekuri/jsonschema/v6/@v/v6.0.2.zip": dial tcp 142.251.45.145:443: i/o timeout
+FAIL	monos.local/runner/cmd/monos [setup failed]
+FAIL	monos.local/runner/cmd/monos-probe-exec [setup failed]
+FAIL	monos.local/runner/cmd/monos-probe-launch [setup failed]
+# monos.local/runner/cmd/monos-probe-launch
+internal/wire/wire.go:16:2: github.com/cyberphone/json-canonicalization@v0.0.0-20241213102144-19d51d7fe467: Get "https://proxy.golang.org/github.com/cyberphone/json-canonicalization/@v/v0.0.0-20241213102144-19d51d7fe467.zip": dial tcp 142.251.45.145:443: i/o timeout
+# monos.local/runner/cmd/monos-probe-launch
+internal/wire/wire.go:17:2: github.com/santhosh-tekuri/jsonschema/v6@v6.0.2: Get "https://proxy.golang.org/github.com/santhosh-tekuri/jsonschema/v6/@v/v6.0.2.zip": dial tcp 142.251.45.145:443: i/o timeout
+# monos.local/runner/cmd/monos-runner
+internal/control/client.go:22:2: github.com/coder/websocket@v1.8.14: Get "https://proxy.golang.org/github.com/coder/websocket/@v/v1.8.14.zip": dial tcp 142.251.45.145:443: i/o timeout
+# monos.local/runner/cmd/monos-runner
+internal/wire/wire.go:16:2: github.com/cyberphone/json-canonicalization@v0.0.0-20241213102144-19d51d7fe467: Get "https://proxy.golang.org/github.com/cyberphone/json-canonicalization/@v/v0.0.0-20241213102144-19d51d7fe467.zip": dial tcp 142.251.45.145:443: i/o timeout
+# monos.local/runner/cmd/monos-runner
+internal/wire/wire.go:17:2: github.com/santhosh-tekuri/jsonschema/v6@v6.0.2: Get "https://proxy.golang.org/github.com/santhosh-tekuri/jsonschema/v6/@v/v6.0.2.zip": dial tcp 142.251.45.145:443: i/o timeout
+# monos.local/runner/cmd/monos-runner
+internal/journal/journal.go:14:2: github.com/mattn/go-sqlite3@v1.14.32: Get "https://proxy.golang.org/github.com/mattn/go-sqlite3/@v/v1.14.32.zip": dial tcp 142.251.45.145:443: i/o timeout
+FAIL	monos.local/runner/cmd/monos-runner [setup failed]
+FAIL	monos.local/runner/internal/adapter [setup failed]
+# monos.local/runner/internal/adapter
+internal/wire/wire.go:16:2: github.com/cyberphone/json-canonicalization@v0.0.0-20241213102144-19d51d7fe467: Get "https://proxy.golang.org/github.com/cyberphone/json-canonicalization/@v/v0.0.0-20241213102144-19d51d7fe467.zip": dial tcp 142.251.45.145:443: i/o timeout
+# monos.local/runner/internal/adapter
+internal/wire/wire.go:17:2: github.com/santhosh-tekuri/jsonschema/v6@v6.0.2: Get "https://proxy.golang.org/github.com/santhosh-tekuri/jsonschema/v6/@v/v6.0.2.zip": dial tcp 142.251.45.145:443: i/o timeout
+# monos.local/runner/internal/control
+internal/control/client.go:22:2: github.com/coder/websocket@v1.8.14: Get "https://proxy.golang.org/github.com/coder/websocket/@v/v1.8.14.zip": dial tcp 142.251.45.145:443: i/o timeout
+# monos.local/runner/internal/control
+internal/wire/wire.go:16:2: github.com/cyberphone/json-canonicalization@v0.0.0-20241213102144-19d51d7fe467: Get "https://proxy.golang.org/github.com/cyberphone/json-canonicalization/@v/v0.0.0-20241213102144-19d51d7fe467.zip": dial tcp 142.251.45.145:443: i/o timeout
+# monos.local/runner/internal/control
+internal/wire/wire.go:17:2: github.com/santhosh-tekuri/jsonschema/v6@v6.0.2: Get "https://proxy.golang.org/github.com/santhosh-tekuri/jsonschema/v6/@v/v6.0.2.zip": dial tcp 142.251.45.145:443: i/o timeout
+FAIL	monos.local/runner/internal/control [setup failed]
+# monos.local/runner/internal/daemon
+internal/control/client.go:22:2: github.com/coder/websocket@v1.8.14: Get "https://proxy.golang.org/github.com/coder/websocket/@v/v1.8.14.zip": dial tcp 142.251.45.145:443: i/o timeout
+# monos.local/runner/internal/daemon
+internal/wire/wire.go:16:2: github.com/cyberphone/json-canonicalization@v0.0.0-20241213102144-19d51d7fe467: Get "https://proxy.golang.org/github.com/cyberphone/json-canonicalization/@v/v0.0.0-20241213102144-19d51d7fe467.zip": dial tcp 142.251.45.145:443: i/o timeout
+# monos.local/runner/internal/daemon
+internal/wire/wire.go:17:2: github.com/santhosh-tekuri/jsonschema/v6@v6.0.2: Get "https://proxy.golang.org/github.com/santhosh-tekuri/jsonschema/v6/@v/v6.0.2.zip": dial tcp 142.251.45.145:443: i/o timeout
+# monos.local/runner/internal/daemon
+internal/journal/journal.go:14:2: github.com/mattn/go-sqlite3@v1.14.32: Get "https://proxy.golang.org/github.com/mattn/go-sqlite3/@v/v1.14.32.zip": dial tcp 142.251.45.145:443: i/o timeout
+# monos.local/runner/internal/host
+internal/wire/wire.go:16:2: github.com/cyberphone/json-canonicalization@v0.0.0-20241213102144-19d51d7fe467: Get "https://proxy.golang.org/github.com/cyberphone/json-canonicalization/@v/v0.0.0-20241213102144-19d51d7fe467.zip": dial tcp 142.251.45.145:443: i/o timeout
+# monos.local/runner/internal/host
+internal/wire/wire.go:17:2: github.com/santhosh-tekuri/jsonschema/v6@v6.0.2: Get "https://proxy.golang.org/github.com/santhosh-tekuri/jsonschema/v6/@v/v6.0.2.zip": dial tcp 142.251.45.145:443: i/o timeout
+FAIL	monos.local/runner/internal/daemon [setup failed]
+FAIL	monos.local/runner/internal/host [setup failed]
+FAIL	monos.local/runner/internal/journal [setup failed]
+# monos.local/runner/internal/journal
+internal/journal/journal.go:14:2: github.com/mattn/go-sqlite3@v1.14.32: Get "https://proxy.golang.org/github.com/mattn/go-sqlite3/@v/v1.14.32.zip": dial tcp 142.251.45.145:443: i/o timeout
+# monos.local/runner/internal/journal
+internal/wire/wire.go:16:2: github.com/cyberphone/json-canonicalization@v0.0.0-20241213102144-19d51d7fe467: Get "https://proxy.golang.org/github.com/cyberphone/json-canonicalization/@v/v0.0.0-20241213102144-19d51d7fe467.zip": dial tcp 142.251.45.145:443: i/o timeout
+# monos.local/runner/internal/journal
+internal/wire/wire.go:17:2: github.com/santhosh-tekuri/jsonschema/v6@v6.0.2: Get "https://proxy.golang.org/github.com/santhosh-tekuri/jsonschema/v6/@v/v6.0.2.zip": dial tcp 142.251.45.145:443: i/o timeout
+# monos.local/runner/internal/local
+internal/control/client.go:22:2: github.com/coder/websocket@v1.8.14: Get "https://proxy.golang.org/github.com/coder/websocket/@v/v1.8.14.zip": dial tcp 142.251.45.145:443: i/o timeout
+# monos.local/runner/internal/local
+internal/wire/wire.go:16:2: github.com/cyberphone/json-canonicalization@v0.0.0-20241213102144-19d51d7fe467: Get "https://proxy.golang.org/github.com/cyberphone/json-canonicalization/@v/v0.0.0-20241213102144-19d51d7fe467.zip": dial tcp 142.251.45.145:443: i/o timeout
+# monos.local/runner/internal/local
+internal/wire/wire.go:17:2: github.com/santhosh-tekuri/jsonschema/v6@v6.0.2: Get "https://proxy.golang.org/github.com/santhosh-tekuri/jsonschema/v6/@v/v6.0.2.zip": dial tcp 142.251.45.145:443: i/o timeout
+# monos.local/runner/internal/local
+internal/journal/journal.go:14:2: github.com/mattn/go-sqlite3@v1.14.32: Get "https://proxy.golang.org/github.com/mattn/go-sqlite3/@v/v1.14.32.zip": dial tcp 142.251.45.145:443: i/o timeout
+# monos.local/runner/internal/wire
+internal/wire/wire.go:16:2: github.com/cyberphone/json-canonicalization@v0.0.0-20241213102144-19d51d7fe467: Get "https://proxy.golang.org/github.com/cyberphone/json-canonicalization/@v/v0.0.0-20241213102144-19d51d7fe467.zip": dial tcp 142.251.45.145:443: i/o timeout
+# monos.local/runner/internal/wire
+internal/wire/wire.go:17:2: github.com/santhosh-tekuri/jsonschema/v6@v6.0.2: Get "https://proxy.golang.org/github.com/santhosh-tekuri/jsonschema/v6/@v/v6.0.2.zip": dial tcp 142.251.45.145:443: i/o timeout
+FAIL	monos.local/runner/internal/local [setup failed]
+FAIL	monos.local/runner/internal/wire [setup failed]
+FAIL

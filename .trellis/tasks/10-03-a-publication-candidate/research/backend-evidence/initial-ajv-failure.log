@@ -1,0 +1,48 @@
+
+ RUN  v5.0.2 /Users/me/IdeaProjects/monos
+
+ ❯ apps/server/test/postgres-result-reads.test.ts (3 tests | 3 failed) 751ms
+   ❯ Exact local result authenticated reads (3)
+     × drops its owned schema when result setup fails before returning the fixture 374ms
+     × uses correlated authenticated WSS, authenticates again after read, and preserves every canonical record 194ms
+     × resolves selected historical results beyond the first 32 and refuses mutable result relabeling 183ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  apps/server/test/postgres-result-reads.test.ts > Exact local result authenticated reads > drops its owned schema when result setup fails before returning the fixture
+AssertionError: expected [Function] to throw error including 'result fixture setup failure' but got 'strict mode: required property "candi…'
+
+Expected: "result fixture setup failure"
+Received: "strict mode: required property "candidate" is not defined at "https://monos.invalid/protocol/v1#/allOf/0/then" (strictRequired)"
+
+ ❯ apps/server/test/postgres-result-reads.test.ts:30:37
+     28|   });
+     29|   try {
+     30|    await expect(resultReadFixture()).rejects.toThrow('result fixture s…
+       |                                     ^
+     31|    expect(ownedSchema).toMatch(/^conversation_[a-f0-9]+$/);
+     32|    expect((await admin.pool.query('SELECT nspname FROM pg_namespace WH…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  apps/server/test/postgres-result-reads.test.ts > Exact local result authenticated reads > uses correlated authenticated WSS, authenticates again after read, and preserves every canonical record
+ FAIL  apps/server/test/postgres-result-reads.test.ts > Exact local result authenticated reads > resolves selected historical results beyond the first 32 and refuses mutable result relabeling
+Error: strict mode: required property "candidate" is not defined at "https://monos.invalid/protocol/v1#/allOf/0/then" (strictRequired)
+ ❯ checkStrictMode node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/lib/compile/util.ts:211:28
+ ❯ Object.code node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/lib/vocabularies/validation/required.ts:45:26
+ ❯ keywordCode node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/lib/compile/validate/index.ts:532:9
+ ❯ node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/lib/compile/validate/index.ts:265:9
+ ❯ CodeGen.code node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/lib/compile/codegen/index.ts:545:33
+ ❯ CodeGen.block node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/lib/compile/codegen/index.ts:700:20
+ ❯ iterateKeywords node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/lib/compile/validate/index.ts:262:7
+ ❯ groupKeywords node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/lib/compile/validate/index.ts:241:7
+ ❯ node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/lib/compile/validate/index.ts:233:38
+ ❯ CodeGen.code node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/lib/compile/codegen/index.ts:545:33
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed (3)
+   Start at  21:44:13
+   Duration  1.36s (tests 58%, import 25%, transform 17%)

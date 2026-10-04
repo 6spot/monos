@@ -1,0 +1,2 @@
+$ tsc --noEmit && pnpm --filter @monos/web typecheck
+$ tsc --noEmit

@@ -414,30 +414,34 @@ export type WorkspaceUnavailableReason = "unsupported_remote" | "unsupported_mul
 export type CommandResultStatus = "admitted" | "committed" | "error" | "unknown";
 
 export interface Frame {
-    allowed?:            boolean;
-    attempt_id?:         string;
-    boot_id?:            string;
-    correlation_id?:     string;
-    credential?:         string;
-    dispatch?:           Dispatch;
-    dispatch_id?:        string;
-    error?:              ErrorInfo;
-    event?:              RuntimeEvent;
-    expires_at?:         string;
-    incarnation?:        number;
-    log_modes?:          LogModeElement[];
-    operation?:          Operation;
-    operation_id?:       string;
-    operation_result?:   OperationResult;
-    result_read?:        ResultReadRequest;
-    result_read_modes?:  ResultReadMode[];
-    result_read_result?: ResultReadResponse;
-    runner_id?:          string;
-    runtimes?:           RuntimeInstallation[];
-    schema_version:      number;
-    sequence?:           number;
-    stream_id?:          string;
-    type:                Type;
+    allowed?:             boolean;
+    attempt_id?:          string;
+    boot_id?:             string;
+    correlation_id?:      string;
+    credential?:          string;
+    dispatch?:            Dispatch;
+    dispatch_id?:         string;
+    error?:               ErrorInfo;
+    event?:               RuntimeEvent;
+    expires_at?:          string;
+    incarnation?:         number;
+    log_modes?:           LogModeElement[];
+    operation?:           Operation;
+    operation_id?:        string;
+    operation_result?:    OperationResult;
+    publication_ack?:     PublicationACK;
+    publication_modes?:   PublicationMode[];
+    publication_prepare?: PublicationPrepareRequest;
+    publication_result?:  PublicationResultPage;
+    result_read?:         ResultReadRequest;
+    result_read_modes?:   ResultReadMode[];
+    result_read_result?:  ResultReadResponse;
+    runner_id?:           string;
+    runtimes?:            RuntimeInstallation[];
+    schema_version:       number;
+    sequence?:            number;
+    stream_id?:           string;
+    type:                 Type;
 }
 
 export interface Dispatch {
@@ -647,13 +651,92 @@ export type FailureKind = "recoverable" | "capture_hard_limit" | "invalid_finali
 
 export type CompletionSettlementDisposition = "cancelled" | "already_finalized";
 
-export interface ResultReadRequest {
-    cursor?:         string;
-    identity:        ResultReadIdentity;
-    identity_digest: string;
-    mode:            ResultReadRequestMode;
-    path?:           string;
-    side?:           Side;
+export interface PublicationACK {
+    operation_id:   string;
+    request_digest: string;
+    result_digest:  string;
+    schema_version: number;
+}
+
+export type PublicationMode = "local_candidate_v1";
+
+export interface PublicationPrepareRequest {
+    configuration:          PublicationScanConfiguration;
+    configuration_digest:   string;
+    construction:           PublicationConstruction;
+    construction_digest:    string;
+    effective_basis:        PublicationEffectiveBasis;
+    effective_basis_digest: string;
+    operation_id:           string;
+    scan_run_id:            string;
+    schema_version:         number;
+    source:                 ResultReadIdentity;
+    source_digest:          string;
+}
+
+export interface PublicationScanConfiguration {
+    deadline_seconds:       number;
+    local_blob_limit:       number;
+    max_aggregate_bytes:    number;
+    max_blob_bytes:         number;
+    max_commits:            number;
+    max_evidence_bytes:     number;
+    max_findings:           number;
+    max_paths:              number;
+    max_versions:           number;
+    permission_fingerprint: string;
+    policy_version:         PolicyVersion;
+    provider_blob_limit:    number;
+    rule_version:           RuleVersion;
+    schema_version:         number;
+    traversal_version:      TraversalVersion;
+    workflow_write:         WorkflowWrite;
+}
+
+export type PolicyVersion = "local_publication_v1";
+
+export type RuleVersion = "credential_rules_v1";
+
+export type TraversalVersion = "all_parents_final_tree_v1";
+
+export type WorkflowWrite = "unknown" | "denied" | "allowed";
+
+export interface PublicationConstruction {
+    author_email:        AuthorEmail;
+    author_name:         AuthorName;
+    candidate_id:        string;
+    construction_id:     string;
+    message:             string;
+    parents:             [PublicationParent, ...PublicationParent[]];
+    repository_identity: string;
+    schema_version:      number;
+    source_digest:       string;
+    target_branch:       string;
+    timestamp:           string;
+}
+
+export type AuthorEmail = "monos@localhost";
+
+export type AuthorName = "monos";
+
+export interface PublicationParent {
+    commit:                   string;
+    kind:                     PublicationParentKind;
+    observation_digest:       string;
+    observation_operation_id: string;
+    outcome:                  EffectResult;
+    repository_identity:      string;
+    workspace:                WorkspaceDescriptor;
+}
+
+export type PublicationParentKind = "materialization" | "target" | "published";
+
+export interface PublicationEffectiveBasis {
+    completion_manifest_digest: string;
+    completion_operation_id:    string;
+    plan_id:                    string;
+    specification_id:           string;
+    task_id:                    string;
 }
 
 export interface ResultReadIdentity {
@@ -677,6 +760,103 @@ export interface ResultReadIdentity {
     storage_id:                string;
     task_id:                   string;
     workspace_id:              string;
+}
+
+export interface PublicationResultPage {
+    findings:       PublicationFinding[];
+    page_count:     number;
+    page_digest:    string;
+    page_index:     number;
+    result:         PublicationResult;
+    schema_version: number;
+}
+
+export interface PublicationFinding {
+    baseline_commit?:        string;
+    baseline_path?:          string;
+    baseline_path_redacted?: boolean;
+    blob?:                   string;
+    commit:                  string;
+    content_digest?:         string;
+    finding_id:              string;
+    kind:                    PublicationFindingKind;
+    limit?:                  number;
+    message:                 Message;
+    occurrence_ordinal:      number;
+    override_eligible:       boolean;
+    path:                    string;
+    path_redacted:           boolean;
+    rule_id:                 RuleID;
+    scope:                   Scope;
+    size?:                   number;
+}
+
+export type PublicationFindingKind = "tracked_ignore" | "publication_policy_size" | "provider_hard_size" | "credential_pattern" | "published_credential" | "workflow_permission";
+
+export type Message = "Tracked file matches ignore rules." | "Blob exceeds local publication policy." | "Blob exceeds provider hard limit." | "Credential pattern matched; value redacted." | "Previously published credential exposure requires remediation." | "Workflow write permission is not verified.";
+
+export type RuleID = "tracked_ignore" | "policy_blob_size" | "provider_blob_size" | "workflow_permission" | "pem_private_key" | "github_classic_token" | "github_fine_grained_token" | "aws_access_key";
+
+export type Scope = "publication_commit" | "final_tree";
+
+export interface PublicationResult {
+    candidate?:                 PublicationCandidateManifest;
+    candidate_manifest_digest?: string;
+    operation_id:               string;
+    reason?:                    PublicationResultReason;
+    request_digest:             string;
+    scan?:                      PublicationScanSummary;
+    scan_digest?:               string;
+    schema_version:             number;
+    status:                     PublicationResultStatus;
+}
+
+export interface PublicationCandidateManifest {
+    candidate_id:        string;
+    construction_digest: string;
+    construction_id:     string;
+    head:                string;
+    parents:             [string, ...string[]];
+    schema_version:      number;
+    source_digest:       string;
+    tree:                string;
+}
+
+export type PublicationResultReason = "no_change" | "retained_unavailable" | "identity_mismatch" | "unverified_parent" | "conflicting_candidate" | "timeout";
+
+export interface PublicationScanSummary {
+    candidate_manifest_digest: string;
+    configuration_digest:      string;
+    coverage:                  PublicationCoverage;
+    findings_bytes:            number;
+    findings_count:            number;
+    findings_digest:           string;
+    reason?:                   PublicationScanSummaryReason;
+    scan_id:                   string;
+    schema_version:            number;
+    status:                    PublicationScanSummaryStatus;
+}
+
+export interface PublicationCoverage {
+    commits:           number;
+    paths:             number;
+    unique_blob_bytes: number;
+    versions:          number;
+}
+
+export type PublicationScanSummaryReason = "commit_limit" | "path_limit" | "version_limit" | "blob_limit" | "aggregate_limit" | "findings_limit" | "evidence_limit" | "timeout" | "unsupported_path" | "unsupported_ignore" | "missing_object" | "unverified_parent" | "retained_unavailable";
+
+export type PublicationScanSummaryStatus = "complete" | "incomplete";
+
+export type PublicationResultStatus = "prepared" | "not_applicable" | "unavailable" | "reconciliation_required";
+
+export interface ResultReadRequest {
+    cursor?:         string;
+    identity:        ResultReadIdentity;
+    identity_digest: string;
+    mode:            ResultReadRequestMode;
+    path?:           string;
+    side?:           Side;
 }
 
 export type ResultReadRequestMode = "changes" | "file" | "diff";
@@ -728,7 +908,7 @@ export interface RuntimeInstallation {
 
 export type Availability = "detected" | "not_found" | "unavailable";
 
-export type Type = "hello" | "welcome" | "ready" | "heartbeat" | "start" | "effect" | "authorize_dispatch" | "authorization" | "event" | "event_ack" | "operation_result" | "operation_ack" | "error" | "result_read" | "result_read_result";
+export type Type = "hello" | "welcome" | "ready" | "heartbeat" | "start" | "effect" | "authorize_dispatch" | "authorization" | "event" | "event_ack" | "operation_result" | "operation_ack" | "error" | "result_read" | "result_read_result" | "publication_prepare" | "publication_result" | "publication_ack";
 
 export interface RunnerInventory {
     dispatches:     Dispatch[];
@@ -743,7 +923,7 @@ export interface InventoryQuery {
     snapshot_id?: string;
 }
 
-export type TaskProposalAction = "apply_specification_revision" | "apply_rework" | "accept_delivery" | "publish_replan";
+export type TaskProposalAction = "apply_specification_revision" | "apply_rework" | "accept_delivery" | "publish_replan" | "override_publication_findings";
 
 export interface OwnerCommand {
     expected_control_version: number;
@@ -1504,7 +1684,7 @@ export interface TaskPreviewStatus {
     preview:                 TaskPreview;
     project_context_version: number;
     proposal_message_id:     string;
-    reason?:                 Reason;
+    reason?:                 TaskPreviewStatusReason;
     schema_version:          number;
     selected_project_id?:    string;
     source_message_id:       string;
@@ -1515,7 +1695,7 @@ export interface TaskPreviewStatus {
     todo_id:                 string;
 }
 
-export type Reason = "todo_archived" | "newer_input" | "source_project_changed" | "project_unavailable";
+export type TaskPreviewStatusReason = "todo_archived" | "newer_input" | "source_project_changed" | "project_unavailable";
 
 export type TaskPreviewStatusState = "eligible" | "project_required" | "unavailable" | "stale" | "cancelled" | "created";
 
@@ -2286,4 +2466,89 @@ export interface ResultReadFileQuery {
 export interface ResultReadDiffQuery {
     identity_digest: string;
     path:            string;
+}
+
+export interface PublicationCandidatePage {
+    items:          PublicationRecord[];
+    next_cursor?:   string;
+    schema_version: number;
+    task_id:        string;
+}
+
+export interface PublicationRecord {
+    candidate?:                  PublicationCandidateManifest;
+    candidate_manifest_digest?:  string;
+    current:                     boolean;
+    effective_basis:             PublicationEffectiveBasis;
+    effective_basis_digest:      string;
+    known_public_exposure_count: number;
+    operation_id:                string;
+    override_allowed:            boolean;
+    override_receipt_ids:        string[];
+    reason?:                     string;
+    remote_preparation:          RemotePreparation;
+    request_digest:              string;
+    retry_allowed:               boolean;
+    scan?:                       PublicationScanSummary;
+    scan_applicable:             boolean;
+    scan_digest?:                string;
+    source:                      ResultReadIdentity;
+    source_digest:               string;
+    status:                      PublicationRecordStatus;
+}
+
+export type PublicationRecordStatus = "pending" | "preparing" | "offline" | "unsupported" | "prepared" | "not_applicable" | "unavailable" | "reconciliation_required";
+
+export interface PublicationCandidateQuery {
+    cursor?:              string;
+    source_operation_id?: string;
+}
+
+export interface PublicationFindingsQuery {
+    cursor?:     string;
+    scan_digest: string;
+}
+
+export interface PublicationFindingPage {
+    candidate_id:   string;
+    items:          PublicationFinding[];
+    next_cursor?:   string;
+    scan_digest:    string;
+    schema_version: number;
+    task_id:        string;
+}
+
+export interface PublicationCommand {
+    name:           PublicationCommandName;
+    payload:        PublicationCommandPayload;
+    request_id:     string;
+    schema_version: number;
+    task_id:        string;
+}
+
+export type PublicationCommandName = "retry_publication_preparation" | "prepare_publication_override" | "confirm_publication_override" | "override_publication_findings";
+
+export interface PublicationCommandPayload {
+    candidate_id?:              string;
+    candidate_manifest_digest?: string;
+    confirmation_id?:           string;
+    content_digest?:            string;
+    effective_basis_digest?:    string;
+    finding_ids?:               [string, ...string[]];
+    operation_digest?:          string;
+    operation_id?:              string;
+    proposal_id?:               string;
+    scan_digest?:               string;
+}
+
+export interface PublicationCommandResult {
+    confirmation_id?: string;
+    content_digest?:  string;
+    operation_id?:    string;
+    proposal_id?:     string;
+    receipt_id?:      string;
+    request_id:       string;
+    schema_version:   number;
+    status:           ConfigurationResultStatus;
+    task_id:          string;
 }

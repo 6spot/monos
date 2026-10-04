@@ -1,0 +1,155 @@
+{
+  "captured_at_utc": "2026-10-04T03:35:46.883479+00:00",
+  "phase": "current owned input snapshot after final F1/F3 and multi-rule real PostgreSQL 13-test gate; snapshot, not before/after unchanged proof",
+  "node": "v26.3.0",
+  "pnpm": "12.6.0",
+  "go": "go1.27.1 darwin/arm64",
+  "inputs": [
+    {
+      "path": "apps/server/src/app.ts",
+      "sha256": "fda5eb6c9853eac4cea0a04971d64d002bc35168be29ef85fa0ae846b0a260e0"
+    },
+    {
+      "path": "apps/server/src/main.ts",
+      "sha256": "ed99b7e528da285cf93313f0398dda6f9cdb5f3c72388bd1ebd1da06ca88739e"
+    },
+    {
+      "path": "apps/server/src/node-completion.ts",
+      "sha256": "4187568e1c5c0255cd65ec9f78d176028709c9c37cbf76ff2714fc9e866aaba3"
+    },
+    {
+      "path": "apps/server/src/publication-candidate-reads.ts",
+      "sha256": "4f62ed478586ddffd1dddf8bfe45f5bc812531f8c814ae7fcbfa22769b923d66"
+    },
+    {
+      "path": "apps/server/src/publication-candidates.ts",
+      "sha256": "74fe7a23dd6d4a182c894bbf31b8b5e7d7041938b59d18e1b21e6a8a0d0c9ab3"
+    },
+    {
+      "path": "apps/server/src/publication-commands.ts",
+      "sha256": "1a77001edb7df3f9ae38ed2476d17df7a290e367a46a20d8a04dda5747625905"
+    },
+    {
+      "path": "apps/server/src/publication-policy.ts",
+      "sha256": "7d02b55b70002d016b883297be4e74d649a13b6e72f4903039ede3a13862d28e"
+    },
+    {
+      "path": "apps/server/src/task-result-reads.ts",
+      "sha256": "e2fc07540f637f8b50ce39140b9622070f5f16bbdc8fc548cf26a96502c677e5"
+    },
+    {
+      "path": "apps/server/test/app.test.ts",
+      "sha256": "85cf6ef3f94863f7cf2f5c284b539c9d2a800adfadb4a6dc0fcb753fa8b13cfb"
+    },
+    {
+      "path": "apps/server/test/fixtures/publication-fixture.ts",
+      "sha256": "192deb171fa990a5d8f68614808df8c79d88187069c8266593ec4c189bd2e0ba"
+    },
+    {
+      "path": "apps/server/test/postgres-publication.test.ts",
+      "sha256": "8a9a3988a7ff28cdde5fc2fd75ddfca7bce8a07c4a81eab83a4237668c067168"
+    },
+    {
+      "path": "package.json",
+      "sha256": "171e203403ec7d02f9291190c951a8ec71aa80cd95a86adb678fb4de7916f323"
+    },
+    {
+      "path": "packages/db/migrations/0022_publication_candidates.sql",
+      "sha256": "4780de7e97350e76f13d778cf3a16095120f77535e370bbfcd2009e1526a2dc9"
+    },
+    {
+      "path": "packages/db/src/migrate.ts",
+      "sha256": "ee3bda98fdc2b6f33fe4d6c078e35b4db3164d9a2a2e481f53a173f858a17d36"
+    },
+    {
+      "path": "packages/protocol/fixtures/publication.json",
+      "sha256": "b3235cddb0e681fef46faaf4aa202d5aa76eccf5e2fb81d963752a3a57e98ba5"
+    },
+    {
+      "path": "packages/protocol/fixtures/validation.json",
+      "sha256": "afa02a045308cee4460ebc2c376b1d704f30e16c8ef2479e8491320d443d3c70"
+    },
+    {
+      "path": "packages/protocol/generated/go/contracts.json",
+      "sha256": "a0068f53fe67643a367e82726ac9b4257ce4d9203416a408e9029cbbbbe84e75"
+    },
+    {
+      "path": "packages/protocol/generated/go/go.mod",
+      "sha256": "2d8da4db743ff11541b4ee0e40e477f2c184404446ba22a7ed265de9b3d602d2"
+    },
+    {
+      "path": "packages/protocol/generated/go/schema.go",
+      "sha256": "8e74d5a0b2b3fbcbafbdfd8dc66575110707bc45b4992a48fee07fc515aaa572"
+    },
+    {
+      "path": "packages/protocol/generated/go/types.go",
+      "sha256": "78b3a9559ff7f6a392eb47c1dc4499be815d5fc49950bb9718cdbe5384c28435"
+    },
+    {
+      "path": "packages/protocol/generated/go/workspace_json.go",
+      "sha256": "eaaf048f6e7ce36be22d51a786e10013c6b97659a8f5f846e6be0d53a12589de"
+    },
+    {
+      "path": "packages/protocol/generated/openapi.json",
+      "sha256": "b9cac7645c636ea21335860c37c786c707a4464c171dea3f514f74ed2a7a734c"
+    },
+    {
+      "path": "packages/protocol/generated/types.ts",
+      "sha256": "d92f7474e97beca56bafecbd112520c1c9a6eb5f9a568c5af86093850c1407cb"
+    },
+    {
+      "path": "packages/protocol/schemas/v1/contracts.json",
+      "sha256": "a0068f53fe67643a367e82726ac9b4257ce4d9203416a408e9029cbbbbe84e75"
+    },
+    {
+      "path": "packages/protocol/scripts/generate.mjs",
+      "sha256": "e2966e919f596507e3713a0339543edb089ae5414eb6c35a79d8b435dc31cfa6"
+    },
+    {
+      "path": "packages/protocol/src/validation.ts",
+      "sha256": "c2e66d83ddfecb49bcc162c46fa02fa5d964e4d8a48e34ff6731eaffd0794e19"
+    },
+    {
+      "path": "packages/protocol/test/publication.test.ts",
+      "sha256": "c3b743d798d09573ba547f69c1c11788f2e9c20b34a93624f498598b6332f748"
+    },
+    {
+      "path": "runner/internal/wire/publication_test.go",
+      "sha256": "a5602686f2f6c1c6f1b3e9160a30c514f816209a24bb198187f331daaf3c7f94"
+    },
+    {
+      "path": "runner/internal/wire/wire.go",
+      "sha256": "a0ed8fdfcefea37b868786750aee748721aa05a8486c9d0c71e36457ec15bc7c"
+    }
+  ],
+  "previous_snapshot_at_utc": "2026-10-04T01:37:54.719650+00:00",
+  "changes_since_previous_snapshot": [
+    {
+      "path": "apps/server/src/publication-candidate-reads.ts",
+      "previous_sha256": "883eaac99bab558cfad81e4682e0288c181488a8b42f2b0ecd38355c1bb57c48",
+      "current_sha256": "4f62ed478586ddffd1dddf8bfe45f5bc812531f8c814ae7fcbfa22769b923d66"
+    },
+    {
+      "path": "apps/server/test/postgres-publication.test.ts",
+      "previous_sha256": "3beac8d77e4b48803caeae3561f22b8a467c270b1dd5371a7712d5ebb6719854",
+      "current_sha256": "8a9a3988a7ff28cdde5fc2fd75ddfca7bce8a07c4a81eab83a4237668c067168"
+    }
+  ],
+  "snapshot_history": [
+    {
+      "captured_at_utc": "2026-10-04T01:37:54.719650+00:00",
+      "changes_since_previous_snapshot": [
+        {
+          "path": "apps/server/src/publication-candidates.ts",
+          "previous_sha256": "95a452ad2c9067abe98cd8f1e30d13c718ebcae36ad48db4ba908ff6aad06cb0",
+          "current_sha256": "74fe7a23dd6d4a182c894bbf31b8b5e7d7041938b59d18e1b21e6a8a0d0c9ab3"
+        },
+        {
+          "path": "apps/server/test/postgres-publication.test.ts",
+          "previous_sha256": "f18b5a2e944e7036df3fcd6e6876832bf0aefad332495309869c6072fb2105f7",
+          "current_sha256": "3beac8d77e4b48803caeae3561f22b8a467c270b1dd5371a7712d5ebb6719854"
+        }
+      ]
+    }
+  ]
+}

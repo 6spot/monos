@@ -1,9 +1,9 @@
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import WebSocket from 'ws';
 import { transaction } from '../../../../packages/db/src/index.ts';
 import type { Database } from '../../../../packages/db/src/index.ts';
-import { submission, validate } from '../../../../packages/protocol/src/index.ts';
-import type { CommandEnvelope, Dispatch, Frame, OwnerCommand, PrepareReplan, ResultChange, ResultObject, ResultReadRequest, ResultReadResponse, TaskActionBasis, TaskSpecificationStatus, WorkspaceMetadata } from '../../../../packages/protocol/src/index.ts';
+import { canonicalJSON, submission, validate } from '../../../../packages/protocol/src/index.ts';
+import type { CommandEnvelope, Dispatch, Frame, OwnerCommand, PrepareReplan, PublicationFinding, PublicationPrepareRequest, PublicationResult, PublicationResultPage, ResultChange, ResultObject, ResultReadRequest, ResultReadResponse, TaskActionBasis, TaskSpecificationStatus, WorkspaceMetadata } from '../../../../packages/protocol/src/index.ts';
 import { Todos } from '../../src/todos.ts';
 import { TaskPreviews } from '../../src/task-previews.ts';
 import { prepareProposalFixture } from './task-preview-fixture.ts';
@@ -19,6 +19,9 @@ import { TaskReplan } from '../../src/task-replan.ts';
 import { replanImpact } from '../../src/task-replan-state.ts';
 import { initializeTask } from '../../src/task-records.ts';
 import type { BoundaryService } from '../../src/service.ts';
+import { PublicationPreparation } from '../../src/publication-candidates.ts';
+import { PublicationCommands } from '../../src/publication-commands.ts';
+import { credentialPath, publicationDigest } from '../../src/publication-policy.ts';
 
 const scenarios = ['ready', 'board_pages', 'queued', 'planning_issue', 'node_queued', 'running', 'running_workspace', 'review_git', 'result_inspection', 'result_empty', 'log_pages', 'blocked', 'review', 'completion_recovery', 'replan', 'replan_issue', 'joint', 'specification', 'guidance', 'input_issue'] as const;
 type Scenario = typeof scenarios[number];
@@ -40,6 +43,12 @@ const resultChanges: ResultChange[] = [
   ...Array.from({ length: 62 }, (_, index): ResultChange => ({ path: `more/file-${String(index).padStart(2, '0')}.txt`, status: 'A', new: blob() })),
 ];
 interface ReadPeer { socket: WebSocket; heartbeat: NodeJS.Timeout; held: Frame[]; hold: boolean; status?: ResultReadResponse['status']; requests: ResultReadRequest[]; empty: boolean }
+const publicationModes = ['findings', 'clean', 'incomplete', 'unavailable', 'no_change', 'preparing', 'offline', 'unsupported'] as const;
+// Private synthetic filename/content input; only redacted path and full-content digest leave the peer.
+const publicationCanary = 'ghp_' + 'X'.repeat(36), publicationRawPath = `private/${publicationCanary}.txt`;
+const publicationRawContent = `synthetic prefix\n${publicationCanary}\nsynthetic suffix\n`;
+type PublicationMode = typeof publicationModes[number];
+interface PublicationPeer { mode: PublicationMode; held: Map<string, Frame>; requests: Map<string, PublicationPrepareRequest>; results: Map<string, PublicationResultPage[]>; unexpected: string[] }
 
 // Browser-only canonical scenarios with explicitly synthetic Runtime acknowledgements.
 // No Runtime or provider is contacted; fixture Tasks never leave the isolated schema.
@@ -52,7 +61,85 @@ export class ExecutionUIFixture {
   private readonly runnerCredentials = new Map<string, string>();
   private readonly readPeers = new Map<string, ReadPeer>();
   private readonly readCompletions = new Map<string, string>();
+  private readonly publicationPeers = new Map<string, PublicationPeer>();
   constructor(db: Database, service: BoundaryService) { this.db = db; this.service = service; }
+
+  async createPublication(token: string, input: { mode: PublicationMode }) {
+    if (!publicationModes.includes(input.mode)) throw new Error('Invalid publication scenario');
+    const f = await this.create(token, { kind: 'result_inspection', title: 'Exact local publication candidate' });
+    await this.closeReadPeer(f.task);
+    this.publicationPeers.set(f.task, { mode: input.mode, held: new Map(), requests: new Map(), results: new Map(), unexpected: [] });
+    await new PublicationPreparation(this.db, this.service.instanceId).pump();
+    await this.connectReadPeer(this.contexts.get(f.task)!);
+    if (input.mode === 'offline') await this.closeReadPeer(f.task);
+    return f;
+  }
+
+  async publicationPeer(token: string, task: string, action: 'observe' | 'mode' | 'release' | 'offline' | 'reconnect' | 'history', mode?: PublicationMode) {
+    await transaction(this.db, tx => authenticateOwner(tx, token));
+    const state = this.publicationPeers.get(task), f = this.contexts.get(task);
+    if (!state || !f || !['observe', 'mode', 'release', 'offline', 'reconnect', 'history'].includes(action)) throw new Error('Unknown publication peer');
+    if (action === 'mode') { if (!mode || !publicationModes.includes(mode)) throw new Error('Unknown publication mode'); state.mode = mode; }
+    if (action === 'offline') await this.closeReadPeer(task);
+    if (action === 'reconnect') { await this.closeReadPeer(task); await this.connectReadPeer(f); }
+    if (action === 'release') { if (state.mode === 'preparing') state.mode = 'findings'; for (const frame of state.held.values()) this.replyPublication(this.readPeers.get(task)!, state, frame); state.held.clear(); }
+    if (action === 'history') {
+      state.mode = 'incomplete';
+      for (let run = 0; run < 33; run++) {
+        const prior = await this.waitPublication(task);
+        await new PublicationCommands(this.db).command(token, { schema_version: 1, task_id: task, request_id: randomUUID(), name: 'retry_publication_preparation', payload: { operation_id: prior.id, operation_digest: prior.request_digest } });
+      }
+      await this.waitPublication(task);
+    }
+    return { requests: [...state.requests.values()].map(request => ({ operation_id: request.operation_id, scan_run_id: request.scan_run_id, candidate_id: request.construction.candidate_id, source_digest: request.source_digest, request_digest: publicationDigest(request) })), held: state.held.size, unexpected: state.unexpected };
+  }
+
+  private async waitPublication(task: string): Promise<{ id: string; request_digest: string }> {
+    for (let check = 0; check < 400; check++) {
+      const row = (await this.db.pool.query("SELECT id,request_digest,state FROM delivery_operations WHERE task_id=$1 ORDER BY created_at DESC,id DESC LIMIT 1", [task])).rows[0];
+      if (row?.state === 'terminal') return row;
+      await new Promise(resolve => setTimeout(resolve, 10));
+    }
+    throw new Error('Synthetic publication did not settle');
+  }
+
+  private replyPublication(peer: ReadPeer, state: PublicationPeer, frame: Frame) {
+    const request = frame.publication_prepare!;
+    let pages = state.results.get(request.operation_id);
+    if (!pages) {
+      const base = { schema_version: 1, operation_id: request.operation_id, request_digest: publicationDigest(request) };
+      let result: PublicationResult;
+      let findings: PublicationFinding[] = [];
+      if (state.mode === 'no_change') result = { ...base, status: 'not_applicable', reason: 'no_change' };
+      else if (state.mode === 'unavailable') result = { ...base, status: 'unavailable', reason: 'retained_unavailable' };
+      else {
+        // Synthetic OIDs/content establish UI and transport binding only, never physical Git construction.
+        const candidate = { schema_version: 1, candidate_id: request.construction.candidate_id, construction_id: request.construction.construction_id, construction_digest: request.construction_digest, source_digest: request.source_digest, head: publicationDigest(request.construction).slice(0, 40), tree: request.source.git_tree, parents: request.construction.parents.map(parent => parent.commit) as [string, ...string[]] };
+        const candidateDigest = publicationDigest(candidate);
+        if (state.mode !== 'clean') findings = Array.from({ length: 70 }, (_, ordinal) => {
+          const kind: PublicationFinding['kind'] = (['credential_pattern', 'published_credential', 'provider_hard_size', 'workflow_permission', 'publication_policy_size'] as const)[ordinal] ?? 'tracked_ignore';
+          const rules = { credential_pattern: 'github_classic_token', published_credential: 'github_classic_token', provider_hard_size: 'provider_blob_size', workflow_permission: 'workflow_permission', publication_policy_size: 'policy_blob_size', tracked_ignore: 'tracked_ignore' } as const;
+          const messages = { credential_pattern: 'Credential pattern matched; value redacted.', published_credential: 'Previously published credential exposure requires remediation.', provider_hard_size: 'Blob exceeds provider hard limit.', workflow_permission: 'Workflow write permission is not verified.', publication_policy_size: 'Blob exceeds local publication policy.', tracked_ignore: 'Tracked file matches ignore rules.' } as const;
+          const redacted = ordinal < 2 && credentialPath(publicationRawPath);
+          const path = ordinal < 2 ? (redacted ? '[redacted credential path]' : publicationRawPath) : ordinal === 3 ? '.github/workflows/change.yml' : ordinal === 5 ? 'src/' + 'long-safe-path-'.repeat(14) + '<literal>.txt' : `tracked/file-${ordinal}.txt`;
+          const facts = { occurrence_ordinal: ordinal, kind, rule_id: rules[kind], scope: 'final_tree' as const, commit: candidate.head, path, path_redacted: redacted, override_eligible: ['credential_pattern', 'publication_policy_size', 'tracked_ignore'].includes(kind), message: messages[kind], blob: '9'.repeat(40), content_digest: ordinal < 2 ? createHash('sha256').update(publicationRawContent).digest('hex') : '8'.repeat(64),
+            ...(kind === 'published_credential' ? { baseline_commit: request.source.base_commit, baseline_path: '[redacted credential path]', baseline_path_redacted: true } : {}),
+            ...(kind === 'provider_hard_size' || kind === 'publication_policy_size' ? { size: (kind === 'provider_hard_size' ? request.configuration.provider_blob_limit : request.configuration.local_blob_limit) + 1, limit: kind === 'provider_hard_size' ? request.configuration.provider_blob_limit : request.configuration.local_blob_limit } : {}),
+          };
+          return { ...facts, finding_id: publicationDigest({ candidate_manifest_digest: candidateDigest, configuration_digest: request.configuration_digest, scan_run_id: request.scan_run_id, finding_facts_without_id: facts }) };
+        });
+        const scan = { schema_version: 1, scan_id: request.scan_run_id, candidate_manifest_digest: candidateDigest, configuration_digest: request.configuration_digest, status: state.mode === 'incomplete' ? 'incomplete' as const : 'complete' as const, ...(state.mode === 'incomplete' ? { reason: 'timeout' as const } : {}), coverage: { commits: 1, paths: 70, versions: 70, unique_blob_bytes: 157286420 }, findings_count: findings.length, findings_bytes: Buffer.byteLength(canonicalJSON(findings)), findings_digest: publicationDigest(findings) };
+        result = { ...base, status: 'prepared', candidate, candidate_manifest_digest: candidateDigest, scan, scan_digest: publicationDigest(scan) };
+      }
+      const pageCount = Math.max(1, Math.ceil(findings.length / 64));
+      pages = Array.from({ length: pageCount }, (_, index) => {
+        const rows = findings.slice(index * 64, (index + 1) * 64);
+        return validate<PublicationResultPage>('PublicationResultPage', { schema_version: 1, result, page_index: index, page_count: pageCount, findings: rows, page_digest: publicationDigest(rows) });
+      });
+      state.results.set(request.operation_id, pages);
+    }
+    for (const page of pages) if (peer.socket.readyState === WebSocket.OPEN) peer.socket.send(JSON.stringify({ schema_version: 1, type: 'publication_result', incarnation: frame.incarnation, publication_result: page }));
+  }
 
   async create(token: string, input: { kind: Scenario; title?: string }) {
     await transaction(this.db, (tx) => authenticateOwner(tx, token));
@@ -213,7 +300,7 @@ export class ExecutionUIFixture {
       await this.settle(token, f.task);
       await this.service.disconnect(f.runner, f.incarnation);
     }
-    this.contexts.clear(); this.workspaceSnapshots.clear(); this.runnerCredentials.clear(); this.readCompletions.clear(); return { reset: true };
+    this.contexts.clear(); this.workspaceSnapshots.clear(); this.runnerCredentials.clear(); this.readCompletions.clear(); this.publicationPeers.clear(); return { reset: true };
   }
 
   // Only this test process owns synthetic read bytes. Authentication, socket
@@ -231,14 +318,22 @@ export class ExecutionUIFixture {
         const frame = validate<Frame>('Frame', JSON.parse(data.toString()));
         if (frame.type === 'welcome') {
           f.incarnation = frame.incarnation!;
-          socket.send(JSON.stringify({ schema_version: 1, type: 'ready', incarnation: f.incarnation, log_modes: ['ordered_v1'], result_read_modes: ['git_objects_v1'] }));
+          const publication = this.publicationPeers.get(f.task);
+          socket.send(JSON.stringify({ schema_version: 1, type: 'ready', incarnation: f.incarnation, log_modes: ['ordered_v1'], result_read_modes: ['git_objects_v1'], ...(publication && publication.mode !== 'unsupported' ? { publication_modes: ['local_candidate_v1'] } : {}) }));
           clearTimeout(timer); resolve();
+        } else if (frame.type === 'publication_prepare') {
+          const publication = this.publicationPeers.get(f.task), request = frame.publication_prepare!;
+          if (!publication || request.source.task_id !== f.task || request.source.runner_id !== f.runner || request.source.operation_id !== this.readCompletions.get(f.task)) { socket.close(4003, 'Synthetic publication peer scope mismatch'); return; }
+          publication.requests.set(request.operation_id, request);
+          if (publication.mode === 'preparing') publication.held.set(request.operation_id, frame); else this.replyPublication(peer, publication, frame);
         } else if (frame.type === 'result_read') {
           if (frame.result_read?.identity.task_id !== f.task || frame.result_read.identity.runner_id !== f.runner || frame.result_read.identity.operation_id !== this.readCompletions.get(f.task)) {
             socket.close(4003, 'Synthetic read peer scope mismatch'); return;
           }
           peer.requests.push(frame.result_read!);
           if (peer.hold) peer.held.push(frame); else this.replyRead(peer, frame);
+        } else if (!['publication_ack', 'pong', 'ack'].includes(frame.type)) {
+          this.publicationPeers.get(f.task)?.unexpected.push(frame.type);
         }
       });
       socket.once('open', () => socket.send(JSON.stringify({ schema_version: 1, type: 'hello', runner_id: f.runner, boot_id: 'synthetic-result-read-peer' })));

@@ -1,0 +1,93 @@
+{
+  "records": [
+    {
+      "display_path": ".trellis/tasks/10-03-a-publication-candidate/research/backend-evidence/affected-postgres-46.log",
+      "original_gzip_path": ".trellis/tasks/10-03-a-publication-candidate/research/backend-evidence/affected-postgres-46.log.original.gz",
+      "original_sha256": "34c2bcf7f3364d88ed82662b2a7b9da9c6c5762a11168c0d8351f470674b1be6",
+      "gzip_sha256": "77b6bd9a38945cc51870d646ebcfb172c18fac0a4eb4123663d45720d4942af6",
+      "display_sha256": "da341ec393e5e43634b35142f130b184f53e5f4a2782f694445c1a2250057790",
+      "reason": "Remove new blank line at EOF from display only; exact original decompression verified"
+    },
+    {
+      "display_path": ".trellis/tasks/10-03-a-publication-candidate/research/backend-evidence/default-tests.log",
+      "original_gzip_path": ".trellis/tasks/10-03-a-publication-candidate/research/backend-evidence/default-tests.log.original.gz",
+      "original_sha256": "b33436eeb86fd0e57e1e7440dc207b99abc45f3d781eb34bb06cf515cd5c622b",
+      "gzip_sha256": "7086a6c12c87a8d6b24c5f788a4fe9ebee8d9081d1095ea8a8f8996e3128a818",
+      "display_sha256": "7f78dec04a5598d2e42f3cb2600f701f6434b82c543db04541f5469c01ba9a56",
+      "reason": "Remove new blank line at EOF from display only; exact original decompression verified"
+    },
+    {
+      "display_path": ".trellis/tasks/10-03-a-publication-candidate/research/backend-evidence/direct-read-multi-rule-focused.log",
+      "original_gzip_path": ".trellis/tasks/10-03-a-publication-candidate/research/backend-evidence/direct-read-multi-rule-focused.log.original.gz",
+      "original_sha256": "3bbc270fe1b1f8cf4cbd7e05eee43734015a23f4b02254fe5ac78d27678ae56d",
+      "gzip_sha256": "ab459e6ba7d1851bd26575767925284057ffe29491e51db7d2145848f0d20a09",
+      "display_sha256": "dae311da4d2aac1e969402197c9821368906dce47c32331ccccb551117eadbd6",
+      "reason": "Remove new blank line at EOF from display only; exact original decompression verified"
+    },
+    {
+      "display_path": ".trellis/tasks/10-03-a-publication-candidate/research/backend-evidence/initial-ajv-failure.log",
+      "original_gzip_path": ".trellis/tasks/10-03-a-publication-candidate/research/backend-evidence/initial-ajv-failure.log.original.gz",
+      "original_sha256": "9e871b669f63ed76830af8bd5d76e46e7173e4d60823de878e953f5f793314d5",
+      "gzip_sha256": "13cfdf80500e8b06a66f8d92f72a3ad5de8ef5a1dec4a3f48eb4bc87e79871d4",
+      "display_sha256": "5169ca1c6ef66422def254946d0b14a157a4f8f28ac82aff67c5e289f33dde12",
+      "reason": "Remove new blank line at EOF from display only; exact original decompression verified"
+    },
+    {
+      "display_path": ".trellis/tasks/10-03-a-publication-candidate/research/backend-evidence/initial-assertion-failure.log",
+      "original_gzip_path": ".trellis/tasks/10-03-a-publication-candidate/research/backend-evidence/initial-assertion-failure.log.original.gz",
+      "original_sha256": "ee589536b8393735945ca0fb2ccaa5e9363588975a23c182abfa1be3a3de0b0f",
+      "gzip_sha256": "790bab8a7931d9ba426be9b2340211f15dc4ec2917ef850aa406294d1c497a5c",
+      "display_sha256": "1ba6d8bb4e78c564c6c465df909746a660d22e3869f8f12e298ec62b45b6de58",
+      "reason": "Remove new blank line at EOF from display only; exact original decompression verified"
+    },
+    {
+      "display_path": ".trellis/tasks/10-03-a-publication-candidate/research/backend-evidence/publication-postgres-10.log",
+      "original_gzip_path": ".trellis/tasks/10-03-a-publication-candidate/research/backend-evidence/publication-postgres-10.log.original.gz",
+      "original_sha256": "eddaba36ef771fae0a5f9ffa009a8b77ee48dd16c251571875c5086a072e3752",
+      "gzip_sha256": "67b99302b7a9e93ceebd28b29939ef4655878ec3cbbc0f10da562c6ba9412a17",
+      "display_sha256": "c1f039168fc4201e66aa440a6e8d84e7dd544545678b58d22a2eae0f69d93256",
+      "reason": "Remove new blank line at EOF from display only; exact original decompression verified"
+    },
+    {
+      "display_path": ".trellis/tasks/10-03-a-publication-candidate/research/backend-evidence/publication-postgres-11-final.log",
+      "original_gzip_path": ".trellis/tasks/10-03-a-publication-candidate/research/backend-evidence/publication-postgres-11-final.log.original.gz",
+      "original_sha256": "472e6dbe31dd985d47c0e2067eba7aa75f30981bd564f711a375546487544e38",
+      "gzip_sha256": "8866f1fb85b114a5be93c5dcab86109e59519ea086e8773830ad609e80892f0f",
+      "display_sha256": "699d6e4f02b1ee36955e29c5a88763200a188f06bed60b0d332e3bbd08bacdc1",
+      "reason": "Remove new blank line at EOF from display only; exact original decompression verified"
+    },
+    {
+      "display_path": ".trellis/tasks/10-03-a-publication-candidate/research/backend-evidence/publication-postgres-13-final.log",
+      "original_gzip_path": ".trellis/tasks/10-03-a-publication-candidate/research/backend-evidence/publication-postgres-13-final.log.original.gz",
+      "original_sha256": "0b975d1db329869e7d9f4311a591c35c12352a13acd5e6e61012e2a378f5cd72",
+      "gzip_sha256": "86647015068c4f345d9c5c774aa9c55cadf3ea4c59728b6cab0110e4490f0347",
+      "display_sha256": "7e11be903ee325fb279c986fc3ff1e94c63861375de42daca21c1a3f78d9fdf2",
+      "reason": "Remove new blank line at EOF from display only; exact original decompression verified"
+    },
+    {
+      "display_path": ".trellis/tasks/10-03-a-publication-candidate/research/backend-evidence/shared-fixtures-250.log",
+      "original_gzip_path": ".trellis/tasks/10-03-a-publication-candidate/research/backend-evidence/shared-fixtures-250.log.original.gz",
+      "original_sha256": "da23fc5b8357590f52636f82f3a1ce1a99922ff2ddcdb7ab5c0cd47045ae996a",
+      "gzip_sha256": "87646bffb5df40f35c1a2c2edc5bd71feb1bd68dc807fae258e3f80ce904b3a8",
+      "display_sha256": "951ee39653d6a82a8f421ff85dc72592ddd63e5fac404929f4191b99bb10a278",
+      "reason": "Remove new blank line at EOF from display only; exact original decompression verified"
+    },
+    {
+      "display_path": ".trellis/tasks/10-03-a-publication-candidate/research/evidence/linux-validation-v1/module-initial-redacted.log",
+      "original_gzip_path": ".trellis/tasks/10-03-a-publication-candidate/research/evidence/linux-validation-v1/module-initial-redacted.log.original.gz",
+      "original_sha256": "ac436b2efb741c901c928c98542a5ded94b69199bfa38ef76287c7ce9056276e",
+      "gzip_sha256": "2d14d7b2d3ce7ad63d5d6def6a8d0fcdb7cab3af48afccb5f10d02e4b3d800e2",
+      "display_sha256": "28c5eb9ade86f7d72bbd74561847cccfad10d4ba618151b872c52f33babbaccb",
+      "reason": "Remove new blank line at EOF from display only; exact original decompression verified"
+    },
+    {
+      "display_path": ".trellis/tasks/10-03-a-publication-candidate/research/evidence/root-default-gates.log",
+      "original_gzip_path": ".trellis/tasks/10-03-a-publication-candidate/research/evidence/root-default-gates.log.original.gz",
+      "original_sha256": "70111f9267c167b122d6eba887803a9dd43dff508c2005d081fe50b3c0188696",
+      "gzip_sha256": "787075ae89ff8af67fdb946e463397b21945a487e0b13d9ddc7548f99e3fbd0b",
+      "display_sha256": "c94827519b42f0ea3f0b1e75742ea976906a23d19c45098d2d98468511e82251",
+      "reason": "Remove new blank line at EOF from display only; exact original decompression verified"
+    }
+  ],
+  "scope": "Evidence presentation only; original gate bytes retained in compressed companions, no source/test mutation"
+}

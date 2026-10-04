@@ -81,6 +81,11 @@ const get = (name, auth, parameters = [], querySchema) => ({
 artifacts.set('generated/openapi.json', `${JSON.stringify({
   openapi: '3.1.0', info: { title: 'monos boundary probe', version: '1.0.0' },
   paths: {
+    '/v1/owner/tasks/{task_id}/publication-candidates': { get: get('PublicationCandidatePage','OwnerAuth',['task_id'],'PublicationCandidateQuery') },
+    '/v1/owner/tasks/{task_id}/publication-candidates/{candidate_id}': { get: get('PublicationRecord','OwnerAuth',['task_id','candidate_id']) },
+    '/v1/owner/tasks/{task_id}/publication-candidates/{candidate_id}/findings': { get: get('PublicationFindingPage','OwnerAuth',['task_id','candidate_id'],'PublicationFindingsQuery') },
+    '/v1/owner/tasks/publication/commands': { post: { security: security('OwnerAuth'),requestBody:{required:true,content:{'application/json':{schema:reference('PublicationCommand')}}},responses:responses('PublicationCommandResult') } },
+    '/v1/owner/tasks/{task_id}/publication/commands/{request_id}': { get: get('PublicationCommandResult','OwnerAuth',['task_id','request_id']) },
     '/v1/owner/tasks': { get: get('TaskListPage', 'OwnerAuth', [], 'TaskListQuery') },
     ...Object.fromEntries(['changes','file','diff'].map(mode=>[`/v1/owner/tasks/{task_id}/results/{operation_id}/${mode}`,{get:get('ResultReadResponse','OwnerAuth',['task_id','operation_id'],`ResultRead${mode[0].toUpperCase()+mode.slice(1)}Query`)}])),
     '/v1/owner/tasks/{task_id}/results': { get: get('TaskResultPage', 'OwnerAuth', ['task_id'], 'TaskResultQuery') },

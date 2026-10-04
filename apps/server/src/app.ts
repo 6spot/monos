@@ -1,3 +1,6 @@
+import { PublicationPreparation } from './publication-candidates.ts';
+import { PublicationCandidateReads } from './publication-candidate-reads.ts';
+import { PublicationCommands } from './publication-commands.ts';
 import { ResultReadBroker } from "./result-read-broker.ts";
 import { resultContent } from "./result-content-reads.ts";
 import { TaskReplan } from './task-replan.ts';
@@ -73,6 +76,9 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
   app.addHook('onRequest', async (request, reply) => { if (request.url.startsWith('/v1/owner/')) void reply.header('Cache-Control', 'no-store'); });
   app.get('/health', async () => { await service.db.pool.query('SELECT 1'); return { schema_version: 1, database: 'ready', probe: true }; });
   const resultReads = new ResultReadBroker();
+  const publication = new PublicationPreparation(service.db,service.instanceId);
+  const publicationReads = new PublicationCandidateReads(service.db,service.instanceId);
+  const publicationCommands = new PublicationCommands(service.db);
   const owner = new OwnerCommands(service.db);
   const reads = new OwnerReads(service.db);
   const access = new OwnerAccess(service.db);
@@ -96,6 +102,11 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
     void app.register(fastifyStatic, { root: join(webRoot, 'assets'), prefix: '/assets/', index: false, dotfiles: 'deny', immutable: true, maxAge: '1y' });
     app.get('/', async (_request, reply) => reply.header('Cache-Control', 'no-store').sendFile('index.html', webRoot, { cacheControl: false }));
   }
+  app.post('/v1/owner/tasks/publication/commands', async request => publicationCommands.command(ownerCredential(request),request.body));
+  app.get<{Params:{task_id:string;request_id:string}}>('/v1/owner/tasks/:task_id/publication/commands/:request_id', async request => publicationCommands.receipt(ownerCredential(request),request.params.task_id,request.params.request_id));
+  app.get<{Params:{task_id:string}}>('/v1/owner/tasks/:task_id/publication-candidates', async (request,reply) => {reply.header('X-Content-Type-Options','nosniff');return publicationReads.list(ownerCredential(request),request.params.task_id,request.query);});
+  app.get<{Params:{task_id:string;candidate_id:string}}>('/v1/owner/tasks/:task_id/publication-candidates/:candidate_id', async (request,reply) => {reply.header('X-Content-Type-Options','nosniff');return publicationReads.candidate(ownerCredential(request),request.params.task_id,request.params.candidate_id);});
+  app.get<{Params:{task_id:string;candidate_id:string}}>('/v1/owner/tasks/:task_id/publication-candidates/:candidate_id/findings', async (request,reply) => {reply.header('X-Content-Type-Options','nosniff');return publicationReads.findings(ownerCredential(request),request.params.task_id,request.params.candidate_id,request.query);});
   app.get('/v1/owner/configuration', async (request) => configuration.read(ownerCredential(request)));
   app.get('/v1/owner/todos', async (request) => todos.list(ownerCredential(request), request.query));
   app.post('/v1/owner/task-previews/commands', async (request) => taskPreviews.command(ownerCredential(request), request.body));
@@ -228,6 +239,7 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
     let incarnation: number | undefined;
     let processing = Promise.resolve();
     let polling = false;
+    let publicationSupported = false;
     let queuedMessages = 0;
     let queuedBytes = 0;
     const send = (frame: Frame) => {
@@ -241,7 +253,7 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
     const poll = setInterval(() => {
       if (incarnation === undefined || polling || ws.readyState !== WebSocket.OPEN) return;
       polling = true;
-      void service.pending(runnerId, incarnation).then((frames) => frames.forEach(send)).catch(() => ws.close(4001, 'Control connection unavailable')).finally(() => { polling = false; });
+      void Promise.all([service.pending(runnerId, incarnation),publication.pending(runnerId,incarnation,publicationSupported)]).then((groups) => groups.flat().forEach(send)).catch(() => ws.close(4001, 'Control connection unavailable')).finally(() => { polling = false; });
     }, 250);
     poll.unref();
     const helloDeadline = setTimeout(() => { if (incarnation === undefined) ws.close(4000, 'Version handshake required'); }, 5000);
@@ -258,6 +270,7 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
         if (ws.readyState !== WebSocket.OPEN) return;
         let frame: Frame;
         try { frame = parseFrame(JSON.parse(body)); } catch { ws.close(4000, 'Invalid or incompatible frame'); return; }
+        if(frame.type.startsWith('publication_') && bytes>512*1024){ws.close(4000,'Publication frame exceeds limit');return;}
         if (incarnation === undefined) {
           if (frame.type !== 'hello' || frame.runner_id !== runnerId) { ws.close(4003, 'Invalid Runner identity'); return; }
           incarnation = await service.connect(runnerId, frame.boot_id!);
@@ -270,10 +283,16 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
             case 'ready':
               if (!frame.log_modes?.includes('ordered_v1')) throw new CommandError('unmet_precondition', 'Runner does not support ordered execution logs');
               await service.touch(runnerId, incarnation, true, frame.runtimes);
+              if(ws.readyState===WebSocket.OPEN){publicationSupported=frame.publication_modes?.includes('local_candidate_v1') ?? false;await service.db.pool.query('UPDATE runners SET publication_supported=$3 WHERE id=$1 AND incarnation=$2 AND connection_instance=$4',[runnerId,incarnation,publicationSupported,service.instanceId]);}
               if (ws.readyState === WebSocket.OPEN) resultReads.register(runnerId,incarnation,ws,frame.result_read_modes?.includes("git_objects_v1") ?? false,send); break;
             case 'result_read_result':
               await service.touch(runnerId,incarnation);
               resultReads.response(runnerId,ws,frame); break;
+            case 'publication_result': {
+              await service.touch(runnerId,incarnation);
+              const ack=await publication.finish(runnerId,incarnation,frame.publication_result);
+              if(ack)send({schema_version:1,type:'publication_ack',incarnation,publication_ack:ack});break;
+            }
             case 'heartbeat': await service.touch(runnerId, incarnation); break;
             case 'authorize_dispatch': {
               const grant = await service.authorize(runnerId, incarnation, frame.dispatch_id!);

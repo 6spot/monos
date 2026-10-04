@@ -1,0 +1,106 @@
+=== RUN   TestPublicationCandidateExactTreePrivateExclusionAndReplay
+--- PASS: TestPublicationCandidateExactTreePrivateExclusionAndReplay (0.20s)
+=== RUN   TestPublicationCandidateCrashStagesConcurrentCASAndRescan
+=== RUN   TestPublicationCandidateCrashStagesConcurrentCASAndRescan/intent
+=== RUN   TestPublicationCandidateCrashStagesConcurrentCASAndRescan/commit
+=== RUN   TestPublicationCandidateCrashStagesConcurrentCASAndRescan/ref
+=== RUN   TestPublicationCandidateCrashStagesConcurrentCASAndRescan/manifest
+=== RUN   TestPublicationCandidateCrashStagesConcurrentCASAndRescan/scan
+=== RUN   TestPublicationCandidateCrashStagesConcurrentCASAndRescan/result
+--- PASS: TestPublicationCandidateCrashStagesConcurrentCASAndRescan (1.58s)
+    --- PASS: TestPublicationCandidateCrashStagesConcurrentCASAndRescan/intent (0.26s)
+    --- PASS: TestPublicationCandidateCrashStagesConcurrentCASAndRescan/commit (0.27s)
+    --- PASS: TestPublicationCandidateCrashStagesConcurrentCASAndRescan/ref (0.27s)
+    --- PASS: TestPublicationCandidateCrashStagesConcurrentCASAndRescan/manifest (0.28s)
+    --- PASS: TestPublicationCandidateCrashStagesConcurrentCASAndRescan/scan (0.29s)
+    --- PASS: TestPublicationCandidateCrashStagesConcurrentCASAndRescan/result (0.22s)
+=== RUN   TestPublicationCandidateConflictingRefSourceAndIntent
+--- PASS: TestPublicationCandidateConflictingRefSourceAndIntent (0.23s)
+=== RUN   TestPublicationNoChangeAndIncompleteRetryPreservesCandidate
+--- PASS: TestPublicationNoChangeAndIncompleteRetryPreservesCandidate (0.52s)
+=== RUN   TestPublicationPagesRedactionDigestsAnd64Bound
+--- PASS: TestPublicationPagesRedactionDigestsAnd64Bound (0.21s)
+=== RUN   TestPublicationPinOriginalCompletedCacheProofAndTamper
+=== RUN   TestPublicationPinOriginalCompletedCacheProofAndTamper/valid
+=== RUN   TestPublicationPinOriginalCompletedCacheProofAndTamper/digest
+=== RUN   TestPublicationPinOriginalCompletedCacheProofAndTamper/repository
+=== RUN   TestPublicationPinOriginalCompletedCacheProofAndTamper/incomplete
+=== RUN   TestPublicationPinOriginalCompletedCacheProofAndTamper/cache-ref
+=== RUN   TestPublicationPinOriginalCompletedCacheProofAndTamper/metadata
+=== RUN   TestPublicationPinOriginalCompletedCacheProofAndTamper/pin-symlink
+=== RUN   TestPublicationPinOriginalCompletedCacheProofAndTamper/object-symlink
+=== RUN   TestPublicationPinOriginalCompletedCacheProofAndTamper/alternate
+=== RUN   TestPublicationPinOriginalCompletedCacheProofAndTamper/writable-parent
+--- PASS: TestPublicationPinOriginalCompletedCacheProofAndTamper (0.80s)
+    --- PASS: TestPublicationPinOriginalCompletedCacheProofAndTamper/valid (0.08s)
+    --- PASS: TestPublicationPinOriginalCompletedCacheProofAndTamper/digest (0.08s)
+    --- PASS: TestPublicationPinOriginalCompletedCacheProofAndTamper/repository (0.08s)
+    --- PASS: TestPublicationPinOriginalCompletedCacheProofAndTamper/incomplete (0.08s)
+    --- PASS: TestPublicationPinOriginalCompletedCacheProofAndTamper/cache-ref (0.09s)
+    --- PASS: TestPublicationPinOriginalCompletedCacheProofAndTamper/metadata (0.08s)
+    --- PASS: TestPublicationPinOriginalCompletedCacheProofAndTamper/pin-symlink (0.08s)
+    --- PASS: TestPublicationPinOriginalCompletedCacheProofAndTamper/object-symlink (0.08s)
+    --- PASS: TestPublicationPinOriginalCompletedCacheProofAndTamper/alternate (0.08s)
+    --- PASS: TestPublicationPinOriginalCompletedCacheProofAndTamper/writable-parent (0.08s)
+=== RUN   TestPublicationPublishedParentSeamRejectsPreparedOrUncertainEvidence
+--- PASS: TestPublicationPublishedParentSeamRejectsPreparedOrUncertainEvidence (0.13s)
+=== RUN   TestPublicationReconnectReplayAckLossAndJournalPermissions
+--- PASS: TestPublicationReconnectReplayAckLossAndJournalPermissions (0.11s)
+=== RUN   TestPublicationNativeRetainedPermissionFixture
+    publication_candidate_test.go:457: explicit isolated permissions evidence directory required
+--- SKIP: TestPublicationNativeRetainedPermissionFixture (0.00s)
+=== RUN   TestPublicationCandidateIntegratedTargetModesAndUnintegratedRejection
+--- PASS: TestPublicationCandidateIntegratedTargetModesAndUnintegratedRejection (0.20s)
+=== RUN   TestPublicationEncodedFindingPagesAndEvidenceOverflow
+--- PASS: TestPublicationEncodedFindingPagesAndEvidenceOverflow (1.36s)
+=== RUN   TestPublicationSHA256ObjectFormatCASReplay
+--- PASS: TestPublicationSHA256ObjectFormatCASReplay (0.13s)
+=== RUN   TestPublicationMultiRuleFindingOrdinals
+--- PASS: TestPublicationMultiRuleFindingOrdinals (0.22s)
+=== RUN   TestPublicationRangeDeletedCredentialAndAllParents
+--- PASS: TestPublicationRangeDeletedCredentialAndAllParents (0.11s)
+=== RUN   TestPublicationIgnoreExactVersionNegationAndWorkflowDeletion
+--- PASS: TestPublicationIgnoreExactVersionNegationAndWorkflowDeletion (0.17s)
+=== RUN   TestPublicationStreamBoundariesAndProcessingLimits
+=== RUN   TestPublicationStreamBoundariesAndProcessingLimits/paths
+=== RUN   TestPublicationStreamBoundariesAndProcessingLimits/occurrences
+=== RUN   TestPublicationStreamBoundariesAndProcessingLimits/blob
+=== RUN   TestPublicationStreamBoundariesAndProcessingLimits/aggregate
+=== RUN   TestPublicationStreamBoundariesAndProcessingLimits/findings
+=== RUN   TestPublicationStreamBoundariesAndProcessingLimits/evidence
+--- PASS: TestPublicationStreamBoundariesAndProcessingLimits (0.22s)
+    --- PASS: TestPublicationStreamBoundariesAndProcessingLimits/paths (0.00s)
+    --- PASS: TestPublicationStreamBoundariesAndProcessingLimits/occurrences (0.03s)
+    --- PASS: TestPublicationStreamBoundariesAndProcessingLimits/blob (0.02s)
+    --- PASS: TestPublicationStreamBoundariesAndProcessingLimits/aggregate (0.02s)
+    --- PASS: TestPublicationStreamBoundariesAndProcessingLimits/findings (0.03s)
+    --- PASS: TestPublicationStreamBoundariesAndProcessingLimits/evidence (0.02s)
+=== RUN   TestPublicationUnsupportedIgnoreAndInheritedFinalContent
+--- PASS: TestPublicationUnsupportedIgnoreAndInheritedFinalContent (0.09s)
+=== RUN   TestPublicationKnownExposureCopyAndSensitiveFilenameRedaction
+--- PASS: TestPublicationKnownExposureCopyAndSensitiveFilenameRedaction (0.08s)
+=== RUN   TestPublicationFiniteRuleCorpusStreamedWholeBlobDigest
+=== RUN   TestPublicationFiniteRuleCorpusStreamedWholeBlobDigest/pem_private_key----
+=== RUN   TestPublicationFiniteRuleCorpusStreamedWholeBlobDigest/pem_private_key----#01
+=== RUN   TestPublicationFiniteRuleCorpusStreamedWholeBlobDigest/pem_private_key----#02
+=== RUN   TestPublicationFiniteRuleCorpusStreamedWholeBlobDigest/pem_private_key----#03
+=== RUN   TestPublicationFiniteRuleCorpusStreamedWholeBlobDigest/github_classic_tokenghp_
+=== RUN   TestPublicationFiniteRuleCorpusStreamedWholeBlobDigest/github_classic_tokengho_
+=== RUN   TestPublicationFiniteRuleCorpusStreamedWholeBlobDigest/github_classic_tokenghr_
+=== RUN   TestPublicationFiniteRuleCorpusStreamedWholeBlobDigest/github_fine_grained_tokengith
+=== RUN   TestPublicationFiniteRuleCorpusStreamedWholeBlobDigest/aws_access_keyAKIA
+=== RUN   TestPublicationFiniteRuleCorpusStreamedWholeBlobDigest/aws_access_keyASIA
+--- PASS: TestPublicationFiniteRuleCorpusStreamedWholeBlobDigest (0.06s)
+    --- PASS: TestPublicationFiniteRuleCorpusStreamedWholeBlobDigest/pem_private_key---- (0.00s)
+    --- PASS: TestPublicationFiniteRuleCorpusStreamedWholeBlobDigest/pem_private_key----#01 (0.00s)
+    --- PASS: TestPublicationFiniteRuleCorpusStreamedWholeBlobDigest/pem_private_key----#02 (0.00s)
+    --- PASS: TestPublicationFiniteRuleCorpusStreamedWholeBlobDigest/pem_private_key----#03 (0.00s)
+    --- PASS: TestPublicationFiniteRuleCorpusStreamedWholeBlobDigest/github_classic_tokenghp_ (0.00s)
+    --- PASS: TestPublicationFiniteRuleCorpusStreamedWholeBlobDigest/github_classic_tokengho_ (0.00s)
+    --- PASS: TestPublicationFiniteRuleCorpusStreamedWholeBlobDigest/github_classic_tokenghr_ (0.00s)
+    --- PASS: TestPublicationFiniteRuleCorpusStreamedWholeBlobDigest/github_fine_grained_tokengith (0.00s)
+    --- PASS: TestPublicationFiniteRuleCorpusStreamedWholeBlobDigest/aws_access_keyAKIA (0.00s)
+    --- PASS: TestPublicationFiniteRuleCorpusStreamedWholeBlobDigest/aws_access_keyASIA (0.00s)
+=== RUN   TestPublicationNonUTF8PathCoverageAndHistoricalPublicCopyDeletion
+--- PASS: TestPublicationNonUTF8PathCoverageAndHistoricalPublicCopyDeletion (0.13s)
+PASS

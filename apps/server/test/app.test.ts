@@ -133,6 +133,9 @@ it('does not register a Ready socket after close or replace a newer incarnation 
   const { ResultReadBroker } = await import('../src/result-read-broker.ts');
   const register = vi.spyOn(ResultReadBroker.prototype, 'register');
   const db = database('postgres://unused:unused@127.0.0.1:1/unused');
+  const capability=vi.spyOn(db.pool,'query').mockImplementation((async()=>({rows:[],rowCount:1,command:'UPDATE',fields:[],oid:0})) as typeof db.pool.query);
+  const {PublicationPreparation}=await import('../src/publication-candidates.ts');
+  const publicationPending=vi.spyOn(PublicationPreparation.prototype,'pending').mockResolvedValue([]);
   const service = new BoundaryService(db, { signingKey: 'test-only-signing-key-never-for-deployment' });
   vi.spyOn(service, 'authenticateRunner').mockResolvedValue('runner-test');
   vi.spyOn(service, 'connect').mockResolvedValueOnce(1).mockResolvedValueOnce(2);
@@ -154,5 +157,5 @@ it('does not register a Ready socket after close or replace a newer incarnation 
     const closed=once(old,'close');old.close();await closed;
     await connect(2);await expect.poll(()=>register.mock.calls.length).toBe(1);expect(register.mock.calls[0]?.[1]).toBe(2);
     release();await new Promise(resolve=>setImmediate(resolve));expect(register).toHaveBeenCalledTimes(1);
-  } finally {release();sockets.forEach(s=>s.terminate());await app.close();await db.pool.end();register.mockRestore();}
+  } finally {release();sockets.forEach(s=>s.terminate());await app.close();await db.pool.end();register.mockRestore();capability.mockRestore();publicationPending.mockRestore();}
 });

@@ -1,0 +1,57 @@
+{
+  "service_uid": 997,
+  "execution_uid": 1000,
+  "files": [
+    {
+      "kind": "export",
+      "uid": 997,
+      "mode": "0o700",
+      "denial_exit_codes": {
+        "-r": 1,
+        "-w": 1
+      }
+    },
+    {
+      "kind": "journal",
+      "uid": 997,
+      "mode": "0o700",
+      "denial_exit_codes": {
+        "-r": 1,
+        "-w": 1
+      }
+    },
+    {
+      "kind": "intent_path",
+      "uid": 997,
+      "mode": "0o600",
+      "denial_exit_codes": {
+        "-r": 1,
+        "-w": 1
+      }
+    },
+    {
+      "kind": "pages_path",
+      "uid": 997,
+      "mode": "0o600",
+      "denial_exit_codes": {
+        "-r": 1,
+        "-w": 1
+      }
+    },
+    {
+      "kind": "candidate_path",
+      "uid": 997,
+      "mode": "0o600",
+      "denial_exit_codes": {
+        "-r": 1,
+        "-w": 1
+      }
+    }
+  ],
+  "binaries": {
+    "monos": "/root/monos-publication-validation-c908d4c9a87847fa9545a790b68c6a99/out/monos: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=3fe038fd8ab5c9479aec347c4139e80471731e48, for GNU/Linux 3.2.0, with debug_info, not stripped",
+    "monos-runner": "/root/monos-publication-validation-c908d4c9a87847fa9545a790b68c6a99/out/monos-runner: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=f8d589050e8326d169cb1ee1b5c234fb9ed1e92c, for GNU/Linux 3.2.0, with debug_info, not stripped",
+    "monos-probe-launch": "/root/monos-publication-validation-c908d4c9a87847fa9545a790b68c6a99/out/monos-probe-launch: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, Go BuildID=wgk3KKYY9ORgiSVURDw_/qT_FEwll6RUAGT0eUBa0/fImqyuztfhRrPx3_6v2q/eYSctLi1R-ob1a1x-jk8, BuildID[sha1]=5b0e448ac2ff9cccfb2fc9178553d0387d53c497, with debug_info, not stripped",
+    "monos-probe-exec": "/root/monos-publication-validation-c908d4c9a87847fa9545a790b68c6a99/out/monos-probe-exec: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, Go BuildID=LQb3ul5BlsY8kQ6ap1Y1/MJusSGfkGw7jH0OWPnTh/X8TarqbGeYPJhp4Q4fvG/v093Ug1B75GbG21-cH_k, BuildID[sha1]=998ebec9b2b49a6cfebbcc70ef6f1ca928fd1347, with debug_info, not stripped"
+  }
+}

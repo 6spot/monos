@@ -1,4 +1,5 @@
 import { ResultInspector } from "./result-inspector.tsx";
+import { PublicationCandidates } from "./publication-candidate.tsx";
 import { useState } from "react";
 import type {
   ArtifactPage,
@@ -279,6 +280,7 @@ export function TaskResults(props: TaskViewProps) {
           {r.git && (
             <ResultInspector key={`${props.commands.sessionId}:${r.manifest.operation_id}:${r.git.identity_digest}`} props={props} result={r} />
           )}
+          {r.git && <PublicationCandidates key={`publication:${props.commands.sessionId}:${r.manifest.operation_id}:${r.git.identity_digest}`} props={props} result={r} />}
         </article>
       ))}
       <More

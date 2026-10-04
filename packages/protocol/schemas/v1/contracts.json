@@ -1840,7 +1840,10 @@
             "operation_ack",
             "error",
             "result_read",
-            "result_read_result"
+            "result_read_result",
+            "publication_prepare",
+            "publication_result",
+            "publication_ack"
           ]
         },
         "runner_id": {
@@ -1930,6 +1933,27 @@
           },
           "maxItems": 1,
           "uniqueItems": true
+        },
+        "publication_modes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "local_candidate_v1"
+            ]
+          },
+          "maxItems": 1,
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "publication_prepare": {
+          "$ref": "#/definitions/PublicationPrepareRequest"
+        },
+        "publication_result": {
+          "$ref": "#/definitions/PublicationResultPage"
+        },
+        "publication_ack": {
+          "$ref": "#/definitions/PublicationAck"
         }
       },
       "allOf": [
@@ -2006,7 +2030,8 @@
               "incarnation": {},
               "runtimes": {},
               "log_modes": {},
-              "result_read_modes": {}
+              "result_read_modes": {},
+              "publication_modes": {}
             },
             "additionalProperties": false,
             "type": "object"
@@ -2363,6 +2388,84 @@
               "result_read_result"
             ]
           }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "const": "publication_prepare"
+              }
+            }
+          },
+          "then": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "schema_version": {},
+              "type": {},
+              "incarnation": {},
+              "publication_prepare": {}
+            },
+            "required": [
+              "schema_version",
+              "type",
+              "incarnation",
+              "publication_prepare"
+            ]
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "const": "publication_result"
+              }
+            }
+          },
+          "then": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "schema_version": {},
+              "type": {},
+              "incarnation": {},
+              "publication_result": {}
+            },
+            "required": [
+              "schema_version",
+              "type",
+              "incarnation",
+              "publication_result"
+            ]
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "const": "publication_ack"
+              }
+            }
+          },
+          "then": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "schema_version": {},
+              "type": {},
+              "incarnation": {},
+              "publication_ack": {}
+            },
+            "required": [
+              "schema_version",
+              "type",
+              "incarnation",
+              "publication_ack"
+            ]
+          }
         }
       ]
     },
@@ -2436,7 +2539,8 @@
         "apply_specification_revision",
         "apply_rework",
         "accept_delivery",
-        "publish_replan"
+        "publish_replan",
+        "override_publication_findings"
       ]
     },
     "OwnerCommand": {
@@ -6404,7 +6508,7 @@
       "type": "string",
       "minLength": 1,
       "maxLength": 65536,
-      "pattern": "[^ \\t\\n\\r\\f\\v\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff]",
+      "pattern": "[^ \\t\\n\\r\\f\\v   -     　﻿]",
       "allOf": [
         {
           "pattern": "^[^\\x00]*$"
@@ -6444,7 +6548,7 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 4096,
-            "pattern": "[^ \\t\\n\\r\\f\\v\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff]",
+            "pattern": "[^ \\t\\n\\r\\f\\v   -     　﻿]",
             "allOf": [
               {
                 "pattern": "^[^\\x00]*$"
@@ -6459,7 +6563,7 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 4096,
-            "pattern": "[^ \\t\\n\\r\\f\\v\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff]",
+            "pattern": "[^ \\t\\n\\r\\f\\v   -     　﻿]",
             "allOf": [
               {
                 "pattern": "^[^\\x00]*$"
@@ -11567,7 +11671,7 @@
         },
         {
           "if": {
-            "pattern": "[\r\n\u2028\u2029]$"
+            "pattern": "[\r\n  ]$"
           },
           "then": {},
           "else": {
@@ -12207,6 +12311,1311 @@
             }
           }
         }
+      ]
+    },
+    "PublicationEffectiveBasis": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "task_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "specification_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "plan_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "completion_operation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "completion_manifest_digest": {
+          "$ref": "#/definitions/SHA256"
+        }
+      },
+      "required": [
+        "task_id",
+        "specification_id",
+        "plan_id",
+        "completion_operation_id",
+        "completion_manifest_digest"
+      ]
+    },
+    "PublicationParent": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "materialization",
+            "target",
+            "published"
+          ]
+        },
+        "commit": {
+          "$ref": "#/definitions/GitOID"
+        },
+        "repository_identity": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        },
+        "observation_operation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "workspace": {
+          "$ref": "#/definitions/WorkspaceDescriptor"
+        },
+        "outcome": {
+          "$ref": "#/definitions/EffectResult"
+        },
+        "observation_digest": {
+          "$ref": "#/definitions/SHA256"
+        }
+      },
+      "required": [
+        "kind",
+        "commit",
+        "repository_identity",
+        "observation_operation_id",
+        "workspace",
+        "outcome",
+        "observation_digest"
+      ]
+    },
+    "PublicationConstruction": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "construction_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "candidate_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "source_digest": {
+          "$ref": "#/definitions/SHA256"
+        },
+        "repository_identity": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        },
+        "target_branch": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        },
+        "parents": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PublicationParent"
+          },
+          "maxItems": 2,
+          "minItems": 1
+        },
+        "author_name": {
+          "type": "string",
+          "const": "monos"
+        },
+        "author_email": {
+          "type": "string",
+          "const": "monos@localhost"
+        },
+        "timestamp": {
+          "type": "string",
+          "pattern": "^[0-9]{10} \\+0000$"
+        },
+        "message": {
+          "type": "string",
+          "pattern": "^monos Task [0-9a-f-]{36} result v1$"
+        }
+      },
+      "required": [
+        "schema_version",
+        "construction_id",
+        "candidate_id",
+        "source_digest",
+        "repository_identity",
+        "target_branch",
+        "parents",
+        "author_name",
+        "author_email",
+        "timestamp",
+        "message"
+      ]
+    },
+    "PublicationScanConfiguration": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "policy_version": {
+          "type": "string",
+          "const": "local_publication_v1"
+        },
+        "rule_version": {
+          "type": "string",
+          "const": "credential_rules_v1"
+        },
+        "traversal_version": {
+          "type": "string",
+          "const": "all_parents_final_tree_v1"
+        },
+        "local_blob_limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 52428800
+        },
+        "provider_blob_limit": {
+          "type": "integer",
+          "const": 104857600
+        },
+        "max_commits": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 256
+        },
+        "max_paths": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8192
+        },
+        "max_versions": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 32768
+        },
+        "max_blob_bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 134217728
+        },
+        "max_aggregate_bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 536870912
+        },
+        "max_findings": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4096
+        },
+        "max_evidence_bytes": {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 8388608
+        },
+        "deadline_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 120
+        },
+        "workflow_write": {
+          "type": "string",
+          "enum": [
+            "unknown",
+            "denied",
+            "allowed"
+          ]
+        },
+        "permission_fingerprint": {
+          "$ref": "#/definitions/SHA256"
+        }
+      },
+      "required": [
+        "schema_version",
+        "policy_version",
+        "rule_version",
+        "traversal_version",
+        "local_blob_limit",
+        "provider_blob_limit",
+        "max_commits",
+        "max_paths",
+        "max_versions",
+        "max_blob_bytes",
+        "max_aggregate_bytes",
+        "max_findings",
+        "max_evidence_bytes",
+        "deadline_seconds",
+        "workflow_write",
+        "permission_fingerprint"
+      ]
+    },
+    "PublicationPrepareRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "operation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "scan_run_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "source": {
+          "$ref": "#/definitions/ResultReadIdentity"
+        },
+        "source_digest": {
+          "$ref": "#/definitions/SHA256"
+        },
+        "effective_basis": {
+          "$ref": "#/definitions/PublicationEffectiveBasis"
+        },
+        "effective_basis_digest": {
+          "$ref": "#/definitions/SHA256"
+        },
+        "construction": {
+          "$ref": "#/definitions/PublicationConstruction"
+        },
+        "construction_digest": {
+          "$ref": "#/definitions/SHA256"
+        },
+        "configuration": {
+          "$ref": "#/definitions/PublicationScanConfiguration"
+        },
+        "configuration_digest": {
+          "$ref": "#/definitions/SHA256"
+        }
+      },
+      "required": [
+        "schema_version",
+        "operation_id",
+        "scan_run_id",
+        "source",
+        "source_digest",
+        "effective_basis",
+        "effective_basis_digest",
+        "construction",
+        "construction_digest",
+        "configuration",
+        "configuration_digest"
+      ]
+    },
+    "PublicationCandidateManifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "candidate_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "construction_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "construction_digest": {
+          "$ref": "#/definitions/SHA256"
+        },
+        "source_digest": {
+          "$ref": "#/definitions/SHA256"
+        },
+        "head": {
+          "$ref": "#/definitions/GitOID"
+        },
+        "tree": {
+          "$ref": "#/definitions/GitOID"
+        },
+        "parents": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GitOID"
+          },
+          "maxItems": 2,
+          "minItems": 1
+        }
+      },
+      "required": [
+        "schema_version",
+        "candidate_id",
+        "construction_id",
+        "construction_digest",
+        "source_digest",
+        "head",
+        "tree",
+        "parents"
+      ]
+    },
+    "PublicationFinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "finding_id": {
+          "$ref": "#/definitions/SHA256"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "tracked_ignore",
+            "publication_policy_size",
+            "provider_hard_size",
+            "credential_pattern",
+            "published_credential",
+            "workflow_permission"
+          ]
+        },
+        "rule_id": {
+          "type": "string",
+          "enum": [
+            "tracked_ignore",
+            "policy_blob_size",
+            "provider_blob_size",
+            "workflow_permission",
+            "pem_private_key",
+            "github_classic_token",
+            "github_fine_grained_token",
+            "aws_access_key"
+          ]
+        },
+        "scope": {
+          "type": "string",
+          "enum": [
+            "publication_commit",
+            "final_tree"
+          ]
+        },
+        "commit": {
+          "$ref": "#/definitions/GitOID"
+        },
+        "path": {
+          "$ref": "#/definitions/ResultPath"
+        },
+        "blob": {
+          "$ref": "#/definitions/GitOID"
+        },
+        "content_digest": {
+          "$ref": "#/definitions/SHA256"
+        },
+        "size": {
+          "$ref": "#/definitions/Counter"
+        },
+        "limit": {
+          "$ref": "#/definitions/Counter"
+        },
+        "baseline_commit": {
+          "$ref": "#/definitions/GitOID"
+        },
+        "override_eligible": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string",
+          "enum": [
+            "Tracked file matches ignore rules.",
+            "Blob exceeds local publication policy.",
+            "Blob exceeds provider hard limit.",
+            "Credential pattern matched; value redacted.",
+            "Previously published credential exposure requires remediation.",
+            "Workflow write permission is not verified."
+          ]
+        },
+        "path_redacted": {
+          "type": "boolean"
+        },
+        "baseline_path": {
+          "$ref": "#/definitions/ResultPath"
+        },
+        "baseline_path_redacted": {
+          "type": "boolean"
+        },
+        "occurrence_ordinal": {
+          "$ref": "#/definitions/Counter"
+        }
+      },
+      "required": [
+        "finding_id",
+        "kind",
+        "rule_id",
+        "scope",
+        "commit",
+        "path",
+        "override_eligible",
+        "message",
+        "occurrence_ordinal",
+        "path_redacted"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "provider_hard_size",
+                  "published_credential",
+                  "workflow_permission"
+                ]
+              }
+            }
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "override_eligible": {
+                "const": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "const": "published_credential"
+              }
+            }
+          },
+          "then": {
+            "type": "object",
+            "required": [
+              "baseline_commit",
+              "blob",
+              "content_digest",
+              "baseline_path",
+              "baseline_path_redacted"
+            ],
+            "properties": {
+              "baseline_commit": {},
+              "blob": {},
+              "content_digest": {},
+              "baseline_path": {},
+              "baseline_path_redacted": {}
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "publication_policy_size",
+                  "provider_hard_size"
+                ]
+              }
+            }
+          },
+          "then": {
+            "type": "object",
+            "required": [
+              "size",
+              "limit",
+              "blob"
+            ],
+            "properties": {
+              "size": {},
+              "limit": {},
+              "blob": {}
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "const": "credential_pattern"
+              }
+            }
+          },
+          "then": {
+            "type": "object",
+            "required": [
+              "blob",
+              "content_digest"
+            ],
+            "properties": {
+              "blob": {},
+              "content_digest": {}
+            }
+          }
+        }
+      ],
+      "dependencies": {
+        "baseline_path": [
+          "baseline_path_redacted"
+        ],
+        "baseline_path_redacted": [
+          "baseline_path"
+        ]
+      }
+    },
+    "PublicationCoverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "commits": {
+          "$ref": "#/definitions/Counter"
+        },
+        "paths": {
+          "$ref": "#/definitions/Counter"
+        },
+        "versions": {
+          "$ref": "#/definitions/Counter"
+        },
+        "unique_blob_bytes": {
+          "$ref": "#/definitions/Counter"
+        }
+      },
+      "required": [
+        "commits",
+        "paths",
+        "versions",
+        "unique_blob_bytes"
+      ]
+    },
+    "PublicationScanSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "scan_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "candidate_manifest_digest": {
+          "$ref": "#/definitions/SHA256"
+        },
+        "configuration_digest": {
+          "$ref": "#/definitions/SHA256"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "complete",
+            "incomplete"
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "enum": [
+            "commit_limit",
+            "path_limit",
+            "version_limit",
+            "blob_limit",
+            "aggregate_limit",
+            "findings_limit",
+            "evidence_limit",
+            "timeout",
+            "unsupported_path",
+            "unsupported_ignore",
+            "missing_object",
+            "unverified_parent",
+            "retained_unavailable"
+          ]
+        },
+        "coverage": {
+          "$ref": "#/definitions/PublicationCoverage"
+        },
+        "findings_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4096
+        },
+        "findings_bytes": {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 8388608
+        },
+        "findings_digest": {
+          "$ref": "#/definitions/SHA256"
+        }
+      },
+      "required": [
+        "schema_version",
+        "scan_id",
+        "candidate_manifest_digest",
+        "configuration_digest",
+        "status",
+        "coverage",
+        "findings_count",
+        "findings_bytes",
+        "findings_digest"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "const": "incomplete"
+              }
+            }
+          },
+          "then": {
+            "type": "object",
+            "required": [
+              "reason"
+            ],
+            "properties": {
+              "reason": {}
+            }
+          },
+          "else": {
+            "type": "object",
+            "properties": {
+              "reason": false
+            }
+          }
+        }
+      ]
+    },
+    "PublicationResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "operation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "request_digest": {
+          "$ref": "#/definitions/SHA256"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "prepared",
+            "not_applicable",
+            "unavailable",
+            "reconciliation_required"
+          ]
+        },
+        "candidate": {
+          "$ref": "#/definitions/PublicationCandidateManifest"
+        },
+        "candidate_manifest_digest": {
+          "$ref": "#/definitions/SHA256"
+        },
+        "scan": {
+          "$ref": "#/definitions/PublicationScanSummary"
+        },
+        "scan_digest": {
+          "$ref": "#/definitions/SHA256"
+        },
+        "reason": {
+          "type": "string",
+          "enum": [
+            "no_change",
+            "retained_unavailable",
+            "identity_mismatch",
+            "unverified_parent",
+            "conflicting_candidate",
+            "timeout"
+          ]
+        }
+      },
+      "required": [
+        "schema_version",
+        "operation_id",
+        "request_digest",
+        "status"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "const": "prepared"
+              }
+            }
+          },
+          "then": {
+            "type": "object",
+            "required": [
+              "candidate",
+              "candidate_manifest_digest",
+              "scan",
+              "scan_digest"
+            ],
+            "properties": {
+              "reason": false,
+              "candidate": {},
+              "candidate_manifest_digest": {},
+              "scan": {},
+              "scan_digest": {}
+            }
+          },
+          "else": {
+            "type": "object",
+            "required": [
+              "reason"
+            ],
+            "properties": {
+              "candidate": false,
+              "candidate_manifest_digest": false,
+              "scan": false,
+              "scan_digest": false,
+              "reason": {}
+            }
+          }
+        }
+      ]
+    },
+    "PublicationResultPage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "result": {
+          "$ref": "#/definitions/PublicationResult"
+        },
+        "page_index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4095
+        },
+        "page_count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4096
+        },
+        "findings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PublicationFinding"
+          },
+          "maxItems": 64,
+          "minItems": 0
+        },
+        "page_digest": {
+          "$ref": "#/definitions/SHA256"
+        }
+      },
+      "required": [
+        "schema_version",
+        "result",
+        "page_index",
+        "page_count",
+        "findings",
+        "page_digest"
+      ]
+    },
+    "PublicationAck": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "operation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "request_digest": {
+          "$ref": "#/definitions/SHA256"
+        },
+        "result_digest": {
+          "$ref": "#/definitions/SHA256"
+        }
+      },
+      "required": [
+        "schema_version",
+        "operation_id",
+        "request_digest",
+        "result_digest"
+      ]
+    },
+    "PublicationRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "operation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "request_digest": {
+          "$ref": "#/definitions/SHA256"
+        },
+        "source": {
+          "$ref": "#/definitions/ResultReadIdentity"
+        },
+        "source_digest": {
+          "$ref": "#/definitions/SHA256"
+        },
+        "effective_basis": {
+          "$ref": "#/definitions/PublicationEffectiveBasis"
+        },
+        "effective_basis_digest": {
+          "$ref": "#/definitions/SHA256"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "pending",
+            "preparing",
+            "offline",
+            "unsupported",
+            "prepared",
+            "not_applicable",
+            "unavailable",
+            "reconciliation_required"
+          ]
+        },
+        "candidate": {
+          "$ref": "#/definitions/PublicationCandidateManifest"
+        },
+        "candidate_manifest_digest": {
+          "$ref": "#/definitions/SHA256"
+        },
+        "scan": {
+          "$ref": "#/definitions/PublicationScanSummary"
+        },
+        "scan_digest": {
+          "$ref": "#/definitions/SHA256"
+        },
+        "current": {
+          "type": "boolean"
+        },
+        "scan_applicable": {
+          "type": "boolean"
+        },
+        "retry_allowed": {
+          "type": "boolean"
+        },
+        "override_allowed": {
+          "type": "boolean"
+        },
+        "override_receipt_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Id"
+          },
+          "maxItems": 4096,
+          "minItems": 0
+        },
+        "remote_preparation": {
+          "type": "string",
+          "enum": [
+            "automatic",
+            "after_acceptance"
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "known_public_exposure_count": {
+          "$ref": "#/definitions/Counter"
+        }
+      },
+      "required": [
+        "operation_id",
+        "request_digest",
+        "source",
+        "source_digest",
+        "effective_basis",
+        "effective_basis_digest",
+        "status",
+        "current",
+        "scan_applicable",
+        "retry_allowed",
+        "override_allowed",
+        "override_receipt_ids",
+        "remote_preparation",
+        "known_public_exposure_count"
+      ]
+    },
+    "PublicationCandidatePage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "task_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PublicationRecord"
+          },
+          "maxItems": 32,
+          "minItems": 0
+        },
+        "next_cursor": {
+          "$ref": "#/definitions/TaskListCursor"
+        }
+      },
+      "required": [
+        "schema_version",
+        "task_id",
+        "items"
+      ]
+    },
+    "PublicationCandidateQuery": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "source_operation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "cursor": {
+          "$ref": "#/definitions/TaskListCursor"
+        }
+      },
+      "required": []
+    },
+    "PublicationFindingsQuery": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "scan_digest": {
+          "$ref": "#/definitions/SHA256"
+        },
+        "cursor": {
+          "$ref": "#/definitions/TaskListCursor"
+        }
+      },
+      "required": [
+        "scan_digest"
+      ]
+    },
+    "PublicationFindingPage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "task_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "candidate_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "scan_digest": {
+          "$ref": "#/definitions/SHA256"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PublicationFinding"
+          },
+          "maxItems": 64,
+          "minItems": 0
+        },
+        "next_cursor": {
+          "$ref": "#/definitions/TaskListCursor"
+        }
+      },
+      "required": [
+        "schema_version",
+        "task_id",
+        "candidate_id",
+        "scan_digest",
+        "items"
+      ]
+    },
+    "PublicationCommand": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "task_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "request_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "name": {
+          "type": "string",
+          "enum": [
+            "retry_publication_preparation",
+            "prepare_publication_override",
+            "confirm_publication_override",
+            "override_publication_findings"
+          ]
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "operation_id": {
+              "$ref": "#/definitions/Id"
+            },
+            "operation_digest": {
+              "$ref": "#/definitions/SHA256"
+            },
+            "candidate_id": {
+              "$ref": "#/definitions/Id"
+            },
+            "candidate_manifest_digest": {
+              "$ref": "#/definitions/SHA256"
+            },
+            "effective_basis_digest": {
+              "$ref": "#/definitions/SHA256"
+            },
+            "scan_digest": {
+              "$ref": "#/definitions/SHA256"
+            },
+            "finding_ids": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/SHA256"
+              },
+              "maxItems": 64,
+              "minItems": 1,
+              "uniqueItems": true
+            },
+            "proposal_id": {
+              "$ref": "#/definitions/Id"
+            },
+            "content_digest": {
+              "$ref": "#/definitions/SHA256"
+            },
+            "confirmation_id": {
+              "$ref": "#/definitions/Id"
+            }
+          },
+          "required": []
+        }
+      },
+      "required": [
+        "schema_version",
+        "task_id",
+        "request_id",
+        "name",
+        "payload"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "const": "retry_publication_preparation"
+              }
+            }
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "payload": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "operation_id": {
+                    "$ref": "#/definitions/Id"
+                  },
+                  "operation_digest": {
+                    "$ref": "#/definitions/SHA256"
+                  }
+                },
+                "required": [
+                  "operation_id",
+                  "operation_digest"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "const": "prepare_publication_override"
+              }
+            }
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "payload": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "candidate_id": {
+                    "$ref": "#/definitions/Id"
+                  },
+                  "candidate_manifest_digest": {
+                    "$ref": "#/definitions/SHA256"
+                  },
+                  "effective_basis_digest": {
+                    "$ref": "#/definitions/SHA256"
+                  },
+                  "scan_digest": {
+                    "$ref": "#/definitions/SHA256"
+                  },
+                  "finding_ids": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/definitions/SHA256"
+                    },
+                    "maxItems": 64,
+                    "minItems": 1,
+                    "uniqueItems": true
+                  }
+                },
+                "required": [
+                  "candidate_id",
+                  "candidate_manifest_digest",
+                  "effective_basis_digest",
+                  "scan_digest",
+                  "finding_ids"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "const": "confirm_publication_override"
+              }
+            }
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "payload": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "proposal_id": {
+                    "$ref": "#/definitions/Id"
+                  },
+                  "content_digest": {
+                    "$ref": "#/definitions/SHA256"
+                  }
+                },
+                "required": [
+                  "proposal_id",
+                  "content_digest"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "const": "override_publication_findings"
+              }
+            }
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "payload": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "candidate_id": {
+                    "$ref": "#/definitions/Id"
+                  },
+                  "candidate_manifest_digest": {
+                    "$ref": "#/definitions/SHA256"
+                  },
+                  "effective_basis_digest": {
+                    "$ref": "#/definitions/SHA256"
+                  },
+                  "scan_digest": {
+                    "$ref": "#/definitions/SHA256"
+                  },
+                  "finding_ids": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/definitions/SHA256"
+                    },
+                    "maxItems": 64,
+                    "minItems": 1,
+                    "uniqueItems": true
+                  },
+                  "confirmation_id": {
+                    "$ref": "#/definitions/Id"
+                  }
+                },
+                "required": [
+                  "candidate_id",
+                  "candidate_manifest_digest",
+                  "effective_basis_digest",
+                  "scan_digest",
+                  "finding_ids",
+                  "confirmation_id"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "PublicationCommandResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "task_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "request_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "committed",
+            "unknown"
+          ]
+        },
+        "operation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "proposal_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "content_digest": {
+          "$ref": "#/definitions/SHA256"
+        },
+        "confirmation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "receipt_id": {
+          "$ref": "#/definitions/Id"
+        }
+      },
+      "required": [
+        "schema_version",
+        "task_id",
+        "request_id",
+        "status"
       ]
     }
   }

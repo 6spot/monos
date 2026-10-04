@@ -1,0 +1,25 @@
+{"file": "ARCHITECTURE.md", "reason": "Controlled candidate contract, scope and validation for implement"}
+{"file": "docs/04-workspace-and-git.md", "reason": "Controlled candidate contract, scope and validation for implement"}
+{"file": "docs/05-tool-protocol.md", "reason": "Controlled candidate contract, scope and validation for implement"}
+{"file": "docs/06-state-and-formal-data.md", "reason": "Controlled candidate contract, scope and validation for implement"}
+{"file": "docs/07-owner-review-and-ui.md", "reason": "Controlled candidate contract, scope and validation for implement"}
+{"file": "docs/08-principles-and-non-goals.md", "reason": "Controlled candidate contract, scope and validation for implement"}
+{"file": "docs/09-first-executable-slice.md", "reason": "Controlled candidate contract, scope and validation for implement"}
+{"file": ".trellis/spec/guides/agent-collaboration.md", "reason": "Controlled candidate contract, scope and validation for implement"}
+{"file": ".trellis/spec/backend/delivery-contracts.md", "reason": "Controlled candidate contract, scope and validation for implement"}
+{"file": ".trellis/spec/backend/result-content-reads.md", "reason": "Controlled candidate contract, scope and validation for implement"}
+{"file": ".trellis/spec/backend/database-guidelines.md", "reason": "Controlled candidate contract, scope and validation for implement"}
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "Controlled candidate contract, scope and validation for implement"}
+{"file": ".trellis/spec/backend/owner-commands.md", "reason": "Controlled candidate contract, scope and validation for implement"}
+{"file": ".trellis/spec/backend/node-execution.md", "reason": "Controlled candidate contract, scope and validation for implement"}
+{"file": ".trellis/spec/backend/workspaces.md", "reason": "Controlled candidate contract, scope and validation for implement"}
+{"file": ".trellis/spec/protocol/schema-generation.md", "reason": "Controlled candidate contract, scope and validation for implement"}
+{"file": ".trellis/spec/runner/workspace-guidelines.md", "reason": "Controlled candidate contract, scope and validation for implement"}
+{"file": ".trellis/spec/runner/execution-guidelines.md", "reason": "Controlled candidate contract, scope and validation for implement"}
+{"file": ".trellis/spec/frontend/execution-ui.md", "reason": "Controlled candidate contract, scope and validation for implement"}
+{"file": ".trellis/spec/frontend/visual-design.md", "reason": "Controlled candidate contract, scope and validation for implement"}
+{"file": ".trellis/tasks/10-03-a-publication-candidate/research/runner-candidate-design.md", "reason": "Controlled candidate contract, scope and validation for implement"}
+{"file": ".trellis/tasks/10-03-a-publication-candidate/research/backend-candidate-design.md", "reason": "Controlled candidate contract, scope and validation for implement"}
+{"file": ".trellis/tasks/10-03-a-publication-candidate/research/policy-and-upstream-baseline.md", "reason": "Controlled candidate contract, scope and validation for implement"}
+{"file": ".trellis/tasks/10-03-a-publication-candidate/research/frozen-contract.md", "reason": "Frozen exact cross-language candidate/page/command contract and redaction identity"}
+{"file": ".trellis/spec/backend/publication-candidates.md", "reason": "Final executable cross-layer candidate, scan, page, receipt and review correction contracts"}

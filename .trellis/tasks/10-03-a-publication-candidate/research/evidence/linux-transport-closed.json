@@ -1,0 +1,20 @@
+{
+  "transports": [
+    {
+      "run": "linux-validation-v1",
+      "socket_absent": true,
+      "status": "bounded transport expired or explicitly closed; Control check confirms no socket"
+    },
+    {
+      "run": "linux-validation-v2-offline",
+      "socket_absent": true,
+      "status": "bounded transport expired or explicitly closed; Control check confirms no socket"
+    },
+    {
+      "run": "linux-validation-v3-private-temp",
+      "socket_absent": true,
+      "status": "bounded transport expired or explicitly closed; Control check confirms no socket"
+    }
+  ],
+  "scope": "task transports only; isolated remote evidence retained; existing services unchanged"
+}

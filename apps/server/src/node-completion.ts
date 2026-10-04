@@ -1,3 +1,4 @@
+import { ensureLocalCandidate } from './publication-candidates.ts';
 import { specificationFrozen } from './task-specification-state.ts';
 import { settleHandledGuidance } from './task-guidance.ts';
 import type { Transaction } from '../../../packages/db/src/index.ts';
@@ -25,6 +26,7 @@ export async function refreshTaskState(tx: Transaction, taskId: string): Promise
     if (state !== task.state)
       await tx.query("UPDATE tasks SET state=CASE WHEN state='REPLAN_REQUIRED' THEN state ELSE $2 END,control_version=control_version+1 WHERE id=$1", [taskId, state]);
   }
+  await ensureLocalCandidate(tx,taskId);
 }
 export async function projectCompletion(
   tx: Transaction,
@@ -111,6 +113,7 @@ export async function projectCompletion(
     { node_id: attempt.node_id, node_activation: Number(attempt.node_activation), ...result },
     operation.id
   );
+  await ensureLocalCandidate(tx,task.id);
 }
 export async function finishCompletionSettlement(
   tx: Transaction,

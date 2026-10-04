@@ -1,0 +1,26 @@
+{
+  "dependency-verify.log": {
+    "original_sha256": "b4537ed75f533f993f371954de47e42a793b8e5b0587577de7e27fb3e50696bd",
+    "retained_file": "dependency-verify-redacted.log",
+    "retained_sha256": "b4537ed75f533f993f371954de47e42a793b8e5b0587577de7e27fb3e50696bd",
+    "redacted": false
+  },
+  "result.json": {
+    "original_sha256": "8f20bda9cf1a4117fb9c27195e7406402bee189e78e8f7bbe31a287216c40028",
+    "retained_file": "result.json",
+    "retained_sha256": "8f20bda9cf1a4117fb9c27195e7406402bee189e78e8f7bbe31a287216c40028",
+    "redacted": false
+  },
+  "job.log": {
+    "original_sha256": "0bb47dea1d97f8c3e04644bfae338567c1a24dc13b9126f15dd5b66b113f20bd",
+    "retained_file": "job-redacted.log",
+    "retained_sha256": "0bb47dea1d97f8c3e04644bfae338567c1a24dc13b9126f15dd5b66b113f20bd",
+    "redacted": false
+  },
+  "module.log": {
+    "original_sha256": "fd118c2dfcbe31dd238d47b95e2c9533d89dfa21a95d9a979c2b3810cf7035d6",
+    "retained_file": "module-redacted.log",
+    "retained_sha256": "fd118c2dfcbe31dd238d47b95e2c9533d89dfa21a95d9a979c2b3810cf7035d6",
+    "redacted": false
+  }
+}

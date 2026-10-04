@@ -27,7 +27,7 @@ var compileErr error
 var mu sync.Mutex
 
 func Validate(name string, raw []byte) error {
-	if name == "ResultReadResponse" && len(raw) > 512*1024 {
+	if (name == "ResultReadResponse" || strings.HasPrefix(name, "Publication")) && len(raw) > 512*1024 {
 		return fmt.Errorf("result response exceeds limit")
 	}
 	if len(raw) > Limit {
@@ -71,14 +71,19 @@ func Validate(name string, raw []byte) error {
 	if err := schema.Validate(v); err != nil {
 		return err
 	}
-	if strings.HasPrefix(name, "Result") || name == "Frame" && resultFrame(v) {
+	if strings.HasPrefix(name, "Result") || strings.HasPrefix(name, "Publication") || name == "Frame" && (resultFrame(v) || publicationFrame(v)) {
+		if name == "Frame" && publicationFrame(v) && len(raw) > 512*1024 {
+			return fmt.Errorf("publication frame exceeds limit")
+		}
 		if err := resultByteBounds(v, ""); err != nil {
 			return err
 		}
 		if m, ok := v.(map[string]any); ok && name == "Frame" {
 			if reply, ok := m["result_read_result"]; ok {
-				encoded, _ := json.Marshal(reply)
-				if len(encoded) > 512*1024 {
+				var fields map[string]json.RawMessage
+				_ = json.Unmarshal(raw, &fields)
+				_ = reply
+				if len(fields["result_read_result"]) > 512*1024 {
 					return fmt.Errorf("result response exceeds limit")
 				}
 			}
@@ -230,6 +235,11 @@ func Envelope(raw []byte) (protocol.CommandEnvelope, error) {
 	return v, nil
 }
 
+func publicationFrame(v any) bool {
+	m, ok := v.(map[string]any)
+	return ok && (m["type"] == "publication_prepare" || m["type"] == "publication_result" || m["type"] == "publication_ack")
+}
+
 func resultFrame(v any) bool {
 	m, ok := v.(map[string]any)
 	return ok && (m["type"] == "result_read" || m["type"] == "result_read_result")
@@ -240,7 +250,7 @@ func resultByteBounds(v any, key string) error {
 		if key == "text" && (len(value) > 65536 || strings.ContainsRune(value, 0)) {
 			return fmt.Errorf("result text exceeds raw byte bounds or is binary")
 		}
-		if key == "path" && len(value) > 4096 {
+		if (key == "path" || key == "baseline_path") && len(value) > 4096 {
 			return fmt.Errorf("result path exceeds byte bounds")
 		}
 	case []any:

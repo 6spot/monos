@@ -84,7 +84,13 @@ export function useTaskCommands(sessionId: string, onUnauthorized: () => void) {
         return { ...local, pending, drafts };
       });
       if (!saved) { notice(taskId, scope, { kind: 'uncertain', text: 'The server saved this request, but local recovery data could not be cleared. Check the same request again; do not submit a replacement.' }); return receipt; }
-      notice(taskId, scope, { kind: 'success', text: receipt.status === 'admitted' || ('operation_id' in receipt && receipt.operation_id) ? 'Decision saved. Execution or cleanup may still be settling.' : intent.command.name === 'submit_task_message' ? 'Message saved. Planner processing is separate.' : 'Decision saved.' });
+      const publicationNotice = intent.family === 'publication' ? {
+        retry_publication_preparation: 'Local preparation requested. Candidate and scan completion are separate.',
+        prepare_publication_override: 'Exact policy override proposal saved.',
+        confirm_publication_override: 'Exact policy override confirmed. Recording it is separate.',
+        override_publication_findings: 'Policy override recorded. The findings remain retained.',
+      }[intent.command.name] : undefined;
+      notice(taskId, scope, { kind: 'success', text: publicationNotice ?? (receipt.status === 'admitted' || ('operation_id' in receipt && receipt.operation_id) ? 'Decision saved. Execution or cleanup may still be settling.' : intent.command.name === 'submit_task_message' ? 'Message saved. Planner processing is separate.' : 'Decision saved.') });
       await Promise.all([client.invalidateQueries({ queryKey: ['tasks', taskId] }), client.invalidateQueries({ queryKey: ['board'] })]);
       return receipt;
     } catch (error) {

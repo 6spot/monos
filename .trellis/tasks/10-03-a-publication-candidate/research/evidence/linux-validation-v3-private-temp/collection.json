@@ -1,0 +1,80 @@
+{
+  "dependency-verify.log": {
+    "original_sha256": "b4537ed75f533f993f371954de47e42a793b8e5b0587577de7e27fb3e50696bd",
+    "retained_file": "dependency-verify-redacted.log",
+    "retained_sha256": "b4537ed75f533f993f371954de47e42a793b8e5b0587577de7e27fb3e50696bd",
+    "redacted": false
+  },
+  "native-git.log": {
+    "original_sha256": "9b172bc7e2b1148b6a8ae1e509d8aaf6992e54ea8e571078b12d7b3b1f26a4b8",
+    "retained_file": "native-git-redacted.log",
+    "retained_sha256": "9b172bc7e2b1148b6a8ae1e509d8aaf6992e54ea8e571078b12d7b3b1f26a4b8",
+    "redacted": false
+  },
+  "native-retained.log": {
+    "original_sha256": "826b3cfca059aa3c1bfa335aed1ae9b70250c49494523de2d34f8023ad7c58af",
+    "retained_file": "native-retained-redacted.log",
+    "retained_sha256": "826b3cfca059aa3c1bfa335aed1ae9b70250c49494523de2d34f8023ad7c58af",
+    "redacted": false
+  },
+  "host-build.log": {
+    "original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "retained_file": "host-build-redacted.log",
+    "retained_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "redacted": false
+  },
+  "build-monos-runner.log": {
+    "original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "retained_file": "build-monos-runner-redacted.log",
+    "retained_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "redacted": false
+  },
+  "vet.log": {
+    "original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "retained_file": "vet-redacted.log",
+    "retained_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "redacted": false
+  },
+  "race.log": {
+    "original_sha256": "c0e1076996cd1f283094894d6a7aa3046702b68db0cdafc8f629f1836e70e2ba",
+    "retained_file": "race-redacted.log",
+    "retained_sha256": "c0e1076996cd1f283094894d6a7aa3046702b68db0cdafc8f629f1836e70e2ba",
+    "redacted": false
+  },
+  "build-monos-probe-exec.log": {
+    "original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "retained_file": "build-monos-probe-exec-redacted.log",
+    "retained_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "redacted": false
+  },
+  "result.json": {
+    "original_sha256": "3b8ed3f2354e179699cb3e254241e51d8d4dc038b5465c1b4e10142a98697304",
+    "retained_file": "result.json",
+    "retained_sha256": "3b8ed3f2354e179699cb3e254241e51d8d4dc038b5465c1b4e10142a98697304",
+    "redacted": false
+  },
+  "build-monos.log": {
+    "original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "retained_file": "build-monos-redacted.log",
+    "retained_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "redacted": false
+  },
+  "job.log": {
+    "original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "retained_file": "job-redacted.log",
+    "retained_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "redacted": false
+  },
+  "build-monos-probe-launch.log": {
+    "original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "retained_file": "build-monos-probe-launch-redacted.log",
+    "retained_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "redacted": false
+  },
+  "module.log": {
+    "original_sha256": "5d6dfd949a210a823e832c384e58c5534482893ccdebf3155648b5dbc8fdcc6d",
+    "retained_file": "module-redacted.log",
+    "retained_sha256": "5d6dfd949a210a823e832c384e58c5534482893ccdebf3155648b5dbc8fdcc6d",
+    "redacted": false
+  }
+}

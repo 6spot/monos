@@ -1,0 +1,101 @@
+{
+  "files": [
+    {
+      "path": "github.com/coder/websocket/@v/v1.8.14.zip",
+      "sha256": "b729277821461eb21a816c16e29a02029dd6abbb1a43b526c1e0a6b794942de0"
+    },
+    {
+      "path": "github.com/coder/websocket/@v/v1.8.14.ziphash",
+      "sha256": "8cabedc038dff1d2bc4cfe4ed837c52960c5a6316ea46f24f08369dd3dbd3ec9"
+    },
+    {
+      "path": "github.com/coder/websocket/@v/v1.8.14.mod",
+      "sha256": "0cab443e389cef98e63828bd7ce82224bf192732a18795581314766eb14ea275"
+    },
+    {
+      "path": "github.com/coder/websocket/@v/v1.8.14.info",
+      "sha256": "91e615a4ddb45e9e8ad536760224e5987ad465350d98e8a837aecf4fd0f738fa"
+    },
+    {
+      "path": "github.com/cyberphone/json-canonicalization/@v/v0.0.0-20241213102144-19d51d7fe467.zip",
+      "sha256": "9492fa89d9f2543890346672d239c494ccba4073be51f338b50e8f749792e25a"
+    },
+    {
+      "path": "github.com/cyberphone/json-canonicalization/@v/v0.0.0-20241213102144-19d51d7fe467.ziphash",
+      "sha256": "e08fb643d585baa1c581a427f3015852ce20f09e8569a0fd929cea8bb45c4c35"
+    },
+    {
+      "path": "github.com/cyberphone/json-canonicalization/@v/v0.0.0-20241213102144-19d51d7fe467.mod",
+      "sha256": "55f88f79a57c1fbdbc11ad2f170fc5435288fb889a5b19cea79f3bd566518534"
+    },
+    {
+      "path": "github.com/cyberphone/json-canonicalization/@v/v0.0.0-20241213102144-19d51d7fe467.info",
+      "sha256": "c0d8f194c346e057f2c3102b5cd4ab7ee54a2679f258a0379213f8555f26cdcd"
+    },
+    {
+      "path": "github.com/dlclark/regexp2/@v/v1.11.0.zip",
+      "sha256": "2a93432600feacb866669789bb7910ff283e1af764fcd03d70c6592f9619aeb4"
+    },
+    {
+      "path": "github.com/dlclark/regexp2/@v/v1.11.0.ziphash",
+      "sha256": "d515c023ae89fbab4030c5a76b5a8333652a6de99d71d7a862f3bf8a3f9ad498"
+    },
+    {
+      "path": "github.com/dlclark/regexp2/@v/v1.11.0.mod",
+      "sha256": "7017e81fb9fa9227a3180a62e323158b4523c67062f0a8aa08637c092b8d4aa7"
+    },
+    {
+      "path": "github.com/dlclark/regexp2/@v/v1.11.0.info",
+      "sha256": "1f36fd525b6a5c3639cc707bcdeae56870fe8b2f845fd57c9c8fdf595c25e836"
+    },
+    {
+      "path": "github.com/mattn/go-sqlite3/@v/v1.14.32.zip",
+      "sha256": "c70101000256656bc0b7286807cf177852c753a001a3aa3c55d5373575fb81aa"
+    },
+    {
+      "path": "github.com/mattn/go-sqlite3/@v/v1.14.32.ziphash",
+      "sha256": "ed3bfabb3e020cd6bb6759db4b93ed6252ba630e4b4d1f700868a005a4a5e578"
+    },
+    {
+      "path": "github.com/mattn/go-sqlite3/@v/v1.14.32.mod",
+      "sha256": "bc9235ee6e4e60243f1e7dcacf0caa4d480afcdf06ed78e481fd127e9e3119df"
+    },
+    {
+      "path": "github.com/mattn/go-sqlite3/@v/v1.14.32.info",
+      "sha256": "59740c3f4d9faad222245b915c355779f662b5b20c81f53f5b5f3dd1c30e25d6"
+    },
+    {
+      "path": "github.com/santhosh-tekuri/jsonschema/v6/@v/v6.0.2.zip",
+      "sha256": "fe5eb88614e560d2072d1f95708ac217b6cb047789531ad633114ec277338635"
+    },
+    {
+      "path": "github.com/santhosh-tekuri/jsonschema/v6/@v/v6.0.2.ziphash",
+      "sha256": "844673f14b68ba1bc46ad3faadf4da6ace6cee63e65fa6a201a20d2f0d680b3a"
+    },
+    {
+      "path": "github.com/santhosh-tekuri/jsonschema/v6/@v/v6.0.2.mod",
+      "sha256": "48f5e138633d4d85be9f6cd447e2db32aabd00e530a00a45985695af5e0372e5"
+    },
+    {
+      "path": "github.com/santhosh-tekuri/jsonschema/v6/@v/v6.0.2.info",
+      "sha256": "4c7922eccea1de5e9fbd593b2f03636d664bdbecc88ccc199d7f63f89040b6d0"
+    },
+    {
+      "path": "golang.org/x/text/@v/v0.14.0.zip",
+      "sha256": "b9814897e0e09cd576a7a013f066c7db537a3d538d2e0f60f0caee9bc1b3f4af"
+    },
+    {
+      "path": "golang.org/x/text/@v/v0.14.0.ziphash",
+      "sha256": "539012412b8393d1b98690539169972de66967da4591f078c0d4459d7fdbf205"
+    },
+    {
+      "path": "golang.org/x/text/@v/v0.14.0.mod",
+      "sha256": "971579f17e9abc5926ab76214f533bd517cf4925c885243ac4755a1a0a7c69ef"
+    },
+    {
+      "path": "golang.org/x/text/@v/v0.14.0.info",
+      "sha256": "91b6d2cff41c2b72454ed215c619face1ab51a0708e02279918634c239058d6a"
+    }
+  ],
+  "go_sum_sha256": "adc02dc0ea4e9173c79d0946ddceab7c3dd2bfff2545dfba1c9c7e05b3a02ed2"
+}

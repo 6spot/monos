@@ -33,6 +33,8 @@ app.post<{ Body: { todo_id: string; title: string; specification: string; conten
 });
 app.post<{ Body: { task_id: string; specification: unknown } }>('/__test__/task-specification', async (request) => reviseSpecificationFixture(db, fixtureOwner(request), request.body.task_id, request.body.specification));
 app.post<{ Body: Parameters<ExecutionUIFixture['create']>[1] }>('/__test__/execution-scenario', async (request) => executionUI.create(fixtureOwner(request), request.body));
+app.post<{ Body: Parameters<ExecutionUIFixture['createPublication']>[1] }>('/__test__/publication-scenario', async request => executionUI.createPublication(fixtureOwner(request), request.body));
+app.post<{ Body: { task_id: string; action: Parameters<ExecutionUIFixture['publicationPeer']>[2]; mode?: Parameters<ExecutionUIFixture['publicationPeer']>[3] } }>('/__test__/publication-peer', async request => executionUI.publicationPeer(fixtureOwner(request), request.body.task_id, request.body.action, request.body.mode));
 app.post<{ Body: { task_id: string } }>('/__test__/execution-settle', async (request) => executionUI.settle(fixtureOwner(request), request.body.task_id));
 app.post('/__test__/execution-reset', async (request) => executionUI.reset(fixtureOwner(request)));
 app.post<{ Body: { task_id: string; action: Parameters<ExecutionUIFixture['readPeer']>[2]; status?: Parameters<ExecutionUIFixture['readPeer']>[3] } }>('/__test__/result-peer', async request => executionUI.readPeer(fixtureOwner(request), request.body.task_id, request.body.action, request.body.status));

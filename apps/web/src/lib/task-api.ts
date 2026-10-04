@@ -1,4 +1,4 @@
-import type { OwnerCommand, OwnerCommandResult, TaskConversationCommand, TaskConversationCommandResult, TaskSpecificationCommand, TaskSpecificationResult, TaskReplanCommand, TaskReplanResult, ResultReadRequest, ResultReadResponse } from '../../../../packages/protocol/generated/types.ts';
+import type { OwnerCommand, OwnerCommandResult, TaskConversationCommand, TaskConversationCommandResult, TaskSpecificationCommand, TaskSpecificationResult, TaskReplanCommand, TaskReplanResult, ResultReadRequest, ResultReadResponse, PublicationCommand, PublicationCommandResult } from '../../../../packages/protocol/generated/types.ts';
 import { validate } from '../../../../packages/protocol/src/validation.ts';
 import { APIError, UncertainError, request } from './api.ts';
 
@@ -6,14 +6,16 @@ export type TaskIntent =
   | { family: 'execution'; command: OwnerCommand }
   | { family: 'conversation'; command: TaskConversationCommand }
   | { family: 'specification'; command: TaskSpecificationCommand }
-  | { family: 'replan'; command: TaskReplanCommand };
-export type TaskReceipt = OwnerCommandResult | TaskConversationCommandResult | TaskSpecificationResult | TaskReplanResult;
+  | { family: 'replan'; command: TaskReplanCommand }
+  | { family: 'publication'; command: PublicationCommand };
+export type TaskReceipt = OwnerCommandResult | TaskConversationCommandResult | TaskSpecificationResult | TaskReplanResult | PublicationCommandResult;
 
 const families = {
   execution: { command: 'OwnerCommand', result: 'OwnerCommandResult', post: '/v1/owner/commands' },
   conversation: { command: 'TaskConversationCommand', result: 'TaskConversationCommandResult', post: '/v1/owner/tasks/conversation/commands' },
   specification: { command: 'TaskSpecificationCommand', result: 'TaskSpecificationResult', post: '/v1/owner/tasks/specification/commands' },
   replan: { command: 'TaskReplanCommand', result: 'TaskReplanResult', post: '/v1/owner/tasks/replan/commands' },
+  publication: { command: 'PublicationCommand', result: 'PublicationCommandResult', post: '/v1/owner/tasks/publication/commands' },
 } as const;
 
 export function intentTask(intent: TaskIntent): string {
@@ -45,7 +47,7 @@ function checkedReceipt(intent: TaskIntent, result: TaskReceipt, allowUnknown: b
     if (Object.keys(result).some((key) => !['schema_version', 'request_id', 'task_id', 'status'].includes(key))) throw new UncertainError();
     return result;
   }
-  if (intent.family === 'conversation' && (!('task_id' in result) || result.task_id !== intent.command.task_id)) throw new UncertainError();
+  if (['conversation', 'publication'].includes(intent.family) && (!('task_id' in result) || result.task_id !== intentTask(intent))) throw new UncertainError();
   // The shared result schemas permit fields to be absent for other commands.
   // A well-formed but incomplete receipt is still uncertain for this command.
   const fields: Record<string, unknown> = { ...result };
@@ -56,7 +58,7 @@ function checkedReceipt(intent: TaskIntent, result: TaskReceipt, allowUnknown: b
   const same = (name: string, expected: unknown) => {
     if (fields[name] !== expected) throw new UncertainError();
   };
-  if (payload.proposal_id !== undefined) same('proposal_id', payload.proposal_id);
+  if (payload.proposal_id !== undefined && (intent.family !== 'publication' || fields.proposal_id !== undefined)) same('proposal_id', payload.proposal_id);
   if (intent.family === 'conversation') {
     requireFields('version');
     if (intent.command.name === 'submit_task_message') {
@@ -91,6 +93,14 @@ function checkedReceipt(intent: TaskIntent, result: TaskReceipt, allowUnknown: b
       // A new command replaying an existing publication need not repeat its
       // optional joint metadata; when supplied, it must retain exact authority.
       if (fields.requirement_confirmation_id !== undefined) same('requirement_confirmation_id', payload.requirement_confirmation_id);
+    }
+  } else if (intent.family === 'publication') {
+    same('status', 'committed');
+    switch (intent.command.name) {
+      case 'retry_publication_preparation': requireFields('operation_id'); break;
+      case 'prepare_publication_override': requireFields('proposal_id', 'content_digest'); break;
+      case 'confirm_publication_override': requireFields('confirmation_id'); if (fields.content_digest !== undefined) same('content_digest', payload.content_digest); break;
+      case 'override_publication_findings': requireFields('receipt_id'); break;
     }
   } else if (intent.command.name === 'confirm_proposal') {
     same('status', 'committed'); requireFields('confirmation_id');

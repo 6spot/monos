@@ -1,0 +1,20 @@
+{
+  "result.json": {
+    "original_sha256": "d0332ef951b00ae600f8901acc01b5907e8d636f410ff6f4e72b72911ea37c17",
+    "retained_file": "result.json",
+    "retained_sha256": "d0332ef951b00ae600f8901acc01b5907e8d636f410ff6f4e72b72911ea37c17",
+    "redacted": false
+  },
+  "job.log": {
+    "original_sha256": "6c66c93b27ac47d4b4bf2a30ea7b5e943163ce7951925d02682ec0afb29cca12",
+    "retained_file": "job-redacted.log",
+    "retained_sha256": "6c66c93b27ac47d4b4bf2a30ea7b5e943163ce7951925d02682ec0afb29cca12",
+    "redacted": false
+  },
+  "module.log": {
+    "original_sha256": "28c5eb9ade86f7d72bbd74561847cccfad10d4ba618151b872c52f33babbaccb",
+    "retained_file": "module-redacted.log",
+    "retained_sha256": "28c5eb9ade86f7d72bbd74561847cccfad10d4ba618151b872c52f33babbaccb",
+    "redacted": false
+  }
+}

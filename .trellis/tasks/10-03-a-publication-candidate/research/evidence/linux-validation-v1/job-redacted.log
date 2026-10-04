@@ -1,0 +1,11 @@
+Traceback (most recent call last):
+  File "/root/monos-publication-validation-de3bad3ed52a414e9ce3e843ee4b4c7d/remote-validation.py", line 29, in <module>
+    container('module',['go','test','./...'])
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/monos-publication-validation-de3bad3ed52a414e9ce3e843ee4b4c7d/remote-validation.py", line 28, in container
+    run(name,args)
+    ~~~^^^^^^^^^^^
+  File "/root/monos-publication-validation-de3bad3ed52a414e9ce3e843ee4b4c7d/remote-validation.py", line 18, in run
+    if r.returncode:raise RuntimeError('isolated stage failed: '+name)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: isolated stage failed: module

@@ -1,0 +1,11 @@
+{
+  "started_at": "2026-10-04T01:40:01.198626+00:00",
+  "commands": [
+    "pnpm protocol:check",
+    "pnpm test"
+  ],
+  "exit_code": 0,
+  "original_log_sha256": "70111f9267c167b122d6eba887803a9dd43dff508c2005d081fe50b3c0188696",
+  "display_log_sha256": "c94827519b42f0ea3f0b1e75742ea976906a23d19c45098d2d98468511e82251",
+  "original_log_gzip": "root-default-gates.log.original.gz"
+}

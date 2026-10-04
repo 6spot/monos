@@ -1,0 +1,9 @@
+{
+  "observed_at": "2026-10-04T03:42:34.874971+00:00",
+  "individual_source_hashes_current": true,
+  "product_input_count": 118,
+  "transport_input_count": 119,
+  "pathlib_component_order_sha256": "da9b580e00cc10477ae37d66600582e9c5a0daf2ce3464a161af8fcde0649dc4",
+  "whole_path_string_order_sha256": "a7ace85a28cfbf39d4f1bcc5552da3f54e591689e18d4765a8dd32382b69c715",
+  "correction": "Earlier report used pathlib-component ordering; all individual bytes and physical gates unchanged"
+}

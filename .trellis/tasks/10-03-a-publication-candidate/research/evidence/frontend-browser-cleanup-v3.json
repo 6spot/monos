@@ -1,0 +1,6 @@
+{
+  "observed_at": "2026-10-04T01:23:16.594Z",
+  "web_fixture_schemas_after": [],
+  "statement": "read-only scoped namespace inventory; no DROP or other mutation",
+  "uuid_observation": "individual fixture UUID not recorded; exclusive namespace variable is generated and dropped by the verified fixture lifecycle"
+}

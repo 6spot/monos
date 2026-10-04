@@ -1,0 +1,67 @@
+[WebServer] (node:76079) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:76079) [FSTDEP023] FastifyDeprecation: disableRequestLogging option is deprecated. Use the logController option with disableRequestLogging or isLogDisabled override instead. The disableRequestLogging top-level option will be removed in `fastify@6`.
+
+Running 34 tests using 1 worker
+
+(node:76085) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 test/execution.e2e.ts:35:1 › Board canonical columns, normal queueing, local Review and responsive navigation (6.0s)
+  ✓   2 test/execution.e2e.ts:76:1 › Task drafts survive scope navigation and reload; a lost persisted message recovers the same receipt (922ms)
+  ✓   3 test/execution.e2e.ts:98:1 › unknown receipt replays original payload after reload; malformed receipt retains uncertainty (855ms)
+  ✓   4 test/execution.e2e.ts:115:1 › initial queue Stop and explicit issue answer preserve correct lifecycle (975ms)
+  ✓   5 test/execution.e2e.ts:127:1 › Node blocker answer uses exact Retry and diagnostics remain separate from formal Timeline (1.0s)
+  ✓   6 test/execution.e2e.ts:142:1 › exact Specification confirmation survives response loss and a second client sees the same applied revision (1.3s)
+  ✓   7 test/execution.e2e.ts:161:1 › joint Replan publishes exact dual approval; dismissal and requirement withdrawal remain independent (1.6s)
+  ✓   8 test/execution.e2e.ts:180:1 › joint approvals and publication recover their original receipts across response loss and reload (1.6s)
+  ✓   9 test/execution.e2e.ts:227:1 › late response after logout cannot resurrect private Task recovery data (635ms)
+  ✓  10 test/execution.e2e.ts:238:1 › two clients racing Start retain one canonical planning intent and show the stale decision (948ms)
+  ✓  11 test/execution.e2e.ts:255:1 › a cookie replacement after preflight cannot submit an old-session command (844ms)
+  ✓  12 test/execution.e2e.ts:273:1 › long content and read errors retain a usable Task workspace (966ms)
+  ✓  13 test/execution.e2e.ts:284:1 › queued and running work offer exact Stop and Continue; Cancel keeps terminal questions available (1.9s)
+  ✓  14 test/execution.e2e.ts:309:1 › completion recovery retains the exact local result while cleanup is retried (832ms)
+  ✓  15 test/execution.e2e.ts:320:1 › input and guidance withdrawals preserve message history and do not start execution (674ms)
+  ✓  16 test/execution.e2e.ts:333:1 › Replan issue answer retries its exact request and preserves independent dismissal (910ms)
+  ✓  17 test/execution.e2e.ts:343:1 › direct Owner edit retains original basis on reload and waits for running work settlement (1.1s)
+  ✓  18 test/execution.e2e.ts:362:1 › a later input must be explicitly deferred before the exact requirements can apply (998ms)
+  ✓  19 test/execution.e2e.ts:377:1 › local storage failure blocks sending and safe retry keeps the newer in-memory draft (584ms)
+  ✓  20 test/execution.e2e.ts:395:1 › all-execution history includes Planner after a Plan exists and formal cursor reset reloads current facts (858ms)
+  ✓  21 test/execution.e2e.ts:419:1 › real bounded message and input pages expose remaining records without duplicating loaded history (797ms)
+  ✓  22 test/execution.e2e.ts:440:1 › Board keyset pagination reaches all canonical and explicitly legacy fixture records (693ms)
+  ✓  23 test/execution.e2e.ts:452:1 › recorded Runtime and live workspace metadata stay distinct from the exact finalized Git result (1.2s)
+  ✓  24 test/execution.e2e.ts:470:1 › ordered log pages retain their cursor with the rendered entries and never enter formal Timeline (824ms)
+Publication screenshot evidence: .trellis/tasks/10-03-a-publication-candidate/research/screenshots/59f989f0c055-8c01cd86ca33-20261004011958418/candidate-findings
+Publication screenshot evidence: .trellis/tasks/10-03-a-publication-candidate/research/screenshots/59f989f0c055-8c01cd86ca33-20261004011958418/candidate-override-review
+Publication screenshot evidence: .trellis/tasks/10-03-a-publication-candidate/research/screenshots/59f989f0c055-8c01cd86ca33-20261004011958418/candidate-override-recorded
+  ✓  25 test/publication.e2e.ts:58:1 › exact paginated redacted findings and prepare/confirm/apply survive lost receipts and reload (6.7s)
+Publication screenshot evidence: .trellis/tasks/10-03-a-publication-candidate/research/screenshots/59f989f0c055-8c01cd86ca33-20261004011958418/candidate-incomplete
+Publication screenshot evidence: .trellis/tasks/10-03-a-publication-candidate/research/screenshots/59f989f0c055-8c01cd86ca33-20261004011958418/candidate-clean-exposure
+  ✓  26 test/publication.e2e.ts:93:1 › incomplete Retry creates new scans over one candidate, reaches history past 32 and direct selection (14.7s)
+Publication screenshot evidence: .trellis/tasks/10-03-a-publication-candidate/research/screenshots/59f989f0c055-8c01cd86ca33-20261004011958418/candidate-preparing
+Publication screenshot evidence: .trellis/tasks/10-03-a-publication-candidate/research/screenshots/59f989f0c055-8c01cd86ca33-20261004011958418/candidate-offline
+Publication screenshot evidence: .trellis/tasks/10-03-a-publication-candidate/research/screenshots/59f989f0c055-8c01cd86ca33-20261004011958418/candidate-clean
+Publication screenshot evidence: .trellis/tasks/10-03-a-publication-candidate/research/screenshots/59f989f0c055-8c01cd86ca33-20261004011958418/candidate-unsupported
+Publication screenshot evidence: .trellis/tasks/10-03-a-publication-candidate/research/screenshots/59f989f0c055-8c01cd86ca33-20261004011958418/candidate-unavailable
+Publication screenshot evidence: .trellis/tasks/10-03-a-publication-candidate/research/screenshots/59f989f0c055-8c01cd86ca33-20261004011958418/candidate-no_change
+  ✓  27 test/publication.e2e.ts:122:1 › preparing/offline/unsupported/missing/no-change remain truthful with result inspection intact (15.8s)
+Publication screenshot evidence: .trellis/tasks/10-03-a-publication-candidate/research/screenshots/59f989f0c055-8c01cd86ca33-20261004011958418/candidate-historical
+  ✓  28 test/publication.e2e.ts:133:1 › late findings/session replacement and changed effective basis cannot revive actions or replace selected history (8.2s)
+Result screenshot evidence: .trellis/tasks/10-03-a-local-result-review/research/screenshots/4fc6ebdbd856-8c01cd86ca33-20261004012043917/result-populated-literal
+Result screenshot evidence: .trellis/tasks/10-03-a-local-result-review/research/screenshots/4fc6ebdbd856-8c01cd86ca33-20261004012043917/result-deleted-side
+Result screenshot evidence: .trellis/tasks/10-03-a-local-result-review/research/screenshots/4fc6ebdbd856-8c01cd86ca33-20261004012043917/result-empty-file
+Result screenshot evidence: .trellis/tasks/10-03-a-local-result-review/research/screenshots/4fc6ebdbd856-8c01cd86ca33-20261004012043917/result-binary
+Result screenshot evidence: .trellis/tasks/10-03-a-local-result-review/research/screenshots/4fc6ebdbd856-8c01cd86ca33-20261004012043917/result-oversized
+Result screenshot evidence: .trellis/tasks/10-03-a-local-result-review/research/screenshots/4fc6ebdbd856-8c01cd86ca33-20261004012043917/result-long-path
+  ✓  29 test/results.e2e.ts:67:1 › on-demand exact result navigation reaches all changes, safely inspects both sides and preserves Task state (4.3s)
+Result screenshot evidence: .trellis/tasks/10-03-a-local-result-review/research/screenshots/4fc6ebdbd856-8c01cd86ca33-20261004012043917/result-offline
+Result screenshot evidence: .trellis/tasks/10-03-a-local-result-review/research/screenshots/4fc6ebdbd856-8c01cd86ca33-20261004012043917/result-unavailable
+  ✓  30 test/results.e2e.ts:111:1 › offline and storage outcomes preserve metadata; explicit Retry reconnects without Task commands (2.5s)
+Result screenshot evidence: .trellis/tasks/10-03-a-local-result-review/research/screenshots/4fc6ebdbd856-8c01cd86ca33-20261004012043917/result-no-changes
+Result screenshot evidence: .trellis/tasks/10-03-a-local-result-review/research/screenshots/4fc6ebdbd856-8c01cd86ca33-20261004012043917/result-loading
+  ✓  31 test/results.e2e.ts:129:1 › empty changes, held loading, selection/close cancellation, late logout response and session replacement stay fenced (2.5s)
+Result screenshot evidence: .trellis/tasks/10-03-a-local-result-review/research/screenshots/4fc6ebdbd856-8c01cd86ca33-20261004012043917/result-historical
+  ✓  32 test/results.e2e.ts:159:1 › fresh result read becomes Historical before metadata polling and keeps the original completion selected (1.3s)
+  ✓  33 test/results.e2e.ts:181:53 › open cached file stays exact while fresh metadata makes its completion Historical (4.3s)
+  ✓  34 test/results.e2e.ts:181:53 › open cached file stays exact while fresh changes makes its completion Historical (993ms)
+
+  34 passed (1.5m)

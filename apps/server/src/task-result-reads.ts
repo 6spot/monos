@@ -1,5 +1,5 @@
 import { transaction } from "../../../packages/db/src/index.ts";
-import type { Database } from "../../../packages/db/src/index.ts";
+import type { Database, Transaction } from "../../../packages/db/src/index.ts";
 import { CommandError } from "../../../packages/domain/src/commands.ts";
 import {
   canonicalJSON,
@@ -99,6 +99,11 @@ export async function taskResults(
         .rowCount
     )
       throw new CommandError("denied_scope", "Unknown Task");
+    return taskResultsInTransaction(tx,taskId,cursor,operationId,captured);
+  });
+}
+
+async function taskResultsInTransaction(tx:Transaction,taskId:string,cursor?:string,operationId?:string,captured?:{identity?:ResultReadIdentity}) {
     let after = decode(taskId, cursor);
     const rows = (
       await tx.query<ResultRow>(
@@ -195,7 +200,15 @@ export async function taskResults(
       cursor: encode(taskId, after),
       has_more: rows.length > items.length,
     });
-  });
+}
+
+export async function resolveCanonicalResult(tx:Transaction,taskId:string,operationId:string) {
+  validate("Id",taskId);validate("Id",operationId);
+  const captured:{identity?:ResultReadIdentity}={};
+  const page=await taskResultsInTransaction(tx,taskId,undefined,operationId,captured);
+  const item=page.items[0];
+  if(!item)throw new CommandError("denied_scope","Unknown canonical result");
+  return {item,identity:captured.identity};
 }
 
 function resultIdentity(row: ResultRow, m: CompletionManifest, effect: EffectResult): ResultReadIdentity {

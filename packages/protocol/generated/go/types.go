@@ -384,30 +384,34 @@ type TaskMessage struct {
 }
 
 type Frame struct {
-	Allowed          *bool                 `json:"allowed,omitempty"`
-	AttemptID        *string               `json:"attempt_id,omitempty"`
-	BootID           *string               `json:"boot_id,omitempty"`
-	CorrelationID    *string               `json:"correlation_id,omitempty"`
-	Credential       *string               `json:"credential,omitempty"`
-	Dispatch         *Dispatch             `json:"dispatch,omitempty"`
-	DispatchID       *string               `json:"dispatch_id,omitempty"`
-	Error            *ErrorInfo            `json:"error,omitempty"`
-	Event            *RuntimeEvent         `json:"event,omitempty"`
-	ExpiresAt        *string               `json:"expires_at,omitempty"`
-	Incarnation      *int64                `json:"incarnation,omitempty"`
-	LogModes         []LogModeElement      `json:"log_modes,omitempty"`
-	Operation        *Operation            `json:"operation,omitempty"`
-	OperationID      *string               `json:"operation_id,omitempty"`
-	OperationResult  *OperationResult      `json:"operation_result,omitempty"`
-	ResultRead       *ResultReadRequest    `json:"result_read,omitempty"`
-	ResultReadModes  []ResultReadMode      `json:"result_read_modes,omitempty"`
-	ResultReadResult *ResultReadResponse   `json:"result_read_result,omitempty"`
-	RunnerID         *string               `json:"runner_id,omitempty"`
-	Runtimes         []RuntimeInstallation `json:"runtimes,omitempty"`
-	SchemaVersion    int64                 `json:"schema_version"`
-	Sequence         *int64                `json:"sequence,omitempty"`
-	StreamID         *string               `json:"stream_id,omitempty"`
-	Type             Type                  `json:"type"`
+	Allowed            *bool                      `json:"allowed,omitempty"`
+	AttemptID          *string                    `json:"attempt_id,omitempty"`
+	BootID             *string                    `json:"boot_id,omitempty"`
+	CorrelationID      *string                    `json:"correlation_id,omitempty"`
+	Credential         *string                    `json:"credential,omitempty"`
+	Dispatch           *Dispatch                  `json:"dispatch,omitempty"`
+	DispatchID         *string                    `json:"dispatch_id,omitempty"`
+	Error              *ErrorInfo                 `json:"error,omitempty"`
+	Event              *RuntimeEvent              `json:"event,omitempty"`
+	ExpiresAt          *string                    `json:"expires_at,omitempty"`
+	Incarnation        *int64                     `json:"incarnation,omitempty"`
+	LogModes           []LogModeElement           `json:"log_modes,omitempty"`
+	Operation          *Operation                 `json:"operation,omitempty"`
+	OperationID        *string                    `json:"operation_id,omitempty"`
+	OperationResult    *OperationResult           `json:"operation_result,omitempty"`
+	PublicationACK     *PublicationACK            `json:"publication_ack,omitempty"`
+	PublicationModes   []PublicationMode          `json:"publication_modes,omitempty"`
+	PublicationPrepare *PublicationPrepareRequest `json:"publication_prepare,omitempty"`
+	PublicationResult  *PublicationResultPage     `json:"publication_result,omitempty"`
+	ResultRead         *ResultReadRequest         `json:"result_read,omitempty"`
+	ResultReadModes    []ResultReadMode           `json:"result_read_modes,omitempty"`
+	ResultReadResult   *ResultReadResponse        `json:"result_read_result,omitempty"`
+	RunnerID           *string                    `json:"runner_id,omitempty"`
+	Runtimes           []RuntimeInstallation      `json:"runtimes,omitempty"`
+	SchemaVersion      int64                      `json:"schema_version"`
+	Sequence           *int64                     `json:"sequence,omitempty"`
+	StreamID           *string                    `json:"stream_id,omitempty"`
+	Type               Type                       `json:"type"`
 }
 
 type Dispatch struct {
@@ -599,13 +603,76 @@ type CompletionOperationResult struct {
 	Success                bool         `json:"success"`
 }
 
-type ResultReadRequest struct {
-	Cursor         *string               `json:"cursor,omitempty"`
-	Identity       ResultReadIdentity    `json:"identity"`
-	IdentityDigest string                `json:"identity_digest"`
-	Mode           ResultReadRequestMode `json:"mode"`
-	Path           *string               `json:"path,omitempty"`
-	Side           *Side                 `json:"side,omitempty"`
+type PublicationACK struct {
+	OperationID   string `json:"operation_id"`
+	RequestDigest string `json:"request_digest"`
+	ResultDigest  string `json:"result_digest"`
+	SchemaVersion int64  `json:"schema_version"`
+}
+
+type PublicationPrepareRequest struct {
+	Configuration        PublicationScanConfiguration `json:"configuration"`
+	ConfigurationDigest  string                       `json:"configuration_digest"`
+	Construction         PublicationConstruction      `json:"construction"`
+	ConstructionDigest   string                       `json:"construction_digest"`
+	EffectiveBasis       PublicationEffectiveBasis    `json:"effective_basis"`
+	EffectiveBasisDigest string                       `json:"effective_basis_digest"`
+	OperationID          string                       `json:"operation_id"`
+	ScanRunID            string                       `json:"scan_run_id"`
+	SchemaVersion        int64                        `json:"schema_version"`
+	Source               ResultReadIdentity           `json:"source"`
+	SourceDigest         string                       `json:"source_digest"`
+}
+
+type PublicationScanConfiguration struct {
+	DeadlineSeconds       int64            `json:"deadline_seconds"`
+	LocalBlobLimit        int64            `json:"local_blob_limit"`
+	MaxAggregateBytes     int64            `json:"max_aggregate_bytes"`
+	MaxBlobBytes          int64            `json:"max_blob_bytes"`
+	MaxCommits            int64            `json:"max_commits"`
+	MaxEvidenceBytes      int64            `json:"max_evidence_bytes"`
+	MaxFindings           int64            `json:"max_findings"`
+	MaxPaths              int64            `json:"max_paths"`
+	MaxVersions           int64            `json:"max_versions"`
+	PermissionFingerprint string           `json:"permission_fingerprint"`
+	PolicyVersion         PolicyVersion    `json:"policy_version"`
+	ProviderBlobLimit     int64            `json:"provider_blob_limit"`
+	RuleVersion           RuleVersion      `json:"rule_version"`
+	SchemaVersion         int64            `json:"schema_version"`
+	TraversalVersion      TraversalVersion `json:"traversal_version"`
+	WorkflowWrite         WorkflowWrite    `json:"workflow_write"`
+}
+
+type PublicationConstruction struct {
+	AuthorEmail        AuthorEmail         `json:"author_email"`
+	AuthorName         AuthorName          `json:"author_name"`
+	CandidateID        string              `json:"candidate_id"`
+	ConstructionID     string              `json:"construction_id"`
+	Message            string              `json:"message"`
+	Parents            []PublicationParent `json:"parents"`
+	RepositoryIdentity string              `json:"repository_identity"`
+	SchemaVersion      int64               `json:"schema_version"`
+	SourceDigest       string              `json:"source_digest"`
+	TargetBranch       string              `json:"target_branch"`
+	Timestamp          string              `json:"timestamp"`
+}
+
+type PublicationParent struct {
+	Commit                 string                `json:"commit"`
+	Kind                   PublicationParentKind `json:"kind"`
+	ObservationDigest      string                `json:"observation_digest"`
+	ObservationOperationID string                `json:"observation_operation_id"`
+	Outcome                EffectResult          `json:"outcome"`
+	RepositoryIdentity     string                `json:"repository_identity"`
+	Workspace              WorkspaceDescriptor   `json:"workspace"`
+}
+
+type PublicationEffectiveBasis struct {
+	CompletionManifestDigest string `json:"completion_manifest_digest"`
+	CompletionOperationID    string `json:"completion_operation_id"`
+	PlanID                   string `json:"plan_id"`
+	SpecificationID          string `json:"specification_id"`
+	TaskID                   string `json:"task_id"`
 }
 
 type ResultReadIdentity struct {
@@ -629,6 +696,87 @@ type ResultReadIdentity struct {
 	StorageID               string `json:"storage_id"`
 	TaskID                  string `json:"task_id"`
 	WorkspaceID             string `json:"workspace_id"`
+}
+
+type PublicationResultPage struct {
+	Findings      []PublicationFinding `json:"findings"`
+	PageCount     int64                `json:"page_count"`
+	PageDigest    string               `json:"page_digest"`
+	PageIndex     int64                `json:"page_index"`
+	Result        PublicationResult    `json:"result"`
+	SchemaVersion int64                `json:"schema_version"`
+}
+
+type PublicationFinding struct {
+	BaselineCommit       *string                `json:"baseline_commit,omitempty"`
+	BaselinePath         *string                `json:"baseline_path,omitempty"`
+	BaselinePathRedacted *bool                  `json:"baseline_path_redacted,omitempty"`
+	Blob                 *string                `json:"blob,omitempty"`
+	Commit               string                 `json:"commit"`
+	ContentDigest        *string                `json:"content_digest,omitempty"`
+	FindingID            string                 `json:"finding_id"`
+	Kind                 PublicationFindingKind `json:"kind"`
+	Limit                *int64                 `json:"limit,omitempty"`
+	Message              Message                `json:"message"`
+	OccurrenceOrdinal    int64                  `json:"occurrence_ordinal"`
+	OverrideEligible     bool                   `json:"override_eligible"`
+	Path                 string                 `json:"path"`
+	PathRedacted         bool                   `json:"path_redacted"`
+	RuleID               RuleID                 `json:"rule_id"`
+	Scope                Scope                  `json:"scope"`
+	Size                 *int64                 `json:"size,omitempty"`
+}
+
+type PublicationResult struct {
+	Candidate               *PublicationCandidateManifest `json:"candidate,omitempty"`
+	CandidateManifestDigest *string                       `json:"candidate_manifest_digest,omitempty"`
+	OperationID             string                        `json:"operation_id"`
+	Reason                  *PublicationResultReason      `json:"reason,omitempty"`
+	RequestDigest           string                        `json:"request_digest"`
+	Scan                    *PublicationScanSummary       `json:"scan,omitempty"`
+	ScanDigest              *string                       `json:"scan_digest,omitempty"`
+	SchemaVersion           int64                         `json:"schema_version"`
+	Status                  PublicationResultStatus       `json:"status"`
+}
+
+type PublicationCandidateManifest struct {
+	CandidateID        string   `json:"candidate_id"`
+	ConstructionDigest string   `json:"construction_digest"`
+	ConstructionID     string   `json:"construction_id"`
+	Head               string   `json:"head"`
+	Parents            []string `json:"parents"`
+	SchemaVersion      int64    `json:"schema_version"`
+	SourceDigest       string   `json:"source_digest"`
+	Tree               string   `json:"tree"`
+}
+
+type PublicationScanSummary struct {
+	CandidateManifestDigest string                        `json:"candidate_manifest_digest"`
+	ConfigurationDigest     string                        `json:"configuration_digest"`
+	Coverage                PublicationCoverage           `json:"coverage"`
+	FindingsBytes           int64                         `json:"findings_bytes"`
+	FindingsCount           int64                         `json:"findings_count"`
+	FindingsDigest          string                        `json:"findings_digest"`
+	Reason                  *PublicationScanSummaryReason `json:"reason,omitempty"`
+	ScanID                  string                        `json:"scan_id"`
+	SchemaVersion           int64                         `json:"schema_version"`
+	Status                  PublicationScanSummaryStatus  `json:"status"`
+}
+
+type PublicationCoverage struct {
+	Commits         int64 `json:"commits"`
+	Paths           int64 `json:"paths"`
+	UniqueBlobBytes int64 `json:"unique_blob_bytes"`
+	Versions        int64 `json:"versions"`
+}
+
+type ResultReadRequest struct {
+	Cursor         *string               `json:"cursor,omitempty"`
+	Identity       ResultReadIdentity    `json:"identity"`
+	IdentityDigest string                `json:"identity_digest"`
+	Mode           ResultReadRequestMode `json:"mode"`
+	Path           *string               `json:"path,omitempty"`
+	Side           *Side                 `json:"side,omitempty"`
 }
 
 type ResultReadResponse struct {
@@ -1367,20 +1515,20 @@ type TaskPreviewCommandResult struct {
 }
 
 type TaskPreviewStatus struct {
-	ConfirmationID        *string                `json:"confirmation_id,omitempty"`
-	ContentDigest         *string                `json:"content_digest,omitempty"`
-	Preview               TaskPreview            `json:"preview"`
-	ProjectContextVersion int64                  `json:"project_context_version"`
-	ProposalMessageID     string                 `json:"proposal_message_id"`
-	Reason                *Reason                `json:"reason,omitempty"`
-	SchemaVersion         int64                  `json:"schema_version"`
-	SelectedProjectID     *string                `json:"selected_project_id,omitempty"`
-	SourceMessageID       string                 `json:"source_message_id"`
-	SourceProjectID       *string                `json:"source_project_id,omitempty"`
-	SourceWatermark       int64                  `json:"source_watermark"`
-	State                 TaskPreviewStatusState `json:"state"`
-	Task                  *TaskOverview          `json:"task,omitempty"`
-	TodoID                string                 `json:"todo_id"`
+	ConfirmationID        *string                  `json:"confirmation_id,omitempty"`
+	ContentDigest         *string                  `json:"content_digest,omitempty"`
+	Preview               TaskPreview              `json:"preview"`
+	ProjectContextVersion int64                    `json:"project_context_version"`
+	ProposalMessageID     string                   `json:"proposal_message_id"`
+	Reason                *TaskPreviewStatusReason `json:"reason,omitempty"`
+	SchemaVersion         int64                    `json:"schema_version"`
+	SelectedProjectID     *string                  `json:"selected_project_id,omitempty"`
+	SourceMessageID       string                   `json:"source_message_id"`
+	SourceProjectID       *string                  `json:"source_project_id,omitempty"`
+	SourceWatermark       int64                    `json:"source_watermark"`
+	State                 TaskPreviewStatusState   `json:"state"`
+	Task                  *TaskOverview            `json:"task,omitempty"`
+	TodoID                string                   `json:"todo_id"`
 }
 
 type TaskOverview struct {
@@ -2106,6 +2254,87 @@ type ResultReadDiffQuery struct {
 	Path           string `json:"path"`
 }
 
+type PublicationCandidatePage struct {
+	Items         []PublicationRecord `json:"items"`
+	NextCursor    *string             `json:"next_cursor,omitempty"`
+	SchemaVersion int64               `json:"schema_version"`
+	TaskID        string              `json:"task_id"`
+}
+
+type PublicationRecord struct {
+	Candidate                *PublicationCandidateManifest `json:"candidate,omitempty"`
+	CandidateManifestDigest  *string                       `json:"candidate_manifest_digest,omitempty"`
+	Current                  bool                          `json:"current"`
+	EffectiveBasis           PublicationEffectiveBasis     `json:"effective_basis"`
+	EffectiveBasisDigest     string                        `json:"effective_basis_digest"`
+	KnownPublicExposureCount int64                         `json:"known_public_exposure_count"`
+	OperationID              string                        `json:"operation_id"`
+	OverrideAllowed          bool                          `json:"override_allowed"`
+	OverrideReceiptIDS       []string                      `json:"override_receipt_ids"`
+	Reason                   *string                       `json:"reason,omitempty"`
+	RemotePreparation        RemotePreparation             `json:"remote_preparation"`
+	RequestDigest            string                        `json:"request_digest"`
+	RetryAllowed             bool                          `json:"retry_allowed"`
+	Scan                     *PublicationScanSummary       `json:"scan,omitempty"`
+	ScanApplicable           bool                          `json:"scan_applicable"`
+	ScanDigest               *string                       `json:"scan_digest,omitempty"`
+	Source                   ResultReadIdentity            `json:"source"`
+	SourceDigest             string                        `json:"source_digest"`
+	Status                   PublicationRecordStatus       `json:"status"`
+}
+
+type PublicationCandidateQuery struct {
+	Cursor            *string `json:"cursor,omitempty"`
+	SourceOperationID *string `json:"source_operation_id,omitempty"`
+}
+
+type PublicationFindingsQuery struct {
+	Cursor     *string `json:"cursor,omitempty"`
+	ScanDigest string  `json:"scan_digest"`
+}
+
+type PublicationFindingPage struct {
+	CandidateID   string               `json:"candidate_id"`
+	Items         []PublicationFinding `json:"items"`
+	NextCursor    *string              `json:"next_cursor,omitempty"`
+	ScanDigest    string               `json:"scan_digest"`
+	SchemaVersion int64                `json:"schema_version"`
+	TaskID        string               `json:"task_id"`
+}
+
+type PublicationCommand struct {
+	Name          PublicationCommandName    `json:"name"`
+	Payload       PublicationCommandPayload `json:"payload"`
+	RequestID     string                    `json:"request_id"`
+	SchemaVersion int64                     `json:"schema_version"`
+	TaskID        string                    `json:"task_id"`
+}
+
+type PublicationCommandPayload struct {
+	CandidateID             *string  `json:"candidate_id,omitempty"`
+	CandidateManifestDigest *string  `json:"candidate_manifest_digest,omitempty"`
+	ConfirmationID          *string  `json:"confirmation_id,omitempty"`
+	ContentDigest           *string  `json:"content_digest,omitempty"`
+	EffectiveBasisDigest    *string  `json:"effective_basis_digest,omitempty"`
+	FindingIDS              []string `json:"finding_ids,omitempty"`
+	OperationDigest         *string  `json:"operation_digest,omitempty"`
+	OperationID             *string  `json:"operation_id,omitempty"`
+	ProposalID              *string  `json:"proposal_id,omitempty"`
+	ScanDigest              *string  `json:"scan_digest,omitempty"`
+}
+
+type PublicationCommandResult struct {
+	ConfirmationID *string                   `json:"confirmation_id,omitempty"`
+	ContentDigest  *string                   `json:"content_digest,omitempty"`
+	OperationID    *string                   `json:"operation_id,omitempty"`
+	ProposalID     *string                   `json:"proposal_id,omitempty"`
+	ReceiptID      *string                   `json:"receipt_id,omitempty"`
+	RequestID      string                    `json:"request_id"`
+	SchemaVersion  int64                     `json:"schema_version"`
+	Status         ConfigurationResultStatus `json:"status"`
+	TaskID         string                    `json:"task_id"`
+}
+
 type CommandEnvelopeName string
 
 const (
@@ -2332,6 +2561,145 @@ const (
 	DispositionCancelled CompletionSettlementDisposition = "cancelled"
 )
 
+type PublicationMode string
+
+const (
+	LocalCandidateV1 PublicationMode = "local_candidate_v1"
+)
+
+type PolicyVersion string
+
+const (
+	LocalPublicationV1 PolicyVersion = "local_publication_v1"
+)
+
+type RuleVersion string
+
+const (
+	CredentialRulesV1 RuleVersion = "credential_rules_v1"
+)
+
+type TraversalVersion string
+
+const (
+	AllParentsFinalTreeV1 TraversalVersion = "all_parents_final_tree_v1"
+)
+
+type WorkflowWrite string
+
+const (
+	Allowed              WorkflowWrite = "allowed"
+	Denied               WorkflowWrite = "denied"
+	WorkflowWriteUnknown WorkflowWrite = "unknown"
+)
+
+type AuthorEmail string
+
+const (
+	MonosLocalhost AuthorEmail = "monos@localhost"
+)
+
+type AuthorName string
+
+const (
+	Monos AuthorName = "monos"
+)
+
+type PublicationParentKind string
+
+const (
+	KindPublished   PublicationParentKind = "published"
+	Materialization PublicationParentKind = "materialization"
+	Target          PublicationParentKind = "target"
+)
+
+type PublicationFindingKind string
+
+const (
+	CredentialPattern      PublicationFindingKind = "credential_pattern"
+	KindTrackedIgnore      PublicationFindingKind = "tracked_ignore"
+	KindWorkflowPermission PublicationFindingKind = "workflow_permission"
+	ProviderHardSize       PublicationFindingKind = "provider_hard_size"
+	PublicationPolicySize  PublicationFindingKind = "publication_policy_size"
+	PublishedCredential    PublicationFindingKind = "published_credential"
+)
+
+type Message string
+
+const (
+	BlobExceedsLocalPublicationPolicy                        Message = "Blob exceeds local publication policy."
+	BlobExceedsProviderHardLimit                             Message = "Blob exceeds provider hard limit."
+	CredentialPatternMatchedValueRedacted                    Message = "Credential pattern matched; value redacted."
+	PreviouslyPublishedCredentialExposureRequiresRemediation Message = "Previously published credential exposure requires remediation."
+	TrackedFileMatchesIgnoreRules                            Message = "Tracked file matches ignore rules."
+	WorkflowWritePermissionIsNotVerified                     Message = "Workflow write permission is not verified."
+)
+
+type RuleID string
+
+const (
+	AwsAccessKey             RuleID = "aws_access_key"
+	GithubClassicToken       RuleID = "github_classic_token"
+	GithubFineGrainedToken   RuleID = "github_fine_grained_token"
+	PemPrivateKey            RuleID = "pem_private_key"
+	PolicyBlobSize           RuleID = "policy_blob_size"
+	ProviderBlobSize         RuleID = "provider_blob_size"
+	RuleIDTrackedIgnore      RuleID = "tracked_ignore"
+	RuleIDWorkflowPermission RuleID = "workflow_permission"
+)
+
+type Scope string
+
+const (
+	FinalTree         Scope = "final_tree"
+	PublicationCommit Scope = "publication_commit"
+)
+
+type PublicationResultReason string
+
+const (
+	ConflictingCandidate      PublicationResultReason = "conflicting_candidate"
+	NoChange                  PublicationResultReason = "no_change"
+	PurpleRetainedUnavailable PublicationResultReason = "retained_unavailable"
+	PurpleTimeout             PublicationResultReason = "timeout"
+	PurpleUnverifiedParent    PublicationResultReason = "unverified_parent"
+	ReasonIdentityMismatch    PublicationResultReason = "identity_mismatch"
+)
+
+type PublicationScanSummaryReason string
+
+const (
+	AggregateLimit            PublicationScanSummaryReason = "aggregate_limit"
+	BlobLimit                 PublicationScanSummaryReason = "blob_limit"
+	CommitLimit               PublicationScanSummaryReason = "commit_limit"
+	EvidenceLimit             PublicationScanSummaryReason = "evidence_limit"
+	FindingsLimit             PublicationScanSummaryReason = "findings_limit"
+	FluffyRetainedUnavailable PublicationScanSummaryReason = "retained_unavailable"
+	FluffyTimeout             PublicationScanSummaryReason = "timeout"
+	FluffyUnverifiedParent    PublicationScanSummaryReason = "unverified_parent"
+	MissingObject             PublicationScanSummaryReason = "missing_object"
+	PathLimit                 PublicationScanSummaryReason = "path_limit"
+	ReasonUnsupportedPath     PublicationScanSummaryReason = "unsupported_path"
+	UnsupportedIgnore         PublicationScanSummaryReason = "unsupported_ignore"
+	VersionLimit              PublicationScanSummaryReason = "version_limit"
+)
+
+type PublicationScanSummaryStatus string
+
+const (
+	Complete   PublicationScanSummaryStatus = "complete"
+	Incomplete PublicationScanSummaryStatus = "incomplete"
+)
+
+type PublicationResultStatus string
+
+const (
+	PurpleNotApplicable          PublicationResultStatus = "not_applicable"
+	PurplePrepared               PublicationResultStatus = "prepared"
+	PurpleReconciliationRequired PublicationResultStatus = "reconciliation_required"
+	PurpleUnavailable            PublicationResultStatus = "unavailable"
+)
+
 type ResultReadRequestMode string
 
 const (
@@ -2374,19 +2742,19 @@ const (
 type ResultReadResponseStatus string
 
 const (
-	Absent            ResultReadResponseStatus = "absent"
-	Available         ResultReadResponseStatus = "available"
-	Binary            ResultReadResponseStatus = "binary"
-	Busy              ResultReadResponseStatus = "busy"
-	IdentityMismatch  ResultReadResponseStatus = "identity_mismatch"
-	NoGit             ResultReadResponseStatus = "no_git"
-	Offline           ResultReadResponseStatus = "offline"
-	Oversized         ResultReadResponseStatus = "oversized"
-	PurpleUnavailable ResultReadResponseStatus = "unavailable"
-	ScanLimit         ResultReadResponseStatus = "scan_limit"
-	Timeout           ResultReadResponseStatus = "timeout"
-	Unsupported       ResultReadResponseStatus = "unsupported"
-	UnsupportedPath   ResultReadResponseStatus = "unsupported_path"
+	Absent                 ResultReadResponseStatus = "absent"
+	Available              ResultReadResponseStatus = "available"
+	Binary                 ResultReadResponseStatus = "binary"
+	Busy                   ResultReadResponseStatus = "busy"
+	FluffyUnavailable      ResultReadResponseStatus = "unavailable"
+	NoGit                  ResultReadResponseStatus = "no_git"
+	Oversized              ResultReadResponseStatus = "oversized"
+	PurpleOffline          ResultReadResponseStatus = "offline"
+	PurpleUnsupported      ResultReadResponseStatus = "unsupported"
+	ScanLimit              ResultReadResponseStatus = "scan_limit"
+	StatusIdentityMismatch ResultReadResponseStatus = "identity_mismatch"
+	StatusTimeout          ResultReadResponseStatus = "timeout"
+	StatusUnsupportedPath  ResultReadResponseStatus = "unsupported_path"
 )
 
 type Availability string
@@ -2400,30 +2768,34 @@ const (
 type Type string
 
 const (
-	Authorization       Type = "authorization"
-	AuthorizeDispatch   Type = "authorize_dispatch"
-	Effect              Type = "effect"
-	Event               Type = "event"
-	EventACK            Type = "event_ack"
-	Heartbeat           Type = "heartbeat"
-	Hello               Type = "hello"
-	OperationACK        Type = "operation_ack"
-	ResultRead          Type = "result_read"
-	ResultReadResult    Type = "result_read_result"
-	Start               Type = "start"
-	TypeError           Type = "error"
-	TypeOperationResult Type = "operation_result"
-	TypeReady           Type = "ready"
-	Welcome             Type = "welcome"
+	Authorization         Type = "authorization"
+	AuthorizeDispatch     Type = "authorize_dispatch"
+	Effect                Type = "effect"
+	Event                 Type = "event"
+	EventACK              Type = "event_ack"
+	Heartbeat             Type = "heartbeat"
+	Hello                 Type = "hello"
+	OperationACK          Type = "operation_ack"
+	PublicationPrepare    Type = "publication_prepare"
+	ResultRead            Type = "result_read"
+	ResultReadResult      Type = "result_read_result"
+	Start                 Type = "start"
+	TypeError             Type = "error"
+	TypeOperationResult   Type = "operation_result"
+	TypePublicationACK    Type = "publication_ack"
+	TypePublicationResult Type = "publication_result"
+	TypeReady             Type = "ready"
+	Welcome               Type = "welcome"
 )
 
 type TaskProposalAction string
 
 const (
-	AcceptDelivery                               TaskProposalAction = "accept_delivery"
-	ApplyRework                                  TaskProposalAction = "apply_rework"
-	TaskProposalActionApplySpecificationRevision TaskProposalAction = "apply_specification_revision"
-	TaskProposalActionPublishReplan              TaskProposalAction = "publish_replan"
+	AcceptDelivery                                TaskProposalAction = "accept_delivery"
+	ApplyRework                                   TaskProposalAction = "apply_rework"
+	TaskProposalActionApplySpecificationRevision  TaskProposalAction = "apply_specification_revision"
+	TaskProposalActionOverridePublicationFindings TaskProposalAction = "override_publication_findings"
+	TaskProposalActionPublishReplan               TaskProposalAction = "publish_replan"
 )
 
 type OwnerCommandName string
@@ -2663,13 +3035,13 @@ const (
 	OutcomeCreated   Outcome = "created"
 )
 
-type Reason string
+type TaskPreviewStatusReason string
 
 const (
-	NewerInput           Reason = "newer_input"
-	ProjectUnavailable   Reason = "project_unavailable"
-	SourceProjectChanged Reason = "source_project_changed"
-	TodoArchived         Reason = "todo_archived"
+	NewerInput           TaskPreviewStatusReason = "newer_input"
+	ProjectUnavailable   TaskPreviewStatusReason = "project_unavailable"
+	SourceProjectChanged TaskPreviewStatusReason = "source_project_changed"
+	TodoArchived         TaskPreviewStatusReason = "todo_archived"
 )
 
 type TaskPreviewStatusState string
@@ -2726,17 +3098,17 @@ const (
 type PlanningStatusEnum string
 
 const (
-	FluffyInterrupted PlanningStatusEnum = "interrupted"
-	FluffyProcessing  PlanningStatusEnum = "processing"
-	FluffyQueued      PlanningStatusEnum = "queued"
-	FluffySettling    PlanningStatusEnum = "settling"
-	FluffyUnavailable PlanningStatusEnum = "unavailable"
-	IndigoCancelled   PlanningStatusEnum = "cancelled"
-	NotStarted        PlanningStatusEnum = "not_started"
-	PurplePending     PlanningStatusEnum = "pending"
-	PurplePublished   PlanningStatusEnum = "published"
-	StatusIssue       PlanningStatusEnum = "issue"
-	Stopped           PlanningStatusEnum = "stopped"
+	FluffyInterrupted    PlanningStatusEnum = "interrupted"
+	FluffyProcessing     PlanningStatusEnum = "processing"
+	FluffyQueued         PlanningStatusEnum = "queued"
+	FluffySettling       PlanningStatusEnum = "settling"
+	IndigoCancelled      PlanningStatusEnum = "cancelled"
+	NotStarted           PlanningStatusEnum = "not_started"
+	PurplePending        PlanningStatusEnum = "pending"
+	PurplePublished      PlanningStatusEnum = "published"
+	StatusIssue          PlanningStatusEnum = "issue"
+	Stopped              PlanningStatusEnum = "stopped"
+	TentacledUnavailable PlanningStatusEnum = "unavailable"
 )
 
 type OwnerRecoverCompletionCommandName string
@@ -2893,4 +3265,26 @@ const (
 	Held               LeaseState = "held"
 	LeaseStateSettling LeaseState = "settling"
 	Released           LeaseState = "released"
+)
+
+type PublicationRecordStatus string
+
+const (
+	FluffyNotApplicable          PublicationRecordStatus = "not_applicable"
+	FluffyOffline                PublicationRecordStatus = "offline"
+	FluffyPrepared               PublicationRecordStatus = "prepared"
+	FluffyReconciliationRequired PublicationRecordStatus = "reconciliation_required"
+	FluffyUnsupported            PublicationRecordStatus = "unsupported"
+	Preparing                    PublicationRecordStatus = "preparing"
+	StickyPending                PublicationRecordStatus = "pending"
+	StickyUnavailable            PublicationRecordStatus = "unavailable"
+)
+
+type PublicationCommandName string
+
+const (
+	ConfirmPublicationOverride      PublicationCommandName = "confirm_publication_override"
+	NameOverridePublicationFindings PublicationCommandName = "override_publication_findings"
+	PreparePublicationOverride      PublicationCommandName = "prepare_publication_override"
+	RetryPublicationPreparation     PublicationCommandName = "retry_publication_preparation"
 )

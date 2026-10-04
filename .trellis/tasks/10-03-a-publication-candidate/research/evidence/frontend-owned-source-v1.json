@@ -1,0 +1,12 @@
+{
+  "apps/web/src/features/publication-candidate.tsx": "3ad0485c992a44dc5a802dc7f952e74c6b3ce8bf9b37c3f818d181341d5802cb",
+  "apps/web/src/lib/publication-api.ts": "7be50fc93d4578c33b42aba151cbae19254a9fc7e98933220de2186c1bddfee4",
+  "apps/web/src/lib/publication-api.test.ts": "fd898d33cf6d50461a717d70432c189f4f66e722852996f7fb1c8275385af27a",
+  "apps/web/src/lib/task-api.ts": "40fd4fc308c99b3249419b0bb26e8e9a1a3c90c4d3c7c39a2b2d8d79a6962344",
+  "apps/web/src/lib/use-task-command.ts": "79e66686e7cfaed091ceadd6a78deff0815fda77acdc39a85c5cba5ca0338311",
+  "apps/web/src/features/task-overview.tsx": "a0033100fe3c258e54cfa504ceca92f930c722ae82a3196a3586f1b936f9dba4",
+  "apps/web/src/features/task-ui.css": "dd91414233b88c3c2015954b859edbc2647566bc7281458c385eaf52fe1365a0",
+  "apps/web/test/publication.e2e.ts": "260776fe7df46a4c71b8c87f29ed54434ffa8141335f09fb38f8ec77c13aea97",
+  "apps/server/test/fixtures/execution-ui-fixture.ts": "281aec9eb1bc519595b5bfde24fd14790f5611a73b0a731e31600fd991a741bc",
+  "apps/server/test/fixtures/web-server.ts": "a67849e057674e1096cee1d17540624837eb1e10b9460c8ad15992a64b088ca6"
+}

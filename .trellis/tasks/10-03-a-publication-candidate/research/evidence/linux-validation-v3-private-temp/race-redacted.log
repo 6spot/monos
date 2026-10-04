@@ -1,0 +1,11 @@
+ok  	monos.local/runner/cmd/monos	1.067s
+?   	monos.local/runner/cmd/monos-probe-exec	[no test files]
+?   	monos.local/runner/cmd/monos-probe-launch	[no test files]
+?   	monos.local/runner/cmd/monos-runner	[no test files]
+ok  	monos.local/runner/internal/adapter	1.258s
+ok  	monos.local/runner/internal/control	1.407s
+ok  	monos.local/runner/internal/daemon	8.183s
+ok  	monos.local/runner/internal/host	25.966s
+ok  	monos.local/runner/internal/journal	2.038s
+ok  	monos.local/runner/internal/local	1.443s
+ok  	monos.local/runner/internal/wire	3.764s

@@ -80,61 +80,72 @@ func resultOutcome(r protocol.ResultReadRequest, status string) protocol.ResultR
 
 // ResultRead checks initialized disk lineage without creating or repairing it.
 func ResultRead(ctx context.Context, r protocol.ResultReadRequest) protocol.ResultReadResponse {
+	dir, status := trustedResultExport(r.Identity)
+	if status != "" {
+		return resultOutcome(r, status)
+	}
+	return readResultObjects(ctx, dir, r)
+}
+
+// Shared disk-only validation. It neither creates storage nor authorizes source
+// identity; callers also verify the retained completion journal and exact refs.
+func trustedResultExport(identity protocol.ResultReadIdentity) (string, string) {
 	uid := uint32(os.Geteuid())
 	if uid == 0 {
-		return resultOutcome(r, "unavailable")
+		return "", "unavailable"
 	}
 	rootCopy, serviceCopy := filepath.Join(Root, "launch", "storage-id"), filepath.Join(Root, "service", "storage-id")
 	if trustedDir(filepath.Dir(rootCopy), 0) != nil || resultParents(filepath.Dir(serviceCopy), uid) != nil {
-		return resultOutcome(r, "unavailable")
+		return "", "unavailable"
 	}
 	if s, e := os.Lstat(serviceCopy); e != nil || s.Mode().Perm()&0077 != 0 {
-		return resultOutcome(r, "unavailable")
+		return "", "unavailable"
 	}
 	storage, err := readStorageIdentity(rootCopy, serviceCopy, 0, uid)
-	if err != nil || storage != r.Identity.StorageID {
-		return resultOutcome(r, "identity_mismatch")
+	if err != nil || storage != identity.StorageID {
+		return "", "identity_mismatch"
 	}
-	dir := filepath.Join(Root, "results", r.Identity.OperationID)
-	if !ValidID(r.Identity.OperationID) || resultParents(dir, uid) != nil || serviceDirectory(filepath.Dir(dir), true) != nil || serviceDirectory(dir, true) != nil {
-		return resultOutcome(r, "unavailable")
+	dir := filepath.Join(Root, "results", identity.OperationID)
+	if !ValidID(identity.OperationID) || resultParents(dir, uid) != nil || serviceDirectory(filepath.Dir(dir), true) != nil || serviceDirectory(dir, true) != nil {
+		return "", "unavailable"
 	}
 	// An export must own its objects; no borrowed object store or indirection.
 	for _, p := range []string{"HEAD", "config"} {
 		if trustedFile(filepath.Join(dir, p), uid) != nil {
-			return resultOutcome(r, "unavailable")
+			return "", "unavailable"
 		}
 	}
 	for _, p := range []string{"objects", "refs"} {
 		if resultParents(filepath.Join(dir, p), uid) != nil || serviceDirectory(filepath.Join(dir, p), false) != nil {
-			return resultOutcome(r, "unavailable")
+			return "", "unavailable"
 		}
 	}
 	for _, p := range []string{"refs/monos", "objects/info", "objects/pack"} {
 		target := filepath.Join(dir, p)
 		if _, e := os.Lstat(target); e == nil {
 			if resultParents(target, uid) != nil || serviceDirectory(target, false) != nil {
-				return resultOutcome(r, "unavailable")
+				return "", "unavailable"
 			}
 		} else if !os.IsNotExist(e) {
-			return resultOutcome(r, "unavailable")
+			return "", "unavailable"
 		}
 	}
 	for _, p := range []string{"refs/monos/result", "packed-refs"} {
 		target := filepath.Join(dir, p)
 		if _, e := os.Lstat(target); e == nil {
 			if trustedFile(target, uid) != nil {
-				return resultOutcome(r, "unavailable")
+				return "", "unavailable"
 			}
 		} else if !os.IsNotExist(e) {
-			return resultOutcome(r, "unavailable")
+			return "", "unavailable"
 		}
 	}
 	if _, err := os.Lstat(filepath.Join(dir, "objects", "info", "alternates")); !os.IsNotExist(err) {
-		return resultOutcome(r, "unavailable")
+		return "", "unavailable"
 	}
-	return readResultObjects(ctx, dir, r)
+	return dir, ""
 }
+
 func resultParents(path string, uid uint32) error {
 	path = filepath.Clean(path)
 	if !filepath.IsAbs(path) {

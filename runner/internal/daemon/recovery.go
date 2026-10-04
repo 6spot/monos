@@ -141,6 +141,7 @@ func (d *Daemon) prepareRecovery(ctx context.Context, inventory protocol.RunnerI
 // Called only after the Ready frame has been sent on this connection. Inventory
 // validation alone must not send results or start recovered effects before Ready.
 func (d *Daemon) ConnectionReady(ctx context.Context) {
+	d.replayPublication(ctx)
 	d.queueMu.Lock()
 	defer d.queueMu.Unlock()
 	if d.recovery == nil || d.recovery.ctx.Done() != ctx.Done() || ctx.Err() != nil {
