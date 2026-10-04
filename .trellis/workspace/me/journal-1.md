@@ -691,3 +691,26 @@ Accepted exact-tree local candidates, complete-range sanitized scans and precise
 ### Next Steps
 
 - Plan and implement10-03-a-remote-preparation under existing sequential authorization; never push monos source
+
+
+## Session 29: Automatic GitHub review preparation accepted
+<!-- trellis-session: v=2 fp=f9dd02ab9a8e6600 -->
+
+**Date**: 2026-10-05
+**Task**: Automatic GitHub review preparation accepted
+**Branch**: `feat/stage-a-boundary-probe`
+
+### Summary
+
+Accepted all seven remote preparation AC with independent combined review. Added durable exact GitHub push/PR/check/Cancel lane, same-tree mapping and protected Web history/Retry. Reused unchanged gates; focused PG, typed scheduling, truncated checks, SHA256 and current Linux deltas passed. Actual original-operation synthetic GitHub PR4 lost-response recovery/FF correction/close retained branch; OAuth kernel explicitly not installed App issuance/Owner Accept/merge. Scoped verification policy committed; unrelated framework work preserved. Continue Owner delivery next.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `a53901a` | docs: bound verification to affected claims |
+| `4b37552` | feat: prepare automatic GitHub reviews |
+
+### Status
+
+[OK] **Completed**
