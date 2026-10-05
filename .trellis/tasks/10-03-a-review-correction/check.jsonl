@@ -1,0 +1,23 @@
+{"file": "ARCHITECTURE.md", "reason": "Ownership and deterministic formal state"}
+{"file": "docs/08-principles-and-non-goals.md", "reason": "Immutable identity, explicit exits, version-specific acceptance"}
+{"file": "docs/02-planner-and-planning.md", "reason": "Review feedback and real Rework vs Replan; scoped direct reads where oversized"}
+{"file": "docs/04-workspace-and-git.md", "reason": "Revocation/finality/settlement/late-input contracts; scoped direct reads where oversized"}
+{"file": "docs/07-owner-review-and-ui.md", "reason": "Request Changes642-674, explicit exits and frozen conversation; scoped direct reads"}
+{"file": ".trellis/spec/backend/task-conversation.md", "reason": "Canonical source, immutable message/reply, independent applicability"}
+{"file": ".trellis/spec/backend/task-specification.md", "reason": "Actual complete requirement proposals and exact Owner publication"}
+{"file": ".trellis/spec/backend/task-replan.md", "reason": "Real review origin, dismissal predecessor and retained independent guards"}
+{"file": ".trellis/spec/backend/task-records.md", "reason": "Actual same-Node invalidation and activation history"}
+{"file": ".trellis/spec/backend/owner-delivery.md", "reason": "Frozen authority/receipt/shared effects/Cancel original truth"}
+{"file": ".trellis/spec/backend/remote-preparation.md", "reason": "Original possible-effect reconciliation/physical claims/stable PR branch"}
+{"file": ".trellis/spec/backend/database-guidelines.md", "reason": "Runner-before-Task order, atomic receipts and actual SQL authority"}
+{"file": ".trellis/spec/protocol/commands.md", "reason": "Strict Owner/Agent scope and exact replay"}
+{"file": ".trellis/spec/protocol/schema-generation.md", "reason": "Single generated authority, encoded bounds, TS/Go consumers"}
+{"file": ".trellis/spec/frontend/execution-ui.md", "reason": "Existing exact journal/session/selection fences and explicit exits"}
+{"file": ".trellis/spec/frontend/visual-design.md", "reason": "Existing Multica-derived layout and Base UI contracts"}
+{"file": ".trellis/spec/runner/execution-guidelines.md", "reason": "Exclusive scratch Planner source, CLI phase and actual Stop attribution"}
+{"file": ".trellis/spec/guides/agent-collaboration.md", "reason": "Nonoverlapping ownership/shared writer and explicit task context"}
+{"file": ".trellis/spec/guides/verification-scope.md", "reason": "Smallest sufficient checks and reuse/stopping rule"}
+{"file": ".trellis/tasks/10-03-a-review-correction/research/backend-correction-design.md", "reason": "Concrete production backend seams/source origin/reconsideration authority"}
+{"file": ".trellis/tasks/10-03-a-review-correction/research/delivery-correction-boundaries.md", "reason": "Stale fallback/effect settlement and exact guard ownership"}
+{"file": ".trellis/tasks/10-03-a-review-correction/research/web-correction-design.md", "reason": "Exact Owner/read/source/journal/session and truthful cancellation UI"}
+{"file": ".trellis/tasks/10-03-a-review-correction/research/planning-convergence-review.md", "reason": "Resolved identity/order/source guard contracts and honest delegate interruption"}
