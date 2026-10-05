@@ -30,6 +30,6 @@
 {"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "Affected interaction/build/layout gate"}
 {"file": ".trellis/spec/guides/index.md", "reason": "Shared collaboration guide discovery; explicit assignment retains task/ownership"}
 {"file": ".trellis/spec/guides/verification-scope.md", "reason": "Smallest sufficient affected checks/valid evidence reuse/stop"}
-{"file": ".trellis/tasks/10-03-a-owner-delivery/research/backend-acceptance-design.md", "reason": "Source-backed authority/freeze/Cancel sites; oversized injection: directly read needed report sections"}
-{"file": ".trellis/tasks/10-03-a-owner-delivery/research/provider-finalization-design.md", "reason": "Primary-source supported readiness/merge uncertainty"}
-{"file": ".trellis/tasks/10-03-a-owner-delivery/research/owner-acceptance-ui-design.md", "reason": "Existing TaskIntent/receipt/UI composition"}
+{"file": ".trellis/tasks/archive/2026-10/10-03-a-owner-delivery/research/backend-acceptance-design.md", "reason": "Source-backed authority/freeze/Cancel sites; oversized injection: directly read needed report sections"}
+{"file": ".trellis/tasks/archive/2026-10/10-03-a-owner-delivery/research/provider-finalization-design.md", "reason": "Primary-source supported readiness/merge uncertainty"}
+{"file": ".trellis/tasks/archive/2026-10/10-03-a-owner-delivery/research/owner-acceptance-ui-design.md", "reason": "Existing TaskIntent/receipt/UI composition"}

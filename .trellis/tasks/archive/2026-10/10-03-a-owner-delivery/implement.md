@@ -66,4 +66,5 @@ branch, claim atomic base CAS or revive Cancelled. Installed App remains externa
 
 - [x] Seven criteria have current/reused evidence with explicit limits.
 - [x] Independent review resolved and final input hashes match validation.
-- [ ] Main scoped commit/archive/session and continue correction leaf.
+- [x] Main scoped work commit `c0212a9`; leaf archived after integrated acceptance.
+  Session journal and ordered correction continuation are main wrap-up actions.

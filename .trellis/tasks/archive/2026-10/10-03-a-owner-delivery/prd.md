@@ -9,7 +9,7 @@ preserve the exact approved identity.
 
 ## Background and order
 
-[Automatic remote preparation](../archive/2026-10/10-03-a-remote-preparation/prd.md)
+[Automatic remote preparation](../10-03-a-remote-preparation/prd.md)
 was accepted on 2026-10-05 at `4b37552`; archive `bac5e35`, journal `37eeb6f`.
 It supplies exact candidates, mapped carry, scans, actual waivers, push/PR preparation
 and original-effect reconciliation. It has no final Accept or merge. Existing
