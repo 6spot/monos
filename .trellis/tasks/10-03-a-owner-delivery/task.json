@@ -2,17 +2,17 @@
   "id": "a-owner-delivery",
   "name": "a-owner-delivery",
   "title": "Exact Owner delivery acceptance",
-  "description": "Freeze exact Owner-approved delivery batches and finalize expected-head GitHub or verified plain-Git delivery.",
+  "description": "Freeze exact Owner-approved delivery batches and finalize expected-head GitHub delivery.",
   "status": "planning",
-  "dev_type": null,
-  "scope": null,
-  "package": null,
+  "dev_type": "fullstack",
+  "scope": "delivery",
+  "package": "monos",
   "priority": "P2",
   "creator": "me",
   "assignee": "me",
   "createdAt": "2026-10-03",
   "completedAt": null,
-  "branch": null,
+  "branch": "feat/stage-a-boundary-probe",
   "base_branch": "main",
   "worktree_path": null,
   "commit": null,
@@ -21,9 +21,9 @@
   "children": [],
   "parent": "09-28-a-review-delivery",
   "relatedFiles": [],
-  "notes": "",
+  "notes": "Backend/provider convergence READY2026-10-05. User standing autonomous ordered execution authorizes transition. Next: single wire contract freeze, then acceptance persistence/coordinator and provider/Web integration; installed live App remains separate external gate.",
   "meta": {
     "roadmap_level": "leaf",
-    "planning_maturity": "backlog"
+    "planning_maturity": "implementation_ready"
   }
 }

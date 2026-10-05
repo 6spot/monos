@@ -29,7 +29,7 @@ Execute these leaves in order; later leaves remain backlog until their own sourc
 
 1. [Exact local result review](../archive/2026-10/10-03-a-local-result-review/prd.md) — accepted 2026-10-03; immutable local reads, current/history, bounded outcomes and desktop/mobile evidence.
 2. [Controlled publication candidate](../archive/2026-10/10-03-a-publication-candidate/prd.md) — accepted2026-10-04; exact-tree public-parent construction, range scans, immutable local receipts and native isolated permissions.
-3. [Automatic review preparation](../10-03-a-remote-preparation/prd.md).
+3. [Automatic review preparation](../archive/2026-10/10-03-a-remote-preparation/prd.md) — accepted2026-10-05, commit4b37552; stable GitHub preparation, original-effect recovery, protected UI and native/provider evidence.
 4. [Exact Owner delivery acceptance](../10-03-a-owner-delivery/prd.md).
 5. [Review correction and delivery recovery](../10-03-a-review-correction/prd.md).
 6. [Review and delivery integration acceptance](../10-03-a-delivery-acceptance/prd.md).

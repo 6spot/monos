@@ -1,0 +1,35 @@
+{"file": "ARCHITECTURE.md", "reason": "Module ownership and deterministic formal changes"}
+{"file": "docs/04-workspace-and-git.md", "reason": "Exact result, acceptance293-338, provider220; oversized context: direct relevant sections"}
+{"file": "docs/05-tool-protocol.md", "reason": "Owner command authorization/replay; direct relevant confirmation sections if truncated"}
+{"file": "docs/06-state-and-formal-data.md", "reason": "Immutable revisions, Task control and input operation authority; direct relevant sections if truncated"}
+{"file": "docs/07-owner-review-and-ui.md", "reason": "Exact Owner review/conversation630-704; direct relevant sections if truncated"}
+{"file": "docs/08-principles-and-non-goals.md", "reason": "Explicit invariants and removed concepts"}
+{"file": ".trellis/spec/backend/index.md", "reason": "Read actual applicable contracts from index"}
+{"file": ".trellis/spec/backend/database-guidelines.md", "reason": "Real transactions/SQL/recovery/migrations"}
+{"file": ".trellis/spec/backend/owner-commands.md", "reason": "Owner sessions/proposals/consumption/replay"}
+{"file": ".trellis/spec/backend/delivery-contracts.md", "reason": "Frozen acceptance/input cutoff/remote effects"}
+{"file": ".trellis/spec/backend/publication-candidates.md", "reason": "Exact source/candidate/mapping/scan/waiver authority"}
+{"file": ".trellis/spec/backend/remote-preparation.md", "reason": "Shared item effects, original uncertainty and bounded providers"}
+{"file": ".trellis/spec/backend/task-records.md", "reason": "Effective activation and canonical completion membership"}
+{"file": ".trellis/spec/backend/task-conversation.md", "reason": "Ordinary input guards and postcutoff reply-only attribution"}
+{"file": ".trellis/spec/backend/node-execution.md", "reason": "Physical effect freeze and Cancel ownership"}
+{"file": ".trellis/spec/backend/dispatch-queue.md", "reason": "No accepted Task Node promotion"}
+{"file": ".trellis/spec/backend/infrastructure-configuration.md", "reason": "Exact App scope/minimal profiles/no credentials in artifacts"}
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "Typed safe failure outcomes"}
+{"file": ".trellis/spec/backend/logging-guidelines.md", "reason": "Credential/provider-body secrecy"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Affected backend quality and external claim boundaries"}
+{"file": ".trellis/spec/protocol/index.md", "reason": "Wire ownership discovery"}
+{"file": ".trellis/spec/protocol/commands.md", "reason": "Strict schemas/canonical bytes/actual command-specific receipt"}
+{"file": ".trellis/spec/protocol/schema-generation.md", "reason": "Single source and affected consumers"}
+{"file": ".trellis/spec/frontend/index.md", "reason": "Read actual applicable frontend contracts"}
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "Base UI/accessibility composition"}
+{"file": ".trellis/spec/frontend/hook-guidelines.md", "reason": "Task/session abort and late reply fences"}
+{"file": ".trellis/spec/frontend/execution-ui.md", "reason": "Scoped command journal/exact controls/history"}
+{"file": ".trellis/spec/frontend/type-safety.md", "reason": "Generated types plus runtime receipt validation"}
+{"file": ".trellis/spec/frontend/visual-design.md", "reason": "Responsive neutral UI and actual new layout evidence"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "Affected interaction/build/layout gate"}
+{"file": ".trellis/spec/guides/index.md", "reason": "Shared collaboration guide discovery; explicit assignment retains task/ownership"}
+{"file": ".trellis/spec/guides/verification-scope.md", "reason": "Smallest sufficient affected checks/valid evidence reuse/stop"}
+{"file": ".trellis/tasks/10-03-a-owner-delivery/research/backend-acceptance-design.md", "reason": "Source-backed authority/freeze/Cancel sites; oversized injection: directly read needed report sections"}
+{"file": ".trellis/tasks/10-03-a-owner-delivery/research/provider-finalization-design.md", "reason": "Primary-source supported readiness/merge uncertainty"}
+{"file": ".trellis/tasks/10-03-a-owner-delivery/research/owner-acceptance-ui-design.md", "reason": "Existing TaskIntent/receipt/UI composition"}
