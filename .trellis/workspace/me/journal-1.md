@@ -714,3 +714,39 @@ Accepted all seven remote preparation AC with independent combined review. Added
 ### Status
 
 [OK] **Completed**
+
+
+## Session 30: Exact Owner delivery accepted
+<!-- trellis-session: v=2 fp=46289df110920c84 -->
+
+**Date**: 2026-10-05
+**Task**: Exact Owner delivery accepted
+**Branch**: `feat/stage-a-boundary-probe`
+
+### Summary
+
+Completed and archived the exact Owner delivery leaf; continuing ordered correction and recovery.
+
+### Main Changes
+
+- Actual Owner receipts, immutable complete batches, atomic cutoff, accepted preparation and expected-head GitHub finalization with original-effect recovery and Cancel.
+- Protected Web exact confirmation/progress/history; generated wire; scoped specs and retained evidence.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `c0212a9` | feat: accept exact Owner delivery |
+
+### Testing
+
+- [OK] Real PostgreSQL authority/contention/process recovery; 12 root integration cases plus affected mapped carry and final SQL checks pass; TypeScript/lint/generated consumers and 3 current-build browser cases pass.
+- [OK] Current-adapter synthetic PR #5: one successful merge, deliberately withheld response, zero recovery mutations; installed App/coordinator remains unproven.
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- Continue 10-03-a-review-correction, then combined installed acceptance; preserve external App gate and unrelated framework edits.
