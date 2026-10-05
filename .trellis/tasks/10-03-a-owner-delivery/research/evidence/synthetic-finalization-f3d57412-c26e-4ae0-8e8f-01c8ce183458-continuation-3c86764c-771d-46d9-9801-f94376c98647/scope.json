@@ -1,0 +1,24 @@
+{
+  "observed_at": "2026-10-05T07:24:40.075Z",
+  "fixture_scope": "oauth_injected_synthetic_adapter",
+  "repository": "6spot/monolab-feasibility-20260928-160020-public",
+  "repository_id": "1393178791",
+  "expected_base": "9ac3353e97ed6a0cb96a80bb8e136d44cac982e4",
+  "task": "f3d57412-c26e-4ae0-8e8f-01c8ce183458",
+  "resource": "f0a8cf21-1052-45d6-91d6-2ecd4a0d704a",
+  "item": "2a653600-0f41-4d10-8b9b-aab16f3c7f10",
+  "branch": "monos/task/f3d57412-c26e-4ae0-8e8f-01c8ce183458/f0a8cf21-1052-45d6-91d6-2ecd4a0d704a",
+  "marker": "<!-- monos-delivery-item:2a653600-0f41-4d10-8b9b-aab16f3c7f10 -->",
+  "inputs": {
+    "apps/server/src/github-finalization.ts": "95cc97a7be85238864cec3b28847a31a332964f4f15276599a97ea064b805938",
+    "apps/server/src/github-remote.ts": "cfdf0ac01279a93b86f3c56ac1feb70121814bb19dc69d3febba0a0ef80c42f3",
+    "apps/server/src/github.ts": "ddb07ebdb9e51a06eac159e09aed02745b48afe44475e1d1f56befb21e4dcc1b",
+    "packages/domain/src/repositories.ts": "f3e4a7ea692888d690ca21d17404d1e1b24248ab79c488f2ec78fe3e944e93d5",
+    "packages/protocol/src/validation.ts": "82fb5d8ee47870685098c757c120ce86f424f9d651dca9acebeb3e360ed16b1d",
+    "packages/protocol/schemas/v1/contracts.json": "2f17d24b9ba4391e78b6f4a09b4d5cf59713b256c0e9f10cdeca0ce41a51bcc9",
+    ".trellis/tasks/10-03-a-owner-delivery/research/synthetic-finalization-kernel.mjs": "073252b59547b269fb54de048fe039a39ef81492ae221e3b86d2559aa0eee9df"
+  },
+  "production_app_issuance": "not_proven",
+  "installed_coordinator": "not_proven",
+  "product_owner_acceptance": "not_performed"
+}

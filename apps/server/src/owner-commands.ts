@@ -94,6 +94,7 @@ export class OwnerCommands {
       current(row, command.scope_id, confirmationCommand.payload.content_digest, basis);
       if((await tx.query('SELECT 1 FROM requirement_proposals WHERE id=$1',[row.id])).rowCount){const task=(await tx.query<SpecificationTask>('SELECT * FROM tasks WHERE id=$1',[command.scope_id])).rows[0]!;await eligibleRequirement(tx,task,await requirementProposal(tx,row.id,task.id));}
       if(row.action==='publish_replan')throw new CommandError('denied_scope','Use dedicated exact Replan confirmation');
+      if(row.action==='accept_delivery')throw new CommandError('denied_scope','Use dedicated exact Delivery confirmation');
       const existing = (await tx.query<{ id: string }>('SELECT id FROM authorization_receipts WHERE proposal_id=$1', [row.id])).rows[0];
       const confirmation = existing?.id ?? randomUUID();
       if (!existing) await tx.query('INSERT INTO authorization_receipts(id,proposal_id) VALUES($1,$2)', [confirmation, row.id]);

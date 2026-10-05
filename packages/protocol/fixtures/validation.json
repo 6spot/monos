@@ -5653,5 +5653,3046 @@
         ]
       }
     }
+  },
+  {
+    "name": "owner delivery prepare_delivery_acceptance",
+    "schema": "OwnerDeliveryCommand",
+    "valid": true,
+    "value": {
+      "schema_version": 1,
+      "task_id": "30000000-0000-4000-8000-000000000090",
+      "request_id": "delivery_request",
+      "name": "prepare_delivery_acceptance",
+      "payload": {
+        "basis": {
+          "control_version": 1,
+          "specification_id": "specification_id",
+          "plan_id": "plan_id"
+        }
+      }
+    }
+  },
+  {
+    "name": "owner delivery prepare_delivery_acceptance requires payload binding",
+    "schema": "OwnerDeliveryCommand",
+    "valid": false,
+    "value": {
+      "schema_version": 1,
+      "task_id": "30000000-0000-4000-8000-000000000090",
+      "request_id": "delivery_request",
+      "name": "prepare_delivery_acceptance",
+      "payload": {}
+    }
+  },
+  {
+    "name": "owner delivery confirm_delivery_acceptance",
+    "schema": "OwnerDeliveryCommand",
+    "valid": true,
+    "value": {
+      "schema_version": 1,
+      "task_id": "30000000-0000-4000-8000-000000000090",
+      "request_id": "delivery_request",
+      "name": "confirm_delivery_acceptance",
+      "payload": {
+        "proposal_id": "proposal",
+        "content_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    }
+  },
+  {
+    "name": "owner delivery confirm_delivery_acceptance requires payload binding",
+    "schema": "OwnerDeliveryCommand",
+    "valid": false,
+    "value": {
+      "schema_version": 1,
+      "task_id": "30000000-0000-4000-8000-000000000090",
+      "request_id": "delivery_request",
+      "name": "confirm_delivery_acceptance",
+      "payload": {
+        "content_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    }
+  },
+  {
+    "name": "owner delivery accept_delivery",
+    "schema": "OwnerDeliveryCommand",
+    "valid": true,
+    "value": {
+      "schema_version": 1,
+      "task_id": "30000000-0000-4000-8000-000000000090",
+      "request_id": "delivery_request",
+      "name": "accept_delivery",
+      "payload": {
+        "proposal_id": "proposal",
+        "confirmation_id": "confirmation",
+        "content_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "basis": {
+          "control_version": 1,
+          "specification_id": "specification_id",
+          "plan_id": "plan_id"
+        }
+      }
+    }
+  },
+  {
+    "name": "owner delivery accept_delivery requires payload binding",
+    "schema": "OwnerDeliveryCommand",
+    "valid": false,
+    "value": {
+      "schema_version": 1,
+      "task_id": "30000000-0000-4000-8000-000000000090",
+      "request_id": "delivery_request",
+      "name": "accept_delivery",
+      "payload": {
+        "confirmation_id": "confirmation",
+        "content_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "basis": {
+          "control_version": 1,
+          "specification_id": "specification_id",
+          "plan_id": "plan_id"
+        }
+      }
+    }
+  },
+  {
+    "name": "owner delivery retry_delivery",
+    "schema": "OwnerDeliveryCommand",
+    "valid": true,
+    "value": {
+      "schema_version": 1,
+      "task_id": "30000000-0000-4000-8000-000000000090",
+      "request_id": "delivery_request",
+      "name": "retry_delivery",
+      "payload": {
+        "operation_id": "batch",
+        "content_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "expected_version": 1
+      }
+    }
+  },
+  {
+    "name": "owner delivery retry_delivery requires payload binding",
+    "schema": "OwnerDeliveryCommand",
+    "valid": false,
+    "value": {
+      "schema_version": 1,
+      "task_id": "30000000-0000-4000-8000-000000000090",
+      "request_id": "delivery_request",
+      "name": "retry_delivery",
+      "payload": {
+        "content_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "expected_version": 1
+      }
+    }
+  },
+  {
+    "name": "owner delivery cancel_delivery",
+    "schema": "OwnerDeliveryCommand",
+    "valid": true,
+    "value": {
+      "schema_version": 1,
+      "task_id": "30000000-0000-4000-8000-000000000090",
+      "request_id": "delivery_request",
+      "name": "cancel_delivery",
+      "payload": {
+        "operation_id": "batch",
+        "content_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "expected_version": 1
+      }
+    }
+  },
+  {
+    "name": "owner delivery cancel_delivery requires payload binding",
+    "schema": "OwnerDeliveryCommand",
+    "valid": false,
+    "value": {
+      "schema_version": 1,
+      "task_id": "30000000-0000-4000-8000-000000000090",
+      "request_id": "delivery_request",
+      "name": "cancel_delivery",
+      "payload": {
+        "content_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "expected_version": 1
+      }
+    }
+  },
+  {
+    "name": "owner delivery retry accepts unrelated later control",
+    "schema": "OwnerDeliveryCommand",
+    "valid": true,
+    "value": {
+      "schema_version": 1,
+      "task_id": "30000000-0000-4000-8000-000000000090",
+      "request_id": "delivery_request",
+      "name": "retry_delivery",
+      "payload": {
+        "operation_id": "batch",
+        "content_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "expected_version": 1
+      },
+      "expected_control_version": 100
+    }
+  },
+  {
+    "name": "owner delivery reject irrelevant confirmation field",
+    "schema": "OwnerDeliveryCommand",
+    "valid": false,
+    "value": {
+      "schema_version": 1,
+      "task_id": "30000000-0000-4000-8000-000000000090",
+      "request_id": "delivery_request",
+      "name": "retry_delivery",
+      "payload": {
+        "operation_id": "batch",
+        "content_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "expected_version": 1,
+        "confirmation_id": "extra"
+      }
+    }
+  },
+  {
+    "name": "owner delivery reject null batch version",
+    "schema": "OwnerDeliveryCommand",
+    "valid": false,
+    "value": {
+      "schema_version": 1,
+      "task_id": "30000000-0000-4000-8000-000000000090",
+      "request_id": "delivery_request",
+      "name": "retry_delivery",
+      "payload": {
+        "operation_id": "batch",
+        "content_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "expected_version": null
+      }
+    }
+  },
+  {
+    "name": "owner delivery reject unsafe batch version",
+    "schema": "OwnerDeliveryCommand",
+    "valid": false,
+    "value": {
+      "schema_version": 1,
+      "task_id": "30000000-0000-4000-8000-000000000090",
+      "request_id": "delivery_request",
+      "name": "retry_delivery",
+      "payload": {
+        "operation_id": "batch",
+        "content_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "expected_version": 9007199254740992
+      }
+    }
+  },
+  {
+    "name": "owner delivery reject unsupported schema version",
+    "schema": "OwnerDeliveryCommand",
+    "valid": false,
+    "value": {
+      "schema_version": 2,
+      "task_id": "30000000-0000-4000-8000-000000000090",
+      "request_id": "delivery_request",
+      "name": "retry_delivery",
+      "payload": {
+        "operation_id": "batch",
+        "content_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "expected_version": 1
+      }
+    }
+  },
+  {
+    "name": "owner delivery reject caller scope field",
+    "schema": "OwnerDeliveryCommand",
+    "valid": false,
+    "value": {
+      "schema_version": 1,
+      "task_id": "30000000-0000-4000-8000-000000000090",
+      "request_id": "delivery_request",
+      "name": "retry_delivery",
+      "payload": {
+        "operation_id": "batch",
+        "content_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "expected_version": 1
+      },
+      "scope_id": "30000000-0000-4000-8000-000000000090"
+    }
+  },
+  {
+    "name": "owner delivery unknown receipt",
+    "schema": "OwnerDeliveryCommandResult",
+    "valid": true,
+    "value": {
+      "schema_version": 1,
+      "task_id": "30000000-0000-4000-8000-000000000090",
+      "request_id": "delivery_request",
+      "status": "unknown"
+    }
+  },
+  {
+    "name": "owner delivery unknown cannot imply approval",
+    "schema": "OwnerDeliveryCommandResult",
+    "valid": false,
+    "value": {
+      "schema_version": 1,
+      "task_id": "30000000-0000-4000-8000-000000000090",
+      "request_id": "delivery_request",
+      "status": "unknown",
+      "operation_id": "batch"
+    }
+  },
+  {
+    "name": "owner delivery prepare_delivery_acceptance receipt",
+    "schema": "OwnerDeliveryCommandResult",
+    "valid": true,
+    "value": {
+      "schema_version": 1,
+      "task_id": "30000000-0000-4000-8000-000000000090",
+      "request_id": "delivery_request",
+      "status": "committed",
+      "name": "prepare_delivery_acceptance",
+      "content_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "proposal_id": "proposal"
+    }
+  },
+  {
+    "name": "owner delivery prepare_delivery_acceptance receipt missing binding",
+    "schema": "OwnerDeliveryCommandResult",
+    "valid": false,
+    "value": {
+      "schema_version": 1,
+      "task_id": "30000000-0000-4000-8000-000000000090",
+      "request_id": "delivery_request",
+      "status": "committed",
+      "name": "prepare_delivery_acceptance",
+      "proposal_id": "proposal"
+    }
+  },
+  {
+    "name": "owner delivery confirm_delivery_acceptance receipt",
+    "schema": "OwnerDeliveryCommandResult",
+    "valid": true,
+    "value": {
+      "schema_version": 1,
+      "task_id": "30000000-0000-4000-8000-000000000090",
+      "request_id": "delivery_request",
+      "status": "committed",
+      "name": "confirm_delivery_acceptance",
+      "content_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "proposal_id": "proposal",
+      "confirmation_id": "confirmation"
+    }
+  },
+  {
+    "name": "owner delivery confirm_delivery_acceptance receipt missing binding",
+    "schema": "OwnerDeliveryCommandResult",
+    "valid": false,
+    "value": {
+      "schema_version": 1,
+      "task_id": "30000000-0000-4000-8000-000000000090",
+      "request_id": "delivery_request",
+      "status": "committed",
+      "name": "confirm_delivery_acceptance",
+      "proposal_id": "proposal",
+      "confirmation_id": "confirmation"
+    }
+  },
+  {
+    "name": "owner delivery accept_delivery receipt",
+    "schema": "OwnerDeliveryCommandResult",
+    "valid": true,
+    "value": {
+      "schema_version": 1,
+      "task_id": "30000000-0000-4000-8000-000000000090",
+      "request_id": "delivery_request",
+      "status": "committed",
+      "name": "accept_delivery",
+      "content_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "proposal_id": "proposal",
+      "confirmation_id": "confirmation",
+      "operation_id": "batch",
+      "operation_version": 1,
+      "input_cutoff": 7
+    }
+  },
+  {
+    "name": "owner delivery accept_delivery receipt missing binding",
+    "schema": "OwnerDeliveryCommandResult",
+    "valid": false,
+    "value": {
+      "schema_version": 1,
+      "task_id": "30000000-0000-4000-8000-000000000090",
+      "request_id": "delivery_request",
+      "status": "committed",
+      "name": "accept_delivery",
+      "proposal_id": "proposal",
+      "confirmation_id": "confirmation",
+      "operation_id": "batch",
+      "operation_version": 1,
+      "input_cutoff": 7
+    }
+  },
+  {
+    "name": "owner delivery retry_delivery receipt",
+    "schema": "OwnerDeliveryCommandResult",
+    "valid": true,
+    "value": {
+      "schema_version": 1,
+      "task_id": "30000000-0000-4000-8000-000000000090",
+      "request_id": "delivery_request",
+      "status": "committed",
+      "name": "retry_delivery",
+      "content_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "operation_id": "batch",
+      "operation_version": 1
+    }
+  },
+  {
+    "name": "owner delivery retry_delivery receipt missing binding",
+    "schema": "OwnerDeliveryCommandResult",
+    "valid": false,
+    "value": {
+      "schema_version": 1,
+      "task_id": "30000000-0000-4000-8000-000000000090",
+      "request_id": "delivery_request",
+      "status": "committed",
+      "name": "retry_delivery",
+      "operation_id": "batch",
+      "operation_version": 1
+    }
+  },
+  {
+    "name": "owner delivery cancel_delivery receipt",
+    "schema": "OwnerDeliveryCommandResult",
+    "valid": true,
+    "value": {
+      "schema_version": 1,
+      "task_id": "30000000-0000-4000-8000-000000000090",
+      "request_id": "delivery_request",
+      "status": "committed",
+      "name": "cancel_delivery",
+      "content_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "operation_id": "batch",
+      "operation_version": 1
+    }
+  },
+  {
+    "name": "owner delivery cancel_delivery receipt missing binding",
+    "schema": "OwnerDeliveryCommandResult",
+    "valid": false,
+    "value": {
+      "schema_version": 1,
+      "task_id": "30000000-0000-4000-8000-000000000090",
+      "request_id": "delivery_request",
+      "status": "committed",
+      "name": "cancel_delivery",
+      "operation_id": "batch",
+      "operation_version": 1
+    }
+  },
+  {
+    "name": "owner delivery prepare receipt cannot imply batch",
+    "schema": "OwnerDeliveryCommandResult",
+    "valid": false,
+    "value": {
+      "schema_version": 1,
+      "task_id": "30000000-0000-4000-8000-000000000090",
+      "request_id": "delivery_request",
+      "status": "committed",
+      "name": "prepare_delivery_acceptance",
+      "proposal_id": "proposal",
+      "content_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "operation_id": "batch"
+    }
+  },
+  {
+    "name": "owner delivery repository free complete manifest",
+    "schema": "DeliveryAcceptanceManifest",
+    "valid": true,
+    "value": {
+      "schema_version": 1,
+      "task_id": "30000000-0000-4000-8000-000000000090",
+      "basis": {
+        "control_version": 1,
+        "specification_id": "specification_id",
+        "plan_id": "plan_id"
+      },
+      "specification_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "plan_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "outputs": [
+        {
+          "node_id": "node_id",
+          "node_activation": 2,
+          "completion": {
+            "operation_id": "operation_id",
+            "task_id": "30000000-0000-4000-8000-000000000090",
+            "node_id": "node_id",
+            "node_activation": 1,
+            "attempt_id": "attempt_id",
+            "source_id": "original-source",
+            "specification_id": "specification_id",
+            "plan_id": "plan_id",
+            "summary": "Exact completed output",
+            "artifact_ids": [],
+            "content_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "manifest_version": 2,
+            "handled_guidance_ids": []
+          },
+          "completion_manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "effective_basis": {
+            "task_id": "30000000-0000-4000-8000-000000000090",
+            "specification_id": "specification_id",
+            "plan_id": "plan_id",
+            "completion_operation_id": "operation_id",
+            "completion_manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "effective_basis_digest": "c84973abafaacbe8b295a3772ad208781eaa7448ae7f18e1623ee99efd0da5ba",
+          "artifacts": [],
+          "repository_free": true
+        }
+      ],
+      "repositories": []
+    }
+  },
+  {
+    "name": "owner delivery free output cannot invent Git identity",
+    "schema": "DeliveryOutputEvidence",
+    "valid": false,
+    "value": {
+      "node_id": "node_id",
+      "node_activation": 2,
+      "completion": {
+        "operation_id": "operation_id",
+        "task_id": "30000000-0000-4000-8000-000000000090",
+        "node_id": "node_id",
+        "node_activation": 1,
+        "attempt_id": "attempt_id",
+        "source_id": "original-source",
+        "specification_id": "specification_id",
+        "plan_id": "plan_id",
+        "summary": "Exact completed output",
+        "artifact_ids": [],
+        "content_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "manifest_version": 2,
+        "handled_guidance_ids": []
+      },
+      "completion_manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "effective_basis": {
+        "task_id": "30000000-0000-4000-8000-000000000090",
+        "specification_id": "specification_id",
+        "plan_id": "plan_id",
+        "completion_operation_id": "operation_id",
+        "completion_manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "effective_basis_digest": "c84973abafaacbe8b295a3772ad208781eaa7448ae7f18e1623ee99efd0da5ba",
+      "artifacts": [],
+      "repository_free": true,
+      "source": {
+        "task_id": "30000000-0000-4000-8000-000000000090",
+        "operation_id": "operation_id",
+        "attempt_id": "attempt_id",
+        "dispatch_id": "dispatch_id",
+        "node_id": "node_id",
+        "specification_id": "specification_id",
+        "plan_id": "plan_id",
+        "workspace_id": "workspace_id",
+        "resource_id": "30000000-0000-4000-8000-000000000091",
+        "runner_id": "runner_id",
+        "storage_id": "storage_id",
+        "lease_id": "lease_id",
+        "manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "operation_identity_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generation": 1,
+        "node_activation": 1,
+        "repository_identity": "github.com/example/result",
+        "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "git_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "git_tree": "cccccccccccccccccccccccccccccccccccccccc"
+      },
+      "source_digest": "4c38b18942a4ab5df809954389b8868beb4a35e797491c5ec4ce2d6e920e710c"
+    }
+  },
+  {
+    "name": "owner delivery Git output requires identity",
+    "schema": "DeliveryOutputEvidence",
+    "valid": false,
+    "value": {
+      "node_id": "node_id",
+      "node_activation": 2,
+      "completion": {
+        "operation_id": "operation_id",
+        "task_id": "30000000-0000-4000-8000-000000000090",
+        "node_id": "node_id",
+        "node_activation": 1,
+        "attempt_id": "attempt_id",
+        "source_id": "original-source",
+        "specification_id": "specification_id",
+        "plan_id": "plan_id",
+        "summary": "Exact completed output",
+        "artifact_ids": [],
+        "content_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "manifest_version": 2,
+        "handled_guidance_ids": []
+      },
+      "completion_manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "effective_basis": {
+        "task_id": "30000000-0000-4000-8000-000000000090",
+        "specification_id": "specification_id",
+        "plan_id": "plan_id",
+        "completion_operation_id": "operation_id",
+        "completion_manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "effective_basis_digest": "c84973abafaacbe8b295a3772ad208781eaa7448ae7f18e1623ee99efd0da5ba",
+      "artifacts": [],
+      "repository_free": false
+    }
+  },
+  {
+    "name": "owner delivery Git output retains original activation",
+    "schema": "DeliveryOutputEvidence",
+    "valid": true,
+    "value": {
+      "node_id": "node_id",
+      "node_activation": 2,
+      "completion": {
+        "operation_id": "operation_id",
+        "task_id": "30000000-0000-4000-8000-000000000090",
+        "node_id": "node_id",
+        "node_activation": 1,
+        "attempt_id": "attempt_id",
+        "source_id": "original-source",
+        "specification_id": "specification_id",
+        "plan_id": "plan_id",
+        "summary": "Exact completed output",
+        "artifact_ids": [],
+        "content_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "manifest_version": 2,
+        "handled_guidance_ids": []
+      },
+      "completion_manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "effective_basis": {
+        "task_id": "30000000-0000-4000-8000-000000000090",
+        "specification_id": "specification_id",
+        "plan_id": "plan_id",
+        "completion_operation_id": "operation_id",
+        "completion_manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "effective_basis_digest": "c84973abafaacbe8b295a3772ad208781eaa7448ae7f18e1623ee99efd0da5ba",
+      "artifacts": [],
+      "repository_free": false,
+      "source": {
+        "task_id": "30000000-0000-4000-8000-000000000090",
+        "operation_id": "operation_id",
+        "attempt_id": "attempt_id",
+        "dispatch_id": "dispatch_id",
+        "node_id": "node_id",
+        "specification_id": "specification_id",
+        "plan_id": "plan_id",
+        "workspace_id": "workspace_id",
+        "resource_id": "30000000-0000-4000-8000-000000000091",
+        "runner_id": "runner_id",
+        "storage_id": "storage_id",
+        "lease_id": "lease_id",
+        "manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "operation_identity_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generation": 1,
+        "node_activation": 1,
+        "repository_identity": "github.com/example/result",
+        "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "git_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "git_tree": "cccccccccccccccccccccccccccccccccccccccc"
+      },
+      "source_digest": "4c38b18942a4ab5df809954389b8868beb4a35e797491c5ec4ce2d6e920e710c"
+    }
+  },
+  {
+    "name": "owner delivery modified exact manifest",
+    "schema": "DeliveryAcceptanceManifest",
+    "valid": true,
+    "value": {
+      "schema_version": 1,
+      "task_id": "30000000-0000-4000-8000-000000000090",
+      "basis": {
+        "control_version": 1,
+        "specification_id": "specification_id",
+        "plan_id": "plan_id"
+      },
+      "specification_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "plan_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "outputs": [
+        {
+          "node_id": "node_id",
+          "node_activation": 2,
+          "completion": {
+            "operation_id": "operation_id",
+            "task_id": "30000000-0000-4000-8000-000000000090",
+            "node_id": "node_id",
+            "node_activation": 1,
+            "attempt_id": "attempt_id",
+            "source_id": "original-source",
+            "specification_id": "specification_id",
+            "plan_id": "plan_id",
+            "summary": "Exact completed output",
+            "artifact_ids": [],
+            "content_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "manifest_version": 2,
+            "handled_guidance_ids": []
+          },
+          "completion_manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "effective_basis": {
+            "task_id": "30000000-0000-4000-8000-000000000090",
+            "specification_id": "specification_id",
+            "plan_id": "plan_id",
+            "completion_operation_id": "operation_id",
+            "completion_manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "effective_basis_digest": "c84973abafaacbe8b295a3772ad208781eaa7448ae7f18e1623ee99efd0da5ba",
+          "artifacts": [],
+          "repository_free": false,
+          "source": {
+            "task_id": "30000000-0000-4000-8000-000000000090",
+            "operation_id": "operation_id",
+            "attempt_id": "attempt_id",
+            "dispatch_id": "dispatch_id",
+            "node_id": "node_id",
+            "specification_id": "specification_id",
+            "plan_id": "plan_id",
+            "workspace_id": "workspace_id",
+            "resource_id": "30000000-0000-4000-8000-000000000091",
+            "runner_id": "runner_id",
+            "storage_id": "storage_id",
+            "lease_id": "lease_id",
+            "manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation_identity_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "generation": 1,
+            "node_activation": 1,
+            "repository_identity": "github.com/example/result",
+            "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "git_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "git_tree": "cccccccccccccccccccccccccccccccccccccccc"
+          },
+          "source_digest": "4c38b18942a4ab5df809954389b8868beb4a35e797491c5ec4ce2d6e920e710c"
+        }
+      ],
+      "repositories": [
+        {
+          "outcome": "modified",
+          "resource_id": "30000000-0000-4000-8000-000000000091",
+          "repository_identity": "github.com/example/result",
+          "provider_metadata": {
+            "github": {
+              "repository_id": "42"
+            }
+          },
+          "source": {
+            "task_id": "30000000-0000-4000-8000-000000000090",
+            "operation_id": "operation_id",
+            "attempt_id": "attempt_id",
+            "dispatch_id": "dispatch_id",
+            "node_id": "node_id",
+            "specification_id": "specification_id",
+            "plan_id": "plan_id",
+            "workspace_id": "workspace_id",
+            "resource_id": "30000000-0000-4000-8000-000000000091",
+            "runner_id": "runner_id",
+            "storage_id": "storage_id",
+            "lease_id": "lease_id",
+            "manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation_identity_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "generation": 1,
+            "node_activation": 1,
+            "repository_identity": "github.com/example/result",
+            "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "git_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "git_tree": "cccccccccccccccccccccccccccccccccccccccc"
+          },
+          "source_digest": "4c38b18942a4ab5df809954389b8868beb4a35e797491c5ec4ce2d6e920e710c",
+          "effective_basis": {
+            "task_id": "30000000-0000-4000-8000-000000000090",
+            "specification_id": "specification_id",
+            "plan_id": "plan_id",
+            "completion_operation_id": "operation_id",
+            "completion_manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "effective_basis_digest": "c84973abafaacbe8b295a3772ad208781eaa7448ae7f18e1623ee99efd0da5ba",
+          "preparation_request": {
+            "schema_version": 1,
+            "operation_id": "publication-operation",
+            "scan_run_id": "publication-scan",
+            "source": {
+              "task_id": "30000000-0000-4000-8000-000000000090",
+              "operation_id": "operation_id",
+              "attempt_id": "attempt_id",
+              "dispatch_id": "dispatch_id",
+              "node_id": "node_id",
+              "specification_id": "specification_id",
+              "plan_id": "plan_id",
+              "workspace_id": "workspace_id",
+              "resource_id": "30000000-0000-4000-8000-000000000091",
+              "runner_id": "runner_id",
+              "storage_id": "storage_id",
+              "lease_id": "lease_id",
+              "manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "operation_identity_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "generation": 1,
+              "node_activation": 1,
+              "repository_identity": "github.com/example/result",
+              "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "git_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "git_tree": "cccccccccccccccccccccccccccccccccccccccc"
+            },
+            "source_digest": "4c38b18942a4ab5df809954389b8868beb4a35e797491c5ec4ce2d6e920e710c",
+            "effective_basis": {
+              "task_id": "30000000-0000-4000-8000-000000000090",
+              "specification_id": "specification_id",
+              "plan_id": "plan_id",
+              "completion_operation_id": "operation_id",
+              "completion_manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "effective_basis_digest": "c84973abafaacbe8b295a3772ad208781eaa7448ae7f18e1623ee99efd0da5ba",
+            "construction": {
+              "schema_version": 1,
+              "construction_id": "publication-construction",
+              "candidate_id": "publication-candidate",
+              "source_digest": "4c38b18942a4ab5df809954389b8868beb4a35e797491c5ec4ce2d6e920e710c",
+              "repository_identity": "github.com/example/result",
+              "target_branch": "main",
+              "parents": [
+                {
+                  "kind": "materialization",
+                  "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "repository_identity": "github.com/example/result",
+                  "observation_operation_id": "original-publication-open",
+                  "workspace": {
+                    "schema_version": 1,
+                    "workspace_id": "workspace_id",
+                    "task_id": "30000000-0000-4000-8000-000000000090",
+                    "project_id": "publication-project",
+                    "resource_id": "30000000-0000-4000-8000-000000000091",
+                    "runner_id": "runner_id",
+                    "generation": 1,
+                    "lease_id": "lease_id",
+                    "node_id": "node_id",
+                    "node_activation": 1,
+                    "open_operation_id": "original-publication-open",
+                    "resource": {
+                      "resource_id": "30000000-0000-4000-8000-000000000091",
+                      "remote_url": "https://github.com/example/result.git",
+                      "repository_identity": "github.com/example/result"
+                    }
+                  },
+                  "outcome": {
+                    "workspace_id": "workspace_id",
+                    "path": "/private/worktree",
+                    "workspace_metadata": {
+                      "generation": 1,
+                      "storage_id": "storage_id",
+                      "lease_id": "lease_id",
+                      "repository_identity": "github.com/example/result",
+                      "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                      "target_branch": "main",
+                      "target_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                      "finalized_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                    }
+                  },
+                  "observation_digest": "a3f44ab13354df0b799ee9263c1f78a6d20d43f46ac4c93b4cd980f21af36083"
+                }
+              ],
+              "author_name": "monos",
+              "author_email": "monos@localhost",
+              "timestamp": "1791028800 +0000",
+              "message": "monos Task 30000000-0000-4000-8000-000000000090 result v1"
+            },
+            "construction_digest": "d13b8dcb557db8492b519f32f99a036aa69c17b0d57cfc74d2a9aa4f61218b0a",
+            "configuration": {
+              "schema_version": 1,
+              "policy_version": "local_publication_v1",
+              "rule_version": "credential_rules_v1",
+              "traversal_version": "all_parents_final_tree_v1",
+              "local_blob_limit": 52428800,
+              "provider_blob_limit": 104857600,
+              "max_commits": 256,
+              "max_paths": 8192,
+              "max_versions": 32768,
+              "max_blob_bytes": 134217728,
+              "max_aggregate_bytes": 536870912,
+              "max_findings": 4096,
+              "max_evidence_bytes": 8388608,
+              "deadline_seconds": 120,
+              "workflow_write": "allowed",
+              "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+            },
+            "configuration_digest": "bf0396b43c70aafee730b1b02486e309c649714f629c4bc3054211c439f9ae51",
+            "permission_proof": {
+              "schema_version": 1,
+              "observation_id": "30000000-0000-4000-8000-000000000002",
+              "resource_id": "30000000-0000-4000-8000-000000000091",
+              "repository_identity": "github.com/example/result",
+              "repository_id": "42",
+              "app_id": "1",
+              "installation_id": "2",
+              "key_fingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "configuration_fingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "permissions": {
+                "contents": "write",
+                "metadata": "read",
+                "workflows": "write"
+              },
+              "observed_at": "2026-10-04T12:00:00.000Z",
+              "expires_at": "2026-10-04T13:00:00.000Z",
+              "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+            },
+            "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6"
+          },
+          "preparation_request_digest": "e3fdd328573f84e834f24b33631e3396a7abf5decf87514967b655ef19b7aae9",
+          "preparation_result": {
+            "schema_version": 1,
+            "operation_id": "publication-operation",
+            "request_digest": "e3fdd328573f84e834f24b33631e3396a7abf5decf87514967b655ef19b7aae9",
+            "status": "prepared",
+            "candidate": {
+              "schema_version": 1,
+              "candidate_id": "publication-candidate",
+              "construction_id": "publication-construction",
+              "construction_digest": "d13b8dcb557db8492b519f32f99a036aa69c17b0d57cfc74d2a9aa4f61218b0a",
+              "source_digest": "4c38b18942a4ab5df809954389b8868beb4a35e797491c5ec4ce2d6e920e710c",
+              "head": "dddddddddddddddddddddddddddddddddddddddd",
+              "tree": "cccccccccccccccccccccccccccccccccccccccc",
+              "parents": [
+                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              ]
+            },
+            "candidate_manifest_digest": "a734383872199e522dd5493d636514ab334f6b3c3bced14b81f8c77ddc288018",
+            "scan": {
+              "schema_version": 1,
+              "scan_id": "publication-scan",
+              "candidate_manifest_digest": "a734383872199e522dd5493d636514ab334f6b3c3bced14b81f8c77ddc288018",
+              "configuration_digest": "bf0396b43c70aafee730b1b02486e309c649714f629c4bc3054211c439f9ae51",
+              "status": "complete",
+              "coverage": {
+                "commits": 1,
+                "paths": 0,
+                "versions": 0,
+                "unique_blob_bytes": 0
+              },
+              "findings_count": 0,
+              "findings_bytes": 2,
+              "findings_digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+              "workflow_changes": true
+            },
+            "scan_digest": "d7cee9d2e19f4ba6eca1a2339b0ebc54be82b87e3176777ff62cc4dcbdd46808"
+          },
+          "preparation_result_digest": "a69e8cf717df5333866b40f215556ce81f643ccebf4d83ee50865f9e36d2f33a",
+          "item_id": "30000000-0000-4000-8000-000000000001",
+          "candidate": {
+            "schema_version": 1,
+            "candidate_id": "publication-candidate",
+            "construction_id": "publication-construction",
+            "construction_digest": "d13b8dcb557db8492b519f32f99a036aa69c17b0d57cfc74d2a9aa4f61218b0a",
+            "source_digest": "4c38b18942a4ab5df809954389b8868beb4a35e797491c5ec4ce2d6e920e710c",
+            "head": "dddddddddddddddddddddddddddddddddddddddd",
+            "tree": "cccccccccccccccccccccccccccccccccccccccc",
+            "parents": [
+              "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            ]
+          },
+          "candidate_manifest_digest": "a734383872199e522dd5493d636514ab334f6b3c3bced14b81f8c77ddc288018",
+          "scan": {
+            "schema_version": 1,
+            "scan_id": "publication-scan",
+            "candidate_manifest_digest": "a734383872199e522dd5493d636514ab334f6b3c3bced14b81f8c77ddc288018",
+            "configuration_digest": "bf0396b43c70aafee730b1b02486e309c649714f629c4bc3054211c439f9ae51",
+            "status": "complete",
+            "coverage": {
+              "commits": 1,
+              "paths": 0,
+              "versions": 0,
+              "unique_blob_bytes": 0
+            },
+            "findings_count": 0,
+            "findings_bytes": 2,
+            "findings_digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+            "workflow_changes": true
+          },
+          "scan_digest": "d7cee9d2e19f4ba6eca1a2339b0ebc54be82b87e3176777ff62cc4dcbdd46808",
+          "permission_proof": {
+            "schema_version": 1,
+            "observation_id": "30000000-0000-4000-8000-000000000002",
+            "resource_id": "30000000-0000-4000-8000-000000000091",
+            "repository_identity": "github.com/example/result",
+            "repository_id": "42",
+            "app_id": "1",
+            "installation_id": "2",
+            "key_fingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "configuration_fingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "permissions": {
+              "contents": "write",
+              "metadata": "read",
+              "workflows": "write"
+            },
+            "observed_at": "2026-10-04T12:00:00.000Z",
+            "expires_at": "2026-10-04T13:00:00.000Z",
+            "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+          },
+          "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6",
+          "waivers": [],
+          "target_branch": "main",
+          "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
+          "marker": "<!-- monos-delivery-item:30000000-0000-4000-8000-000000000001 -->",
+          "remote_preparation": "automatic",
+          "provider_content": {
+            "title": "Exact review",
+            "body": "Safe Task summary"
+          },
+          "provider_content_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      ]
+    }
+  },
+  {
+    "name": "owner delivery modified requires real permission proof",
+    "schema": "DeliveryRepository",
+    "valid": false,
+    "value": {
+      "outcome": "modified",
+      "resource_id": "30000000-0000-4000-8000-000000000091",
+      "repository_identity": "github.com/example/result",
+      "provider_metadata": {
+        "github": {
+          "repository_id": "42"
+        }
+      },
+      "source": {
+        "task_id": "30000000-0000-4000-8000-000000000090",
+        "operation_id": "operation_id",
+        "attempt_id": "attempt_id",
+        "dispatch_id": "dispatch_id",
+        "node_id": "node_id",
+        "specification_id": "specification_id",
+        "plan_id": "plan_id",
+        "workspace_id": "workspace_id",
+        "resource_id": "30000000-0000-4000-8000-000000000091",
+        "runner_id": "runner_id",
+        "storage_id": "storage_id",
+        "lease_id": "lease_id",
+        "manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "operation_identity_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generation": 1,
+        "node_activation": 1,
+        "repository_identity": "github.com/example/result",
+        "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "git_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "git_tree": "cccccccccccccccccccccccccccccccccccccccc"
+      },
+      "source_digest": "4c38b18942a4ab5df809954389b8868beb4a35e797491c5ec4ce2d6e920e710c",
+      "effective_basis": {
+        "task_id": "30000000-0000-4000-8000-000000000090",
+        "specification_id": "specification_id",
+        "plan_id": "plan_id",
+        "completion_operation_id": "operation_id",
+        "completion_manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "effective_basis_digest": "c84973abafaacbe8b295a3772ad208781eaa7448ae7f18e1623ee99efd0da5ba",
+      "preparation_request": {
+        "schema_version": 1,
+        "operation_id": "publication-operation",
+        "scan_run_id": "publication-scan",
+        "source": {
+          "task_id": "30000000-0000-4000-8000-000000000090",
+          "operation_id": "operation_id",
+          "attempt_id": "attempt_id",
+          "dispatch_id": "dispatch_id",
+          "node_id": "node_id",
+          "specification_id": "specification_id",
+          "plan_id": "plan_id",
+          "workspace_id": "workspace_id",
+          "resource_id": "30000000-0000-4000-8000-000000000091",
+          "runner_id": "runner_id",
+          "storage_id": "storage_id",
+          "lease_id": "lease_id",
+          "manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "operation_identity_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "generation": 1,
+          "node_activation": 1,
+          "repository_identity": "github.com/example/result",
+          "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "git_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "git_tree": "cccccccccccccccccccccccccccccccccccccccc"
+        },
+        "source_digest": "4c38b18942a4ab5df809954389b8868beb4a35e797491c5ec4ce2d6e920e710c",
+        "effective_basis": {
+          "task_id": "30000000-0000-4000-8000-000000000090",
+          "specification_id": "specification_id",
+          "plan_id": "plan_id",
+          "completion_operation_id": "operation_id",
+          "completion_manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "effective_basis_digest": "c84973abafaacbe8b295a3772ad208781eaa7448ae7f18e1623ee99efd0da5ba",
+        "construction": {
+          "schema_version": 1,
+          "construction_id": "publication-construction",
+          "candidate_id": "publication-candidate",
+          "source_digest": "4c38b18942a4ab5df809954389b8868beb4a35e797491c5ec4ce2d6e920e710c",
+          "repository_identity": "github.com/example/result",
+          "target_branch": "main",
+          "parents": [
+            {
+              "kind": "materialization",
+              "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "repository_identity": "github.com/example/result",
+              "observation_operation_id": "original-publication-open",
+              "workspace": {
+                "schema_version": 1,
+                "workspace_id": "workspace_id",
+                "task_id": "30000000-0000-4000-8000-000000000090",
+                "project_id": "publication-project",
+                "resource_id": "30000000-0000-4000-8000-000000000091",
+                "runner_id": "runner_id",
+                "generation": 1,
+                "lease_id": "lease_id",
+                "node_id": "node_id",
+                "node_activation": 1,
+                "open_operation_id": "original-publication-open",
+                "resource": {
+                  "resource_id": "30000000-0000-4000-8000-000000000091",
+                  "remote_url": "https://github.com/example/result.git",
+                  "repository_identity": "github.com/example/result"
+                }
+              },
+              "outcome": {
+                "workspace_id": "workspace_id",
+                "path": "/private/worktree",
+                "workspace_metadata": {
+                  "generation": 1,
+                  "storage_id": "storage_id",
+                  "lease_id": "lease_id",
+                  "repository_identity": "github.com/example/result",
+                  "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "target_branch": "main",
+                  "target_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "finalized_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                }
+              },
+              "observation_digest": "a3f44ab13354df0b799ee9263c1f78a6d20d43f46ac4c93b4cd980f21af36083"
+            }
+          ],
+          "author_name": "monos",
+          "author_email": "monos@localhost",
+          "timestamp": "1791028800 +0000",
+          "message": "monos Task 30000000-0000-4000-8000-000000000090 result v1"
+        },
+        "construction_digest": "d13b8dcb557db8492b519f32f99a036aa69c17b0d57cfc74d2a9aa4f61218b0a",
+        "configuration": {
+          "schema_version": 1,
+          "policy_version": "local_publication_v1",
+          "rule_version": "credential_rules_v1",
+          "traversal_version": "all_parents_final_tree_v1",
+          "local_blob_limit": 52428800,
+          "provider_blob_limit": 104857600,
+          "max_commits": 256,
+          "max_paths": 8192,
+          "max_versions": 32768,
+          "max_blob_bytes": 134217728,
+          "max_aggregate_bytes": 536870912,
+          "max_findings": 4096,
+          "max_evidence_bytes": 8388608,
+          "deadline_seconds": 120,
+          "workflow_write": "allowed",
+          "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+        },
+        "configuration_digest": "bf0396b43c70aafee730b1b02486e309c649714f629c4bc3054211c439f9ae51",
+        "permission_proof": {
+          "schema_version": 1,
+          "observation_id": "30000000-0000-4000-8000-000000000002",
+          "resource_id": "30000000-0000-4000-8000-000000000091",
+          "repository_identity": "github.com/example/result",
+          "repository_id": "42",
+          "app_id": "1",
+          "installation_id": "2",
+          "key_fingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "configuration_fingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "permissions": {
+            "contents": "write",
+            "metadata": "read",
+            "workflows": "write"
+          },
+          "observed_at": "2026-10-04T12:00:00.000Z",
+          "expires_at": "2026-10-04T13:00:00.000Z",
+          "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+        },
+        "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6"
+      },
+      "preparation_request_digest": "e3fdd328573f84e834f24b33631e3396a7abf5decf87514967b655ef19b7aae9",
+      "preparation_result": {
+        "schema_version": 1,
+        "operation_id": "publication-operation",
+        "request_digest": "e3fdd328573f84e834f24b33631e3396a7abf5decf87514967b655ef19b7aae9",
+        "status": "prepared",
+        "candidate": {
+          "schema_version": 1,
+          "candidate_id": "publication-candidate",
+          "construction_id": "publication-construction",
+          "construction_digest": "d13b8dcb557db8492b519f32f99a036aa69c17b0d57cfc74d2a9aa4f61218b0a",
+          "source_digest": "4c38b18942a4ab5df809954389b8868beb4a35e797491c5ec4ce2d6e920e710c",
+          "head": "dddddddddddddddddddddddddddddddddddddddd",
+          "tree": "cccccccccccccccccccccccccccccccccccccccc",
+          "parents": [
+            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          ]
+        },
+        "candidate_manifest_digest": "a734383872199e522dd5493d636514ab334f6b3c3bced14b81f8c77ddc288018",
+        "scan": {
+          "schema_version": 1,
+          "scan_id": "publication-scan",
+          "candidate_manifest_digest": "a734383872199e522dd5493d636514ab334f6b3c3bced14b81f8c77ddc288018",
+          "configuration_digest": "bf0396b43c70aafee730b1b02486e309c649714f629c4bc3054211c439f9ae51",
+          "status": "complete",
+          "coverage": {
+            "commits": 1,
+            "paths": 0,
+            "versions": 0,
+            "unique_blob_bytes": 0
+          },
+          "findings_count": 0,
+          "findings_bytes": 2,
+          "findings_digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "workflow_changes": true
+        },
+        "scan_digest": "d7cee9d2e19f4ba6eca1a2339b0ebc54be82b87e3176777ff62cc4dcbdd46808"
+      },
+      "preparation_result_digest": "a69e8cf717df5333866b40f215556ce81f643ccebf4d83ee50865f9e36d2f33a",
+      "item_id": "30000000-0000-4000-8000-000000000001",
+      "candidate": {
+        "schema_version": 1,
+        "candidate_id": "publication-candidate",
+        "construction_id": "publication-construction",
+        "construction_digest": "d13b8dcb557db8492b519f32f99a036aa69c17b0d57cfc74d2a9aa4f61218b0a",
+        "source_digest": "4c38b18942a4ab5df809954389b8868beb4a35e797491c5ec4ce2d6e920e710c",
+        "head": "dddddddddddddddddddddddddddddddddddddddd",
+        "tree": "cccccccccccccccccccccccccccccccccccccccc",
+        "parents": [
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        ]
+      },
+      "candidate_manifest_digest": "a734383872199e522dd5493d636514ab334f6b3c3bced14b81f8c77ddc288018",
+      "scan": {
+        "schema_version": 1,
+        "scan_id": "publication-scan",
+        "candidate_manifest_digest": "a734383872199e522dd5493d636514ab334f6b3c3bced14b81f8c77ddc288018",
+        "configuration_digest": "bf0396b43c70aafee730b1b02486e309c649714f629c4bc3054211c439f9ae51",
+        "status": "complete",
+        "coverage": {
+          "commits": 1,
+          "paths": 0,
+          "versions": 0,
+          "unique_blob_bytes": 0
+        },
+        "findings_count": 0,
+        "findings_bytes": 2,
+        "findings_digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "workflow_changes": true
+      },
+      "scan_digest": "d7cee9d2e19f4ba6eca1a2339b0ebc54be82b87e3176777ff62cc4dcbdd46808",
+      "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6",
+      "waivers": [],
+      "target_branch": "main",
+      "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
+      "marker": "<!-- monos-delivery-item:30000000-0000-4000-8000-000000000001 -->",
+      "remote_preparation": "automatic",
+      "provider_content": {
+        "title": "Exact review",
+        "body": "Safe Task summary"
+      },
+      "provider_content_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    }
+  },
+  {
+    "name": "owner delivery modified incomplete scan rejected",
+    "schema": "DeliveryRepository",
+    "valid": false,
+    "value": {
+      "outcome": "modified",
+      "resource_id": "30000000-0000-4000-8000-000000000091",
+      "repository_identity": "github.com/example/result",
+      "provider_metadata": {
+        "github": {
+          "repository_id": "42"
+        }
+      },
+      "source": {
+        "task_id": "30000000-0000-4000-8000-000000000090",
+        "operation_id": "operation_id",
+        "attempt_id": "attempt_id",
+        "dispatch_id": "dispatch_id",
+        "node_id": "node_id",
+        "specification_id": "specification_id",
+        "plan_id": "plan_id",
+        "workspace_id": "workspace_id",
+        "resource_id": "30000000-0000-4000-8000-000000000091",
+        "runner_id": "runner_id",
+        "storage_id": "storage_id",
+        "lease_id": "lease_id",
+        "manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "operation_identity_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generation": 1,
+        "node_activation": 1,
+        "repository_identity": "github.com/example/result",
+        "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "git_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "git_tree": "cccccccccccccccccccccccccccccccccccccccc"
+      },
+      "source_digest": "4c38b18942a4ab5df809954389b8868beb4a35e797491c5ec4ce2d6e920e710c",
+      "effective_basis": {
+        "task_id": "30000000-0000-4000-8000-000000000090",
+        "specification_id": "specification_id",
+        "plan_id": "plan_id",
+        "completion_operation_id": "operation_id",
+        "completion_manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "effective_basis_digest": "c84973abafaacbe8b295a3772ad208781eaa7448ae7f18e1623ee99efd0da5ba",
+      "preparation_request": {
+        "schema_version": 1,
+        "operation_id": "publication-operation",
+        "scan_run_id": "publication-scan",
+        "source": {
+          "task_id": "30000000-0000-4000-8000-000000000090",
+          "operation_id": "operation_id",
+          "attempt_id": "attempt_id",
+          "dispatch_id": "dispatch_id",
+          "node_id": "node_id",
+          "specification_id": "specification_id",
+          "plan_id": "plan_id",
+          "workspace_id": "workspace_id",
+          "resource_id": "30000000-0000-4000-8000-000000000091",
+          "runner_id": "runner_id",
+          "storage_id": "storage_id",
+          "lease_id": "lease_id",
+          "manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "operation_identity_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "generation": 1,
+          "node_activation": 1,
+          "repository_identity": "github.com/example/result",
+          "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "git_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "git_tree": "cccccccccccccccccccccccccccccccccccccccc"
+        },
+        "source_digest": "4c38b18942a4ab5df809954389b8868beb4a35e797491c5ec4ce2d6e920e710c",
+        "effective_basis": {
+          "task_id": "30000000-0000-4000-8000-000000000090",
+          "specification_id": "specification_id",
+          "plan_id": "plan_id",
+          "completion_operation_id": "operation_id",
+          "completion_manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "effective_basis_digest": "c84973abafaacbe8b295a3772ad208781eaa7448ae7f18e1623ee99efd0da5ba",
+        "construction": {
+          "schema_version": 1,
+          "construction_id": "publication-construction",
+          "candidate_id": "publication-candidate",
+          "source_digest": "4c38b18942a4ab5df809954389b8868beb4a35e797491c5ec4ce2d6e920e710c",
+          "repository_identity": "github.com/example/result",
+          "target_branch": "main",
+          "parents": [
+            {
+              "kind": "materialization",
+              "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "repository_identity": "github.com/example/result",
+              "observation_operation_id": "original-publication-open",
+              "workspace": {
+                "schema_version": 1,
+                "workspace_id": "workspace_id",
+                "task_id": "30000000-0000-4000-8000-000000000090",
+                "project_id": "publication-project",
+                "resource_id": "30000000-0000-4000-8000-000000000091",
+                "runner_id": "runner_id",
+                "generation": 1,
+                "lease_id": "lease_id",
+                "node_id": "node_id",
+                "node_activation": 1,
+                "open_operation_id": "original-publication-open",
+                "resource": {
+                  "resource_id": "30000000-0000-4000-8000-000000000091",
+                  "remote_url": "https://github.com/example/result.git",
+                  "repository_identity": "github.com/example/result"
+                }
+              },
+              "outcome": {
+                "workspace_id": "workspace_id",
+                "path": "/private/worktree",
+                "workspace_metadata": {
+                  "generation": 1,
+                  "storage_id": "storage_id",
+                  "lease_id": "lease_id",
+                  "repository_identity": "github.com/example/result",
+                  "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "target_branch": "main",
+                  "target_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "finalized_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                }
+              },
+              "observation_digest": "a3f44ab13354df0b799ee9263c1f78a6d20d43f46ac4c93b4cd980f21af36083"
+            }
+          ],
+          "author_name": "monos",
+          "author_email": "monos@localhost",
+          "timestamp": "1791028800 +0000",
+          "message": "monos Task 30000000-0000-4000-8000-000000000090 result v1"
+        },
+        "construction_digest": "d13b8dcb557db8492b519f32f99a036aa69c17b0d57cfc74d2a9aa4f61218b0a",
+        "configuration": {
+          "schema_version": 1,
+          "policy_version": "local_publication_v1",
+          "rule_version": "credential_rules_v1",
+          "traversal_version": "all_parents_final_tree_v1",
+          "local_blob_limit": 52428800,
+          "provider_blob_limit": 104857600,
+          "max_commits": 256,
+          "max_paths": 8192,
+          "max_versions": 32768,
+          "max_blob_bytes": 134217728,
+          "max_aggregate_bytes": 536870912,
+          "max_findings": 4096,
+          "max_evidence_bytes": 8388608,
+          "deadline_seconds": 120,
+          "workflow_write": "allowed",
+          "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+        },
+        "configuration_digest": "bf0396b43c70aafee730b1b02486e309c649714f629c4bc3054211c439f9ae51",
+        "permission_proof": {
+          "schema_version": 1,
+          "observation_id": "30000000-0000-4000-8000-000000000002",
+          "resource_id": "30000000-0000-4000-8000-000000000091",
+          "repository_identity": "github.com/example/result",
+          "repository_id": "42",
+          "app_id": "1",
+          "installation_id": "2",
+          "key_fingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "configuration_fingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "permissions": {
+            "contents": "write",
+            "metadata": "read",
+            "workflows": "write"
+          },
+          "observed_at": "2026-10-04T12:00:00.000Z",
+          "expires_at": "2026-10-04T13:00:00.000Z",
+          "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+        },
+        "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6"
+      },
+      "preparation_request_digest": "e3fdd328573f84e834f24b33631e3396a7abf5decf87514967b655ef19b7aae9",
+      "preparation_result": {
+        "schema_version": 1,
+        "operation_id": "publication-operation",
+        "request_digest": "e3fdd328573f84e834f24b33631e3396a7abf5decf87514967b655ef19b7aae9",
+        "status": "prepared",
+        "candidate": {
+          "schema_version": 1,
+          "candidate_id": "publication-candidate",
+          "construction_id": "publication-construction",
+          "construction_digest": "d13b8dcb557db8492b519f32f99a036aa69c17b0d57cfc74d2a9aa4f61218b0a",
+          "source_digest": "4c38b18942a4ab5df809954389b8868beb4a35e797491c5ec4ce2d6e920e710c",
+          "head": "dddddddddddddddddddddddddddddddddddddddd",
+          "tree": "cccccccccccccccccccccccccccccccccccccccc",
+          "parents": [
+            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          ]
+        },
+        "candidate_manifest_digest": "a734383872199e522dd5493d636514ab334f6b3c3bced14b81f8c77ddc288018",
+        "scan": {
+          "schema_version": 1,
+          "scan_id": "publication-scan",
+          "candidate_manifest_digest": "a734383872199e522dd5493d636514ab334f6b3c3bced14b81f8c77ddc288018",
+          "configuration_digest": "bf0396b43c70aafee730b1b02486e309c649714f629c4bc3054211c439f9ae51",
+          "status": "complete",
+          "coverage": {
+            "commits": 1,
+            "paths": 0,
+            "versions": 0,
+            "unique_blob_bytes": 0
+          },
+          "findings_count": 0,
+          "findings_bytes": 2,
+          "findings_digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "workflow_changes": true
+        },
+        "scan_digest": "d7cee9d2e19f4ba6eca1a2339b0ebc54be82b87e3176777ff62cc4dcbdd46808"
+      },
+      "preparation_result_digest": "a69e8cf717df5333866b40f215556ce81f643ccebf4d83ee50865f9e36d2f33a",
+      "item_id": "30000000-0000-4000-8000-000000000001",
+      "candidate": {
+        "schema_version": 1,
+        "candidate_id": "publication-candidate",
+        "construction_id": "publication-construction",
+        "construction_digest": "d13b8dcb557db8492b519f32f99a036aa69c17b0d57cfc74d2a9aa4f61218b0a",
+        "source_digest": "4c38b18942a4ab5df809954389b8868beb4a35e797491c5ec4ce2d6e920e710c",
+        "head": "dddddddddddddddddddddddddddddddddddddddd",
+        "tree": "cccccccccccccccccccccccccccccccccccccccc",
+        "parents": [
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        ]
+      },
+      "candidate_manifest_digest": "a734383872199e522dd5493d636514ab334f6b3c3bced14b81f8c77ddc288018",
+      "scan": {
+        "schema_version": 1,
+        "scan_id": "publication-scan",
+        "candidate_manifest_digest": "a734383872199e522dd5493d636514ab334f6b3c3bced14b81f8c77ddc288018",
+        "configuration_digest": "bf0396b43c70aafee730b1b02486e309c649714f629c4bc3054211c439f9ae51",
+        "status": "incomplete",
+        "coverage": {
+          "commits": 1,
+          "paths": 0,
+          "versions": 0,
+          "unique_blob_bytes": 0
+        },
+        "findings_count": 0,
+        "findings_bytes": 2,
+        "findings_digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "workflow_changes": true,
+        "reason": "timeout"
+      },
+      "scan_digest": "d7cee9d2e19f4ba6eca1a2339b0ebc54be82b87e3176777ff62cc4dcbdd46808",
+      "permission_proof": {
+        "schema_version": 1,
+        "observation_id": "30000000-0000-4000-8000-000000000002",
+        "resource_id": "30000000-0000-4000-8000-000000000091",
+        "repository_identity": "github.com/example/result",
+        "repository_id": "42",
+        "app_id": "1",
+        "installation_id": "2",
+        "key_fingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "configuration_fingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "permissions": {
+          "contents": "write",
+          "metadata": "read",
+          "workflows": "write"
+        },
+        "observed_at": "2026-10-04T12:00:00.000Z",
+        "expires_at": "2026-10-04T13:00:00.000Z",
+        "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+      },
+      "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6",
+      "waivers": [],
+      "target_branch": "main",
+      "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
+      "marker": "<!-- monos-delivery-item:30000000-0000-4000-8000-000000000001 -->",
+      "remote_preparation": "automatic",
+      "provider_content": {
+        "title": "Exact review",
+        "body": "Safe Task summary"
+      },
+      "provider_content_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    }
+  },
+  {
+    "name": "owner delivery modified requires actual waiver proof shape",
+    "schema": "DeliveryRepository",
+    "valid": false,
+    "value": {
+      "outcome": "modified",
+      "resource_id": "30000000-0000-4000-8000-000000000091",
+      "repository_identity": "github.com/example/result",
+      "provider_metadata": {
+        "github": {
+          "repository_id": "42"
+        }
+      },
+      "source": {
+        "task_id": "30000000-0000-4000-8000-000000000090",
+        "operation_id": "operation_id",
+        "attempt_id": "attempt_id",
+        "dispatch_id": "dispatch_id",
+        "node_id": "node_id",
+        "specification_id": "specification_id",
+        "plan_id": "plan_id",
+        "workspace_id": "workspace_id",
+        "resource_id": "30000000-0000-4000-8000-000000000091",
+        "runner_id": "runner_id",
+        "storage_id": "storage_id",
+        "lease_id": "lease_id",
+        "manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "operation_identity_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generation": 1,
+        "node_activation": 1,
+        "repository_identity": "github.com/example/result",
+        "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "git_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "git_tree": "cccccccccccccccccccccccccccccccccccccccc"
+      },
+      "source_digest": "4c38b18942a4ab5df809954389b8868beb4a35e797491c5ec4ce2d6e920e710c",
+      "effective_basis": {
+        "task_id": "30000000-0000-4000-8000-000000000090",
+        "specification_id": "specification_id",
+        "plan_id": "plan_id",
+        "completion_operation_id": "operation_id",
+        "completion_manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "effective_basis_digest": "c84973abafaacbe8b295a3772ad208781eaa7448ae7f18e1623ee99efd0da5ba",
+      "preparation_request": {
+        "schema_version": 1,
+        "operation_id": "publication-operation",
+        "scan_run_id": "publication-scan",
+        "source": {
+          "task_id": "30000000-0000-4000-8000-000000000090",
+          "operation_id": "operation_id",
+          "attempt_id": "attempt_id",
+          "dispatch_id": "dispatch_id",
+          "node_id": "node_id",
+          "specification_id": "specification_id",
+          "plan_id": "plan_id",
+          "workspace_id": "workspace_id",
+          "resource_id": "30000000-0000-4000-8000-000000000091",
+          "runner_id": "runner_id",
+          "storage_id": "storage_id",
+          "lease_id": "lease_id",
+          "manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "operation_identity_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "generation": 1,
+          "node_activation": 1,
+          "repository_identity": "github.com/example/result",
+          "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "git_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "git_tree": "cccccccccccccccccccccccccccccccccccccccc"
+        },
+        "source_digest": "4c38b18942a4ab5df809954389b8868beb4a35e797491c5ec4ce2d6e920e710c",
+        "effective_basis": {
+          "task_id": "30000000-0000-4000-8000-000000000090",
+          "specification_id": "specification_id",
+          "plan_id": "plan_id",
+          "completion_operation_id": "operation_id",
+          "completion_manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "effective_basis_digest": "c84973abafaacbe8b295a3772ad208781eaa7448ae7f18e1623ee99efd0da5ba",
+        "construction": {
+          "schema_version": 1,
+          "construction_id": "publication-construction",
+          "candidate_id": "publication-candidate",
+          "source_digest": "4c38b18942a4ab5df809954389b8868beb4a35e797491c5ec4ce2d6e920e710c",
+          "repository_identity": "github.com/example/result",
+          "target_branch": "main",
+          "parents": [
+            {
+              "kind": "materialization",
+              "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "repository_identity": "github.com/example/result",
+              "observation_operation_id": "original-publication-open",
+              "workspace": {
+                "schema_version": 1,
+                "workspace_id": "workspace_id",
+                "task_id": "30000000-0000-4000-8000-000000000090",
+                "project_id": "publication-project",
+                "resource_id": "30000000-0000-4000-8000-000000000091",
+                "runner_id": "runner_id",
+                "generation": 1,
+                "lease_id": "lease_id",
+                "node_id": "node_id",
+                "node_activation": 1,
+                "open_operation_id": "original-publication-open",
+                "resource": {
+                  "resource_id": "30000000-0000-4000-8000-000000000091",
+                  "remote_url": "https://github.com/example/result.git",
+                  "repository_identity": "github.com/example/result"
+                }
+              },
+              "outcome": {
+                "workspace_id": "workspace_id",
+                "path": "/private/worktree",
+                "workspace_metadata": {
+                  "generation": 1,
+                  "storage_id": "storage_id",
+                  "lease_id": "lease_id",
+                  "repository_identity": "github.com/example/result",
+                  "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "target_branch": "main",
+                  "target_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "finalized_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                }
+              },
+              "observation_digest": "a3f44ab13354df0b799ee9263c1f78a6d20d43f46ac4c93b4cd980f21af36083"
+            }
+          ],
+          "author_name": "monos",
+          "author_email": "monos@localhost",
+          "timestamp": "1791028800 +0000",
+          "message": "monos Task 30000000-0000-4000-8000-000000000090 result v1"
+        },
+        "construction_digest": "d13b8dcb557db8492b519f32f99a036aa69c17b0d57cfc74d2a9aa4f61218b0a",
+        "configuration": {
+          "schema_version": 1,
+          "policy_version": "local_publication_v1",
+          "rule_version": "credential_rules_v1",
+          "traversal_version": "all_parents_final_tree_v1",
+          "local_blob_limit": 52428800,
+          "provider_blob_limit": 104857600,
+          "max_commits": 256,
+          "max_paths": 8192,
+          "max_versions": 32768,
+          "max_blob_bytes": 134217728,
+          "max_aggregate_bytes": 536870912,
+          "max_findings": 4096,
+          "max_evidence_bytes": 8388608,
+          "deadline_seconds": 120,
+          "workflow_write": "allowed",
+          "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+        },
+        "configuration_digest": "bf0396b43c70aafee730b1b02486e309c649714f629c4bc3054211c439f9ae51",
+        "permission_proof": {
+          "schema_version": 1,
+          "observation_id": "30000000-0000-4000-8000-000000000002",
+          "resource_id": "30000000-0000-4000-8000-000000000091",
+          "repository_identity": "github.com/example/result",
+          "repository_id": "42",
+          "app_id": "1",
+          "installation_id": "2",
+          "key_fingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "configuration_fingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "permissions": {
+            "contents": "write",
+            "metadata": "read",
+            "workflows": "write"
+          },
+          "observed_at": "2026-10-04T12:00:00.000Z",
+          "expires_at": "2026-10-04T13:00:00.000Z",
+          "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+        },
+        "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6"
+      },
+      "preparation_request_digest": "e3fdd328573f84e834f24b33631e3396a7abf5decf87514967b655ef19b7aae9",
+      "preparation_result": {
+        "schema_version": 1,
+        "operation_id": "publication-operation",
+        "request_digest": "e3fdd328573f84e834f24b33631e3396a7abf5decf87514967b655ef19b7aae9",
+        "status": "prepared",
+        "candidate": {
+          "schema_version": 1,
+          "candidate_id": "publication-candidate",
+          "construction_id": "publication-construction",
+          "construction_digest": "d13b8dcb557db8492b519f32f99a036aa69c17b0d57cfc74d2a9aa4f61218b0a",
+          "source_digest": "4c38b18942a4ab5df809954389b8868beb4a35e797491c5ec4ce2d6e920e710c",
+          "head": "dddddddddddddddddddddddddddddddddddddddd",
+          "tree": "cccccccccccccccccccccccccccccccccccccccc",
+          "parents": [
+            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          ]
+        },
+        "candidate_manifest_digest": "a734383872199e522dd5493d636514ab334f6b3c3bced14b81f8c77ddc288018",
+        "scan": {
+          "schema_version": 1,
+          "scan_id": "publication-scan",
+          "candidate_manifest_digest": "a734383872199e522dd5493d636514ab334f6b3c3bced14b81f8c77ddc288018",
+          "configuration_digest": "bf0396b43c70aafee730b1b02486e309c649714f629c4bc3054211c439f9ae51",
+          "status": "complete",
+          "coverage": {
+            "commits": 1,
+            "paths": 0,
+            "versions": 0,
+            "unique_blob_bytes": 0
+          },
+          "findings_count": 0,
+          "findings_bytes": 2,
+          "findings_digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "workflow_changes": true
+        },
+        "scan_digest": "d7cee9d2e19f4ba6eca1a2339b0ebc54be82b87e3176777ff62cc4dcbdd46808"
+      },
+      "preparation_result_digest": "a69e8cf717df5333866b40f215556ce81f643ccebf4d83ee50865f9e36d2f33a",
+      "item_id": "30000000-0000-4000-8000-000000000001",
+      "candidate": {
+        "schema_version": 1,
+        "candidate_id": "publication-candidate",
+        "construction_id": "publication-construction",
+        "construction_digest": "d13b8dcb557db8492b519f32f99a036aa69c17b0d57cfc74d2a9aa4f61218b0a",
+        "source_digest": "4c38b18942a4ab5df809954389b8868beb4a35e797491c5ec4ce2d6e920e710c",
+        "head": "dddddddddddddddddddddddddddddddddddddddd",
+        "tree": "cccccccccccccccccccccccccccccccccccccccc",
+        "parents": [
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        ]
+      },
+      "candidate_manifest_digest": "a734383872199e522dd5493d636514ab334f6b3c3bced14b81f8c77ddc288018",
+      "scan": {
+        "schema_version": 1,
+        "scan_id": "publication-scan",
+        "candidate_manifest_digest": "a734383872199e522dd5493d636514ab334f6b3c3bced14b81f8c77ddc288018",
+        "configuration_digest": "bf0396b43c70aafee730b1b02486e309c649714f629c4bc3054211c439f9ae51",
+        "status": "complete",
+        "coverage": {
+          "commits": 1,
+          "paths": 0,
+          "versions": 0,
+          "unique_blob_bytes": 0
+        },
+        "findings_count": 0,
+        "findings_bytes": 2,
+        "findings_digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "workflow_changes": true
+      },
+      "scan_digest": "d7cee9d2e19f4ba6eca1a2339b0ebc54be82b87e3176777ff62cc4dcbdd46808",
+      "permission_proof": {
+        "schema_version": 1,
+        "observation_id": "30000000-0000-4000-8000-000000000002",
+        "resource_id": "30000000-0000-4000-8000-000000000091",
+        "repository_identity": "github.com/example/result",
+        "repository_id": "42",
+        "app_id": "1",
+        "installation_id": "2",
+        "key_fingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "configuration_fingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "permissions": {
+          "contents": "write",
+          "metadata": "read",
+          "workflows": "write"
+        },
+        "observed_at": "2026-10-04T12:00:00.000Z",
+        "expires_at": "2026-10-04T13:00:00.000Z",
+        "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+      },
+      "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6",
+      "waivers": [
+        "arbitrary-id"
+      ],
+      "target_branch": "main",
+      "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
+      "marker": "<!-- monos-delivery-item:30000000-0000-4000-8000-000000000001 -->",
+      "remote_preparation": "automatic",
+      "provider_content": {
+        "title": "Exact review",
+        "body": "Safe Task summary"
+      },
+      "provider_content_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    }
+  },
+  {
+    "name": "owner delivery no change exact terminal preparation",
+    "schema": "DeliveryRepository",
+    "valid": true,
+    "value": {
+      "resource_id": "30000000-0000-4000-8000-000000000091",
+      "repository_identity": "github.com/example/result",
+      "provider_metadata": {
+        "github": {
+          "repository_id": "42"
+        }
+      },
+      "source": {
+        "task_id": "30000000-0000-4000-8000-000000000090",
+        "operation_id": "operation_id",
+        "attempt_id": "attempt_id",
+        "dispatch_id": "dispatch_id",
+        "node_id": "node_id",
+        "specification_id": "specification_id",
+        "plan_id": "plan_id",
+        "workspace_id": "workspace_id",
+        "resource_id": "30000000-0000-4000-8000-000000000091",
+        "runner_id": "runner_id",
+        "storage_id": "storage_id",
+        "lease_id": "lease_id",
+        "manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "operation_identity_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generation": 1,
+        "node_activation": 1,
+        "repository_identity": "github.com/example/result",
+        "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "git_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "git_tree": "cccccccccccccccccccccccccccccccccccccccc"
+      },
+      "source_digest": "4c38b18942a4ab5df809954389b8868beb4a35e797491c5ec4ce2d6e920e710c",
+      "effective_basis": {
+        "task_id": "30000000-0000-4000-8000-000000000090",
+        "specification_id": "specification_id",
+        "plan_id": "plan_id",
+        "completion_operation_id": "operation_id",
+        "completion_manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "effective_basis_digest": "c84973abafaacbe8b295a3772ad208781eaa7448ae7f18e1623ee99efd0da5ba",
+      "preparation_request": {
+        "schema_version": 1,
+        "operation_id": "publication-operation",
+        "scan_run_id": "publication-scan",
+        "source": {
+          "task_id": "30000000-0000-4000-8000-000000000090",
+          "operation_id": "operation_id",
+          "attempt_id": "attempt_id",
+          "dispatch_id": "dispatch_id",
+          "node_id": "node_id",
+          "specification_id": "specification_id",
+          "plan_id": "plan_id",
+          "workspace_id": "workspace_id",
+          "resource_id": "30000000-0000-4000-8000-000000000091",
+          "runner_id": "runner_id",
+          "storage_id": "storage_id",
+          "lease_id": "lease_id",
+          "manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "operation_identity_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "generation": 1,
+          "node_activation": 1,
+          "repository_identity": "github.com/example/result",
+          "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "git_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "git_tree": "cccccccccccccccccccccccccccccccccccccccc"
+        },
+        "source_digest": "4c38b18942a4ab5df809954389b8868beb4a35e797491c5ec4ce2d6e920e710c",
+        "effective_basis": {
+          "task_id": "30000000-0000-4000-8000-000000000090",
+          "specification_id": "specification_id",
+          "plan_id": "plan_id",
+          "completion_operation_id": "operation_id",
+          "completion_manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "effective_basis_digest": "c84973abafaacbe8b295a3772ad208781eaa7448ae7f18e1623ee99efd0da5ba",
+        "construction": {
+          "schema_version": 1,
+          "construction_id": "publication-construction",
+          "candidate_id": "publication-candidate",
+          "source_digest": "4c38b18942a4ab5df809954389b8868beb4a35e797491c5ec4ce2d6e920e710c",
+          "repository_identity": "github.com/example/result",
+          "target_branch": "main",
+          "parents": [
+            {
+              "kind": "materialization",
+              "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "repository_identity": "github.com/example/result",
+              "observation_operation_id": "original-publication-open",
+              "workspace": {
+                "schema_version": 1,
+                "workspace_id": "workspace_id",
+                "task_id": "30000000-0000-4000-8000-000000000090",
+                "project_id": "publication-project",
+                "resource_id": "30000000-0000-4000-8000-000000000091",
+                "runner_id": "runner_id",
+                "generation": 1,
+                "lease_id": "lease_id",
+                "node_id": "node_id",
+                "node_activation": 1,
+                "open_operation_id": "original-publication-open",
+                "resource": {
+                  "resource_id": "30000000-0000-4000-8000-000000000091",
+                  "remote_url": "https://github.com/example/result.git",
+                  "repository_identity": "github.com/example/result"
+                }
+              },
+              "outcome": {
+                "workspace_id": "workspace_id",
+                "path": "/private/worktree",
+                "workspace_metadata": {
+                  "generation": 1,
+                  "storage_id": "storage_id",
+                  "lease_id": "lease_id",
+                  "repository_identity": "github.com/example/result",
+                  "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "target_branch": "main",
+                  "target_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "finalized_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                }
+              },
+              "observation_digest": "a3f44ab13354df0b799ee9263c1f78a6d20d43f46ac4c93b4cd980f21af36083"
+            }
+          ],
+          "author_name": "monos",
+          "author_email": "monos@localhost",
+          "timestamp": "1791028800 +0000",
+          "message": "monos Task 30000000-0000-4000-8000-000000000090 result v1"
+        },
+        "construction_digest": "d13b8dcb557db8492b519f32f99a036aa69c17b0d57cfc74d2a9aa4f61218b0a",
+        "configuration": {
+          "schema_version": 1,
+          "policy_version": "local_publication_v1",
+          "rule_version": "credential_rules_v1",
+          "traversal_version": "all_parents_final_tree_v1",
+          "local_blob_limit": 52428800,
+          "provider_blob_limit": 104857600,
+          "max_commits": 256,
+          "max_paths": 8192,
+          "max_versions": 32768,
+          "max_blob_bytes": 134217728,
+          "max_aggregate_bytes": 536870912,
+          "max_findings": 4096,
+          "max_evidence_bytes": 8388608,
+          "deadline_seconds": 120,
+          "workflow_write": "allowed",
+          "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+        },
+        "configuration_digest": "bf0396b43c70aafee730b1b02486e309c649714f629c4bc3054211c439f9ae51",
+        "permission_proof": {
+          "schema_version": 1,
+          "observation_id": "30000000-0000-4000-8000-000000000002",
+          "resource_id": "30000000-0000-4000-8000-000000000091",
+          "repository_identity": "github.com/example/result",
+          "repository_id": "42",
+          "app_id": "1",
+          "installation_id": "2",
+          "key_fingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "configuration_fingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "permissions": {
+            "contents": "write",
+            "metadata": "read",
+            "workflows": "write"
+          },
+          "observed_at": "2026-10-04T12:00:00.000Z",
+          "expires_at": "2026-10-04T13:00:00.000Z",
+          "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+        },
+        "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6"
+      },
+      "preparation_request_digest": "e3fdd328573f84e834f24b33631e3396a7abf5decf87514967b655ef19b7aae9",
+      "preparation_result_digest": "a69e8cf717df5333866b40f215556ce81f643ccebf4d83ee50865f9e36d2f33a",
+      "outcome": "no_change",
+      "preparation_result": {
+        "schema_version": 1,
+        "operation_id": "publication-operation",
+        "request_digest": "e3fdd328573f84e834f24b33631e3396a7abf5decf87514967b655ef19b7aae9",
+        "status": "not_applicable",
+        "reason": "no_change"
+      }
+    }
+  },
+  {
+    "name": "owner delivery no change cannot conceal candidate",
+    "schema": "DeliveryRepository",
+    "valid": false,
+    "value": {
+      "resource_id": "30000000-0000-4000-8000-000000000091",
+      "repository_identity": "github.com/example/result",
+      "provider_metadata": {
+        "github": {
+          "repository_id": "42"
+        }
+      },
+      "source": {
+        "task_id": "30000000-0000-4000-8000-000000000090",
+        "operation_id": "operation_id",
+        "attempt_id": "attempt_id",
+        "dispatch_id": "dispatch_id",
+        "node_id": "node_id",
+        "specification_id": "specification_id",
+        "plan_id": "plan_id",
+        "workspace_id": "workspace_id",
+        "resource_id": "30000000-0000-4000-8000-000000000091",
+        "runner_id": "runner_id",
+        "storage_id": "storage_id",
+        "lease_id": "lease_id",
+        "manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "operation_identity_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generation": 1,
+        "node_activation": 1,
+        "repository_identity": "github.com/example/result",
+        "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "git_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "git_tree": "cccccccccccccccccccccccccccccccccccccccc"
+      },
+      "source_digest": "4c38b18942a4ab5df809954389b8868beb4a35e797491c5ec4ce2d6e920e710c",
+      "effective_basis": {
+        "task_id": "30000000-0000-4000-8000-000000000090",
+        "specification_id": "specification_id",
+        "plan_id": "plan_id",
+        "completion_operation_id": "operation_id",
+        "completion_manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "effective_basis_digest": "c84973abafaacbe8b295a3772ad208781eaa7448ae7f18e1623ee99efd0da5ba",
+      "preparation_request": {
+        "schema_version": 1,
+        "operation_id": "publication-operation",
+        "scan_run_id": "publication-scan",
+        "source": {
+          "task_id": "30000000-0000-4000-8000-000000000090",
+          "operation_id": "operation_id",
+          "attempt_id": "attempt_id",
+          "dispatch_id": "dispatch_id",
+          "node_id": "node_id",
+          "specification_id": "specification_id",
+          "plan_id": "plan_id",
+          "workspace_id": "workspace_id",
+          "resource_id": "30000000-0000-4000-8000-000000000091",
+          "runner_id": "runner_id",
+          "storage_id": "storage_id",
+          "lease_id": "lease_id",
+          "manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "operation_identity_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "generation": 1,
+          "node_activation": 1,
+          "repository_identity": "github.com/example/result",
+          "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "git_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "git_tree": "cccccccccccccccccccccccccccccccccccccccc"
+        },
+        "source_digest": "4c38b18942a4ab5df809954389b8868beb4a35e797491c5ec4ce2d6e920e710c",
+        "effective_basis": {
+          "task_id": "30000000-0000-4000-8000-000000000090",
+          "specification_id": "specification_id",
+          "plan_id": "plan_id",
+          "completion_operation_id": "operation_id",
+          "completion_manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "effective_basis_digest": "c84973abafaacbe8b295a3772ad208781eaa7448ae7f18e1623ee99efd0da5ba",
+        "construction": {
+          "schema_version": 1,
+          "construction_id": "publication-construction",
+          "candidate_id": "publication-candidate",
+          "source_digest": "4c38b18942a4ab5df809954389b8868beb4a35e797491c5ec4ce2d6e920e710c",
+          "repository_identity": "github.com/example/result",
+          "target_branch": "main",
+          "parents": [
+            {
+              "kind": "materialization",
+              "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "repository_identity": "github.com/example/result",
+              "observation_operation_id": "original-publication-open",
+              "workspace": {
+                "schema_version": 1,
+                "workspace_id": "workspace_id",
+                "task_id": "30000000-0000-4000-8000-000000000090",
+                "project_id": "publication-project",
+                "resource_id": "30000000-0000-4000-8000-000000000091",
+                "runner_id": "runner_id",
+                "generation": 1,
+                "lease_id": "lease_id",
+                "node_id": "node_id",
+                "node_activation": 1,
+                "open_operation_id": "original-publication-open",
+                "resource": {
+                  "resource_id": "30000000-0000-4000-8000-000000000091",
+                  "remote_url": "https://github.com/example/result.git",
+                  "repository_identity": "github.com/example/result"
+                }
+              },
+              "outcome": {
+                "workspace_id": "workspace_id",
+                "path": "/private/worktree",
+                "workspace_metadata": {
+                  "generation": 1,
+                  "storage_id": "storage_id",
+                  "lease_id": "lease_id",
+                  "repository_identity": "github.com/example/result",
+                  "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "target_branch": "main",
+                  "target_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "finalized_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                }
+              },
+              "observation_digest": "a3f44ab13354df0b799ee9263c1f78a6d20d43f46ac4c93b4cd980f21af36083"
+            }
+          ],
+          "author_name": "monos",
+          "author_email": "monos@localhost",
+          "timestamp": "1791028800 +0000",
+          "message": "monos Task 30000000-0000-4000-8000-000000000090 result v1"
+        },
+        "construction_digest": "d13b8dcb557db8492b519f32f99a036aa69c17b0d57cfc74d2a9aa4f61218b0a",
+        "configuration": {
+          "schema_version": 1,
+          "policy_version": "local_publication_v1",
+          "rule_version": "credential_rules_v1",
+          "traversal_version": "all_parents_final_tree_v1",
+          "local_blob_limit": 52428800,
+          "provider_blob_limit": 104857600,
+          "max_commits": 256,
+          "max_paths": 8192,
+          "max_versions": 32768,
+          "max_blob_bytes": 134217728,
+          "max_aggregate_bytes": 536870912,
+          "max_findings": 4096,
+          "max_evidence_bytes": 8388608,
+          "deadline_seconds": 120,
+          "workflow_write": "allowed",
+          "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+        },
+        "configuration_digest": "bf0396b43c70aafee730b1b02486e309c649714f629c4bc3054211c439f9ae51",
+        "permission_proof": {
+          "schema_version": 1,
+          "observation_id": "30000000-0000-4000-8000-000000000002",
+          "resource_id": "30000000-0000-4000-8000-000000000091",
+          "repository_identity": "github.com/example/result",
+          "repository_id": "42",
+          "app_id": "1",
+          "installation_id": "2",
+          "key_fingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "configuration_fingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "permissions": {
+            "contents": "write",
+            "metadata": "read",
+            "workflows": "write"
+          },
+          "observed_at": "2026-10-04T12:00:00.000Z",
+          "expires_at": "2026-10-04T13:00:00.000Z",
+          "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+        },
+        "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6"
+      },
+      "preparation_request_digest": "e3fdd328573f84e834f24b33631e3396a7abf5decf87514967b655ef19b7aae9",
+      "preparation_result_digest": "a69e8cf717df5333866b40f215556ce81f643ccebf4d83ee50865f9e36d2f33a",
+      "outcome": "no_change",
+      "preparation_result": {
+        "schema_version": 1,
+        "operation_id": "publication-operation",
+        "request_digest": "e3fdd328573f84e834f24b33631e3396a7abf5decf87514967b655ef19b7aae9",
+        "status": "not_applicable",
+        "reason": "no_change"
+      },
+      "candidate": {
+        "schema_version": 1,
+        "candidate_id": "publication-candidate",
+        "construction_id": "publication-construction",
+        "construction_digest": "d13b8dcb557db8492b519f32f99a036aa69c17b0d57cfc74d2a9aa4f61218b0a",
+        "source_digest": "4c38b18942a4ab5df809954389b8868beb4a35e797491c5ec4ce2d6e920e710c",
+        "head": "dddddddddddddddddddddddddddddddddddddddd",
+        "tree": "cccccccccccccccccccccccccccccccccccccccc",
+        "parents": [
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        ]
+      }
+    }
+  },
+  {
+    "name": "owner delivery mapped zero new commits remains modified",
+    "schema": "DeliveryRepository",
+    "valid": true,
+    "value": {
+      "outcome": "modified",
+      "resource_id": "30000000-0000-4000-8000-000000000091",
+      "repository_identity": "github.com/example/result",
+      "provider_metadata": {
+        "github": {
+          "repository_id": "42"
+        }
+      },
+      "source": {
+        "task_id": "30000000-0000-4000-8000-000000000090",
+        "operation_id": "operation_id",
+        "attempt_id": "attempt_id",
+        "dispatch_id": "dispatch_id",
+        "node_id": "node_id",
+        "specification_id": "specification_id",
+        "plan_id": "plan_id",
+        "workspace_id": "workspace_id",
+        "resource_id": "30000000-0000-4000-8000-000000000091",
+        "runner_id": "runner_id",
+        "storage_id": "storage_id",
+        "lease_id": "lease_id",
+        "manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "operation_identity_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generation": 1,
+        "node_activation": 1,
+        "repository_identity": "github.com/example/result",
+        "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "git_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "git_tree": "cccccccccccccccccccccccccccccccccccccccc"
+      },
+      "source_digest": "4c38b18942a4ab5df809954389b8868beb4a35e797491c5ec4ce2d6e920e710c",
+      "effective_basis": {
+        "task_id": "30000000-0000-4000-8000-000000000090",
+        "specification_id": "specification_id",
+        "plan_id": "plan_id",
+        "completion_operation_id": "operation_id",
+        "completion_manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "effective_basis_digest": "c84973abafaacbe8b295a3772ad208781eaa7448ae7f18e1623ee99efd0da5ba",
+      "preparation_request": {
+        "schema_version": 1,
+        "operation_id": "publication-operation",
+        "scan_run_id": "publication-scan",
+        "source": {
+          "task_id": "30000000-0000-4000-8000-000000000090",
+          "operation_id": "operation_id",
+          "attempt_id": "attempt_id",
+          "dispatch_id": "dispatch_id",
+          "node_id": "node_id",
+          "specification_id": "specification_id",
+          "plan_id": "plan_id",
+          "workspace_id": "workspace_id",
+          "resource_id": "30000000-0000-4000-8000-000000000091",
+          "runner_id": "runner_id",
+          "storage_id": "storage_id",
+          "lease_id": "lease_id",
+          "manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "operation_identity_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "generation": 1,
+          "node_activation": 1,
+          "repository_identity": "github.com/example/result",
+          "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "git_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "git_tree": "cccccccccccccccccccccccccccccccccccccccc"
+        },
+        "source_digest": "4c38b18942a4ab5df809954389b8868beb4a35e797491c5ec4ce2d6e920e710c",
+        "effective_basis": {
+          "task_id": "30000000-0000-4000-8000-000000000090",
+          "specification_id": "specification_id",
+          "plan_id": "plan_id",
+          "completion_operation_id": "operation_id",
+          "completion_manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "effective_basis_digest": "c84973abafaacbe8b295a3772ad208781eaa7448ae7f18e1623ee99efd0da5ba",
+        "construction": {
+          "schema_version": 1,
+          "construction_id": "publication-construction",
+          "candidate_id": "publication-candidate",
+          "source_digest": "4c38b18942a4ab5df809954389b8868beb4a35e797491c5ec4ce2d6e920e710c",
+          "repository_identity": "github.com/example/result",
+          "target_branch": "main",
+          "parents": [
+            {
+              "kind": "materialization",
+              "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "repository_identity": "github.com/example/result",
+              "observation_operation_id": "original-publication-open",
+              "workspace": {
+                "schema_version": 1,
+                "workspace_id": "workspace_id",
+                "task_id": "30000000-0000-4000-8000-000000000090",
+                "project_id": "publication-project",
+                "resource_id": "30000000-0000-4000-8000-000000000091",
+                "runner_id": "runner_id",
+                "generation": 1,
+                "lease_id": "lease_id",
+                "node_id": "node_id",
+                "node_activation": 1,
+                "open_operation_id": "original-publication-open",
+                "resource": {
+                  "resource_id": "30000000-0000-4000-8000-000000000091",
+                  "remote_url": "https://github.com/example/result.git",
+                  "repository_identity": "github.com/example/result"
+                }
+              },
+              "outcome": {
+                "workspace_id": "workspace_id",
+                "path": "/private/worktree",
+                "workspace_metadata": {
+                  "generation": 1,
+                  "storage_id": "storage_id",
+                  "lease_id": "lease_id",
+                  "repository_identity": "github.com/example/result",
+                  "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "target_branch": "main",
+                  "target_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "finalized_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                }
+              },
+              "observation_digest": "a3f44ab13354df0b799ee9263c1f78a6d20d43f46ac4c93b4cd980f21af36083"
+            }
+          ],
+          "author_name": "monos",
+          "author_email": "monos@localhost",
+          "timestamp": "1791028800 +0000",
+          "message": "monos Task 30000000-0000-4000-8000-000000000090 result v1"
+        },
+        "construction_digest": "d13b8dcb557db8492b519f32f99a036aa69c17b0d57cfc74d2a9aa4f61218b0a",
+        "configuration": {
+          "schema_version": 1,
+          "policy_version": "local_publication_v1",
+          "rule_version": "credential_rules_v1",
+          "traversal_version": "all_parents_final_tree_v1",
+          "local_blob_limit": 52428800,
+          "provider_blob_limit": 104857600,
+          "max_commits": 256,
+          "max_paths": 8192,
+          "max_versions": 32768,
+          "max_blob_bytes": 134217728,
+          "max_aggregate_bytes": 536870912,
+          "max_findings": 4096,
+          "max_evidence_bytes": 8388608,
+          "deadline_seconds": 120,
+          "workflow_write": "allowed",
+          "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+        },
+        "configuration_digest": "bf0396b43c70aafee730b1b02486e309c649714f629c4bc3054211c439f9ae51",
+        "permission_proof": {
+          "schema_version": 1,
+          "observation_id": "30000000-0000-4000-8000-000000000002",
+          "resource_id": "30000000-0000-4000-8000-000000000091",
+          "repository_identity": "github.com/example/result",
+          "repository_id": "42",
+          "app_id": "1",
+          "installation_id": "2",
+          "key_fingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "configuration_fingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "permissions": {
+            "contents": "write",
+            "metadata": "read",
+            "workflows": "write"
+          },
+          "observed_at": "2026-10-04T12:00:00.000Z",
+          "expires_at": "2026-10-04T13:00:00.000Z",
+          "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+        },
+        "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6"
+      },
+      "preparation_request_digest": "e3fdd328573f84e834f24b33631e3396a7abf5decf87514967b655ef19b7aae9",
+      "preparation_result": {
+        "schema_version": 1,
+        "operation_id": "30000000-0000-4000-8000-000000000005",
+        "request_digest": "c45788294a669b9d4fa42c2d399416293be6ad756036db6d3b6151c976a51692",
+        "status": "mapped",
+        "candidate": {
+          "schema_version": 1,
+          "candidate_id": "publication-candidate",
+          "construction_id": "publication-construction",
+          "construction_digest": "d13b8dcb557db8492b519f32f99a036aa69c17b0d57cfc74d2a9aa4f61218b0a",
+          "source_digest": "4c38b18942a4ab5df809954389b8868beb4a35e797491c5ec4ce2d6e920e710c",
+          "head": "dddddddddddddddddddddddddddddddddddddddd",
+          "tree": "cccccccccccccccccccccccccccccccccccccccc",
+          "parents": [
+            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          ]
+        },
+        "candidate_manifest_digest": "a734383872199e522dd5493d636514ab334f6b3c3bced14b81f8c77ddc288018",
+        "scan": {
+          "schema_version": 1,
+          "scan_id": "30000000-0000-4000-8000-000000000006",
+          "candidate_manifest_digest": "a734383872199e522dd5493d636514ab334f6b3c3bced14b81f8c77ddc288018",
+          "configuration_digest": "bf0396b43c70aafee730b1b02486e309c649714f629c4bc3054211c439f9ae51",
+          "status": "complete",
+          "coverage": {
+            "commits": 0,
+            "paths": 0,
+            "versions": 0,
+            "unique_blob_bytes": 0
+          },
+          "findings_count": 0,
+          "findings_bytes": 2,
+          "findings_digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "workflow_changes": false
+        },
+        "scan_digest": "2e58930a88653a0575dcb0eb100366e16220435cd2085b3363c4361cd7a92084",
+        "mapping": {
+          "schema_version": 1,
+          "mapping_id": "30000000-0000-4000-8000-000000000005",
+          "operation_id": "30000000-0000-4000-8000-000000000005",
+          "request_digest": "c45788294a669b9d4fa42c2d399416293be6ad756036db6d3b6151c976a51692",
+          "item_id": "30000000-0000-4000-8000-000000000001",
+          "source": {
+            "task_id": "30000000-0000-4000-8000-000000000090",
+            "operation_id": "30000000-0000-4000-8000-000000000007",
+            "attempt_id": "attempt_id",
+            "dispatch_id": "dispatch_id",
+            "node_id": "node_id",
+            "specification_id": "specification_id",
+            "plan_id": "plan_id",
+            "workspace_id": "workspace_id",
+            "resource_id": "30000000-0000-4000-8000-000000000091",
+            "runner_id": "runner_id",
+            "storage_id": "storage_id",
+            "lease_id": "lease_id",
+            "manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation_identity_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "generation": 1,
+            "node_activation": 1,
+            "repository_identity": "github.com/example/result",
+            "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "git_commit": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+            "git_tree": "cccccccccccccccccccccccccccccccccccccccc"
+          },
+          "source_digest": "cbca11d33c7d2ba2548907812a7dbf5bfc3a3d9cf5b58668dfdf370fa638e660",
+          "effective_basis": {
+            "task_id": "30000000-0000-4000-8000-000000000090",
+            "specification_id": "specification_id",
+            "plan_id": "plan_id",
+            "completion_operation_id": "30000000-0000-4000-8000-000000000007",
+            "completion_manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "effective_basis_digest": "ba0295ee9356fc0a6fb9d6dce8a00e97986f8fd405ae8f99c3f5c16dad8219e3",
+          "published": {
+            "schema_version": 1,
+            "operation_id": "30000000-0000-4000-8000-000000000003",
+            "request_digest": "57fce81c9a49bc82b551810060aed5414741e8031f5de5bb7f7927ff26e4e777",
+            "result_digest": "8f4a4f285d53ee2847e717464d4680d56a883d64ca54d8a0302fa52190463f74",
+            "item_id": "30000000-0000-4000-8000-000000000001",
+            "task_id": "30000000-0000-4000-8000-000000000090",
+            "resource_id": "30000000-0000-4000-8000-000000000091",
+            "runner_id": "runner_id",
+            "storage_id": "storage_id",
+            "repository_identity": "github.com/example/result",
+            "repository_id": "42",
+            "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
+            "candidate": {
+              "schema_version": 1,
+              "candidate_id": "publication-candidate",
+              "construction_id": "publication-construction",
+              "construction_digest": "d13b8dcb557db8492b519f32f99a036aa69c17b0d57cfc74d2a9aa4f61218b0a",
+              "source_digest": "4c38b18942a4ab5df809954389b8868beb4a35e797491c5ec4ce2d6e920e710c",
+              "head": "dddddddddddddddddddddddddddddddddddddddd",
+              "tree": "cccccccccccccccccccccccccccccccccccccccc",
+              "parents": [
+                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              ]
+            },
+            "candidate_manifest_digest": "a734383872199e522dd5493d636514ab334f6b3c3bced14b81f8c77ddc288018",
+            "observation": {
+              "schema_version": 1,
+              "observation_id": "30000000-0000-4000-8000-000000000004",
+              "operation_id": "30000000-0000-4000-8000-000000000003",
+              "item_id": "30000000-0000-4000-8000-000000000001",
+              "task_id": "30000000-0000-4000-8000-000000000090",
+              "resource_id": "30000000-0000-4000-8000-000000000091",
+              "runner_id": "runner_id",
+              "storage_id": "storage_id",
+              "repository_identity": "github.com/example/result",
+              "repository_id": "42",
+              "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
+              "status": "present",
+              "head": "dddddddddddddddddddddddddddddddddddddddd",
+              "observed_at": "2026-10-04T12:00:00.000Z"
+            },
+            "observation_digest": "3e8dac4e9b4faa2dc3078b4f76592d88ad750d2e0d9050ec4ea6135cbbd41a49"
+          },
+          "published_digest": "c6746b91be6a0363abae1eda13ad3dbc9bf2c5b62a5feb95f35997a3004e49b2",
+          "candidate_manifest_digest": "a734383872199e522dd5493d636514ab334f6b3c3bced14b81f8c77ddc288018",
+          "reused_head": "dddddddddddddddddddddddddddddddddddddddd",
+          "result_tree": "cccccccccccccccccccccccccccccccccccccccc",
+          "configuration_digest": "bf0396b43c70aafee730b1b02486e309c649714f629c4bc3054211c439f9ae51"
+        },
+        "mapping_digest": "15cba31777b00afdba89157354b622b110c2c4e351c43db171ec7256f2369dec"
+      },
+      "preparation_result_digest": "a69e8cf717df5333866b40f215556ce81f643ccebf4d83ee50865f9e36d2f33a",
+      "item_id": "30000000-0000-4000-8000-000000000001",
+      "candidate": {
+        "schema_version": 1,
+        "candidate_id": "publication-candidate",
+        "construction_id": "publication-construction",
+        "construction_digest": "d13b8dcb557db8492b519f32f99a036aa69c17b0d57cfc74d2a9aa4f61218b0a",
+        "source_digest": "4c38b18942a4ab5df809954389b8868beb4a35e797491c5ec4ce2d6e920e710c",
+        "head": "dddddddddddddddddddddddddddddddddddddddd",
+        "tree": "cccccccccccccccccccccccccccccccccccccccc",
+        "parents": [
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        ]
+      },
+      "candidate_manifest_digest": "a734383872199e522dd5493d636514ab334f6b3c3bced14b81f8c77ddc288018",
+      "scan": {
+        "schema_version": 1,
+        "scan_id": "publication-scan",
+        "candidate_manifest_digest": "a734383872199e522dd5493d636514ab334f6b3c3bced14b81f8c77ddc288018",
+        "configuration_digest": "bf0396b43c70aafee730b1b02486e309c649714f629c4bc3054211c439f9ae51",
+        "status": "complete",
+        "coverage": {
+          "commits": 1,
+          "paths": 0,
+          "versions": 0,
+          "unique_blob_bytes": 0
+        },
+        "findings_count": 0,
+        "findings_bytes": 2,
+        "findings_digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "workflow_changes": true
+      },
+      "scan_digest": "d7cee9d2e19f4ba6eca1a2339b0ebc54be82b87e3176777ff62cc4dcbdd46808",
+      "permission_proof": {
+        "schema_version": 1,
+        "observation_id": "30000000-0000-4000-8000-000000000002",
+        "resource_id": "30000000-0000-4000-8000-000000000091",
+        "repository_identity": "github.com/example/result",
+        "repository_id": "42",
+        "app_id": "1",
+        "installation_id": "2",
+        "key_fingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "configuration_fingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "permissions": {
+          "contents": "write",
+          "metadata": "read",
+          "workflows": "write"
+        },
+        "observed_at": "2026-10-04T12:00:00.000Z",
+        "expires_at": "2026-10-04T13:00:00.000Z",
+        "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+      },
+      "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6",
+      "waivers": [],
+      "target_branch": "main",
+      "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
+      "marker": "<!-- monos-delivery-item:30000000-0000-4000-8000-000000000001 -->",
+      "remote_preparation": "automatic",
+      "provider_content": {
+        "title": "Exact review",
+        "body": "Safe Task summary"
+      },
+      "provider_content_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "mapping": {
+        "schema_version": 1,
+        "mapping_id": "30000000-0000-4000-8000-000000000005",
+        "operation_id": "30000000-0000-4000-8000-000000000005",
+        "request_digest": "c45788294a669b9d4fa42c2d399416293be6ad756036db6d3b6151c976a51692",
+        "item_id": "30000000-0000-4000-8000-000000000001",
+        "source": {
+          "task_id": "30000000-0000-4000-8000-000000000090",
+          "operation_id": "30000000-0000-4000-8000-000000000007",
+          "attempt_id": "attempt_id",
+          "dispatch_id": "dispatch_id",
+          "node_id": "node_id",
+          "specification_id": "specification_id",
+          "plan_id": "plan_id",
+          "workspace_id": "workspace_id",
+          "resource_id": "30000000-0000-4000-8000-000000000091",
+          "runner_id": "runner_id",
+          "storage_id": "storage_id",
+          "lease_id": "lease_id",
+          "manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "operation_identity_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "generation": 1,
+          "node_activation": 1,
+          "repository_identity": "github.com/example/result",
+          "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "git_commit": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "git_tree": "cccccccccccccccccccccccccccccccccccccccc"
+        },
+        "source_digest": "cbca11d33c7d2ba2548907812a7dbf5bfc3a3d9cf5b58668dfdf370fa638e660",
+        "effective_basis": {
+          "task_id": "30000000-0000-4000-8000-000000000090",
+          "specification_id": "specification_id",
+          "plan_id": "plan_id",
+          "completion_operation_id": "30000000-0000-4000-8000-000000000007",
+          "completion_manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "effective_basis_digest": "ba0295ee9356fc0a6fb9d6dce8a00e97986f8fd405ae8f99c3f5c16dad8219e3",
+        "published": {
+          "schema_version": 1,
+          "operation_id": "30000000-0000-4000-8000-000000000003",
+          "request_digest": "57fce81c9a49bc82b551810060aed5414741e8031f5de5bb7f7927ff26e4e777",
+          "result_digest": "8f4a4f285d53ee2847e717464d4680d56a883d64ca54d8a0302fa52190463f74",
+          "item_id": "30000000-0000-4000-8000-000000000001",
+          "task_id": "30000000-0000-4000-8000-000000000090",
+          "resource_id": "30000000-0000-4000-8000-000000000091",
+          "runner_id": "runner_id",
+          "storage_id": "storage_id",
+          "repository_identity": "github.com/example/result",
+          "repository_id": "42",
+          "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
+          "candidate": {
+            "schema_version": 1,
+            "candidate_id": "publication-candidate",
+            "construction_id": "publication-construction",
+            "construction_digest": "d13b8dcb557db8492b519f32f99a036aa69c17b0d57cfc74d2a9aa4f61218b0a",
+            "source_digest": "4c38b18942a4ab5df809954389b8868beb4a35e797491c5ec4ce2d6e920e710c",
+            "head": "dddddddddddddddddddddddddddddddddddddddd",
+            "tree": "cccccccccccccccccccccccccccccccccccccccc",
+            "parents": [
+              "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            ]
+          },
+          "candidate_manifest_digest": "a734383872199e522dd5493d636514ab334f6b3c3bced14b81f8c77ddc288018",
+          "observation": {
+            "schema_version": 1,
+            "observation_id": "30000000-0000-4000-8000-000000000004",
+            "operation_id": "30000000-0000-4000-8000-000000000003",
+            "item_id": "30000000-0000-4000-8000-000000000001",
+            "task_id": "30000000-0000-4000-8000-000000000090",
+            "resource_id": "30000000-0000-4000-8000-000000000091",
+            "runner_id": "runner_id",
+            "storage_id": "storage_id",
+            "repository_identity": "github.com/example/result",
+            "repository_id": "42",
+            "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
+            "status": "present",
+            "head": "dddddddddddddddddddddddddddddddddddddddd",
+            "observed_at": "2026-10-04T12:00:00.000Z"
+          },
+          "observation_digest": "3e8dac4e9b4faa2dc3078b4f76592d88ad750d2e0d9050ec4ea6135cbbd41a49"
+        },
+        "published_digest": "c6746b91be6a0363abae1eda13ad3dbc9bf2c5b62a5feb95f35997a3004e49b2",
+        "candidate_manifest_digest": "a734383872199e522dd5493d636514ab334f6b3c3bced14b81f8c77ddc288018",
+        "reused_head": "dddddddddddddddddddddddddddddddddddddddd",
+        "result_tree": "cccccccccccccccccccccccccccccccccccccccc",
+        "configuration_digest": "bf0396b43c70aafee730b1b02486e309c649714f629c4bc3054211c439f9ae51"
+      },
+      "mapping_digest": "15cba31777b00afdba89157354b622b110c2c4e351c43db171ec7256f2369dec"
+    }
+  },
+  {
+    "name": "owner delivery manifest rejects empty membership",
+    "schema": "DeliveryAcceptanceManifest",
+    "valid": false,
+    "value": {
+      "schema_version": 1,
+      "task_id": "30000000-0000-4000-8000-000000000090",
+      "basis": {
+        "control_version": 1,
+        "specification_id": "specification_id",
+        "plan_id": "plan_id"
+      },
+      "specification_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "plan_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "outputs": [],
+      "repositories": []
+    }
+  },
+  {
+    "name": "owner delivery no Plan status remains readable",
+    "schema": "OwnerDeliveryStatus",
+    "valid": true,
+    "value": {
+      "schema_version": 1,
+      "task_id": "30000000-0000-4000-8000-000000000090",
+      "basis": {
+        "control_version": 1,
+        "specification_id": "specification_id",
+        "plan_id": null
+      },
+      "accept_allowed": false,
+      "reason": "no_plan",
+      "proposals": [],
+      "proposals_has_more": false,
+      "batches": [],
+      "batches_has_more": false
+    }
+  },
+  {
+    "name": "owner delivery admission basis rejects no Plan",
+    "schema": "DeliveryAcceptanceBasis",
+    "valid": false,
+    "value": {
+      "control_version": 1,
+      "specification_id": "specification_id",
+      "plan_id": null
+    }
+  },
+  {
+    "name": "owner delivery status requires paired accepted cutoff",
+    "schema": "OwnerDeliveryStatus",
+    "valid": false,
+    "value": {
+      "schema_version": 1,
+      "task_id": "30000000-0000-4000-8000-000000000090",
+      "basis": {
+        "control_version": 1,
+        "specification_id": "specification_id",
+        "plan_id": null
+      },
+      "accept_allowed": false,
+      "reason": "no_plan",
+      "proposals": [],
+      "proposals_has_more": false,
+      "batches": [],
+      "batches_has_more": false,
+      "accepted_delivery_operation_id": "batch"
+    }
+  },
+  {
+    "name": "owner delivery status pairs accepted pointer",
+    "schema": "OwnerDeliveryStatus",
+    "valid": true,
+    "value": {
+      "schema_version": 1,
+      "task_id": "30000000-0000-4000-8000-000000000090",
+      "basis": {
+        "control_version": 1,
+        "specification_id": "specification_id",
+        "plan_id": null
+      },
+      "accept_allowed": false,
+      "reason": "no_plan",
+      "proposals": [],
+      "proposals_has_more": false,
+      "batches": [],
+      "batches_has_more": false,
+      "accepted_delivery_operation_id": "batch",
+      "accepted_delivery_input_cutoff": 7
+    }
+  },
+  {
+    "name": "owner delivery modified requires actual workflow fact",
+    "schema": "DeliveryRepository",
+    "valid": false,
+    "value": {
+      "outcome": "modified",
+      "resource_id": "30000000-0000-4000-8000-000000000091",
+      "repository_identity": "github.com/example/result",
+      "provider_metadata": {
+        "github": {
+          "repository_id": "42"
+        }
+      },
+      "source": {
+        "task_id": "30000000-0000-4000-8000-000000000090",
+        "operation_id": "operation_id",
+        "attempt_id": "attempt_id",
+        "dispatch_id": "dispatch_id",
+        "node_id": "node_id",
+        "specification_id": "specification_id",
+        "plan_id": "plan_id",
+        "workspace_id": "workspace_id",
+        "resource_id": "30000000-0000-4000-8000-000000000091",
+        "runner_id": "runner_id",
+        "storage_id": "storage_id",
+        "lease_id": "lease_id",
+        "manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "operation_identity_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generation": 1,
+        "node_activation": 1,
+        "repository_identity": "github.com/example/result",
+        "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "git_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "git_tree": "cccccccccccccccccccccccccccccccccccccccc"
+      },
+      "source_digest": "4c38b18942a4ab5df809954389b8868beb4a35e797491c5ec4ce2d6e920e710c",
+      "effective_basis": {
+        "task_id": "30000000-0000-4000-8000-000000000090",
+        "specification_id": "specification_id",
+        "plan_id": "plan_id",
+        "completion_operation_id": "operation_id",
+        "completion_manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "effective_basis_digest": "c84973abafaacbe8b295a3772ad208781eaa7448ae7f18e1623ee99efd0da5ba",
+      "preparation_request": {
+        "schema_version": 1,
+        "operation_id": "publication-operation",
+        "scan_run_id": "publication-scan",
+        "source": {
+          "task_id": "30000000-0000-4000-8000-000000000090",
+          "operation_id": "operation_id",
+          "attempt_id": "attempt_id",
+          "dispatch_id": "dispatch_id",
+          "node_id": "node_id",
+          "specification_id": "specification_id",
+          "plan_id": "plan_id",
+          "workspace_id": "workspace_id",
+          "resource_id": "30000000-0000-4000-8000-000000000091",
+          "runner_id": "runner_id",
+          "storage_id": "storage_id",
+          "lease_id": "lease_id",
+          "manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "operation_identity_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "generation": 1,
+          "node_activation": 1,
+          "repository_identity": "github.com/example/result",
+          "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "git_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "git_tree": "cccccccccccccccccccccccccccccccccccccccc"
+        },
+        "source_digest": "4c38b18942a4ab5df809954389b8868beb4a35e797491c5ec4ce2d6e920e710c",
+        "effective_basis": {
+          "task_id": "30000000-0000-4000-8000-000000000090",
+          "specification_id": "specification_id",
+          "plan_id": "plan_id",
+          "completion_operation_id": "operation_id",
+          "completion_manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "effective_basis_digest": "c84973abafaacbe8b295a3772ad208781eaa7448ae7f18e1623ee99efd0da5ba",
+        "construction": {
+          "schema_version": 1,
+          "construction_id": "publication-construction",
+          "candidate_id": "publication-candidate",
+          "source_digest": "4c38b18942a4ab5df809954389b8868beb4a35e797491c5ec4ce2d6e920e710c",
+          "repository_identity": "github.com/example/result",
+          "target_branch": "main",
+          "parents": [
+            {
+              "kind": "materialization",
+              "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "repository_identity": "github.com/example/result",
+              "observation_operation_id": "original-publication-open",
+              "workspace": {
+                "schema_version": 1,
+                "workspace_id": "workspace_id",
+                "task_id": "30000000-0000-4000-8000-000000000090",
+                "project_id": "publication-project",
+                "resource_id": "30000000-0000-4000-8000-000000000091",
+                "runner_id": "runner_id",
+                "generation": 1,
+                "lease_id": "lease_id",
+                "node_id": "node_id",
+                "node_activation": 1,
+                "open_operation_id": "original-publication-open",
+                "resource": {
+                  "resource_id": "30000000-0000-4000-8000-000000000091",
+                  "remote_url": "https://github.com/example/result.git",
+                  "repository_identity": "github.com/example/result"
+                }
+              },
+              "outcome": {
+                "workspace_id": "workspace_id",
+                "path": "/private/worktree",
+                "workspace_metadata": {
+                  "generation": 1,
+                  "storage_id": "storage_id",
+                  "lease_id": "lease_id",
+                  "repository_identity": "github.com/example/result",
+                  "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "target_branch": "main",
+                  "target_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "finalized_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                }
+              },
+              "observation_digest": "a3f44ab13354df0b799ee9263c1f78a6d20d43f46ac4c93b4cd980f21af36083"
+            }
+          ],
+          "author_name": "monos",
+          "author_email": "monos@localhost",
+          "timestamp": "1791028800 +0000",
+          "message": "monos Task 30000000-0000-4000-8000-000000000090 result v1"
+        },
+        "construction_digest": "d13b8dcb557db8492b519f32f99a036aa69c17b0d57cfc74d2a9aa4f61218b0a",
+        "configuration": {
+          "schema_version": 1,
+          "policy_version": "local_publication_v1",
+          "rule_version": "credential_rules_v1",
+          "traversal_version": "all_parents_final_tree_v1",
+          "local_blob_limit": 52428800,
+          "provider_blob_limit": 104857600,
+          "max_commits": 256,
+          "max_paths": 8192,
+          "max_versions": 32768,
+          "max_blob_bytes": 134217728,
+          "max_aggregate_bytes": 536870912,
+          "max_findings": 4096,
+          "max_evidence_bytes": 8388608,
+          "deadline_seconds": 120,
+          "workflow_write": "allowed",
+          "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+        },
+        "configuration_digest": "bf0396b43c70aafee730b1b02486e309c649714f629c4bc3054211c439f9ae51",
+        "permission_proof": {
+          "schema_version": 1,
+          "observation_id": "30000000-0000-4000-8000-000000000002",
+          "resource_id": "30000000-0000-4000-8000-000000000091",
+          "repository_identity": "github.com/example/result",
+          "repository_id": "42",
+          "app_id": "1",
+          "installation_id": "2",
+          "key_fingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "configuration_fingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "permissions": {
+            "contents": "write",
+            "metadata": "read",
+            "workflows": "write"
+          },
+          "observed_at": "2026-10-04T12:00:00.000Z",
+          "expires_at": "2026-10-04T13:00:00.000Z",
+          "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+        },
+        "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6"
+      },
+      "preparation_request_digest": "e3fdd328573f84e834f24b33631e3396a7abf5decf87514967b655ef19b7aae9",
+      "preparation_result": {
+        "schema_version": 1,
+        "operation_id": "publication-operation",
+        "request_digest": "e3fdd328573f84e834f24b33631e3396a7abf5decf87514967b655ef19b7aae9",
+        "status": "prepared",
+        "candidate": {
+          "schema_version": 1,
+          "candidate_id": "publication-candidate",
+          "construction_id": "publication-construction",
+          "construction_digest": "d13b8dcb557db8492b519f32f99a036aa69c17b0d57cfc74d2a9aa4f61218b0a",
+          "source_digest": "4c38b18942a4ab5df809954389b8868beb4a35e797491c5ec4ce2d6e920e710c",
+          "head": "dddddddddddddddddddddddddddddddddddddddd",
+          "tree": "cccccccccccccccccccccccccccccccccccccccc",
+          "parents": [
+            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          ]
+        },
+        "candidate_manifest_digest": "a734383872199e522dd5493d636514ab334f6b3c3bced14b81f8c77ddc288018",
+        "scan": {
+          "schema_version": 1,
+          "scan_id": "publication-scan",
+          "candidate_manifest_digest": "a734383872199e522dd5493d636514ab334f6b3c3bced14b81f8c77ddc288018",
+          "configuration_digest": "bf0396b43c70aafee730b1b02486e309c649714f629c4bc3054211c439f9ae51",
+          "status": "complete",
+          "coverage": {
+            "commits": 1,
+            "paths": 0,
+            "versions": 0,
+            "unique_blob_bytes": 0
+          },
+          "findings_count": 0,
+          "findings_bytes": 2,
+          "findings_digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "workflow_changes": true
+        },
+        "scan_digest": "d7cee9d2e19f4ba6eca1a2339b0ebc54be82b87e3176777ff62cc4dcbdd46808"
+      },
+      "preparation_result_digest": "a69e8cf717df5333866b40f215556ce81f643ccebf4d83ee50865f9e36d2f33a",
+      "item_id": "30000000-0000-4000-8000-000000000001",
+      "candidate": {
+        "schema_version": 1,
+        "candidate_id": "publication-candidate",
+        "construction_id": "publication-construction",
+        "construction_digest": "d13b8dcb557db8492b519f32f99a036aa69c17b0d57cfc74d2a9aa4f61218b0a",
+        "source_digest": "4c38b18942a4ab5df809954389b8868beb4a35e797491c5ec4ce2d6e920e710c",
+        "head": "dddddddddddddddddddddddddddddddddddddddd",
+        "tree": "cccccccccccccccccccccccccccccccccccccccc",
+        "parents": [
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        ]
+      },
+      "candidate_manifest_digest": "a734383872199e522dd5493d636514ab334f6b3c3bced14b81f8c77ddc288018",
+      "scan": {
+        "schema_version": 1,
+        "scan_id": "publication-scan",
+        "candidate_manifest_digest": "a734383872199e522dd5493d636514ab334f6b3c3bced14b81f8c77ddc288018",
+        "configuration_digest": "bf0396b43c70aafee730b1b02486e309c649714f629c4bc3054211c439f9ae51",
+        "status": "complete",
+        "coverage": {
+          "commits": 1,
+          "paths": 0,
+          "versions": 0,
+          "unique_blob_bytes": 0
+        },
+        "findings_count": 0,
+        "findings_bytes": 2,
+        "findings_digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "scan_digest": "d7cee9d2e19f4ba6eca1a2339b0ebc54be82b87e3176777ff62cc4dcbdd46808",
+      "permission_proof": {
+        "schema_version": 1,
+        "observation_id": "30000000-0000-4000-8000-000000000002",
+        "resource_id": "30000000-0000-4000-8000-000000000091",
+        "repository_identity": "github.com/example/result",
+        "repository_id": "42",
+        "app_id": "1",
+        "installation_id": "2",
+        "key_fingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "configuration_fingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "permissions": {
+          "contents": "write",
+          "metadata": "read",
+          "workflows": "write"
+        },
+        "observed_at": "2026-10-04T12:00:00.000Z",
+        "expires_at": "2026-10-04T13:00:00.000Z",
+        "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+      },
+      "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6",
+      "waivers": [],
+      "target_branch": "main",
+      "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
+      "marker": "<!-- monos-delivery-item:30000000-0000-4000-8000-000000000001 -->",
+      "remote_preparation": "automatic",
+      "provider_content": {
+        "title": "Exact review",
+        "body": "Safe Task summary"
+      },
+      "provider_content_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    }
+  },
+  {
+    "name": "owner delivery empty history query",
+    "schema": "OwnerDeliveryHistoryQuery",
+    "valid": true,
+    "value": {}
+  },
+  {
+    "name": "owner delivery history cursors",
+    "schema": "OwnerDeliveryHistoryQuery",
+    "valid": true,
+    "value": {
+      "proposal_cursor": "eyJ2IjoxfQ",
+      "batch_cursor": "eyJ2IjoxfQ"
+    }
+  },
+  {
+    "name": "owner delivery history rejects null",
+    "schema": "OwnerDeliveryHistoryQuery",
+    "valid": false,
+    "value": {
+      "proposal_cursor": null
+    }
+  },
+  {
+    "name": "owner delivery history rejects unknown",
+    "schema": "OwnerDeliveryHistoryQuery",
+    "valid": false,
+    "value": {
+      "after": "foreign"
+    }
+  },
+  {
+    "name": "owner delivery history rejects padded cursor",
+    "schema": "OwnerDeliveryHistoryQuery",
+    "valid": false,
+    "value": {
+      "proposal_cursor": "eyJ2IjoxfQ=="
+    }
   }
 ]

@@ -11,6 +11,7 @@ import {
   executeOwner,
   human,
   ReadProblem,
+  taskHref,
   useTaskRead,
 } from "./task-shared.tsx";
 import type { TaskViewProps } from "./task-shared.tsx";
@@ -125,7 +126,12 @@ export function TaskControls(props: TaskViewProps) {
             )}
         </>
       )}
-      {!terminal && (
+      {!terminal && task.accepted_delivery_operation_id && (
+        <p className="task-muted">
+          Manage the accepted delivery and its exact Cancel in <a href={taskHref(task.task_id, "overview")}>Overview</a>.
+        </p>
+      )}
+      {!terminal && !task.accepted_delivery_operation_id && (
         <Button
           variant="ghost"
           disabled={busy || !p}

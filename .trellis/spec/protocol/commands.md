@@ -111,3 +111,11 @@ Execution UI adds `TaskListQuery/TaskListPage`, `TaskResultPage` and
 See [Owner reads](../backend/owner-reads.md) and [Owner access](../backend/owner-access.md)
 for exact fields, encoded bounds and session-header validation. These reads do not
 introduce Owner command names, authorization states or completion timestamps.
+
+Exact delivery uses dedicated `OwnerDeliveryCommand` and per-action receipts in
+[Owner delivery](../backend/owner-delivery.md). Preserve exact proposal/confirmation/
+basis and batch/digest/version variants. Unknown receipts contain no committed IDs.
+`Delivery*`/`OwnerDelivery*` enforce 512 KiB encoded bytes and well-formed Unicode.
+Summaries omit manifests; details are selected reads. History uses separate bounded
+proposal/batch cursors and conditional next fields. Generated Go enum collisions
+must preserve actual wire values/types and compile affected consumers.

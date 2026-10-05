@@ -659,7 +659,7 @@ func (d *Daemon) Tick(ctx context.Context) {
 				kind := protocol.Output
 				text := strings.ToValidUTF8(string(buf[:n]), "?")
 				if stream == "stderr" && strings.Contains(text, "permission requested:") {
-					kind = protocol.Attention
+					kind = protocol.RuntimeEventKind("attention")
 				}
 				event, err := d.DB.LogEvent(protocol.RuntimeEvent{AttemptID: s.Dispatch.AttemptID, DispatchID: s.Dispatch.DispatchID, StreamID: stream, Kind: kind, Text: text, DataBase64: ptr(base64.StdEncoding.EncodeToString(buf[:n])), BootID: &d.Boot}, offset, offset+int64(n))
 				if err != nil {

@@ -1,0 +1,18 @@
+{
+  "ownedScopes": [
+    "conversation_f0d269632d754d15b7f644d100698067",
+    "conversation_9503fa7d00a1459b8ad87df2be3aacc1",
+    "conversation_a979daa99792486fb6be4c3f29eac98c"
+  ],
+  "closedScopes": [
+    "conversation_f0d269632d754d15b7f644d100698067",
+    "conversation_9503fa7d00a1459b8ad87df2be3aacc1",
+    "conversation_a979daa99792486fb6be4c3f29eac98c"
+  ],
+  "closing": true,
+  "verified_absent_scopes": [
+    "conversation_f0d269632d754d15b7f644d100698067",
+    "conversation_9503fa7d00a1459b8ad87df2be3aacc1",
+    "conversation_a979daa99792486fb6be4c3f29eac98c"
+  ]
+}

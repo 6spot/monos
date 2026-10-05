@@ -28,7 +28,7 @@
   ],
   "parent": "09-28-stage-a-product-loop",
   "relatedFiles": [],
-  "notes": "Three ordered review/delivery leaves independently accepted2026-10-05; latest automatic remote preparation4b37552 archivedbac5e35. Continue Owner delivery then correction/recovery and combined acceptance. No package/Stage A/native installed delivery closure.",
+  "notes": "Four ordered review/delivery leaves independently accepted 2026-10-05; current exact Owner delivery integration READY, archive follows scoped work commit. Continue correction/recovery, then combined installed acceptance. Parent/Stage A/native installed delivery remain open.",
   "meta": {
     "roadmap_level": "work-package",
     "planning_maturity": "decomposed"

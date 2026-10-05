@@ -1,0 +1,6 @@
+{
+  "state": "rejected",
+  "status": 409,
+  "reason": "unexpected_head",
+  "cooldown_ms": 0
+}

@@ -81,6 +81,11 @@ const get = (name, auth, parameters = [], querySchema) => ({
 artifacts.set('generated/openapi.json', `${JSON.stringify({
   openapi: '3.1.0', info: { title: 'monos boundary probe', version: '1.0.0' },
   paths: {
+    '/v1/owner/tasks/delivery/commands': { post: { security: security('OwnerAuth'), requestBody: { required: true, content: { 'application/json': { schema: reference('OwnerDeliveryCommand') } } }, responses: responses('OwnerDeliveryCommandResult') } },
+    '/v1/owner/tasks/{task_id}/delivery': { get: get('OwnerDeliveryStatus','OwnerAuth',['task_id'],'OwnerDeliveryHistoryQuery') },
+    '/v1/owner/tasks/{task_id}/delivery/proposals/{proposal_id}': { get: get('DeliveryProposalDetail','OwnerAuth',['task_id','proposal_id']) },
+    '/v1/owner/tasks/{task_id}/delivery/batches/{operation_id}': { get: get('DeliveryBatch','OwnerAuth',['task_id','operation_id']) },
+    '/v1/owner/tasks/{task_id}/delivery/commands/{request_id}': { get: get('OwnerDeliveryCommandResult','OwnerAuth',['task_id','request_id']) },
     '/v1/owner/tasks/{task_id}/publication-candidates': { get: get('PublicationCandidatePage','OwnerAuth',['task_id'],'PublicationCandidateQuery') },
     '/v1/owner/tasks/{task_id}/remote-preparation': { get: get('RemotePreparationPage','OwnerAuth',['task_id'],'RemotePreparationQuery') },
     '/v1/owner/tasks/{task_id}/remote-preparation/{item_id}': { get: get('RemotePreparationRecord','OwnerAuth',['task_id','item_id']) },

@@ -101,3 +101,18 @@ shown as current because its Node once completed.
 Correct: render exact current manifest applicability, keep original revision and
 activation attribution in history, and distinguish saved input, delivery, formal
 completion, local review and eventual Owner acceptance.
+
+## Exact accepted delivery
+
+[Owner delivery](../backend/owner-delivery.md) supplies dedicated prepare/confirm/
+Accept and frozen batch Retry/Cancel. `owner-delivery-api.ts` verifies digest/member/
+source bindings and preserves selected Artifact own Attempt/revision metadata.
+`owner-delivery.tsx` shows exact review, cutoff, unknown readiness, recovery and
+history. Current capabilities stay independent of paged history and later chat;
+failed reads disable actions. Task controls use exact batch cancellation.
+
+Retain the original delivery envelope in Task/session storage before HTTP; recover
+its actual receipt after reply loss/reload. Logout/session/selection fence late
+callbacks. Completed links to independent Todo Discussion. Inspect representative
+changed review, frozen progress and terminal layouts at desktop/mobile sizes tied
+to the current build; reuse unchanged shell/provider evidence at its original scope.

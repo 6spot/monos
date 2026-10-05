@@ -24,8 +24,8 @@ export async function effectiveResult(tx:Transaction, request:PublicationPrepare
  return {resolved,basis,current:!!resolved.identity && resolved.item.current && head?.finalized_commit===request.source.git_commit && hash(resolved.identity)===request.source_digest && hash(basis)===request.effective_basis_digest};
 }
 export async function localAdmissionAllowed(tx:Transaction, taskId:string):Promise<boolean> {
- const task=(await tx.query<{state:string}>('SELECT state FROM tasks WHERE id=$1',[taskId])).rows[0];
- return task?.state==='REVIEW' && !(await specificationFrozen(tx,taskId)) && !(await tx.query("SELECT 1 FROM replan_requests WHERE task_id=$1 AND status='pending'",[taskId])).rowCount
+ const task=(await tx.query<{state:string;accepted_delivery_operation_id:string|null}>('SELECT state,accepted_delivery_operation_id FROM tasks WHERE id=$1',[taskId])).rows[0];
+ return task?.state==='REVIEW' && !task.accepted_delivery_operation_id && !(await specificationFrozen(tx,taskId)) && !(await tx.query("SELECT 1 FROM replan_requests WHERE task_id=$1 AND status='pending'",[taskId])).rowCount
   && !(await tx.query("SELECT 1 FROM attempts WHERE task_id=$1 AND NOT process_released UNION ALL SELECT 1 FROM workspace_leases WHERE task_id=$1 AND state<>'released'",[taskId])).rowCount;
 }
 async function sourceParent(tx:Transaction, source:PublicationPrepareRequest['source']) {

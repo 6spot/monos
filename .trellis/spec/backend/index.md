@@ -4,7 +4,9 @@ Status: `apps/server` implements the Stage A foundation, Todo Discussion/Task cr
 explicit initial planning and canonical Single-Node execution with Artifacts and
 completion recovery, ordered Task Conversation, explicit guidance handling and exact
 Specification revision settlement and independently accepted one-Node replacement
-Plans with standalone/joint publication and independent exits; delivery remains a later slice. See [root](../index.md), [quality evidence](quality-guidelines.md)
+Plans with standalone/joint publication and independent exits, exact local/remote
+preparation and Owner delivery for zero/one modified automatic GitHub repository.
+Correction and combined installed acceptance remain later slices. See [root](../index.md), [quality evidence](quality-guidelines.md)
 and [technology](../../../docs/11-technology-and-deployment.md).
 
 ## Pre-Development Checklist
@@ -33,6 +35,8 @@ and [technology](../../../docs/11-technology-and-deployment.md).
 - For Owner sessions/proposal consumption, read [Owner commands](owner-commands.md).
 - For commands/persistence, read [database](database-guidelines.md), [errors](error-handling.md) and [protocol](../protocol/commands.md).
 - For acceptance/messages/provider effects, read [delivery contracts](delivery-contracts.md).
+- For exact Owner prepare/confirm/Accept, frozen Retry/Cancel and GitHub finality,
+  read [Owner delivery](owner-delivery.md).
 - Read [logging](logging-guidelines.md) and [quality](quality-guidelines.md) before workers.
 - Linux effects require [Runner](../runner/index.md); UI requires [Frontend](../frontend/index.md).
 

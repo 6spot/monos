@@ -6,7 +6,7 @@
 - [x] PRD converged; technical decisions recorded in design.
 - [x] Independent backend/provider convergence READY; contexts validated (35 entries
   each; oversized module/research entries require scoped direct reads).
-- [ ] Main activates existing tracked leaf under standing user delegation.
+- [x] Main activates existing tracked leaf under standing user delegation.
 
 ## Ownership and dependency order
 
@@ -64,6 +64,6 @@ branch, claim atomic base CAS or revive Cancelled. Installed App remains externa
 
 ## Completion
 
-- [ ] Seven criteria have current/reused evidence with explicit limits.
-- [ ] Independent review resolved and final input hashes match validation.
+- [x] Seven criteria have current/reused evidence with explicit limits.
+- [x] Independent review resolved and final input hashes match validation.
 - [ ] Main scoped commit/archive/session and continue correction leaf.

@@ -26,6 +26,8 @@ export class RemotePreparationCommands {
    const located=(await tx.query<RemoteOperation>('SELECT * FROM remote_preparation_operations WHERE id=$1 AND task_id=$2',[command.payload.operation_id,command.task_id])).rows[0];if(!located)throw new CommandError('denied_scope','Unknown remote operation');
    const item=(await tx.query<RemoteItem>('SELECT * FROM remote_preparation_items WHERE item_id=$1 FOR UPDATE',[located.item_id])).rows[0]!,op=(await tx.query<RemoteOperation>('SELECT * FROM remote_preparation_operations WHERE id=$1 FOR UPDATE',[located.id])).rows[0]!;
    if(op.request_digest!==command.payload.operation_digest)throw new CommandError('payload_conflict','Remote operation digest differs');if(Number(op.version)!==command.payload.expected_version)throw new CommandError('version_conflict','Remote operation version changed');
+   const accepted=(await tx.query('SELECT 1 FROM tasks WHERE id=$1 AND accepted_delivery_operation_id IS NOT NULL',[command.task_id])).rowCount;
+   if(accepted&&!item.cancel_requested&&!op.may_have_mutated)throw new CommandError('unmet_precondition','Use exact accepted delivery Retry');
    const record=await remoteRecord(tx,item,op);let actual=op;
    if(record.retry_allowed) {
     const original=validate<PublicationPushRequest>('PublicationPushRequest',op.request),receipts=await ordinaryRemoteAdmission(tx,item,original.preparation,original.prepared,op.id);

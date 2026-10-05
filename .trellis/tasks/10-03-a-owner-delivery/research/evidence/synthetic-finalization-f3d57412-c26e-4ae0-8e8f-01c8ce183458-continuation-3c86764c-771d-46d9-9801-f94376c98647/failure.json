@@ -1,0 +1,65 @@
+{
+  "complete": false,
+  "safe_error": "provider_unavailable",
+  "successful_reply_observed": false,
+  "calls": [
+    {
+      "method": "GET",
+      "path": "/repos/6spot/monolab-feasibility-20260928-160020-public/branches/main/protection"
+    },
+    {
+      "method": "GET",
+      "path": "/repos/6spot/monolab-feasibility-20260928-160020-public/rules/branches/main"
+    },
+    {
+      "method": "GET",
+      "path": "/repos/6spot/monolab-feasibility-20260928-160020-public/pulls/5"
+    },
+    {
+      "method": "GET",
+      "path": "/repos/6spot/monolab-feasibility-20260928-160020-public/branches/main/protection"
+    },
+    {
+      "method": "GET",
+      "path": "/repos/6spot/monolab-feasibility-20260928-160020-public/rules/branches/main"
+    },
+    {
+      "method": "GET",
+      "path": "/repos/6spot/monolab-feasibility-20260928-160020-public/commits/66cd67d5bf8b7d4526b4e6c1c152dbddd7b1c422/check-runs?per_page=100&page=1&filter=latest"
+    },
+    {
+      "method": "GET",
+      "path": "/repos/6spot/monolab-feasibility-20260928-160020-public/commits/66cd67d5bf8b7d4526b4e6c1c152dbddd7b1c422/statuses?per_page=100&page=1"
+    },
+    {
+      "method": "GET",
+      "path": "/repos/6spot/monolab-feasibility-20260928-160020-public/commits/379d35b55f3f5ca8329e393cc75cf9b2ecd56f91/check-runs?per_page=100&page=1&filter=latest"
+    },
+    {
+      "method": "GET",
+      "path": "/repos/6spot/monolab-feasibility-20260928-160020-public/commits/379d35b55f3f5ca8329e393cc75cf9b2ecd56f91/statuses?per_page=100&page=1"
+    },
+    {
+      "method": "GET",
+      "path": "/repos/6spot/monolab-feasibility-20260928-160020-public/pulls/5"
+    },
+    {
+      "method": "GET",
+      "path": "/repos/6spot/monolab-feasibility-20260928-160020-public/pulls/5"
+    },
+    {
+      "method": "GET",
+      "path": "/repos/6spot/monolab-feasibility-20260928-160020-public/branches/main/protection"
+    },
+    {
+      "method": "GET",
+      "path": "/repos/6spot/monolab-feasibility-20260928-160020-public/rules/branches/main"
+    }
+  ],
+  "grants": [
+    "readiness",
+    "readiness",
+    "readiness",
+    "merge"
+  ]
+}

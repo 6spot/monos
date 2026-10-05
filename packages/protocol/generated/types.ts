@@ -1849,7 +1849,7 @@ export interface TaskPreviewQuery {
 export interface TaskPreviewCommandResult {
     confirmation_id?:     string;
     content_digest?:      string;
-    outcome?:             Outcome;
+    outcome?:             TaskPreviewCommandResultOutcome;
     proposal_message_id?: string;
     request_id:           string;
     schema_version:       number;
@@ -1859,7 +1859,7 @@ export interface TaskPreviewCommandResult {
     todo_id?:             string;
 }
 
-export type Outcome = "confirmed" | "created" | "cancelled";
+export type TaskPreviewCommandResultOutcome = "confirmed" | "created" | "cancelled";
 
 export interface TaskPreviewStatus {
     confirmation_id?:        string;
@@ -1883,23 +1883,25 @@ export type TaskPreviewStatusReason = "todo_archived" | "newer_input" | "source_
 export type TaskPreviewStatusState = "eligible" | "project_required" | "unavailable" | "stale" | "cancelled" | "created";
 
 export interface TaskOverview {
-    control_version:           number;
-    created_at?:               string;
-    event_cursor:              string;
-    held_attempts:             number;
-    initial_specification_id?: string;
-    nodes:                     NodeCounts;
-    open_operations:           number;
-    plan_id?:                  string;
-    project_id?:               string;
-    queued_attempts:           number;
-    schema_version:            number;
-    specification?:            string;
-    specification_id:          string;
-    state:                     TaskOverviewState;
-    task_id:                   string;
-    title?:                    string;
-    todo_id?:                  string;
+    accepted_delivery_input_cutoff?: number;
+    accepted_delivery_operation_id?: string;
+    control_version:                 number;
+    created_at?:                     string;
+    event_cursor:                    string;
+    held_attempts:                   number;
+    initial_specification_id?:       string;
+    nodes:                           NodeCounts;
+    open_operations:                 number;
+    plan_id?:                        string;
+    project_id?:                     string;
+    queued_attempts:                 number;
+    schema_version:                  number;
+    specification?:                  string;
+    specification_id:                string;
+    state:                           TaskOverviewState;
+    task_id:                         string;
+    title?:                          string;
+    todo_id?:                        string;
 }
 
 export interface NodeCounts {
@@ -3009,3 +3011,203 @@ export interface RemotePreparationProviderRequestPrepared {
 }
 
 export type FluffyStatus = "prepared" | "mapped";
+
+export interface OwnerDeliveryCommand {
+    expected_control_version?: number;
+    name:                      OwnerDeliveryCommandName;
+    payload:                   OwnerDeliveryPayload;
+    request_id:                string;
+    schema_version:            number;
+    task_id:                   string;
+}
+
+export type OwnerDeliveryCommandName = "prepare_delivery_acceptance" | "confirm_delivery_acceptance" | "accept_delivery" | "retry_delivery" | "cancel_delivery";
+
+export interface OwnerDeliveryPayload {
+    basis?:            DeliveryAcceptanceBasis;
+    confirmation_id?:  string;
+    content_digest?:   string;
+    expected_version?: number;
+    operation_id?:     string;
+    proposal_id?:      string;
+}
+
+export interface DeliveryAcceptanceBasis {
+    control_version:  number;
+    plan_id:          string;
+    specification_id: string;
+}
+
+export interface OwnerDeliveryCommandResult {
+    confirmation_id?:   string;
+    content_digest?:    string;
+    input_cutoff?:      number;
+    name?:              OwnerDeliveryCommandName;
+    operation_id?:      string;
+    operation_version?: number;
+    proposal_id?:       string;
+    request_id:         string;
+    schema_version:     number;
+    status:             ConfigurationResultStatus;
+    task_id:            string;
+}
+
+export interface DeliveryProposalDetail {
+    manifest:       DeliveryAcceptanceManifest;
+    proposal:       DeliveryProposalSummary;
+    schema_version: number;
+    task_id:        string;
+}
+
+export interface DeliveryAcceptanceManifest {
+    basis:                DeliveryAcceptanceBasis;
+    outputs:              [DeliveryOutputEvidence, ...DeliveryOutputEvidence[]];
+    plan_digest:          string;
+    repositories:         DeliveryRepository[];
+    schema_version:       number;
+    specification_digest: string;
+    task_id:              string;
+}
+
+export interface DeliveryOutputEvidence {
+    artifacts:                  ArtifactMetadata[];
+    completion:                 CompletionManifest;
+    completion_manifest_digest: string;
+    effective_basis:            PublicationEffectiveBasis;
+    effective_basis_digest:     string;
+    node_activation:            number;
+    node_id:                    string;
+    repository_free:            boolean;
+    source?:                    ResultReadIdentity;
+    source_digest?:             string;
+}
+
+export interface DeliveryRepository {
+    candidate?:                 PublicationCandidateManifest;
+    candidate_manifest_digest?: string;
+    delivery_ref?:              string;
+    effective_basis:            PublicationEffectiveBasis;
+    effective_basis_digest:     string;
+    item_id?:                   string;
+    mapping?:                   PublishedResultMapping;
+    mapping_digest?:            string;
+    marker?:                    string;
+    merge_method?:              MergeMethod;
+    outcome:                    DeliveryRepositoryOutcome;
+    permission_proof?:          PublicationPermissionProof;
+    permission_proof_digest?:   string;
+    preparation_request:        PublicationPrepareRequest;
+    preparation_request_digest: string;
+    preparation_result:         PublicationResult;
+    preparation_result_digest:  string;
+    provider_content?:          RemotePreparationContent;
+    provider_content_digest?:   string;
+    provider_metadata:          RepositoryProviderMetadata;
+    published?:                 PublicationPublishedProof;
+    published_digest?:          string;
+    remote_preparation?:        RemotePreparation;
+    repository_identity:        string;
+    resource_id:                string;
+    review?:                    RemotePreparationReview;
+    scan?:                      PublicationScanSummary;
+    scan_digest?:               string;
+    source:                     ResultReadIdentity;
+    source_digest:              string;
+    target_branch?:             string;
+    waivers?:                   PublicationOverrideProof[];
+}
+
+export type DeliveryRepositoryOutcome = "no_change" | "modified";
+
+export interface DeliveryProposalSummary {
+    basis:            DeliveryAcceptanceBasis;
+    confirmation_id?: string;
+    content_digest:   string;
+    current:          boolean;
+    expires_at:       string;
+    proposal_id:      string;
+}
+
+export interface DeliveryBatch {
+    admission_request_id: string;
+    batch:                DeliveryBatchSummary;
+    confirmation_id:      string;
+    items:                DeliveryItemProgress[];
+    manifest:             DeliveryAcceptanceManifest;
+    proposal_id:          string;
+    schema_version:       number;
+    task_id:              string;
+}
+
+export interface DeliveryBatchSummary {
+    accepted_at:     string;
+    cancel_allowed:  boolean;
+    content_digest:  string;
+    finalized_items: number;
+    input_cutoff:    number;
+    modified_items:  number;
+    operation_id:    string;
+    reason?:         string;
+    retry_allowed:   boolean;
+    status:          DeliveryBatchSummaryStatus;
+    version:         number;
+}
+
+export type DeliveryBatchSummaryStatus = "active" | "waiting" | "failed" | "reconciling" | "attention" | "completed" | "cancelled";
+
+export interface DeliveryItemProgress {
+    accepted_head:     string;
+    checks:            Checks;
+    cooldown_until?:   string;
+    final_commit?:     string;
+    finalized_at?:     string;
+    item_id:           string;
+    merge_method?:     MergeMethod;
+    observed_base?:    string;
+    operation_digest?: string;
+    operation_id?:     string;
+    operation_kind?:   OperationKindEnum;
+    operation_state?:  OperationState;
+    reason?:           string;
+    resource_id:       string;
+    review?:           RemotePreparationReview;
+    status:            DeliveryItemProgressStatus;
+    test_merge_head?:  string;
+}
+
+export type Checks = "unknown" | "pending" | "passing" | "failing";
+
+export type OperationKindEnum = "push" | "create_pr" | "update_pr" | "close_pr" | "merge";
+
+export type OperationState = "pending" | "started" | "unknown" | "failed" | "succeeded" | "cancelled";
+
+export type DeliveryItemProgressStatus = "pending" | "preparing" | "waiting_checks" | "ready" | "merging" | "reconciling" | "failed" | "attention" | "finalized" | "cancelled";
+
+export interface OwnerDeliveryStatus {
+    accept_allowed:                  boolean;
+    accepted_delivery_input_cutoff?: number;
+    accepted_delivery_operation_id?: string;
+    basis:                           DeliveryReadBasis;
+    batches:                         DeliveryBatchSummary[];
+    batches_has_more:                boolean;
+    next_batch_cursor?:              string;
+    next_proposal_cursor?:           string;
+    proposals:                       DeliveryProposalSummary[];
+    proposals_has_more:              boolean;
+    reason?:                         OwnerDeliveryStatusReason;
+    schema_version:                  number;
+    task_id:                         string;
+}
+
+export interface DeliveryReadBasis {
+    control_version:  number;
+    plan_id:          null | string;
+    specification_id: string;
+}
+
+export type OwnerDeliveryStatusReason = "not_review" | "no_plan" | "accepted" | "terminal" | "unsupported_mode" | "input_pending" | "work_unsettled" | "source_changed" | "configuration_changed" | "permission_unknown" | "expired_permission" | "scan_incomplete" | "findings_blocked" | "known_public_exposure" | "retained_unavailable" | "identity_mismatch" | "possible_publication" | "reconciliation_required" | "authority_invalid";
+
+export interface OwnerDeliveryHistoryQuery {
+    batch_cursor?:    string;
+    proposal_cursor?: string;
+}

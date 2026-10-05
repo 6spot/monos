@@ -118,6 +118,7 @@ export async function assertCurrentNode(tx: Transaction, input: { task_id: strin
 // resets a fully settled subgraph. Live-writer settlement belongs to orchestration.
 export async function reactivateSettledNodes(tx: Transaction, input: { task_id: string; expected: ControlBasis; node_ids: string[] }): Promise<string[]> {
   const task = await control(tx, input.task_id, input.expected);
+  await assertSpecificationUnfrozen(tx,input.task_id);
   if (!['RUNNING', 'BLOCKED', 'REVIEW'].includes(task.state) || !task.plan_id) throw new CommandError('unmet_precondition', 'Task cannot reactivate work');
   const members = (await tx.query<{ node_id: string; definition: { dependencies: string[] } }>('SELECT node_id,definition FROM plan_nodes WHERE plan_id=$1', [task.plan_id])).rows;
   const affected = new Set(input.node_ids);

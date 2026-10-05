@@ -112,7 +112,7 @@ export async function admitCompletionSettlement(
   ]);
   return id;
 }
-async function stopAttempt(
+export async function stopAttempt(
   tx: Transaction,
   attempt: Attempt,
   requestId: string,

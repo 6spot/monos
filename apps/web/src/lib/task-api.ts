@@ -1,4 +1,4 @@
-import type { OwnerCommand, OwnerCommandResult, TaskConversationCommand, TaskConversationCommandResult, TaskSpecificationCommand, TaskSpecificationResult, TaskReplanCommand, TaskReplanResult, ResultReadRequest, ResultReadResponse, PublicationCommand, PublicationCommandResult, RemotePreparationCommand, RemotePreparationCommandResult } from '../../../../packages/protocol/generated/types.ts';
+import type { OwnerCommand, OwnerCommandResult, TaskConversationCommand, TaskConversationCommandResult, TaskSpecificationCommand, TaskSpecificationResult, TaskReplanCommand, TaskReplanResult, ResultReadRequest, ResultReadResponse, PublicationCommand, PublicationCommandResult, RemotePreparationCommand, RemotePreparationCommandResult, OwnerDeliveryCommand, OwnerDeliveryCommandResult } from '../../../../packages/protocol/generated/types.ts';
 import { validate } from '../../../../packages/protocol/src/validation.ts';
 import { APIError, UncertainError, request } from './api.ts';
 
@@ -8,8 +8,9 @@ export type TaskIntent =
   | { family: 'specification'; command: TaskSpecificationCommand }
   | { family: 'replan'; command: TaskReplanCommand }
   | { family: 'publication'; command: PublicationCommand }
-  | { family: 'remote-preparation'; command: RemotePreparationCommand };
-export type TaskReceipt = OwnerCommandResult | TaskConversationCommandResult | TaskSpecificationResult | TaskReplanResult | PublicationCommandResult | RemotePreparationCommandResult;
+  | { family: 'remote-preparation'; command: RemotePreparationCommand }
+  | { family: 'delivery'; command: OwnerDeliveryCommand };
+export type TaskReceipt = OwnerCommandResult | TaskConversationCommandResult | TaskSpecificationResult | TaskReplanResult | PublicationCommandResult | RemotePreparationCommandResult | OwnerDeliveryCommandResult;
 
 const families = {
   execution: { command: 'OwnerCommand', result: 'OwnerCommandResult', post: '/v1/owner/commands' },
@@ -18,6 +19,7 @@ const families = {
   replan: { command: 'TaskReplanCommand', result: 'TaskReplanResult', post: '/v1/owner/tasks/replan/commands' },
   publication: { command: 'PublicationCommand', result: 'PublicationCommandResult', post: '/v1/owner/tasks/publication/commands' },
   'remote-preparation': { command: 'RemotePreparationCommand', result: 'RemotePreparationCommandResult', post: '/v1/owner/tasks/remote-preparation/commands' },
+  delivery: { command: 'OwnerDeliveryCommand', result: 'OwnerDeliveryCommandResult', post: '/v1/owner/tasks/delivery/commands' },
 } as const;
 
 export function intentTask(intent: TaskIntent): string {
@@ -45,7 +47,7 @@ export async function taskRead<T>(taskId: string, suffix: string, schema: string
 function checkedReceipt(intent: TaskIntent, result: TaskReceipt, allowUnknown: boolean): TaskReceipt {
   if (result.request_id !== intent.command.request_id || (!allowUnknown && result.status === 'unknown')) throw new UncertainError();
   if ('task_id' in result && result.task_id !== undefined && result.task_id !== intentTask(intent)) throw new UncertainError();
-  if (intent.family === 'remote-preparation' && (!('task_id' in result) || result.task_id !== intentTask(intent))) throw new UncertainError();
+  if (['remote-preparation', 'delivery'].includes(intent.family) && (!('task_id' in result) || result.task_id !== intentTask(intent))) throw new UncertainError();
   if (result.status === 'unknown') {
     if (Object.keys(result).some((key) => !['schema_version', 'request_id', 'task_id', 'status'].includes(key))) throw new UncertainError();
     return result;
@@ -62,7 +64,19 @@ function checkedReceipt(intent: TaskIntent, result: TaskReceipt, allowUnknown: b
     if (fields[name] !== expected) throw new UncertainError();
   };
   if (payload.proposal_id !== undefined && (intent.family !== 'publication' || fields.proposal_id !== undefined)) same('proposal_id', payload.proposal_id);
-  if (intent.family === 'conversation') {
+  if (intent.family === 'delivery') {
+    same('status', 'committed'); same('name', intent.command.name); requireFields('content_digest');
+    if (payload.content_digest !== undefined) same('content_digest', payload.content_digest);
+    switch (intent.command.name) {
+      case 'prepare_delivery_acceptance': requireFields('proposal_id'); break;
+      case 'confirm_delivery_acceptance': requireFields('proposal_id', 'confirmation_id'); break;
+      case 'accept_delivery':
+        same('confirmation_id', payload.confirmation_id); requireFields('proposal_id', 'operation_id', 'operation_version', 'input_cutoff'); break;
+      case 'retry_delivery':
+      case 'cancel_delivery':
+        same('operation_id', payload.operation_id); same('operation_version', Number(payload.expected_version) + 1); break;
+    }
+  } else if (intent.family === 'conversation') {
     requireFields('version');
     if (intent.command.name === 'submit_task_message') {
       same('message_id', payload.message_id); requireFields('input_id'); same('version', 1);

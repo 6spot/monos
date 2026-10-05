@@ -2938,7 +2938,21 @@
           "type": "string",
           "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d\\.\\d{3}Z$",
           "maxLength": 24
+        },
+        "accepted_delivery_operation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "accepted_delivery_input_cutoff": {
+          "$ref": "#/definitions/Counter"
         }
+      },
+      "dependencies": {
+        "accepted_delivery_operation_id": [
+          "accepted_delivery_input_cutoff"
+        ],
+        "accepted_delivery_input_cutoff": [
+          "accepted_delivery_operation_id"
+        ]
       }
     },
     "FormalTaskEvent": {
@@ -15998,6 +16012,1478 @@
           }
         }
       ]
+    },
+    "DeliveryAcceptanceBasis": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "control_version": {
+          "$ref": "#/definitions/Counter"
+        },
+        "specification_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "plan_id": {
+          "$ref": "#/definitions/Id"
+        }
+      },
+      "required": [
+        "control_version",
+        "specification_id",
+        "plan_id"
+      ]
+    },
+    "DeliveryOutputEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "node_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "node_activation": {
+          "$ref": "#/definitions/PositiveCounter"
+        },
+        "completion": {
+          "$ref": "#/definitions/CompletionManifest"
+        },
+        "completion_manifest_digest": {
+          "$ref": "#/definitions/SHA256"
+        },
+        "effective_basis": {
+          "$ref": "#/definitions/PublicationEffectiveBasis"
+        },
+        "effective_basis_digest": {
+          "$ref": "#/definitions/SHA256"
+        },
+        "artifacts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ArtifactMetadata"
+          },
+          "maxItems": 256,
+          "minItems": 0
+        },
+        "repository_free": {
+          "type": "boolean"
+        },
+        "source": {
+          "$ref": "#/definitions/ResultReadIdentity"
+        },
+        "source_digest": {
+          "$ref": "#/definitions/SHA256"
+        }
+      },
+      "required": [
+        "node_id",
+        "node_activation",
+        "completion",
+        "completion_manifest_digest",
+        "effective_basis",
+        "effective_basis_digest",
+        "artifacts",
+        "repository_free"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "repository_free": {
+                "const": true
+              }
+            },
+            "required": [
+              "repository_free"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "source": false,
+              "source_digest": false
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "repository_free": {
+                "const": false
+              }
+            },
+            "required": [
+              "repository_free"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "source": {},
+              "source_digest": {}
+            },
+            "required": [
+              "source",
+              "source_digest"
+            ]
+          }
+        }
+      ]
+    },
+    "DeliveryRepository": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "outcome": {
+          "type": "string",
+          "enum": [
+            "no_change",
+            "modified"
+          ]
+        },
+        "resource_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "repository_identity": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048,
+          "pattern": "^[^\\x00]*$"
+        },
+        "provider_metadata": {
+          "$ref": "#/definitions/RepositoryProviderMetadata"
+        },
+        "source": {
+          "$ref": "#/definitions/ResultReadIdentity"
+        },
+        "source_digest": {
+          "$ref": "#/definitions/SHA256"
+        },
+        "effective_basis": {
+          "$ref": "#/definitions/PublicationEffectiveBasis"
+        },
+        "effective_basis_digest": {
+          "$ref": "#/definitions/SHA256"
+        },
+        "preparation_request": {
+          "$ref": "#/definitions/PublicationPrepareRequest"
+        },
+        "preparation_request_digest": {
+          "$ref": "#/definitions/SHA256"
+        },
+        "preparation_result": {
+          "$ref": "#/definitions/PublicationResult"
+        },
+        "preparation_result_digest": {
+          "$ref": "#/definitions/SHA256"
+        },
+        "item_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "candidate": {
+          "$ref": "#/definitions/PublicationCandidateManifest"
+        },
+        "candidate_manifest_digest": {
+          "$ref": "#/definitions/SHA256"
+        },
+        "scan": {
+          "$ref": "#/definitions/PublicationScanSummary"
+        },
+        "scan_digest": {
+          "$ref": "#/definitions/SHA256"
+        },
+        "permission_proof": {
+          "$ref": "#/definitions/PublicationPermissionProof"
+        },
+        "permission_proof_digest": {
+          "$ref": "#/definitions/SHA256"
+        },
+        "waivers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PublicationOverrideProof"
+          },
+          "maxItems": 4096,
+          "minItems": 0
+        },
+        "target_branch": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024,
+          "pattern": "^[^\\x00]*$"
+        },
+        "delivery_ref": {
+          "type": "string",
+          "pattern": "^refs/heads/monos/task/[0-9a-f-]{36}/[0-9a-f-]{36}$",
+          "maxLength": 128
+        },
+        "marker": {
+          "type": "string",
+          "pattern": "^<!-- monos-delivery-item:[0-9a-f-]{36} -->$",
+          "maxLength": 80
+        },
+        "remote_preparation": {
+          "type": "string",
+          "enum": [
+            "automatic",
+            "after_acceptance"
+          ]
+        },
+        "merge_method": {
+          "type": "string",
+          "enum": [
+            "merge",
+            "squash",
+            "rebase"
+          ]
+        },
+        "mapping": {
+          "$ref": "#/definitions/PublishedResultMapping"
+        },
+        "mapping_digest": {
+          "$ref": "#/definitions/SHA256"
+        },
+        "published": {
+          "$ref": "#/definitions/PublicationPublishedProof"
+        },
+        "published_digest": {
+          "$ref": "#/definitions/SHA256"
+        },
+        "review": {
+          "$ref": "#/definitions/RemotePreparationReview"
+        },
+        "provider_content": {
+          "$ref": "#/definitions/RemotePreparationContent"
+        },
+        "provider_content_digest": {
+          "$ref": "#/definitions/SHA256"
+        }
+      },
+      "required": [
+        "outcome",
+        "resource_id",
+        "repository_identity",
+        "provider_metadata",
+        "source",
+        "source_digest",
+        "effective_basis",
+        "effective_basis_digest",
+        "preparation_request",
+        "preparation_request_digest",
+        "preparation_result",
+        "preparation_result_digest"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "outcome": {
+                "const": "no_change"
+              }
+            },
+            "required": [
+              "outcome"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "item_id": false,
+              "candidate": false,
+              "candidate_manifest_digest": false,
+              "scan": false,
+              "scan_digest": false,
+              "permission_proof": false,
+              "permission_proof_digest": false,
+              "waivers": false,
+              "target_branch": false,
+              "delivery_ref": false,
+              "marker": false,
+              "remote_preparation": false,
+              "provider_content": false,
+              "provider_content_digest": false,
+              "merge_method": false,
+              "mapping": false,
+              "mapping_digest": false,
+              "published": false,
+              "published_digest": false,
+              "review": false,
+              "preparation_result": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "const": "not_applicable"
+                  },
+                  "reason": {
+                    "const": "no_change"
+                  }
+                },
+                "required": [
+                  "status",
+                  "reason"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "outcome": {
+                "const": "modified"
+              }
+            },
+            "required": [
+              "outcome"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "preparation_result": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "enum": [
+                      "prepared",
+                      "mapped"
+                    ]
+                  }
+                },
+                "required": [
+                  "status"
+                ]
+              },
+              "scan": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "const": "complete"
+                  },
+                  "workflow_changes": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "status",
+                  "workflow_changes"
+                ]
+              }
+            },
+            "required": [
+              "item_id",
+              "candidate",
+              "candidate_manifest_digest",
+              "scan",
+              "scan_digest",
+              "permission_proof",
+              "permission_proof_digest",
+              "waivers",
+              "target_branch",
+              "delivery_ref",
+              "marker",
+              "remote_preparation",
+              "provider_content",
+              "provider_content_digest"
+            ]
+          }
+        }
+      ],
+      "dependencies": {
+        "mapping": [
+          "mapping_digest"
+        ],
+        "mapping_digest": [
+          "mapping"
+        ],
+        "published": [
+          "published_digest"
+        ],
+        "published_digest": [
+          "published"
+        ]
+      }
+    },
+    "DeliveryAcceptanceManifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "task_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "basis": {
+          "$ref": "#/definitions/DeliveryAcceptanceBasis"
+        },
+        "specification_digest": {
+          "$ref": "#/definitions/SHA256"
+        },
+        "plan_digest": {
+          "$ref": "#/definitions/SHA256"
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DeliveryOutputEvidence"
+          },
+          "maxItems": 256,
+          "minItems": 1
+        },
+        "repositories": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DeliveryRepository"
+          },
+          "maxItems": 64,
+          "minItems": 0
+        }
+      },
+      "required": [
+        "schema_version",
+        "task_id",
+        "basis",
+        "specification_digest",
+        "plan_digest",
+        "outputs",
+        "repositories"
+      ]
+    },
+    "OwnerDeliveryCommand": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "task_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "request_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "name": {
+          "type": "string",
+          "enum": [
+            "prepare_delivery_acceptance",
+            "confirm_delivery_acceptance",
+            "accept_delivery",
+            "retry_delivery",
+            "cancel_delivery"
+          ]
+        },
+        "expected_control_version": {
+          "$ref": "#/definitions/Counter"
+        },
+        "payload": {
+          "$ref": "#/definitions/OwnerDeliveryPayload"
+        }
+      },
+      "required": [
+        "schema_version",
+        "task_id",
+        "request_id",
+        "name",
+        "payload"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "const": "prepare_delivery_acceptance"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "payload": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "basis": {
+                    "$ref": "#/definitions/DeliveryAcceptanceBasis"
+                  }
+                },
+                "required": [
+                  "basis"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "const": "confirm_delivery_acceptance"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "payload": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "proposal_id": {
+                    "$ref": "#/definitions/Id"
+                  },
+                  "content_digest": {
+                    "$ref": "#/definitions/SHA256"
+                  }
+                },
+                "required": [
+                  "proposal_id",
+                  "content_digest"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "const": "accept_delivery"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "payload": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "proposal_id": {
+                    "$ref": "#/definitions/Id"
+                  },
+                  "confirmation_id": {
+                    "$ref": "#/definitions/Id"
+                  },
+                  "content_digest": {
+                    "$ref": "#/definitions/SHA256"
+                  },
+                  "basis": {
+                    "$ref": "#/definitions/DeliveryAcceptanceBasis"
+                  }
+                },
+                "required": [
+                  "proposal_id",
+                  "confirmation_id",
+                  "content_digest",
+                  "basis"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "const": "retry_delivery"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "payload": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "operation_id": {
+                    "$ref": "#/definitions/Id"
+                  },
+                  "content_digest": {
+                    "$ref": "#/definitions/SHA256"
+                  },
+                  "expected_version": {
+                    "$ref": "#/definitions/PositiveCounter"
+                  }
+                },
+                "required": [
+                  "operation_id",
+                  "content_digest",
+                  "expected_version"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "const": "cancel_delivery"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "payload": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "operation_id": {
+                    "$ref": "#/definitions/Id"
+                  },
+                  "content_digest": {
+                    "$ref": "#/definitions/SHA256"
+                  },
+                  "expected_version": {
+                    "$ref": "#/definitions/PositiveCounter"
+                  }
+                },
+                "required": [
+                  "operation_id",
+                  "content_digest",
+                  "expected_version"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "OwnerDeliveryCommandResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "task_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "request_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "committed",
+            "unknown"
+          ]
+        },
+        "name": {
+          "type": "string",
+          "enum": [
+            "prepare_delivery_acceptance",
+            "confirm_delivery_acceptance",
+            "accept_delivery",
+            "retry_delivery",
+            "cancel_delivery"
+          ]
+        },
+        "proposal_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "confirmation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "content_digest": {
+          "$ref": "#/definitions/SHA256"
+        },
+        "operation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "operation_version": {
+          "$ref": "#/definitions/PositiveCounter"
+        },
+        "input_cutoff": {
+          "$ref": "#/definitions/Counter"
+        }
+      },
+      "required": [
+        "schema_version",
+        "task_id",
+        "request_id",
+        "status"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "const": "unknown"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "name": false,
+              "proposal_id": false,
+              "confirmation_id": false,
+              "content_digest": false,
+              "operation_id": false,
+              "operation_version": false,
+              "input_cutoff": false
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "const": "committed"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "name": {}
+            },
+            "required": [
+              "name"
+            ]
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "const": "prepare_delivery_acceptance"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "proposal_id": {},
+              "confirmation_id": false,
+              "content_digest": {},
+              "operation_id": false,
+              "operation_version": false,
+              "input_cutoff": false
+            },
+            "required": [
+              "proposal_id",
+              "content_digest"
+            ]
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "const": "confirm_delivery_acceptance"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "proposal_id": {},
+              "confirmation_id": {},
+              "content_digest": {},
+              "operation_id": false,
+              "operation_version": false,
+              "input_cutoff": false
+            },
+            "required": [
+              "proposal_id",
+              "confirmation_id",
+              "content_digest"
+            ]
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "const": "accept_delivery"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "proposal_id": {},
+              "confirmation_id": {},
+              "content_digest": {},
+              "operation_id": {},
+              "operation_version": {},
+              "input_cutoff": {}
+            },
+            "required": [
+              "proposal_id",
+              "confirmation_id",
+              "operation_id",
+              "content_digest",
+              "operation_version",
+              "input_cutoff"
+            ]
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "const": "retry_delivery"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "proposal_id": false,
+              "confirmation_id": false,
+              "content_digest": {},
+              "operation_id": {},
+              "operation_version": {},
+              "input_cutoff": false
+            },
+            "required": [
+              "operation_id",
+              "content_digest",
+              "operation_version"
+            ]
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "const": "cancel_delivery"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "proposal_id": false,
+              "confirmation_id": false,
+              "content_digest": {},
+              "operation_id": {},
+              "operation_version": {},
+              "input_cutoff": false
+            },
+            "required": [
+              "operation_id",
+              "content_digest",
+              "operation_version"
+            ]
+          }
+        }
+      ]
+    },
+    "DeliveryProposalSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "proposal_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "content_digest": {
+          "$ref": "#/definitions/SHA256"
+        },
+        "basis": {
+          "$ref": "#/definitions/DeliveryAcceptanceBasis"
+        },
+        "expires_at": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(?:\\.\\d{1,3})?Z$",
+          "maxLength": 24
+        },
+        "current": {
+          "type": "boolean"
+        },
+        "confirmation_id": {
+          "$ref": "#/definitions/Id"
+        }
+      },
+      "required": [
+        "proposal_id",
+        "content_digest",
+        "basis",
+        "expires_at",
+        "current"
+      ]
+    },
+    "DeliveryProposalDetail": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "task_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "proposal": {
+          "$ref": "#/definitions/DeliveryProposalSummary"
+        },
+        "manifest": {
+          "$ref": "#/definitions/DeliveryAcceptanceManifest"
+        }
+      },
+      "required": [
+        "schema_version",
+        "task_id",
+        "proposal",
+        "manifest"
+      ]
+    },
+    "DeliveryBatchSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "operation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "content_digest": {
+          "$ref": "#/definitions/SHA256"
+        },
+        "version": {
+          "$ref": "#/definitions/PositiveCounter"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "active",
+            "waiting",
+            "failed",
+            "reconciling",
+            "attention",
+            "completed",
+            "cancelled"
+          ]
+        },
+        "input_cutoff": {
+          "$ref": "#/definitions/Counter"
+        },
+        "accepted_at": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(?:\\.\\d{1,3})?Z$",
+          "maxLength": 24
+        },
+        "modified_items": {
+          "$ref": "#/definitions/Counter"
+        },
+        "finalized_items": {
+          "$ref": "#/definitions/Counter"
+        },
+        "retry_allowed": {
+          "type": "boolean"
+        },
+        "cancel_allowed": {
+          "type": "boolean"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^[^\\x00]*$"
+        }
+      },
+      "required": [
+        "operation_id",
+        "content_digest",
+        "version",
+        "status",
+        "input_cutoff",
+        "accepted_at",
+        "modified_items",
+        "finalized_items",
+        "retry_allowed",
+        "cancel_allowed"
+      ]
+    },
+    "DeliveryItemProgress": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "item_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "resource_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "pending",
+            "preparing",
+            "waiting_checks",
+            "ready",
+            "merging",
+            "reconciling",
+            "failed",
+            "attention",
+            "finalized",
+            "cancelled"
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^[^\\x00]*$"
+        },
+        "operation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "operation_digest": {
+          "$ref": "#/definitions/SHA256"
+        },
+        "operation_kind": {
+          "type": "string",
+          "enum": [
+            "push",
+            "create_pr",
+            "update_pr",
+            "close_pr",
+            "merge"
+          ]
+        },
+        "operation_state": {
+          "type": "string",
+          "enum": [
+            "pending",
+            "started",
+            "unknown",
+            "failed",
+            "succeeded",
+            "cancelled"
+          ]
+        },
+        "merge_method": {
+          "type": "string",
+          "enum": [
+            "merge",
+            "squash",
+            "rebase"
+          ]
+        },
+        "review": {
+          "$ref": "#/definitions/RemotePreparationReview"
+        },
+        "accepted_head": {
+          "$ref": "#/definitions/GitOID"
+        },
+        "observed_base": {
+          "$ref": "#/definitions/GitOID"
+        },
+        "test_merge_head": {
+          "$ref": "#/definitions/GitOID"
+        },
+        "checks": {
+          "type": "string",
+          "enum": [
+            "unknown",
+            "pending",
+            "passing",
+            "failing"
+          ]
+        },
+        "final_commit": {
+          "$ref": "#/definitions/GitOID"
+        },
+        "finalized_at": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(?:\\.\\d{1,3})?Z$",
+          "maxLength": 24
+        },
+        "cooldown_until": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(?:\\.\\d{1,3})?Z$",
+          "maxLength": 24
+        }
+      },
+      "required": [
+        "item_id",
+        "resource_id",
+        "status",
+        "accepted_head",
+        "checks"
+      ],
+      "dependencies": {
+        "operation_id": [
+          "operation_digest",
+          "operation_kind",
+          "operation_state"
+        ],
+        "operation_digest": [
+          "operation_id",
+          "operation_kind",
+          "operation_state"
+        ],
+        "operation_kind": [
+          "operation_id",
+          "operation_digest",
+          "operation_state"
+        ],
+        "operation_state": [
+          "operation_id",
+          "operation_digest",
+          "operation_kind"
+        ]
+      },
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "const": "finalized"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "final_commit": {},
+              "finalized_at": {}
+            },
+            "required": [
+              "final_commit",
+              "finalized_at"
+            ]
+          }
+        }
+      ]
+    },
+    "DeliveryBatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "task_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "batch": {
+          "$ref": "#/definitions/DeliveryBatchSummary"
+        },
+        "proposal_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "confirmation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "admission_request_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "manifest": {
+          "$ref": "#/definitions/DeliveryAcceptanceManifest"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DeliveryItemProgress"
+          },
+          "maxItems": 64,
+          "minItems": 0
+        }
+      },
+      "required": [
+        "schema_version",
+        "task_id",
+        "batch",
+        "proposal_id",
+        "confirmation_id",
+        "admission_request_id",
+        "manifest",
+        "items"
+      ]
+    },
+    "OwnerDeliveryStatus": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "task_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "basis": {
+          "$ref": "#/definitions/DeliveryReadBasis"
+        },
+        "accept_allowed": {
+          "type": "boolean"
+        },
+        "reason": {
+          "type": "string",
+          "enum": [
+            "not_review",
+            "no_plan",
+            "accepted",
+            "terminal",
+            "unsupported_mode",
+            "input_pending",
+            "work_unsettled",
+            "source_changed",
+            "configuration_changed",
+            "permission_unknown",
+            "expired_permission",
+            "scan_incomplete",
+            "findings_blocked",
+            "known_public_exposure",
+            "retained_unavailable",
+            "identity_mismatch",
+            "possible_publication",
+            "reconciliation_required",
+            "authority_invalid"
+          ]
+        },
+        "proposals": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DeliveryProposalSummary"
+          },
+          "maxItems": 64,
+          "minItems": 0
+        },
+        "proposals_has_more": {
+          "type": "boolean"
+        },
+        "batches": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DeliveryBatchSummary"
+          },
+          "maxItems": 64,
+          "minItems": 0
+        },
+        "batches_has_more": {
+          "type": "boolean"
+        },
+        "accepted_delivery_operation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "accepted_delivery_input_cutoff": {
+          "$ref": "#/definitions/Counter"
+        },
+        "next_proposal_cursor": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "next_batch_cursor": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        }
+      },
+      "required": [
+        "schema_version",
+        "task_id",
+        "basis",
+        "accept_allowed",
+        "proposals",
+        "proposals_has_more",
+        "batches",
+        "batches_has_more"
+      ],
+      "dependencies": {
+        "accepted_delivery_operation_id": [
+          "accepted_delivery_input_cutoff"
+        ],
+        "accepted_delivery_input_cutoff": [
+          "accepted_delivery_operation_id"
+        ]
+      },
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "proposals_has_more": {
+                "const": true
+              }
+            },
+            "required": [
+              "proposals_has_more"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "next_proposal_cursor": {}
+            },
+            "required": [
+              "next_proposal_cursor"
+            ]
+          },
+          "else": {
+            "type": "object",
+            "properties": {
+              "next_proposal_cursor": false
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "batches_has_more": {
+                "const": true
+              }
+            },
+            "required": [
+              "batches_has_more"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "next_batch_cursor": {}
+            },
+            "required": [
+              "next_batch_cursor"
+            ]
+          },
+          "else": {
+            "type": "object",
+            "properties": {
+              "next_batch_cursor": false
+            }
+          }
+        }
+      ]
+    },
+    "DeliveryReadBasis": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "control_version": {
+          "$ref": "#/definitions/Counter"
+        },
+        "specification_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "plan_id": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "control_version",
+        "specification_id",
+        "plan_id"
+      ]
+    },
+    "OwnerDeliveryPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "basis": {
+          "$ref": "#/definitions/DeliveryAcceptanceBasis"
+        },
+        "proposal_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "confirmation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "content_digest": {
+          "$ref": "#/definitions/SHA256"
+        },
+        "operation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "expected_version": {
+          "$ref": "#/definitions/PositiveCounter"
+        }
+      },
+      "required": []
+    },
+    "OwnerDeliveryHistoryQuery": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "proposal_cursor": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "batch_cursor": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        }
+      },
+      "required": []
     }
   }
 }

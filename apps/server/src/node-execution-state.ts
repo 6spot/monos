@@ -1,5 +1,5 @@
 import { liveReplanAuthority, assertNoReplan } from './task-replan-state.ts';
-import { assertSpecificationUnfrozen } from './task-specification-state.ts';
+import { assertSpecificationUnfrozen, assertTaskUnaccepted } from './task-specification-state.ts';
 import { guidanceContext, assignGuidance } from './task-guidance.ts';
 import { randomUUID } from 'node:crypto';
 import type { Transaction } from '../../../packages/db/src/index.ts';
@@ -59,6 +59,7 @@ export async function assertNodeSource(
   attemptId: string,
   prompt?: string
 ): Promise<NodeSource> {
+  await assertTaskUnaccepted(tx,taskId);
   if(await liveReplanAuthority(tx,taskId,attemptId)){const live=(await tx.query<NodeSource>('SELECT * FROM node_execution_outbox WHERE id=$1',[source.source_id])).rows[0];if(live&&canonicalJSON(nodeSource(live))===canonicalJSON(source)&&(prompt===undefined||live.prompt===prompt))return live;throw new CommandError('stale_execution','Live Replan source differs');}
   await assertSpecificationUnfrozen(tx,taskId);
   const row = (

@@ -58,31 +58,34 @@ does not supply product Owner acceptance for real work.
 
 ## Acceptance criteria
 
-- [ ] **AC1 — exact authority:** actual authenticated prepare/confirm/Accept creates one
+- [x] **AC1 — exact authority:** actual authenticated prepare/confirm/Accept creates one
   complete immutable batch/receipt. Missing/changed/cross-Task source, evidence, mapping,
   candidate, scan, waiver, receipt and SQL missing-field/direct-pointer bypass fail.
   Clean install/upgrade handles legacy seam values without manufactured approvals.
-- [ ] **AC2 — cutoff/freeze:** real PG contention in both message/Accept orders proves
+- [x] **AC2 — cutoff/freeze:** real PG contention in both message/Accept orders proves
   atomic cutoff/attribution; before/after-commit recovery replays same receipt. Later
   pending/failed/live/stopped/retried conversation neither stalls delivery nor starts
   Node, guidance, requirement or Replan work.
-- [ ] **AC3 — accepted preparation:** acceptance before first push/PR and exact pending
+- [x] **AC3 — accepted preparation:** acceptance before first push/PR and exact pending
   nomination deliver same source. Incompatible/possible effects cannot be adopted.
   Token-I/O Cancel/currentness fences writes; same-authority refresh never rebuilds candidate.
-- [ ] **AC4 — readiness/methods:** exact candidate/base/test-merge applicability, required
+- [x] **AC4 — readiness/methods:** exact candidate/base/test-merge applicability, required
   status/check/App rules, strict ancestry, unsupported rules, moving target and all
   configured/default methods produce truthful bounded readiness. Unknown never merges.
-- [ ] **AC5 — finality/recovery:** stale head rejects; exact merge records final identity.
+- [x] **AC5 — finality/recovery:** stale head rejects; exact merge records final identity.
   Lost success/restart reconciles original PR with one mutation. Retry preserves batch;
   shared item claims and Cancel races preserve truthful terminal precedence.
-- [ ] **AC6 — modes:** no-change/repository-free complete with zero provider effects;
+- [x] **AC6 — modes:** no-change/repository-free complete with zero provider effects;
   mapped zero-new-commit still finalizes. Unsupported modes reject without consumption,
   batch creation or remote effect.
-- [ ] **AC7 — Web/wire:** strict generated contracts and Owner auth/Origin/no-store/receipt
+- [x] **AC7 — Web/wire:** strict generated contracts and Owner auth/Origin/no-store/receipt
   bindings hold across layers. Current built Web demonstrates exact confirmation,
   frozen wait/failure/recovery/history and later conversation with focused evidence.
 
 ## Design and evidence
+
+[Integrated verification](research/integration-verification.md) closes all seven
+criteria with explicit actual/reused evidence and limits.
 
 [Design](design.md) owns technical decisions/support matrix; [execution](implement.md)
 owns ordered work. Source research: [backend](research/backend-acceptance-design.md),

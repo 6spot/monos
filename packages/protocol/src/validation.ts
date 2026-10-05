@@ -5,6 +5,8 @@ export const MAX_BODY_BYTES = 2 * 1024 * 1024;
 export const MAX_FRAME_BYTES = 1024 * 1024;
 // Leave room for the inventory page/cursor or dispatch/result frame wrapper.
 export const MAX_ITEM_BYTES = MAX_FRAME_BYTES - 4096;
+// Complete acceptance evidence is rejected when it cannot fit; it is never clipped.
+export const MAX_DELIVERY_BYTES = 512 * 1024;
 export const schema = contracts;
 const ajv = new Ajv({ strict: true, allErrors: false });
 ajv.addSchema(schema);
@@ -14,13 +16,17 @@ export class ProtocolVersionError extends Error {}
 export class ProtocolValidationError extends Error {}
 
 export function validate<T>(name: string, value: unknown): T {
-  if (['Frame', 'CommandEnvelope', 'OwnerCommand', 'OwnerLogin', 'ConfigurationCommand', 'TodoCommand', 'DiscussionCommand', 'TaskPreviewCommand'].includes(name) && value && typeof value === 'object' && 'schema_version' in value && value.schema_version !== 1) throw new ProtocolVersionError('Unsupported schema version');
+  if (['Frame', 'CommandEnvelope', 'OwnerCommand', 'OwnerDeliveryCommand', 'OwnerLogin', 'ConfigurationCommand', 'TodoCommand', 'DiscussionCommand', 'TaskPreviewCommand'].includes(name) && value && typeof value === 'object' && 'schema_version' in value && value.schema_version !== 1) throw new ProtocolVersionError('Unsupported schema version');
   let validator = validators.get(name);
   if (!validator) {
     validator = ajv.compile({ $ref: `${schema.$id}#/definitions/${name}` });
     validators.set(name, validator);
   }
   if (!validator(value)) throw new ProtocolValidationError(`Invalid ${name}: ${ajv.errorsText(validator.errors, { dataVar: 'body' })}`);
+  if (name.startsWith('Delivery') || name.startsWith('OwnerDelivery')) {
+    if (new TextEncoder().encode(JSON.stringify(value)).length > MAX_DELIVERY_BYTES) throw new ProtocolValidationError(`${name} exceeds the encoded wire byte limit`);
+    resultBytes(value);
+  }
   const limit = ['GitHubRepositoryAccessResult','PublicationAccessRequest','PublicationAccessResult','PublicationPermissionRequest','PublicationPermissionResult'].includes(name) ? 16 * 1024 : name === 'ResultReadResponse' || name.startsWith('Publication') || name.startsWith('PublishedResult') || name.startsWith('RemotePreparation') ? 512 * 1024 : ['Frame', 'RunnerInventory'].includes(name) ? MAX_FRAME_BYTES : ['Dispatch', 'Operation', 'OperationResult'].includes(name) ? MAX_ITEM_BYTES : undefined;
   if (limit !== undefined && new TextEncoder().encode(JSON.stringify(value)).length > limit) throw new ProtocolValidationError(`${name} exceeds the encoded wire byte limit`);
   if (name.startsWith('Publication') || name.startsWith('PublishedResult') || name.startsWith('RemotePreparation') || name.startsWith('Result') || name === 'Frame' && value && typeof value === 'object' && 'type' in value && ['result_read','result_read_result','publication_prepare','publication_result','publication_ack','publication_push','publication_push_result','publication_push_ack'].includes(String(value.type))) {

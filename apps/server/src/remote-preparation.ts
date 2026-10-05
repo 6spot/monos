@@ -8,6 +8,8 @@ import {lockConfiguration} from './configuration-guards.ts';
 import {RemoteProviderError,ProviderTurnComplete} from './github-remote.ts';
 import type {GitHubRemote,RemoteReviewSnapshot,GitHubRemoteScope} from './github-remote.ts';
 import {ordinaryRemoteAdmission,currentLocalPreparation,RemoteAdmissionError} from './remote-preparation-guards.ts';
+import {remoteAdmissionForOperation} from './owner-delivery-guards.ts';
+import {admitAcceptedPreparationForItem} from './owner-delivery-preparation.ts';
 import {remoteScope,appendRemoteObservation,publishProof,verifyPushObservation,reserveRemoteProvider,releaseRemoteProvider,RemoteProviderWaiting} from './remote-preparation-state.ts';
 import type {RemoteItem,RemoteOperation} from './remote-preparation-state.ts';
 import {observePublicationPermission} from './remote-preparation-access.ts';
@@ -75,6 +77,8 @@ export class RemotePreparation {
   await tx.query('SELECT id FROM tasks WHERE id=$1 FOR UPDATE',[located.task_id]);
   const item=(await tx.query<RemoteItem>('SELECT * FROM remote_preparation_items WHERE item_id=$1 FOR UPDATE',[itemId])).rows[0]!;
   const local=await currentLocalPreparation(tx,item);
+  if(item.cancel_requested&&(await tx.query("SELECT 1 FROM owner_delivery_merge_operations WHERE item_id=$1 AND (effect_owned OR status IN ('started','unknown')) LIMIT 1",[itemId])).rowCount)return;
+  if(!item.cancel_requested&&(await tx.query('SELECT 1 FROM tasks WHERE id=$1 AND accepted_delivery_operation_id IS NOT NULL',[item.task_id])).rowCount){await admitAcceptedPreparationForItem(tx,item);return;}
   const active=(await tx.query<RemoteOperation>("SELECT * FROM remote_preparation_operations WHERE item_id=$1 AND active AND state NOT IN('settled','revoked') FOR UPDATE",[itemId])).rows[0];
   if(active){if(!active.may_have_mutated&&!active.effect_owned&&(local?.id!==active.request.preparation.operation_id||!(await effectiveResult(tx,active.request.preparation)).current||hash(await publicationConfiguration(tx,item.resource_id))!==active.request.preparation.configuration_digest))await tx.query("UPDATE remote_preparation_operations SET state='revoked',active=false,reason='source_changed',version=version+1 WHERE id=$1",[active.id]);else return;}
   if(!local?.result?.candidate)return;
@@ -104,7 +108,7 @@ export class RemotePreparation {
    const rows=(await tx.query<RemoteOperation>(`SELECT o.* FROM remote_preparation_operations o WHERE o.runner_id=$1 AND o.kind='push' AND o.active AND o.state NOT IN('settled','revoked') AND o.next_attempt_at<=clock_timestamp() AND (o.last_sent_at IS NULL OR o.last_sent_at<clock_timestamp()-interval '2 seconds') ORDER BY o.next_attempt_at,o.id LIMIT 8`,[runnerId])).rows;
    const frames:Frame[]=[];
    for(const op of rows){await tx.query('SELECT id FROM tasks WHERE id=$1 FOR UPDATE',[op.task_id]);const item=(await tx.query<RemoteItem>('SELECT * FROM remote_preparation_items WHERE item_id=$1 FOR UPDATE',[op.item_id])).rows[0]!;
-    try {if(!op.may_have_mutated){const scope=await remoteScope(tx,item);if(scope.config&&(await tx.query('SELECT 1 FROM github_remote_cooldowns WHERE installation_id=$1 AND next_request_at>clock_timestamp()',[scope.config.installation_id])).rowCount)continue;await ordinaryRemoteAdmission(tx,item,op.request.preparation,op.request.prepared,op.id);if(item.cancel_requested)continue;}
+    try {if(!op.may_have_mutated){const scope=await remoteScope(tx,item);if(scope.config&&(await tx.query('SELECT 1 FROM github_remote_cooldowns WHERE installation_id=$1 AND next_request_at>clock_timestamp()',[scope.config.installation_id])).rowCount)continue;await remoteAdmissionForOperation(tx,item,op.request.preparation,op.request.prepared,op.id);if(item.cancel_requested)continue;}
      await tx.query('UPDATE remote_preparation_operations SET last_sent_at=clock_timestamp(),sent_incarnation=$2 WHERE id=$1',[op.id,incarnation]);frames.push(validate('Frame',{schema_version:1,type:'publication_push',incarnation,publication_push:op.request}));if(frames.length===2)break;
     }catch(error){if(!(error instanceof CommandError))throw error;}
    }return frames;
@@ -145,7 +149,7 @@ export class RemotePreparation {
    }
    if(op&&op.state==='failed'&&!op.may_have_mutated)return; // explicit Owner Retry
    if(op)await this.providerOperation(initial.item,initial.scope,op,budget);
-   else if(initial.item.pr_id&&!initial.item.cancel_requested)await pollRemoteChecks(this.db,this.provider,initial.item,initial.scope,budget);
+   else if(initial.item.pr_id&&!initial.item.cancel_requested&&!(await this.db.pool.query('SELECT 1 FROM tasks WHERE id=$1 AND accepted_delivery_operation_id IS NOT NULL',[initial.item.task_id])).rowCount)await pollRemoteChecks(this.db,this.provider,initial.item,initial.scope,budget);
    else if(initial.item.cancel_requested)await transaction(this.db,tx=>this.admit(tx,itemId));
   }catch(error){failure=error;if(error instanceof ProviderTurnComplete)return;
    if(error instanceof RemoteProviderWaiting){await this.db.pool.query('UPDATE remote_preparation_items SET next_poll_at=$2 WHERE item_id=$1',[itemId,error.until]);return;}
@@ -157,8 +161,8 @@ export class RemotePreparation {
  private async providerOperation(item:RemoteItem,scope:GitHubRemoteScope,op:RemoteOperation,budget:{remaining:number}):Promise<void> {
   const request=validate<RemotePreparationProviderRequest>('RemotePreparationProviderRequest',op.request);
   if(!op.may_have_mutated)await transaction(this.db,async tx=>{await lockConfiguration(tx);await tx.query('SELECT id FROM tasks WHERE id=$1 FOR UPDATE',[item.task_id]);const fresh=(await tx.query<RemoteItem>('SELECT * FROM remote_preparation_items WHERE item_id=$1 FOR UPDATE',[item.item_id])).rows[0]!;
-   if(request.kind==='close_pr'){if(!fresh.cancel_requested||fresh.pr_id!==request.review?.pr_id)throw new RemoteAdmissionError('cancel_requested');}
-   else {if(fresh.cancel_requested)throw new RemoteAdmissionError('cancel_requested');await ordinaryRemoteAdmission(tx,fresh,request.preparation,request.prepared,op.id);}
+   if(request.kind==='close_pr'){if(!fresh.cancel_requested||fresh.pr_id!==request.review?.pr_id)throw new RemoteAdmissionError('cancel_requested');if((await tx.query("SELECT 1 FROM owner_delivery_merge_operations WHERE item_id=$1 AND (effect_owned OR status IN ('started','unknown')) LIMIT 1",[fresh.item_id])).rowCount)throw new RemoteAdmissionError('possible_publication');}
+   else {if(fresh.cancel_requested)throw new RemoteAdmissionError('cancel_requested');await remoteAdmissionForOperation(tx,fresh,request.preparation,request.prepared,op.id);}
   });
   const grant=await this.provider.grant(scope,op.may_have_mutated?'poll':'review',budget);
   let snapshot:RemoteReviewSnapshot|undefined;
@@ -192,8 +196,8 @@ export class RemotePreparation {
   await transaction(this.db,async tx=>{await lockConfiguration(tx);await tx.query('SELECT id FROM tasks WHERE id=$1 FOR UPDATE',[item.task_id]);const fresh=(await tx.query<RemoteItem>('SELECT * FROM remote_preparation_items WHERE item_id=$1 FOR UPDATE',[item.item_id])).rows[0]!;
    const current=(await tx.query<RemoteOperation>('SELECT * FROM remote_preparation_operations WHERE id=$1 FOR UPDATE',[op.id])).rows[0]!;
    if(current.state!=='pending'||current.may_have_mutated)throw new RemoteAdmissionError('possible_publication');
-   if(request.kind==='close_pr'){if(!fresh.cancel_requested||fresh.pr_id!==request.review!.pr_id)throw new RemoteAdmissionError('cancel_requested');}
-   else {if(fresh.cancel_requested)throw new RemoteAdmissionError('cancel_requested');await ordinaryRemoteAdmission(tx,fresh,request.preparation,request.prepared,op.id);}
+   if(request.kind==='close_pr'){if(!fresh.cancel_requested||fresh.pr_id!==request.review!.pr_id)throw new RemoteAdmissionError('cancel_requested');if((await tx.query("SELECT 1 FROM owner_delivery_merge_operations WHERE item_id=$1 AND (effect_owned OR status IN ('started','unknown')) LIMIT 1",[fresh.item_id])).rowCount)throw new RemoteAdmissionError('possible_publication');}
+   else {if(fresh.cancel_requested)throw new RemoteAdmissionError('cancel_requested');await remoteAdmissionForOperation(tx,fresh,request.preparation,request.prepared,op.id);}
    const after=await remoteScope(tx,fresh);if(after.config?.key_fingerprint!==scope.config?.key_fingerprint||after.config?.installation_id!==scope.config?.installation_id||after.config?.app_id!==scope.config?.app_id||after.repository_id!==scope.repository_id||after.repository_identity!==scope.repository_identity||after.remote_url!==scope.remote_url)throw new RemoteAdmissionError('configuration_changed');
    await tx.query("UPDATE remote_preparation_operations SET state='started',effect_owned=true,may_have_mutated=true,worker_absent=false,version=version+1 WHERE id=$1",[op.id]);
   });

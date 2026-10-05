@@ -5,7 +5,7 @@ import { canonicalJSON, MAX_BODY_BYTES, validate } from '../../../packages/proto
 import type { AttemptListPage, AttemptLogPage, AttemptStatus, FormalTaskEvent, NodeCounts, RuntimeEvent, TaskEventPage, TaskOverview } from '../../../packages/protocol/src/index.ts';
 import { authenticateOwner } from './owner-commands.ts';
 
-interface TaskRow { id: string; control_version: string; state: TaskOverview['state']; specification_id: string; plan_id: string | null; event_sequence: string; title: string | null; todo_id: string | null; project_id: string | null; initial_specification_id: string | null; created_at: Date | null }
+interface TaskRow { id: string; control_version: string; state: TaskOverview['state']; specification_id: string; plan_id: string | null; event_sequence: string; title: string | null; todo_id: string | null; project_id: string | null; initial_specification_id: string | null; created_at: Date | null; accepted_delivery_operation_id: string | null; accepted_delivery_input_cutoff: string | null }
 
 export function taskEventCursor(taskId: string, after: number): string {
   validate('Id', taskId); validate('Counter', after);
@@ -29,7 +29,7 @@ function readCursor(taskId: string, cursor?: string): number {
 
 async function readTask(tx: Transaction, token: string, taskId: string): Promise<TaskRow> {
   validate('Id', taskId); await authenticateOwner(tx, token);
-  const task = (await tx.query<TaskRow>('SELECT id,control_version,state,specification_id,plan_id,event_sequence,title,todo_id,project_id,initial_specification_id,created_at FROM tasks WHERE id=$1 FOR SHARE', [taskId])).rows[0];
+  const task = (await tx.query<TaskRow>('SELECT id,control_version,state,specification_id,plan_id,event_sequence,title,todo_id,project_id,initial_specification_id,created_at,accepted_delivery_operation_id,accepted_delivery_input_cutoff FROM tasks WHERE id=$1 FOR SHARE', [taskId])).rows[0];
   if (!task) throw new CommandError('denied_scope', 'Unknown Task');
   return task;
 }
@@ -196,6 +196,7 @@ export async function readTaskOverview(tx: Transaction, token: string, taskId: s
     ...(task.title !== null ? { title: task.title } : {}), ...(task.todo_id ? { todo_id: task.todo_id } : {}),
     ...(task.project_id ? { project_id: task.project_id } : {}), ...(task.initial_specification_id ? { initial_specification_id: task.initial_specification_id } : {}),
     ...(task.created_at ? { created_at: task.created_at.toISOString() } : {}), ...(typeof revision?.content === 'string' ? { specification: revision.content } : {}),
+    ...(task.accepted_delivery_operation_id ? {accepted_delivery_operation_id:task.accepted_delivery_operation_id,accepted_delivery_input_cutoff:Number(task.accepted_delivery_input_cutoff)} : {}),
     event_cursor: taskEventCursor(taskId, Number(task.event_sequence)),
   });
 }

@@ -1,0 +1,69 @@
+{
+  "complete": false,
+  "safe_error": "Expected values to be strictly equal:\n+ actual - expected\n\n+ '379d35b55f3f5ca8329e393cc75cf9b2ecd56f91'\n- 'ea7665c0d45ddb7e15fc06750be7b40f1f84298d'\n",
+  "successful_reply_observed": false,
+  "calls": [
+    {
+      "method": "GET",
+      "path": "/repos/6spot/monolab-feasibility-20260928-160020-public/branches/main/protection"
+    },
+    {
+      "method": "GET",
+      "path": "/repos/6spot/monolab-feasibility-20260928-160020-public/rules/branches/main"
+    },
+    {
+      "method": "GET",
+      "path": "/repos/6spot/monolab-feasibility-20260928-160020-public/pulls/5"
+    },
+    {
+      "method": "GET",
+      "path": "/repos/6spot/monolab-feasibility-20260928-160020-public/branches/main/protection"
+    },
+    {
+      "method": "GET",
+      "path": "/repos/6spot/monolab-feasibility-20260928-160020-public/rules/branches/main"
+    },
+    {
+      "method": "GET",
+      "path": "/repos/6spot/monolab-feasibility-20260928-160020-public/commits/66cd67d5bf8b7d4526b4e6c1c152dbddd7b1c422/check-runs?per_page=100&page=1&filter=latest"
+    },
+    {
+      "method": "GET",
+      "path": "/repos/6spot/monolab-feasibility-20260928-160020-public/commits/66cd67d5bf8b7d4526b4e6c1c152dbddd7b1c422/statuses?per_page=100&page=1"
+    },
+    {
+      "method": "GET",
+      "path": "/repos/6spot/monolab-feasibility-20260928-160020-public/commits/ea7665c0d45ddb7e15fc06750be7b40f1f84298d/check-runs?per_page=100&page=1&filter=latest"
+    },
+    {
+      "method": "GET",
+      "path": "/repos/6spot/monolab-feasibility-20260928-160020-public/commits/ea7665c0d45ddb7e15fc06750be7b40f1f84298d/statuses?per_page=100&page=1"
+    },
+    {
+      "method": "GET",
+      "path": "/repos/6spot/monolab-feasibility-20260928-160020-public/pulls/5"
+    },
+    {
+      "method": "PUT",
+      "path": "/repos/6spot/monolab-feasibility-20260928-160020-public/pulls/5/merge"
+    },
+    {
+      "method": "GET",
+      "path": "/repos/6spot/monolab-feasibility-20260928-160020-public/pulls/5"
+    },
+    {
+      "method": "GET",
+      "path": "/repos/6spot/monolab-feasibility-20260928-160020-public/branches/main/protection"
+    },
+    {
+      "method": "GET",
+      "path": "/repos/6spot/monolab-feasibility-20260928-160020-public/rules/branches/main"
+    }
+  ],
+  "grants": [
+    "readiness",
+    "readiness",
+    "merge",
+    "readiness"
+  ]
+}

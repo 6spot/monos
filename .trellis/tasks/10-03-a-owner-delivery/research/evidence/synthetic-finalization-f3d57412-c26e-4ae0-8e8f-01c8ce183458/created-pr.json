@@ -1,0 +1,20 @@
+{
+  "intent": {
+    "item_id": "2a653600-0f41-4d10-8b9b-aab16f3c7f10",
+    "delivery_ref": "refs/heads/monos/task/f3d57412-c26e-4ae0-8e8f-01c8ce183458/f0a8cf21-1052-45d6-91d6-2ecd4a0d704a",
+    "target_branch": "main",
+    "kind": "update_pr",
+    "review": {
+      "repository_id": "1393178791",
+      "pr_id": "4741530001",
+      "pr_number": 5,
+      "url": "https://github.com/6spot/monolab-feasibility-20260928-160020-public/pull/5",
+      "head_ref": "monos/task/f3d57412-c26e-4ae0-8e8f-01c8ce183458/f0a8cf21-1052-45d6-91d6-2ecd4a0d704a",
+      "base_ref": "main",
+      "marker": "<!-- monos-delivery-item:2a653600-0f41-4d10-8b9b-aab16f3c7f10 -->",
+      "state": "open"
+    },
+    "accepted_head": "66cd67d5bf8b7d4526b4e6c1c152dbddd7b1c422"
+  },
+  "base": "9ac3353e97ed6a0cb96a80bb8e136d44cac982e4"
+}

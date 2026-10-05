@@ -1671,16 +1671,16 @@ type TaskPreviewQuery struct {
 }
 
 type TaskPreviewCommandResult struct {
-	ConfirmationID    *string                   `json:"confirmation_id,omitempty"`
-	ContentDigest     *string                   `json:"content_digest,omitempty"`
-	Outcome           *Outcome                  `json:"outcome,omitempty"`
-	ProposalMessageID *string                   `json:"proposal_message_id,omitempty"`
-	RequestID         string                    `json:"request_id"`
-	SchemaVersion     int64                     `json:"schema_version"`
-	SpecificationID   *string                   `json:"specification_id,omitempty"`
-	Status            ConfigurationResultStatus `json:"status"`
-	TaskID            *string                   `json:"task_id,omitempty"`
-	TodoID            *string                   `json:"todo_id,omitempty"`
+	ConfirmationID    *string                          `json:"confirmation_id,omitempty"`
+	ContentDigest     *string                          `json:"content_digest,omitempty"`
+	Outcome           *TaskPreviewCommandResultOutcome `json:"outcome,omitempty"`
+	ProposalMessageID *string                          `json:"proposal_message_id,omitempty"`
+	RequestID         string                           `json:"request_id"`
+	SchemaVersion     int64                            `json:"schema_version"`
+	SpecificationID   *string                          `json:"specification_id,omitempty"`
+	Status            ConfigurationResultStatus        `json:"status"`
+	TaskID            *string                          `json:"task_id,omitempty"`
+	TodoID            *string                          `json:"todo_id,omitempty"`
 }
 
 type TaskPreviewStatus struct {
@@ -1701,23 +1701,25 @@ type TaskPreviewStatus struct {
 }
 
 type TaskOverview struct {
-	ControlVersion         int64             `json:"control_version"`
-	CreatedAt              *string           `json:"created_at,omitempty"`
-	EventCursor            string            `json:"event_cursor"`
-	HeldAttempts           int64             `json:"held_attempts"`
-	InitialSpecificationID *string           `json:"initial_specification_id,omitempty"`
-	Nodes                  NodeCounts        `json:"nodes"`
-	OpenOperations         int64             `json:"open_operations"`
-	PlanID                 *string           `json:"plan_id,omitempty"`
-	ProjectID              *string           `json:"project_id,omitempty"`
-	QueuedAttempts         int64             `json:"queued_attempts"`
-	SchemaVersion          int64             `json:"schema_version"`
-	Specification          *string           `json:"specification,omitempty"`
-	SpecificationID        string            `json:"specification_id"`
-	State                  TaskOverviewState `json:"state"`
-	TaskID                 string            `json:"task_id"`
-	Title                  *string           `json:"title,omitempty"`
-	TodoID                 *string           `json:"todo_id,omitempty"`
+	AcceptedDeliveryInputCutoff *int64            `json:"accepted_delivery_input_cutoff,omitempty"`
+	AcceptedDeliveryOperationID *string           `json:"accepted_delivery_operation_id,omitempty"`
+	ControlVersion              int64             `json:"control_version"`
+	CreatedAt                   *string           `json:"created_at,omitempty"`
+	EventCursor                 string            `json:"event_cursor"`
+	HeldAttempts                int64             `json:"held_attempts"`
+	InitialSpecificationID      *string           `json:"initial_specification_id,omitempty"`
+	Nodes                       NodeCounts        `json:"nodes"`
+	OpenOperations              int64             `json:"open_operations"`
+	PlanID                      *string           `json:"plan_id,omitempty"`
+	ProjectID                   *string           `json:"project_id,omitempty"`
+	QueuedAttempts              int64             `json:"queued_attempts"`
+	SchemaVersion               int64             `json:"schema_version"`
+	Specification               *string           `json:"specification,omitempty"`
+	SpecificationID             string            `json:"specification_id"`
+	State                       TaskOverviewState `json:"state"`
+	TaskID                      string            `json:"task_id"`
+	Title                       *string           `json:"title,omitempty"`
+	TodoID                      *string           `json:"todo_id,omitempty"`
 }
 
 type NodeCounts struct {
@@ -2303,11 +2305,11 @@ type ReplanReadQuery struct {
 }
 
 type TaskListQuery struct {
-	Attention *AttentionEnum `json:"attention,omitempty"`
-	Column    *Column        `json:"column,omitempty"`
-	Cursor    *string        `json:"cursor,omitempty"`
-	History   *History       `json:"history,omitempty"`
-	ProjectID *string        `json:"project_id,omitempty"`
+	Attention *Attention `json:"attention,omitempty"`
+	Column    *Column    `json:"column,omitempty"`
+	Cursor    *string    `json:"cursor,omitempty"`
+	History   *History   `json:"history,omitempty"`
+	ProjectID *string    `json:"project_id,omitempty"`
 }
 
 type TaskListPage struct {
@@ -2746,6 +2748,190 @@ type RemotePreparationProviderRequestPrepared struct {
 	Status                  FluffyStatus                  `json:"status"`
 }
 
+type OwnerDeliveryCommand struct {
+	ExpectedControlVersion *int64                   `json:"expected_control_version,omitempty"`
+	Name                   OwnerDeliveryCommandName `json:"name"`
+	Payload                OwnerDeliveryPayload     `json:"payload"`
+	RequestID              string                   `json:"request_id"`
+	SchemaVersion          int64                    `json:"schema_version"`
+	TaskID                 string                   `json:"task_id"`
+}
+
+type OwnerDeliveryPayload struct {
+	Basis           *DeliveryAcceptanceBasis `json:"basis,omitempty"`
+	ConfirmationID  *string                  `json:"confirmation_id,omitempty"`
+	ContentDigest   *string                  `json:"content_digest,omitempty"`
+	ExpectedVersion *int64                   `json:"expected_version,omitempty"`
+	OperationID     *string                  `json:"operation_id,omitempty"`
+	ProposalID      *string                  `json:"proposal_id,omitempty"`
+}
+
+type DeliveryAcceptanceBasis struct {
+	ControlVersion  int64  `json:"control_version"`
+	PlanID          string `json:"plan_id"`
+	SpecificationID string `json:"specification_id"`
+}
+
+type OwnerDeliveryCommandResult struct {
+	ConfirmationID   *string                   `json:"confirmation_id,omitempty"`
+	ContentDigest    *string                   `json:"content_digest,omitempty"`
+	InputCutoff      *int64                    `json:"input_cutoff,omitempty"`
+	Name             *OwnerDeliveryCommandName `json:"name,omitempty"`
+	OperationID      *string                   `json:"operation_id,omitempty"`
+	OperationVersion *int64                    `json:"operation_version,omitempty"`
+	ProposalID       *string                   `json:"proposal_id,omitempty"`
+	RequestID        string                    `json:"request_id"`
+	SchemaVersion    int64                     `json:"schema_version"`
+	Status           ConfigurationResultStatus `json:"status"`
+	TaskID           string                    `json:"task_id"`
+}
+
+type DeliveryProposalDetail struct {
+	Manifest      DeliveryAcceptanceManifest `json:"manifest"`
+	Proposal      DeliveryProposalSummary    `json:"proposal"`
+	SchemaVersion int64                      `json:"schema_version"`
+	TaskID        string                     `json:"task_id"`
+}
+
+type DeliveryAcceptanceManifest struct {
+	Basis               DeliveryAcceptanceBasis  `json:"basis"`
+	Outputs             []DeliveryOutputEvidence `json:"outputs"`
+	PlanDigest          string                   `json:"plan_digest"`
+	Repositories        []DeliveryRepository     `json:"repositories"`
+	SchemaVersion       int64                    `json:"schema_version"`
+	SpecificationDigest string                   `json:"specification_digest"`
+	TaskID              string                   `json:"task_id"`
+}
+
+type DeliveryOutputEvidence struct {
+	Artifacts                []ArtifactMetadata        `json:"artifacts"`
+	Completion               CompletionManifest        `json:"completion"`
+	CompletionManifestDigest string                    `json:"completion_manifest_digest"`
+	EffectiveBasis           PublicationEffectiveBasis `json:"effective_basis"`
+	EffectiveBasisDigest     string                    `json:"effective_basis_digest"`
+	NodeActivation           int64                     `json:"node_activation"`
+	NodeID                   string                    `json:"node_id"`
+	RepositoryFree           bool                      `json:"repository_free"`
+	Source                   *ResultReadIdentity       `json:"source,omitempty"`
+	SourceDigest             *string                   `json:"source_digest,omitempty"`
+}
+
+type DeliveryRepository struct {
+	Candidate                *PublicationCandidateManifest `json:"candidate,omitempty"`
+	CandidateManifestDigest  *string                       `json:"candidate_manifest_digest,omitempty"`
+	DeliveryRef              *string                       `json:"delivery_ref,omitempty"`
+	EffectiveBasis           PublicationEffectiveBasis     `json:"effective_basis"`
+	EffectiveBasisDigest     string                        `json:"effective_basis_digest"`
+	ItemID                   *string                       `json:"item_id,omitempty"`
+	Mapping                  *PublishedResultMapping       `json:"mapping,omitempty"`
+	MappingDigest            *string                       `json:"mapping_digest,omitempty"`
+	Marker                   *string                       `json:"marker,omitempty"`
+	MergeMethod              *MergeMethod                  `json:"merge_method,omitempty"`
+	Outcome                  DeliveryRepositoryOutcome     `json:"outcome"`
+	PermissionProof          *PublicationPermissionProof   `json:"permission_proof,omitempty"`
+	PermissionProofDigest    *string                       `json:"permission_proof_digest,omitempty"`
+	PreparationRequest       PublicationPrepareRequest     `json:"preparation_request"`
+	PreparationRequestDigest string                        `json:"preparation_request_digest"`
+	PreparationResult        PublicationResult             `json:"preparation_result"`
+	PreparationResultDigest  string                        `json:"preparation_result_digest"`
+	ProviderContent          *RemotePreparationContent     `json:"provider_content,omitempty"`
+	ProviderContentDigest    *string                       `json:"provider_content_digest,omitempty"`
+	ProviderMetadata         RepositoryProviderMetadata    `json:"provider_metadata"`
+	Published                *PublicationPublishedProof    `json:"published,omitempty"`
+	PublishedDigest          *string                       `json:"published_digest,omitempty"`
+	RemotePreparation        *RemotePreparation            `json:"remote_preparation,omitempty"`
+	RepositoryIdentity       string                        `json:"repository_identity"`
+	ResourceID               string                        `json:"resource_id"`
+	Review                   *RemotePreparationReview      `json:"review,omitempty"`
+	Scan                     *PublicationScanSummary       `json:"scan,omitempty"`
+	ScanDigest               *string                       `json:"scan_digest,omitempty"`
+	Source                   ResultReadIdentity            `json:"source"`
+	SourceDigest             string                        `json:"source_digest"`
+	TargetBranch             *string                       `json:"target_branch,omitempty"`
+	Waivers                  []PublicationOverrideProof    `json:"waivers,omitempty"`
+}
+
+type DeliveryProposalSummary struct {
+	Basis          DeliveryAcceptanceBasis `json:"basis"`
+	ConfirmationID *string                 `json:"confirmation_id,omitempty"`
+	ContentDigest  string                  `json:"content_digest"`
+	Current        bool                    `json:"current"`
+	ExpiresAt      string                  `json:"expires_at"`
+	ProposalID     string                  `json:"proposal_id"`
+}
+
+type DeliveryBatch struct {
+	AdmissionRequestID string                     `json:"admission_request_id"`
+	Batch              DeliveryBatchSummary       `json:"batch"`
+	ConfirmationID     string                     `json:"confirmation_id"`
+	Items              []DeliveryItemProgress     `json:"items"`
+	Manifest           DeliveryAcceptanceManifest `json:"manifest"`
+	ProposalID         string                     `json:"proposal_id"`
+	SchemaVersion      int64                      `json:"schema_version"`
+	TaskID             string                     `json:"task_id"`
+}
+
+type DeliveryBatchSummary struct {
+	AcceptedAt     string                     `json:"accepted_at"`
+	CancelAllowed  bool                       `json:"cancel_allowed"`
+	ContentDigest  string                     `json:"content_digest"`
+	FinalizedItems int64                      `json:"finalized_items"`
+	InputCutoff    int64                      `json:"input_cutoff"`
+	ModifiedItems  int64                      `json:"modified_items"`
+	OperationID    string                     `json:"operation_id"`
+	Reason         *string                    `json:"reason,omitempty"`
+	RetryAllowed   bool                       `json:"retry_allowed"`
+	Status         DeliveryBatchSummaryStatus `json:"status"`
+	Version        int64                      `json:"version"`
+}
+
+type DeliveryItemProgress struct {
+	AcceptedHead    string                     `json:"accepted_head"`
+	Checks          Checks                     `json:"checks"`
+	CooldownUntil   *string                    `json:"cooldown_until,omitempty"`
+	FinalCommit     *string                    `json:"final_commit,omitempty"`
+	FinalizedAt     *string                    `json:"finalized_at,omitempty"`
+	ItemID          string                     `json:"item_id"`
+	MergeMethod     *MergeMethod               `json:"merge_method,omitempty"`
+	ObservedBase    *string                    `json:"observed_base,omitempty"`
+	OperationDigest *string                    `json:"operation_digest,omitempty"`
+	OperationID     *string                    `json:"operation_id,omitempty"`
+	OperationKind   *OperationKindEnum         `json:"operation_kind,omitempty"`
+	OperationState  *OperationState            `json:"operation_state,omitempty"`
+	Reason          *string                    `json:"reason,omitempty"`
+	ResourceID      string                     `json:"resource_id"`
+	Review          *RemotePreparationReview   `json:"review,omitempty"`
+	Status          DeliveryItemProgressStatus `json:"status"`
+	TestMergeHead   *string                    `json:"test_merge_head,omitempty"`
+}
+
+type OwnerDeliveryStatus struct {
+	AcceptAllowed               bool                       `json:"accept_allowed"`
+	AcceptedDeliveryInputCutoff *int64                     `json:"accepted_delivery_input_cutoff,omitempty"`
+	AcceptedDeliveryOperationID *string                    `json:"accepted_delivery_operation_id,omitempty"`
+	Basis                       DeliveryReadBasis          `json:"basis"`
+	Batches                     []DeliveryBatchSummary     `json:"batches"`
+	BatchesHasMore              bool                       `json:"batches_has_more"`
+	NextBatchCursor             *string                    `json:"next_batch_cursor,omitempty"`
+	NextProposalCursor          *string                    `json:"next_proposal_cursor,omitempty"`
+	Proposals                   []DeliveryProposalSummary  `json:"proposals"`
+	ProposalsHasMore            bool                       `json:"proposals_has_more"`
+	Reason                      *OwnerDeliveryStatusReason `json:"reason,omitempty"`
+	SchemaVersion               int64                      `json:"schema_version"`
+	TaskID                      string                     `json:"task_id"`
+}
+
+type DeliveryReadBasis struct {
+	ControlVersion  int64   `json:"control_version"`
+	PlanID          *string `json:"plan_id"`
+	SpecificationID string  `json:"specification_id"`
+}
+
+type OwnerDeliveryHistoryQuery struct {
+	BatchCursor    *string `json:"batch_cursor,omitempty"`
+	ProposalCursor *string `json:"proposal_cursor,omitempty"`
+}
+
 type CommandEnvelopeName string
 
 const (
@@ -2804,8 +2990,8 @@ const (
 type ReplanWorkspaceInputKind string
 
 const (
-	Checkpoint ReplanWorkspaceInputKind = "checkpoint"
-	Completed  ReplanWorkspaceInputKind = "completed"
+	Checkpoint    ReplanWorkspaceInputKind = "checkpoint"
+	KindCompleted ReplanWorkspaceInputKind = "completed"
 )
 
 type TaskTurnRoutingKind string
@@ -2930,9 +3116,9 @@ const (
 type RuntimeEventKind string
 
 const (
-	Attention     RuntimeEventKind = "attention"
 	CaptureFailed RuntimeEventKind = "capture_failed"
 	Exited        RuntimeEventKind = "exited"
+	KindAttention RuntimeEventKind = "attention"
 	KindStarted   RuntimeEventKind = "started"
 	Output        RuntimeEventKind = "output"
 	ProcessAbsent RuntimeEventKind = "process_absent"
@@ -3027,34 +3213,34 @@ const (
 type PublicationRefObservationReason string
 
 const (
-	AmbiguousPR               PublicationRefObservationReason = "ambiguous_pr"
-	CancelRequested           PublicationRefObservationReason = "cancel_requested"
-	ConfigurationChanged      PublicationRefObservationReason = "configuration_changed"
-	ContentMismatch           PublicationRefObservationReason = "content_mismatch"
-	ExpiredPermission         PublicationRefObservationReason = "expired_permission"
-	FindingsBlocked           PublicationRefObservationReason = "findings_blocked"
-	InputPending              PublicationRefObservationReason = "input_pending"
-	InvalidProviderResponse   PublicationRefObservationReason = "invalid_provider_response"
-	KnownPublicExposure       PublicationRefObservationReason = "known_public_exposure"
-	ModeDeferred              PublicationRefObservationReason = "mode_deferred"
-	PRClosed                  PublicationRefObservationReason = "pr_closed"
-	PRMerged                  PublicationRefObservationReason = "pr_merged"
-	PRMissing                 PublicationRefObservationReason = "pr_missing"
-	PermissionUnknown         PublicationRefObservationReason = "permission_unknown"
-	PossiblePublication       PublicationRefObservationReason = "possible_publication"
-	ProviderUnavailable       PublicationRefObservationReason = "provider_unavailable"
-	PurpleIdentityMismatch    PublicationRefObservationReason = "identity_mismatch"
-	PurpleRetainedUnavailable PublicationRefObservationReason = "retained_unavailable"
-	PurpleTimeout             PublicationRefObservationReason = "timeout"
-	PurpleUnverifiedParent    PublicationRefObservationReason = "unverified_parent"
-	ReasonAccessDenied        PublicationRefObservationReason = "access_denied"
-	ReasonCredentialsMissing  PublicationRefObservationReason = "credentials_missing"
-	ReasonRateLimited         PublicationRefObservationReason = "rate_limited"
-	RunnerOffline             PublicationRefObservationReason = "runner_offline"
-	RunnerUnsupported         PublicationRefObservationReason = "runner_unsupported"
-	ScanIncomplete            PublicationRefObservationReason = "scan_incomplete"
-	SourceChanged             PublicationRefObservationReason = "source_changed"
-	UnexpectedHead            PublicationRefObservationReason = "unexpected_head"
+	AmbiguousPR                PublicationRefObservationReason = "ambiguous_pr"
+	CancelRequested            PublicationRefObservationReason = "cancel_requested"
+	ContentMismatch            PublicationRefObservationReason = "content_mismatch"
+	InvalidProviderResponse    PublicationRefObservationReason = "invalid_provider_response"
+	ModeDeferred               PublicationRefObservationReason = "mode_deferred"
+	PRClosed                   PublicationRefObservationReason = "pr_closed"
+	PRMerged                   PublicationRefObservationReason = "pr_merged"
+	PRMissing                  PublicationRefObservationReason = "pr_missing"
+	ProviderUnavailable        PublicationRefObservationReason = "provider_unavailable"
+	PurpleConfigurationChanged PublicationRefObservationReason = "configuration_changed"
+	PurpleExpiredPermission    PublicationRefObservationReason = "expired_permission"
+	PurpleFindingsBlocked      PublicationRefObservationReason = "findings_blocked"
+	PurpleIdentityMismatch     PublicationRefObservationReason = "identity_mismatch"
+	PurpleInputPending         PublicationRefObservationReason = "input_pending"
+	PurpleKnownPublicExposure  PublicationRefObservationReason = "known_public_exposure"
+	PurplePermissionUnknown    PublicationRefObservationReason = "permission_unknown"
+	PurplePossiblePublication  PublicationRefObservationReason = "possible_publication"
+	PurpleRetainedUnavailable  PublicationRefObservationReason = "retained_unavailable"
+	PurpleScanIncomplete       PublicationRefObservationReason = "scan_incomplete"
+	PurpleSourceChanged        PublicationRefObservationReason = "source_changed"
+	PurpleTimeout              PublicationRefObservationReason = "timeout"
+	PurpleUnverifiedParent     PublicationRefObservationReason = "unverified_parent"
+	ReasonAccessDenied         PublicationRefObservationReason = "access_denied"
+	ReasonCredentialsMissing   PublicationRefObservationReason = "credentials_missing"
+	ReasonRateLimited          PublicationRefObservationReason = "rate_limited"
+	RunnerOffline              PublicationRefObservationReason = "runner_offline"
+	RunnerUnsupported          PublicationRefObservationReason = "runner_unsupported"
+	UnexpectedHead             PublicationRefObservationReason = "unexpected_head"
 )
 
 type PublicationRefObservationStatus string
@@ -3085,7 +3271,7 @@ const (
 	FluffyRetainedUnavailable PreparedReason = "retained_unavailable"
 	FluffyTimeout             PreparedReason = "timeout"
 	FluffyUnverifiedParent    PreparedReason = "unverified_parent"
-	NoChange                  PreparedReason = "no_change"
+	ReasonNoChange            PreparedReason = "no_change"
 )
 
 type PublicationScanSummaryReason string
@@ -3279,8 +3465,8 @@ const (
 type TaskProposalAction string
 
 const (
-	AcceptDelivery                                TaskProposalAction = "accept_delivery"
 	ApplyRework                                   TaskProposalAction = "apply_rework"
+	TaskProposalActionAcceptDelivery              TaskProposalAction = "accept_delivery"
 	TaskProposalActionApplySpecificationRevision  TaskProposalAction = "apply_specification_revision"
 	TaskProposalActionOverridePublicationFindings TaskProposalAction = "override_publication_findings"
 	TaskProposalActionPublishReplan               TaskProposalAction = "publish_replan"
@@ -3328,9 +3514,9 @@ const (
 type MergeMethod string
 
 const (
-	Merge  MergeMethod = "merge"
-	Rebase MergeMethod = "rebase"
-	Squash MergeMethod = "squash"
+	MergeMethodMerge MergeMethod = "merge"
+	Rebase           MergeMethod = "rebase"
+	Squash           MergeMethod = "squash"
 )
 
 type Provider string
@@ -3515,12 +3701,12 @@ const (
 	FluffyCreateExecutionTask TaskPreviewCommandName = "create_execution_task"
 )
 
-type Outcome string
+type TaskPreviewCommandResultOutcome string
 
 const (
-	Confirmed        Outcome = "confirmed"
-	OutcomeCancelled Outcome = "cancelled"
-	OutcomeCreated   Outcome = "created"
+	Confirmed        TaskPreviewCommandResultOutcome = "confirmed"
+	OutcomeCancelled TaskPreviewCommandResultOutcome = "cancelled"
+	OutcomeCreated   TaskPreviewCommandResultOutcome = "created"
 )
 
 type TaskPreviewStatusReason string
@@ -3707,11 +3893,11 @@ const (
 	TentacledPending ReplanRequestSummaryStatus = "pending"
 )
 
-type AttentionEnum string
+type Attention string
 
 const (
-	AttentionAll AttentionEnum = "all"
-	Needed       AttentionEnum = "needed"
+	AttentionAll Attention = "all"
+	Needed       Attention = "needed"
 )
 
 type Column string
@@ -3727,8 +3913,8 @@ const (
 type History string
 
 const (
-	Active     History = "active"
-	HistoryAll History = "all"
+	HistoryActive History = "active"
+	HistoryAll    History = "all"
 )
 
 type TaskAttentionKind string
@@ -3861,9 +4047,9 @@ const (
 	LocalOnly                    RemotePreparationRecordStatus = "local_only"
 	MischievousCancelled         RemotePreparationRecordStatus = "cancelled"
 	PausedInput                  RemotePreparationRecordStatus = "paused_input"
-	Reconciling                  RemotePreparationRecordStatus = "reconciling"
+	PurpleFailed                 RemotePreparationRecordStatus = "failed"
+	PurpleReconciling            RemotePreparationRecordStatus = "reconciling"
 	StatusAccessDenied           RemotePreparationRecordStatus = "access_denied"
-	StatusFailed                 RemotePreparationRecordStatus = "failed"
 	StickyPrepared               RemotePreparationRecordStatus = "prepared"
 	StickyReconciliationRequired RemotePreparationRecordStatus = "reconciliation_required"
 	TentacledOffline             RemotePreparationRecordStatus = "offline"
@@ -3923,4 +4109,102 @@ type FluffyStatus string
 const (
 	IndigoPrepared  FluffyStatus = "prepared"
 	TentacledMapped FluffyStatus = "mapped"
+)
+
+type OwnerDeliveryCommandName string
+
+const (
+	CancelDelivery            OwnerDeliveryCommandName = "cancel_delivery"
+	ConfirmDeliveryAcceptance OwnerDeliveryCommandName = "confirm_delivery_acceptance"
+	NameAcceptDelivery        OwnerDeliveryCommandName = "accept_delivery"
+	PrepareDeliveryAcceptance OwnerDeliveryCommandName = "prepare_delivery_acceptance"
+	RetryDelivery             OwnerDeliveryCommandName = "retry_delivery"
+)
+
+type DeliveryRepositoryOutcome string
+
+const (
+	Modified        DeliveryRepositoryOutcome = "modified"
+	OutcomeNoChange DeliveryRepositoryOutcome = "no_change"
+)
+
+type DeliveryBatchSummaryStatus string
+
+const (
+	BraggadociousCancelled DeliveryBatchSummaryStatus = "cancelled"
+	FluffyFailed           DeliveryBatchSummaryStatus = "failed"
+	FluffyReconciling      DeliveryBatchSummaryStatus = "reconciling"
+	PurpleAttention        DeliveryBatchSummaryStatus = "attention"
+	StatusActive           DeliveryBatchSummaryStatus = "active"
+	StatusCompleted        DeliveryBatchSummaryStatus = "completed"
+	Waiting                DeliveryBatchSummaryStatus = "waiting"
+)
+
+type Checks string
+
+const (
+	ChecksPending Checks = "pending"
+	ChecksUnknown Checks = "unknown"
+	Failing       Checks = "failing"
+	Passing       Checks = "passing"
+)
+
+type OperationKindEnum string
+
+const (
+	OperationKindClosePR  OperationKindEnum = "close_pr"
+	OperationKindCreatePR OperationKindEnum = "create_pr"
+	OperationKindMerge    OperationKindEnum = "merge"
+	OperationKindPush     OperationKindEnum = "push"
+	OperationKindUpdatePR OperationKindEnum = "update_pr"
+)
+
+type OperationState string
+
+const (
+	OperationStateCancelled OperationState = "cancelled"
+	OperationStateFailed    OperationState = "failed"
+	OperationStatePending   OperationState = "pending"
+	OperationStateStarted   OperationState = "started"
+	OperationStateSucceeded OperationState = "succeeded"
+	OperationStateUnknown   OperationState = "unknown"
+)
+
+type DeliveryItemProgressStatus string
+
+const (
+	Cancelled1           DeliveryItemProgressStatus = "cancelled"
+	Finalized            DeliveryItemProgressStatus = "finalized"
+	FluffyAttention      DeliveryItemProgressStatus = "attention"
+	HilariousPending     DeliveryItemProgressStatus = "pending"
+	Merging              DeliveryItemProgressStatus = "merging"
+	StatusReady          DeliveryItemProgressStatus = "ready"
+	TentacledFailed      DeliveryItemProgressStatus = "failed"
+	TentacledPreparing   DeliveryItemProgressStatus = "preparing"
+	TentacledReconciling DeliveryItemProgressStatus = "reconciling"
+	WaitingChecks        DeliveryItemProgressStatus = "waiting_checks"
+)
+
+type OwnerDeliveryStatusReason string
+
+const (
+	Accepted                     OwnerDeliveryStatusReason = "accepted"
+	AuthorityInvalid             OwnerDeliveryStatusReason = "authority_invalid"
+	FluffyConfigurationChanged   OwnerDeliveryStatusReason = "configuration_changed"
+	FluffyExpiredPermission      OwnerDeliveryStatusReason = "expired_permission"
+	FluffyFindingsBlocked        OwnerDeliveryStatusReason = "findings_blocked"
+	FluffyInputPending           OwnerDeliveryStatusReason = "input_pending"
+	FluffyKnownPublicExposure    OwnerDeliveryStatusReason = "known_public_exposure"
+	FluffyPermissionUnknown      OwnerDeliveryStatusReason = "permission_unknown"
+	FluffyPossiblePublication    OwnerDeliveryStatusReason = "possible_publication"
+	FluffyScanIncomplete         OwnerDeliveryStatusReason = "scan_incomplete"
+	FluffySourceChanged          OwnerDeliveryStatusReason = "source_changed"
+	NoPlan                       OwnerDeliveryStatusReason = "no_plan"
+	NotReview                    OwnerDeliveryStatusReason = "not_review"
+	ReasonReconciliationRequired OwnerDeliveryStatusReason = "reconciliation_required"
+	StickyRetainedUnavailable    OwnerDeliveryStatusReason = "retained_unavailable"
+	TentacledIdentityMismatch    OwnerDeliveryStatusReason = "identity_mismatch"
+	Terminal                     OwnerDeliveryStatusReason = "terminal"
+	UnsupportedMode              OwnerDeliveryStatusReason = "unsupported_mode"
+	WorkUnsettled                OwnerDeliveryStatusReason = "work_unsettled"
 )

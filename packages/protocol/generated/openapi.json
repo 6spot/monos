@@ -5,6 +5,319 @@
     "version": "1.0.0"
   },
   "paths": {
+    "/v1/owner/tasks/delivery/commands": {
+      "post": {
+        "security": [
+          {
+            "OwnerAuth": []
+          },
+          {
+            "OwnerCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OwnerDeliveryCommand"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authenticated response; admission is distinct from completed effects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OwnerDeliveryCommandResult"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Deterministic protocol error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "X-Monos-Session",
+            "in": "header",
+            "required": false,
+            "description": "Noncredential expected session identity. Mismatch rejects before reads or effects; this header alone never authenticates.",
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          }
+        ]
+      }
+    },
+    "/v1/owner/tasks/{task_id}/delivery": {
+      "get": {
+        "security": [
+          {
+            "OwnerAuth": []
+          },
+          {
+            "OwnerCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "X-Monos-Session",
+            "in": "header",
+            "required": false,
+            "description": "Noncredential expected session identity. Mismatch rejects before reads or effects; this header alone never authenticates.",
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "proposal_cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048,
+              "pattern": "^[A-Za-z0-9_-]+$"
+            }
+          },
+          {
+            "name": "batch_cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048,
+              "pattern": "^[A-Za-z0-9_-]+$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authenticated response; admission is distinct from completed effects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OwnerDeliveryStatus"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Deterministic protocol error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/owner/tasks/{task_id}/delivery/proposals/{proposal_id}": {
+      "get": {
+        "security": [
+          {
+            "OwnerAuth": []
+          },
+          {
+            "OwnerCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "X-Monos-Session",
+            "in": "header",
+            "required": false,
+            "description": "Noncredential expected session identity. Mismatch rejects before reads or effects; this header alone never authenticates.",
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "proposal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authenticated response; admission is distinct from completed effects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeliveryProposalDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Deterministic protocol error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/owner/tasks/{task_id}/delivery/batches/{operation_id}": {
+      "get": {
+        "security": [
+          {
+            "OwnerAuth": []
+          },
+          {
+            "OwnerCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "X-Monos-Session",
+            "in": "header",
+            "required": false,
+            "description": "Noncredential expected session identity. Mismatch rejects before reads or effects; this header alone never authenticates.",
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "operation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authenticated response; admission is distinct from completed effects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeliveryBatch"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Deterministic protocol error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/owner/tasks/{task_id}/delivery/commands/{request_id}": {
+      "get": {
+        "security": [
+          {
+            "OwnerAuth": []
+          },
+          {
+            "OwnerCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "X-Monos-Session",
+            "in": "header",
+            "required": false,
+            "description": "Noncredential expected session identity. Mismatch rejects before reads or effects; this header alone never authenticates.",
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authenticated response; admission is distinct from completed effects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OwnerDeliveryCommandResult"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Deterministic protocol error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/owner/tasks/{task_id}/publication-candidates": {
       "get": {
         "security": [
@@ -7134,7 +7447,21 @@
             "type": "string",
             "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d\\.\\d{3}Z$",
             "maxLength": 24
+          },
+          "accepted_delivery_operation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "accepted_delivery_input_cutoff": {
+            "$ref": "#/components/schemas/Counter"
           }
+        },
+        "dependencies": {
+          "accepted_delivery_operation_id": [
+            "accepted_delivery_input_cutoff"
+          ],
+          "accepted_delivery_input_cutoff": [
+            "accepted_delivery_operation_id"
+          ]
         }
       },
       "FormalTaskEvent": {
@@ -20194,6 +20521,1478 @@
             }
           }
         ]
+      },
+      "DeliveryAcceptanceBasis": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "control_version": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "specification_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "plan_id": {
+            "$ref": "#/components/schemas/Id"
+          }
+        },
+        "required": [
+          "control_version",
+          "specification_id",
+          "plan_id"
+        ]
+      },
+      "DeliveryOutputEvidence": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "node_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "node_activation": {
+            "$ref": "#/components/schemas/PositiveCounter"
+          },
+          "completion": {
+            "$ref": "#/components/schemas/CompletionManifest"
+          },
+          "completion_manifest_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "effective_basis": {
+            "$ref": "#/components/schemas/PublicationEffectiveBasis"
+          },
+          "effective_basis_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "artifacts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ArtifactMetadata"
+            },
+            "maxItems": 256,
+            "minItems": 0
+          },
+          "repository_free": {
+            "type": "boolean"
+          },
+          "source": {
+            "$ref": "#/components/schemas/ResultReadIdentity"
+          },
+          "source_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          }
+        },
+        "required": [
+          "node_id",
+          "node_activation",
+          "completion",
+          "completion_manifest_digest",
+          "effective_basis",
+          "effective_basis_digest",
+          "artifacts",
+          "repository_free"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "repository_free": {
+                  "const": true
+                }
+              },
+              "required": [
+                "repository_free"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "source": false,
+                "source_digest": false
+              }
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "repository_free": {
+                  "const": false
+                }
+              },
+              "required": [
+                "repository_free"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "source": {},
+                "source_digest": {}
+              },
+              "required": [
+                "source",
+                "source_digest"
+              ]
+            }
+          }
+        ]
+      },
+      "DeliveryRepository": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "no_change",
+              "modified"
+            ]
+          },
+          "resource_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "repository_identity": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048,
+            "pattern": "^[^\\x00]*$"
+          },
+          "provider_metadata": {
+            "$ref": "#/components/schemas/RepositoryProviderMetadata"
+          },
+          "source": {
+            "$ref": "#/components/schemas/ResultReadIdentity"
+          },
+          "source_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "effective_basis": {
+            "$ref": "#/components/schemas/PublicationEffectiveBasis"
+          },
+          "effective_basis_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "preparation_request": {
+            "$ref": "#/components/schemas/PublicationPrepareRequest"
+          },
+          "preparation_request_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "preparation_result": {
+            "$ref": "#/components/schemas/PublicationResult"
+          },
+          "preparation_result_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "item_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "candidate": {
+            "$ref": "#/components/schemas/PublicationCandidateManifest"
+          },
+          "candidate_manifest_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "scan": {
+            "$ref": "#/components/schemas/PublicationScanSummary"
+          },
+          "scan_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "permission_proof": {
+            "$ref": "#/components/schemas/PublicationPermissionProof"
+          },
+          "permission_proof_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "waivers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicationOverrideProof"
+            },
+            "maxItems": 4096,
+            "minItems": 0
+          },
+          "target_branch": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1024,
+            "pattern": "^[^\\x00]*$"
+          },
+          "delivery_ref": {
+            "type": "string",
+            "pattern": "^refs/heads/monos/task/[0-9a-f-]{36}/[0-9a-f-]{36}$",
+            "maxLength": 128
+          },
+          "marker": {
+            "type": "string",
+            "pattern": "^<!-- monos-delivery-item:[0-9a-f-]{36} -->$",
+            "maxLength": 80
+          },
+          "remote_preparation": {
+            "type": "string",
+            "enum": [
+              "automatic",
+              "after_acceptance"
+            ]
+          },
+          "merge_method": {
+            "type": "string",
+            "enum": [
+              "merge",
+              "squash",
+              "rebase"
+            ]
+          },
+          "mapping": {
+            "$ref": "#/components/schemas/PublishedResultMapping"
+          },
+          "mapping_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "published": {
+            "$ref": "#/components/schemas/PublicationPublishedProof"
+          },
+          "published_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "review": {
+            "$ref": "#/components/schemas/RemotePreparationReview"
+          },
+          "provider_content": {
+            "$ref": "#/components/schemas/RemotePreparationContent"
+          },
+          "provider_content_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          }
+        },
+        "required": [
+          "outcome",
+          "resource_id",
+          "repository_identity",
+          "provider_metadata",
+          "source",
+          "source_digest",
+          "effective_basis",
+          "effective_basis_digest",
+          "preparation_request",
+          "preparation_request_digest",
+          "preparation_result",
+          "preparation_result_digest"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "outcome": {
+                  "const": "no_change"
+                }
+              },
+              "required": [
+                "outcome"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "item_id": false,
+                "candidate": false,
+                "candidate_manifest_digest": false,
+                "scan": false,
+                "scan_digest": false,
+                "permission_proof": false,
+                "permission_proof_digest": false,
+                "waivers": false,
+                "target_branch": false,
+                "delivery_ref": false,
+                "marker": false,
+                "remote_preparation": false,
+                "provider_content": false,
+                "provider_content_digest": false,
+                "merge_method": false,
+                "mapping": false,
+                "mapping_digest": false,
+                "published": false,
+                "published_digest": false,
+                "review": false,
+                "preparation_result": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "const": "not_applicable"
+                    },
+                    "reason": {
+                      "const": "no_change"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "reason"
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "outcome": {
+                  "const": "modified"
+                }
+              },
+              "required": [
+                "outcome"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "preparation_result": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "enum": [
+                        "prepared",
+                        "mapped"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "status"
+                  ]
+                },
+                "scan": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "const": "complete"
+                    },
+                    "workflow_changes": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "workflow_changes"
+                  ]
+                }
+              },
+              "required": [
+                "item_id",
+                "candidate",
+                "candidate_manifest_digest",
+                "scan",
+                "scan_digest",
+                "permission_proof",
+                "permission_proof_digest",
+                "waivers",
+                "target_branch",
+                "delivery_ref",
+                "marker",
+                "remote_preparation",
+                "provider_content",
+                "provider_content_digest"
+              ]
+            }
+          }
+        ],
+        "dependencies": {
+          "mapping": [
+            "mapping_digest"
+          ],
+          "mapping_digest": [
+            "mapping"
+          ],
+          "published": [
+            "published_digest"
+          ],
+          "published_digest": [
+            "published"
+          ]
+        }
+      },
+      "DeliveryAcceptanceManifest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "task_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "basis": {
+            "$ref": "#/components/schemas/DeliveryAcceptanceBasis"
+          },
+          "specification_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "plan_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "outputs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DeliveryOutputEvidence"
+            },
+            "maxItems": 256,
+            "minItems": 1
+          },
+          "repositories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DeliveryRepository"
+            },
+            "maxItems": 64,
+            "minItems": 0
+          }
+        },
+        "required": [
+          "schema_version",
+          "task_id",
+          "basis",
+          "specification_digest",
+          "plan_digest",
+          "outputs",
+          "repositories"
+        ]
+      },
+      "OwnerDeliveryCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "task_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "request_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "name": {
+            "type": "string",
+            "enum": [
+              "prepare_delivery_acceptance",
+              "confirm_delivery_acceptance",
+              "accept_delivery",
+              "retry_delivery",
+              "cancel_delivery"
+            ]
+          },
+          "expected_control_version": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/OwnerDeliveryPayload"
+          }
+        },
+        "required": [
+          "schema_version",
+          "task_id",
+          "request_id",
+          "name",
+          "payload"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "const": "prepare_delivery_acceptance"
+                }
+              },
+              "required": [
+                "name"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "payload": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "basis": {
+                      "$ref": "#/components/schemas/DeliveryAcceptanceBasis"
+                    }
+                  },
+                  "required": [
+                    "basis"
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "const": "confirm_delivery_acceptance"
+                }
+              },
+              "required": [
+                "name"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "payload": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "proposal_id": {
+                      "$ref": "#/components/schemas/Id"
+                    },
+                    "content_digest": {
+                      "$ref": "#/components/schemas/SHA256"
+                    }
+                  },
+                  "required": [
+                    "proposal_id",
+                    "content_digest"
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "const": "accept_delivery"
+                }
+              },
+              "required": [
+                "name"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "payload": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "proposal_id": {
+                      "$ref": "#/components/schemas/Id"
+                    },
+                    "confirmation_id": {
+                      "$ref": "#/components/schemas/Id"
+                    },
+                    "content_digest": {
+                      "$ref": "#/components/schemas/SHA256"
+                    },
+                    "basis": {
+                      "$ref": "#/components/schemas/DeliveryAcceptanceBasis"
+                    }
+                  },
+                  "required": [
+                    "proposal_id",
+                    "confirmation_id",
+                    "content_digest",
+                    "basis"
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "const": "retry_delivery"
+                }
+              },
+              "required": [
+                "name"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "payload": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "operation_id": {
+                      "$ref": "#/components/schemas/Id"
+                    },
+                    "content_digest": {
+                      "$ref": "#/components/schemas/SHA256"
+                    },
+                    "expected_version": {
+                      "$ref": "#/components/schemas/PositiveCounter"
+                    }
+                  },
+                  "required": [
+                    "operation_id",
+                    "content_digest",
+                    "expected_version"
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "const": "cancel_delivery"
+                }
+              },
+              "required": [
+                "name"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "payload": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "operation_id": {
+                      "$ref": "#/components/schemas/Id"
+                    },
+                    "content_digest": {
+                      "$ref": "#/components/schemas/SHA256"
+                    },
+                    "expected_version": {
+                      "$ref": "#/components/schemas/PositiveCounter"
+                    }
+                  },
+                  "required": [
+                    "operation_id",
+                    "content_digest",
+                    "expected_version"
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      },
+      "OwnerDeliveryCommandResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "task_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "request_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "committed",
+              "unknown"
+            ]
+          },
+          "name": {
+            "type": "string",
+            "enum": [
+              "prepare_delivery_acceptance",
+              "confirm_delivery_acceptance",
+              "accept_delivery",
+              "retry_delivery",
+              "cancel_delivery"
+            ]
+          },
+          "proposal_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "confirmation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "content_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "operation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "operation_version": {
+            "$ref": "#/components/schemas/PositiveCounter"
+          },
+          "input_cutoff": {
+            "$ref": "#/components/schemas/Counter"
+          }
+        },
+        "required": [
+          "schema_version",
+          "task_id",
+          "request_id",
+          "status"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "const": "unknown"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "name": false,
+                "proposal_id": false,
+                "confirmation_id": false,
+                "content_digest": false,
+                "operation_id": false,
+                "operation_version": false,
+                "input_cutoff": false
+              }
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "const": "committed"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "name": {}
+              },
+              "required": [
+                "name"
+              ]
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "const": "prepare_delivery_acceptance"
+                }
+              },
+              "required": [
+                "name"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "proposal_id": {},
+                "confirmation_id": false,
+                "content_digest": {},
+                "operation_id": false,
+                "operation_version": false,
+                "input_cutoff": false
+              },
+              "required": [
+                "proposal_id",
+                "content_digest"
+              ]
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "const": "confirm_delivery_acceptance"
+                }
+              },
+              "required": [
+                "name"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "proposal_id": {},
+                "confirmation_id": {},
+                "content_digest": {},
+                "operation_id": false,
+                "operation_version": false,
+                "input_cutoff": false
+              },
+              "required": [
+                "proposal_id",
+                "confirmation_id",
+                "content_digest"
+              ]
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "const": "accept_delivery"
+                }
+              },
+              "required": [
+                "name"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "proposal_id": {},
+                "confirmation_id": {},
+                "content_digest": {},
+                "operation_id": {},
+                "operation_version": {},
+                "input_cutoff": {}
+              },
+              "required": [
+                "proposal_id",
+                "confirmation_id",
+                "operation_id",
+                "content_digest",
+                "operation_version",
+                "input_cutoff"
+              ]
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "const": "retry_delivery"
+                }
+              },
+              "required": [
+                "name"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "proposal_id": false,
+                "confirmation_id": false,
+                "content_digest": {},
+                "operation_id": {},
+                "operation_version": {},
+                "input_cutoff": false
+              },
+              "required": [
+                "operation_id",
+                "content_digest",
+                "operation_version"
+              ]
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "const": "cancel_delivery"
+                }
+              },
+              "required": [
+                "name"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "proposal_id": false,
+                "confirmation_id": false,
+                "content_digest": {},
+                "operation_id": {},
+                "operation_version": {},
+                "input_cutoff": false
+              },
+              "required": [
+                "operation_id",
+                "content_digest",
+                "operation_version"
+              ]
+            }
+          }
+        ]
+      },
+      "DeliveryProposalSummary": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "proposal_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "content_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "basis": {
+            "$ref": "#/components/schemas/DeliveryAcceptanceBasis"
+          },
+          "expires_at": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(?:\\.\\d{1,3})?Z$",
+            "maxLength": 24
+          },
+          "current": {
+            "type": "boolean"
+          },
+          "confirmation_id": {
+            "$ref": "#/components/schemas/Id"
+          }
+        },
+        "required": [
+          "proposal_id",
+          "content_digest",
+          "basis",
+          "expires_at",
+          "current"
+        ]
+      },
+      "DeliveryProposalDetail": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "task_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "proposal": {
+            "$ref": "#/components/schemas/DeliveryProposalSummary"
+          },
+          "manifest": {
+            "$ref": "#/components/schemas/DeliveryAcceptanceManifest"
+          }
+        },
+        "required": [
+          "schema_version",
+          "task_id",
+          "proposal",
+          "manifest"
+        ]
+      },
+      "DeliveryBatchSummary": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "operation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "content_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "version": {
+            "$ref": "#/components/schemas/PositiveCounter"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "waiting",
+              "failed",
+              "reconciling",
+              "attention",
+              "completed",
+              "cancelled"
+            ]
+          },
+          "input_cutoff": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "accepted_at": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(?:\\.\\d{1,3})?Z$",
+            "maxLength": 24
+          },
+          "modified_items": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "finalized_items": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "retry_allowed": {
+            "type": "boolean"
+          },
+          "cancel_allowed": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "pattern": "^[^\\x00]*$"
+          }
+        },
+        "required": [
+          "operation_id",
+          "content_digest",
+          "version",
+          "status",
+          "input_cutoff",
+          "accepted_at",
+          "modified_items",
+          "finalized_items",
+          "retry_allowed",
+          "cancel_allowed"
+        ]
+      },
+      "DeliveryItemProgress": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "item_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "resource_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "preparing",
+              "waiting_checks",
+              "ready",
+              "merging",
+              "reconciling",
+              "failed",
+              "attention",
+              "finalized",
+              "cancelled"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "pattern": "^[^\\x00]*$"
+          },
+          "operation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "operation_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "operation_kind": {
+            "type": "string",
+            "enum": [
+              "push",
+              "create_pr",
+              "update_pr",
+              "close_pr",
+              "merge"
+            ]
+          },
+          "operation_state": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "started",
+              "unknown",
+              "failed",
+              "succeeded",
+              "cancelled"
+            ]
+          },
+          "merge_method": {
+            "type": "string",
+            "enum": [
+              "merge",
+              "squash",
+              "rebase"
+            ]
+          },
+          "review": {
+            "$ref": "#/components/schemas/RemotePreparationReview"
+          },
+          "accepted_head": {
+            "$ref": "#/components/schemas/GitOID"
+          },
+          "observed_base": {
+            "$ref": "#/components/schemas/GitOID"
+          },
+          "test_merge_head": {
+            "$ref": "#/components/schemas/GitOID"
+          },
+          "checks": {
+            "type": "string",
+            "enum": [
+              "unknown",
+              "pending",
+              "passing",
+              "failing"
+            ]
+          },
+          "final_commit": {
+            "$ref": "#/components/schemas/GitOID"
+          },
+          "finalized_at": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(?:\\.\\d{1,3})?Z$",
+            "maxLength": 24
+          },
+          "cooldown_until": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(?:\\.\\d{1,3})?Z$",
+            "maxLength": 24
+          }
+        },
+        "required": [
+          "item_id",
+          "resource_id",
+          "status",
+          "accepted_head",
+          "checks"
+        ],
+        "dependencies": {
+          "operation_id": [
+            "operation_digest",
+            "operation_kind",
+            "operation_state"
+          ],
+          "operation_digest": [
+            "operation_id",
+            "operation_kind",
+            "operation_state"
+          ],
+          "operation_kind": [
+            "operation_id",
+            "operation_digest",
+            "operation_state"
+          ],
+          "operation_state": [
+            "operation_id",
+            "operation_digest",
+            "operation_kind"
+          ]
+        },
+        "allOf": [
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "const": "finalized"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "final_commit": {},
+                "finalized_at": {}
+              },
+              "required": [
+                "final_commit",
+                "finalized_at"
+              ]
+            }
+          }
+        ]
+      },
+      "DeliveryBatch": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "task_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "batch": {
+            "$ref": "#/components/schemas/DeliveryBatchSummary"
+          },
+          "proposal_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "confirmation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "admission_request_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "manifest": {
+            "$ref": "#/components/schemas/DeliveryAcceptanceManifest"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DeliveryItemProgress"
+            },
+            "maxItems": 64,
+            "minItems": 0
+          }
+        },
+        "required": [
+          "schema_version",
+          "task_id",
+          "batch",
+          "proposal_id",
+          "confirmation_id",
+          "admission_request_id",
+          "manifest",
+          "items"
+        ]
+      },
+      "OwnerDeliveryStatus": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "task_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "basis": {
+            "$ref": "#/components/schemas/DeliveryReadBasis"
+          },
+          "accept_allowed": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "not_review",
+              "no_plan",
+              "accepted",
+              "terminal",
+              "unsupported_mode",
+              "input_pending",
+              "work_unsettled",
+              "source_changed",
+              "configuration_changed",
+              "permission_unknown",
+              "expired_permission",
+              "scan_incomplete",
+              "findings_blocked",
+              "known_public_exposure",
+              "retained_unavailable",
+              "identity_mismatch",
+              "possible_publication",
+              "reconciliation_required",
+              "authority_invalid"
+            ]
+          },
+          "proposals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DeliveryProposalSummary"
+            },
+            "maxItems": 64,
+            "minItems": 0
+          },
+          "proposals_has_more": {
+            "type": "boolean"
+          },
+          "batches": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DeliveryBatchSummary"
+            },
+            "maxItems": 64,
+            "minItems": 0
+          },
+          "batches_has_more": {
+            "type": "boolean"
+          },
+          "accepted_delivery_operation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "accepted_delivery_input_cutoff": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "next_proposal_cursor": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "next_batch_cursor": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          }
+        },
+        "required": [
+          "schema_version",
+          "task_id",
+          "basis",
+          "accept_allowed",
+          "proposals",
+          "proposals_has_more",
+          "batches",
+          "batches_has_more"
+        ],
+        "dependencies": {
+          "accepted_delivery_operation_id": [
+            "accepted_delivery_input_cutoff"
+          ],
+          "accepted_delivery_input_cutoff": [
+            "accepted_delivery_operation_id"
+          ]
+        },
+        "allOf": [
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "proposals_has_more": {
+                  "const": true
+                }
+              },
+              "required": [
+                "proposals_has_more"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "next_proposal_cursor": {}
+              },
+              "required": [
+                "next_proposal_cursor"
+              ]
+            },
+            "else": {
+              "type": "object",
+              "properties": {
+                "next_proposal_cursor": false
+              }
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "batches_has_more": {
+                  "const": true
+                }
+              },
+              "required": [
+                "batches_has_more"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "next_batch_cursor": {}
+              },
+              "required": [
+                "next_batch_cursor"
+              ]
+            },
+            "else": {
+              "type": "object",
+              "properties": {
+                "next_batch_cursor": false
+              }
+            }
+          }
+        ]
+      },
+      "DeliveryReadBasis": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "control_version": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "specification_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "plan_id": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Id"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "control_version",
+          "specification_id",
+          "plan_id"
+        ]
+      },
+      "OwnerDeliveryPayload": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "basis": {
+            "$ref": "#/components/schemas/DeliveryAcceptanceBasis"
+          },
+          "proposal_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "confirmation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "content_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "operation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "expected_version": {
+            "$ref": "#/components/schemas/PositiveCounter"
+          }
+        },
+        "required": []
+      },
+      "OwnerDeliveryHistoryQuery": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "proposal_cursor": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "batch_cursor": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          }
+        },
+        "required": []
       }
     },
     "securitySchemes": {

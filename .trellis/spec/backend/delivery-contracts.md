@@ -12,11 +12,11 @@ Canonical Task Conversation implements source-bound `commit_task_turn` and Owner
 `submit_task_message`, Retry/Withdraw/Stop through the routes in
 [Task Conversation](task-conversation.md). Canonical Node completion implements
 `complete_node(summary, artifact_ids?, handled_guidance_ids?)`; source-aware local
-pre-delivery Cancel is also implemented. Owner Accept, Request Changes and delivery
-Retry remain future product contracts. The paired accepted-operation/input-cutoff
-fields are a guarded internal seam with no public acceptance setter; proposal
-confirmation does not constitute acceptance. The delivery behavior below describes
-requirements for that future implementation, not completed provider integration.
+pre-delivery Cancel is also implemented. Exact Owner Accept, accepted Retry/Cancel
+and zero/one modified automatic GitHub finality follow [Owner delivery](owner-delivery.md).
+Dedicated prepare/confirm/Accept receipts are enforced in SQL; confirmation alone
+is not acceptance. Request Changes/revocation/restoration is the next slice.
+Multi-repository/plain-Git/deferred-mode final delivery remains outside Stage A.
 
 ## 3. Contracts
 

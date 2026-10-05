@@ -3,7 +3,7 @@
   "name": "a-owner-delivery",
   "title": "Exact Owner delivery acceptance",
   "description": "Freeze exact Owner-approved delivery batches and finalize expected-head GitHub delivery.",
-  "status": "planning",
+  "status": "in_progress",
   "dev_type": "fullstack",
   "scope": "delivery",
   "package": "monos",
@@ -21,7 +21,7 @@
   "children": [],
   "parent": "09-28-a-review-delivery",
   "relatedFiles": [],
-  "notes": "Backend/provider convergence READY2026-10-05. User standing autonomous ordered execution authorizes transition. Next: single wire contract freeze, then acceptance persistence/coordinator and provider/Web integration; installed live App remains separate external gate.",
+  "notes": "Integrated leaf acceptance READY 2026-10-05: genuine Owner/real PG authority, preparation/finality/recovery, generated wire and current-built Web pass; source hashes and actual/reused evidence in research/integration-verification.md. Controlled synthetic adapter PR #5 merged once and recovered original lost success. Installed App/coordinator remains a later external gate. Next ordered leaf: review correction/recovery.",
   "meta": {
     "roadmap_level": "leaf",
     "planning_maturity": "implementation_ready"

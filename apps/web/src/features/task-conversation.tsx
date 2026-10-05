@@ -139,6 +139,13 @@ export function TaskConversationView(props: TaskViewProps) {
           .
         </p>
       )}
+      {props.task.accepted_delivery_operation_id && (
+        <p className="task-notice">
+          This result is frozen at conversation sequence {props.task.accepted_delivery_input_cutoff}.
+          Later messages can be answered, but cannot change or pause the accepted delivery.
+          Manage its Retry or Cancel in <a href={`#task?${new URLSearchParams({ task_id: props.task.task_id, section: "overview" })}`}>Overview</a>.
+        </p>
+      )}
       <form
         className="task-composer"
         onSubmit={(e) => {
@@ -161,6 +168,8 @@ export function TaskConversationView(props: TaskViewProps) {
           placeholder={
             terminal
               ? "Ask about the completed history…"
+              : props.task.accepted_delivery_operation_id
+                ? "Ask about the frozen result or clarify later needs…"
               : "Ask a question, clarify requirements or give direction…"
           }
         />
@@ -240,6 +249,12 @@ function InputOperation({
               : item.content
           }
         />
+      )}
+      {item.accepted_delivery_operation_id && (
+        <p className="task-muted">
+          Saved outside accepted delivery {item.accepted_delivery_operation_id}.
+          This input cannot alter its frozen result or block delivery Retry.
+        </p>
       )}
       <div className="task-actions">
         {item.available_actions.map((name) => (

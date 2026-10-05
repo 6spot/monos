@@ -6,7 +6,7 @@ import {GitHubRequestError,githubExpiry,githubSecondaryLimit} from './github.ts'
 import type {GitHub,GitHubCredentials} from './github.ts';
 import {publicationDigest as hash} from './publication-policy.ts';
 
-export type GitHubRemoteProfile='permission'|'observe'|'push'|'review'|'poll';
+export type GitHubRemoteProfile='permission'|'observe'|'push'|'review'|'poll'|'readiness'|'merge'|'reconcile';
 export interface GitHubRemoteScope {resource_id:string;repository_identity:string;repository_id:string;remote_url:string;config?:GitHubCredentials;workflow_changes:boolean}
 export interface GitHubRemoteGrant {token:string;expires_at:string;repository_id:string;permissions:Record<string,'read'|'write'>}
 export type AcquireGitHubRemoteGrant=(scope:GitHubRemoteScope,profile:GitHubRemoteProfile)=>Promise<GitHubRemoteGrant>;
@@ -23,7 +23,7 @@ const oid=(v:unknown):v is string=>typeof v==='string'&&/^(?:[0-9a-f]{40}|[0-9a-
 const positive=(v:unknown):v is number=>typeof v==='number'&&Number.isSafeInteger(v)&&v>0;
 function invalid():never {throw new RemoteProviderError('invalid_provider_response');}
 function object(value:unknown):Record<string,unknown> {if(!value||typeof value!=='object'||Array.isArray(value))invalid();return value as Record<string,unknown>;}
-export const remoteProfile=(scope:GitHubRemoteScope,profile:GitHubRemoteProfile):Record<string,'read'|'write'>=>profile==='permission'||profile==='push'?{contents:'write',metadata:'read',...(scope.workflow_changes?{workflows:'write' as const}:{})}:profile==='review'?{contents:'read',metadata:'read',pull_requests:'write'}:profile==='poll'?{contents:'read',metadata:'read',pull_requests:'read',checks:'read',statuses:'read'}:{contents:'read',metadata:'read'};
+export const remoteProfile=(scope:GitHubRemoteScope,profile:GitHubRemoteProfile):Record<string,'read'|'write'>=>profile==='merge'?{contents:'write',metadata:'read'}:profile==='readiness'?{contents:'read',metadata:'read',pull_requests:'read',checks:'read',statuses:'read',administration:'read'}:profile==='reconcile'?{contents:'read',metadata:'read',pull_requests:'read'}:profile==='permission'||profile==='push'?{contents:'write',metadata:'read',...(scope.workflow_changes?{workflows:'write' as const}:{})}:profile==='review'?{contents:'read',metadata:'read',pull_requests:'write'}:profile==='poll'?{contents:'read',metadata:'read',pull_requests:'read',checks:'read',statuses:'read'}:{contents:'read',metadata:'read'};
 
 export class GitHubRemote {
  readonly fetcher:typeof fetch;readonly acquireGrant:AcquireGitHubRemoteGrant;

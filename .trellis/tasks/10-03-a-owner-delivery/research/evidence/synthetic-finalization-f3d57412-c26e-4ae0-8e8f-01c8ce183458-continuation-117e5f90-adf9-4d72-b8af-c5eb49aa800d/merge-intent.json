@@ -1,0 +1,83 @@
+{
+  "operation_id": "9ec1ab2a-4ca4-47da-95b1-234d50c92bfd",
+  "intent": {
+    "item_id": "2a653600-0f41-4d10-8b9b-aab16f3c7f10",
+    "delivery_ref": "refs/heads/monos/task/f3d57412-c26e-4ae0-8e8f-01c8ce183458/f0a8cf21-1052-45d6-91d6-2ecd4a0d704a",
+    "target_branch": "main",
+    "kind": "update_pr",
+    "review": {
+      "repository_id": "1393178791",
+      "pr_id": "4741530001",
+      "pr_number": 5,
+      "url": "https://github.com/6spot/monolab-feasibility-20260928-160020-public/pull/5",
+      "head_ref": "monos/task/f3d57412-c26e-4ae0-8e8f-01c8ce183458/f0a8cf21-1052-45d6-91d6-2ecd4a0d704a",
+      "base_ref": "main",
+      "marker": "<!-- monos-delivery-item:2a653600-0f41-4d10-8b9b-aab16f3c7f10 -->",
+      "state": "open"
+    },
+    "accepted_head": "66cd67d5bf8b7d4526b4e6c1c152dbddd7b1c422"
+  },
+  "method": "merge",
+  "possible_effect": true,
+  "before": {
+    "review": {
+      "repository_id": "1393178791",
+      "pr_id": "4741530001",
+      "pr_number": 5,
+      "url": "https://github.com/6spot/monolab-feasibility-20260928-160020-public/pull/5",
+      "head_ref": "monos/task/f3d57412-c26e-4ae0-8e8f-01c8ce183458/f0a8cf21-1052-45d6-91d6-2ecd4a0d704a",
+      "base_ref": "main",
+      "marker": "<!-- monos-delivery-item:2a653600-0f41-4d10-8b9b-aab16f3c7f10 -->",
+      "state": "open"
+    },
+    "head": "66cd67d5bf8b7d4526b4e6c1c152dbddd7b1c422",
+    "base_head": "9ac3353e97ed6a0cb96a80bb8e136d44cac982e4",
+    "content_digest": "d99e1fbf7d3adb61979622cab5df454282973e90492a0be0af97f89d29f7d3fa",
+    "mergeability": "mergeable",
+    "draft": false,
+    "merged": false,
+    "merged_at": null,
+    "final_head": null,
+    "test_head": "379d35b55f3f5ca8329e393cc75cf9b2ecd56f91",
+    "observed_at": "2026-10-05T07:27:17.617Z"
+  },
+  "after": {
+    "review": {
+      "repository_id": "1393178791",
+      "pr_id": "4741530001",
+      "pr_number": 5,
+      "url": "https://github.com/6spot/monolab-feasibility-20260928-160020-public/pull/5",
+      "head_ref": "monos/task/f3d57412-c26e-4ae0-8e8f-01c8ce183458/f0a8cf21-1052-45d6-91d6-2ecd4a0d704a",
+      "base_ref": "main",
+      "marker": "<!-- monos-delivery-item:2a653600-0f41-4d10-8b9b-aab16f3c7f10 -->",
+      "state": "open"
+    },
+    "head": "66cd67d5bf8b7d4526b4e6c1c152dbddd7b1c422",
+    "base_head": "9ac3353e97ed6a0cb96a80bb8e136d44cac982e4",
+    "content_digest": "d99e1fbf7d3adb61979622cab5df454282973e90492a0be0af97f89d29f7d3fa",
+    "mergeability": "mergeable",
+    "draft": false,
+    "merged": false,
+    "merged_at": null,
+    "final_head": null,
+    "test_head": "379d35b55f3f5ca8329e393cc75cf9b2ecd56f91",
+    "observed_at": "2026-10-05T07:27:19.588Z"
+  },
+  "policy": {
+    "repository_id": "1393178791",
+    "target_branch": "main",
+    "protected": true,
+    "strict": false,
+    "linear_history": false,
+    "requirements": [
+      {
+        "context": "monolab/probe",
+        "app_id": null
+      }
+    ],
+    "supported": true,
+    "reason": "supported",
+    "digest": "9a40cb654c8659b4fb9bab71eb8ca63cfd6b0ffa7a3990b32c85df0af0446f97",
+    "observed_at": "2026-10-05T07:27:18.417Z"
+  }
+}
