@@ -104,7 +104,7 @@ suite('Durable local publication',()=>{
    expect((await x.db.pool.query('SELECT count(*) n FROM delivery_operations')).rows[0]!.n).toBe('4');
   }finally{await x.close();}
  },30000);
- it('upgrades actual version21 PostgreSQL with untouched checksums through additive version23',async()=>{
+ it('upgrades populated version21 PostgreSQL to version25 without changing prior checksums or Task revision history',async()=>{
   const url=new URL(process.env.DATABASE_URL!),admin=database(url.toString()),namespace='publication_upgrade_'+randomUUID().replaceAll('-','');
   await admin.pool.query(`CREATE SCHEMA ${namespace}`);url.searchParams.set('options',`-c search_path=${namespace}`);const db=database(url.toString());
   try {
@@ -112,7 +112,12 @@ suite('Durable local publication',()=>{
    const directory=new URL('../../../packages/db/migrations/',import.meta.url),names=(await readdir(directory)).filter(n=>/^00(?:0[1-9]|1[0-9]|2[01])_.*\.sql$/.test(n)).sort();
    expect(names).toHaveLength(21);
    await transaction(db,async tx=>{for(const [i,name] of names.entries()){const sql=await readFile(new URL(name,directory),'utf8');await tx.query(sql);await tx.query('INSERT INTO schema_migrations VALUES($1,$2)',[i+1,createHash('sha256').update(sql).digest('hex')]);}});
-   await migrate(db);await migrate(db);expect((await db.pool.query('SELECT version FROM schema_migrations ORDER BY version DESC LIMIT 1')).rows[0]!.version).toBe(23);
+   await transaction(db,tx=>initializeTask(tx,{task_id:randomUUID(),specification_id:randomUUID(),specification:'Retained pre-delivery Task'}));
+   const versions=(await db.pool.query('SELECT * FROM schema_migrations ORDER BY version')).rows;
+   const tasks=(await db.pool.query('SELECT * FROM tasks')).rows,revisions=(await db.pool.query('SELECT * FROM specification_revisions')).rows;
+   await migrate(db);await migrate(db);expect((await db.pool.query('SELECT version FROM schema_migrations ORDER BY version DESC LIMIT 1')).rows[0]!.version).toBe(25);
+   expect((await db.pool.query('SELECT * FROM schema_migrations ORDER BY version')).rows.slice(0,21)).toEqual(versions);
+   expect((await db.pool.query('SELECT * FROM tasks')).rows).toEqual(tasks);expect((await db.pool.query('SELECT * FROM specification_revisions')).rows).toEqual(revisions);
    expect((await db.pool.query('SELECT * FROM delivery_operations')).rows).toEqual([]);
   }finally{await db.pool.end();await admin.pool.query(`DROP SCHEMA ${namespace} CASCADE`);await admin.pool.end();}
  },30000);
