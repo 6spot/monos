@@ -72,4 +72,4 @@ capacity release without actual existing physical settlement.
 - [x] Six criteria have actual/current or explicitly reused evidence with limits.
 - [x] Independent integrated review resolved; changed inputs match validation.
 - [x] Scoped work commit `5c26071`; archived after independent READY.
-- [ ] Record session journal, then begin ordered installed combined gate.
+- [x] Session journal recorded; proceed to ordered installed combined gate planning.

@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 30
-- **Last Active**: 2026-10-05
+- **Total Sessions**: 31
+- **Last Active**: 2026-10-07
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~752 | Active |
+| `journal-1.md` | ~788 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 31 | 2026-10-07 | Guarded review correction and original-effect recovery | `5c26071` | `feat/stage-a-boundary-probe` |
 | 30 | 2026-10-05 | Exact Owner delivery accepted | `c0212a9` | `feat/stage-a-boundary-probe` |
 | 29 | 2026-10-05 | Automatic GitHub review preparation accepted | `a53901a`, `4b37552` | `feat/stage-a-boundary-probe` |
 | 28 | 2026-10-04 | Controlled local publication candidate acceptance | `1ad5735` | `feat/stage-a-boundary-probe` |

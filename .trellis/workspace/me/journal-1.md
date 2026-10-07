@@ -750,3 +750,39 @@ Completed and archived the exact Owner delivery leaf; continuing ordered correct
 ### Next Steps
 
 - Continue 10-03-a-review-correction, then combined installed acceptance; preserve external App gate and unrelated framework edits.
+
+
+## Session 31: Guarded review correction and original-effect recovery
+<!-- trellis-session: v=2 fp=039cc0ba562581ac -->
+
+**Date**: 2026-10-07
+**Task**: Guarded review correction and original-effect recovery
+**Branch**: `feat/stage-a-boundary-probe`
+
+### Summary
+
+Completed and independently accepted all six correction criteria; preserved source/input/effect truth and reduced repeated verification to affected checks.
+
+### Main Changes
+
+- Exact Owner correction and immutable revocation; genuine review sources, late-input reconsideration, explicit exits and original push ACK recovery.
+- Specs, scoped work commit and archive complete; unrelated framework changes preserved.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `5c26071` | feat: route guarded review correction |
+
+### Testing
+
+- [OK] 27 real PostgreSQL cases passed, plus one affected input Replan rerun; populated 24-to-25 upgrade, 4 valid browser behaviors, 6 inspected images and exact schema cleanup.
+- [OK] Build, current scoped lint/type checks and affected Go checks passed; unchanged protocol/domain/Web API and native/provider evidence reused within limits.
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- Refine and execute 10-03-a-delivery-acceptance: exact installed candidate, preserved services/history, real GitHub App prerequisites and ordinary native correction/delivery.
