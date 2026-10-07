@@ -27,7 +27,7 @@ export async function frozenDeliveryRepository(
   const batch = (await tx.query<DeliveryBatchRecord>('SELECT * FROM owner_delivery_batches WHERE id=$1 AND task_id=$2', [task.accepted_delivery_operation_id, item.task_id])).rows[0];
   if (!batch) throw new RemoteAdmissionError('identity_mismatch');
   await assertDeliveryBatchAuthority(tx, batch);
-  if (task.state !== 'REVIEW' || ['cancelled', 'completed'].includes(batch.status)) throw new RemoteAdmissionError('cancel_requested');
+  if (task.state !== 'REVIEW' || ['cancelled', 'completed', 'revoked'].includes(batch.status)) throw new RemoteAdmissionError('cancel_requested');
   const manifest = validate<DeliveryAcceptanceManifest>('DeliveryAcceptanceManifest', batch.manifest);
   if (manifest.task_id !== item.task_id || hash(manifest) !== batch.content_digest || task.specification_id !== manifest.basis.specification_id || task.plan_id !== manifest.basis.plan_id || Number(task.accepted_delivery_input_cutoff) !== Number(batch.input_cutoff)) throw new RemoteAdmissionError('source_changed');
   const repository = manifest.repositories.find(r => r.resource_id === item.resource_id);
@@ -72,6 +72,12 @@ export async function remoteSourceAdmission(tx: Transaction, item: Pick<RemoteIt
 }
 
 export async function remoteAdmissionForOperation(tx: Transaction, item: RemoteItem, request: PublicationPrepareRequest, result: PublicationResult, operationId?: string): Promise<PublicationOverrideProof[]> {
+  // A retained accepted operation never acquires ordinary authority when its
+  // Task pointer is cleared, withdrawn, or replaced by a fresh acceptance.
+  if (operationId && (await tx.query(`SELECT 1 FROM owner_delivery_preparation_links l
+    JOIN owner_delivery_batches b ON b.id=l.batch_id JOIN tasks t ON t.id=b.task_id
+    WHERE l.operation_id=$1 AND (b.status IN ('revoked','cancelled','completed')
+      OR t.accepted_delivery_operation_id IS DISTINCT FROM b.id) LIMIT 1`, [operationId])).rowCount) throw new RemoteAdmissionError('cancel_requested');
   const accepted = await frozenDeliveryRepository(tx, item, request, result);
   if (!accepted) return ordinaryRemoteAdmission(tx, item, request, result, operationId);
   if (item.cancel_requested) throw new RemoteAdmissionError('cancel_requested');

@@ -16,14 +16,14 @@ export class ProtocolVersionError extends Error {}
 export class ProtocolValidationError extends Error {}
 
 export function validate<T>(name: string, value: unknown): T {
-  if (['Frame', 'CommandEnvelope', 'OwnerCommand', 'OwnerDeliveryCommand', 'OwnerLogin', 'ConfigurationCommand', 'TodoCommand', 'DiscussionCommand', 'TaskPreviewCommand'].includes(name) && value && typeof value === 'object' && 'schema_version' in value && value.schema_version !== 1) throw new ProtocolVersionError('Unsupported schema version');
+  if (['Frame', 'CommandEnvelope', 'OwnerCommand', 'OwnerDeliveryCommand', 'OwnerReviewCommand', 'OwnerLogin', 'ConfigurationCommand', 'TodoCommand', 'DiscussionCommand', 'TaskPreviewCommand'].includes(name) && value && typeof value === 'object' && 'schema_version' in value && value.schema_version !== 1) throw new ProtocolVersionError('Unsupported schema version');
   let validator = validators.get(name);
   if (!validator) {
     validator = ajv.compile({ $ref: `${schema.$id}#/definitions/${name}` });
     validators.set(name, validator);
   }
   if (!validator(value)) throw new ProtocolValidationError(`Invalid ${name}: ${ajv.errorsText(validator.errors, { dataVar: 'body' })}`);
-  if (name.startsWith('Delivery') || name.startsWith('OwnerDelivery')) {
+  if (name.startsWith('Delivery') || name.startsWith('OwnerDelivery') || name.startsWith('OwnerReview') || name.startsWith('Review') || name.startsWith('TaskReview')) {
     if (new TextEncoder().encode(JSON.stringify(value)).length > MAX_DELIVERY_BYTES) throw new ProtocolValidationError(`${name} exceeds the encoded wire byte limit`);
     resultBytes(value);
   }

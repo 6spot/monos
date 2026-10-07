@@ -1,3 +1,4 @@
+import {handleReviewCommand,assertReviewSource} from './task-review-sources.ts';
 import type { SpecificationTask } from './task-specification-state.ts';
 import { liveReplanAuthority, handleReplanCommand, requestReplan } from './task-replan-state.ts';
 import { specificationFrozen } from './task-specification-state.ts';
@@ -80,6 +81,7 @@ async function taskEvent(tx: Transaction, attempt: AttemptRow, kind: string, bod
 
 async function missingFormalOutcome(tx: Transaction, attempt: AttemptRow, observation: string, exitCode?: number): Promise<void> {
   if (!attempt.mutation_allowed) return;
+  if(attempt.launch.task_review_source){await tx.query("UPDATE attempts SET mutation_allowed=false,state='FAILED',end_reason='missing_formal_outcome' WHERE id=$1",[attempt.id]);await tx.query("UPDATE task_review_sources SET done=true,waiting_reason='missing_formal_outcome' WHERE id=$1",[attempt.launch.task_review_source.source_id]);await tx.query("UPDATE task_review_operations SET status='failed',reason='missing_formal_outcome' WHERE source_id=$1 AND status IN('queued','running')",[attempt.launch.task_review_source.source_id]);await admitEffect(tx,attempt,'stop',randomUUID());return;}
   if(attempt.launch.task_replan_source){await tx.query("UPDATE attempts SET mutation_allowed=false,state='FAILED',end_reason='missing_formal_outcome' WHERE id=$1",[attempt.id]);await tx.query("UPDATE replan_sources SET done=true,waiting_reason='missing_formal_outcome' WHERE id=$1",[attempt.launch.task_replan_source.source_id]);await admitEffect(tx,attempt,'stop',randomUUID());return;}
   if(attempt.launch.task_conversation_source){
     await tx.query("UPDATE attempts SET mutation_allowed=false,state='FAILED',end_reason='missing_formal_outcome' WHERE id=$1",[attempt.id]);
@@ -246,6 +248,14 @@ export class BoundaryService {
       }
       if (!task) throw new CommandError('denied_scope', 'Attempt owner is missing');
       if (command.name === 'commit_discussion_turn' || command.name === 'read_discussion' || command.name === 'update_working_requirement_state') throw new CommandError('denied_scope', 'Todo command requires Todo Planner authority');
+      if(attempt.launch.task_review_source){
+        guardNewCommand(command,{kind:attempt.kind,taskId:task.id,taskReview:true,mutationAllowed:attempt.mutation_allowed,processReleased:attempt.process_released,controlVersion:Number(task.control_version),sourceWatermark:0,connectionAvailable:runner.available&&runner.connection_instance===this.instanceId});
+        await assertReviewSource(tx,task.id,attempt.launch.task_review_source,attempt.id,attempt.launch.prompt);
+        if(command.name!=='inspect_repository'){
+         const outcome=await handleReviewCommand(tx,task,attempt,command),response:CommandResult={schema_version:1,request_id:command.request_id,status:'committed',result:outcome.result,...(outcome.operation_id?{operation_id:outcome.operation_id}:{})};validate('CommandResult',response);
+         await tx.query('INSERT INTO command_receipts(attempt_id,scope_id,request_id,command_name,digest,schema_version,envelope_json,response,operation_id) VALUES($1,$2,$3,$4,$5,1,$6,$7,$8)',[attempt.id,task.id,command.request_id,command.name,submission.sha256,submission.envelope_json,response,outcome.operation_id??null]);this.options.beforeAdmissionCommit?.();return response;
+        }
+      }
       if(attempt.launch.task_conversation_source){
         const current=(await tx.query<{conversation_version:string}>('SELECT conversation_version FROM tasks WHERE id=$1',[task.id])).rows[0]!;
         guardNewCommand(command,{kind:attempt.kind,taskId:task.id,taskConversation:true,mutationAllowed:attempt.mutation_allowed,processReleased:attempt.process_released,controlVersion:Number(current.conversation_version),sourceWatermark:attempt.launch.source_watermark,connectionAvailable:runner.available&&runner.connection_instance===this.instanceId});
@@ -456,7 +466,7 @@ export class BoundaryService {
       if (event.kind === 'capture_failed' && !attempt.process_released) {
         const completion = (await tx.query("SELECT 1 FROM operations WHERE attempt_id=$1 AND kind='complete_node'", [attempt.id])).rowCount;
         if (!completion && attempt.mutation_allowed) {
-          if(attempt.launch.task_conversation_source||attempt.launch.task_replan_source){
+          if(attempt.launch.task_review_source||attempt.launch.task_conversation_source||attempt.launch.task_replan_source){
             await missingFormalOutcome(tx,attempt,'capture_failed');
             await tx.query("UPDATE attempts SET end_reason='capture_failed' WHERE id=$1",[attempt.id]);
           } else if (attempt.todo_id) {

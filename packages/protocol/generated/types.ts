@@ -34,7 +34,7 @@ export interface CommandEnvelope {
     scope_id:                 string;
 }
 
-export type CommandEnvelopeName = "open_workspace" | "inspect_repository" | "complete_node" | "commit_task_turn" | "commit_discussion_turn" | "read_discussion" | "update_working_requirement_state" | "publish_execution_plan" | "raise_planning_issue" | "publish_artifact" | "read_artifact" | "block_node" | "read_task_context" | "read_task_history" | "prepare_specification_revision" | "apply_specification_revision" | "request_replan" | "prepare_replan";
+export type CommandEnvelopeName = "open_workspace" | "inspect_repository" | "complete_node" | "commit_task_turn" | "commit_discussion_turn" | "read_discussion" | "update_working_requirement_state" | "publish_execution_plan" | "raise_planning_issue" | "publish_artifact" | "read_artifact" | "block_node" | "read_task_context" | "read_task_history" | "prepare_specification_revision" | "apply_specification_revision" | "request_replan" | "prepare_replan" | "apply_review_rework" | "commit_review_feedback" | "resolve_review_input";
 
 export interface CommandPayload {
     artifact_id?:               string;
@@ -43,10 +43,14 @@ export interface CommandPayload {
     confirmation_id?:           string;
     content?:                   ArtifactContent;
     cursor?:                    string;
+    feedback_id?:               string;
     handled_guidance_ids?:      string[];
     impact?:                    Impact;
     input_id?:                  string;
+    node_ids?:                  [string, ...string[]];
     nodes?:                     [ExecutionPlanNode, ...ExecutionPlanNode[]];
+    operation_id?:              string;
+    operation_version?:         number;
     plan_id?:                   string;
     planning_intent_id?:        string;
     project_context_digest?:    string;
@@ -54,6 +58,7 @@ export interface CommandPayload {
     proposal_id?:               string;
     query?:                     string;
     reason?:                    string;
+    reconsideration_id?:        string;
     references?:                ArtifactReference[];
     replan_request_id?:         string;
     reply?:                     string;
@@ -473,6 +478,7 @@ export interface Dispatch {
     task_id?:                  string;
     task_planning_source?:     TaskPlanningSource;
     task_replan_source?:       TaskReplanSource;
+    task_review_source?:       TaskReviewSource;
     todo_id?:                  string;
     workspace_reservations?:   WorkspaceReservations;
 }
@@ -518,6 +524,23 @@ export interface TaskReplanSource {
     source_id:        string;
     specification_id: string;
 }
+
+export interface TaskReviewSource {
+    context_digest:       string;
+    control_version:      number;
+    feedback_id:          string;
+    input_id?:            string;
+    operation_id:         string;
+    operation_version:    number;
+    plan_id:              string;
+    purpose:              TaskReviewSourcePurpose;
+    reconsideration_id?:  string;
+    review_result_digest: string;
+    source_id:            string;
+    specification_id:     string;
+}
+
+export type TaskReviewSourcePurpose = "route_feedback" | "reconsider_input";
 
 export interface WorkspaceReservations {
     configuration_version: number;
@@ -2327,6 +2350,8 @@ export interface RequirementProposalDetail {
     predecessor_id:       null | string;
     proposal:             RequirementProposalSummary;
     replan_source_id?:    null | string;
+    review_operation_id?: string;
+    review_source_id?:    string;
     schema_version:       number;
     source_id:            null | string;
     source_input_ids:     string[];
@@ -2424,20 +2449,23 @@ export interface TaskReplanCommand {
 export type TaskReplanCommandName = "confirm_replan" | "publish_replan" | "dismiss_replan" | "retry_replan" | "defer_replan_inputs";
 
 export interface TaskReplanResult {
-    confirmation_id?:             string;
-    content_digest?:              string;
-    operation_id?:                string;
-    plan_id?:                     string;
-    proposal_id?:                 string;
-    publication_id?:              string;
-    replan_request_id?:           string;
-    request_id:                   string;
-    requirement_confirmation_id?: string;
-    requirement_proposal_id?:     string;
-    schema_version:               number;
-    specification_id?:            string;
-    status:                       ConfigurationResultStatus;
-    version?:                     number;
+    confirmation_id?:                 string;
+    content_digest?:                  string;
+    operation_id?:                    string;
+    plan_id?:                         string;
+    proposal_id?:                     string;
+    publication_id?:                  string;
+    replan_request_id?:               string;
+    request_id:                       string;
+    requirement_confirmation_id?:     string;
+    requirement_proposal_id?:         string;
+    review_feedback_id?:              string;
+    review_operation_id?:             string;
+    review_predecessor_operation_id?: string;
+    schema_version:                   number;
+    specification_id?:                string;
+    status:                           ConfigurationResultStatus;
+    version?:                         number;
 }
 
 export interface TaskReplanStatus {
@@ -2449,20 +2477,23 @@ export interface TaskReplanStatus {
 }
 
 export interface ReplanRequestSummary {
-    direction:            null | string;
-    id:                   string;
-    input_id:             null | string;
-    issue_id:             null | string;
-    origin_activation:    number | null;
-    origin_node_id:       null | string;
-    physical_settled:     boolean;
-    proposal_id:          null | string;
-    reason:               string;
-    requester_blocker_id: null | string;
-    source_id:            null | string;
-    status:               ReplanRequestSummaryStatus;
-    task_id:              string;
-    version:              number;
+    direction:                        null | string;
+    id:                               string;
+    input_id:                         null | string;
+    issue_id:                         null | string;
+    origin_activation:                number | null;
+    origin_node_id:                   null | string;
+    physical_settled:                 boolean;
+    proposal_id:                      null | string;
+    reason:                           string;
+    requester_blocker_id:             null | string;
+    review_feedback_id?:              string;
+    review_operation_id?:             string;
+    review_predecessor_operation_id?: string;
+    source_id:                        null | string;
+    status:                           ReplanRequestSummaryStatus;
+    task_id:                          string;
+    version:                          number;
 }
 
 export type ReplanRequestSummaryStatus = "pending" | "published" | "dismissed" | "cancelled";
@@ -2758,12 +2789,12 @@ export interface PublicationPermissionResult {
 export interface PublicationAccessRequest {
     attempt_id:     string;
     incarnation:    number;
-    purpose:        Purpose;
+    purpose:        PublicationAccessRequestPurpose;
     request_digest: string;
     schema_version: number;
 }
 
-export type Purpose = "observe" | "push";
+export type PublicationAccessRequestPurpose = "observe" | "push";
 
 export interface PublicationAccessResult {
     attempt_id:               string;
@@ -2777,7 +2808,7 @@ export interface PublicationAccessResult {
     operation_id:             string;
     permission_proof?:        PublicationPermissionProof;
     permission_proof_digest?: string;
-    purpose:                  Purpose;
+    purpose:                  PublicationAccessRequestPurpose;
     remote_url:               string;
     repository_id:            string;
     request_digest:           string;
@@ -3135,6 +3166,7 @@ export interface DeliveryBatch {
     items:                DeliveryItemProgress[];
     manifest:             DeliveryAcceptanceManifest;
     proposal_id:          string;
+    revocation?:          Revocation;
     schema_version:       number;
     task_id:              string;
 }
@@ -3153,7 +3185,7 @@ export interface DeliveryBatchSummary {
     version:         number;
 }
 
-export type DeliveryBatchSummaryStatus = "active" | "waiting" | "failed" | "reconciling" | "attention" | "completed" | "cancelled";
+export type DeliveryBatchSummaryStatus = "active" | "waiting" | "failed" | "reconciling" | "attention" | "completed" | "cancelled" | "revoked";
 
 export interface DeliveryItemProgress {
     accepted_head:     string;
@@ -3169,6 +3201,7 @@ export interface DeliveryItemProgress {
     operation_kind?:   OperationKindEnum;
     operation_state?:  OperationState;
     reason?:           string;
+    reconciliation?:   Reconciliation;
     resource_id:       string;
     review?:           RemotePreparationReview;
     status:            DeliveryItemProgressStatus;
@@ -3181,7 +3214,16 @@ export type OperationKindEnum = "push" | "create_pr" | "update_pr" | "close_pr" 
 
 export type OperationState = "pending" | "started" | "unknown" | "failed" | "succeeded" | "cancelled";
 
-export type DeliveryItemProgressStatus = "pending" | "preparing" | "waiting_checks" | "ready" | "merging" | "reconciling" | "failed" | "attention" | "finalized" | "cancelled";
+export type Reconciliation = "none" | "waiting_original_merge" | "waiting_preparation" | "pending_close" | "closed" | "externally_merged" | "not_needed" | "attention";
+
+export type DeliveryItemProgressStatus = "pending" | "preparing" | "waiting_checks" | "ready" | "merging" | "reconciling" | "failed" | "attention" | "finalized" | "cancelled" | "revoked";
+
+export interface Revocation {
+    feedback_id:   string;
+    request_id:    string;
+    revocation_id: string;
+    settled:       boolean;
+}
 
 export interface OwnerDeliveryStatus {
     accept_allowed:                  boolean;
@@ -3211,3 +3253,231 @@ export interface OwnerDeliveryHistoryQuery {
     batch_cursor?:    string;
     proposal_cursor?: string;
 }
+
+export interface TaskReviewManifest {
+    outputs:              [DeliveryOutputEvidence, ...DeliveryOutputEvidence[]];
+    plan_digest:          string;
+    plan_id:              string;
+    schema_version:       number;
+    specification_digest: string;
+    specification_id:     string;
+    task_id:              string;
+}
+
+export interface OwnerReviewCommand {
+    name:           OwnerReviewCommandName;
+    payload:        OwnerReviewPayload;
+    request_id:     string;
+    schema_version: number;
+    task_id:        string;
+}
+
+export type OwnerReviewCommandName = "request_changes" | "retry_review_feedback" | "withdraw_review_feedback" | "retry_review_input" | "withdraw_review_input";
+
+export interface OwnerReviewPayload {
+    accepted_batch?:     ReviewAcceptedBatch;
+    answer?:             string;
+    basis?:              TaskReviewBasis;
+    expected_version?:   number;
+    feedback_id?:        string;
+    issue_id?:           string;
+    operation_id?:       string;
+    reconsideration_id?: string;
+    text?:               string;
+}
+
+export interface ReviewAcceptedBatch {
+    content_digest:   string;
+    expected_version: number;
+    operation_id:     string;
+}
+
+export interface TaskReviewBasis {
+    control_version:      number;
+    plan_id:              string;
+    review_result_digest: string;
+    specification_id:     string;
+}
+
+export interface OwnerReviewCommandResult {
+    feedback_id?:          string;
+    name?:                 OwnerReviewCommandName;
+    operation_id?:         string;
+    operation_version?:    number;
+    reconsideration_id?:   string;
+    request_id:            string;
+    review_result_digest?: string;
+    revoked_batch?:        ReviewRevokedBatch;
+    schema_version:        number;
+    status:                ConfigurationResultStatus;
+    task_id:               string;
+}
+
+export interface ReviewRevokedBatch {
+    content_digest:    string;
+    input_cutoff:      number;
+    operation_id:      string;
+    operation_version: number;
+    revocation_id:     string;
+}
+
+export interface OwnerReviewHistoryQuery {
+    feedback_cursor?: string;
+    input_cursor?:    string;
+}
+
+export interface OwnerReviewStatus {
+    accepted_batch?:         ReviewAcceptedBatch;
+    basis:                   TaskReviewBasis | null;
+    feedback:                ReviewFeedbackSummary | null;
+    history:                 ReviewFeedbackSummary[];
+    history_has_more:        boolean;
+    history_next_cursor?:    string;
+    inputs:                  ReviewInputSummary[];
+    inputs_has_more:         boolean;
+    inputs_next_cursor?:     string;
+    reason?:                 string;
+    request_changes_allowed: boolean;
+    schema_version:          number;
+    task_id:                 string;
+}
+
+export interface ReviewFeedbackSummary {
+    created_at:           string;
+    feedback_id:          string;
+    operation:            ReviewOperationSummary;
+    review_result_digest: string;
+    status:               ReviewFeedbackSummaryStatus;
+}
+
+export interface ReviewOperationSummary {
+    feedback_id:               string;
+    input_id?:                 string;
+    issue_id?:                 string;
+    operation_id:              string;
+    operation_version:         number;
+    predecessor_operation_id?: string;
+    previous_source_id?:       string;
+    purpose:                   TaskReviewSourcePurpose;
+    reason?:                   string;
+    reconsideration_id?:       string;
+    replan_request_id?:        string;
+    requirement_proposal_id?:  string;
+    retry_allowed:             boolean;
+    settlement_pending:        boolean;
+    source_id?:                string;
+    status:                    ReviewOperationSummaryStatus;
+    withdraw_allowed:          boolean;
+}
+
+export type ReviewOperationSummaryStatus = "settling" | "queued" | "running" | "issue" | "failed" | "rework" | "replan" | "requirement" | "withdrawn" | "cancelled" | "resolved";
+
+export type ReviewFeedbackSummaryStatus = "active" | "resolved" | "withdrawn" | "cancelled";
+
+export interface ReviewInputSummary {
+    accepted_batch_id:  string;
+    input_id:           string;
+    operation:          ReviewOperationSummary;
+    original_reply_id?: string;
+    reconsideration_id: string;
+    sequence:           number;
+    status:             ReviewInputSummaryStatus;
+}
+
+export type ReviewInputSummaryStatus = "pending" | "resolved" | "transferred" | "withdrawn" | "cancelled";
+
+export interface OwnerReviewDetailQuery {
+    decision_cursor?: string;
+}
+
+export interface ReviewFeedbackDetail {
+    basis:                  TaskReviewBasis;
+    decisions:              ReviewDecisionSummary[];
+    decisions_has_more:     boolean;
+    decisions_next_cursor?: string;
+    feedback:               ReviewFeedbackSummary;
+    request_id:             string;
+    revoked_batch?:         ReviewRevokedBatch;
+    schema_version:         number;
+    task_id:                string;
+    text:                   string;
+}
+
+export interface ReviewDecisionSummary {
+    created_at:        string;
+    has_answer:        boolean;
+    name:              ReviewDecisionSummaryName;
+    operation_id:      string;
+    operation_version: number;
+    request_id:        string;
+}
+
+export type ReviewDecisionSummaryName = "request_changes" | "retry_review_feedback" | "withdraw_review_feedback" | "retry_review_input" | "withdraw_review_input" | "dismiss_replan" | "cancel_task" | "cancel_delivery";
+
+export interface ReviewOperationDetail {
+    basis:              TaskReviewBasis;
+    issue?:             ReviewIssue;
+    operation:          ReviewOperationSummary;
+    schema_version:     number;
+    source?:            TaskReviewSource;
+    stop_operation_ids: string[];
+    task_id:            string;
+}
+
+export interface ReviewIssue {
+    issue_id:  string;
+    reason:    string;
+    source_id: string;
+    version:   number;
+}
+
+export interface ApplyReviewRework {
+    basis:             ReviewActionBasis;
+    feedback_id:       string;
+    node_ids:          [string, ...string[]];
+    operation_id:      string;
+    operation_version: number;
+    reason:            string;
+    source_id:         string;
+}
+
+export interface ReviewActionBasis {
+    control_version:  number;
+    plan_id:          string;
+    specification_id: string;
+}
+
+export interface CommitReviewFeedback {
+    basis:             ReviewActionBasis;
+    feedback_id:       string;
+    operation_id:      string;
+    operation_version: number;
+    proposal_id:       string;
+    source_id:         string;
+}
+
+export interface ResolveReviewInput {
+    basis:              ReviewActionBasis;
+    feedback_id:        string;
+    operation_id:       string;
+    operation_version:  number;
+    reconsideration_id: string;
+    routing:            ReviewInputRouting;
+    source_id:          string;
+    summary:            string;
+}
+
+export interface ReviewInputRouting {
+    basis?:            TaskActionBasis;
+    expected_version?: number;
+    issue_sequence?:   number;
+    kind:              ReviewInputRoutingKind;
+    operation_id?:     string;
+    proposal_id?:      string;
+    supersedes?:       string;
+    target_id?:        string;
+    target_kind?:      TargetKind;
+    text?:             string;
+}
+
+export type ReviewInputRoutingKind = "reply" | "guidance" | "issue" | "answer" | "resolve_guidance" | "specification_proposal" | "replan";

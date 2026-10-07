@@ -22,6 +22,7 @@ import {
   useTaskRead,
 } from "./task-shared.tsx";
 import type { TaskViewProps } from "./task-shared.tsx";
+import { ReviewConversationNotice } from "./review-correction.tsx";
 
 export function TaskConversationView(props: TaskViewProps) {
   const [search, setSearch] = useState("");
@@ -146,6 +147,7 @@ export function TaskConversationView(props: TaskViewProps) {
           Manage its Retry or Cancel in <a href={`#task?${new URLSearchParams({ task_id: props.task.task_id, section: "overview" })}`}>Overview</a>.
         </p>
       )}
+      <ReviewConversationNotice {...props} />
       <form
         className="task-composer"
         onSubmit={(e) => {
@@ -252,8 +254,9 @@ function InputOperation({
       )}
       {item.accepted_delivery_operation_id && (
         <p className="task-muted">
-          Saved outside accepted delivery {item.accepted_delivery_operation_id}.
-          This input cannot alter its frozen result or block delivery Retry.
+          Originally saved outside accepted delivery {item.accepted_delivery_operation_id}.
+          Its frozen evidence and original reply remain history. After revocation,
+          manage any separate reconsideration decision in Overview.
         </p>
       )}
       <div className="task-actions">

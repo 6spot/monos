@@ -19,7 +19,7 @@ async function hash(value: unknown, expected: string | undefined) {
   if (!expected || await publicationDigest(value) !== expected) mismatch();
 }
 function counts(batch: DeliveryBatchSummary) {
-  if (batch.finalized_items > batch.modified_items || batch.status === 'completed' && batch.finalized_items !== batch.modified_items || ['completed','cancelled'].includes(batch.status) && (batch.retry_allowed || batch.cancel_allowed)) mismatch();
+  if (batch.finalized_items > batch.modified_items || batch.status === 'completed' && batch.finalized_items !== batch.modified_items || ['completed','cancelled','revoked'].includes(batch.status) && (batch.retry_allowed || batch.cancel_allowed)) mismatch();
 }
 function reviewIdentity(review: RemotePreparationReview, repository: DeliveryRepository) {
   const url = new URL(review.url);
@@ -91,6 +91,7 @@ export async function ownerDeliveryBatch(task: string, expected: Pick<DeliveryBa
   const detail = await taskRead<DeliveryBatch>(task, `/delivery/batches/${encodeURIComponent(expected.operation_id)}`, 'DeliveryBatch', undefined, session, signal);
   if (detail.batch.operation_id !== expected.operation_id || detail.batch.content_digest !== expected.content_digest) mismatch();
   counts(detail.batch);
+  if (detail.batch.status === 'revoked' && !detail.revocation) mismatch();
   await deliveryManifest(detail.manifest, task, expected.content_digest);
   const modified = detail.manifest.repositories.filter(value => value.outcome === 'modified');
   sameSet(modified.map(value => value.item_id ?? ''), detail.items.map(value => value.item_id));

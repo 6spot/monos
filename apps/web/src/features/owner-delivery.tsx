@@ -58,7 +58,7 @@ export function OwnerDelivery(props: TaskViewProps) {
   const data = status.data;
   const proposalPage = proposalCursor ? proposalHistory.data : data;
   const batchPage = batchCursor ? batchHistory.data : data;
-  const pointer = data?.accepted_delivery_operation_id ?? props.task.accepted_delivery_operation_id;
+  const pointer = data ? data.accepted_delivery_operation_id : props.task.accepted_delivery_operation_id;
   const summary = selectedProposal ? data?.proposals.find(value => value.proposal_id === selectedProposal.proposal_id) ?? proposalPage?.proposals.find(value => value.proposal_id === selectedProposal.proposal_id) ?? selectedProposal : data?.proposals.find(value => value.current);
   const batch = selectedBatch ? data?.batches.find(value => value.operation_id === selectedBatch.operation_id) ?? batchPage?.batches.find(value => value.operation_id === selectedBatch.operation_id) ?? selectedBatch : data?.batches.find(value => value.operation_id === pointer) ?? (!pointer ? data?.batches[0] : undefined);
   const acceptanceFresh = !!data && status.isSuccess && !status.error && data.accept_allowed && !!data.basis.plan_id && props.task.state === 'REVIEW' && data.basis.specification_id === props.task.specification_id && data.basis.plan_id === props.task.plan_id && !pointer;
@@ -197,9 +197,11 @@ function AcceptedBatch({ expected, active, ...props }: TaskViewProps & { expecte
       <BatchProgress data={data} />
       {batch?.status === 'completed' && <p className="task-notice">This accepted delivery is complete. Further implementation starts as an independent Task through <a href={props.task.todo_id ? `#todos?${new URLSearchParams({ todo_id: props.task.todo_id })}` : '#todos'}>Todo Discussion</a>.</p>}
       {batch?.status === 'cancelled' && <p className="task-notice">New delivery effects are revoked. Original uncertain effects still require reconciliation. Any later verified remote success stays in history and cannot revive this cancelled Task.</p>}
+      {batch?.status === 'revoked' && <p className="task-notice">This approval was revoked for requested changes. Fresh review and acceptance are required before delivery can resume. Its existing PR and branch are retained.</p>}
+      {data.revocation && <p className="task-notice">{data.revocation.settled ? 'Original admitted effects have settled.' : 'Original admitted effects are still settling. Correction cannot acquire their physical ownership yet.'}</p>}
       <div className="task-actions">
         {batch?.retry_allowed && <Button className="max-sm:min-h-11" variant="outline" disabled={!fresh || !expected.retry_allowed || busy} onClick={() => { void act('retry_delivery'); }}>{batch.status === 'reconciling' ? 'Reconcile original delivery' : 'Retry accepted delivery'}</Button>}
-        {batch?.cancel_allowed && <Dialog open={cancelOpen} onOpenChange={setCancelOpen}><DialogTrigger render={<Button className="max-sm:min-h-11" variant="outline" disabled={!fresh || !expected.cancel_allowed || busy} />}>Cancel accepted delivery</DialogTrigger><DialogContent><DialogTitle className="pr-8 text-xl font-medium">Cancel this accepted delivery?</DialogTitle><DialogDescription>This cancels the Task and revokes new effects for this exact batch. It cannot undo a verified merge. Original uncertain effects remain under reconciliation.</DialogDescription><p className="break-all text-sm">Accepted version · <code>{batch.content_digest}</code></p><Button disabled={!fresh || busy} onClick={() => { void act('cancel_delivery'); }}>Cancel this batch and Task</Button></DialogContent></Dialog>}
+        {batch?.cancel_allowed && <Dialog open={cancelOpen} onOpenChange={setCancelOpen}><DialogTrigger render={<Button className="max-sm:min-h-11" variant="outline" disabled={!fresh || !expected.cancel_allowed || busy} />}>Cancel accepted delivery</DialogTrigger><DialogContent><DialogTitle className="pr-8 text-xl font-medium">Cancel this accepted delivery?</DialogTitle><DialogDescription>This cancels the Task and revokes new effects for this exact batch. It cannot undo a verified merge. Original uncertain effects remain under reconciliation. Undelivered open PRs are closed when safe; their branches are retained.</DialogDescription><p className="break-all text-sm">Accepted version · <code>{batch.content_digest}</code></p><Button disabled={!fresh || busy} onClick={() => { void act('cancel_delivery'); }}>Cancel this batch and Task</Button></DialogContent></Dialog>}
       </div>
       {!active && <p className="task-muted">Historical approval grants no new Retry or Cancel authority.</p>}
       {active && !fresh && (batch?.retry_allowed || batch?.cancel_allowed) && <p className="task-muted">Refreshing the exact batch capability before another decision.</p>}
@@ -210,6 +212,16 @@ function AcceptedBatch({ expected, active, ...props }: TaskViewProps & { expecte
   </article>;
 }
 function BatchProgress({ data }: { data: DeliveryBatch }) {
+  const reconciliation = {
+    none: 'No remote reconciliation obligation is recorded.',
+    waiting_original_merge: 'Waiting for the original uncertain merge outcome. No second merge is authorized.',
+    waiting_preparation: 'Waiting for the original preparation effect to settle.',
+    pending_close: 'The undelivered PR still needs to be closed.',
+    closed: 'The undelivered PR is closed. Its branch is retained.',
+    externally_merged: 'A remote merge was verified during reconciliation. The Task remains terminal if cancelled.',
+    not_needed: 'No PR closure is needed for this item.',
+    attention: 'Remote reconciliation needs attention. Recorded remote facts remain visible.',
+  };
   return <div>{!data.items.length ? <p>No modified repository items. This exact result needs no remote publication or provider calls.</p> : <>
     <p>{data.batch.finalized_items} of {data.batch.modified_items} repository items finalized.</p>
     {data.items.map(item => <section className="border-b border-border py-3" key={item.item_id}>
@@ -217,6 +229,7 @@ function BatchProgress({ data }: { data: DeliveryBatch }) {
       <p className="break-all">Accepted head · <code>{item.accepted_head}</code></p>
       {item.status !== 'finalized' && <p>Required checks · {human(item.checks)}{item.checks === 'unknown' ? '. Missing or unsupported readiness is not permission to merge.' : ''}</p>}
       {item.reason && <p className="task-notice">{explain(item.reason)}</p>}
+      {item.reconciliation && <p className="task-notice">{reconciliation[item.reconciliation]}</p>}
       {item.status === 'reconciling' && <p className="task-muted">Reading the original exact PR to resolve an uncertain merge. A lost reply does not authorize another merge.</p>}
       {item.review && <p><a href={item.review.url} target="_blank" rel="noreferrer">Open PR #{item.review.pr_number}</a></p>}
       {item.final_commit && <p className="break-all">Verified final commit · <code>{item.final_commit}</code>{item.finalized_at && ` · ${new Date(item.finalized_at).toLocaleString()}`}</p>}

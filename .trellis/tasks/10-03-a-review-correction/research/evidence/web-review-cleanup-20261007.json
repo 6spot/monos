@@ -1,0 +1,43 @@
+{
+  "checked_at": "2026-10-07T04:03:56.635Z",
+  "proofs": [
+    {
+      "path": "/tmp/monos-review-web-cleanup-final-20261007.json",
+      "ownedScopes": [
+        "conversation_60f3780891eb4d82bd344e6feaa288e0",
+        "conversation_fc8eb38add9544478f92cc1b106fa4fb",
+        "conversation_2e36b9cbfa4548d982e31d4652b7dc0c",
+        "conversation_6f0fb5fb1a6a46fda2c87bdffc9297c0"
+      ],
+      "closedScopes": [
+        "conversation_60f3780891eb4d82bd344e6feaa288e0",
+        "conversation_fc8eb38add9544478f92cc1b106fa4fb",
+        "conversation_2e36b9cbfa4548d982e31d4652b7dc0c",
+        "conversation_6f0fb5fb1a6a46fda2c87bdffc9297c0"
+      ],
+      "closing": true
+    },
+    {
+      "path": "/tmp/monos-review-web-cleanup-input-final-20261007.json",
+      "ownedScopes": [
+        "conversation_bd908a025fc7419b944851d333bd9382"
+      ],
+      "closedScopes": [
+        "conversation_bd908a025fc7419b944851d333bd9382"
+      ],
+      "closing": true
+    },
+    {
+      "path": "/tmp/monos-review-web-cleanup-input-final2-20261007.json",
+      "ownedScopes": [
+        "conversation_5d85257ddb02419cadb5bfac431f4dba"
+      ],
+      "closedScopes": [
+        "conversation_5d85257ddb02419cadb5bfac431f4dba"
+      ],
+      "closing": true
+    }
+  ],
+  "exact_owned_namespace_count": 6,
+  "remaining": []
+}

@@ -83,7 +83,7 @@ export async function assertConversationSource(
   const row = (
     await tx.query<ConversationSource>(
       `SELECT s.* FROM task_conversation_outbox s JOIN tasks t ON t.id=s.task_id JOIN task_inputs i ON i.id=s.input_id
-    WHERE s.id=$1 AND s.task_id=$2 AND s.planned_attempt_id=$3 AND t.conversation_source_id=s.id AND t.conversation_input_id=s.input_id AND t.conversation_version=s.expected_version AND i.status='pending'`,
+    WHERE s.id=$1 AND s.task_id=$2 AND s.planned_attempt_id=$3 AND t.conversation_source_id=s.id AND t.conversation_input_id=s.input_id AND t.conversation_version=s.expected_version AND i.status='pending' AND NOT EXISTS(SELECT 1 FROM task_input_reconsiderations re WHERE re.input_id=i.id)`,
       [source.source_id, taskId, attemptId],
     )
   ).rows[0];
@@ -101,7 +101,7 @@ export async function ensureConversationHead(tx: Transaction, taskId: string): P
   if (task.conversation_input_id) return;
   const next = (
     await tx.query<{ id: string; sequence: string }>(
-      `SELECT i.id,m.sequence FROM task_inputs i JOIN task_messages m ON m.id=i.message_id WHERE i.task_id=$1 AND i.status IN ('pending','failed') ORDER BY m.sequence LIMIT 1`,
+      `SELECT i.id,m.sequence FROM task_inputs i JOIN task_messages m ON m.id=i.message_id WHERE i.task_id=$1 AND i.status IN ('pending','failed') AND NOT EXISTS(SELECT 1 FROM task_input_reconsiderations re WHERE re.input_id=i.id) ORDER BY m.sequence LIMIT 1`,
       [taskId],
     )
   ).rows[0];

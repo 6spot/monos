@@ -119,3 +119,23 @@ basis and batch/digest/version variants. Unknown receipts contain no committed I
 Summaries omit manifests; details are selected reads. History uses separate bounded
 proposal/batch cursors and conditional next fields. Generated Go enum collisions
 must preserve actual wire values/types and compile affected consumers.
+
+Review correction uses `OwnerReviewCommand` with `request_changes`,
+`retry_review_feedback`, `withdraw_review_feedback`, `retry_review_input` and
+`withdraw_review_input`; every committed action binds actual feedback/operation/
+capability, and input variants bind reconsideration. Request Changes alone carries
+the exact local result digest and optional exact accepted batch; server admission
+requires that batch iff current. Unknown receipts contain no committed IDs.
+`TaskReviewSource` is mutually exclusive with all other dispatch sources and adds
+purpose `route_feedback|reconsider_input`; only the second carries paired input and
+reconsideration IDs. Transport watermark/activation is zero, reservations are empty
+and source control matches dispatch. New tools are `apply_review_rework`,
+`commit_review_feedback`, `resolve_review_input`, plus the strict review issue
+variant. Their source/op IDs and op version cannot be replaced by control version.
+`request_replan` retains reason-only payload and genuine launch authority.
+Review families enforce 512 KiB encoded UTF-8/well-formed Unicode and 64 KiB raw
+feedback text in TS/Go. Requirement detail exposes paired review source/operation
+IDs; Replan exposes actual review feedback/predecessor/successor. Delivery adds
+`revoked`, selected detail `revocation` and separate item `reconciliation` facts.
+See [review correction](../backend/review-correction.md) for signatures, SQL,
+error matrix and required authority/race checks.

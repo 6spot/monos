@@ -13,6 +13,7 @@ import type { Attempt, CompletionOperation } from './node-execution.ts';
 import { lockAttemptWorkspace } from './workspaces.ts';
 import { planningEvent } from './task-planning-state.ts';
 import { retryAcceptedMerge } from './owner-delivery-worker.ts';
+import {cancelReviewOperations} from './task-review-state.ts';
 
 export async function admitAcceptedPreparation(tx: Transaction, batch: DeliveryBatchRecord, repositories: DeliveryRepository[], retry = false): Promise<void> {
   await assertDeliveryBatchAuthority(tx, batch);
@@ -27,6 +28,7 @@ export async function admitAcceptedPreparation(tx: Transaction, batch: DeliveryB
 // then revalidates that discovery. This hook never discovers another Runner.
 export async function cancelAcceptedDelivery(tx: Transaction, batch: DeliveryBatchRecord, requestId: string): Promise<void> {
   await assertDeliveryBatchAuthority(tx, batch);
+  await cancelReviewOperations(tx,batch.task_id,requestId);
   await cancelTaskInputEffects(tx, batch.task_id);
   await requestRemoteCancel(tx, batch.task_id);
   await tx.query("UPDATE owner_delivery_merge_operations SET status='cancelled',effect_owned=false,reason='cancel_requested',version=version+1 WHERE batch_id=$1 AND status='pending' AND NOT may_have_mutated", [batch.id]);

@@ -131,12 +131,19 @@ reconciliation settles only original declared IDs and preserves later follow-up.
 Guidance cannot abandon a hard completion or replace its lease settlement pointer.
 Task Cancel retains history/cleanup and only conversation-only authority thereafter.
 
-`accepted_delivery_operation_id` and `accepted_delivery_input_cutoff` are a paired
-future control seam with no public setter in this leaf. Proposal/confirmation alone
-is not acceptance. Later delivery admission must add actual operation ownership and
-atomically set exact result/receipt/cutoff/outbox under the same Task lock. Later
-input records that batch and is nonblocking/conversation-only even on Planner
-failure. Tests populating this seam do not establish provider delivery integration.
+`accepted_delivery_operation_id` and `accepted_delivery_input_cutoff` form the
+exact paired control owned by [Owner delivery](owner-delivery.md), with actual
+receipt-backed admission under the Task lock. Proposal/confirmation alone is not
+acceptance. Later input records that batch and stays nonblocking/reply-only even
+on Planner failure.
+
+Explicit [review correction](review-correction.md) appends fresh reconsideration
+obligations for later input after eligible revocation. Preserve the original
+pending/failed/replied row, attribution, resolution and reply. Original Conversation
+Retry/Stop/Withdraw capabilities are suppressed once reconsideration exists;
+reject new old-turn commands even after the original batch pointer clears. Recover
+an exact existing receipt first. Fresh reconsideration commands own its new routing
+decisions and exits; withdrawing them does not rewrite the original input.
 
 ## 4. Validation & Error Matrix
 
@@ -152,6 +159,7 @@ failure. Tests populating this seam do not establish provider delivery integrati
 | No Runner/shared capacity full | Durable waiting, no invented failed Attempt |
 | Task stopped/blocked | Chat permitted; independent execution control remains |
 | Terminal/accepted batch | Reply only; no guidance/Plan/Spec/Node effects |
+| Original input has reconsideration | No original Retry/Stop/Withdraw; exact old receipt replay remains valid |
 | Required-work issue interpreted | Reply exists, separate obligation and Owner exit remain |
 
 ## 5. Good / Base / Bad Cases
@@ -176,6 +184,9 @@ Node/activation assignment and reply resolutions. Validate JSON ID element types
 before text conversion. Test migration18 manifests/operation identity retention.
 Test routing/completion/Stop/Cancel and hard-recovery orders, independent obligations,
 post-completion reactivation, explicit answers and withdrawal without false resume.
+After review revocation, assert replied/failed/pending original inputs retain their
+rows and sequence, get fresh ordered decisions with no second reply, and expose no
+original control capability. New old-turn commands reject without changing history.
 
 Shared TS/Go schemas, CLI phase allowlists, immutable journal retries and finite
 conversation Stop reconnect recovery must pass alongside full relevant suites.

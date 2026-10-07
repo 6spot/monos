@@ -182,6 +182,21 @@ operation only through actual Owner Retry and fresh ordinary guards. Started or
 possibly mutated effects retain their original identity and observation path.
 The automatic pump cannot replace a blocked operation merely to retry it.
 
+An accepted preparation revoked by explicit review correction can be replaced by
+a fresh operation ID after ordinary/current or newly accepted guards pass. Require
+the immutable old link, actual batch revocation, no possible effect and no claim;
+never relink or reactivate its old ID. See [review correction](review-correction.md).
+An unsent revoked push has no Runner journal to settle. A previously sent revoked
+push resumes its original frame solely to finish its no-effect journal. Write access
+stays denied. `finish` accepts only exact original request/result scope, authenticated
+current Runner, `push_started=false`, worker absence and no claim/effect/mutation.
+It appends `{revoked_push_result: PublicationPushResult}` as an immutable `ref`
+observation and returns the exact ACK; conflicting results reject. The revoked row
+and publication proof stay unchanged. Reconnection may have a newer incarnation.
+Do not send a successor for that item until this original result is retained:
+the Go successor guard requires the original result/absence/ACK, and sending a
+new intent before the old result exists can create mutual predecessor waits.
+
 Both Task Cancel paths durably revoke ordinary admission, reconcile admitted
 effects, then close only the exact owned undelivered PR. Retain its branch. Missing
 access or uncertain cleanup stays visible with scoped Retry; terminal Task never
@@ -243,6 +258,9 @@ full-suite checklist for documentation, handoffs or unrelated fixes.
 - Actual PostgreSQL: migration 22→23 and immutable rows, current admission and
   token-I/O races, original uncertain resolution, immediate waived exposure,
   receipt replay, history scope, Cancel/revision quiescence and bounded polling.
+  For review revocation, cover both unsent and sent pregrant push: zero write grants,
+  original result/ACK replay after reconnect, conflicting replay rejection and
+  successor dispatch ordering without restoring revoked authority.
 - Physical Git/journal/process: public-parent exclusion, FF/CAS, same-tree mapping
   and real revert, actual Runner death/birth/group recovery, immutable result/ACK/
   resolution, fresh permission context and anonymous credential boundaries.

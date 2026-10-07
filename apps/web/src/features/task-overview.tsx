@@ -2,6 +2,7 @@ import { ResultInspector } from "./result-inspector.tsx";
 import { PublicationCandidates } from "./publication-candidate.tsx";
 import { RemotePreparations } from "./remote-preparation.tsx";
 import { OwnerDelivery } from "./owner-delivery.tsx";
+import { ReviewCorrection } from "./review-correction.tsx";
 import { useState } from "react";
 import type {
   ArtifactPage,
@@ -56,6 +57,7 @@ export function TaskOverviewView(props: TaskViewProps) {
       </section>
       <TaskWork {...props} />
       <TaskResults {...props} />
+      <ReviewCorrection key={`${props.commands.sessionId}:${props.task.task_id}`} {...props} />
       <OwnerDelivery key={`${props.commands.sessionId}:${props.task.task_id}`} {...props} />
       <RemotePreparations key={`${props.commands.sessionId}:${props.task.task_id}`} {...props} />
       <TaskArtifacts {...props} />

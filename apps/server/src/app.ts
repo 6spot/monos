@@ -1,6 +1,9 @@
 import {OwnerDeliveryCommands} from './owner-delivery-commands.ts';
 import {OwnerDeliveryReads} from './owner-delivery-reads.ts';
 import {ownerDeliveryHooks} from './owner-delivery-control.ts';
+import {TaskReviewCommands} from './task-review-commands.ts';
+import {TaskReviewReads} from './task-review-reads.ts';
+import {ownerReviewHooks} from './owner-review-control.ts';
 import { PublicationPreparation } from './publication-candidates.ts';
 import { PublicationCandidateReads } from './publication-candidate-reads.ts';
 import { PublicationCommands } from './publication-commands.ts';
@@ -82,7 +85,7 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
     if (code === 'rate_limited') void reply.header('Retry-After', error instanceof RemoteProviderWaiting ? String(error.retry_after_seconds) : '60');
     void reply.code(code === 'unauthorized' ? 401 : code === 'denied_scope' ? 403 : code === 'rate_limited' ? 429 : code === 'internal_error' ? 500 : 409).send(result);
   });
-  app.addHook('onRequest', async (request, reply) => { if (request.url.startsWith('/v1/owner/')) {void reply.header('Cache-Control', 'no-store');if(request.url.includes('/remote-preparation')||request.url.includes('/delivery'))void reply.header('X-Content-Type-Options','nosniff');} });
+  app.addHook('onRequest', async (request, reply) => { if (request.url.startsWith('/v1/owner/')) {void reply.header('Cache-Control', 'no-store');if(request.url.includes('/remote-preparation')||request.url.includes('/delivery')||request.url.includes('/review'))void reply.header('X-Content-Type-Options','nosniff');} });
   app.get('/health', async () => { await service.db.pool.query('SELECT 1'); return { schema_version: 1, database: 'ready', probe: true }; });
   const resultReads = new ResultReadBroker();
   const publication = new PublicationPreparation(service.db,service.instanceId);
@@ -90,6 +93,8 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
   const publicationCommands = new PublicationCommands(service.db);
   const ownerDeliveryCommands=new OwnerDeliveryCommands(service.db,ownerDeliveryHooks);
   const ownerDeliveryReads=new OwnerDeliveryReads(service.db);
+  const reviewCommands=new TaskReviewCommands(service.db,ownerReviewHooks);
+  const reviewReads=new TaskReviewReads(service.db);
   const remoteProvider=options.remoteProvider??new GitHubRemote(service.options.github??new GitHub(service.options.signingKey));
   const remote=new RemotePreparation(service.db,service.instanceId,remoteProvider);
   const remoteReads=new RemotePreparationReads(service.db,service.instanceId);
@@ -119,6 +124,11 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
     app.get('/', async (_request, reply) => reply.header('Cache-Control', 'no-store').sendFile('index.html', webRoot, { cacheControl: false }));
   }
   app.post('/v1/owner/tasks/delivery/commands',async request=>ownerDeliveryCommands.command(ownerCredential(request),request.body));
+  app.post('/v1/owner/tasks/review/commands',async request=>reviewCommands.command(ownerCredential(request),request.body));
+  app.get<{Params:{task_id:string}}>('/v1/owner/tasks/:task_id/review',async request=>reviewReads.task(ownerCredential(request),request.params.task_id,request.query));
+  app.get<{Params:{task_id:string;feedback_id:string}}>('/v1/owner/tasks/:task_id/review/feedback/:feedback_id',async request=>reviewReads.feedback(ownerCredential(request),request.params.task_id,request.params.feedback_id,request.query));
+  app.get<{Params:{task_id:string;operation_id:string}}>('/v1/owner/tasks/:task_id/review/operations/:operation_id',async request=>reviewReads.operation(ownerCredential(request),request.params.task_id,request.params.operation_id));
+  app.get<{Params:{task_id:string;request_id:string}}>('/v1/owner/tasks/:task_id/review/commands/:request_id',async request=>reviewCommands.status(ownerCredential(request),request.params.task_id,request.params.request_id));
   app.get<{Params:{task_id:string}}>('/v1/owner/tasks/:task_id/delivery',async request=>ownerDeliveryReads.task(ownerCredential(request),request.params.task_id,request.query));
   app.get<{Params:{task_id:string;proposal_id:string}}>('/v1/owner/tasks/:task_id/delivery/proposals/:proposal_id',async request=>ownerDeliveryReads.proposal(ownerCredential(request),request.params.task_id,request.params.proposal_id));
   app.get<{Params:{task_id:string;operation_id:string}}>('/v1/owner/tasks/:task_id/delivery/batches/:operation_id',async request=>ownerDeliveryReads.batch(ownerCredential(request),request.params.task_id,request.params.operation_id));

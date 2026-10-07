@@ -32,6 +32,19 @@ async function batch(modified = false): Promise<DeliveryBatch> {
     items:repository?[{item_id:repository.item_id ?? '',resource_id:repository.resource_id,status:'failed',accepted_head:repository.candidate?.head ?? '',checks:'unknown'}]:[]};
 }
 
+it('revoked history retains its exact manifest and real revocation while granting no delivery capability', async () => {
+  const value=await batch(true);
+  value.batch={...value.batch,status:'revoked',retry_allowed:false,cancel_allowed:false};
+  value.items=value.items.map(item=>({...item,status:'revoked',reconciliation:'waiting_preparation'}));
+  value.revocation={feedback_id:'feedback-a',revocation_id:'revocation-a',request_id:'review-request-a',settled:false};
+  vi.stubGlobal('fetch',async()=>Response.json(value));
+  await expect(ownerDeliveryBatch(task,value.batch,session)).resolves.toEqual(value);
+  for(const change of [{...value,revocation:undefined},{...value,batch:{...value.batch,retry_allowed:true}},{...value,batch:{...value.batch,cancel_allowed:true}}]) {
+    vi.stubGlobal('fetch',async()=>Response.json(change));
+    await expect(ownerDeliveryBatch(task,value.batch,session)).rejects.toBeInstanceOf(APIError);
+  }
+});
+
 it('persists exact delivery command in the existing allowlisted Task journal and recovers without a new control basis', async () => {
   const command = {schema_version:1,task_id:task,request_id:'request-a',name:'retry_delivery',expected_control_version:999,payload:{operation_id:'batch-a',content_digest:h,expected_version:7}} as const;
   const pending: TaskIntent = {family:'delivery',command};

@@ -16,7 +16,7 @@ import (
 	"monos.local/runner/internal/wire"
 )
 
-type PublicationAccess func(context.Context, protocol.PublicationPushRequest, protocol.Purpose, string) (protocol.PublicationAccessResult, error)
+type PublicationAccess func(context.Context, protocol.PublicationPushRequest, protocol.PublicationAccessRequestPurpose, string) (protocol.PublicationAccessResult, error)
 
 func publicationAccessSchedulingWait(e error) bool {
 	var waiting interface{ PublicationRetryAfter() time.Duration }
@@ -150,7 +150,7 @@ func observePublicationRemote(ctx context.Context, r protocol.PublicationPushReq
 	return remotePublicationObservation(r, "present", f[0], ""), nil
 }
 
-func validatePublicationAccess(r protocol.PublicationPushRequest, a protocol.PublicationAccessResult, purpose protocol.Purpose) error {
+func validatePublicationAccess(r protocol.PublicationPushRequest, a protocol.PublicationAccessResult, purpose protocol.PublicationAccessRequestPurpose) error {
 	if !validPublicationAuthentication(a) || a.OperationID != r.OperationID || a.RequestDigest != publicationDigest(r) || a.ItemID != r.ItemID || a.Purpose != purpose || a.RemoteURL != r.RemoteURL || a.RepositoryID != r.RepositoryID || a.DeliveryRef != r.DeliveryRef || a.CandidateHead != r.Prepared.Candidate.Head || !equalPublicationHead(a.ExpectedHead, r.ExpectedHead) {
 		return errors.New("publication access mismatch")
 	}

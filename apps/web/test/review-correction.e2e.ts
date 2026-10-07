@@ -1,0 +1,79 @@
+import { test, expect } from '@playwright/test';
+import type { Page, TestInfo } from '@playwright/test';
+import { createHash } from 'node:crypto';
+import { execFileSync } from 'node:child_process';
+import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
+const base='http://127.0.0.1:18557',run=new Date().toISOString().replaceAll(/[^0-9]/g,'');
+interface Scenario {task:string;second:string;schema:string}
+interface Observed {review:{request_id:string;envelope:{name:string;payload:{feedback_id:string;operation_id?:string}};response:{operation_id:string;operation_version:number;revoked_batch?:{operation_id:string}}}[];replan:{response:{review_feedback_id:string;review_predecessor_operation_id:string;review_operation_id:string}}[];delivery:{id:string;status:string;content_digest:string}[];inputs:{id:string;accepted_delivery_operation_id:string}[];feedback:{id:string;status:string;current_operation_id:string}[]}
+async function control<T>(page:Page,path:string,data:object={}):Promise<T>{const response=await page.request.post(path,{data,headers:{Origin:base}});expect(response.ok(),await response.text()).toBe(true);return response.json();}
+async function scenario(page:Page,mode:'repository_free'|'modified'='repository_free'){
+  const value=await control<Scenario>(page,'/__test__/review-scenario',{mode});await page.goto(`/#task?task_id=${value.task}&section=overview`);await expect(page.getByRole('heading',{name:'Requested changes',exact:true})).toBeVisible();return value;
+}
+const correction=(page:Page)=>page.getByRole('region',{name:'Review correction',exact:true});
+async function requestChanges(page:Page,text:string){await page.getByRole('button',{name:'Request Changes',exact:true}).click();await page.getByRole('textbox',{name:'Review feedback',exact:true}).fill(text);await page.getByRole('button',{name:'Request these changes',exact:true}).click();await expect(page.getByRole('dialog')).toHaveCount(0);await expect(correction(page)).toContainText(text);}
+async function accept(page:Page){await page.getByRole('button',{name:'Prepare exact review',exact:true}).click();await page.getByRole('button',{name:'Review exact result',exact:true}).click();await page.getByRole('button',{name:'Confirm exact result',exact:true}).click();await expect(page.getByRole('dialog')).toContainText('Exact Owner confirmation recorded.');await page.getByRole('button',{name:'Accept & Merge',exact:true}).click();await expect(page.getByRole('dialog')).toHaveCount(0);await expect(page.getByRole('region',{name:'Owner delivery',exact:true})).toContainText('The accepted result is frozen.');}
+async function capture(page:Page,info:TestInfo,name:string,state:string,anchor:string){
+  const root=resolve('../..'),dir=resolve(root,`.trellis/tasks/10-03-a-review-correction/research/evidence/web-review-correction-${run}`);await mkdir(dir,{recursive:true});
+  const sourcePaths=[...execFileSync('rg',['--files','apps/web/src','apps/server/src','packages/db/migrations','packages/protocol/src','packages/protocol/schemas','packages/protocol/generated'],{cwd:root,encoding:'utf8'}).trim().split('\n'),'apps/web/test/review-correction.e2e.ts','apps/web/test/review-correction-server.ts','apps/web/review-correction.playwright.config.ts','apps/server/test/fixtures/review-correction-fixture.ts','apps/server/test/fixtures/owner-delivery-fixture.ts'].sort();
+  const source=await Promise.all(sourcePaths.map(async path=>({path,sha256:createHash('sha256').update(await readFile(resolve(root,path))).digest('hex')})));
+  const assets=await readdir(resolve(root,'apps/web/dist/assets')),bundle=await Promise.all(assets.sort().map(async path=>({path,sha256:createHash('sha256').update(await readFile(resolve(root,'apps/web/dist/assets',path))).digest('hex')})));
+  const metadata={head:execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim(),dirty_candidate:true,source,bundle,route:page.url(),state,test:info.title,evidence:'Current built SPA, genuine isolated PostgreSQL and protected Owner/Agent commands. Runtime launch and physical process absence are synthetic; publication permission/Git preparation are upstream fixture data. No live Runtime/provider evidence.',views:[] as unknown[]};
+  for(const viewport of [{width:1440,height:1000,label:'desktop'},{width:390,height:844,label:'mobile'}]){
+    await page.setViewportSize(viewport);await page.evaluate(()=>document.fonts.ready);
+    const action=page.getByRole('button',{name:anchor,exact:true});await action.scrollIntoViewIfNeeded();await expect(action).toBeInViewport();
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`${name} horizontal overflow`).toBe(true);
+    const body=await page.locator('body').innerText();expect(body).not.toContain('ephemeral-owner-delivery-test-grant');
+    const image=await page.screenshot(),file=`${name}-${viewport.label}.png`;await writeFile(resolve(dir,file),image,{flag:'wx'});await info.attach(file,{body:image,contentType:'image/png'});metadata.views.push({viewport,file,sha256:createHash('sha256').update(image).digest('hex'),body});
+  }
+  await writeFile(resolve(dir,`${name}.json`),JSON.stringify(metadata,null,2)+'\n',{flag:'wx'});await page.setViewportSize({width:1440,height:1000});console.log(`Review correction screenshots: ${dir}/${name}`);
+}
+
+test('real request, issue and exact Answer & Retry recover a lost receipt before source-bound Rework',async({page},info)=>{
+  await scenario(page);
+  expect((await control<Observed>(page,'/__test__/review-observe')).review).toHaveLength(0);
+  await page.getByRole('button',{name:'Request Changes',exact:true}).click();await page.getByRole('textbox',{name:'Review feedback',exact:true}).fill('Make the completed output more precise.');await page.getByRole('button',{name:'Close dialog',exact:true}).click();await expect(page.getByRole('button',{name:'Request Changes',exact:true})).toBeFocused();
+  expect((await control<Observed>(page,'/__test__/review-observe')).review).toHaveLength(0);
+  await page.getByRole('button',{name:'Request Changes',exact:true}).click();await expect(page.getByRole('textbox',{name:'Review feedback',exact:true})).toHaveValue('Make the completed output more precise.');await page.getByRole('button',{name:'Request these changes',exact:true}).click();await expect(page.getByRole('dialog')).toHaveCount(0);
+  const original=(await control<Observed>(page,'/__test__/review-observe')).review[0]!;
+  await control(page,'/__test__/review-semantic',{action:'issue'});await expect(page.getByRole('textbox',{name:'Review issue answer',exact:true})).toBeVisible();await capture(page,info,'feedback-issue','Actual requested feedback and source-bound Planner issue; Review remains current','Answer & Retry');
+  await page.getByRole('textbox',{name:'Review issue answer',exact:true}).fill('Keep the current requirements and collaboration structure.');
+  let withheld=false;
+  await page.route('**/v1/owner/tasks/review/commands',async route=>{if(!withheld&&route.request().postDataJSON().name==='retry_review_feedback'){withheld=true;const response=await route.fetch();expect(response.ok()).toBe(true);await route.abort('failed');}else await route.continue();});
+  await page.getByRole('button',{name:'Answer & Retry',exact:true}).click();await expect(page.getByRole('button',{name:'Check request result',exact:true})).toBeVisible();await page.reload();await page.getByRole('button',{name:'Check request result',exact:true}).click();await expect(page.getByRole('button',{name:'Check request result',exact:true})).toHaveCount(0);
+  const after=await control<Observed>(page,'/__test__/review-observe'),retries=after.review.filter(value=>value.envelope.name==='retry_review_feedback');expect(retries).toHaveLength(1);expect(retries[0]?.response.operation_id).toBe(original.response.operation_id);expect(retries[0]?.response.operation_version).toBe(2);
+  await control(page,'/__test__/review-semantic',{action:'rework'});await expect(page.locator('.task-heading .task-state')).toHaveText('Running');await correction(page).locator('summary').filter({hasText:'Review feedback history'}).click();await correction(page).getByRole('button',{name:/^Resolved ·/}).click();await expect(correction(page)).toContainText('Rework was applied');await expect(page.getByRole('button',{name:'Request Changes',exact:true})).toBeDisabled();
+});
+
+test('eligible real accepted revocation preserves later input, independent Withdraw and fresh review requirements',async({page},info)=>{
+  const f=await scenario(page,'modified');await accept(page);
+  const original=(await control<Observed>(page,'/__test__/review-observe')).delivery[0]!;
+  await page.goto(`/#task?task_id=${f.task}&section=conversation`);await page.getByRole('textbox',{name:'Message to Planner',exact:true}).fill('Consider this separately after the accepted version.');await page.getByRole('button',{name:'Send message',exact:true}).click();await expect(page.getByRole('textbox',{name:'Message to Planner',exact:true})).toHaveValue('');await page.goto(`/#task?task_id=${f.task}&section=overview`);
+  await requestChanges(page,'Correct this entirely undelivered accepted result.');await expect(page.getByRole('article',{name:'Accepted delivery batch',exact:true})).toContainText('This approval was revoked');await expect(correction(page)).toContainText('Later input after revoked delivery');await capture(page,info,'revoked-reconsideration','Real exact accepted batch revocation and independent canonical later-input obligation; no delivery authority survives','Withdraw reconsidered input');
+  const revoked=await control<Observed>(page,'/__test__/review-observe');expect(revoked.delivery[0]).toMatchObject({id:original.id,status:'revoked',content_digest:original.content_digest});expect(revoked.inputs[0]?.accepted_delivery_operation_id).toBe(original.id);
+  await control(page,'/__test__/review-semantic',{action:'replan'});await page.goto(`/#task?task_id=${f.task}&section=conversation`);await expect(page.getByRole('button',{name:'Dismiss Replan',exact:true})).toBeVisible();await page.getByRole('textbox',{name:'Direction',exact:true}).fill('Reconsider this input with the current graph.');await page.getByRole('button',{name:'Dismiss Replan',exact:true}).click();await page.goto(`/#task?task_id=${f.task}&section=overview`);
+  await expect(correction(page)).toContainText('Input 1 · Transferred');await control(page,'/__test__/review-semantic',{action:'issue'});await page.getByRole('textbox',{name:'Input reconsideration answer',exact:true}).fill('Keep the original input and use the current graph.');await page.getByRole('button',{name:'Answer & Retry',exact:true}).click();await expect(page.getByRole('button',{name:'Answer & Retry',exact:true})).toHaveCount(0);
+  await page.getByRole('button',{name:'Withdraw reconsidered input',exact:true}).click();await page.getByRole('button',{name:'Withdraw this reconsideration',exact:true}).click();await expect(page.getByRole('dialog')).toHaveCount(0);await expect(page.getByRole('article',{name:'Reconsidered input',exact:true})).toContainText('This routing obligation was withdrawn');await expect(correction(page)).toContainText('Input 1 · Transferred');
+  await control(page,'/__test__/review-pump');
+  await page.getByRole('button',{name:'Withdraw feedback',exact:true}).click();await page.getByRole('button',{name:'Withdraw this feedback',exact:true}).click();await expect(page.getByRole('dialog')).toHaveCount(0);await control(page,'/__test__/review-pump');await expect(page.getByRole('button',{name:'Request Changes',exact:true})).toBeEnabled();
+  expect((await control<Observed>(page,'/__test__/review-observe')).feedback[0]?.status).toBe('withdrawn');await expect(page.getByRole('button',{name:'Retry accepted delivery',exact:true})).toHaveCount(0);await expect(page.getByRole('button',{name:'Cancel accepted delivery',exact:true})).toHaveCount(0);
+});
+
+test('real review-origin Replan Dismiss preserves same-feedback successor and terminal Cancel truth',async({page},info)=>{
+  const f=await scenario(page);await requestChanges(page,'Review this result against the retained requested correction.');const original=(await control<Observed>(page,'/__test__/review-observe')).review[0]!;
+  await control(page,'/__test__/review-semantic',{action:'replan'});await page.goto(`/#task?task_id=${f.task}&section=conversation`);await expect(page.getByRole('button',{name:'Dismiss Replan',exact:true})).toBeVisible();await expect(page.getByText('This replacement Plan originated from requested review changes.',{exact:false})).toBeVisible();await page.getByRole('textbox',{name:'Direction',exact:true}).fill('Try the retained feedback with the current graph.');await page.getByRole('button',{name:'Dismiss Replan',exact:true}).click();
+  await page.goto(`/#task?task_id=${f.task}&section=overview`);await expect(correction(page)).toContainText('fresh same-feedback routing successor');await capture(page,info,'dismissed-successor','Actual review-origin Replan Dismiss, preserved active feedback and distinct current routing successor','Withdraw feedback');
+  const dismissed=await control<Observed>(page,'/__test__/review-observe');expect(dismissed.replan).toHaveLength(1);expect(dismissed.replan[0]?.response.review_feedback_id).toBe(original.envelope.payload.feedback_id);expect(dismissed.replan[0]?.response.review_predecessor_operation_id).toBe(original.response.operation_id);expect(dismissed.replan[0]?.response.review_operation_id).not.toBe(original.response.operation_id);
+  await page.getByRole('button',{name:'Cancel task',exact:true}).click();await expect(page.locator('.task-heading .task-state')).toHaveText('Cancelled');await expect(page.getByRole('button',{name:'Request Changes',exact:true})).toBeDisabled();await expect(page.getByRole('button',{name:'Withdraw feedback',exact:true})).toHaveCount(0);
+});
+
+test('held review detail cannot repopulate another Task or a signed-out session',async({page})=>{
+  const f=await scenario(page);await requestChanges(page,'Private correction stays scoped to this Task.');
+  let release:()=>void=()=>{},entered:()=>void=()=>{},once=false;const held=new Promise<void>(resolve=>{entered=resolve;});
+  await page.route(`**/v1/owner/tasks/${f.task}/review/feedback/**`,async route=>{if(once){await route.continue();return;}once=true;const response=await route.fetch();await new Promise<void>(resolve=>{release=resolve;entered();});try{await route.fulfill({response});}catch{/* Navigation can abort the fenced query. */}});
+  await page.reload();await held;await page.goto(`/#task?task_id=${f.second}&section=overview`);release();await expect(page.locator('.task-heading .task-state')).toHaveText('Ready to start');await expect(page.getByText('Private correction stays scoped to this Task.',{exact:true})).toHaveCount(0);
+  let releaseLogout:()=>void=()=>{},enteredLogout:()=>void=()=>{},logoutOnce=false;const logoutHeld=new Promise<void>(resolve=>{enteredLogout=resolve;});
+  await page.unroute(`**/v1/owner/tasks/${f.task}/review/feedback/**`);await page.route(`**/v1/owner/tasks/${f.task}/review/feedback/**`,async route=>{if(logoutOnce){await route.continue();return;}logoutOnce=true;const response=await route.fetch();await new Promise<void>(resolve=>{releaseLogout=resolve;enteredLogout();});try{await route.fulfill({response});}catch{/* Logout can abort the fenced query. */}});
+  await page.goto(`/#task?task_id=${f.task}&section=overview`);await logoutHeld;await page.getByRole('button',{name:'Sign out',exact:true}).click();releaseLogout();await expect(page.getByRole('button',{name:'Sign in',exact:true})).toBeVisible();expect(await page.evaluate(()=>Object.keys(sessionStorage).filter(key=>key.startsWith('monos:task-ui:')))).toEqual([]);await expect(page.getByText('Private correction stays scoped to this Task.',{exact:true})).toHaveCount(0);
+});

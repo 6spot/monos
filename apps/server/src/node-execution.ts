@@ -1,4 +1,5 @@
 import { remoteItemQuiescent, requestRemoteCancel } from './remote-preparation-state.ts';
+import { cancelReviewOperations } from './task-review-state.ts';
 import { activateInheritedHold,resolveInheritedHold } from './task-replan-holds.ts';
 import { assertCurrentNode } from './task-records.ts';
 import { specificationFrozen } from './task-specification-state.ts';
@@ -320,6 +321,7 @@ export class NodeExecution {
           if (target.specification_id !== task.specification_id || target.plan_id !== task.plan_id)
             throw new CommandError('version_conflict', 'Cancel requires exact Specification and Plan');
           if((await tx.query('SELECT 1 FROM tasks WHERE id=$1 AND accepted_delivery_operation_id IS NOT NULL',[task.id])).rowCount)throw new CommandError('unmet_precondition','Accepted delivery requires delivery cancellation');
+          await cancelReviewOperations(tx,task.id,command.request_id);
           await cancelTaskInputEffects(tx,task.id);
           await requestRemoteCancel(tx,task.id);
           await tx.query("UPDATE tasks SET state='CANCELLED',control_version=control_version+1 WHERE id=$1", [task.id]);

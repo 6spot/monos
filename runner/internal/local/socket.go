@@ -135,6 +135,12 @@ func prepareEnvelope(d protocol.Dispatch, r Request) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	if d.TaskReviewSource != nil {
+		return prepareReviewEnvelope(d, r, scope)
+	}
+	if r.Name == "apply_review_rework" || r.Name == "commit_review_feedback" || r.Name == "resolve_review_input" {
+		return nil, fmt.Errorf("review command requires a canonical Task review source")
+	}
 	specificationCommand := r.Name == "prepare_specification_revision" || r.Name == "apply_specification_revision"
 	if specificationCommand && d.TaskConversationSource == nil {
 		return nil, fmt.Errorf("Specification commands require exact canonical Task conversation source")

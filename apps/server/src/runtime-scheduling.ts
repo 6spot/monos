@@ -109,7 +109,7 @@ export class RuntimeScheduling {
     };
     const dispatch_id = await this.queue.enqueue(tx, {
       attempt_id: request.attempt_id, task_id: request.task_id, node_id: request.node_id,
-      todo_id: request.todo_id, discussion_context: request.discussion_context, task_replan_source: request.task_replan_source, task_planning_source: request.task_planning_source, task_conversation_source: request.task_conversation_source, node_execution_source: request.node_execution_source,
+      todo_id: request.todo_id, discussion_context: request.discussion_context, task_review_source:request.task_review_source, task_replan_source: request.task_replan_source, task_planning_source: request.task_planning_source, task_conversation_source: request.task_conversation_source, node_execution_source: request.node_execution_source,
       kind: request.kind, expected: request.expected, resource_id: request.resource_id,
       ...(request.legacy_probe ? { legacy_probe: true as const } : {}),
       prompt: request.prompt, source_watermark: request.source_watermark,

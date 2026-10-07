@@ -9,8 +9,8 @@
 - [x] Independent findings reconciled by final main convergence after platform
   delegate usage interruption; lossless final PRD pass.
 - [x] Context validation and final planning summary under standing user delegation.
-  Further implementation runs locally while delegation is unavailable.
-- [ ] Activate this leaf; no new permission question is needed.
+  Delegates resumed after the usage limit cleared; sole ownership remains scoped.
+- [x] Activate this leaf; no new permission question is needed.
 
 ## Write ownership and dependency order
 
@@ -69,6 +69,6 @@ capacity release without actual existing physical settlement.
 
 ## Completion
 
-- [ ] Six criteria have actual/current or explicitly reused evidence with limits.
-- [ ] Independent integrated review resolved; changed inputs match validation.
+- [x] Six criteria have actual/current or explicitly reused evidence with limits.
+- [x] Independent integrated review resolved; changed inputs match validation.
 - [ ] Scoped work commit/archive/journal, then ordered installed combined gate.

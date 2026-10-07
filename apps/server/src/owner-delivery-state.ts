@@ -1,9 +1,7 @@
 import type {Transaction} from '../../../packages/db/src/index.ts';
 import {CommandError} from '../../../packages/domain/src/commands.ts';
 import {canonicalJSON,validate} from '../../../packages/protocol/src/index.ts';
-import type {DeliveryAcceptanceBasis,DeliveryAcceptanceManifest,DeliveryOutputEvidence,DeliveryRepository,DeliveryBatch,DeliveryBatchSummary,DeliveryItemProgress,PublicationEffectiveBasis,PublicationFinding,RemotePreparationReview} from '../../../packages/protocol/src/index.ts';
-import {resolveCanonicalResult} from './task-result-reads.ts';
-import {readArtifact} from './artifacts.ts';
+import type {DeliveryAcceptanceBasis,DeliveryAcceptanceManifest,DeliveryRepository,DeliveryBatch,DeliveryBatchSummary,DeliveryItemProgress,PublicationFinding,RemotePreparationReview} from '../../../packages/protocol/src/index.ts';
 import {localAdmissionAllowed,effectiveResult} from './publication-candidates.ts';
 import type {DeliveryOperation} from './publication-candidates.ts';
 import {publicationConfiguration,permissionConfigurationFingerprint,publicationDigest as hash} from './publication-policy.ts';
@@ -14,6 +12,8 @@ import type {RemoteItem} from './remote-preparation-state.ts';
 import {remoteContent} from './remote-preparation.ts';
 import {planningEvent} from './task-planning-state.ts';
 import {readAcceptedReadiness} from './owner-delivery-worker.ts';
+import {canonicalReviewManifest} from './task-review-basis.ts';
+import {reviewRevocationSettled} from './task-review-state.ts';
 
 export interface DeliveryBatchRecord {
  id:string;task_id:string;manifest:DeliveryAcceptanceManifest;content_digest:string;proposal_id:string;confirmation_id:string;admission_request_id:string;
@@ -54,23 +54,8 @@ export async function buildDeliveryAcceptance(tx:Transaction,taskId:string,revie
  if(reviewedBasis&&canonicalJSON(basis)!==canonicalJSON(reviewedBasis))throw new CommandError('version_conflict','source_changed');
  if((await taskInputGuards(tx,taskId)).length)throw new CommandError('unmet_precondition','input_pending');
  if(!await localAdmissionAllowed(tx,taskId))throw new CommandError('unmet_precondition','work_unsettled');
- const revision=(await tx.query<{specification_digest:string;plan_digest:string}>('SELECT s.content_digest specification_digest,p.content_digest plan_digest FROM specification_revisions s JOIN plan_revisions p ON p.task_id=s.task_id WHERE s.task_id=$1 AND s.id=$2 AND p.id=$3',[taskId,basis.specification_id,basis.plan_id])).rows[0];
- if(!revision)throw new CommandError('unmet_precondition','retained_unavailable');
- const members=(await tx.query<{node_id:string;activation:string;state:string;operation_id:string|null}>(`SELECT pn.node_id,n.activation,n.state,c.operation_id FROM plan_nodes pn JOIN nodes n ON n.id=pn.node_id AND n.task_id=pn.task_id LEFT JOIN node_completions c ON c.node_id=n.id AND c.activation=n.activation WHERE pn.task_id=$1 AND pn.plan_id=$2 ORDER BY pn.node_id`,[taskId,basis.plan_id])).rows;
- if(!members.length||members.length>256||members.some(m=>m.state!=='COMPLETED'||!m.operation_id))throw new CommandError('unmet_precondition','work_unsettled');
- const outputs:DeliveryOutputEvidence[]=[];
- for(const m of members){
-  const {item,identity}=await resolveCanonicalResult(tx,taskId,m.operation_id!);
-  if(!item.current||item.manifest.node_id!==m.node_id||item.manifest.node_activation!==Number(m.activation))throw new CommandError('unmet_precondition','source_changed');
-  const completion=item.manifest,artifacts=[];
-  if(new Set(completion.artifact_ids).size!==completion.artifact_ids.length)throw new CommandError('unmet_precondition','identity_mismatch');
-  for(const id of [...completion.artifact_ids].sort()){
-   const a=(await readArtifact(tx,taskId,id)).metadata;
-   if(a.task_id!==taskId||a.node_id!==m.node_id||a.node_activation!==completion.node_activation)throw new CommandError('unmet_precondition','identity_mismatch');artifacts.push(a);
-  }
-  const effective:PublicationEffectiveBasis={task_id:taskId,specification_id:basis.specification_id,plan_id:basis.plan_id,completion_operation_id:completion.operation_id,completion_manifest_digest:completion.content_digest};
-  outputs.push(validate('DeliveryOutputEvidence',{node_id:m.node_id,node_activation:Number(m.activation),completion,completion_manifest_digest:completion.content_digest,effective_basis:effective,effective_basis_digest:hash(effective),artifacts,repository_free:item.repository_free,...(identity?{source:identity,source_digest:hash(identity)}:{})}));
- }
+ const reviewed=await canonicalReviewManifest(tx,taskId),outputs=reviewed.outputs;
+ const revision={specification_digest:reviewed.specification_digest,plan_digest:reviewed.plan_digest};
  const resources=[...new Set(outputs.flatMap(o=>o.source?[o.source.resource_id]:[]))].sort(),repositories:DeliveryRepository[]=[];
  if(resources.length>64)throw new CommandError('unmet_precondition','unsupported_mode');
  for(const resourceId of resources){
@@ -122,10 +107,18 @@ export async function deliveryBatchRecord(tx:Transaction,b:DeliveryBatchRecord):
   }
   if(await permissionConfigurationFingerprint(tx,r.resource_id)!==r.permission_proof!.configuration_fingerprint||await knownPublicExposureCount(tx,b.task_id,r.resource_id,r.repository_identity)){checks='unknown';status='attention';}
   const operation=merge?{operation_id:merge.id,operation_digest:merge.request_digest,operation_kind:'merge',operation_state:merge.status,merge_method:merge.selected_method}:preparation?{operation_id:preparation.id,operation_digest:preparation.request_digest,operation_kind:preparation.kind,operation_state:preparation.state==='settled'?preparation.result?.status==='reconciliation_required'?'unknown':preparation.reason?'failed':'succeeded':preparation.state==='revoked'?'cancelled':preparation.state}:{};
-  items.push(validate('DeliveryItemProgress',{item_id:r.item_id,resource_id:r.resource_id,accepted_head:r.candidate!.head,checks,status:final?'finalized':b.status==='cancelled'?'cancelled':merge?.status==='unknown'?'reconciling':merge?.status==='started'?'merging':merge?.status==='failed'?'failed':status,...(review?{review}:{}),...(observedBase?{observed_base:observedBase}:{}),...(testHead?{test_merge_head:testHead}:{}),...operation,...(merge?.reason||preparation?.reason||b.attention_reason?{reason:merge?.reason??preparation?.reason??b.attention_reason}:{}),...(final?{final_commit:final.final_commit,finalized_at:final.finalized_at.toISOString()}:{})}));
+  let reconciliation:DeliveryItemProgress['reconciliation'];
+  if(['cancelled','revoked'].includes(b.status)){
+   const item=(await tx.query<{cleanup_state:string}>('SELECT cleanup_state FROM remote_preparation_items WHERE item_id=$1',[r.item_id])).rows[0];
+   const pendingMerge=(await tx.query("SELECT 1 FROM owner_delivery_merge_operations WHERE item_id=$1 AND (effect_owned OR status IN ('started','unknown')) LIMIT 1",[r.item_id])).rowCount;
+   const pendingPreparation=(await tx.query(`SELECT 1 FROM remote_preparation_operations o WHERE o.item_id=$1 AND (o.effect_owned OR o.may_have_mutated AND o.state NOT IN ('settled','revoked') OR o.kind='push' AND o.state='settled' AND o.result->>'status'='reconciliation_required' AND NOT EXISTS(SELECT 1 FROM remote_preparation_observations p WHERE p.operation_id=o.id AND p.kind='published')) LIMIT 1`,[r.item_id])).rowCount;
+   reconciliation=final||item?.cleanup_state==='externally_merged'?'externally_merged':pendingMerge?'waiting_original_merge':pendingPreparation?'waiting_preparation':b.status==='revoked'?'none':item?.cleanup_state==='closed'?'closed':item?.cleanup_state==='not_needed'?'not_needed':item?.cleanup_state==='attention'?'attention':'pending_close';
+  }
+  items.push(validate('DeliveryItemProgress',{item_id:r.item_id,resource_id:r.resource_id,accepted_head:r.candidate!.head,checks,status:final?'finalized':b.status==='cancelled'?'cancelled':b.status==='revoked'?'revoked':merge?.status==='unknown'?'reconciling':merge?.status==='started'?'merging':merge?.status==='failed'?'failed':status,...(reconciliation?{reconciliation}:{}),...(review?{review}:{}),...(observedBase?{observed_base:observedBase}:{}),...(testHead?{test_merge_head:testHead}:{}),...operation,...(merge?.reason||preparation?.reason||b.attention_reason?{reason:merge?.reason??preparation?.reason??b.attention_reason}:{}),...(final?{final_commit:final.final_commit,finalized_at:final.finalized_at.toISOString()}:{})}));
  }
- const summary:DeliveryBatchSummary={operation_id:b.id,content_digest:b.content_digest,version:Number(b.version),status:b.status,input_cutoff:Number(b.input_cutoff),accepted_at:b.accepted_at.toISOString(),modified_items:items.length,finalized_items:items.filter(i=>i.status==='finalized').length,retry_allowed:['waiting','failed','reconciling','attention'].includes(b.status),cancel_allowed:!['completed','cancelled'].includes(b.status),...(b.attention_reason?{reason:b.attention_reason}:{})};
- return validate('DeliveryBatch',{schema_version:1,task_id:b.task_id,batch:summary,proposal_id:b.proposal_id,confirmation_id:b.confirmation_id,admission_request_id:b.admission_request_id,manifest:b.manifest,items});
+ const revocation=(await tx.query<{feedback_id:string;id:string;request_id:string}>('SELECT feedback_id,id,request_id FROM owner_delivery_revocations WHERE batch_id=$1',[b.id])).rows[0];
+ const summary:DeliveryBatchSummary={operation_id:b.id,content_digest:b.content_digest,version:Number(b.version),status:b.status,input_cutoff:Number(b.input_cutoff),accepted_at:b.accepted_at.toISOString(),modified_items:items.length,finalized_items:items.filter(i=>i.status==='finalized').length,retry_allowed:['waiting','failed','reconciling','attention'].includes(b.status),cancel_allowed:!['completed','cancelled','revoked'].includes(b.status),...(b.attention_reason?{reason:b.attention_reason}:{})};
+ return validate('DeliveryBatch',{schema_version:1,task_id:b.task_id,batch:summary,proposal_id:b.proposal_id,confirmation_id:b.confirmation_id,admission_request_id:b.admission_request_id,manifest:b.manifest,items,...(revocation?{revocation:{feedback_id:revocation.feedback_id,revocation_id:revocation.id,request_id:revocation.request_id,settled:await reviewRevocationSettled(tx,revocation.id)}}:{})});
 }
 export async function completeLocalDelivery(tx:Transaction,b:DeliveryBatchRecord):Promise<void> {
  if(b.manifest.repositories.some(r=>r.outcome==='modified'))throw new CommandError('unmet_precondition','Modified delivery cannot complete locally');
@@ -139,7 +132,7 @@ export async function completeAcceptedBatch(tx:Transaction,b:DeliveryBatchRecord
  const final=(await tx.query<{item_id:string}>('SELECT item_id FROM owner_delivery_finalizations WHERE batch_id=$1',[b.id])).rows;
  if(modified.some(r=>!final.some(f=>f.item_id===r.item_id))||final.length!==modified.length)throw new CommandError('unmet_precondition','Delivery items are not all finalized');
  const task=(await tx.query<{state:string;accepted_delivery_operation_id:string|null}>('SELECT state,accepted_delivery_operation_id FROM tasks WHERE id=$1 FOR UPDATE',[b.task_id])).rows[0];
- if(task?.state==='CANCELLED'||b.status==='cancelled')return;
+ if(task?.state==='CANCELLED'||['cancelled','revoked'].includes(b.status))return;
  if(task?.accepted_delivery_operation_id!==b.id||!['REVIEW','COMPLETED'].includes(task.state))throw new CommandError('unmet_precondition','Delivery no longer owns Task completion');
  await tx.query("UPDATE owner_delivery_batches SET status='completed',version=version+1 WHERE id=$1 AND status<>'completed'",[b.id]);
  const done=await tx.query("UPDATE tasks SET state='COMPLETED',control_version=control_version+1 WHERE id=$1 AND state='REVIEW' RETURNING id",[b.task_id]);

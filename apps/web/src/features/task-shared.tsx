@@ -35,17 +35,22 @@ export function useTaskRead<T>(
   suffix: string,
   schema: string,
   enabled = true,
+  check?: (value: T) => void,
 ) {
   const query = useQuery({
-    queryKey: ["tasks", props.task.task_id, suffix],
-    queryFn: () =>
-      taskRead<T>(
+    queryKey: ["tasks", props.task.task_id, suffix, props.commands.sessionId],
+    queryFn: async ({signal}) => {
+      const value = await taskRead<T>(
         props.task.task_id,
         suffix,
         schema,
         undefined,
         props.commands.sessionId,
-      ),
+        signal,
+      );
+      check?.(value);
+      return value;
+    },
     enabled,
     retry: false,
     refetchInterval: 3000,
@@ -63,18 +68,23 @@ export function useTaskPages<T>(
   next: (page: T) => string | undefined,
   params: Record<string, string | undefined> = {},
   enabled = true,
+  check?: (value: T) => void,
 ) {
   const query = useInfiniteQuery({
-    queryKey: ["tasks", props.task.task_id, suffix, params],
+    queryKey: ["tasks", props.task.task_id, suffix, params, props.commands.sessionId],
     initialPageParam: undefined as string | undefined,
-    queryFn: ({ pageParam }) =>
-      taskRead<T>(
+    queryFn: async ({ pageParam, signal }) => {
+      const value = await taskRead<T>(
         props.task.task_id,
         suffix,
         schema,
         { ...params, cursor: pageParam ?? params.cursor },
         props.commands.sessionId,
-      ),
+        signal,
+      );
+      check?.(value);
+      return value;
+    },
     getNextPageParam: next,
     enabled,
     retry: false,

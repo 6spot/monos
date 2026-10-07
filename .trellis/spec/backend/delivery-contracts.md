@@ -15,7 +15,8 @@ Canonical Task Conversation implements source-bound `commit_task_turn` and Owner
 pre-delivery Cancel is also implemented. Exact Owner Accept, accepted Retry/Cancel
 and zero/one modified automatic GitHub finality follow [Owner delivery](owner-delivery.md).
 Dedicated prepare/confirm/Accept receipts are enforced in SQL; confirmation alone
-is not acceptance. Request Changes/revocation/restoration is the next slice.
+is not acceptance. Explicit Request Changes/revocation/reconsideration uses the
+[review correction](review-correction.md) contract.
 Multi-repository/plain-Git/deferred-mode final delivery remains outside Stage A.
 
 ## 3. Contracts

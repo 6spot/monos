@@ -51,6 +51,10 @@ func (d *Daemon) retainedRecovery(op protocol.Operation, dispatch protocol.Dispa
 		if dispatch.TaskConversationSource == nil || dispatch.MutationAllowed || dispatch.ProcessReleased || !reflect.DeepEqual(start.Dispatch.TaskID, dispatch.TaskID) || !reflect.DeepEqual(start.Dispatch.TaskConversationSource, dispatch.TaskConversationSource) || !reflect.DeepEqual(start.Dispatch.WorkspaceReservations, dispatch.WorkspaceReservations) {
 			return false, fmt.Errorf("Task conversation recovery source or authorization changed")
 		}
+	} else if dispatch.TaskReviewSource != nil || start.Dispatch.TaskReviewSource != nil {
+		if dispatch.TaskReviewSource == nil || dispatch.MutationAllowed || dispatch.ProcessReleased || !reflect.DeepEqual(start.Dispatch.TaskID, dispatch.TaskID) || !reflect.DeepEqual(start.Dispatch.TaskReviewSource, dispatch.TaskReviewSource) || !reflect.DeepEqual(start.Dispatch.WorkspaceReservations, dispatch.WorkspaceReservations) {
+			return false, fmt.Errorf("Task review recovery source or authorization changed")
+		}
 	} else if dispatch.TaskReplanSource != nil || start.Dispatch.TaskReplanSource != nil {
 		if dispatch.TaskReplanSource == nil || dispatch.MutationAllowed || dispatch.ProcessReleased || !reflect.DeepEqual(start.Dispatch.TaskID, dispatch.TaskID) || !reflect.DeepEqual(start.Dispatch.TaskReplanSource, dispatch.TaskReplanSource) || !reflect.DeepEqual(start.Dispatch.WorkspaceReservations, dispatch.WorkspaceReservations) {
 			return false, fmt.Errorf("Task Replan recovery source or authorization changed")
@@ -77,7 +81,7 @@ func (d *Daemon) prepareRecovery(ctx context.Context, inventory protocol.RunnerI
 		// Only exact source-bound terminal effects gain repository-free replay.
 		nodeFree := dispatch.NodeExecutionSource != nil && (op.Kind == protocol.Stop || op.Kind == protocol.KindCompleteNode && op.RepositoryFree != nil && *op.RepositoryFree)
 		conversationStop := dispatch.TaskConversationSource != nil && op.Kind == protocol.Stop
-		if op.Workspace == nil && !nodeFree && !conversationStop && (op.Kind != protocol.Stop || dispatch.TaskPlanningSource == nil && dispatch.TaskReplanSource == nil) {
+		if op.Workspace == nil && !nodeFree && !conversationStop && (op.Kind != protocol.Stop || dispatch.TaskPlanningSource == nil && dispatch.TaskReplanSource == nil && dispatch.TaskReviewSource == nil) {
 			continue
 		}
 		if prior, exists := seen[op.OperationID]; exists {

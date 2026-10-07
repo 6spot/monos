@@ -118,7 +118,7 @@ export async function retryAcceptedMerge(tx: Transaction,batch: DeliveryBatchRec
   const id=randomUUID(),request={...old.request,operation_id:id};
   await tx.query('INSERT INTO owner_delivery_merge_operations(id,batch_id,item_id,request,request_digest,selected_method) VALUES($1,$2,$3,$4,$5,$6)',[id,batch.id,repository.item_id,request,hash(request),old.selected_method]);
  }
- await tx.query("UPDATE owner_delivery_batches SET status=CASE WHEN status='reconciling' THEN status ELSE 'active' END,attention_reason=NULL,due_at=clock_timestamp() WHERE id=$1 AND status NOT IN ('completed','cancelled')",[batch.id]);
+ await tx.query("UPDATE owner_delivery_batches SET status=CASE WHEN status='reconciling' THEN status ELSE 'active' END,attention_reason=NULL,due_at=clock_timestamp() WHERE id=$1 AND status NOT IN ('completed','cancelled','revoked')",[batch.id]);
 }
 
 export class OwnerDeliveryWorker {
@@ -126,7 +126,7 @@ export class OwnerDeliveryWorker {
  constructor(db: Database,instanceId: string,provider: GitHubFinalization) {this.db=db;this.instanceId=instanceId;this.provider=provider;}
  async pump(): Promise<void> {
   const batches=(await this.db.pool.query<{id:string;task_id:string}>(`SELECT b.id,b.task_id FROM owner_delivery_batches b WHERE b.due_at<=clock_timestamp() AND
-   (b.status IN ('active','waiting','reconciling') OR b.status='cancelled' AND EXISTS(SELECT 1 FROM owner_delivery_merge_operations m WHERE m.batch_id=b.id AND m.status IN ('started','unknown') AND m.may_have_mutated)) ORDER BY b.due_at,b.id LIMIT 16`)).rows;
+   (b.status IN ('active','waiting','reconciling') OR b.status IN ('cancelled','revoked') AND EXISTS(SELECT 1 FROM owner_delivery_merge_operations m WHERE m.batch_id=b.id AND m.status IN ('started','unknown') AND m.may_have_mutated)) ORDER BY b.due_at,b.id LIMIT 16`)).rows;
   for(const b of batches) {
    let work: Work|undefined;
    try {
@@ -136,7 +136,7 @@ export class OwnerDeliveryWorker {
    } catch(error) {
     if(work)await this.settleError(work,error);
     else if(error instanceof RemoteProviderWaiting)await this.db.pool.query('UPDATE owner_delivery_batches SET due_at=$2 WHERE id=$1',[b.id,error.until]);
-    else if(!(error instanceof ProviderTurnComplete))await this.db.pool.query("UPDATE owner_delivery_batches SET status=CASE WHEN status='cancelled' THEN status ELSE 'attention' END,attention_reason=$2,due_at=clock_timestamp()+interval '30 seconds',version=version+1 WHERE id=$1 AND status<>'completed'",[b.id,safeReason(error)]);
+    else if(!(error instanceof ProviderTurnComplete))await this.db.pool.query("UPDATE owner_delivery_batches SET status=CASE WHEN status IN ('cancelled','revoked') THEN status ELSE 'attention' END,attention_reason=$2,due_at=clock_timestamp()+interval '30 seconds',version=version+1 WHERE id=$1 AND status<>'completed'",[b.id,safeReason(error)]);
    } finally {
     if(work)await transaction(this.db,tx=>releaseRemoteProvider(tx,work!.scope,work!.reservation));
    }
@@ -152,7 +152,7 @@ export class OwnerDeliveryWorker {
    const item=(await tx.query<RemoteItem>('SELECT * FROM remote_preparation_items WHERE item_id=$1 AND task_id=$2 FOR UPDATE',[repository.item_id,taskId])).rows[0];if(!item)throw new RemoteAdmissionError('identity_mismatch');
    const merge=(await tx.query<MergeRow>('SELECT * FROM owner_delivery_merge_operations WHERE batch_id=$1 AND item_id=$2 ORDER BY created_at DESC,id DESC LIMIT 1 FOR UPDATE',[batch.id,item.item_id])).rows[0];
    const recovery=merge?.may_have_mutated&&['started','unknown'].includes(merge.status);
-   if(batch.status==='cancelled'&&!recovery)return;
+   if(['cancelled','revoked'].includes(batch.status)&&!recovery)return;
    if(!recovery) {
     await frozenDeliveryRepository(tx,item,repository.preparation_request,repository.preparation_result);
     if(merge?.status==='failed')return;
@@ -283,10 +283,10 @@ export class OwnerDeliveryWorker {
     await completeAcceptedBatch(tx,batch);
    } else if(outcome.state==='rejected') {
     await tx.query("UPDATE owner_delivery_merge_operations SET status='failed',reason=$2,result=$3,result_digest=$4,effect_owned=false,claim=NULL,backend_instance=NULL,claim_expires_at=NULL,version=version+1 WHERE id=$1",[row.id,outcome.reason,outcome,hash(outcome)]);
-    await tx.query("UPDATE owner_delivery_batches SET status=CASE WHEN status='cancelled' THEN status ELSE 'failed' END,attention_reason=$2,version=version+1 WHERE id=$1",[batch.id,outcome.reason]);
+    await tx.query("UPDATE owner_delivery_batches SET status=CASE WHEN status IN ('cancelled','revoked') THEN status ELSE 'failed' END,attention_reason=$2,version=version+1 WHERE id=$1",[batch.id,outcome.reason]);
    } else {
     await tx.query("UPDATE owner_delivery_merge_operations SET status='unknown',reason=$2,result=$3,result_digest=$4,claim=NULL,backend_instance=NULL,claim_expires_at=NULL,due_at=clock_timestamp()+interval '5 seconds',version=version+1 WHERE id=$1",[row.id,outcome.reason,outcome,hash(outcome)]);
-    await tx.query("UPDATE owner_delivery_batches SET status=CASE WHEN status='cancelled' THEN status ELSE 'reconciling' END,attention_reason=$2,due_at=clock_timestamp()+interval '5 seconds',version=version+1 WHERE id=$1",[batch.id,outcome.reason]);
+    await tx.query("UPDATE owner_delivery_batches SET status=CASE WHEN status IN ('cancelled','revoked') THEN status ELSE 'reconciling' END,attention_reason=$2,due_at=clock_timestamp()+interval '5 seconds',version=version+1 WHERE id=$1",[batch.id,outcome.reason]);
    }
    await tx.query("UPDATE owner_delivery_batches SET checkpoint=checkpoint-'claim' WHERE id=$1",[batch.id]);
   });
@@ -306,7 +306,7 @@ export class OwnerDeliveryWorker {
    const possible=(await tx.query<MergeRow>("SELECT * FROM owner_delivery_merge_operations WHERE batch_id=$1 AND item_id=$2 AND may_have_mutated AND status IN ('started','unknown') FOR UPDATE",[batch.id,work.item.item_id])).rows[0];
    if(possible)await tx.query("UPDATE owner_delivery_merge_operations SET status='unknown',reason=$2,claim=NULL,backend_instance=NULL,claim_expires_at=NULL,version=version+1 WHERE id=$1",[possible.id,reason]);
    const transient=error instanceof RemoteProviderError&&['rate_limited','provider_unavailable'].includes(error.reason)||error instanceof ProviderTurnComplete;
-   await tx.query("UPDATE owner_delivery_batches SET status=CASE WHEN status='cancelled' THEN status WHEN $2 THEN 'reconciling' WHEN $3 THEN 'waiting' ELSE 'attention' END,attention_reason=$4,checkpoint=checkpoint-'claim',due_at=clock_timestamp()+interval '5 seconds',version=version+1 WHERE id=$1",[batch.id,!!possible,transient,reason]);
+   await tx.query("UPDATE owner_delivery_batches SET status=CASE WHEN status IN ('cancelled','revoked') THEN status WHEN $2 THEN 'reconciling' WHEN $3 THEN 'waiting' ELSE 'attention' END,attention_reason=$4,checkpoint=checkpoint-'claim',due_at=clock_timestamp()+interval '5 seconds',version=version+1 WHERE id=$1",[batch.id,!!possible,transient,reason]);
    await releaseRemoteProvider(tx,work.scope,work.reservation,error);
   });
  }

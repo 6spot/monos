@@ -12,8 +12,8 @@ Stage A supports complete collections with zero/one modified automatic GitHub
 repository. Repository-free and actual no-change results complete locally. Mapped
 results remain modified even when publication creates no new commit. Multiple
 modified repositories, plain Git and configured `after_acceptance` final delivery
-reject before approval consumption. Request Changes/revocation/restoration belongs
-to the next slice. No new Task states, Runtime work or Agent acceptance.
+reject before approval consumption. Explicit Request Changes, receipt-backed
+revocation and input reconsideration follow [review correction](review-correction.md). No new Task states, Runtime work or Agent acceptance.
 
 ## 2. Signatures
 
@@ -138,7 +138,10 @@ Accepted Cancel locks discovered Runners before Task, revokes new effects and st
 settles actual attempts under workspace guards. Unknown merge ownership suppresses
 PR close while original read-only reconciliation continues. Late success records
 historical finality/externally-merged cleanup; Task and batch remain cancelled.
-Completed rejects new Cancel while committed receipts replay.
+Completed rejects new Cancel while committed receipts replay. Revoked batches also
+reject Retry/Cancel; their original preparation links never regain ordinary authority.
+Worker catch/settlement paths preserve revoked status. Correction preserves PR/ref;
+terminal cleanup remains a separate explicit Cancel path.
 
 ### Reads and UI
 

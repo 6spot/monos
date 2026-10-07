@@ -120,6 +120,15 @@ results record the original Attempt command receipt and Stop intent atomically.
 The source version is execution control; operation_version independently fences
 its exact obligation. Full canonical context rejects oversize, rather than clipping.
 
+A reconsideration-authored requirement proposal cannot publish while its same
+feedback remains unresolved. Main feedback may explicitly adopt that exact proposal
+through `commit_review_feedback`; its frozen context must retain the genuine earlier
+resolution/proposal linkage and identical semantic basis. This transfers the main
+feedback guard to the actual requirement obligation before publication. The Owner
+still confirms exact content independently. Cross-feedback adoption, silent basis
+refresh and inherited approval are forbidden. Publication resolves only its actual
+linked obligations; withdrawal retains an explicit route back to feedback handling.
+
 Review Rework excludes its own feedback from preconditions and preserves independent
 waits. Node promotion distinguishes executable assigned guidance from unresolved
 classification/issue/requirement/Replan/publication controls; it cannot count the
@@ -144,6 +153,9 @@ transaction, with predecessor/dismissal receipt/direction/basis retained and no 
 gap. It returns REVIEW; successor dispatch waits for actual old Planner/effect
 settlement. Same feedback/basis without new Owner direction cannot automatically
 repeat the dismissed structural request. Dismissal and Withdrawal are distinct.
+The anti-repeat identity uses feedback, Specification, Plan, result digest and actual
+Owner direction, excluding incidental control version, source and operation generation.
+Dismissal's own control increment and Retry alone do not authorize a repeated request.
 
 Cancel uses existing terminal cleanup and is not correction. Preserve Task CANCELLED
 while exposing original reconciliation/cleanup and eventual verified final commit.
@@ -174,4 +186,5 @@ and Web/wire research own source anchors. Dedicated revoked status, actual revie
 source and conservative immutable-input reconsideration are selected. Concrete reconsideration/source/requirement identity and ordering are now resolved
 above. Independent researcher findings are preserved below; the final main pass
 reconciles them because the platform interrupted the reviewers with a usage limit.
-No product implementation has started.
+Implementation is active after the scoped planning commit; final review awaits the
+actual backend, Web and runtime handoffs.

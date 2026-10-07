@@ -43,10 +43,14 @@ type CommandPayload struct {
 	ConfirmationID          *string             `json:"confirmation_id,omitempty"`
 	Content                 *ArtifactContent    `json:"content,omitempty"`
 	Cursor                  *string             `json:"cursor,omitempty"`
+	FeedbackID              *string             `json:"feedback_id,omitempty"`
 	HandledGuidanceIDS      []string            `json:"handled_guidance_ids,omitempty"`
 	Impact                  *Impact             `json:"impact,omitempty"`
 	InputID                 *string             `json:"input_id,omitempty"`
+	NodeIDS                 []string            `json:"node_ids,omitempty"`
 	Nodes                   []ExecutionPlanNode `json:"nodes,omitempty"`
+	OperationID             *string             `json:"operation_id,omitempty"`
+	OperationVersion        *int64              `json:"operation_version,omitempty"`
 	PlanID                  *string             `json:"plan_id,omitempty"`
 	PlanningIntentID        *string             `json:"planning_intent_id,omitempty"`
 	ProjectContextDigest    *string             `json:"project_context_digest,omitempty"`
@@ -54,6 +58,7 @@ type CommandPayload struct {
 	ProposalID              *string             `json:"proposal_id,omitempty"`
 	Query                   *string             `json:"query,omitempty"`
 	Reason                  *string             `json:"reason,omitempty"`
+	ReconsiderationID       *string             `json:"reconsideration_id,omitempty"`
 	References              []ArtifactReference `json:"references,omitempty"`
 	ReplanRequestID         *string             `json:"replan_request_id,omitempty"`
 	Reply                   *string             `json:"reply,omitempty"`
@@ -443,6 +448,7 @@ type Dispatch struct {
 	TaskID                 *string                 `json:"task_id,omitempty"`
 	TaskPlanningSource     *TaskPlanningSource     `json:"task_planning_source,omitempty"`
 	TaskReplanSource       *TaskReplanSource       `json:"task_replan_source,omitempty"`
+	TaskReviewSource       *TaskReviewSource       `json:"task_review_source,omitempty"`
 	TodoID                 *string                 `json:"todo_id,omitempty"`
 	WorkspaceReservations  *WorkspaceReservations  `json:"workspace_reservations,omitempty"`
 }
@@ -479,6 +485,21 @@ type TaskReplanSource struct {
 	RequestID       string `json:"request_id"`
 	SourceID        string `json:"source_id"`
 	SpecificationID string `json:"specification_id"`
+}
+
+type TaskReviewSource struct {
+	ContextDigest      string                  `json:"context_digest"`
+	ControlVersion     int64                   `json:"control_version"`
+	FeedbackID         string                  `json:"feedback_id"`
+	InputID            *string                 `json:"input_id,omitempty"`
+	OperationID        string                  `json:"operation_id"`
+	OperationVersion   int64                   `json:"operation_version"`
+	PlanID             string                  `json:"plan_id"`
+	Purpose            TaskReviewSourcePurpose `json:"purpose"`
+	ReconsiderationID  *string                 `json:"reconsideration_id,omitempty"`
+	ReviewResultDigest string                  `json:"review_result_digest"`
+	SourceID           string                  `json:"source_id"`
+	SpecificationID    string                  `json:"specification_id"`
 }
 
 type WorkspaceReservations struct {
@@ -2115,6 +2136,8 @@ type RequirementProposalDetail struct {
 	PredecessorID       *string                    `json:"predecessor_id"`
 	Proposal            RequirementProposalSummary `json:"proposal"`
 	ReplanSourceID      *string                    `json:"replan_source_id"`
+	ReviewOperationID   *string                    `json:"review_operation_id,omitempty"`
+	ReviewSourceID      *string                    `json:"review_source_id,omitempty"`
 	SchemaVersion       int64                      `json:"schema_version"`
 	SourceID            *string                    `json:"source_id"`
 	SourceInputIDS      []string                   `json:"source_input_ids"`
@@ -2208,20 +2231,23 @@ type TaskReplanCommand struct {
 }
 
 type TaskReplanResult struct {
-	ConfirmationID            *string                   `json:"confirmation_id,omitempty"`
-	ContentDigest             *string                   `json:"content_digest,omitempty"`
-	OperationID               *string                   `json:"operation_id,omitempty"`
-	PlanID                    *string                   `json:"plan_id,omitempty"`
-	ProposalID                *string                   `json:"proposal_id,omitempty"`
-	PublicationID             *string                   `json:"publication_id,omitempty"`
-	ReplanRequestID           *string                   `json:"replan_request_id,omitempty"`
-	RequestID                 string                    `json:"request_id"`
-	RequirementConfirmationID *string                   `json:"requirement_confirmation_id,omitempty"`
-	RequirementProposalID     *string                   `json:"requirement_proposal_id,omitempty"`
-	SchemaVersion             float64                   `json:"schema_version"`
-	SpecificationID           *string                   `json:"specification_id,omitempty"`
-	Status                    ConfigurationResultStatus `json:"status"`
-	Version                   *int64                    `json:"version,omitempty"`
+	ConfirmationID               *string                   `json:"confirmation_id,omitempty"`
+	ContentDigest                *string                   `json:"content_digest,omitempty"`
+	OperationID                  *string                   `json:"operation_id,omitempty"`
+	PlanID                       *string                   `json:"plan_id,omitempty"`
+	ProposalID                   *string                   `json:"proposal_id,omitempty"`
+	PublicationID                *string                   `json:"publication_id,omitempty"`
+	ReplanRequestID              *string                   `json:"replan_request_id,omitempty"`
+	RequestID                    string                    `json:"request_id"`
+	RequirementConfirmationID    *string                   `json:"requirement_confirmation_id,omitempty"`
+	RequirementProposalID        *string                   `json:"requirement_proposal_id,omitempty"`
+	ReviewFeedbackID             *string                   `json:"review_feedback_id,omitempty"`
+	ReviewOperationID            *string                   `json:"review_operation_id,omitempty"`
+	ReviewPredecessorOperationID *string                   `json:"review_predecessor_operation_id,omitempty"`
+	SchemaVersion                float64                   `json:"schema_version"`
+	SpecificationID              *string                   `json:"specification_id,omitempty"`
+	Status                       ConfigurationResultStatus `json:"status"`
+	Version                      *int64                    `json:"version,omitempty"`
 }
 
 type TaskReplanStatus struct {
@@ -2233,20 +2259,23 @@ type TaskReplanStatus struct {
 }
 
 type ReplanRequestSummary struct {
-	Direction          *string                    `json:"direction"`
-	ID                 string                     `json:"id"`
-	InputID            *string                    `json:"input_id"`
-	IssueID            *string                    `json:"issue_id"`
-	OriginActivation   *int64                     `json:"origin_activation"`
-	OriginNodeID       *string                    `json:"origin_node_id"`
-	PhysicalSettled    bool                       `json:"physical_settled"`
-	ProposalID         *string                    `json:"proposal_id"`
-	Reason             string                     `json:"reason"`
-	RequesterBlockerID *string                    `json:"requester_blocker_id"`
-	SourceID           *string                    `json:"source_id"`
-	Status             ReplanRequestSummaryStatus `json:"status"`
-	TaskID             string                     `json:"task_id"`
-	Version            int64                      `json:"version"`
+	Direction                    *string                    `json:"direction"`
+	ID                           string                     `json:"id"`
+	InputID                      *string                    `json:"input_id"`
+	IssueID                      *string                    `json:"issue_id"`
+	OriginActivation             *int64                     `json:"origin_activation"`
+	OriginNodeID                 *string                    `json:"origin_node_id"`
+	PhysicalSettled              bool                       `json:"physical_settled"`
+	ProposalID                   *string                    `json:"proposal_id"`
+	Reason                       string                     `json:"reason"`
+	RequesterBlockerID           *string                    `json:"requester_blocker_id"`
+	ReviewFeedbackID             *string                    `json:"review_feedback_id,omitempty"`
+	ReviewOperationID            *string                    `json:"review_operation_id,omitempty"`
+	ReviewPredecessorOperationID *string                    `json:"review_predecessor_operation_id,omitempty"`
+	SourceID                     *string                    `json:"source_id"`
+	Status                       ReplanRequestSummaryStatus `json:"status"`
+	TaskID                       string                     `json:"task_id"`
+	Version                      int64                      `json:"version"`
 }
 
 type ReplanProposalDetail struct {
@@ -2524,30 +2553,30 @@ type PublicationPermissionResult struct {
 }
 
 type PublicationAccessRequest struct {
-	AttemptID     string  `json:"attempt_id"`
-	Incarnation   int64   `json:"incarnation"`
-	Purpose       Purpose `json:"purpose"`
-	RequestDigest string  `json:"request_digest"`
-	SchemaVersion int64   `json:"schema_version"`
+	AttemptID     string                          `json:"attempt_id"`
+	Incarnation   int64                           `json:"incarnation"`
+	Purpose       PublicationAccessRequestPurpose `json:"purpose"`
+	RequestDigest string                          `json:"request_digest"`
+	SchemaVersion int64                           `json:"schema_version"`
 }
 
 type PublicationAccessResult struct {
-	AttemptID             string                      `json:"attempt_id"`
-	Authentication        Authentication              `json:"authentication"`
-	CandidateHead         string                      `json:"candidate_head"`
-	ClaimExpiresAt        *string                     `json:"claim_expires_at,omitempty"`
-	ClaimID               *string                     `json:"claim_id,omitempty"`
-	DeliveryRef           string                      `json:"delivery_ref"`
-	ExpectedHead          *string                     `json:"expected_head"`
-	ItemID                string                      `json:"item_id"`
-	OperationID           string                      `json:"operation_id"`
-	PermissionProof       *PublicationPermissionProof `json:"permission_proof,omitempty"`
-	PermissionProofDigest *string                     `json:"permission_proof_digest,omitempty"`
-	Purpose               Purpose                     `json:"purpose"`
-	RemoteURL             string                      `json:"remote_url"`
-	RepositoryID          string                      `json:"repository_id"`
-	RequestDigest         string                      `json:"request_digest"`
-	SchemaVersion         int64                       `json:"schema_version"`
+	AttemptID             string                          `json:"attempt_id"`
+	Authentication        Authentication                  `json:"authentication"`
+	CandidateHead         string                          `json:"candidate_head"`
+	ClaimExpiresAt        *string                         `json:"claim_expires_at,omitempty"`
+	ClaimID               *string                         `json:"claim_id,omitempty"`
+	DeliveryRef           string                          `json:"delivery_ref"`
+	ExpectedHead          *string                         `json:"expected_head"`
+	ItemID                string                          `json:"item_id"`
+	OperationID           string                          `json:"operation_id"`
+	PermissionProof       *PublicationPermissionProof     `json:"permission_proof,omitempty"`
+	PermissionProofDigest *string                         `json:"permission_proof_digest,omitempty"`
+	Purpose               PublicationAccessRequestPurpose `json:"purpose"`
+	RemoteURL             string                          `json:"remote_url"`
+	RepositoryID          string                          `json:"repository_id"`
+	RequestDigest         string                          `json:"request_digest"`
+	SchemaVersion         int64                           `json:"schema_version"`
 }
 
 type Authentication struct {
@@ -2867,6 +2896,7 @@ type DeliveryBatch struct {
 	Items              []DeliveryItemProgress     `json:"items"`
 	Manifest           DeliveryAcceptanceManifest `json:"manifest"`
 	ProposalID         string                     `json:"proposal_id"`
+	Revocation         *Revocation                `json:"revocation,omitempty"`
 	SchemaVersion      int64                      `json:"schema_version"`
 	TaskID             string                     `json:"task_id"`
 }
@@ -2899,10 +2929,18 @@ type DeliveryItemProgress struct {
 	OperationKind   *OperationKindEnum         `json:"operation_kind,omitempty"`
 	OperationState  *OperationState            `json:"operation_state,omitempty"`
 	Reason          *string                    `json:"reason,omitempty"`
+	Reconciliation  *Reconciliation            `json:"reconciliation,omitempty"`
 	ResourceID      string                     `json:"resource_id"`
 	Review          *RemotePreparationReview   `json:"review,omitempty"`
 	Status          DeliveryItemProgressStatus `json:"status"`
 	TestMergeHead   *string                    `json:"test_merge_head,omitempty"`
+}
+
+type Revocation struct {
+	FeedbackID   string `json:"feedback_id"`
+	RequestID    string `json:"request_id"`
+	RevocationID string `json:"revocation_id"`
+	Settled      bool   `json:"settled"`
 }
 
 type OwnerDeliveryStatus struct {
@@ -2932,17 +2970,236 @@ type OwnerDeliveryHistoryQuery struct {
 	ProposalCursor *string `json:"proposal_cursor,omitempty"`
 }
 
+type TaskReviewManifest struct {
+	Outputs             []DeliveryOutputEvidence `json:"outputs"`
+	PlanDigest          string                   `json:"plan_digest"`
+	PlanID              string                   `json:"plan_id"`
+	SchemaVersion       int64                    `json:"schema_version"`
+	SpecificationDigest string                   `json:"specification_digest"`
+	SpecificationID     string                   `json:"specification_id"`
+	TaskID              string                   `json:"task_id"`
+}
+
+type OwnerReviewCommand struct {
+	Name          OwnerReviewCommandName `json:"name"`
+	Payload       OwnerReviewPayload     `json:"payload"`
+	RequestID     string                 `json:"request_id"`
+	SchemaVersion int64                  `json:"schema_version"`
+	TaskID        string                 `json:"task_id"`
+}
+
+type OwnerReviewPayload struct {
+	AcceptedBatch     *ReviewAcceptedBatch `json:"accepted_batch,omitempty"`
+	Answer            *string              `json:"answer,omitempty"`
+	Basis             *TaskReviewBasis     `json:"basis,omitempty"`
+	ExpectedVersion   *int64               `json:"expected_version,omitempty"`
+	FeedbackID        *string              `json:"feedback_id,omitempty"`
+	IssueID           *string              `json:"issue_id,omitempty"`
+	OperationID       *string              `json:"operation_id,omitempty"`
+	ReconsiderationID *string              `json:"reconsideration_id,omitempty"`
+	Text              *string              `json:"text,omitempty"`
+}
+
+type ReviewAcceptedBatch struct {
+	ContentDigest   string `json:"content_digest"`
+	ExpectedVersion int64  `json:"expected_version"`
+	OperationID     string `json:"operation_id"`
+}
+
+type TaskReviewBasis struct {
+	ControlVersion     int64  `json:"control_version"`
+	PlanID             string `json:"plan_id"`
+	ReviewResultDigest string `json:"review_result_digest"`
+	SpecificationID    string `json:"specification_id"`
+}
+
+type OwnerReviewCommandResult struct {
+	FeedbackID         *string                   `json:"feedback_id,omitempty"`
+	Name               *OwnerReviewCommandName   `json:"name,omitempty"`
+	OperationID        *string                   `json:"operation_id,omitempty"`
+	OperationVersion   *int64                    `json:"operation_version,omitempty"`
+	ReconsiderationID  *string                   `json:"reconsideration_id,omitempty"`
+	RequestID          string                    `json:"request_id"`
+	ReviewResultDigest *string                   `json:"review_result_digest,omitempty"`
+	RevokedBatch       *ReviewRevokedBatch       `json:"revoked_batch,omitempty"`
+	SchemaVersion      int64                     `json:"schema_version"`
+	Status             ConfigurationResultStatus `json:"status"`
+	TaskID             string                    `json:"task_id"`
+}
+
+type ReviewRevokedBatch struct {
+	ContentDigest    string `json:"content_digest"`
+	InputCutoff      int64  `json:"input_cutoff"`
+	OperationID      string `json:"operation_id"`
+	OperationVersion int64  `json:"operation_version"`
+	RevocationID     string `json:"revocation_id"`
+}
+
+type OwnerReviewHistoryQuery struct {
+	FeedbackCursor *string `json:"feedback_cursor,omitempty"`
+	InputCursor    *string `json:"input_cursor,omitempty"`
+}
+
+type OwnerReviewStatus struct {
+	AcceptedBatch         *ReviewAcceptedBatch    `json:"accepted_batch,omitempty"`
+	Basis                 *TaskReviewBasis        `json:"basis"`
+	Feedback              *ReviewFeedbackSummary  `json:"feedback"`
+	History               []ReviewFeedbackSummary `json:"history"`
+	HistoryHasMore        bool                    `json:"history_has_more"`
+	HistoryNextCursor     *string                 `json:"history_next_cursor,omitempty"`
+	Inputs                []ReviewInputSummary    `json:"inputs"`
+	InputsHasMore         bool                    `json:"inputs_has_more"`
+	InputsNextCursor      *string                 `json:"inputs_next_cursor,omitempty"`
+	Reason                *string                 `json:"reason,omitempty"`
+	RequestChangesAllowed bool                    `json:"request_changes_allowed"`
+	SchemaVersion         int64                   `json:"schema_version"`
+	TaskID                string                  `json:"task_id"`
+}
+
+type ReviewFeedbackSummary struct {
+	CreatedAt          string                      `json:"created_at"`
+	FeedbackID         string                      `json:"feedback_id"`
+	Operation          ReviewOperationSummary      `json:"operation"`
+	ReviewResultDigest string                      `json:"review_result_digest"`
+	Status             ReviewFeedbackSummaryStatus `json:"status"`
+}
+
+type ReviewOperationSummary struct {
+	FeedbackID             string                       `json:"feedback_id"`
+	InputID                *string                      `json:"input_id,omitempty"`
+	IssueID                *string                      `json:"issue_id,omitempty"`
+	OperationID            string                       `json:"operation_id"`
+	OperationVersion       int64                        `json:"operation_version"`
+	PredecessorOperationID *string                      `json:"predecessor_operation_id,omitempty"`
+	PreviousSourceID       *string                      `json:"previous_source_id,omitempty"`
+	Purpose                TaskReviewSourcePurpose      `json:"purpose"`
+	Reason                 *string                      `json:"reason,omitempty"`
+	ReconsiderationID      *string                      `json:"reconsideration_id,omitempty"`
+	ReplanRequestID        *string                      `json:"replan_request_id,omitempty"`
+	RequirementProposalID  *string                      `json:"requirement_proposal_id,omitempty"`
+	RetryAllowed           bool                         `json:"retry_allowed"`
+	SettlementPending      bool                         `json:"settlement_pending"`
+	SourceID               *string                      `json:"source_id,omitempty"`
+	Status                 ReviewOperationSummaryStatus `json:"status"`
+	WithdrawAllowed        bool                         `json:"withdraw_allowed"`
+}
+
+type ReviewInputSummary struct {
+	AcceptedBatchID   string                   `json:"accepted_batch_id"`
+	InputID           string                   `json:"input_id"`
+	Operation         ReviewOperationSummary   `json:"operation"`
+	OriginalReplyID   *string                  `json:"original_reply_id,omitempty"`
+	ReconsiderationID string                   `json:"reconsideration_id"`
+	Sequence          int64                    `json:"sequence"`
+	Status            ReviewInputSummaryStatus `json:"status"`
+}
+
+type OwnerReviewDetailQuery struct {
+	DecisionCursor *string `json:"decision_cursor,omitempty"`
+}
+
+type ReviewFeedbackDetail struct {
+	Basis               TaskReviewBasis         `json:"basis"`
+	Decisions           []ReviewDecisionSummary `json:"decisions"`
+	DecisionsHasMore    bool                    `json:"decisions_has_more"`
+	DecisionsNextCursor *string                 `json:"decisions_next_cursor,omitempty"`
+	Feedback            ReviewFeedbackSummary   `json:"feedback"`
+	RequestID           string                  `json:"request_id"`
+	RevokedBatch        *ReviewRevokedBatch     `json:"revoked_batch,omitempty"`
+	SchemaVersion       int64                   `json:"schema_version"`
+	TaskID              string                  `json:"task_id"`
+	Text                string                  `json:"text"`
+}
+
+type ReviewDecisionSummary struct {
+	CreatedAt        string                    `json:"created_at"`
+	HasAnswer        bool                      `json:"has_answer"`
+	Name             ReviewDecisionSummaryName `json:"name"`
+	OperationID      string                    `json:"operation_id"`
+	OperationVersion int64                     `json:"operation_version"`
+	RequestID        string                    `json:"request_id"`
+}
+
+type ReviewOperationDetail struct {
+	Basis            TaskReviewBasis        `json:"basis"`
+	Issue            *ReviewIssue           `json:"issue,omitempty"`
+	Operation        ReviewOperationSummary `json:"operation"`
+	SchemaVersion    int64                  `json:"schema_version"`
+	Source           *TaskReviewSource      `json:"source,omitempty"`
+	StopOperationIDS []string               `json:"stop_operation_ids"`
+	TaskID           string                 `json:"task_id"`
+}
+
+type ReviewIssue struct {
+	IssueID  string `json:"issue_id"`
+	Reason   string `json:"reason"`
+	SourceID string `json:"source_id"`
+	Version  int64  `json:"version"`
+}
+
+type ApplyReviewRework struct {
+	Basis            ReviewActionBasis `json:"basis"`
+	FeedbackID       string            `json:"feedback_id"`
+	NodeIDS          []string          `json:"node_ids"`
+	OperationID      string            `json:"operation_id"`
+	OperationVersion int64             `json:"operation_version"`
+	Reason           string            `json:"reason"`
+	SourceID         string            `json:"source_id"`
+}
+
+type ReviewActionBasis struct {
+	ControlVersion  int64  `json:"control_version"`
+	PlanID          string `json:"plan_id"`
+	SpecificationID string `json:"specification_id"`
+}
+
+type CommitReviewFeedback struct {
+	Basis            ReviewActionBasis `json:"basis"`
+	FeedbackID       string            `json:"feedback_id"`
+	OperationID      string            `json:"operation_id"`
+	OperationVersion int64             `json:"operation_version"`
+	ProposalID       string            `json:"proposal_id"`
+	SourceID         string            `json:"source_id"`
+}
+
+type ResolveReviewInput struct {
+	Basis             ReviewActionBasis  `json:"basis"`
+	FeedbackID        string             `json:"feedback_id"`
+	OperationID       string             `json:"operation_id"`
+	OperationVersion  int64              `json:"operation_version"`
+	ReconsiderationID string             `json:"reconsideration_id"`
+	Routing           ReviewInputRouting `json:"routing"`
+	SourceID          string             `json:"source_id"`
+	Summary           string             `json:"summary"`
+}
+
+type ReviewInputRouting struct {
+	Basis           *TaskActionBasis       `json:"basis,omitempty"`
+	ExpectedVersion *int64                 `json:"expected_version,omitempty"`
+	IssueSequence   *int64                 `json:"issue_sequence,omitempty"`
+	Kind            ReviewInputRoutingKind `json:"kind"`
+	OperationID     *string                `json:"operation_id,omitempty"`
+	ProposalID      *string                `json:"proposal_id,omitempty"`
+	Supersedes      *string                `json:"supersedes,omitempty"`
+	TargetID        *string                `json:"target_id,omitempty"`
+	TargetKind      *TargetKind            `json:"target_kind,omitempty"`
+	Text            *string                `json:"text,omitempty"`
+}
+
 type CommandEnvelopeName string
 
 const (
 	BlockNode                        CommandEnvelopeName = "block_node"
 	CommitDiscussionTurn             CommandEnvelopeName = "commit_discussion_turn"
 	CommitTaskTurn                   CommandEnvelopeName = "commit_task_turn"
+	NameApplyReviewRework            CommandEnvelopeName = "apply_review_rework"
+	NameCommitReviewFeedback         CommandEnvelopeName = "commit_review_feedback"
 	NameCompleteNode                 CommandEnvelopeName = "complete_node"
 	NameInspectRepository            CommandEnvelopeName = "inspect_repository"
 	NameOpenWorkspace                CommandEnvelopeName = "open_workspace"
 	NamePrepareReplan                CommandEnvelopeName = "prepare_replan"
 	NamePrepareSpecificationRevision CommandEnvelopeName = "prepare_specification_revision"
+	NameResolveReviewInput           CommandEnvelopeName = "resolve_review_input"
 	PublishArtifact                  CommandEnvelopeName = "publish_artifact"
 	PublishExecutionPlan             CommandEnvelopeName = "publish_execution_plan"
 	PurpleApplySpecificationRevision CommandEnvelopeName = "apply_specification_revision"
@@ -2997,14 +3254,14 @@ const (
 type TaskTurnRoutingKind string
 
 const (
-	Answer                TaskTurnRoutingKind = "answer"
-	PurpleGuidance        TaskTurnRoutingKind = "guidance"
-	PurpleIssue           TaskTurnRoutingKind = "issue"
-	Replan                TaskTurnRoutingKind = "replan"
-	Reply                 TaskTurnRoutingKind = "reply"
-	ReplyOnly             TaskTurnRoutingKind = "reply_only"
-	ResolveGuidance       TaskTurnRoutingKind = "resolve_guidance"
-	SpecificationProposal TaskTurnRoutingKind = "specification_proposal"
+	PurpleAnswer                TaskTurnRoutingKind = "answer"
+	PurpleGuidance              TaskTurnRoutingKind = "guidance"
+	PurpleIssue                 TaskTurnRoutingKind = "issue"
+	PurpleReplan                TaskTurnRoutingKind = "replan"
+	PurpleReply                 TaskTurnRoutingKind = "reply"
+	PurpleResolveGuidance       TaskTurnRoutingKind = "resolve_guidance"
+	PurpleSpecificationProposal TaskTurnRoutingKind = "specification_proposal"
+	ReplyOnly                   TaskTurnRoutingKind = "reply_only"
 )
 
 type TargetKind string
@@ -3111,6 +3368,13 @@ type RuntimeID string
 
 const (
 	Opencode RuntimeID = "opencode"
+)
+
+type TaskReviewSourcePurpose string
+
+const (
+	ReconsiderInput TaskReviewSourcePurpose = "reconsider_input"
+	RouteFeedback   TaskReviewSourcePurpose = "route_feedback"
 )
 
 type RuntimeEventKind string
@@ -3780,7 +4044,7 @@ const (
 	IndigoCancelled   PlanningStatusEnum = "cancelled"
 	NotStarted        PlanningStatusEnum = "not_started"
 	PurplePending     PlanningStatusEnum = "pending"
-	StatusIssue       PlanningStatusEnum = "issue"
+	StickyIssue       PlanningStatusEnum = "issue"
 	StickyUnavailable PlanningStatusEnum = "unavailable"
 	Stopped           PlanningStatusEnum = "stopped"
 )
@@ -3822,8 +4086,8 @@ type TaskInputOperationKind string
 
 const (
 	FluffyGuidance TaskInputOperationKind = "guidance"
+	IndigoIssue    TaskInputOperationKind = "issue"
 	Input          TaskInputOperationKind = "input"
-	StickyIssue    TaskInputOperationKind = "issue"
 )
 
 type LaunchStatus string
@@ -3877,11 +4141,11 @@ const (
 type TaskReplanCommandName string
 
 const (
-	ConfirmReplan     TaskReplanCommandName = "confirm_replan"
-	DeferReplanInputs TaskReplanCommandName = "defer_replan_inputs"
-	DismissReplan     TaskReplanCommandName = "dismiss_replan"
-	NamePublishReplan TaskReplanCommandName = "publish_replan"
-	RetryReplan       TaskReplanCommandName = "retry_replan"
+	ConfirmReplan       TaskReplanCommandName = "confirm_replan"
+	DeferReplanInputs   TaskReplanCommandName = "defer_replan_inputs"
+	NamePublishReplan   TaskReplanCommandName = "publish_replan"
+	PurpleDismissReplan TaskReplanCommandName = "dismiss_replan"
+	RetryReplan         TaskReplanCommandName = "retry_replan"
 )
 
 type ReplanRequestSummaryStatus string
@@ -3964,11 +4228,11 @@ const (
 	RetryPublicationPreparation     PublicationCommandName = "retry_publication_preparation"
 )
 
-type Purpose string
+type PublicationAccessRequestPurpose string
 
 const (
-	Observe     Purpose = "observe"
-	PurposePush Purpose = "push"
+	Observe     PublicationAccessRequestPurpose = "observe"
+	PurposePush PublicationAccessRequestPurpose = "push"
 )
 
 type PurpleKind string
@@ -4024,9 +4288,9 @@ type RemotePreparationOperationState string
 
 const (
 	IndigoPending RemotePreparationOperationState = "pending"
-	Revoked       RemotePreparationOperationState = "revoked"
 	Settled       RemotePreparationOperationState = "settled"
 	StateFailed   RemotePreparationOperationState = "failed"
+	StateRevoked  RemotePreparationOperationState = "revoked"
 	StateStarted  RemotePreparationOperationState = "started"
 	StickyUnknown RemotePreparationOperationState = "unknown"
 )
@@ -4034,9 +4298,9 @@ const (
 type RemotePreparationReviewState string
 
 const (
-	Closed RemotePreparationReviewState = "closed"
-	Merged RemotePreparationReviewState = "merged"
-	Open   RemotePreparationReviewState = "open"
+	Merged      RemotePreparationReviewState = "merged"
+	Open        RemotePreparationReviewState = "open"
+	StateClosed RemotePreparationReviewState = "closed"
 )
 
 type RemotePreparationRecordStatus string
@@ -4114,10 +4378,10 @@ const (
 type OwnerDeliveryCommandName string
 
 const (
-	CancelDelivery            OwnerDeliveryCommandName = "cancel_delivery"
 	ConfirmDeliveryAcceptance OwnerDeliveryCommandName = "confirm_delivery_acceptance"
 	NameAcceptDelivery        OwnerDeliveryCommandName = "accept_delivery"
 	PrepareDeliveryAcceptance OwnerDeliveryCommandName = "prepare_delivery_acceptance"
+	PurpleCancelDelivery      OwnerDeliveryCommandName = "cancel_delivery"
 	RetryDelivery             OwnerDeliveryCommandName = "retry_delivery"
 )
 
@@ -4134,8 +4398,9 @@ const (
 	BraggadociousCancelled DeliveryBatchSummaryStatus = "cancelled"
 	FluffyFailed           DeliveryBatchSummaryStatus = "failed"
 	FluffyReconciling      DeliveryBatchSummaryStatus = "reconciling"
+	PurpleActive           DeliveryBatchSummaryStatus = "active"
 	PurpleAttention        DeliveryBatchSummaryStatus = "attention"
-	StatusActive           DeliveryBatchSummaryStatus = "active"
+	PurpleRevoked          DeliveryBatchSummaryStatus = "revoked"
 	StatusCompleted        DeliveryBatchSummaryStatus = "completed"
 	Waiting                DeliveryBatchSummaryStatus = "waiting"
 )
@@ -4170,12 +4435,26 @@ const (
 	OperationStateUnknown   OperationState = "unknown"
 )
 
+type Reconciliation string
+
+const (
+	ExternallyMerged        Reconciliation = "externally_merged"
+	None                    Reconciliation = "none"
+	NotNeeded               Reconciliation = "not_needed"
+	PendingClose            Reconciliation = "pending_close"
+	ReconciliationAttention Reconciliation = "attention"
+	ReconciliationClosed    Reconciliation = "closed"
+	WaitingOriginalMerge    Reconciliation = "waiting_original_merge"
+	WaitingPreparation      Reconciliation = "waiting_preparation"
+)
+
 type DeliveryItemProgressStatus string
 
 const (
 	Cancelled1           DeliveryItemProgressStatus = "cancelled"
 	Finalized            DeliveryItemProgressStatus = "finalized"
 	FluffyAttention      DeliveryItemProgressStatus = "attention"
+	FluffyRevoked        DeliveryItemProgressStatus = "revoked"
 	HilariousPending     DeliveryItemProgressStatus = "pending"
 	Merging              DeliveryItemProgressStatus = "merging"
 	StatusReady          DeliveryItemProgressStatus = "ready"
@@ -4207,4 +4486,74 @@ const (
 	Terminal                     OwnerDeliveryStatusReason = "terminal"
 	UnsupportedMode              OwnerDeliveryStatusReason = "unsupported_mode"
 	WorkUnsettled                OwnerDeliveryStatusReason = "work_unsettled"
+)
+
+type OwnerReviewCommandName string
+
+const (
+	PurpleRequestChanges         OwnerReviewCommandName = "request_changes"
+	PurpleRetryReviewFeedback    OwnerReviewCommandName = "retry_review_feedback"
+	PurpleRetryReviewInput       OwnerReviewCommandName = "retry_review_input"
+	PurpleWithdrawReviewFeedback OwnerReviewCommandName = "withdraw_review_feedback"
+	PurpleWithdrawReviewInput    OwnerReviewCommandName = "withdraw_review_input"
+)
+
+type ReviewOperationSummaryStatus string
+
+const (
+	Cancelled2         ReviewOperationSummaryStatus = "cancelled"
+	IndecentIssue      ReviewOperationSummaryStatus = "issue"
+	PurpleResolved     ReviewOperationSummaryStatus = "resolved"
+	Requirement        ReviewOperationSummaryStatus = "requirement"
+	Rework             ReviewOperationSummaryStatus = "rework"
+	StatusReplan       ReviewOperationSummaryStatus = "replan"
+	StatusRunning      ReviewOperationSummaryStatus = "running"
+	StickyFailed       ReviewOperationSummaryStatus = "failed"
+	StickySettling     ReviewOperationSummaryStatus = "settling"
+	TentacledQueued    ReviewOperationSummaryStatus = "queued"
+	TentacledWithdrawn ReviewOperationSummaryStatus = "withdrawn"
+)
+
+type ReviewFeedbackSummaryStatus string
+
+const (
+	Cancelled3      ReviewFeedbackSummaryStatus = "cancelled"
+	FluffyActive    ReviewFeedbackSummaryStatus = "active"
+	FluffyResolved  ReviewFeedbackSummaryStatus = "resolved"
+	StickyWithdrawn ReviewFeedbackSummaryStatus = "withdrawn"
+)
+
+type ReviewInputSummaryStatus string
+
+const (
+	AmbitiousPending  ReviewInputSummaryStatus = "pending"
+	Cancelled4        ReviewInputSummaryStatus = "cancelled"
+	IndigoWithdrawn   ReviewInputSummaryStatus = "withdrawn"
+	TentacledResolved ReviewInputSummaryStatus = "resolved"
+	Transferred       ReviewInputSummaryStatus = "transferred"
+)
+
+type ReviewDecisionSummaryName string
+
+const (
+	FluffyCancelDelivery         ReviewDecisionSummaryName = "cancel_delivery"
+	FluffyDismissReplan          ReviewDecisionSummaryName = "dismiss_replan"
+	FluffyRequestChanges         ReviewDecisionSummaryName = "request_changes"
+	FluffyRetryReviewFeedback    ReviewDecisionSummaryName = "retry_review_feedback"
+	FluffyRetryReviewInput       ReviewDecisionSummaryName = "retry_review_input"
+	FluffyWithdrawReviewFeedback ReviewDecisionSummaryName = "withdraw_review_feedback"
+	FluffyWithdrawReviewInput    ReviewDecisionSummaryName = "withdraw_review_input"
+	TentacledCancelTask          ReviewDecisionSummaryName = "cancel_task"
+)
+
+type ReviewInputRoutingKind string
+
+const (
+	FluffyAnswer                ReviewInputRoutingKind = "answer"
+	FluffyReplan                ReviewInputRoutingKind = "replan"
+	FluffyReply                 ReviewInputRoutingKind = "reply"
+	FluffyResolveGuidance       ReviewInputRoutingKind = "resolve_guidance"
+	FluffySpecificationProposal ReviewInputRoutingKind = "specification_proposal"
+	HilariousIssue              ReviewInputRoutingKind = "issue"
+	TentacledGuidance           ReviewInputRoutingKind = "guidance"
 )

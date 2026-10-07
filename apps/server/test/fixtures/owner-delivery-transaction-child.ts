@@ -3,11 +3,13 @@ import {database} from '../../../../packages/db/src/index.ts';
 import {OwnerDeliveryCommands} from '../../src/owner-delivery-commands.ts';
 import {ownerDeliveryHooks} from '../../src/owner-delivery-control.ts';
 import {TaskConversation} from '../../src/task-conversation.ts';
+import {TaskReviewCommands} from '../../src/task-review-commands.ts';
+import {ownerReviewHooks} from '../../src/owner-review-control.ts';
 
 // Test-only independent backend process. Credentials arrive only on stdin.
 const input=createInterface({input:process.stdin}),lines=input[Symbol.asyncIterator]();
 const first=await lines.next();
-const config=JSON.parse(first.value!) as {database_url:string;token:string;command:unknown;family:'delivery'|'conversation';mode:'hold'|'kill_before'|'kill_after'};
+const config=JSON.parse(first.value!) as {database_url:string;token:string;command:unknown;family:'delivery'|'conversation'|'review';mode:'hold'|'kill_before'|'kill_after'};
 const db=database(config.database_url),connect=db.pool.connect.bind(db.pool);
 db.pool.connect=(async()=>{
  const client=await connect(),query=client.query.bind(client) as (...args:unknown[])=>Promise<unknown>;
@@ -25,6 +27,6 @@ db.pool.connect=(async()=>{
  return client;
 }) as typeof db.pool.connect;
 try{
- const result=config.family==='delivery'?await new OwnerDeliveryCommands(db,ownerDeliveryHooks).command(config.token,config.command):await new TaskConversation(db,'cutoff-independent-worker').command(config.token,config.command);
+ const result=config.family==='delivery'?await new OwnerDeliveryCommands(db,ownerDeliveryHooks).command(config.token,config.command):config.family==='review'?await new TaskReviewCommands(db,ownerReviewHooks).command(config.token,config.command):await new TaskConversation(db,'cutoff-independent-worker').command(config.token,config.command);
  process.stdout.write(JSON.stringify({boundary:'result',result})+'\n');
 }finally{input.close();await db.pool.end();}

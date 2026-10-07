@@ -16,6 +16,7 @@ export interface AdmissionBasis {
   initialPlanning?: boolean;
   taskConversation?: boolean;
   taskReplan?: boolean;
+  taskReview?: boolean;
   mutationAllowed: boolean;
   processReleased: boolean;
   controlVersion: number;
@@ -29,6 +30,11 @@ export function guardNewCommand(command: CommandEnvelope, basis: AdmissionBasis)
   if (!basis.mutationAllowed || basis.processReleased) throw new CommandError('stale_execution', 'Attempt mutation authority has ended');
   if (!basis.connectionAvailable) throw new CommandError('control_unavailable', 'Runner control connection is unavailable');
   if (command.expected_control_version !== basis.controlVersion) throw new CommandError('version_conflict', 'Expected control version is stale', basis.controlVersion);
+  if(basis.taskReview){
+    if(basis.kind!=='planner'||basis.scopeKind==='todo'||!['read_task_context','read_task_history','prepare_specification_revision','apply_review_rework','commit_review_feedback','resolve_review_input','request_replan','raise_planning_issue'].includes(command.name))throw new CommandError('denied_scope','Command is outside Task review authority');
+    return;
+  }
+  if(['apply_review_rework','commit_review_feedback','resolve_review_input'].includes(command.name))throw new CommandError('denied_scope','Dedicated review source required');
   if(basis.taskReplan){if(basis.kind!=='planner'||!['prepare_replan','raise_planning_issue'].includes(command.name))throw new CommandError('denied_scope','Command is outside Replan phase');return;}
   if(command.name==='prepare_replan')throw new CommandError('denied_scope','Dedicated Replan source required');
   if(basis.taskConversation){

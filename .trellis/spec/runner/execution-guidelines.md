@@ -177,3 +177,24 @@ neither coding-CLI login nor real tool/Stop acceptance. See the backend
 Wrong: treat missing cgroup as sufficient absence or acknowledge a failed query.
 Correct: validate the retained exit and kernel facts through the shared status
 path; save acknowledgement only after success and retain formal operation ownership.
+
+## Dedicated Task review
+
+`Dispatch.task_review_source` follows [review correction](../backend/review-correction.md).
+Validate exclusive Task/planner ownership, zero watermark/activation, matching
+control, complete source identity and empty reservations before local/Host work.
+CLI allows context/history, nonterminal requirement preparation, reason-only genuine
+Replan, source-bound issue and exactly the source purpose's terminal outcome.
+Input reconsideration cannot complete main feedback; main feedback cannot resolve
+another input. Stage A repository inspection and all writable/Node/Conversation/
+Replan-planning effects are denied. Persist the exact envelope before send; uncertain
+Retry cannot replace IDs, source, capability, basis or semantic content.
+
+Host grants only repository-free Stop. Reconnect may reconcile its exact retained
+source/Task/reservations under a revoked, unreleased dispatch and original recoverable
+result after Ready. A changed feedback/operation/capability/result digest or purpose
+cannot authorize recovery. Use the existing finite effect queue, no timer or new
+operation. A Stop result proves the corresponding physical boundary only; it does
+not supply a review semantic outcome. All Go consumers must compile after generation;
+new source checks live in `local/review_test.go`, `daemon/review_recovery_test.go` and
+`wire/review_test.go`. Installed native compatibility is a distinct real-host gate.

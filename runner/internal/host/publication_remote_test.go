@@ -89,7 +89,7 @@ func publicationPushTestFixtureAt(t *testing.T, evidence string) *publicationPus
 	}
 	fixture := &publicationPushFixture{source: f, preparation: r, request: request, root: root, store: store, remoteRoot: filepath.Join(filepath.Dir(root), "remote"), remote: filepath.Join(filepath.Dir(root), "remote.git")}
 	resultTestGit(t, filepath.Dir(root), nil, "init", "--bare", "--quiet", fixture.remote)
-	fixture.io = publicationRemoteIO{access: func(ctx context.Context, r protocol.PublicationPushRequest, purpose protocol.Purpose, attempt string) (protocol.PublicationAccessResult, error) {
+	fixture.io = publicationRemoteIO{access: func(ctx context.Context, r protocol.PublicationPushRequest, purpose protocol.PublicationAccessRequestPurpose, attempt string) (protocol.PublicationAccessResult, error) {
 		token := "synthetic-no-provider-token"
 		a := protocol.PublicationAccessResult{SchemaVersion: 1, OperationID: r.OperationID, RequestDigest: publicationDigest(r), ItemID: r.ItemID, AttemptID: attempt, Purpose: purpose, RemoteURL: r.RemoteURL, RepositoryID: r.RepositoryID, DeliveryRef: r.DeliveryRef, CandidateHead: r.Prepared.Candidate.Head, ExpectedHead: r.ExpectedHead, Authentication: protocol.Authentication{Kind: "github_installation", Token: &token, ExpiresAt: &permission.ExpiresAt}}
 		if purpose == "push" {
@@ -144,7 +144,7 @@ func TestRemotePreparationDurablePushEffectLossAndACKReplay(t *testing.T) {
 	}
 	f.io.fault = nil
 	access := f.io.access
-	f.io.access = func(context.Context, protocol.PublicationPushRequest, protocol.Purpose, string) (protocol.PublicationAccessResult, error) {
+	f.io.access = func(context.Context, protocol.PublicationPushRequest, protocol.PublicationAccessRequestPurpose, string) (protocol.PublicationAccessResult, error) {
 		return protocol.PublicationAccessResult{}, publicationTestSchedulingWait{}
 	}
 	if _, e := f.run(context.Background()); !publicationAccessSchedulingWait(e) || f.pushes.Load() != 1 {
@@ -349,7 +349,7 @@ func TestRemotePreparationFreshScanMetadataAndCancellationFence(t *testing.T) {
 		t.Run("scheduling_"+phase, func(t *testing.T) {
 			f := publicationPushTestFixture(t)
 			access := f.io.access
-			f.io.access = func(ctx context.Context, r protocol.PublicationPushRequest, purpose protocol.Purpose, attempt string) (protocol.PublicationAccessResult, error) {
+			f.io.access = func(ctx context.Context, r protocol.PublicationPushRequest, purpose protocol.PublicationAccessRequestPurpose, attempt string) (protocol.PublicationAccessResult, error) {
 				if string(purpose) == phase {
 					return protocol.PublicationAccessResult{}, publicationTestSchedulingWait{}
 				}
@@ -403,7 +403,7 @@ func TestRemotePreparationFreshScanMetadataAndCancellationFence(t *testing.T) {
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	access := f.io.access
-	f.io.access = func(ctx context.Context, r protocol.PublicationPushRequest, purpose protocol.Purpose, attempt string) (protocol.PublicationAccessResult, error) {
+	f.io.access = func(ctx context.Context, r protocol.PublicationPushRequest, purpose protocol.PublicationAccessRequestPurpose, attempt string) (protocol.PublicationAccessResult, error) {
 		cancel()
 		return access(ctx, r, purpose, attempt)
 	}
@@ -413,6 +413,37 @@ func TestRemotePreparationFreshScanMetadataAndCancellationFence(t *testing.T) {
 	op := filepath.Join(f.remoteRoot, "items", f.request.ItemID, "operations", f.request.OperationID)
 	if _, e := os.Lstat(filepath.Join(op, "result.json")); !os.IsNotExist(e) {
 		t.Fatal("connection cancellation froze terminal result")
+	}
+}
+
+func TestReviewRevokedPregrantPushRequiresOriginalACKBeforeSuccessor(t *testing.T) {
+	f := publicationPushTestFixture(t)
+	access := f.io.access
+	f.io.access = func(ctx context.Context, r protocol.PublicationPushRequest, purpose protocol.PublicationAccessRequestPurpose, attempt string) (protocol.PublicationAccessResult, error) {
+		if purpose == "push" {
+			return protocol.PublicationAccessResult{}, errors.New("original write authority revoked")
+		}
+		return access(ctx, r, purpose, attempt)
+	}
+	original := f.request
+	result, e := f.run(context.Background())
+	if e != nil || result.PushStarted || !result.WorkerAbsent || result.Status != "blocked" || f.pushes.Load() != 0 {
+		t.Fatal("revoked pregrant operation did not retain no-effect result", e)
+	}
+	f.request.OperationID = "successor"
+	f.io.access = access
+	if _, e = f.run(context.Background()); e == nil || f.pushes.Load() != 0 {
+		t.Fatal("successor ran before original acknowledgement")
+	}
+	f.request = original
+	replayed, e := f.run(context.Background())
+	if e != nil || publicationDigest(replayed) != publicationDigest(result) {
+		t.Fatal("original result could not replay beside waiting successor", e)
+	}
+	f.ack(t, result)
+	f.request.OperationID = "successor"
+	if next, e := f.run(context.Background()); e != nil || next.Status != "published" || f.pushes.Load() != 1 {
+		t.Fatal("fresh operation did not proceed after immutable original ACK", e)
 	}
 }
 
@@ -482,7 +513,7 @@ func TestRemotePreparationImmutableScanAndStoreTamperBlocksClaim(t *testing.T) {
 			f := publicationPushTestFixture(t)
 			claims := 0
 			access := f.io.access
-			f.io.access = func(ctx context.Context, r protocol.PublicationPushRequest, purpose protocol.Purpose, attempt string) (protocol.PublicationAccessResult, error) {
+			f.io.access = func(ctx context.Context, r protocol.PublicationPushRequest, purpose protocol.PublicationAccessRequestPurpose, attempt string) (protocol.PublicationAccessResult, error) {
 				if purpose == "push" {
 					claims++
 				}

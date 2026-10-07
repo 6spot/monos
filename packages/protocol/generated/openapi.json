@@ -5,6 +5,330 @@
     "version": "1.0.0"
   },
   "paths": {
+    "/v1/owner/tasks/review/commands": {
+      "post": {
+        "security": [
+          {
+            "OwnerAuth": []
+          },
+          {
+            "OwnerCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OwnerReviewCommand"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authenticated response; admission is distinct from completed effects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OwnerReviewCommandResult"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Deterministic protocol error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "X-Monos-Session",
+            "in": "header",
+            "required": false,
+            "description": "Noncredential expected session identity. Mismatch rejects before reads or effects; this header alone never authenticates.",
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          }
+        ]
+      }
+    },
+    "/v1/owner/tasks/{task_id}/review": {
+      "get": {
+        "security": [
+          {
+            "OwnerAuth": []
+          },
+          {
+            "OwnerCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "X-Monos-Session",
+            "in": "header",
+            "required": false,
+            "description": "Noncredential expected session identity. Mismatch rejects before reads or effects; this header alone never authenticates.",
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "feedback_cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048,
+              "pattern": "^[A-Za-z0-9_-]+$"
+            }
+          },
+          {
+            "name": "input_cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048,
+              "pattern": "^[A-Za-z0-9_-]+$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authenticated response; admission is distinct from completed effects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OwnerReviewStatus"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Deterministic protocol error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/owner/tasks/{task_id}/review/feedback/{feedback_id}": {
+      "get": {
+        "security": [
+          {
+            "OwnerAuth": []
+          },
+          {
+            "OwnerCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "X-Monos-Session",
+            "in": "header",
+            "required": false,
+            "description": "Noncredential expected session identity. Mismatch rejects before reads or effects; this header alone never authenticates.",
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "feedback_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "decision_cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048,
+              "pattern": "^[A-Za-z0-9_-]+$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authenticated response; admission is distinct from completed effects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewFeedbackDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Deterministic protocol error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/owner/tasks/{task_id}/review/operations/{operation_id}": {
+      "get": {
+        "security": [
+          {
+            "OwnerAuth": []
+          },
+          {
+            "OwnerCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "X-Monos-Session",
+            "in": "header",
+            "required": false,
+            "description": "Noncredential expected session identity. Mismatch rejects before reads or effects; this header alone never authenticates.",
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "operation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authenticated response; admission is distinct from completed effects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewOperationDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Deterministic protocol error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/owner/tasks/{task_id}/review/commands/{request_id}": {
+      "get": {
+        "security": [
+          {
+            "OwnerAuth": []
+          },
+          {
+            "OwnerCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "X-Monos-Session",
+            "in": "header",
+            "required": false,
+            "description": "Noncredential expected session identity. Mismatch rejects before reads or effects; this header alone never authenticates.",
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authenticated response; admission is distinct from completed effects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OwnerReviewCommandResult"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Deterministic protocol error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/owner/tasks/delivery/commands": {
       "post": {
         "security": [
@@ -4563,7 +4887,10 @@
               "prepare_specification_revision",
               "apply_specification_revision",
               "request_replan",
-              "prepare_replan"
+              "prepare_replan",
+              "apply_review_rework",
+              "commit_review_feedback",
+              "resolve_review_input"
             ]
           },
           "scope_id": {
@@ -4926,6 +5253,34 @@
                         "source_id",
                         "reason"
                       ]
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "feedback_id": {
+                          "$ref": "#/components/schemas/Id"
+                        },
+                        "operation_id": {
+                          "$ref": "#/components/schemas/Id"
+                        },
+                        "source_id": {
+                          "$ref": "#/components/schemas/Id"
+                        },
+                        "operation_version": {
+                          "$ref": "#/components/schemas/PositiveCounter"
+                        },
+                        "reason": {
+                          "$ref": "#/components/schemas/PlanningText"
+                        }
+                      },
+                      "required": [
+                        "feedback_id",
+                        "operation_id",
+                        "source_id",
+                        "operation_version",
+                        "reason"
+                      ]
                     }
                   ]
                 }
@@ -5139,6 +5494,69 @@
               },
               "type": "object"
             }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "const": "apply_review_rework"
+                }
+              },
+              "required": [
+                "name"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "payload": {
+                  "$ref": "#/components/schemas/ApplyReviewRework"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "const": "commit_review_feedback"
+                }
+              },
+              "required": [
+                "name"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "payload": {
+                  "$ref": "#/components/schemas/CommitReviewFeedback"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "const": "resolve_review_input"
+                }
+              },
+              "required": [
+                "name"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "payload": {
+                  "$ref": "#/components/schemas/ResolveReviewInput"
+                }
+              }
+            }
           }
         ]
       },
@@ -5292,6 +5710,27 @@
           },
           "requirement": {
             "$ref": "#/components/schemas/ReplanRequirement"
+          },
+          "feedback_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "operation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "reconsideration_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "operation_version": {
+            "$ref": "#/components/schemas/PositiveCounter"
+          },
+          "node_ids": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Id"
+            },
+            "minItems": 1,
+            "maxItems": 256,
+            "uniqueItems": true
           }
         }
       },
@@ -5601,6 +6040,9 @@
           },
           "task_replan_source": {
             "$ref": "#/components/schemas/TaskReplanSource"
+          },
+          "task_review_source": {
+            "$ref": "#/components/schemas/TaskReviewSource"
           }
         },
         "allOf": [
@@ -5828,6 +6270,55 @@
                 "resource_id": false,
                 "task_planning_source": false,
                 "node_execution_source": false
+              }
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "required": [
+                "task_review_source"
+              ],
+              "properties": {
+                "task_review_source": {}
+              }
+            },
+            "then": {
+              "type": "object",
+              "required": [
+                "task_id",
+                "workspace_reservations"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "planner"
+                },
+                "node_activation": {
+                  "const": 0
+                },
+                "source_watermark": {
+                  "const": 0
+                },
+                "workspace_reservations": {
+                  "type": "object",
+                  "properties": {
+                    "resources": {
+                      "type": "array",
+                      "maxItems": 0
+                    }
+                  }
+                },
+                "todo_id": false,
+                "node_id": false,
+                "resource_id": false,
+                "source_message_id": false,
+                "task_planning_source": false,
+                "node_execution_source": false,
+                "task_conversation_source": false,
+                "task_replan_source": false,
+                "task_id": {
+                  "$ref": "#/components/schemas/Id"
+                }
               }
             }
           }
@@ -13904,6 +14395,12 @@
                 "type": "null"
               }
             ]
+          },
+          "review_source_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "review_operation_id": {
+            "$ref": "#/components/schemas/Id"
           }
         },
         "required": [
@@ -13922,6 +14419,52 @@
           "predecessor_id",
           "confirmation_id",
           "operation"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "required": [
+                "review_source_id"
+              ],
+              "properties": {
+                "review_source_id": {
+                  "$ref": "#/components/schemas/Id"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "review_operation_id"
+              ],
+              "properties": {
+                "review_operation_id": {
+                  "$ref": "#/components/schemas/Id"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "required": [
+                "review_operation_id"
+              ],
+              "properties": {
+                "review_operation_id": {
+                  "$ref": "#/components/schemas/Id"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "review_source_id"
+              ],
+              "properties": {
+                "review_source_id": {
+                  "$ref": "#/components/schemas/Id"
+                }
+              }
+            }
+          }
         ]
       },
       "SpecificationHistoryQuery": {
@@ -15152,6 +15695,15 @@
           },
           "version": {
             "$ref": "#/components/schemas/Counter"
+          },
+          "review_feedback_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "review_operation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "review_predecessor_operation_id": {
+            "$ref": "#/components/schemas/Id"
           }
         },
         "required": [
@@ -15276,6 +15828,15 @@
           },
           "physical_settled": {
             "type": "boolean"
+          },
+          "review_feedback_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "review_operation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "review_predecessor_operation_id": {
+            "$ref": "#/components/schemas/Id"
           }
         },
         "required": [
@@ -21518,7 +22079,8 @@
               "reconciling",
               "attention",
               "completed",
-              "cancelled"
+              "cancelled",
+              "revoked"
             ]
           },
           "input_cutoff": {
@@ -21583,7 +22145,8 @@
               "failed",
               "attention",
               "finalized",
-              "cancelled"
+              "cancelled",
+              "revoked"
             ]
           },
           "reason": {
@@ -21660,6 +22223,19 @@
             "type": "string",
             "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(?:\\.\\d{1,3})?Z$",
             "maxLength": 24
+          },
+          "reconciliation": {
+            "type": "string",
+            "enum": [
+              "none",
+              "waiting_original_merge",
+              "waiting_preparation",
+              "pending_close",
+              "closed",
+              "externally_merged",
+              "not_needed",
+              "attention"
+            ]
           }
         },
         "required": [
@@ -21751,6 +22327,30 @@
             },
             "maxItems": 64,
             "minItems": 0
+          },
+          "revocation": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "feedback_id": {
+                "$ref": "#/components/schemas/Id"
+              },
+              "revocation_id": {
+                "$ref": "#/components/schemas/Id"
+              },
+              "request_id": {
+                "$ref": "#/components/schemas/Id"
+              },
+              "settled": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "feedback_id",
+              "revocation_id",
+              "request_id",
+              "settled"
+            ]
           }
         },
         "required": [
@@ -21993,6 +22593,1733 @@
           }
         },
         "required": []
+      },
+      "TaskReviewBasis": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "control_version": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "specification_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "plan_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "review_result_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          }
+        },
+        "required": [
+          "control_version",
+          "specification_id",
+          "plan_id",
+          "review_result_digest"
+        ]
+      },
+      "TaskReviewManifest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "task_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "specification_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "plan_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "specification_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "plan_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "outputs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DeliveryOutputEvidence"
+            },
+            "minItems": 1,
+            "maxItems": 256
+          }
+        },
+        "required": [
+          "schema_version",
+          "task_id",
+          "specification_id",
+          "plan_id",
+          "specification_digest",
+          "plan_digest",
+          "outputs"
+        ]
+      },
+      "ReviewAcceptedBatch": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "operation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "content_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "expected_version": {
+            "$ref": "#/components/schemas/PositiveCounter"
+          }
+        },
+        "required": [
+          "operation_id",
+          "content_digest",
+          "expected_version"
+        ]
+      },
+      "ReviewRevokedBatch": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "operation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "content_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "operation_version": {
+            "$ref": "#/components/schemas/PositiveCounter"
+          },
+          "input_cutoff": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "revocation_id": {
+            "$ref": "#/components/schemas/Id"
+          }
+        },
+        "required": [
+          "operation_id",
+          "content_digest",
+          "operation_version",
+          "input_cutoff",
+          "revocation_id"
+        ]
+      },
+      "TaskReviewSource": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "feedback_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "operation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "operation_version": {
+            "$ref": "#/components/schemas/PositiveCounter"
+          },
+          "source_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "specification_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "plan_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "control_version": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "review_result_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "context_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "purpose": {
+            "type": "string",
+            "enum": [
+              "route_feedback",
+              "reconsider_input"
+            ]
+          },
+          "reconsideration_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "input_id": {
+            "$ref": "#/components/schemas/Id"
+          }
+        },
+        "required": [
+          "feedback_id",
+          "operation_id",
+          "operation_version",
+          "source_id",
+          "specification_id",
+          "plan_id",
+          "control_version",
+          "review_result_digest",
+          "context_digest",
+          "purpose"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "purpose": {
+                  "const": "route_feedback"
+                }
+              },
+              "required": [
+                "purpose"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "reconsideration_id": false,
+                "input_id": false
+              }
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "purpose": {
+                  "const": "reconsider_input"
+                }
+              },
+              "required": [
+                "purpose"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "required": [
+                "reconsideration_id",
+                "input_id"
+              ],
+              "properties": {
+                "reconsideration_id": {},
+                "input_id": {}
+              }
+            }
+          }
+        ]
+      },
+      "OwnerReviewPayload": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "feedback_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "text": {
+            "$ref": "#/components/schemas/PlanningText"
+          },
+          "basis": {
+            "$ref": "#/components/schemas/TaskReviewBasis"
+          },
+          "accepted_batch": {
+            "$ref": "#/components/schemas/ReviewAcceptedBatch"
+          },
+          "operation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "expected_version": {
+            "$ref": "#/components/schemas/PositiveCounter"
+          },
+          "issue_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "answer": {
+            "$ref": "#/components/schemas/PlanningText"
+          },
+          "reconsideration_id": {
+            "$ref": "#/components/schemas/Id"
+          }
+        },
+        "required": []
+      },
+      "OwnerReviewCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "task_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "request_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "name": {
+            "type": "string",
+            "enum": [
+              "request_changes",
+              "retry_review_feedback",
+              "withdraw_review_feedback",
+              "retry_review_input",
+              "withdraw_review_input"
+            ]
+          },
+          "payload": {
+            "$ref": "#/components/schemas/OwnerReviewPayload"
+          }
+        },
+        "required": [
+          "schema_version",
+          "task_id",
+          "request_id",
+          "name",
+          "payload"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "const": "request_changes"
+                }
+              },
+              "required": [
+                "name"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "payload": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "feedback_id": {
+                      "$ref": "#/components/schemas/Id"
+                    },
+                    "text": {
+                      "$ref": "#/components/schemas/PlanningText"
+                    },
+                    "basis": {
+                      "$ref": "#/components/schemas/TaskReviewBasis"
+                    },
+                    "accepted_batch": {
+                      "$ref": "#/components/schemas/ReviewAcceptedBatch"
+                    }
+                  },
+                  "required": [
+                    "feedback_id",
+                    "text",
+                    "basis"
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "const": "retry_review_feedback"
+                }
+              },
+              "required": [
+                "name"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "payload": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "feedback_id": {
+                      "$ref": "#/components/schemas/Id"
+                    },
+                    "operation_id": {
+                      "$ref": "#/components/schemas/Id"
+                    },
+                    "expected_version": {
+                      "$ref": "#/components/schemas/PositiveCounter"
+                    },
+                    "issue_id": {
+                      "$ref": "#/components/schemas/Id"
+                    },
+                    "answer": {
+                      "$ref": "#/components/schemas/PlanningText"
+                    }
+                  },
+                  "required": [
+                    "feedback_id",
+                    "operation_id",
+                    "expected_version"
+                  ],
+                  "dependencies": {
+                    "issue_id": [
+                      "answer"
+                    ],
+                    "answer": [
+                      "issue_id"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "const": "withdraw_review_feedback"
+                }
+              },
+              "required": [
+                "name"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "payload": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "feedback_id": {
+                      "$ref": "#/components/schemas/Id"
+                    },
+                    "operation_id": {
+                      "$ref": "#/components/schemas/Id"
+                    },
+                    "expected_version": {
+                      "$ref": "#/components/schemas/PositiveCounter"
+                    }
+                  },
+                  "required": [
+                    "feedback_id",
+                    "operation_id",
+                    "expected_version"
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "const": "retry_review_input"
+                }
+              },
+              "required": [
+                "name"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "payload": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "feedback_id": {
+                      "$ref": "#/components/schemas/Id"
+                    },
+                    "operation_id": {
+                      "$ref": "#/components/schemas/Id"
+                    },
+                    "expected_version": {
+                      "$ref": "#/components/schemas/PositiveCounter"
+                    },
+                    "reconsideration_id": {
+                      "$ref": "#/components/schemas/Id"
+                    },
+                    "issue_id": {
+                      "$ref": "#/components/schemas/Id"
+                    },
+                    "answer": {
+                      "$ref": "#/components/schemas/PlanningText"
+                    }
+                  },
+                  "required": [
+                    "feedback_id",
+                    "operation_id",
+                    "expected_version",
+                    "reconsideration_id"
+                  ],
+                  "dependencies": {
+                    "issue_id": [
+                      "answer"
+                    ],
+                    "answer": [
+                      "issue_id"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "const": "withdraw_review_input"
+                }
+              },
+              "required": [
+                "name"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "payload": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "feedback_id": {
+                      "$ref": "#/components/schemas/Id"
+                    },
+                    "operation_id": {
+                      "$ref": "#/components/schemas/Id"
+                    },
+                    "expected_version": {
+                      "$ref": "#/components/schemas/PositiveCounter"
+                    },
+                    "reconsideration_id": {
+                      "$ref": "#/components/schemas/Id"
+                    }
+                  },
+                  "required": [
+                    "feedback_id",
+                    "operation_id",
+                    "expected_version",
+                    "reconsideration_id"
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      },
+      "OwnerReviewCommandResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "task_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "request_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "committed",
+              "unknown"
+            ]
+          },
+          "name": {
+            "type": "string",
+            "enum": [
+              "request_changes",
+              "retry_review_feedback",
+              "withdraw_review_feedback",
+              "retry_review_input",
+              "withdraw_review_input"
+            ]
+          },
+          "feedback_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "operation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "operation_version": {
+            "$ref": "#/components/schemas/PositiveCounter"
+          },
+          "review_result_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "revoked_batch": {
+            "$ref": "#/components/schemas/ReviewRevokedBatch"
+          },
+          "reconsideration_id": {
+            "$ref": "#/components/schemas/Id"
+          }
+        },
+        "required": [
+          "schema_version",
+          "task_id",
+          "request_id",
+          "status"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "const": "unknown"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "name": false,
+                "feedback_id": false,
+                "operation_id": false,
+                "operation_version": false,
+                "review_result_digest": false,
+                "revoked_batch": false,
+                "reconsideration_id": false
+              }
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "const": "committed"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "required": [
+                "name",
+                "feedback_id",
+                "operation_id",
+                "operation_version"
+              ],
+              "properties": {
+                "name": {},
+                "feedback_id": {},
+                "operation_id": {},
+                "operation_version": {}
+              }
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "const": "request_changes"
+                }
+              },
+              "required": [
+                "name"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "reconsideration_id": false,
+                "review_result_digest": {}
+              },
+              "required": [
+                "review_result_digest"
+              ]
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "const": "retry_review_feedback"
+                }
+              },
+              "required": [
+                "name"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "review_result_digest": false,
+                "revoked_batch": false,
+                "reconsideration_id": false
+              },
+              "required": []
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "const": "withdraw_review_feedback"
+                }
+              },
+              "required": [
+                "name"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "review_result_digest": false,
+                "revoked_batch": false,
+                "reconsideration_id": false
+              },
+              "required": []
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "const": "retry_review_input"
+                }
+              },
+              "required": [
+                "name"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "review_result_digest": false,
+                "revoked_batch": false,
+                "reconsideration_id": {}
+              },
+              "required": [
+                "reconsideration_id"
+              ]
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "const": "withdraw_review_input"
+                }
+              },
+              "required": [
+                "name"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "review_result_digest": false,
+                "revoked_batch": false,
+                "reconsideration_id": {}
+              },
+              "required": [
+                "reconsideration_id"
+              ]
+            }
+          }
+        ]
+      },
+      "ReviewIssue": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "issue_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "source_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "version": {
+            "$ref": "#/components/schemas/PositiveCounter"
+          },
+          "reason": {
+            "$ref": "#/components/schemas/PlanningText"
+          }
+        },
+        "required": [
+          "issue_id",
+          "source_id",
+          "version",
+          "reason"
+        ]
+      },
+      "ReviewOperationSummary": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "feedback_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "operation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "operation_version": {
+            "$ref": "#/components/schemas/PositiveCounter"
+          },
+          "purpose": {
+            "type": "string",
+            "enum": [
+              "route_feedback",
+              "reconsider_input"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "settling",
+              "queued",
+              "running",
+              "issue",
+              "failed",
+              "rework",
+              "replan",
+              "requirement",
+              "withdrawn",
+              "cancelled",
+              "resolved"
+            ]
+          },
+          "retry_allowed": {
+            "type": "boolean"
+          },
+          "withdraw_allowed": {
+            "type": "boolean"
+          },
+          "settlement_pending": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "pattern": "^[^\\x00]*$"
+          },
+          "source_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "previous_source_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "predecessor_operation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "reconsideration_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "input_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "issue_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "requirement_proposal_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "replan_request_id": {
+            "$ref": "#/components/schemas/Id"
+          }
+        },
+        "required": [
+          "feedback_id",
+          "operation_id",
+          "operation_version",
+          "purpose",
+          "status",
+          "retry_allowed",
+          "withdraw_allowed",
+          "settlement_pending"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "purpose": {
+                  "const": "route_feedback"
+                }
+              },
+              "required": [
+                "purpose"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "reconsideration_id": false,
+                "input_id": false
+              }
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "purpose": {
+                  "const": "reconsider_input"
+                }
+              },
+              "required": [
+                "purpose"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "required": [
+                "reconsideration_id",
+                "input_id"
+              ],
+              "properties": {
+                "reconsideration_id": {},
+                "input_id": {}
+              }
+            }
+          }
+        ]
+      },
+      "ReviewFeedbackSummary": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "feedback_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "created_at": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(?:\\.\\d{1,3})?Z$",
+            "maxLength": 24
+          },
+          "review_result_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "resolved",
+              "withdrawn",
+              "cancelled"
+            ]
+          },
+          "operation": {
+            "$ref": "#/components/schemas/ReviewOperationSummary"
+          }
+        },
+        "required": [
+          "feedback_id",
+          "created_at",
+          "review_result_digest",
+          "status",
+          "operation"
+        ]
+      },
+      "ReviewInputSummary": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "reconsideration_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "input_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "accepted_batch_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "sequence": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "resolved",
+              "transferred",
+              "withdrawn",
+              "cancelled"
+            ]
+          },
+          "operation": {
+            "$ref": "#/components/schemas/ReviewOperationSummary"
+          },
+          "original_reply_id": {
+            "$ref": "#/components/schemas/Id"
+          }
+        },
+        "required": [
+          "reconsideration_id",
+          "input_id",
+          "accepted_batch_id",
+          "sequence",
+          "status",
+          "operation"
+        ]
+      },
+      "ReviewDecisionSummary": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "request_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "name": {
+            "type": "string",
+            "enum": [
+              "request_changes",
+              "retry_review_feedback",
+              "withdraw_review_feedback",
+              "retry_review_input",
+              "withdraw_review_input",
+              "dismiss_replan",
+              "cancel_task",
+              "cancel_delivery"
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(?:\\.\\d{1,3})?Z$",
+            "maxLength": 24
+          },
+          "operation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "operation_version": {
+            "$ref": "#/components/schemas/PositiveCounter"
+          },
+          "has_answer": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "request_id",
+          "name",
+          "created_at",
+          "operation_id",
+          "operation_version",
+          "has_answer"
+        ]
+      },
+      "OwnerReviewHistoryQuery": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "feedback_cursor": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "input_cursor": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          }
+        },
+        "required": []
+      },
+      "OwnerReviewStatus": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "task_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "basis": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/TaskReviewBasis"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "request_changes_allowed": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "pattern": "^[^\\x00]*$"
+          },
+          "accepted_batch": {
+            "$ref": "#/components/schemas/ReviewAcceptedBatch"
+          },
+          "feedback": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ReviewFeedbackSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "history": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReviewFeedbackSummary"
+            },
+            "minItems": 0,
+            "maxItems": 64
+          },
+          "history_has_more": {
+            "type": "boolean"
+          },
+          "history_next_cursor": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "inputs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReviewInputSummary"
+            },
+            "minItems": 0,
+            "maxItems": 64
+          },
+          "inputs_has_more": {
+            "type": "boolean"
+          },
+          "inputs_next_cursor": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          }
+        },
+        "required": [
+          "schema_version",
+          "task_id",
+          "basis",
+          "request_changes_allowed",
+          "feedback",
+          "history",
+          "history_has_more",
+          "inputs",
+          "inputs_has_more"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "history_has_more": {
+                  "const": true
+                }
+              },
+              "required": [
+                "history_has_more"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "required": [
+                "history_next_cursor"
+              ],
+              "properties": {
+                "history_next_cursor": {}
+              }
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "history_has_more": {
+                  "const": false
+                }
+              },
+              "required": [
+                "history_has_more"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "history_next_cursor": false
+              }
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "inputs_has_more": {
+                  "const": true
+                }
+              },
+              "required": [
+                "inputs_has_more"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "required": [
+                "inputs_next_cursor"
+              ],
+              "properties": {
+                "inputs_next_cursor": {}
+              }
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "inputs_has_more": {
+                  "const": false
+                }
+              },
+              "required": [
+                "inputs_has_more"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "inputs_next_cursor": false
+              }
+            }
+          }
+        ]
+      },
+      "OwnerReviewDetailQuery": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "decision_cursor": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          }
+        },
+        "required": []
+      },
+      "ReviewFeedbackDetail": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "task_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "feedback": {
+            "$ref": "#/components/schemas/ReviewFeedbackSummary"
+          },
+          "text": {
+            "$ref": "#/components/schemas/PlanningText"
+          },
+          "basis": {
+            "$ref": "#/components/schemas/TaskReviewBasis"
+          },
+          "request_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "revoked_batch": {
+            "$ref": "#/components/schemas/ReviewRevokedBatch"
+          },
+          "decisions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReviewDecisionSummary"
+            },
+            "minItems": 0,
+            "maxItems": 64
+          },
+          "decisions_has_more": {
+            "type": "boolean"
+          },
+          "decisions_next_cursor": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          }
+        },
+        "required": [
+          "schema_version",
+          "task_id",
+          "feedback",
+          "text",
+          "basis",
+          "request_id",
+          "decisions",
+          "decisions_has_more"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "decisions_has_more": {
+                  "const": true
+                }
+              },
+              "required": [
+                "decisions_has_more"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "required": [
+                "decisions_next_cursor"
+              ],
+              "properties": {
+                "decisions_next_cursor": {}
+              }
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "decisions_has_more": {
+                  "const": false
+                }
+              },
+              "required": [
+                "decisions_has_more"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "decisions_next_cursor": false
+              }
+            }
+          }
+        ]
+      },
+      "ReviewOperationDetail": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "task_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "operation": {
+            "$ref": "#/components/schemas/ReviewOperationSummary"
+          },
+          "basis": {
+            "$ref": "#/components/schemas/TaskReviewBasis"
+          },
+          "source": {
+            "$ref": "#/components/schemas/TaskReviewSource"
+          },
+          "issue": {
+            "$ref": "#/components/schemas/ReviewIssue"
+          },
+          "stop_operation_ids": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Id"
+            },
+            "minItems": 0,
+            "maxItems": 256
+          }
+        },
+        "required": [
+          "schema_version",
+          "task_id",
+          "operation",
+          "basis",
+          "stop_operation_ids"
+        ]
+      },
+      "ApplyReviewRework": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "feedback_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "operation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "source_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "operation_version": {
+            "$ref": "#/components/schemas/PositiveCounter"
+          },
+          "basis": {
+            "$ref": "#/components/schemas/ReviewActionBasis"
+          },
+          "node_ids": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Id"
+            },
+            "minItems": 1,
+            "maxItems": 256,
+            "uniqueItems": true
+          },
+          "reason": {
+            "$ref": "#/components/schemas/PlanningText"
+          }
+        },
+        "required": [
+          "feedback_id",
+          "operation_id",
+          "source_id",
+          "operation_version",
+          "basis",
+          "node_ids",
+          "reason"
+        ]
+      },
+      "CommitReviewFeedback": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "feedback_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "operation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "source_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "operation_version": {
+            "$ref": "#/components/schemas/PositiveCounter"
+          },
+          "basis": {
+            "$ref": "#/components/schemas/ReviewActionBasis"
+          },
+          "proposal_id": {
+            "$ref": "#/components/schemas/Id"
+          }
+        },
+        "required": [
+          "feedback_id",
+          "operation_id",
+          "source_id",
+          "operation_version",
+          "basis",
+          "proposal_id"
+        ]
+      },
+      "ReviewInputRouting": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "reply",
+              "guidance",
+              "issue",
+              "answer",
+              "resolve_guidance",
+              "specification_proposal",
+              "replan"
+            ]
+          },
+          "basis": {
+            "$ref": "#/components/schemas/TaskActionBasis"
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 65536,
+            "pattern": "^[^\\x00]*$"
+          },
+          "operation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "expected_version": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "target_kind": {
+            "type": "string",
+            "enum": [
+              "planning_issue",
+              "node_blocker",
+              "input_issue"
+            ]
+          },
+          "target_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "issue_sequence": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "supersedes": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "proposal_id": {
+            "$ref": "#/components/schemas/Id"
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "reply"
+                }
+              }
+            },
+            "then": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "kind": {}
+              },
+              "required": []
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "guidance"
+                }
+              }
+            },
+            "then": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "kind": {},
+                "basis": {},
+                "text": {},
+                "supersedes": {}
+              },
+              "required": [
+                "basis",
+                "text"
+              ]
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "issue"
+                }
+              }
+            },
+            "then": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "kind": {},
+                "basis": {},
+                "text": {}
+              },
+              "required": [
+                "basis",
+                "text"
+              ]
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "answer"
+                }
+              }
+            },
+            "then": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "kind": {},
+                "basis": {},
+                "text": {},
+                "target_kind": {},
+                "target_id": {},
+                "issue_sequence": {}
+              },
+              "required": [
+                "basis",
+                "text",
+                "target_kind"
+              ]
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "resolve_guidance"
+                }
+              }
+            },
+            "then": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "kind": {},
+                "basis": {},
+                "text": {},
+                "operation_id": {},
+                "expected_version": {}
+              },
+              "required": [
+                "basis",
+                "text",
+                "operation_id",
+                "expected_version"
+              ]
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "specification_proposal"
+                }
+              }
+            },
+            "then": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "kind": {},
+                "basis": {},
+                "proposal_id": {}
+              },
+              "required": [
+                "basis",
+                "proposal_id"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "replan"
+                }
+              },
+              "type": "object"
+            },
+            "then": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "kind": {},
+                "basis": {},
+                "text": {}
+              },
+              "required": [
+                "kind",
+                "basis",
+                "text"
+              ]
+            }
+          }
+        ]
+      },
+      "ResolveReviewInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "feedback_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "operation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "source_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "operation_version": {
+            "$ref": "#/components/schemas/PositiveCounter"
+          },
+          "basis": {
+            "$ref": "#/components/schemas/ReviewActionBasis"
+          },
+          "reconsideration_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/PlanningText"
+          },
+          "routing": {
+            "$ref": "#/components/schemas/ReviewInputRouting"
+          }
+        },
+        "required": [
+          "feedback_id",
+          "operation_id",
+          "source_id",
+          "operation_version",
+          "basis",
+          "reconsideration_id",
+          "summary",
+          "routing"
+        ]
+      },
+      "ReviewActionBasis": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "control_version": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "specification_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "plan_id": {
+            "$ref": "#/components/schemas/Id"
+          }
+        },
+        "required": [
+          "control_version",
+          "specification_id",
+          "plan_id"
+        ]
       }
     },
     "securitySchemes": {

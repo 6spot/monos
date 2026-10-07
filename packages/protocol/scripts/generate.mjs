@@ -81,6 +81,11 @@ const get = (name, auth, parameters = [], querySchema) => ({
 artifacts.set('generated/openapi.json', `${JSON.stringify({
   openapi: '3.1.0', info: { title: 'monos boundary probe', version: '1.0.0' },
   paths: {
+    '/v1/owner/tasks/review/commands': { post: { security: security('OwnerAuth'), requestBody: { required: true, content: { 'application/json': { schema: reference('OwnerReviewCommand') } } }, responses: responses('OwnerReviewCommandResult') } },
+    '/v1/owner/tasks/{task_id}/review': { get: get('OwnerReviewStatus', 'OwnerAuth', ['task_id'], 'OwnerReviewHistoryQuery') },
+    '/v1/owner/tasks/{task_id}/review/feedback/{feedback_id}': { get: get('ReviewFeedbackDetail', 'OwnerAuth', ['task_id', 'feedback_id'], 'OwnerReviewDetailQuery') },
+    '/v1/owner/tasks/{task_id}/review/operations/{operation_id}': { get: get('ReviewOperationDetail', 'OwnerAuth', ['task_id', 'operation_id']) },
+    '/v1/owner/tasks/{task_id}/review/commands/{request_id}': { get: get('OwnerReviewCommandResult', 'OwnerAuth', ['task_id', 'request_id']) },
     '/v1/owner/tasks/delivery/commands': { post: { security: security('OwnerAuth'), requestBody: { required: true, content: { 'application/json': { schema: reference('OwnerDeliveryCommand') } } }, responses: responses('OwnerDeliveryCommandResult') } },
     '/v1/owner/tasks/{task_id}/delivery': { get: get('OwnerDeliveryStatus','OwnerAuth',['task_id'],'OwnerDeliveryHistoryQuery') },
     '/v1/owner/tasks/{task_id}/delivery/proposals/{proposal_id}': { get: get('DeliveryProposalDetail','OwnerAuth',['task_id','proposal_id']) },

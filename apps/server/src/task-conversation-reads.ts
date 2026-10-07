@@ -8,13 +8,13 @@ import type {
   TaskGuidanceRecipient,
 } from '../../../packages/protocol/src/index.ts';
 
-const operationQuery = `SELECT i.id,'input' kind,i.status,i.version,m.content,i.message_id,NULL::text node_id,i.accepted_delivery_operation_id,m.sequence input_sequence,
+const operationQuery = `SELECT i.id,'input' kind,i.status,i.version,m.content,i.message_id,NULL::text node_id,i.accepted_delivery_operation_id,m.sequence input_sequence,EXISTS(SELECT 1 FROM task_input_reconsiderations restored WHERE restored.input_id=i.id) reconsidered,
  EXISTS(SELECT 1 FROM task_conversation_outbox s JOIN attempts a ON a.id=s.planned_attempt_id JOIN tasks t ON t.conversation_source_id=s.id WHERE s.input_id=i.id AND (a.mutation_allowed OR a.state='QUEUED')) live
  FROM task_inputs i JOIN task_messages m ON m.id=i.message_id WHERE i.task_id=$1
- UNION ALL SELECT id,'guidance',status,version,text,NULL,node_id,NULL,0,false FROM task_guidance WHERE task_id=$1
- UNION ALL SELECT id,'issue',status,version,reason,NULL,NULL,NULL,0,false FROM task_input_issues WHERE task_id=$1`;
+ UNION ALL SELECT id,'guidance',status,version,text,NULL,node_id,NULL,0,false,false FROM task_guidance WHERE task_id=$1
+ UNION ALL SELECT id,'issue',status,version,reason,NULL,NULL,NULL,0,false,false FROM task_input_issues WHERE task_id=$1`;
 function operation(row: Record<string, unknown>, withContent: boolean): TaskInputOperation {
-  const active = ['pending', 'failed', 'active', 'open'].includes(String(row.status));
+  const active = !row.reconsidered && ['pending', 'failed', 'active', 'open'].includes(String(row.status));
   return {
     id: String(row.id),
     kind: row.kind as TaskInputOperation['kind'],
@@ -38,7 +38,7 @@ function operation(row: Record<string, unknown>, withContent: boolean): TaskInpu
 export async function operationSummary(tx: Transaction, taskId: string, kind: TaskInputOperation['kind']) {
   const rows = (
     await tx.query(
-      `SELECT id,kind,status,version,message_id,node_id,accepted_delivery_operation_id,live FROM (${operationQuery}) q WHERE kind=$2 ${kind === 'input' ? "AND status IN ('pending','failed')" : kind === 'issue' ? "AND status='open'" : ''} ORDER BY input_sequence,id LIMIT 65`,
+      `SELECT id,kind,status,version,message_id,node_id,accepted_delivery_operation_id,live,reconsidered FROM (${operationQuery}) q WHERE kind=$2 ${kind === 'input' ? "AND status IN ('pending','failed')" : kind === 'issue' ? "AND status='open'" : ''} ORDER BY input_sequence,id LIMIT 65`,
       [taskId, kind],
     )
   ).rows;

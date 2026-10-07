@@ -9,7 +9,7 @@ import {RemoteProviderError,ProviderTurnComplete} from './github-remote.ts';
 import type {GitHubRemote,RemoteReviewSnapshot,GitHubRemoteScope} from './github-remote.ts';
 import {ordinaryRemoteAdmission,currentLocalPreparation,RemoteAdmissionError} from './remote-preparation-guards.ts';
 import {remoteAdmissionForOperation} from './owner-delivery-guards.ts';
-import {admitAcceptedPreparationForItem} from './owner-delivery-preparation.ts';
+import {admitAcceptedPreparationForItem,replaceRevokedPreparation} from './owner-delivery-preparation.ts';
 import {remoteScope,appendRemoteObservation,publishProof,verifyPushObservation,reserveRemoteProvider,releaseRemoteProvider,RemoteProviderWaiting} from './remote-preparation-state.ts';
 import type {RemoteItem,RemoteOperation} from './remote-preparation-state.ts';
 import {observePublicationPermission} from './remote-preparation-access.ts';
@@ -93,7 +93,7 @@ export class RemotePreparation {
   if(item.last_published_proof?.candidate.head!==local.result.candidate.head) {
    if(local.result.status!=='prepared'||!local.request.permission_proof)throw new RemoteAdmissionError('permission_unknown');
    const previous=(await tx.query<RemoteOperation>("SELECT * FROM remote_preparation_operations WHERE item_id=$1 AND kind='push' ORDER BY created_at DESC,id DESC LIMIT 1",[itemId])).rows[0];
-   if(previous&&previous.request.preparation.operation_id===local.id)return; // blocked needs an actual Owner Retry
+   if(previous&&previous.request.preparation.operation_id===local.id&&!await replaceRevokedPreparation(tx,previous))return; // blocked needs an actual Owner Retry; revoked correction needs a fresh operation
    await insertRemoteOperation(tx,item,validate('PublicationPushRequest',{schema_version:1,operation_id:randomUUID(),item_id:item.item_id,task_id:item.task_id,resource_id:item.resource_id,runner_id:item.runner_id,storage_id:item.storage_id,repository_identity:item.repository_identity,repository_id:item.repository_id,remote_url:item.remote_url,delivery_ref:item.delivery_ref,target_branch:item.target_branch,preparation:local.request,prepared:local.result,preparation_result_digest:local.result_digest,override_receipts:receipts,permission_proof:local.request.permission_proof,permission_proof_digest:hash(local.request.permission_proof),workflow_changes:local.result.scan!.workflow_changes,expected_head:item.last_published_proof?.candidate.head??null,...(item.last_published_proof?{prior_published:item.last_published_proof,prior_published_digest:item.last_published_digest}:{})}));return;
   }
   const content=await remoteContent(tx,item,local);
@@ -105,10 +105,21 @@ export class RemotePreparation {
   if(!supported)return [];
   return transaction(this.db,async tx=>{
    const valid=(await tx.query("SELECT 1 FROM runners WHERE id=$1 AND incarnation=$2 AND connection_instance=$3 AND connected AND ready AND last_seen>clock_timestamp()-interval '15 seconds' FOR UPDATE",[runnerId,incarnation,this.instanceId])).rowCount;if(!valid)return [];
-   const rows=(await tx.query<RemoteOperation>(`SELECT o.* FROM remote_preparation_operations o WHERE o.runner_id=$1 AND o.kind='push' AND o.active AND o.state NOT IN('settled','revoked') AND o.next_attempt_at<=clock_timestamp() AND (o.last_sent_at IS NULL OR o.last_sent_at<clock_timestamp()-interval '2 seconds') ORDER BY o.next_attempt_at,o.id LIMIT 8`,[runnerId])).rows;
+   const rows=(await tx.query<RemoteOperation>(`SELECT o.* FROM remote_preparation_operations o WHERE o.runner_id=$1 AND o.kind='push' AND (
+     o.active AND o.state NOT IN('settled','revoked') AND o.next_attempt_at<=clock_timestamp() AND (o.last_sent_at IS NULL OR o.last_sent_at<clock_timestamp()-interval '2 seconds')
+     OR o.state='revoked' AND NOT o.active AND NOT o.may_have_mutated AND NOT o.effect_owned AND o.claim_id IS NULL AND o.claim_instance IS NULL AND o.claim_expires_at IS NULL
+       AND o.last_sent_at IS NOT NULL AND o.sent_incarnation IS NOT NULL AND NOT EXISTS(SELECT 1 FROM remote_preparation_observations p WHERE p.operation_id=o.id AND p.kind='ref' AND p.observation ? 'revoked_push_result')
+   ) ORDER BY o.next_attempt_at,o.id LIMIT 8`,[runnerId])).rows;
    const frames:Frame[]=[];
    for(const op of rows){await tx.query('SELECT id FROM tasks WHERE id=$1 FOR UPDATE',[op.task_id]);const item=(await tx.query<RemoteItem>('SELECT * FROM remote_preparation_items WHERE item_id=$1 FOR UPDATE',[op.item_id])).rows[0]!;
-    try {if(!op.may_have_mutated){const scope=await remoteScope(tx,item);if(scope.config&&(await tx.query('SELECT 1 FROM github_remote_cooldowns WHERE installation_id=$1 AND next_request_at>clock_timestamp()',[scope.config.installation_id])).rowCount)continue;await remoteAdmissionForOperation(tx,item,op.request.preparation,op.request.prepared,op.id);if(item.cancel_requested)continue;}
+    try {if(op.state==='revoked'){
+      // Resume only the original no-effect journal. Its write grant remains
+      // denied; the immutable result must reach ACK before any successor frame.
+      frames.push(validate('Frame',{schema_version:1,type:'publication_push',incarnation,publication_push:op.request}));if(frames.length===2)break;continue;
+     }
+     if((await tx.query(`SELECT 1 FROM remote_preparation_operations old WHERE old.item_id=$1 AND old.kind='push' AND old.state='revoked' AND old.sent_incarnation IS NOT NULL
+       AND NOT EXISTS(SELECT 1 FROM remote_preparation_observations p WHERE p.operation_id=old.id AND p.kind='ref' AND p.observation ? 'revoked_push_result') LIMIT 1`,[item.item_id])).rowCount)continue;
+     if(!op.may_have_mutated){const scope=await remoteScope(tx,item);if(scope.config&&(await tx.query('SELECT 1 FROM github_remote_cooldowns WHERE installation_id=$1 AND next_request_at>clock_timestamp()',[scope.config.installation_id])).rowCount)continue;await remoteAdmissionForOperation(tx,item,op.request.preparation,op.request.prepared,op.id);if(item.cancel_requested)continue;}
      await tx.query('UPDATE remote_preparation_operations SET last_sent_at=clock_timestamp(),sent_incarnation=$2 WHERE id=$1',[op.id,incarnation]);frames.push(validate('Frame',{schema_version:1,type:'publication_push',incarnation,publication_push:op.request}));if(frames.length===2)break;
     }catch(error){if(!(error instanceof CommandError))throw error;}
    }return frames;
@@ -124,8 +135,15 @@ export class RemotePreparation {
    if(op.request_digest!==hash(request)||result.request_digest!==op.request_digest||result.item_id!==item.item_id||result.delivery_ref!==item.delivery_ref||result.candidate_head!==request.prepared.candidate!.head||result.candidate_manifest_digest!==request.prepared.candidate_manifest_digest||result.observation_digest!==hash(result.observation)||!result.worker_absent)throw new CommandError('payload_conflict','Push result scope differs');
    verifyPushObservation(request,result.observation);
    if(result.status==='published'&&(result.observation.status!=='present'||result.observation.head!==result.candidate_head))throw new CommandError('payload_conflict','Published head differs');
-   if(op.state==='settled'){if(op.result_digest!==digest)throw new CommandError('payload_conflict','Remote result is immutable');}
-   else {if(!op.active||op.state==='revoked'||Number(op.sent_incarnation)!==incarnation||result.push_started&&!op.may_have_mutated)throw new CommandError('stale_execution','Push has no admitted physical claim');
+   if(op.state==='revoked'){
+    if(op.active||op.may_have_mutated||op.effect_owned||op.claim_id||op.claim_instance||op.claim_expires_at||op.sent_incarnation===null||result.push_started||result.status==='reconciliation_required'||!(await tx.query('SELECT 1 FROM remote_preparation_operations WHERE id=$1 AND last_sent_at IS NOT NULL',[op.id])).rowCount)throw new CommandError('stale_execution','Revoked push has no original no-effect settlement');
+    const retained=(await tx.query<{digest:string}>("SELECT digest FROM remote_preparation_observations WHERE operation_id=$1 AND kind='ref' AND observation ? 'revoked_push_result'",[op.id])).rows[0];
+    const observation={revoked_push_result:result};
+    if(retained){if(retained.digest!==hash(observation))throw new CommandError('payload_conflict','Revoked push result is immutable');}
+    else await appendRemoteObservation(tx,item,op.id,'ref',observation);
+   }
+   else if(op.state==='settled'){if(op.result_digest!==digest)throw new CommandError('payload_conflict','Remote result is immutable');}
+   else {if(!op.active||Number(op.sent_incarnation)!==incarnation||result.push_started&&!op.may_have_mutated)throw new CommandError('stale_execution','Push has no admitted physical claim');
     await tx.query("UPDATE remote_preparation_operations SET state='settled',active=false,effect_owned=false,worker_absent=true,result=$2,result_digest=$3,reason=$4,version=version+1 WHERE id=$1",[op.id,result,digest,result.reason??null]);
     const settled={...op,state:'settled' as const,result,result_digest:digest,effect_owned:false,worker_absent:true};if(result.status==='published')await publishProof(tx,item,settled,result.observation);
     await tx.query('UPDATE remote_preparation_items SET next_poll_at=clock_timestamp(),poll_progress=NULL WHERE item_id=$1',[item.item_id]);

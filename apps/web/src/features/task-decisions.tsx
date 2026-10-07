@@ -21,6 +21,7 @@ import { validate } from "../../../../packages/protocol/src/validation.ts";
 import { Button } from "../components/ui/button.tsx";
 import { Label } from "../components/ui/label.tsx";
 import { Textarea } from "../components/ui/textarea.tsx";
+import { APIError } from "../lib/api.ts";
 import {
   Busy,
   DetailIDs,
@@ -30,6 +31,7 @@ import {
   MarkdownText,
   More,
   ReadProblem,
+  taskHref,
   unique,
   useTaskPages,
   useTaskRead,
@@ -65,9 +67,11 @@ function replanCommand(
   scope: string,
   name: TaskReplanCommandName,
   payload: Record<string, unknown>,
+  review_origin?: {feedback_id:string;operation_id:string},
 ) {
   return props.commands.execute(props.task.task_id, scope, {
     family: "replan",
+    ...(review_origin?{review_origin}:{}),
     command: {
       schema_version: 1,
       request_id: crypto.randomUUID(),
@@ -480,11 +484,17 @@ function ReplanCard({
   request,
   ...props
 }: TaskViewProps & { request: ReplanRequestSummary }) {
+  const checkRequest = (value: ReplanRequestDetail) => {
+    if (value.request.id !== request.id || value.request.task_id !== props.task.task_id || value.source && value.source.request_id !== request.id || value.proposals.some(p=>p.request_id!==request.id) || !!value.request.review_feedback_id !== !!value.request.review_operation_id) throw new APIError("invalid_response","The replacement Plan read did not match this request.");
+  };
   const q = useTaskPages<ReplanRequestDetail>(
     props,
     `/replan/requests/${encodeURIComponent(request.id)}`,
     "ReplanRequestDetail",
     (p) => p.next_cursor ?? undefined,
+    {},
+    true,
+    checkRequest,
   );
   const [effectCursor, setEffectCursor] = useState<string>();
   const effectPage = useTaskRead<ReplanRequestDetail>(
@@ -492,6 +502,7 @@ function ReplanCard({
     `/replan/requests/${encodeURIComponent(request.id)}${effectCursor ? "?effects_cursor=" + encodeURIComponent(effectCursor) : ""}`,
     "ReplanRequestDetail",
     !!effectCursor,
+    checkRequest,
   );
   const d = q.data?.pages[0],
     r = d?.request ?? request,
@@ -516,10 +527,12 @@ function ReplanCard({
   const active =
     r.status === "pending" &&
     !["COMPLETED", "CANCELLED"].includes(props.task.state);
+  const readable = !!d && !q.error && !effectPage.error;
   return (
     <article className="task-proposal">
       <h3>Replacement Plan</h3>
       <p>{r.reason}</p>
+      {r.review_feedback_id && <p className="task-notice">This replacement Plan originated from requested review changes. Dismiss returns to Review with that feedback still effective and a fresh routing successor; it does not withdraw feedback.</p>}
       <ReadProblem
         error={q.error ?? effectPage.error}
         retry={() => {
@@ -579,7 +592,7 @@ function ReplanCard({
           <div className="task-actions">
             <Button
               variant="outline"
-              disabled={busy || (!!r.issue_id && !answer.trim())}
+              disabled={busy || !readable || (!!r.issue_id && !answer.trim())}
               onClick={() => {
                 void replanCommand(props, scope, "retry_replan", {
                   replan_request_id: r.id,
@@ -592,13 +605,13 @@ function ReplanCard({
             </Button>
             <Button
               variant="outline"
-              disabled={busy}
+              disabled={busy || !readable}
               onClick={() => {
                 void replanCommand(props, scope, "dismiss_replan", {
                   replan_request_id: r.id,
                   expected_version: r.version,
                   ...(direction.trim() ? { direction } : {}),
-                });
+                },r.review_feedback_id && r.review_operation_id?{feedback_id:r.review_feedback_id,operation_id:r.review_operation_id}:undefined);
               }}
             >
               Dismiss Replan
@@ -608,6 +621,7 @@ function ReplanCard({
             Dismissing this Plan request leaves any linked requirements
             independently actionable.
           </p>
+          {r.review_feedback_id && <p className="task-muted">Manage the preserved feedback and its independent Withdraw action in <a href={taskHref(props.task.task_id,"overview")}>Overview</a>. Planner termination and successor dispatch may still be settling.</p>}
         </>
       )}
       {!r.physical_settled && (
@@ -679,6 +693,10 @@ function ReplanProposal({
     props,
     `/replan/proposals/${encodeURIComponent(proposalId)}`,
     "ReplanProposalDetail",
+    true,
+    (value) => {
+      if (value.proposal.proposal_id!==proposalId || value.content.proposal_id!==proposalId || value.proposal.request_id!==request.id || value.content.replan_request_id!==request.id || value.content.source_id!==value.proposal.source_id) throw new APIError("invalid_response","The replacement Plan proposal did not match this request and source.");
+    },
   );
   const requirementId = q.data?.proposal.requirement_proposal_id;
   const requirement = useTaskRead<RequirementProposalDetail>(
@@ -686,6 +704,9 @@ function ReplanProposal({
     `/specification/proposals/${encodeURIComponent(requirementId ?? "none")}`,
     "RequirementProposalDetail",
     !!requirementId,
+    (value) => {
+      if (value.proposal.proposal_id!==requirementId) throw new APIError("invalid_response","The linked requirement proposal did not match this Plan.");
+    },
   );
   const d = q.data,
     scope = `replan-proposal:${proposalId}`,
@@ -695,6 +716,7 @@ function ReplanProposal({
       scope,
     });
   const eligible =
+    !q.error && !requirement.error &&
     d?.proposal.current &&
     !d.proposal.revoked &&
     !d.proposal.expired &&

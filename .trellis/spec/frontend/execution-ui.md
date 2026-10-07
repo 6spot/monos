@@ -116,3 +116,32 @@ its actual receipt after reply loss/reload. Logout/session/selection fence late
 callbacks. Completed links to independent Todo Discussion. Inspect representative
 changed review, frozen progress and terminal layouts at desktop/mobile sizes tied
 to the current build; reuse unchanged shell/provider evidence at its original scope.
+
+## Explicit review correction
+
+[Review correction](../backend/review-correction.md) supplies authenticated exact
+Request Changes and independent feedback/input operation capabilities.
+`review-correction-api.ts` validates selected Task/feedback/operation, purpose,
+reconsideration and committed/unknown receipts. Capture the displayed local basis
+and accepted batch with the text draft; never silently refresh either before POST.
+Retain the exact review envelope before send. A lost reply recovers the same
+request; changed prose, answer, source or expected version cannot replace it.
+
+`review-correction.tsx` shows pending settlement/routing, actual issue, Answer &
+Retry, Withdrawal, input reconsiderations and retained history. Replan Dismiss
+records a local review-origin binding with the immutable journal and requires its
+actual distinct successor receipt; this local metadata never supplies wire authority.
+Failed current reads disable mutations. Review reads and their late callbacks are
+fenced by Task selection, AbortSignal and authenticated session epoch.
+
+Historical delivery `revoked` disables batch Retry/Cancel and cannot be selected as
+the current accepted pointer. Read `revocation` from selected delivery detail and
+show its original-effect settlement separately from new routing. Cancelled items
+retain distinct merge/preparation/close/external-merge reconciliation facts; terminal
+Task status never implies stopped effects. Requirement details retain actual paired
+review source/operation identity, without a fabricated Conversation input.
+
+Affected API/journal tests plus genuine protected-route/PG browser scenarios verify
+exact Request Changes, exits, receipt recovery and session fences. Inspect current
+built representative desktop/mobile states; mocks alone do not establish backend
+authority, physical absence or provider effects.

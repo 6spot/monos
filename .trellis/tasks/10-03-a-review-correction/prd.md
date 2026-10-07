@@ -75,28 +75,28 @@ installed delivery acceptance; zero configured live GitHub Apps remains that gat
 
 ## Acceptance criteria
 
-- [ ] **AC1 — Owner and revocation authority:** genuine commands create one feedback
+- [x] **AC1 — Owner and revocation authority:** genuine commands create one feedback
   and, when eligible, one receipt-backed revocation. SQL rejects pointer clearing or
   provenance substitution without the exact recorded authority. Unknown merge,
   stale basis/batch or finalized item rejects without partial state changes.
-- [ ] **AC2 — effect and routing order:** real PG shared-lock races cover both correction
+- [x] **AC2 — effect and routing order:** real PG shared-lock races cover both correction
   and finality admission winners. Held-token/pre-effect worker cannot mutate after
   revocation; actual admitted original preparation settles before routing/Rework.
   Stale linked operation cannot regain ordinary authority after Withdrawal/reacceptance.
-- [ ] **AC3 — semantic correction:** actual source-bound Planner commands demonstrate
+- [x] **AC3 — semantic correction:** actual source-bound Planner commands demonstrate
   REVIEW while routing, sufficient Rework with retained Task/Node/PR lineage,
   genuine-insufficient Replan and exact changed-requirement proposal boundaries.
   Fresh accepted result cannot inherit old approval. Stage A finalized result rejects
   correction; no unsupported multi-repository success is claimed.
-- [ ] **AC4 — explicit exits:** actual issue + answer/retry, routing failure + Retry,
+- [x] **AC4 — explicit exits:** actual issue + answer/retry, routing failure + Retry,
   running withdrawal and review-origin Replan dismissal preserve exact obligation,
   successor and process-settlement guards. Dismissal never silently withdraws feedback;
   same-feedback/same-basis automatic Replan repetition fails.
-- [ ] **AC5 — later input and Cancel truth:** late pending/failed/replied messages retain
+- [x] **AC5 — later input and Cancel truth:** late pending/failed/replied messages retain
   attribution and original replies, with fresh ordinary routing and no duplicate reply.
   Original effect recovery remains truthful through Cancel; terminal Task never revives,
   and undelivered PR cleanup respects unknown merge and retains branch history.
-- [ ] **AC6 — wire and Web:** strict generated Owner/Agent/launch/read contracts,
+- [x] **AC6 — wire and Web:** strict generated Owner/Agent/launch/read contracts,
   authentication/Origin/no-store and exact journal recovery pass affected consumers.
   Current built Web demonstrates Request Changes, queued/failed/issue exits,
   accepted revocation settlement, review-origin Dismiss/Withdraw and cancellation

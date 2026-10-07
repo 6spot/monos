@@ -56,7 +56,7 @@ export async function admitAcceptedPreparationForItem(tx: Transaction, item: Rem
   const facts = { schema_version: 1, operation_id: randomUUID(), item_id: item.item_id, task_id: item.task_id, resource_id: item.resource_id, runner_id: item.runner_id, storage_id: item.storage_id, repository_identity: item.repository_identity, repository_id: item.repository_id, remote_url: item.remote_url, delivery_ref: item.delivery_ref, target_branch: item.target_branch, preparation: repository.preparation_request, prepared: repository.preparation_result, preparation_result_digest: repository.preparation_result_digest, override_receipts: repository.waivers! };
   if (item.last_published_proof?.candidate.head !== repository.candidate!.head) {
     const prior = (await tx.query<RemoteOperation>("SELECT * FROM remote_preparation_operations WHERE item_id=$1 AND kind='push' ORDER BY created_at DESC,id DESC LIMIT 1", [item.item_id])).rows[0];
-    if (prior && prior.request.preparation.operation_id === repository.preparation_request.operation_id && !retry) throw new RemoteAdmissionError('possible_publication');
+    if (prior && prior.request.preparation.operation_id === repository.preparation_request.operation_id && !retry && !await replaceRevokedPreparation(tx,prior)) throw new RemoteAdmissionError('possible_publication');
     if (repository.preparation_result.status !== 'prepared') throw new RemoteAdmissionError('identity_mismatch');
     const request = validate<PublicationPushRequest>('PublicationPushRequest', { ...facts, permission_proof: repository.permission_proof, permission_proof_digest: repository.permission_proof_digest, workflow_changes: repository.scan!.workflow_changes, expected_head: item.last_published_proof?.candidate.head ?? null, ...(item.last_published_proof ? { prior_published: item.last_published_proof, prior_published_digest: item.last_published_digest } : {}) });
     await link(tx, accepted.batch.id, item, await insertRemoteOperation(tx, item, request));
@@ -65,9 +65,17 @@ export async function admitAcceptedPreparationForItem(tx: Transaction, item: Rem
   if (repository.review && (item.pr_id !== repository.review.pr_id || Number(item.pr_number) !== repository.review.pr_number)) throw new RemoteAdmissionError('identity_mismatch');
   const prior = (await tx.query<RemoteOperation>("SELECT * FROM remote_preparation_operations WHERE item_id=$1 AND kind IN ('create_pr','update_pr') ORDER BY created_at DESC,id DESC LIMIT 1", [item.item_id])).rows[0];
   if (prior && prior.request.preparation.operation_id === repository.preparation_request.operation_id && prior.state === 'settled' && !prior.reason && prior.result && 'content_digest' in prior.result && prior.result.content_digest === repository.provider_content_digest) return;
-  if (prior && prior.request.preparation.operation_id === repository.preparation_request.operation_id && !retry) throw new RemoteAdmissionError('possible_publication');
+  if (prior && prior.request.preparation.operation_id === repository.preparation_request.operation_id && !retry && !await replaceRevokedPreparation(tx,prior)) throw new RemoteAdmissionError('possible_publication');
   const request = validate<RemotePreparationProviderRequest>('RemotePreparationProviderRequest', { ...facts, kind: item.pr_id ? 'update_pr' : 'create_pr', ...(remoteReview(item) ? { review: remoteReview(item) } : {}), content: repository.provider_content });
   await link(tx, accepted.batch.id, item, await insertRemoteOperation(tx, item, request));
+}
+
+// A fresh accepted batch may reuse unchanged content after the previous pending
+// operation was genuinely revoked. It must create a new operation, never wake or
+// relink the historical accepted identity. Possible effects remain excluded above.
+export async function replaceRevokedPreparation(tx:Transaction,prior:RemoteOperation):Promise<boolean>{
+ return prior.state==='revoked'&&!prior.may_have_mutated&&!prior.effect_owned&&!prior.claim_id&&!prior.claim_instance&&!prior.claim_expires_at&&!!(await tx.query(`SELECT 1 FROM owner_delivery_preparation_links l JOIN owner_delivery_revocations v ON v.batch_id=l.batch_id JOIN owner_delivery_batches b ON b.id=v.batch_id
+   WHERE l.operation_id=$1 AND l.request_digest=$2 AND b.status='revoked' LIMIT 1`,[prior.id,prior.request_digest])).rowCount;
 }
 
 async function link(tx: Transaction, batchId: string, item: RemoteItem, operation: RemoteOperation): Promise<void> {

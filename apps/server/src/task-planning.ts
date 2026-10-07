@@ -1,4 +1,5 @@
 import { requestRemoteCancel } from './remote-preparation-state.ts';
+import { cancelReviewOperations } from './task-review-state.ts';
 import { cancelTaskInputEffects } from './task-guidance.ts';
 import { stopConversationAttempt } from './task-conversation-state.ts';
 import type { AttemptRow } from './service.ts';
@@ -97,6 +98,7 @@ export class TaskPlanning {
               if((await tx.query('SELECT 1 FROM tasks WHERE id=$1 AND accepted_delivery_operation_id IS NOT NULL',[task.id])).rowCount)throw new CommandError('unmet_precondition','Accepted delivery requires delivery cancellation');
               const conversations=(await tx.query<AttemptRow>('SELECT * FROM attempts WHERE task_id=$1 AND task_conversation_source_id IS NOT NULL FOR UPDATE',[task.id])).rows;
               for(const a of conversations){await stopConversationAttempt(tx,a,command.request_id);await tx.query('UPDATE attempts SET mutation_allowed=false WHERE id=$1',[a.id]);}
+              await cancelReviewOperations(tx,task.id,command.request_id);
               await cancelTaskInputEffects(tx,task.id);
               await requestRemoteCancel(tx,task.id);
             }

@@ -26,3 +26,8 @@ Dedicated [Replan](../backend/task-replan.md) uses terminal prepare/issue and a
 mutually exclusive source. Its transport watermark is0 while immutable context
 retains the actual input cutoff. Workspace transfer is a system-authored descriptor;
 Agent payloads cannot supply it. Compile all Go consumers after final generation.
+
+Dedicated [review correction](../backend/review-correction.md) adds exact Owner
+receipts, two exclusive review-source purposes and source-bound terminal tools.
+Review result basis and operation capability are distinct; unknown receipts
+carry no committed identities.

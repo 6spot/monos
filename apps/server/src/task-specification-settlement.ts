@@ -1,3 +1,4 @@
+import {assertReviewRequirementPublication,resolvePublishedReviewRequirement} from './task-review-state.ts';
 import { remoteItemQuiescent } from './remote-preparation-state.ts';
 import { assertNoReplan } from './task-replan-state.ts';
 import { randomUUID } from 'node:crypto';
@@ -18,7 +19,7 @@ export interface RequirementChange {id:string;task_id:string;proposal_id:string;
 export async function admitSpecification(tx:Transaction,task:SpecificationTask,p:RequirementProposal,confirmationId:string,requestId:string,admissionAttemptId?:string):Promise<RequirementChange>{
  const prior=(await tx.query<RequirementChange>('SELECT * FROM requirement_changes WHERE proposal_id=$1',[p.id])).rows[0];if(prior){if(prior.authorization_id!==confirmationId)throw new CommandError('payload_conflict','Applied proposal requires its original confirmation');return prior;}
  if(!p.impact.graph_sufficient)throw new CommandError('unmet_precondition','Insufficient graph requires exact joint Replan publication');
- await assertNoReplan(tx,task.id);await eligibleRequirement(tx,task,p);
+ await assertReviewRequirementPublication(tx,p.id);await assertNoReplan(tx,task.id);await eligibleRequirement(tx,task,p);
  if((await tx.query('SELECT 1 FROM task_publication_slots WHERE task_id=$1',[task.id])).rowCount)throw new CommandError('unmet_precondition','Previous publication must settle before admission');
  const auth=(await tx.query<{consumed_by:string|null}>('SELECT consumed_by FROM authorization_receipts WHERE id=$1 AND proposal_id=$2 FOR UPDATE',[confirmationId,p.id])).rows[0];
  if(!auth||auth.consumed_by)throw new CommandError('denied_scope','Exact unused Owner authorization required');
@@ -62,6 +63,7 @@ export async function advanceSpecification(tx:Transaction,task:SpecificationTask
  const status=withdrawing?(task.state==='CANCELLED'?'cancelled':'withdrawn'):'published';
  await tx.query('UPDATE requirement_changes SET status=$2,attention=NULL,version=version+1 WHERE id=$1',[c.id,status]);
  if(!withdrawing){
+  await assertReviewRequirementPublication(tx,p.id);
   await tx.query('INSERT INTO specification_revisions(id,task_id,parent_id,content,content_digest,authorization_id) VALUES($1,$2,$3,to_jsonb($4::text),$5,$6)',[c.specification_id,task.id,p.base_specification_id,p.specification,p.specification_digest,c.authorization_id]);
   await tx.query('INSERT INTO requirement_publications(task_id,change_id,specification_id,parent_id,plan_id) VALUES($1,$2,$3,$4,$5)',[task.id,c.id,c.specification_id,p.base_specification_id,p.base_plan_id]);
   await tx.query('UPDATE tasks SET specification_id=$2,control_version=control_version+1 WHERE id=$1',[task.id,c.specification_id]);
@@ -95,6 +97,7 @@ export async function advanceSpecification(tx:Transaction,task:SpecificationTask
  }
  if(task.plan_id&&task.state!=='CANCELLED')await tx.query("UPDATE tasks SET state=CASE WHEN EXISTS(SELECT 1 FROM nodes n JOIN plan_nodes pn ON pn.node_id=n.id WHERE pn.plan_id=tasks.plan_id AND n.state='BLOCKED') THEN 'BLOCKED' WHEN NOT EXISTS(SELECT 1 FROM nodes n JOIN plan_nodes pn ON pn.node_id=n.id WHERE pn.plan_id=tasks.plan_id AND n.state<>'COMPLETED') THEN 'REVIEW' ELSE 'RUNNING' END WHERE id=$1",[task.id]);
  if(!task.plan_id&&task.state==='RUNNING'&&task.planning_issue_sequence===null){const fresh=(await tx.query<PlanningTask>('SELECT * FROM tasks WHERE id=$1',[task.id])).rows[0]!;await createPlanningIntent(tx,fresh,c.id,configurationVersion,c.id);}
+ if(!withdrawing)await resolvePublishedReviewRequirement(tx,p.id);
  await planningEvent(tx,task.id,'specification_change_'+status,{change_id:c.id,proposal_id:p.id,...(!withdrawing?{specification_id:c.specification_id}: {})});
 }
 async function attention(tx:Transaction,c:RequirementChange,message:string){if(c.attention!==message)await tx.query('UPDATE requirement_changes SET attention=$2,version=version+1 WHERE id=$1',[c.id,message]);}

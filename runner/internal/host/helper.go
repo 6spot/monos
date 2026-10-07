@@ -65,7 +65,7 @@ func ValidateRequest(r Request) error {
 		if err := wire.Validate("Dispatch", raw); err != nil {
 			return err
 		}
-		if r.Dispatch.TaskReplanSource != nil || r.Dispatch.TaskPlanningSource != nil || r.Dispatch.NodeExecutionSource != nil || r.Dispatch.TaskConversationSource != nil {
+		if r.Dispatch.TaskReviewSource != nil || r.Dispatch.TaskReplanSource != nil || r.Dispatch.TaskPlanningSource != nil || r.Dispatch.NodeExecutionSource != nil || r.Dispatch.TaskConversationSource != nil {
 			if _, err := wire.ScopeID(*r.Dispatch); err != nil {
 				return err
 			}
@@ -242,7 +242,7 @@ func createTraversalRoot(path string, uid, gid int) error {
 	return nil
 }
 func executionDirectories(d protocol.Dispatch) []string {
-	if d.TodoID != nil || d.TaskReplanSource != nil || d.TaskPlanningSource != nil || d.TaskConversationSource != nil || d.WorkspaceReservations != nil {
+	if d.TodoID != nil || d.TaskReviewSource != nil || d.TaskReplanSource != nil || d.TaskPlanningSource != nil || d.TaskConversationSource != nil || d.WorkspaceReservations != nil {
 		return []string{"scratch", "data", "cache", "state", "tmp", "config"}
 	}
 	return []string{"scratch", "workspace", "common", "data", "cache", "state", "tmp", "config"}

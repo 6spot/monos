@@ -1,3 +1,4 @@
+import {reviewInputDisposition} from './task-review-state.ts';
 import { operationSummary, inputOperationPage, guidanceRecipientPage } from './task-conversation-reads.ts';
 import { randomUUID } from 'node:crypto';
 import { transaction } from '../../../packages/db/src/index.ts';
@@ -144,6 +145,7 @@ export class TaskConversation {
           await tx.query('SELECT * FROM task_inputs WHERE id=$1 AND task_id=$2 FOR UPDATE', [target, task.id])
         ).rows[0];
         if (input) {
+          if (await reviewInputDisposition(tx,input.id)) throw new CommandError('unmet_precondition','Original input is retained under explicit review reconsideration; use its review operation');
           inputId = input.id;
           version = Number(input.version) + 1;
           if (Number(input.version) !== command.expected_version)
@@ -313,7 +315,7 @@ export class TaskConversation {
     try {
       const heads = (
         await this.db.pool.query<{ id: string }>(
-          `SELECT t.id FROM tasks t JOIN task_inputs i ON i.id=t.conversation_input_id WHERE t.conversation_source_id IS NULL AND i.status='pending' ORDER BY i.created_at,i.id LIMIT $1`,
+          `SELECT t.id FROM tasks t JOIN task_inputs i ON i.id=t.conversation_input_id WHERE t.conversation_source_id IS NULL AND i.status='pending' AND NOT EXISTS(SELECT 1 FROM task_input_reconsiderations re WHERE re.input_id=i.id) AND NOT EXISTS(SELECT 1 FROM task_review_feedback f WHERE f.task_id=t.id AND f.status='active') ORDER BY i.created_at,i.id LIMIT $1`,
           [limit],
         )
       ).rows;

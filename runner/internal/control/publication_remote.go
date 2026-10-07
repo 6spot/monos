@@ -122,7 +122,7 @@ func (c *Client) PublicationPermission(ctx context.Context, r protocol.Publicati
 	return result, e
 }
 
-func (c *Client) PublicationAccess(ctx context.Context, r protocol.PublicationPushRequest, purpose protocol.Purpose, attempt string) (protocol.PublicationAccessResult, error) {
+func (c *Client) PublicationAccess(ctx context.Context, r protocol.PublicationPushRequest, purpose protocol.PublicationAccessRequestPurpose, attempt string) (protocol.PublicationAccessResult, error) {
 	var result protocol.PublicationAccessResult
 	_, digest, e := wire.Canonical(r)
 	if e != nil {

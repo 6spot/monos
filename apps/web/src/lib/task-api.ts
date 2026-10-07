@@ -1,16 +1,18 @@
-import type { OwnerCommand, OwnerCommandResult, TaskConversationCommand, TaskConversationCommandResult, TaskSpecificationCommand, TaskSpecificationResult, TaskReplanCommand, TaskReplanResult, ResultReadRequest, ResultReadResponse, PublicationCommand, PublicationCommandResult, RemotePreparationCommand, RemotePreparationCommandResult, OwnerDeliveryCommand, OwnerDeliveryCommandResult } from '../../../../packages/protocol/generated/types.ts';
+import type { OwnerCommand, OwnerCommandResult, TaskConversationCommand, TaskConversationCommandResult, TaskSpecificationCommand, TaskSpecificationResult, TaskReplanCommand, TaskReplanResult, ResultReadRequest, ResultReadResponse, PublicationCommand, PublicationCommandResult, RemotePreparationCommand, RemotePreparationCommandResult, OwnerDeliveryCommand, OwnerDeliveryCommandResult, OwnerReviewCommand, OwnerReviewCommandResult } from '../../../../packages/protocol/generated/types.ts';
 import { validate } from '../../../../packages/protocol/src/validation.ts';
 import { APIError, UncertainError, request } from './api.ts';
+import { taskStorageEpoch } from './task-storage.ts';
 
 export type TaskIntent =
   | { family: 'execution'; command: OwnerCommand }
   | { family: 'conversation'; command: TaskConversationCommand }
   | { family: 'specification'; command: TaskSpecificationCommand }
-  | { family: 'replan'; command: TaskReplanCommand }
+  | { family: 'replan'; command: TaskReplanCommand; review_origin?: {feedback_id:string;operation_id:string} }
   | { family: 'publication'; command: PublicationCommand }
   | { family: 'remote-preparation'; command: RemotePreparationCommand }
-  | { family: 'delivery'; command: OwnerDeliveryCommand };
-export type TaskReceipt = OwnerCommandResult | TaskConversationCommandResult | TaskSpecificationResult | TaskReplanResult | PublicationCommandResult | RemotePreparationCommandResult | OwnerDeliveryCommandResult;
+  | { family: 'delivery'; command: OwnerDeliveryCommand }
+  | { family: 'review'; command: OwnerReviewCommand };
+export type TaskReceipt = OwnerCommandResult | TaskConversationCommandResult | TaskSpecificationResult | TaskReplanResult | PublicationCommandResult | RemotePreparationCommandResult | OwnerDeliveryCommandResult | OwnerReviewCommandResult;
 
 const families = {
   execution: { command: 'OwnerCommand', result: 'OwnerCommandResult', post: '/v1/owner/commands' },
@@ -20,6 +22,7 @@ const families = {
   publication: { command: 'PublicationCommand', result: 'PublicationCommandResult', post: '/v1/owner/tasks/publication/commands' },
   'remote-preparation': { command: 'RemotePreparationCommand', result: 'RemotePreparationCommandResult', post: '/v1/owner/tasks/remote-preparation/commands' },
   delivery: { command: 'OwnerDeliveryCommand', result: 'OwnerDeliveryCommandResult', post: '/v1/owner/tasks/delivery/commands' },
+  review: { command: 'OwnerReviewCommand', result: 'OwnerReviewCommandResult', post: '/v1/owner/tasks/review/commands' },
 } as const;
 
 export function intentTask(intent: TaskIntent): string {
@@ -27,19 +30,28 @@ export function intentTask(intent: TaskIntent): string {
 }
 
 export function validateTaskIntent(value: unknown): TaskIntent {
-  if (!value || typeof value !== 'object' || Array.isArray(value) || Object.keys(value).sort().join(',') !== 'command,family') throw new Error('Invalid Task recovery record');
+  if (!value || typeof value !== 'object' || Array.isArray(value) || !['command,family','command,family,review_origin'].includes(Object.keys(value).sort().join(','))) throw new Error('Invalid Task recovery record');
   const data = value as Record<string, unknown>;
   if (typeof data.family !== 'string' || !Object.hasOwn(families, data.family)) throw new Error('Unknown Task command family');
   const family = data.family as TaskIntent['family'];
   validate(families[family].command, data.command);
+  if (Object.hasOwn(data, 'review_origin')) {
+    const intent = value as TaskIntent;
+    const origin = data.review_origin;
+    if (intent.family !== 'replan' || intent.command.name !== 'dismiss_replan' || !origin || typeof origin !== 'object' || Array.isArray(origin) || Object.keys(origin).sort().join(',') !== 'feedback_id,operation_id') throw new Error('Invalid review-origin recovery record');
+    validate('Id', intent.review_origin?.feedback_id); validate('Id', intent.review_origin?.operation_id);
+  }
   return value as TaskIntent;
 }
 
 export async function taskRead<T>(taskId: string, suffix: string, schema: string, query?: Record<string, string | undefined>, sessionId?: string, signal?: AbortSignal): Promise<T> {
   validate('Id', taskId);
+  const epoch = taskStorageEpoch();
   const params = new URLSearchParams();
   for (const [key, value] of Object.entries(query ?? {})) if (value !== undefined) params.set(key, value);
   const value = await request<T>(`/v1/owner/tasks/${encodeURIComponent(taskId)}${suffix}${params.size ? `?${params}` : ''}`, schema, undefined, sessionId, signal);
+  signal?.throwIfAborted();
+  if (epoch !== taskStorageEpoch()) throw new DOMException('Owner session changed', 'AbortError');
   if (value && typeof value === 'object' && 'task_id' in value && value.task_id !== taskId) throw new APIError('invalid_response', 'The server returned another Task.');
   return value;
 }
@@ -47,7 +59,7 @@ export async function taskRead<T>(taskId: string, suffix: string, schema: string
 function checkedReceipt(intent: TaskIntent, result: TaskReceipt, allowUnknown: boolean): TaskReceipt {
   if (result.request_id !== intent.command.request_id || (!allowUnknown && result.status === 'unknown')) throw new UncertainError();
   if ('task_id' in result && result.task_id !== undefined && result.task_id !== intentTask(intent)) throw new UncertainError();
-  if (['remote-preparation', 'delivery'].includes(intent.family) && (!('task_id' in result) || result.task_id !== intentTask(intent))) throw new UncertainError();
+  if (['remote-preparation', 'delivery', 'review'].includes(intent.family) && (!('task_id' in result) || result.task_id !== intentTask(intent))) throw new UncertainError();
   if (result.status === 'unknown') {
     if (Object.keys(result).some((key) => !['schema_version', 'request_id', 'task_id', 'status'].includes(key))) throw new UncertainError();
     return result;
@@ -64,7 +76,22 @@ function checkedReceipt(intent: TaskIntent, result: TaskReceipt, allowUnknown: b
     if (fields[name] !== expected) throw new UncertainError();
   };
   if (payload.proposal_id !== undefined && (intent.family !== 'publication' || fields.proposal_id !== undefined)) same('proposal_id', payload.proposal_id);
-  if (intent.family === 'delivery') {
+  if (intent.family === 'review') {
+    same('status', 'committed'); same('name', intent.command.name); same('feedback_id', payload.feedback_id);
+    requireFields('operation_id', 'operation_version');
+    if (intent.command.name === 'request_changes') {
+      const basis = intent.command.payload.basis;
+      same('review_result_digest', basis?.review_result_digest); same('operation_version', 1);
+      const accepted = intent.command.payload.accepted_batch;
+      if (accepted) {
+        const revoked = 'revoked_batch' in result ? result.revoked_batch : undefined;
+        if (!revoked || revoked.operation_id !== accepted.operation_id || revoked.content_digest !== accepted.content_digest || revoked.operation_version !== accepted.expected_version + 1) throw new UncertainError();
+      } else if ('revoked_batch' in result) throw new UncertainError();
+    } else {
+      same('operation_id', payload.operation_id); same('operation_version', Number(payload.expected_version) + 1);
+      if (payload.reconsideration_id !== undefined) same('reconsideration_id', payload.reconsideration_id);
+    }
+  } else if (intent.family === 'delivery') {
     same('status', 'committed'); same('name', intent.command.name); requireFields('content_digest');
     if (payload.content_digest !== undefined) same('content_digest', payload.content_digest);
     switch (intent.command.name) {
@@ -102,6 +129,11 @@ function checkedReceipt(intent: TaskIntent, result: TaskReceipt, allowUnknown: b
   } else if (intent.family === 'replan') {
     requireFields('replan_request_id');
     if (payload.replan_request_id !== undefined) same('replan_request_id', payload.replan_request_id);
+    if (intent.review_origin) {
+      same('review_feedback_id', intent.review_origin.feedback_id); same('review_predecessor_operation_id', intent.review_origin.operation_id);
+      requireFields('review_operation_id');
+      if (fields.review_operation_id === intent.review_origin.operation_id) throw new UncertainError();
+    }
     if (intent.command.name === 'confirm_replan') {
       requireFields('confirmation_id'); same('content_digest', payload.content_digest);
     }

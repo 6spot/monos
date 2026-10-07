@@ -26,7 +26,7 @@ export function useTaskCommands(sessionId: string, onUnauthorized: () => void) {
   const inFlight = useRef(new Set<string>());
   const [notices, setNotices] = useState<Record<string, Notice>>({});
   const [, renderBusy] = useState(0);
-  useEffect(() => () => { mounted.current = false; }, []);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   const valid = () => mounted.current && generation.current === taskStorageEpoch();
   const key = (task: string, scope: string) => JSON.stringify([task, scope]);
 
@@ -121,6 +121,7 @@ export function useTaskCommands(sessionId: string, onUnauthorized: () => void) {
     },
     getDraft: (task: string, scope: string): TaskDraft => own(own(journal.tasks, task)?.drafts ?? {}, scope) ?? { text: '' },
     setDraft: (task: string, scope: string, text: string, basis?: TaskActionBasis) => { change(task, (local) => ({ ...local, drafts: { ...local.drafts, [scope]: { text, ...(basis ? { basis } : {}) } } }), false); },
+    setReviewDraft: (task: string, scope: string, text: string, review: NonNullable<TaskDraft['review']>) => { change(task, (local) => ({ ...local, drafts: { ...local.drafts, [scope]: { text, review } } }), false); },
     clearDraft: (task: string, scope: string) => { change(task, (local) => { const drafts = { ...local.drafts }; delete drafts[scope]; return { ...local, drafts }; }); },
     execute: (task: string, scope: string, intent: TaskIntent) => run(task, scope, intent),
     recover: (task: string, scope: string) => { const intent = own(own(current.current.tasks, task)?.pending ?? {}, scope); return intent ? run(task, scope, intent, true) : Promise.resolve(undefined); },

@@ -3,7 +3,7 @@
   "name": "a-review-correction",
   "title": "Review correction and delivery recovery",
   "description": "Route explicit review feedback, revoke eligible undelivered batches and reconcile retry/cancel without losing remote truth.",
-  "status": "planning",
+  "status": "in_progress",
   "dev_type": "fullstack",
   "scope": "delivery",
   "package": "monos",
@@ -21,9 +21,9 @@
   "children": [],
   "parent": "09-28-a-review-delivery",
   "relatedFiles": [],
-  "notes": "Source-backed plan READY under final main convergence; independent findings and concrete backend/Web contracts reconciled. Delegate usage interruption requires local implementation/review fallback until available. User standing autonomous ordered execution authorizes activation without further approval. Upstream c0212a9/80f57b5/ea1a15d; installed App remains next external gate.",
+  "notes": "All six leaf criteria independently READY on 2026-10-07. Genuine PG authority/semantics/upgrade/effects and bounded built-Web/Go checks passed; immutable input/source and original effect truth preserved. Work commit/archive/journal follow under standing autonomous authorization. Installed new-source/native GitHub App delivery remains the next gate; no new live mutation or product Owner acceptance is claimed.",
   "meta": {
     "roadmap_level": "leaf",
-    "planning_maturity": "implementation_ready"
+    "planning_maturity": "implementation_verified"
   }
 }

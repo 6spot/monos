@@ -15,6 +15,7 @@ outcomes, Stop and service/host recovery. Startup after that reboot trial was ma
 - Read [Node execution](../backend/node-execution.md) for canonical source, repository-free completion and paired recovery contracts.
 - Read [Task Conversation](../backend/task-conversation.md) for source-specific reads/replies, Stop-only effects and explicit guidance declarations.
 - Read [Specification revisions](../backend/task-specification.md) for canonical prepare/apply and exact Owner authority; neither command adds a physical effect.
+- Read [review correction](../backend/review-correction.md) for exclusive scratch sources, phase tools and original Stop recovery.
 - Read [Replan](../backend/task-replan.md) for its terminal Planner phase and exact cross-Node workspace transfer.
 - Read [Result content reads](../backend/result-content-reads.md) for retained completion identity, immutable Git inspection and bounded read-only WSS.
 - Read [Publication candidates](../backend/publication-candidates.md) for verified public ancestry, durable candidate CAS, range scans and the independent Delivery lane.

@@ -13,12 +13,12 @@ func ValidateEffectScope(d protocol.Dispatch, op protocol.Operation) error {
 	if d.AttemptID != op.AttemptID || d.DispatchID != op.DispatchID {
 		return fmt.Errorf("effect dispatch conflict")
 	}
-	if d.TaskConversationSource != nil || d.TaskReplanSource != nil {
+	if d.TaskReviewSource != nil || d.TaskConversationSource != nil || d.TaskReplanSource != nil {
 		if _, err := wire.ScopeID(d); err != nil {
 			return err
 		}
 		if op.Kind != protocol.Stop || op.ResourceID != nil || op.Workspace != nil || op.WorkspaceDigest != nil || op.RepositoryFree != nil || op.CompletionManifestDigest != nil || op.CompletionOperationID != nil || op.CompletionIdentityDigest != nil {
-			return fmt.Errorf("Task conversation/Replan permits only repository-free Stop effects")
+			return fmt.Errorf("Task review/conversation/Replan permits only repository-free Stop effects")
 		}
 		return nil
 	}

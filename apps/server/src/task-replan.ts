@@ -1,3 +1,4 @@
+import {resumeReviewAfterDismissal} from './task-review-state.ts';
 import { replanRead } from './task-replan-reads.ts';
 import { randomUUID } from 'node:crypto';
 import { transaction } from '../../../packages/db/src/index.ts';
@@ -29,7 +30,7 @@ export async function revokeReplanGeneration(tx:Transaction,r:ReplanRequest,requ
 async function reconcileDismissal(tx:Transaction,task:SpecificationTask,r:ReplanRequest):Promise<void>{
  if(!await replanQuiescent(tx,task.id))return;
  if(r.origin_node_id)await tx.query("UPDATE nodes n SET state='PENDING',blocker_id=NULL,execution_source_id=NULL WHERE n.id=$1 AND n.activation=$2 AND NOT n.guidance_paused AND EXISTS(SELECT 1 FROM node_blockers b WHERE b.id=n.blocker_id AND b.id=$3)",[r.origin_node_id,r.origin_activation,r.requester_blocker_id]);
- if(task.state!=='CANCELLED')await tx.query("UPDATE tasks SET state=CASE WHEN EXISTS(SELECT 1 FROM nodes n JOIN plan_nodes p ON p.node_id=n.id WHERE p.plan_id=tasks.plan_id AND n.state='BLOCKED') THEN 'BLOCKED' WHEN NOT EXISTS(SELECT 1 FROM nodes n JOIN plan_nodes p ON p.node_id=n.id WHERE p.plan_id=tasks.plan_id AND n.state<>'COMPLETED') THEN 'REVIEW' ELSE 'RUNNING' END,control_version=control_version+1 WHERE id=$1",[task.id]);
+ if(!r.review_operation_id&&task.state!=='CANCELLED')await tx.query("UPDATE tasks SET state=CASE WHEN EXISTS(SELECT 1 FROM nodes n JOIN plan_nodes p ON p.node_id=n.id WHERE p.plan_id=tasks.plan_id AND n.state='BLOCKED') THEN 'BLOCKED' WHEN NOT EXISTS(SELECT 1 FROM nodes n JOIN plan_nodes p ON p.node_id=n.id WHERE p.plan_id=tasks.plan_id AND n.state<>'COMPLETED') THEN 'REVIEW' ELSE 'RUNNING' END,control_version=control_version+1 WHERE id=$1",[task.id]);
  await tx.query('UPDATE replan_requests SET reconciled=true WHERE id=$1',[r.id]);
 }
 export class TaskReplan {
@@ -64,7 +65,7 @@ export class TaskReplan {
     await tx.query('INSERT INTO replan_decisions(task_id,request_id,owner_request_id,kind,body) VALUES($1,$2,$3,$4,$5)',[task.id,r.id,cmd.request_id,cmd.name,payload]);
     if(cmd.name==='dismiss_replan'){
      await tx.query("UPDATE replan_requests SET status='dismissed',direction=$2,version=version+1 WHERE id=$1",[r.id,payload.direction??null]);
-     await tx.query('UPDATE tasks SET control_version=control_version+1 WHERE id=$1',[task.id]);await reconcileDismissal(tx,task,r);
+     await tx.query('UPDATE tasks SET control_version=control_version+1 WHERE id=$1',[task.id]);await reconcileDismissal(tx,task,r);const successor=await resumeReviewAfterDismissal(tx,task.id,r.id,cmd.request_id,payload.direction as string|undefined);if(successor){result.review_feedback_id=(await tx.query('SELECT feedback_id FROM task_review_operations WHERE id=$1',[successor])).rows[0].feedback_id;result.review_operation_id=successor;result.review_predecessor_operation_id=r.review_operation_id!;}
     }else {await tx.query('UPDATE replan_requests SET source_id=NULL,proposal_id=NULL,issue_id=NULL,version=version+1 WHERE id=$1',[r.id]);}
     result={...result,replan_request_id:r.id,...(operation?{operation_id:operation}:{})};
     await planningEvent(tx,task.id,cmd.name,{replan_request_id:r.id,request_id:cmd.request_id,...payload});

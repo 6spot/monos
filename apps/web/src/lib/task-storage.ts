@@ -1,4 +1,4 @@
-import type { TaskActionBasis } from '../../../../packages/protocol/generated/types.ts';
+import type { TaskActionBasis, TaskReviewBasis, ReviewAcceptedBatch } from '../../../../packages/protocol/generated/types.ts';
 import { validate } from '../../../../packages/protocol/src/validation.ts';
 import { intentTask, validateTaskIntent } from './task-api.ts';
 import type { TaskIntent } from './task-api.ts';
@@ -7,7 +7,7 @@ const prefix = 'monos:task-ui:v1:';
 const limit = 2 * 1024 * 1024;
 let epoch = 0;
 export function taskStorageEpoch() { return epoch; }
-export interface TaskDraft { text: string; basis?: TaskActionBasis }
+export interface TaskDraft { text: string; basis?: TaskActionBasis; review?: { basis: TaskReviewBasis; accepted_batch?: ReviewAcceptedBatch } }
 export interface TaskLocal { drafts: Record<string, TaskDraft>; pending: Record<string, TaskIntent> }
 export interface TaskJournal { version: 1; session_id: string; tasks: Record<string, TaskLocal> }
 type StoragePort = Pick<Storage, 'getItem' | 'setItem' | 'removeItem' | 'key' | 'length'>;
@@ -27,8 +27,14 @@ export function validateTaskJournal(value: unknown, sessionId: string): TaskJour
     if (!record(local.drafts) || !record(local.pending) || Object.keys(local.drafts).length > 64 || Object.keys(local.pending).length > 32) throw new Error('Task recovery capacity exceeded');
     for (const [key, draft] of Object.entries(local.drafts)) {
       if (!key || key.length > 256 || !record(draft) || typeof draft.text !== 'string' || draft.text.length > 262144) throw new Error('Invalid saved Task draft');
-      keys(draft, ['text', 'basis']);
+      keys(draft, ['text', 'basis', 'review']);
       if (draft.basis !== undefined) validate('TaskActionBasis', draft.basis);
+      if (draft.review !== undefined) {
+        if (draft.basis !== undefined || !record(draft.review)) throw new Error('Invalid saved review draft');
+        keys(draft.review, ['basis', 'accepted_batch']);
+        validate('TaskReviewBasis', draft.review.basis);
+        if (draft.review.accepted_batch !== undefined) validate('ReviewAcceptedBatch', draft.review.accepted_batch);
+      }
     }
     for (const [scope, intent] of Object.entries(local.pending)) {
       if (!scope || scope.length > 256 || intentTask(validateTaskIntent(intent)) !== taskId) throw new Error('Task recovery scope mismatch');

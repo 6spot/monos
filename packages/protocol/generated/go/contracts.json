@@ -54,7 +54,10 @@
             "prepare_specification_revision",
             "apply_specification_revision",
             "request_replan",
-            "prepare_replan"
+            "prepare_replan",
+            "apply_review_rework",
+            "commit_review_feedback",
+            "resolve_review_input"
           ]
         },
         "scope_id": {
@@ -417,6 +420,34 @@
                       "source_id",
                       "reason"
                     ]
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "feedback_id": {
+                        "$ref": "#/definitions/Id"
+                      },
+                      "operation_id": {
+                        "$ref": "#/definitions/Id"
+                      },
+                      "source_id": {
+                        "$ref": "#/definitions/Id"
+                      },
+                      "operation_version": {
+                        "$ref": "#/definitions/PositiveCounter"
+                      },
+                      "reason": {
+                        "$ref": "#/definitions/PlanningText"
+                      }
+                    },
+                    "required": [
+                      "feedback_id",
+                      "operation_id",
+                      "source_id",
+                      "operation_version",
+                      "reason"
+                    ]
                   }
                 ]
               }
@@ -630,6 +661,69 @@
             },
             "type": "object"
           }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "const": "apply_review_rework"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "payload": {
+                "$ref": "#/definitions/ApplyReviewRework"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "const": "commit_review_feedback"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "payload": {
+                "$ref": "#/definitions/CommitReviewFeedback"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "const": "resolve_review_input"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "payload": {
+                "$ref": "#/definitions/ResolveReviewInput"
+              }
+            }
+          }
         }
       ]
     },
@@ -783,6 +877,27 @@
         },
         "requirement": {
           "$ref": "#/definitions/ReplanRequirement"
+        },
+        "feedback_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "operation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "reconsideration_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "operation_version": {
+          "$ref": "#/definitions/PositiveCounter"
+        },
+        "node_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Id"
+          },
+          "minItems": 1,
+          "maxItems": 256,
+          "uniqueItems": true
         }
       }
     },
@@ -1092,6 +1207,9 @@
         },
         "task_replan_source": {
           "$ref": "#/definitions/TaskReplanSource"
+        },
+        "task_review_source": {
+          "$ref": "#/definitions/TaskReviewSource"
         }
       },
       "allOf": [
@@ -1319,6 +1437,55 @@
               "resource_id": false,
               "task_planning_source": false,
               "node_execution_source": false
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "required": [
+              "task_review_source"
+            ],
+            "properties": {
+              "task_review_source": {}
+            }
+          },
+          "then": {
+            "type": "object",
+            "required": [
+              "task_id",
+              "workspace_reservations"
+            ],
+            "properties": {
+              "kind": {
+                "const": "planner"
+              },
+              "node_activation": {
+                "const": 0
+              },
+              "source_watermark": {
+                "const": 0
+              },
+              "workspace_reservations": {
+                "type": "object",
+                "properties": {
+                  "resources": {
+                    "type": "array",
+                    "maxItems": 0
+                  }
+                }
+              },
+              "todo_id": false,
+              "node_id": false,
+              "resource_id": false,
+              "source_message_id": false,
+              "task_planning_source": false,
+              "node_execution_source": false,
+              "task_conversation_source": false,
+              "task_replan_source": false,
+              "task_id": {
+                "$ref": "#/definitions/Id"
+              }
             }
           }
         }
@@ -9395,6 +9562,12 @@
               "type": "null"
             }
           ]
+        },
+        "review_source_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "review_operation_id": {
+          "$ref": "#/definitions/Id"
         }
       },
       "required": [
@@ -9413,6 +9586,52 @@
         "predecessor_id",
         "confirmation_id",
         "operation"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "review_source_id"
+            ],
+            "properties": {
+              "review_source_id": {
+                "$ref": "#/definitions/Id"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "review_operation_id"
+            ],
+            "properties": {
+              "review_operation_id": {
+                "$ref": "#/definitions/Id"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "review_operation_id"
+            ],
+            "properties": {
+              "review_operation_id": {
+                "$ref": "#/definitions/Id"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "review_source_id"
+            ],
+            "properties": {
+              "review_source_id": {
+                "$ref": "#/definitions/Id"
+              }
+            }
+          }
+        }
       ]
     },
     "SpecificationHistoryQuery": {
@@ -10643,6 +10862,15 @@
         },
         "version": {
           "$ref": "#/definitions/Counter"
+        },
+        "review_feedback_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "review_operation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "review_predecessor_operation_id": {
+          "$ref": "#/definitions/Id"
         }
       },
       "required": [
@@ -10767,6 +10995,15 @@
         },
         "physical_settled": {
           "type": "boolean"
+        },
+        "review_feedback_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "review_operation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "review_predecessor_operation_id": {
+          "$ref": "#/definitions/Id"
         }
       },
       "required": [
@@ -17009,7 +17246,8 @@
             "reconciling",
             "attention",
             "completed",
-            "cancelled"
+            "cancelled",
+            "revoked"
           ]
         },
         "input_cutoff": {
@@ -17074,7 +17312,8 @@
             "failed",
             "attention",
             "finalized",
-            "cancelled"
+            "cancelled",
+            "revoked"
           ]
         },
         "reason": {
@@ -17151,6 +17390,19 @@
           "type": "string",
           "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(?:\\.\\d{1,3})?Z$",
           "maxLength": 24
+        },
+        "reconciliation": {
+          "type": "string",
+          "enum": [
+            "none",
+            "waiting_original_merge",
+            "waiting_preparation",
+            "pending_close",
+            "closed",
+            "externally_merged",
+            "not_needed",
+            "attention"
+          ]
         }
       },
       "required": [
@@ -17242,6 +17494,30 @@
           },
           "maxItems": 64,
           "minItems": 0
+        },
+        "revocation": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "feedback_id": {
+              "$ref": "#/definitions/Id"
+            },
+            "revocation_id": {
+              "$ref": "#/definitions/Id"
+            },
+            "request_id": {
+              "$ref": "#/definitions/Id"
+            },
+            "settled": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "feedback_id",
+            "revocation_id",
+            "request_id",
+            "settled"
+          ]
         }
       },
       "required": [
@@ -17484,6 +17760,1733 @@
         }
       },
       "required": []
+    },
+    "TaskReviewBasis": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "control_version": {
+          "$ref": "#/definitions/Counter"
+        },
+        "specification_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "plan_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "review_result_digest": {
+          "$ref": "#/definitions/SHA256"
+        }
+      },
+      "required": [
+        "control_version",
+        "specification_id",
+        "plan_id",
+        "review_result_digest"
+      ]
+    },
+    "TaskReviewManifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "task_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "specification_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "plan_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "specification_digest": {
+          "$ref": "#/definitions/SHA256"
+        },
+        "plan_digest": {
+          "$ref": "#/definitions/SHA256"
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DeliveryOutputEvidence"
+          },
+          "minItems": 1,
+          "maxItems": 256
+        }
+      },
+      "required": [
+        "schema_version",
+        "task_id",
+        "specification_id",
+        "plan_id",
+        "specification_digest",
+        "plan_digest",
+        "outputs"
+      ]
+    },
+    "ReviewAcceptedBatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "operation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "content_digest": {
+          "$ref": "#/definitions/SHA256"
+        },
+        "expected_version": {
+          "$ref": "#/definitions/PositiveCounter"
+        }
+      },
+      "required": [
+        "operation_id",
+        "content_digest",
+        "expected_version"
+      ]
+    },
+    "ReviewRevokedBatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "operation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "content_digest": {
+          "$ref": "#/definitions/SHA256"
+        },
+        "operation_version": {
+          "$ref": "#/definitions/PositiveCounter"
+        },
+        "input_cutoff": {
+          "$ref": "#/definitions/Counter"
+        },
+        "revocation_id": {
+          "$ref": "#/definitions/Id"
+        }
+      },
+      "required": [
+        "operation_id",
+        "content_digest",
+        "operation_version",
+        "input_cutoff",
+        "revocation_id"
+      ]
+    },
+    "TaskReviewSource": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "feedback_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "operation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "operation_version": {
+          "$ref": "#/definitions/PositiveCounter"
+        },
+        "source_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "specification_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "plan_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "control_version": {
+          "$ref": "#/definitions/Counter"
+        },
+        "review_result_digest": {
+          "$ref": "#/definitions/SHA256"
+        },
+        "context_digest": {
+          "$ref": "#/definitions/SHA256"
+        },
+        "purpose": {
+          "type": "string",
+          "enum": [
+            "route_feedback",
+            "reconsider_input"
+          ]
+        },
+        "reconsideration_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "input_id": {
+          "$ref": "#/definitions/Id"
+        }
+      },
+      "required": [
+        "feedback_id",
+        "operation_id",
+        "operation_version",
+        "source_id",
+        "specification_id",
+        "plan_id",
+        "control_version",
+        "review_result_digest",
+        "context_digest",
+        "purpose"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "purpose": {
+                "const": "route_feedback"
+              }
+            },
+            "required": [
+              "purpose"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "reconsideration_id": false,
+              "input_id": false
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "purpose": {
+                "const": "reconsider_input"
+              }
+            },
+            "required": [
+              "purpose"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "required": [
+              "reconsideration_id",
+              "input_id"
+            ],
+            "properties": {
+              "reconsideration_id": {},
+              "input_id": {}
+            }
+          }
+        }
+      ]
+    },
+    "OwnerReviewPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "feedback_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "text": {
+          "$ref": "#/definitions/PlanningText"
+        },
+        "basis": {
+          "$ref": "#/definitions/TaskReviewBasis"
+        },
+        "accepted_batch": {
+          "$ref": "#/definitions/ReviewAcceptedBatch"
+        },
+        "operation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "expected_version": {
+          "$ref": "#/definitions/PositiveCounter"
+        },
+        "issue_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "answer": {
+          "$ref": "#/definitions/PlanningText"
+        },
+        "reconsideration_id": {
+          "$ref": "#/definitions/Id"
+        }
+      },
+      "required": []
+    },
+    "OwnerReviewCommand": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "task_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "request_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "name": {
+          "type": "string",
+          "enum": [
+            "request_changes",
+            "retry_review_feedback",
+            "withdraw_review_feedback",
+            "retry_review_input",
+            "withdraw_review_input"
+          ]
+        },
+        "payload": {
+          "$ref": "#/definitions/OwnerReviewPayload"
+        }
+      },
+      "required": [
+        "schema_version",
+        "task_id",
+        "request_id",
+        "name",
+        "payload"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "const": "request_changes"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "payload": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "feedback_id": {
+                    "$ref": "#/definitions/Id"
+                  },
+                  "text": {
+                    "$ref": "#/definitions/PlanningText"
+                  },
+                  "basis": {
+                    "$ref": "#/definitions/TaskReviewBasis"
+                  },
+                  "accepted_batch": {
+                    "$ref": "#/definitions/ReviewAcceptedBatch"
+                  }
+                },
+                "required": [
+                  "feedback_id",
+                  "text",
+                  "basis"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "const": "retry_review_feedback"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "payload": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "feedback_id": {
+                    "$ref": "#/definitions/Id"
+                  },
+                  "operation_id": {
+                    "$ref": "#/definitions/Id"
+                  },
+                  "expected_version": {
+                    "$ref": "#/definitions/PositiveCounter"
+                  },
+                  "issue_id": {
+                    "$ref": "#/definitions/Id"
+                  },
+                  "answer": {
+                    "$ref": "#/definitions/PlanningText"
+                  }
+                },
+                "required": [
+                  "feedback_id",
+                  "operation_id",
+                  "expected_version"
+                ],
+                "dependencies": {
+                  "issue_id": [
+                    "answer"
+                  ],
+                  "answer": [
+                    "issue_id"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "const": "withdraw_review_feedback"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "payload": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "feedback_id": {
+                    "$ref": "#/definitions/Id"
+                  },
+                  "operation_id": {
+                    "$ref": "#/definitions/Id"
+                  },
+                  "expected_version": {
+                    "$ref": "#/definitions/PositiveCounter"
+                  }
+                },
+                "required": [
+                  "feedback_id",
+                  "operation_id",
+                  "expected_version"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "const": "retry_review_input"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "payload": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "feedback_id": {
+                    "$ref": "#/definitions/Id"
+                  },
+                  "operation_id": {
+                    "$ref": "#/definitions/Id"
+                  },
+                  "expected_version": {
+                    "$ref": "#/definitions/PositiveCounter"
+                  },
+                  "reconsideration_id": {
+                    "$ref": "#/definitions/Id"
+                  },
+                  "issue_id": {
+                    "$ref": "#/definitions/Id"
+                  },
+                  "answer": {
+                    "$ref": "#/definitions/PlanningText"
+                  }
+                },
+                "required": [
+                  "feedback_id",
+                  "operation_id",
+                  "expected_version",
+                  "reconsideration_id"
+                ],
+                "dependencies": {
+                  "issue_id": [
+                    "answer"
+                  ],
+                  "answer": [
+                    "issue_id"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "const": "withdraw_review_input"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "payload": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "feedback_id": {
+                    "$ref": "#/definitions/Id"
+                  },
+                  "operation_id": {
+                    "$ref": "#/definitions/Id"
+                  },
+                  "expected_version": {
+                    "$ref": "#/definitions/PositiveCounter"
+                  },
+                  "reconsideration_id": {
+                    "$ref": "#/definitions/Id"
+                  }
+                },
+                "required": [
+                  "feedback_id",
+                  "operation_id",
+                  "expected_version",
+                  "reconsideration_id"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "OwnerReviewCommandResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "task_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "request_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "committed",
+            "unknown"
+          ]
+        },
+        "name": {
+          "type": "string",
+          "enum": [
+            "request_changes",
+            "retry_review_feedback",
+            "withdraw_review_feedback",
+            "retry_review_input",
+            "withdraw_review_input"
+          ]
+        },
+        "feedback_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "operation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "operation_version": {
+          "$ref": "#/definitions/PositiveCounter"
+        },
+        "review_result_digest": {
+          "$ref": "#/definitions/SHA256"
+        },
+        "revoked_batch": {
+          "$ref": "#/definitions/ReviewRevokedBatch"
+        },
+        "reconsideration_id": {
+          "$ref": "#/definitions/Id"
+        }
+      },
+      "required": [
+        "schema_version",
+        "task_id",
+        "request_id",
+        "status"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "const": "unknown"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "name": false,
+              "feedback_id": false,
+              "operation_id": false,
+              "operation_version": false,
+              "review_result_digest": false,
+              "revoked_batch": false,
+              "reconsideration_id": false
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "const": "committed"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "required": [
+              "name",
+              "feedback_id",
+              "operation_id",
+              "operation_version"
+            ],
+            "properties": {
+              "name": {},
+              "feedback_id": {},
+              "operation_id": {},
+              "operation_version": {}
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "const": "request_changes"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "reconsideration_id": false,
+              "review_result_digest": {}
+            },
+            "required": [
+              "review_result_digest"
+            ]
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "const": "retry_review_feedback"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "review_result_digest": false,
+              "revoked_batch": false,
+              "reconsideration_id": false
+            },
+            "required": []
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "const": "withdraw_review_feedback"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "review_result_digest": false,
+              "revoked_batch": false,
+              "reconsideration_id": false
+            },
+            "required": []
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "const": "retry_review_input"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "review_result_digest": false,
+              "revoked_batch": false,
+              "reconsideration_id": {}
+            },
+            "required": [
+              "reconsideration_id"
+            ]
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "const": "withdraw_review_input"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "review_result_digest": false,
+              "revoked_batch": false,
+              "reconsideration_id": {}
+            },
+            "required": [
+              "reconsideration_id"
+            ]
+          }
+        }
+      ]
+    },
+    "ReviewIssue": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "issue_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "source_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "version": {
+          "$ref": "#/definitions/PositiveCounter"
+        },
+        "reason": {
+          "$ref": "#/definitions/PlanningText"
+        }
+      },
+      "required": [
+        "issue_id",
+        "source_id",
+        "version",
+        "reason"
+      ]
+    },
+    "ReviewOperationSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "feedback_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "operation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "operation_version": {
+          "$ref": "#/definitions/PositiveCounter"
+        },
+        "purpose": {
+          "type": "string",
+          "enum": [
+            "route_feedback",
+            "reconsider_input"
+          ]
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "settling",
+            "queued",
+            "running",
+            "issue",
+            "failed",
+            "rework",
+            "replan",
+            "requirement",
+            "withdrawn",
+            "cancelled",
+            "resolved"
+          ]
+        },
+        "retry_allowed": {
+          "type": "boolean"
+        },
+        "withdraw_allowed": {
+          "type": "boolean"
+        },
+        "settlement_pending": {
+          "type": "boolean"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^[^\\x00]*$"
+        },
+        "source_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "previous_source_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "predecessor_operation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "reconsideration_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "input_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "issue_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "requirement_proposal_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "replan_request_id": {
+          "$ref": "#/definitions/Id"
+        }
+      },
+      "required": [
+        "feedback_id",
+        "operation_id",
+        "operation_version",
+        "purpose",
+        "status",
+        "retry_allowed",
+        "withdraw_allowed",
+        "settlement_pending"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "purpose": {
+                "const": "route_feedback"
+              }
+            },
+            "required": [
+              "purpose"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "reconsideration_id": false,
+              "input_id": false
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "purpose": {
+                "const": "reconsider_input"
+              }
+            },
+            "required": [
+              "purpose"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "required": [
+              "reconsideration_id",
+              "input_id"
+            ],
+            "properties": {
+              "reconsideration_id": {},
+              "input_id": {}
+            }
+          }
+        }
+      ]
+    },
+    "ReviewFeedbackSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "feedback_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "created_at": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(?:\\.\\d{1,3})?Z$",
+          "maxLength": 24
+        },
+        "review_result_digest": {
+          "$ref": "#/definitions/SHA256"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "active",
+            "resolved",
+            "withdrawn",
+            "cancelled"
+          ]
+        },
+        "operation": {
+          "$ref": "#/definitions/ReviewOperationSummary"
+        }
+      },
+      "required": [
+        "feedback_id",
+        "created_at",
+        "review_result_digest",
+        "status",
+        "operation"
+      ]
+    },
+    "ReviewInputSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "reconsideration_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "input_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "accepted_batch_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "sequence": {
+          "$ref": "#/definitions/Counter"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "pending",
+            "resolved",
+            "transferred",
+            "withdrawn",
+            "cancelled"
+          ]
+        },
+        "operation": {
+          "$ref": "#/definitions/ReviewOperationSummary"
+        },
+        "original_reply_id": {
+          "$ref": "#/definitions/Id"
+        }
+      },
+      "required": [
+        "reconsideration_id",
+        "input_id",
+        "accepted_batch_id",
+        "sequence",
+        "status",
+        "operation"
+      ]
+    },
+    "ReviewDecisionSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "request_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "name": {
+          "type": "string",
+          "enum": [
+            "request_changes",
+            "retry_review_feedback",
+            "withdraw_review_feedback",
+            "retry_review_input",
+            "withdraw_review_input",
+            "dismiss_replan",
+            "cancel_task",
+            "cancel_delivery"
+          ]
+        },
+        "created_at": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(?:\\.\\d{1,3})?Z$",
+          "maxLength": 24
+        },
+        "operation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "operation_version": {
+          "$ref": "#/definitions/PositiveCounter"
+        },
+        "has_answer": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "request_id",
+        "name",
+        "created_at",
+        "operation_id",
+        "operation_version",
+        "has_answer"
+      ]
+    },
+    "OwnerReviewHistoryQuery": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "feedback_cursor": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "input_cursor": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        }
+      },
+      "required": []
+    },
+    "OwnerReviewStatus": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "task_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "basis": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/TaskReviewBasis"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "request_changes_allowed": {
+          "type": "boolean"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^[^\\x00]*$"
+        },
+        "accepted_batch": {
+          "$ref": "#/definitions/ReviewAcceptedBatch"
+        },
+        "feedback": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/ReviewFeedbackSummary"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "history": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ReviewFeedbackSummary"
+          },
+          "minItems": 0,
+          "maxItems": 64
+        },
+        "history_has_more": {
+          "type": "boolean"
+        },
+        "history_next_cursor": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ReviewInputSummary"
+          },
+          "minItems": 0,
+          "maxItems": 64
+        },
+        "inputs_has_more": {
+          "type": "boolean"
+        },
+        "inputs_next_cursor": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        }
+      },
+      "required": [
+        "schema_version",
+        "task_id",
+        "basis",
+        "request_changes_allowed",
+        "feedback",
+        "history",
+        "history_has_more",
+        "inputs",
+        "inputs_has_more"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "history_has_more": {
+                "const": true
+              }
+            },
+            "required": [
+              "history_has_more"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "required": [
+              "history_next_cursor"
+            ],
+            "properties": {
+              "history_next_cursor": {}
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "history_has_more": {
+                "const": false
+              }
+            },
+            "required": [
+              "history_has_more"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "history_next_cursor": false
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "inputs_has_more": {
+                "const": true
+              }
+            },
+            "required": [
+              "inputs_has_more"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "required": [
+              "inputs_next_cursor"
+            ],
+            "properties": {
+              "inputs_next_cursor": {}
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "inputs_has_more": {
+                "const": false
+              }
+            },
+            "required": [
+              "inputs_has_more"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "inputs_next_cursor": false
+            }
+          }
+        }
+      ]
+    },
+    "OwnerReviewDetailQuery": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "decision_cursor": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        }
+      },
+      "required": []
+    },
+    "ReviewFeedbackDetail": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "task_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "feedback": {
+          "$ref": "#/definitions/ReviewFeedbackSummary"
+        },
+        "text": {
+          "$ref": "#/definitions/PlanningText"
+        },
+        "basis": {
+          "$ref": "#/definitions/TaskReviewBasis"
+        },
+        "request_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "revoked_batch": {
+          "$ref": "#/definitions/ReviewRevokedBatch"
+        },
+        "decisions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ReviewDecisionSummary"
+          },
+          "minItems": 0,
+          "maxItems": 64
+        },
+        "decisions_has_more": {
+          "type": "boolean"
+        },
+        "decisions_next_cursor": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        }
+      },
+      "required": [
+        "schema_version",
+        "task_id",
+        "feedback",
+        "text",
+        "basis",
+        "request_id",
+        "decisions",
+        "decisions_has_more"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "decisions_has_more": {
+                "const": true
+              }
+            },
+            "required": [
+              "decisions_has_more"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "required": [
+              "decisions_next_cursor"
+            ],
+            "properties": {
+              "decisions_next_cursor": {}
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "decisions_has_more": {
+                "const": false
+              }
+            },
+            "required": [
+              "decisions_has_more"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "decisions_next_cursor": false
+            }
+          }
+        }
+      ]
+    },
+    "ReviewOperationDetail": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "task_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "operation": {
+          "$ref": "#/definitions/ReviewOperationSummary"
+        },
+        "basis": {
+          "$ref": "#/definitions/TaskReviewBasis"
+        },
+        "source": {
+          "$ref": "#/definitions/TaskReviewSource"
+        },
+        "issue": {
+          "$ref": "#/definitions/ReviewIssue"
+        },
+        "stop_operation_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Id"
+          },
+          "minItems": 0,
+          "maxItems": 256
+        }
+      },
+      "required": [
+        "schema_version",
+        "task_id",
+        "operation",
+        "basis",
+        "stop_operation_ids"
+      ]
+    },
+    "ApplyReviewRework": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "feedback_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "operation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "source_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "operation_version": {
+          "$ref": "#/definitions/PositiveCounter"
+        },
+        "basis": {
+          "$ref": "#/definitions/ReviewActionBasis"
+        },
+        "node_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Id"
+          },
+          "minItems": 1,
+          "maxItems": 256,
+          "uniqueItems": true
+        },
+        "reason": {
+          "$ref": "#/definitions/PlanningText"
+        }
+      },
+      "required": [
+        "feedback_id",
+        "operation_id",
+        "source_id",
+        "operation_version",
+        "basis",
+        "node_ids",
+        "reason"
+      ]
+    },
+    "CommitReviewFeedback": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "feedback_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "operation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "source_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "operation_version": {
+          "$ref": "#/definitions/PositiveCounter"
+        },
+        "basis": {
+          "$ref": "#/definitions/ReviewActionBasis"
+        },
+        "proposal_id": {
+          "$ref": "#/definitions/Id"
+        }
+      },
+      "required": [
+        "feedback_id",
+        "operation_id",
+        "source_id",
+        "operation_version",
+        "basis",
+        "proposal_id"
+      ]
+    },
+    "ReviewInputRouting": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "reply",
+            "guidance",
+            "issue",
+            "answer",
+            "resolve_guidance",
+            "specification_proposal",
+            "replan"
+          ]
+        },
+        "basis": {
+          "$ref": "#/definitions/TaskActionBasis"
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 65536,
+          "pattern": "^[^\\x00]*$"
+        },
+        "operation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "expected_version": {
+          "$ref": "#/definitions/Counter"
+        },
+        "target_kind": {
+          "type": "string",
+          "enum": [
+            "planning_issue",
+            "node_blocker",
+            "input_issue"
+          ]
+        },
+        "target_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "issue_sequence": {
+          "$ref": "#/definitions/Counter"
+        },
+        "supersedes": {
+          "$ref": "#/definitions/Id"
+        },
+        "proposal_id": {
+          "$ref": "#/definitions/Id"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "const": "reply"
+              }
+            }
+          },
+          "then": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "kind": {}
+            },
+            "required": []
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "const": "guidance"
+              }
+            }
+          },
+          "then": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "kind": {},
+              "basis": {},
+              "text": {},
+              "supersedes": {}
+            },
+            "required": [
+              "basis",
+              "text"
+            ]
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "const": "issue"
+              }
+            }
+          },
+          "then": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "kind": {},
+              "basis": {},
+              "text": {}
+            },
+            "required": [
+              "basis",
+              "text"
+            ]
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "const": "answer"
+              }
+            }
+          },
+          "then": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "kind": {},
+              "basis": {},
+              "text": {},
+              "target_kind": {},
+              "target_id": {},
+              "issue_sequence": {}
+            },
+            "required": [
+              "basis",
+              "text",
+              "target_kind"
+            ]
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "const": "resolve_guidance"
+              }
+            }
+          },
+          "then": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "kind": {},
+              "basis": {},
+              "text": {},
+              "operation_id": {},
+              "expected_version": {}
+            },
+            "required": [
+              "basis",
+              "text",
+              "operation_id",
+              "expected_version"
+            ]
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "const": "specification_proposal"
+              }
+            }
+          },
+          "then": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "kind": {},
+              "basis": {},
+              "proposal_id": {}
+            },
+            "required": [
+              "basis",
+              "proposal_id"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "replan"
+              }
+            },
+            "type": "object"
+          },
+          "then": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "kind": {},
+              "basis": {},
+              "text": {}
+            },
+            "required": [
+              "kind",
+              "basis",
+              "text"
+            ]
+          }
+        }
+      ]
+    },
+    "ResolveReviewInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "feedback_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "operation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "source_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "operation_version": {
+          "$ref": "#/definitions/PositiveCounter"
+        },
+        "basis": {
+          "$ref": "#/definitions/ReviewActionBasis"
+        },
+        "reconsideration_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "summary": {
+          "$ref": "#/definitions/PlanningText"
+        },
+        "routing": {
+          "$ref": "#/definitions/ReviewInputRouting"
+        }
+      },
+      "required": [
+        "feedback_id",
+        "operation_id",
+        "source_id",
+        "operation_version",
+        "basis",
+        "reconsideration_id",
+        "summary",
+        "routing"
+      ]
+    },
+    "ReviewActionBasis": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "control_version": {
+          "$ref": "#/definitions/Counter"
+        },
+        "specification_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "plan_id": {
+          "$ref": "#/definitions/Id"
+        }
+      },
+      "required": [
+        "control_version",
+        "specification_id",
+        "plan_id"
+      ]
     }
   }
 }

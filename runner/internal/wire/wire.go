@@ -26,11 +26,15 @@ var compiler *jsonschema.Compiler
 var compileErr error
 var mu sync.Mutex
 
+func reviewContract(name string) bool {
+	return strings.HasPrefix(name, "OwnerReview") || strings.HasPrefix(name, "Review") || strings.HasPrefix(name, "TaskReview")
+}
+
 func Validate(name string, raw []byte) error {
 	if (name == "PublicationAccessRequest" || name == "PublicationAccessResult" || name == "PublicationPermissionRequest" || name == "PublicationPermissionResult") && len(raw) > 16*1024 {
 		return fmt.Errorf("publication access exceeds limit")
 	}
-	if (name == "ResultReadResponse" || strings.HasPrefix(name, "Publication") || strings.HasPrefix(name, "PublishedResult") || strings.HasPrefix(name, "RemotePreparation")) && len(raw) > 512*1024 {
+	if (reviewContract(name) || name == "ResultReadResponse" || strings.HasPrefix(name, "Publication") || strings.HasPrefix(name, "PublishedResult") || strings.HasPrefix(name, "RemotePreparation")) && len(raw) > 512*1024 {
 		return fmt.Errorf("result response exceeds limit")
 	}
 	if len(raw) > Limit {
@@ -74,7 +78,7 @@ func Validate(name string, raw []byte) error {
 	if err := schema.Validate(v); err != nil {
 		return err
 	}
-	if strings.HasPrefix(name, "Result") || strings.HasPrefix(name, "Publication") || strings.HasPrefix(name, "PublishedResult") || strings.HasPrefix(name, "RemotePreparation") || name == "Frame" && (resultFrame(v) || publicationFrame(v)) {
+	if reviewContract(name) || strings.HasPrefix(name, "Result") || strings.HasPrefix(name, "Publication") || strings.HasPrefix(name, "PublishedResult") || strings.HasPrefix(name, "RemotePreparation") || name == "Frame" && (resultFrame(v) || publicationFrame(v)) {
 		if name == "Frame" && publicationFrame(v) && len(raw) > 512*1024 {
 			return fmt.Errorf("publication frame exceeds limit")
 		}
@@ -205,11 +209,19 @@ func Envelope(raw []byte) (protocol.CommandEnvelope, error) {
 		allowed["cursor"], allowed["query"] = true, true
 	case "publish_execution_plan":
 		required = []string{"planning_intent_id", "plan_id", "nodes"}
+	case "apply_review_rework":
+		required = []string{"feedback_id", "operation_id", "operation_version", "source_id", "basis", "node_ids", "reason"}
+	case "commit_review_feedback":
+		required = []string{"feedback_id", "operation_id", "operation_version", "source_id", "basis", "proposal_id"}
+	case "resolve_review_input":
+		required = []string{"feedback_id", "operation_id", "operation_version", "source_id", "basis", "reconsideration_id", "summary", "routing"}
 	case "prepare_replan":
 		required = []string{"replan_request_id", "source_id", "proposal_id", "plan_id", "basis", "nodes", "summary", "impact"}
 		allowed["requirement"] = true
 	case "raise_planning_issue":
-		if _, replan := payload["replan_request_id"]; replan {
+		if _, review := payload["feedback_id"]; review {
+			required = []string{"feedback_id", "operation_id", "operation_version", "source_id", "reason"}
+		} else if _, replan := payload["replan_request_id"]; replan {
 			required = []string{"replan_request_id", "source_id", "reason"}
 		} else {
 			required = []string{"planning_intent_id", "reason"}
