@@ -1,0 +1,9 @@
+{
+  "candidate_commit": "63eaa285ab90fdd6de018671a47ba5583f87bc75",
+  "namespace": "v2",
+  "transport_sha256": "0c861a85111e1064903cdc9179b25dd8940c12bae72213d258e72c49974100ae",
+  "archive_sha256": "57de313a0399e4d4899f0da83009339a418382c2b4899a1a1231e4ccdd8f4b54",
+  "manifest_sha256": "c556a62a0e786bf4d65421c4490b3d210cce8e502c5174b7fd31a74c4b31ae25",
+  "prior_failure_preserved": true,
+  "helper_only_correction": "ephemeral verified writable copy and private TMPDIR; Python3.9 collector validated member copy"
+}

@@ -1,0 +1,13 @@
+{
+  "observed_at": "2026-10-07",
+  "scope": "read-only account App installation discovery; no provider effect",
+  "command": "gh api /user/installations with safe selected JSON fields",
+  "status": 403,
+  "message": "Current credential is not a GitHub App-authorized user access token; installation enumeration denied",
+  "conclusion": "Cannot infer absence of existing Apps/installations from this refusal. Both installed databases separately have zero configured App rows. Genuine key/ID/selected installation remain unverified and required; OAuth cannot replace App JWT/installation issuance.",
+  "browser_observation": {
+    "url_requested": "https://github.com/settings/apps",
+    "result": "Redirected to GitHub sign-in; current task-owned browser has no authenticated GitHub session",
+    "scope": "read-only; no login, App registration or install submitted"
+  }
+}

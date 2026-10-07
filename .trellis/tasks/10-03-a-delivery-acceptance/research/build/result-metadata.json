@@ -1,0 +1,21 @@
+{
+  "scope": "closed immutable private build evidence; no installation/native/provider acceptance",
+  "transport_closed": true,
+  "remote_evidence_directory": "/root/monos-delivery-acceptance-build-v3",
+  "local_private_evidence_directory": "/private/tmp/monos-delivery-acceptance-build-v3/results",
+  "sha256": {
+    "built.json": "066c1a62eade75781491f01dbc68fb938e0daa23ff046a651469d4144a654e13",
+    "build-intent.json": "924f2c0d4e20e94a4d3e1b3c49e708d8e0566c4026bcaf01b3f84dace8b3f28d",
+    "cleanup.json": "64773f0abbdafc9dc19637d1888496f26b8e279fab5343127728c6f5d0dd5946",
+    "targeted-postgres-summary.json": "3e8e5aac26358e501cbf497436fa3b42433442b92b8a005b53fb9b842b1deca3",
+    "targeted-postgres.result.json": "1525b8aed7a86fd579dd8f27ab40cdc1bbd5f3470e1426400d00be60b6ca251f",
+    "targeted-postgres.log": "d78619b66ea2bd6ce2c8ee993b24dd097934de35bbe733fa593b6796fde2ebd7",
+    "targeted-vitest.json": "9d1fdf9060c46a6777e3a3b605943071db536efba40317c1be08f72684f0a760",
+    "driver.log": "dec2a412ced846b009efd7c9018a060df9ae4e9674177e358ac037a7ca2318fc"
+  },
+  "failed_namespaces_preserved": [
+    "v1",
+    "v2"
+  ],
+  "product_worktree_clean": true
+}

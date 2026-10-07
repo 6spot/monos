@@ -1,0 +1,9 @@
+{
+  "candidate_commit": "63eaa285ab90fdd6de018671a47ba5583f87bc75",
+  "namespace": "v3",
+  "transport_sha256": "a30f03a9d04cd7f8e7af3c17aa54026378d4569739c363bf9b9698691f5ede0e",
+  "build_sha256": "544943d0e1794bd6533c485b8e93394009b1c6bea59f8c3551e5cb0a37c19368",
+  "targeted_db_sha256": "fb7344e48ba3d273cc0d22174e04b077c16e77efcb6f1ca4f927b63ad7c8f53c",
+  "reused_successful_build_namespace": "v2",
+  "no_go_or_docker_build_repetition": true
+}

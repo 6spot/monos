@@ -1,0 +1,134 @@
+{
+  "observed_at": "2026-10-07T04:23:10.247643+00:00",
+  "scope": "read-only binaries, nonsecret configuration fields, storage, CA validity, SQLite table counts and actual process identities",
+  "binaries": [
+    {
+      "path": "/usr/local/bin/monos",
+      "sha256": "c422e1c1d03beb1b936969657ace7c9a9c5c3cb89b640fd1518e34e65f4da5dc",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o755"
+    },
+    {
+      "path": "/usr/local/libexec/monos-runner",
+      "sha256": "f222fdc0302a91587822bc6fa1810b32b2a27d3cefd8e8cb2c6e5876067c6678",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o755"
+    },
+    {
+      "path": "/usr/local/libexec/monos-probe-launch",
+      "sha256": "402fe22e3c82eb46e0702702fd6c1eca0534cafb0b3d375ca529c5ce1d645de5",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o755"
+    },
+    {
+      "path": "/usr/local/libexec/monos-probe-exec",
+      "sha256": "d1e18d61747cd5fa572485babec8bdd9db1354a44adec3345b65f7717a103c43",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o755"
+    }
+  ],
+  "runner_configuration": {
+    "endpoint": "https://127.0.0.1:18444",
+    "ca_file": "/etc/monos-probe/ca.pem",
+    "runner_id": "runner-a",
+    "journal": "/var/lib/monos-probe/service/journal.sqlite",
+    "socket": "/run/monos-probe/command.sock",
+    "execution_uid": 1000
+  },
+  "private_config_hashes": [
+    {
+      "path": "/etc/monos-probe/runner.json",
+      "sha256": "c153eaee7387bb43d2c10420d04a4af6202783bbf5233c75b7c72cad4ad8e700",
+      "uid": 997,
+      "gid": 986,
+      "mode": "0o640"
+    },
+    {
+      "path": "/etc/systemd/system/monos-probe-runner.service",
+      "sha256": "f79779bfe0d0772ecf92d48094e2752e12082c42dd769bb716a9ec2e373a4ef8",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o644"
+    },
+    {
+      "path": "/etc/sudoers.d/monos-probe",
+      "sha256": "1c799984dcf6b06ba970a243d9237de083bd267425174defa4c57f3a28501848",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o440"
+    },
+    {
+      "path": "/root/monos-boundary-probe-ports.yaml",
+      "sha256": "b8a12ccecf14774b6356ac5993d3a3f9f3843c0bc920fbd2b0137adff95b031a",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o600"
+    }
+  ],
+  "service_and_execution_accounts": [
+    {
+      "name": "monos-probe",
+      "uid": 997,
+      "gid": 986
+    },
+    {
+      "name": "me",
+      "uid": 1000,
+      "gid": 1000
+    }
+  ],
+  "ca_certificate": "notBefore=Sep 29 07:43:34 2026 GMT\nnotAfter=Oct 29 07:43:34 2026 GMT\nsha256 Fingerprint=C1:E4:DB:AC:E5:B4:6C:AC:2D:57:6C:3F:16:F7:31:3F:AA:D9:6C:49:A8:86:F0:6B:2D:C2:FE:6C:48:F1:36:03",
+  "execution_groups": "uid=1000(me) gid=1000(me) groups=1000(me),24(cdrom),25(floppy),29(audio),30(dip),44(video),46(plugdev),100(users),101(netdev),987(monolab-probe-read),986(monos-probe-read)",
+  "owned_units": [
+    "monos-probe-a-2f22a87b-b1b4-4763-a985-47d590968193.service loaded failed failed  monos probe attempt ac23f1b5-8209-471e-ba07-e8113482f461",
+    "monos-probe-a-374ee8e5-29f4-4e7d-b5fe-8623308521dc.service loaded failed failed  monos probe attempt 3dfe6c74-2b9e-4b8f-9df0-5a5cd089657b",
+    "monos-probe-a-399596a8-3c15-4591-b140-31f5aa98e9d7.service loaded failed failed  monos probe attempt 4ec265cf-0727-4f09-86d5-ab8a47dfe9bc",
+    "monos-probe-a-5ee37b41-cf81-4e37-a689-79e7093eabb0.service loaded failed failed  monos probe attempt 4f57e3d3-185b-4ee1-8331-2704a79d759e",
+    "monos-probe-a-6b358de7-1b6a-487d-bd3b-153dea65577e.service loaded failed failed  monos probe attempt 64db56a2-f7e5-4235-a585-51c84a3f2df0",
+    "monos-probe-a-c094fb5c-89f1-492a-ba6b-5ccbad3487ab.service loaded failed failed  monos probe attempt c9c9ad38-235b-4983-abdf-e3ea0dc942dd",
+    "monos-probe-a-c89bff4a-6121-4f52-b635-8b8878c3017f.service loaded failed failed  monos probe attempt 24049bcf-0264-48c9-a1df-41ece8600056",
+    "monos-probe-runner.service                                 loaded active running monos isolated boundary probe Runner"
+  ],
+  "journal_table_counts": {
+    "effects": 128,
+    "events": 934,
+    "log_offsets": 87,
+    "requests": 156,
+    "starts": 87
+  },
+  "retained_helper_files": [
+    {
+      "path": "/root/monos_replan_audit_common_v3.py",
+      "sha256": "6df7c606b5b48734ae33ec30072fd1915f5a5cf176e9cb7be563630dd36113c6",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o644"
+    },
+    {
+      "path": "/root/monos_replan_never_started_v1.py",
+      "sha256": "0bcbe73dc8391455d950db3e65cc3612ace64a7790629f4b004cd264b04feb19",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o644"
+    },
+    {
+      "path": "/root/monos-execution-acceptance-build-v1/build.py",
+      "sha256": "6b125616593f3f8567f5d61ecab2f9dfc3bf6794fa04474fc639ca24f54c9d9b",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o644"
+    },
+    {
+      "path": "/root/monos-execution-acceptance-build-v1/package.py",
+      "sha256": "3587f9acc6f92f426ac54744c603f967a047ecd4054942f0d544847bd6703b37",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o644"
+    }
+  ],
+  "transport_closed": true
+}

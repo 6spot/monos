@@ -1,0 +1,10 @@
+{
+  "scope": "Private source pg_dump and isolated populated clone upgrade, not coordinated installation backup",
+  "server_image": "sha256:de8f15a1b9b60f9b013abaa167100f84f518ac3304afc0ab98d408efc8fd7434",
+  "postgres_image": "postgres:17.11-trixie@sha256:d74eeac9a635390a49bc21bd49fccd973de707e2a53a76ac49b552b8712ec46f",
+  "container_name": "monos-delivery-upgrade-734c10462ae1d252",
+  "observer_name": "monos-delivery-upgrade-observer-734c10462ae1d252",
+  "run_nonce": "734c10462ae1d252",
+  "helper_sha256": "f25edbabf59cb077d50d6c71a906ee665062447ac1db99cebab61456f873aa7f",
+  "migration_observer_sha256": "3ab65e5cf3d5afa90275c42c247f2f640cf583f15c3c620d05bf7188129c4f13"
+}

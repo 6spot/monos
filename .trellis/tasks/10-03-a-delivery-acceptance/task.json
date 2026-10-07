@@ -3,16 +3,16 @@
   "name": "a-delivery-acceptance",
   "title": "Review and delivery integration acceptance",
   "description": "Accept the installed native local review, controlled publication, exact delivery and correction loop.",
-  "status": "planning",
-  "dev_type": null,
-  "scope": null,
-  "package": null,
+  "status": "in_progress",
+  "dev_type": "fullstack",
+  "scope": "delivery",
+  "package": "monos",
   "priority": "P2",
   "creator": "me",
   "assignee": "me",
   "createdAt": "2026-10-03",
   "completedAt": null,
-  "branch": null,
+  "branch": "feat/stage-a-boundary-probe",
   "base_branch": "main",
   "worktree_path": null,
   "commit": null,
@@ -20,10 +20,15 @@
   "subtasks": [],
   "children": [],
   "parent": "09-28-a-review-delivery",
-  "relatedFiles": [],
-  "notes": "",
+  "relatedFiles": [
+    "apps/server/test/postgres-publication.test.ts",
+    "apps/server/test/postgres-owner-delivery.test.ts"
+  ],
+  "notes": "Standing Owner autonomy covers ordered planning, implementation and routine decisions without permission questions. Upstream correction accepted:5c26071/archive024b6fa/journal0f4c18b. Candidate63eaa285ab90fdd6de018671a47ba5583f87bc75 frozen493 files; pinned Linux/SPA/server build independently READY. Owner2026-10-08: before actual use, no historical version/architecture/data migration compatibility; use fresh scoped current-version acceptance. Earlier migration tests/clone trials are retained historical evidence, compatibility observers stopped. Primary services remain unchanged; actual App unconfigured. All six revised AC remain open; fresh current-version installation design/review is next.",
   "meta": {
     "roadmap_level": "leaf",
-    "planning_maturity": "backlog"
+    "planning_maturity": "reviewed",
+    "development_stage": "pre_use",
+    "compatibility_scope": "none_until_actual_use"
   }
 }

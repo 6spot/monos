@@ -1,0 +1,9 @@
+{
+  "scope": "Root collection controller provenance; derived closure result from successful actual guarded controller execution",
+  "controller_private_path": "/private/tmp/monos-delivery-populated-controller.py",
+  "controller_sha256": "f6381b2b7e1c9916e7b9c6a3132f57f255a4e65a9081ae47bd8be4e56a01bff6",
+  "transport_receipt_sha256": "ae99799cce1ac5015bfe6a3bc2675ef36642a356769dd08fbccd08d5eeaac9e2",
+  "actual_controller_exit": 0,
+  "verified_ssh_close_returncode": 0,
+  "basis": "Controller finally captures ssh -O exit result, raises RuntimeError when returncode is nonzero, and writes transport receipt only after this guard; actual invocation exited0."
+}

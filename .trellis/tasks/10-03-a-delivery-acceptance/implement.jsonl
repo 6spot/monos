@@ -1,0 +1,23 @@
+{"file": "ARCHITECTURE.md", "reason": "Semantic/system boundaries"}
+{"file": "docs/08-principles-and-non-goals.md", "reason": "Exact acceptance, immutable history, tool authority"}
+{"file": "docs/11-technology-and-deployment.md", "reason": "Native accounts, TLS, App and storage"}
+{"file": "docs/12-product-naming-and-upgrades.md", "reason": "Owner pre-use current-version policy; no historical architecture/data migration compatibility gate"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Current native evidence boundaries; historical compatibility gates superseded by current development policy"}
+{"file": ".trellis/spec/backend/infrastructure-configuration.md", "reason": "Production encrypted App issuance/configuration"}
+{"file": ".trellis/spec/backend/owner-delivery.md", "reason": "Exact batch/cutoff/finality authority"}
+{"file": ".trellis/spec/backend/remote-preparation.md", "reason": "Original effects, same PR, scoped publication"}
+{"file": ".trellis/spec/backend/review-correction.md", "reason": "Genuine two-purpose sources and immutable revocation"}
+{"file": ".trellis/spec/runner/execution-guidelines.md", "reason": "Native source/CLI/process/recovery identity"}
+{"file": ".trellis/spec/runner/workspace-guidelines.md", "reason": "Private export and two-account physical ownership"}
+{"file": ".trellis/spec/runner/quality-guidelines.md", "reason": "Linux build and native evidence boundary"}
+{"file": ".trellis/spec/frontend/execution-ui.md", "reason": "Protected exact UI commands and journals"}
+{"file": ".trellis/spec/frontend/visual-design.md", "reason": "Existing shell/layout"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "Inspected viewports and served build"}
+{"file": ".trellis/spec/protocol/commands.md", "reason": "Actual scoped command/receipt provenance"}
+{"file": ".trellis/spec/guides/agent-collaboration.md", "reason": "Explicit scoped ownership and integration"}
+{"file": ".trellis/spec/guides/verification-scope.md", "reason": "Smallest necessary gates and evidence reuse"}
+{"file": ".trellis/tasks/10-03-a-delivery-acceptance/research/acceptance-evidence-design.md", "reason": "Five leaves mapped to fresh native gaps"}
+{"file": ".trellis/tasks/10-03-a-delivery-acceptance/research/host-inventory-v3.json", "reason": "Latest bounded current host prerequisites; not an old-state migration/preservation requirement"}
+{"file": ".trellis/tasks/10-03-a-delivery-acceptance/research/native-loop-design.md", "reason": "Actual production/native source, process, receipt and public ancestry seams"}
+{"file": ".trellis/tasks/10-03-a-delivery-acceptance/research/development-phase-decision.md", "reason": "Latest Owner scope correction and discontinued compatibility work"}
+{"file": ".trellis/tasks/10-03-a-delivery-acceptance/research/fresh-install-design.md", "reason": "Fresh current-version installation plan only; no historical compatibility gates; actual execution helper/install acceptance still required"}

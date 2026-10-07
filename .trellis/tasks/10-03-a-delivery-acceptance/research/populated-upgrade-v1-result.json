@@ -1,0 +1,25 @@
+{
+  "scope": "Read source snapshot; mutate isolated clone only",
+  "outcome": "fail",
+  "source_dump_sha256": "2322f194cabf970cb5ae482f2459d72a587c07ba1024ccf04ae65194d33f0abb",
+  "failure": {
+    "type": "RuntimeError"
+  },
+  "cleanup": [
+    {
+      "name": "monos-delivery-upgrade-observer-734c10462ae1d252",
+      "role": "observer",
+      "confirmed_absent": true,
+      "basis": "successful Docker inventory before cleanup"
+    },
+    {
+      "name": "monos-delivery-upgrade-734c10462ae1d252",
+      "role": "database",
+      "confirmed_absent": false,
+      "id": "2160a396fb4613829108b841d7f6ccd5c530a8adc51996bdce3fce2d9fa82422",
+      "stop_returncode": 0,
+      "basis": "successful Docker inventory after exact owned stop"
+    }
+  ],
+  "clone_cleanup_confirmed": false
+}

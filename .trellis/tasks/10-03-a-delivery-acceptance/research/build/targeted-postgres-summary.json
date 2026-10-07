@@ -1,0 +1,23 @@
+{
+  "exit": 0,
+  "passed": 2,
+  "skipped": 20,
+  "schema_set_preserved": true,
+  "schema_count_before": 8,
+  "schema_count_after": 8,
+  "test_schema_removed": true,
+  "node": "v24.21.0",
+  "selected_command": [
+    "pnpm",
+    "exec",
+    "vitest",
+    "run",
+    "apps/server/test/postgres-publication.test.ts",
+    "apps/server/test/postgres-owner-delivery.test.ts",
+    "-t",
+    "upgrades populated version21|upgrades exact version23 to version25",
+    "--reporter=json",
+    "--outputFile=/evidence/targeted-vitest.json"
+  ],
+  "postgres_version": "17.11 (Debian 17.11-1.pgdg13+2)"
+}

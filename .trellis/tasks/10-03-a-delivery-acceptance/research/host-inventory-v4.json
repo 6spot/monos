@@ -1,0 +1,279 @@
+{
+  "observed_at": "2026-10-07T16:47:13.506560+00:00",
+  "scope": "read-only installed service identities and prerequisites; no credentials serialized",
+  "containers": [
+    {
+      "name": "monolab-boundary-probe-database-1",
+      "id": "677b500dd740020512d40f542c08252f13690245d4937ab91985a4d38f45c255",
+      "image_id": "sha256:d74eeac9a635390a49bc21bd49fccd973de707e2a53a76ac49b552b8712ec46f",
+      "status": "running",
+      "started_at": "2026-09-29T15:14:10.539936083Z",
+      "compose_working_dir": "/root/monolab-boundary-probe-src/infra/compose",
+      "mounts": [
+        {
+          "type": "bind",
+          "source": "/root/monolab-boundary-probe-src/infra/compose/private/db_password",
+          "destination": "/run/secrets/db_password",
+          "read_write": false
+        },
+        {
+          "type": "volume",
+          "source": "/var/lib/docker/volumes/monolab-boundary-probe_database_data/_data",
+          "destination": "/var/lib/postgresql/data",
+          "read_write": true
+        }
+      ],
+      "database": {
+        "migrations": [
+          {
+            "version": 1,
+            "checksum": "963b94c8e275cfa18b59d8f22ba692318408c874341272dd84064dc338118094"
+          },
+          {
+            "version": 2,
+            "checksum": "48bdf550c6696344df5880ab720b89a4b4410c96ae67339bc520454311d979dc"
+          },
+          {
+            "version": 3,
+            "checksum": "42c96433c75dcdfc98e4695d2f8f73a572185d982cbd3bdbac6d499c9b35db81"
+          },
+          {
+            "version": 4,
+            "checksum": "625b9d8ce2bb95f363be71bfa03bc9d770468bb66cc4dc455ab05dc22f498050"
+          },
+          {
+            "version": 5,
+            "checksum": "b455ef5c4997ed03528e8056c2865bbf268f33e9ffcac0bbd89a1d91dbcdf84b"
+          },
+          {
+            "version": 6,
+            "checksum": "43bf609c9994ea81db61e279050025c4c5ce77e30e05c1661682b8ca7868baee"
+          },
+          {
+            "version": 7,
+            "checksum": "84c761eb51b7563f17405e6932bf552231da2759428e88c922e70429d5472f02"
+          },
+          {
+            "version": 8,
+            "checksum": "6980995cb33c59af1b305cf798181e5eef41c5269c5cddf8e7f598dba62f4c85"
+          },
+          {
+            "version": 9,
+            "checksum": "8ebea11b5e3f7e248f4607a4320db2ca1edbe0147b4011ee7326e31bba685f20"
+          }
+        ],
+        "github_app_rows": 0,
+        "task_count": 16,
+        "attempt_count": 16
+      }
+    },
+    {
+      "name": "monolab-boundary-probe-server-1",
+      "id": "a4a1de22e17d4108d3cc8ac45aa4d866393cc8bb381fdf60f3cc6317ac5f971b",
+      "image_id": "sha256:f21099e7fa8d576bbc69fb70b20836edf3b5ccd8499f70005d7c5fc6799d64fc",
+      "status": "running",
+      "started_at": "2026-09-29T15:14:10.580683009Z",
+      "compose_working_dir": "/root/monolab-boundary-probe-src/infra/compose",
+      "mounts": [
+        {
+          "type": "bind",
+          "source": "/root/monolab-boundary-probe-src/infra/compose/private/database_url",
+          "destination": "/run/secrets/database_url",
+          "read_write": false
+        },
+        {
+          "type": "bind",
+          "source": "/root/monolab-boundary-probe-src/infra/compose/private/signing_key",
+          "destination": "/run/secrets/signing_key",
+          "read_write": false
+        },
+        {
+          "type": "bind",
+          "source": "/root/monolab-boundary-probe-src/infra/compose/private/server.crt",
+          "destination": "/run/secrets/tls_cert",
+          "read_write": false
+        },
+        {
+          "type": "bind",
+          "source": "/root/monolab-boundary-probe-src/infra/compose/private/server.key",
+          "destination": "/run/secrets/tls_key",
+          "read_write": false
+        }
+      ]
+    },
+    {
+      "name": "monos-boundary-probe-database-1",
+      "id": "23d0468cf1b87a28a0401fcf6dafe76f640cbbc92b1ee5fd93788fb9ebf3aad8",
+      "image_id": "sha256:d74eeac9a635390a49bc21bd49fccd973de707e2a53a76ac49b552b8712ec46f",
+      "status": "running",
+      "started_at": "2026-09-29T15:14:10.528388039Z",
+      "compose_working_dir": "/root/monos-boundary-probe-src/infra/compose",
+      "mounts": [
+        {
+          "type": "bind",
+          "source": "/root/monos-boundary-probe-src/infra/compose/private/db_password",
+          "destination": "/run/secrets/db_password",
+          "read_write": false
+        },
+        {
+          "type": "volume",
+          "source": "/var/lib/docker/volumes/monos-boundary-probe_database_data/_data",
+          "destination": "/var/lib/postgresql/data",
+          "read_write": true
+        }
+      ],
+      "database": {
+        "migrations": [
+          {
+            "version": 1,
+            "checksum": "963b94c8e275cfa18b59d8f22ba692318408c874341272dd84064dc338118094"
+          },
+          {
+            "version": 2,
+            "checksum": "48bdf550c6696344df5880ab720b89a4b4410c96ae67339bc520454311d979dc"
+          },
+          {
+            "version": 3,
+            "checksum": "42c96433c75dcdfc98e4695d2f8f73a572185d982cbd3bdbac6d499c9b35db81"
+          },
+          {
+            "version": 4,
+            "checksum": "625b9d8ce2bb95f363be71bfa03bc9d770468bb66cc4dc455ab05dc22f498050"
+          },
+          {
+            "version": 5,
+            "checksum": "b455ef5c4997ed03528e8056c2865bbf268f33e9ffcac0bbd89a1d91dbcdf84b"
+          },
+          {
+            "version": 6,
+            "checksum": "43bf609c9994ea81db61e279050025c4c5ce77e30e05c1661682b8ca7868baee"
+          },
+          {
+            "version": 7,
+            "checksum": "84c761eb51b7563f17405e6932bf552231da2759428e88c922e70429d5472f02"
+          },
+          {
+            "version": 8,
+            "checksum": "6980995cb33c59af1b305cf798181e5eef41c5269c5cddf8e7f598dba62f4c85"
+          },
+          {
+            "version": 9,
+            "checksum": "8ebea11b5e3f7e248f4607a4320db2ca1edbe0147b4011ee7326e31bba685f20"
+          },
+          {
+            "version": 10,
+            "checksum": "649ebe04a7afaad67a81d4af8f83cb4b3d9023bd7f6787bf7c13dd517ab030ad"
+          },
+          {
+            "version": 11,
+            "checksum": "79113cb3bb96e25c0e685bd4e6031db46bc1b6e6c927564a346fd5bb76f5898d"
+          },
+          {
+            "version": 12,
+            "checksum": "8cde381b9a5b08b6ac3f2db3649f42466d0e5747f6b6cdfe1f9b78f513cce168"
+          },
+          {
+            "version": 13,
+            "checksum": "d385623498818ab7fedfd1640b5d4642b7c1a9c7ea5f06ecbf07cb2913a73e4c"
+          },
+          {
+            "version": 14,
+            "checksum": "84f1d58bfc5d154094adf01c37ca7ad6fd385e90d461810352e0925b21aa39aa"
+          },
+          {
+            "version": 15,
+            "checksum": "225ce4c3d172e97dd1ecc4cdb551ebf1260b3f5f02c543bbd6f0bdcc85bba7cb"
+          },
+          {
+            "version": 16,
+            "checksum": "6b38bcbb0c2f9561fa7cfca375fcb51c02556db919bc0e4bc281d607a7268d09"
+          },
+          {
+            "version": 17,
+            "checksum": "f480a0358b5bb7a4cc9d867da3b1383ab539c00ec5e679219103cd4befc96dfe"
+          },
+          {
+            "version": 18,
+            "checksum": "dbcc9192b11a77c653193fcf99ac2e0e426fdb6c6b521ccae405ad8825c0f115"
+          },
+          {
+            "version": 19,
+            "checksum": "908abd571dcee5a480d47d0473e0a0caac5967ed1c5b997e662444e3a4294925"
+          },
+          {
+            "version": 20,
+            "checksum": "dcc0df95b445462b5388fb450a8cfca18e13ac8f06ede6e778fc4460653205d7"
+          },
+          {
+            "version": 21,
+            "checksum": "6cb142abed9a0994caae1714bbccdb2c090441d6e7c5c3865c3de10c9424a2ee"
+          }
+        ],
+        "github_app_rows": 0,
+        "task_count": 32,
+        "attempt_count": 88
+      }
+    },
+    {
+      "name": "monos-boundary-probe-server-1",
+      "id": "3c1399070bab7f1a6e7a3c0274a5f369eb757878c0be7b1501f823064fd5420c",
+      "image_id": "sha256:daa468f43a5b13fe67ebeeb79a575131159f241502cc39fb8ded9b27cd161cc3",
+      "status": "running",
+      "started_at": "2026-10-02T21:43:16.197044095Z",
+      "compose_working_dir": "/root/monos-boundary-probe-src/infra/compose",
+      "mounts": [
+        {
+          "type": "bind",
+          "source": "/root/monos-boundary-probe-src/infra/compose/private/database_url",
+          "destination": "/run/secrets/database_url",
+          "read_write": false
+        },
+        {
+          "type": "bind",
+          "source": "/root/monos-boundary-probe-src/infra/compose/private/signing_key",
+          "destination": "/run/secrets/signing_key",
+          "read_write": false
+        },
+        {
+          "type": "bind",
+          "source": "/root/monos-boundary-probe-src/infra/compose/private/server.crt",
+          "destination": "/run/secrets/tls_cert",
+          "read_write": false
+        },
+        {
+          "type": "bind",
+          "source": "/root/monos-boundary-probe-src/infra/compose/private/server.key",
+          "destination": "/run/secrets/tls_key",
+          "read_write": false
+        }
+      ]
+    }
+  ],
+  "units": [
+    {
+      "name": "monolab-probe-runner.service",
+      "MainPID": "5573",
+      "ExecMainStartTimestamp": "Tue 2026-09-29 23:14:57 CST",
+      "User": "monolab-probe",
+      "Group": "monolab-probe-read",
+      "ActiveState": "active",
+      "SubState": "running",
+      "FragmentPath": "/etc/systemd/system/monolab-probe-runner.service",
+      "InvocationID": "8ac7b4ed41b54d33a2c2ecaa2b88f08e"
+    },
+    {
+      "name": "monos-probe-runner.service",
+      "MainPID": "394453",
+      "ExecMainStartTimestamp": "Sat 2026-10-03 05:43:16 CST",
+      "User": "monos-probe",
+      "Group": "monos-probe-read",
+      "ActiveState": "active",
+      "SubState": "running",
+      "FragmentPath": "/etc/systemd/system/monos-probe-runner.service",
+      "InvocationID": "9f74616401924824b49397d7b38ccee7"
+    }
+  ],
+  "host": "Linux 6.12.107+deb13-amd64 x86_64",
+  "boot_id": "eb12bbe6-c63c-4e2e-8463-82b3e780aca1",
+  "transport_closed": true
+}

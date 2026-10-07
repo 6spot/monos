@@ -1,0 +1,6 @@
+{
+  "epoch": 1791364116.6890485,
+  "error_type": "RuntimeError",
+  "message": "linux-go failed; retained private log and result",
+  "outcome": "fail"
+}

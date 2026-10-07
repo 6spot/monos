@@ -1,0 +1,7 @@
+{
+  "scope": "read-only details observer failed before producing a report; no installation/admission/provider mutation",
+  "helper_sha256": "4e232169d6bfc7ae2c2c3dcbfb279b86ab82582cd41df2688d82ac537321a0c2",
+  "outcome": "failed",
+  "diagnosis": "Observer assumed journal_path/socket_path; canonical Runner Config uses journal/socket. Correct observer field mapping and write distinct output.",
+  "transport_close_checked": true
+}

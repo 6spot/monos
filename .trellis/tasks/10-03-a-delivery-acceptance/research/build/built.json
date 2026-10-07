@@ -1,0 +1,129 @@
+{
+  "asset_hashes": {
+    "assets/index-CDYDw6Vm.css": "90913bdae0315da53398e57a8ae6f76c4cbaf2493692e8a6bda01a0b9a364f64",
+    "assets/index-mkoA3kwR.js": "1f5275cc68455ccd9d5a70ad80f0eddbd060a6db6f1b243df4ea2191a7db18f5",
+    "index.html": "6a52687e255558742408f477af3ef17dff04e2f9a7f4a9a465adf97599cc4991"
+  },
+  "binaries": {
+    "monos": "7fc14aacda3e07e9a120d96e391287aa92a2cad3d4059d61e181c9a6573f170b",
+    "monos-probe-exec": "75103986428e4ccee0dd70e59c062f8842abb141db5f9b2437a069ed71e29faa",
+    "monos-probe-launch": "88a3706e964ef587be0614de850735a3311545933bcb1df7e4f6dacb7f67978e",
+    "monos-runner": "8e4ac8f122455fce974293620f14401ad5e5ad1b545864907edb6da95742dcb7"
+  },
+  "binary_directory": "/root/monos-delivery-acceptance-build-v2/bin",
+  "binary_modes": {
+    "monos": "0o755",
+    "monos-probe-exec": "0o755",
+    "monos-probe-launch": "0o755",
+    "monos-runner": "0o755"
+  },
+  "candidate_commit": "63eaa285ab90fdd6de018671a47ba5583f87bc75",
+  "cleanup_sha256": "64773f0abbdafc9dc19637d1888496f26b8e279fab5343127728c6f5d0dd5946",
+  "current_stage_result_sha256": "1525b8aed7a86fd579dd8f27ab40cdc1bbd5f3470e1426400d00be60b6ca251f",
+  "finished_epoch": 1791364768.0686247,
+  "go_image_id": "sha256:69a7b9788769bec032d238959b61854e9ae87f57be9029ec04e9885fabf99195",
+  "image_tags": {
+    "server": "monos-delivery-acceptance-server:v2",
+    "tests": "monos-delivery-acceptance-tests:v2"
+  },
+  "image_verification": {
+    "server": {
+      "asset_hashes": {
+        "assets/index-CDYDw6Vm.css": "90913bdae0315da53398e57a8ae6f76c4cbaf2493692e8a6bda01a0b9a364f64",
+        "assets/index-mkoA3kwR.js": "1f5275cc68455ccd9d5a70ad80f0eddbd060a6db6f1b243df4ea2191a7db18f5",
+        "index.html": "6a52687e255558742408f477af3ef17dff04e2f9a7f4a9a465adf97599cc4991"
+      },
+      "native_imports_verified": true,
+      "node": "v24.21.0",
+      "source_files_verified": 304
+    },
+    "tests": {
+      "asset_hashes": {
+        "assets/index-CDYDw6Vm.css": "90913bdae0315da53398e57a8ae6f76c4cbaf2493692e8a6bda01a0b9a364f64",
+        "assets/index-mkoA3kwR.js": "1f5275cc68455ccd9d5a70ad80f0eddbd060a6db6f1b243df4ea2191a7db18f5",
+        "index.html": "6a52687e255558742408f477af3ef17dff04e2f9a7f4a9a465adf97599cc4991"
+      },
+      "native_imports_verified": true,
+      "node": "v24.21.0",
+      "source_files_verified": 306
+    }
+  },
+  "images": {
+    "server": "sha256:de8f15a1b9b60f9b013abaa167100f84f518ac3304afc0ab98d408efc8fd7434",
+    "tests": "sha256:1d228d1b3b41c6114105c4ccb19db06092174b25afc7220a94f0de38ec8195a6"
+  },
+  "limitations": [
+    "V1 read-only fixture failure and V2 wrong pg package lookup retained; no product source changes.",
+    "No installation/service restart/native model/provider acceptance performed."
+  ],
+  "manifest_sha256": "c556a62a0e786bf4d65421c4490b3d210cce8e502c5174b7fd31a74c4b31ae25",
+  "outcome": "pass",
+  "reused_stage_directory": "/root/monos-delivery-acceptance-build-v2",
+  "reused_stages": {
+    "docker-server-build": {
+      "exit": 0,
+      "finished_epoch": 1791364441.1703947,
+      "log_sha256": "931211ae0ef382f03c12e76a23373076a5552ab7dc62f275fcaf4b15fcc74863",
+      "result_sha256": "b0ced0510ec9574991942943156a0d3c037fdb02d17fede11bf678518492beec",
+      "started_epoch": 1791364409.667042
+    },
+    "docker-test-build": {
+      "exit": 0,
+      "finished_epoch": 1791364409.6664534,
+      "log_sha256": "1e729b92dc90cb66ed85e99dea1bd43bbaf0acdc9f907e1e3fd0794d8959f58b",
+      "result_sha256": "6a90b5425cab4b22b7d3feab44867388a5ac62986d20247e7a061968eb8184d4",
+      "started_epoch": 1791364352.960445
+    },
+    "linux-go": {
+      "exit": 0,
+      "finished_epoch": 1791364352.9209094,
+      "log_sha256": "17eb624a583edc9b805e6c660bd7361d3f68cf911e6260c09aba8bc3319c08cd",
+      "result_sha256": "8e7880fd1b6b483a1282ea24e5aad45b076e2f74832115331b618e6f71598745",
+      "started_epoch": 1791364295.9391534
+    },
+    "verify-server-image": {
+      "exit": 0,
+      "finished_epoch": 1791364443.8729327,
+      "log_sha256": "60311fd4a095e5ce690aee9345cefa63e72f0beaa0cf864f412f5d2cb2d84faa",
+      "result_sha256": "3ec10009b5af5599739a2d0758a94c524f7bc2763d584ae2d40cdc14b04d66c4",
+      "started_epoch": 1791364442.8158364
+    },
+    "verify-tests-image": {
+      "exit": 0,
+      "finished_epoch": 1791364442.8154476,
+      "log_sha256": "a5aeac08f5260a6b019dd52b6f94f2e8727aff535ef07c1d26b33f407c4b9372",
+      "result_sha256": "7051ccc22e30ee41bbe6c31e7ec5065a9e6136f17737e07493fbf41e9d72fa1c",
+      "started_epoch": 1791364441.2754138
+    }
+  },
+  "source_directory": "/root/monos-delivery-acceptance-src-v2",
+  "source_tar_sha256": "57de313a0399e4d4899f0da83009339a418382c2b4899a1a1231e4ccdd8f4b54",
+  "targeted_postgres": {
+    "exit": 0,
+    "node": "v24.21.0",
+    "passed": 2,
+    "postgres_version": "17.11 (Debian 17.11-1.pgdg13+2)",
+    "schema_count_after": 8,
+    "schema_count_before": 8,
+    "schema_set_preserved": true,
+    "selected_command": [
+      "pnpm",
+      "exec",
+      "vitest",
+      "run",
+      "apps/server/test/postgres-publication.test.ts",
+      "apps/server/test/postgres-owner-delivery.test.ts",
+      "-t",
+      "upgrades populated version21|upgrades exact version23 to version25",
+      "--reporter=json",
+      "--outputFile=/evidence/targeted-vitest.json"
+    ],
+    "skipped": 20,
+    "test_schema_removed": true
+  },
+  "utilities_sha256": {
+    "build.py": "544943d0e1794bd6533c485b8e93394009b1c6bea59f8c3551e5cb0a37c19368",
+    "package.py": "b4abc89e78c61cc72e1f0a959dc29c6ca040b600f6caf3e655ba27f84de22457",
+    "targeted-db.mjs": "fb7344e48ba3d273cc0d22174e04b077c16e77efcb6f1ca4f927b63ad7c8f53c"
+  }
+}

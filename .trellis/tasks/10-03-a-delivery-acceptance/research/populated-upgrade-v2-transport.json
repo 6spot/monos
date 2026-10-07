@@ -1,0 +1,18 @@
+{
+  "execution": {
+    "returncode": 0
+  },
+  "transport_closed": true,
+  "helper_hashes": {
+    "populated-upgrade.py": "2f61ad0ac1dc23fb551410a3590dbcfb8e23b37b9d6f526cc3717c49f49c177d",
+    "populated-upgrade.mjs": "3ab65e5cf3d5afa90275c42c247f2f640cf583f15c3c620d05bf7188129c4f13"
+  },
+  "reports": [
+    "intent.json",
+    "result.json",
+    "populated-upgrade.json",
+    "create-clone.json",
+    "restore-clone.json",
+    "migrate-clone.json"
+  ]
+}

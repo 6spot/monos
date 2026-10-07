@@ -1,0 +1,12 @@
+{
+  "scope": "Historical abandoned compatibility observer attempt; no remote query or service transition",
+  "stage": "private SSH authentication",
+  "authentication_failed": true,
+  "helper_transfer_started": false,
+  "remote_observer_executed": false,
+  "transport_closed": null,
+  "closure_error": "Private transport closure not confirmed",
+  "later_matching_local_transport_processes": 0,
+  "controller_sha256": "641679483f0c45bef70d97e110087373e83a4a7265805dff9bdad810ac68d03a",
+  "superseded_by": "Owner pre-use development policy2026-10-08"
+}

@@ -1,0 +1,8 @@
+{
+  "observed_at": "2026-10-07T09:26:07.367519+00:00",
+  "scope": "actual read-only original clone container reconciliation",
+  "successful_docker_inventory": true,
+  "original_container_id": "2160a396fb4613829108b841d7f6ccd5c530a8adc51996bdce3fce2d9fa82422",
+  "original_id_absent": true,
+  "matching_task_containers": {}
+}

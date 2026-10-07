@@ -1,0 +1,32 @@
+{
+  "linux-go": {
+    "exit": 0,
+    "finished_epoch": 1791364352.9209094,
+    "log_sha256": "17eb624a583edc9b805e6c660bd7361d3f68cf911e6260c09aba8bc3319c08cd",
+    "started_epoch": 1791364295.9391534
+  },
+  "docker-test-build": {
+    "exit": 0,
+    "finished_epoch": 1791364409.6664534,
+    "log_sha256": "1e729b92dc90cb66ed85e99dea1bd43bbaf0acdc9f907e1e3fd0794d8959f58b",
+    "started_epoch": 1791364352.960445
+  },
+  "docker-server-build": {
+    "exit": 0,
+    "finished_epoch": 1791364441.1703947,
+    "log_sha256": "931211ae0ef382f03c12e76a23373076a5552ab7dc62f275fcaf4b15fcc74863",
+    "started_epoch": 1791364409.667042
+  },
+  "verify-tests-image": {
+    "exit": 0,
+    "finished_epoch": 1791364442.8154476,
+    "log_sha256": "a5aeac08f5260a6b019dd52b6f94f2e8727aff535ef07c1d26b33f407c4b9372",
+    "started_epoch": 1791364441.2754138
+  },
+  "verify-server-image": {
+    "exit": 0,
+    "finished_epoch": 1791364443.8729327,
+    "log_sha256": "60311fd4a095e5ce690aee9345cefa63e72f0beaa0cf864f412f5d2cb2d84faa",
+    "started_epoch": 1791364442.8158364
+  }
+}

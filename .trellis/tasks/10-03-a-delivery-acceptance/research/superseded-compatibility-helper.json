@@ -1,0 +1,8 @@
+{
+  "scope": "Interrupted incomplete compatibility helper retained privately; never executed and not a current tool/gate",
+  "filename": "preinstall-ownership.py",
+  "sha256": "4229b7cfce60ac9e74badaf470ac20287738bf60539db2034beebfef0c58b496",
+  "bytes": 4858,
+  "private_directory": "/private/tmp/monos-superseded-compatibility-k2m_a96q",
+  "status": "constants-only; no functions/entrypoint; assignment stopped by Owner pre-use policy"
+}
