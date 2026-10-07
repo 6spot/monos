@@ -1,5 +1,7 @@
 # Go Runner and Linux Execution
 
+Current stage: [pre-use development](../../../docs/12-product-naming-and-upgrades.md). Historical architecture, version and data compatibility are not required; implement and verify the current version. Current-run recovery and ownership contracts still apply.
+
 Status: the Go Runner under `runner` passed combined production Runtime integration
 acceptance on 2026-09-29; recipes are in `infra/runner`. It also implements canonical
 Single-Node workspace and repository-free completion, managed Artifact commands

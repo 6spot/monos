@@ -2,6 +2,17 @@
 
 This file is the architecture map. Detailed rules live in the linked modules.
 
+## Current development stage
+
+monos is a new project that the Owner has not started using. Until actual use
+begins, implement the current design directly: historical API, protocol, schema,
+configuration and architecture compatibility are not requirements. Update current
+producers/consumers together and validate a fresh development installation;
+do not add compatibility layers or old-data migration gates. See the
+[development and deployment policy](docs/12-product-naming-and-upgrades.md).
+Current execution still requires exact authorization, durable receipts, recovery
+and physical workspace ownership. These runtime invariants are unchanged.
+
 ## Selected implementation stack
 
 React/Vite/TypeScript Web → Fastify/Node.js TypeScript modular monolith → PostgreSQL (Drizzle/SQL). A separate Go Runner on Linux directly invokes Owner-installed/authenticated host Agent CLIs and supervises their processes and system Git operations. Web uses HTTPS/SSE; Runner initiates a versioned authenticated WSS connection; Agents invoke the bundled `monos` CLI, which sends Attempt-scoped HTTPS commands through the Tool Protocol. No MCP bridge installation or registration is required. PostgreSQL outbox workers handle durable background work.

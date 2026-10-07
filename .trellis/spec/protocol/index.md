@@ -1,5 +1,7 @@
 # Cross-Language Protocol
 
+Current stage: [pre-use development](../../../docs/12-product-naming-and-upgrades.md). Historical architecture, version and data compatibility are not required; implement and verify the current version. Current-run recovery and ownership contracts still apply.
+
 Status: implemented boundary-probe schemas, generated TypeScript/Go types, OpenAPI and shared fixtures are in `packages/protocol`. Full-product commands remain architecture contracts until implemented.
 
 ## Pre-Development Checklist

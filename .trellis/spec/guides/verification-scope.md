@@ -4,6 +4,16 @@ Select checks from the changed behavior and a concrete failure risk. Test counts
 and coverage percentages are not acceptance criteria. Historical gate reports in
 layer guidelines describe past evidence, not a checklist for every task.
 
+## Development stage
+
+Apply the [pre-use development policy](../../../docs/12-product-naming-and-upgrades.md).
+Before actual use begins, historical architecture/version/data compatibility is
+not a verification requirement. Choose fresh initialization and current consumer
+checks; omit old-version upgrade, migration preservation and compatibility-only
+matrices. Previously recorded upgrade evidence stays historical. Current-run
+receipts, concurrency, uncertain effects and physical ownership still need the
+checks appropriate to the changed contract.
+
 ## Select the smallest sufficient check
 
 | Change | Default verification |

@@ -1,4 +1,4 @@
-# Product naming and deployment upgrades
+# Product naming and development deployments
 
 The product and bundled Agent CLI are named **monos**. The canonical repository is
 [6spot/monos](https://github.com/6spot/monos). Use lowercase `monos` in UI text,
@@ -19,40 +19,47 @@ documentation, command examples and executable names.
 Generic third-party settings such as `DATABASE_URL`, `HOME`, `XDG_*`, `POSTGRES_*`
 and `OPENCODE_*` retain their upstream names. This naming change does not change
 Tool Protocol command names, schema version, formal states or immutable receipts.
-The v1 provider-key derivation salt and numeric migration lock also retain their
-exact original bytes/values; stored GitHub credentials remain decryptable.
+Current provider-key derivation and database locking are implementation contracts;
+their existing bytes do not create a historical-version compatibility obligation.
 
-## Existing deployments
+## Current stage: before actual use
 
-The renamed templates describe a **fresh installation**. Changing the Compose
-project name selects a different default volume name; running them beside an older
-installation does not migrate its canonical database. The test host's prior
-accepted installation and retained evidence were not moved by the source rename.
+Owner decision, 2026-10-08: monos is a new development project and has not entered
+actual use. Historical version, architecture and data migration compatibility are
+outside the current development and acceptance scope. This policy supersedes old
+upgrade/preservation requirements in prior plans and verification guidance.
 
-An existing deployment needs a separate, quiescent migration:
+Development databases, fixtures and synthetic/native acceptance Tasks do not mean
+the Owner has started actual use. Existing test records alone never activate a
+migration or backward-compatibility requirement.
 
-1. Drain new dispatch and reconcile all process/workspace ownership. Record exact
-   old unit, account, UID/GID, database volume, configuration and storage identities.
-2. Back up PostgreSQL, service configuration and coordinated Runner journal/storage.
-   Keep secrets private and preserve previous binaries for rollback.
-3. Stop the old backend/Runner. Coordinate the upgrade: host path/unit ownership
-   checks and configuration entrypoints use the new namespace. Database migration
-   checksums and the migration lock remain unchanged.
-4. Explicitly retain/restore the existing database volume and update its configured
-   database/user connection details. Configure new environment names together;
-   preparation refuses to overwrite old secret directories.
-5. Migrate host paths/accounts and persisted path/unit references coherently,
-   preserving numeric ownership and immutable request/receipt bytes. Moving a
-   directory alone is insufficient for Git worktree links or recorded ownership.
-   No automatic in-place host-state migrator is provided.
-6. Start compatible services and verify schema checksums, enrollment, inventory,
-   existing-result reads and physical ownership before reopening dispatch.
+- Implement the current design directly. Breaking API, protocol, schema, naming
+  and configuration changes update current consumers and fixtures together.
+- Do not add old/new dual paths, aliases, compatibility adapters, historical
+  ciphertext support or old-database migration machinery just to preserve earlier
+  development versions.
+- Validate current behavior and fresh schema initialization. Old development
+  database upgrades, prior receipt/data preservation across versions and old
+  deployment rollback matrices are not required gates or default tests.
+- Use a fresh scoped development database/configuration/journal/storage when
+  earlier test state no longer fits. Select the intended environment explicitly;
+  a different Compose project or volume creates separate state, not a migration.
+- Keep current-run authorization, exact-version acceptance, immutable receipts,
+  uncertain-effect recovery and physical writer isolation. A running execution
+  cannot be reset to fabricate successful settlement.
+- Retain recorded trial results as historical evidence. Stop superseded migration
+  work instead of reinterpreting those results as current acceptance.
 
-The renamed browser cookie requires signing in again. Owner credentials and stored
-records are retained by a proper database migration; the rename does not reset them.
-Do not delete a previous volume, journal or workspace because templates use another
-name. On failure, restore the coordinated previous installation rather than combine
-old data with partially renamed ownership.
+For example, change a payload and regenerate both TypeScript/Go consumers, then
+exercise the current payload. Do not add an old-payload parser and upgrade matrix
+solely for a previous development build.
+
+## After actual use begins
+
+Migration and compatibility work becomes relevant when the Owner actually starts
+using monos. At that point, scope it against real retained data, deployed versions
+and running work. Define the required backup, migration and recovery contracts for
+that concrete change; no speculative migration framework is required now.
 
 ## Historical evidence
 

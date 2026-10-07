@@ -50,7 +50,7 @@ independent Owner input controls.
   provenance, never an assertion that a failed fetch refreshed the repository.
 - Retry loads the immutable original payload; no mutable-file reread or new ID after uncertainty.
 - Revoked Attempts cannot make new effects. Scoped recovery reads never renew old mutation authority.
-- Product naming changes do not rewrite stored envelopes, digests or process identities. `monos` is the current CLI and `MONOS_SOCKET` its local-channel setting; historical raw evidence retains original bytes. See [deployment upgrades](../../../docs/12-product-naming-and-upgrades.md) before moving existing storage.
+- Current-run envelopes, digests and process identities remain exact. `monos` is the current CLI and `MONOS_SOCKET` its local-channel setting; historical raw evidence retains original bytes. Follow the [pre-use development policy](../../../docs/12-product-naming-and-upgrades.md): old development versions need no storage/wire migration support; validate the current version with fresh scoped state when needed.
 - Authenticate the signed Attempt identity's exact fields/types and expiry, not only its signature. Reject malformed, padded or trailing credential encodings as `unauthorized`.
 - Canonical envelope input rejects malformed Unicode instead of hashing a replacement string differently in TS and Go.
 - Complete every inventory page under the same snapshot before reconciliation; a partial page never proves process absence.

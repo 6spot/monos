@@ -8,6 +8,10 @@ The Task / Plan / Node / Attempt separation supports staged expansion without re
 
 No paper review guarantees freedom from implementation defects. The remaining high-risk assumptions must be exercised before broad product implementation, rather than deferred until multi-Runner rollout.
 
+Apply the [pre-use development policy](12-product-naming-and-upgrades.md): current
+execution and service boundaries are required; historical version/data migration
+and rolling-upgrade support are scoped only after actual use begins.
+
 ## Extension checks
 
 | Concern | Required boundary now | Later implementation | Owning module |
@@ -18,7 +22,7 @@ No paper review guarantees freedom from implementation defects. The remaining hi
 | Same-Task distributed work | Node identities remain location-independent; completion requires integrated result | Remote result transport and authoritative integration | [03](03-runtime-and-execution.md), [04](04-workspace-and-git.md) |
 | Multiple backend workers | Database claim/receipt guards plus fenced/reconciled side-effect operations | Replicated backend service | [06](06-state-and-formal-data.md) |
 | Runner restart and late dispatch | Supervised process identity, durable start intent, connection incarnation and replay guards | Broader reconnect automation | [03](03-runtime-and-execution.md) |
-| Rolling upgrades | Explicit command/event versions; compatibility negotiation before dispatch | Mixed-version rollout policy | [05](05-tool-protocol.md) |
+| Current wire contract | Current producers/consumers agree; unsupported required semantics are rejected | Historical migration/mixed-version rollout after actual use begins | [05](05-tool-protocol.md), [development policy](12-product-naming-and-upgrades.md) |
 | Parallel Git results | Serialized integration, revision-attributed evidence, final validation when required | Worktrees and distributed result integration | [04](04-workspace-and-git.md) |
 | Multiple repositories | Workspace/delivery collections and per-item durable progress | Multi-item preparation/merge and partial-delivery UI | [04](04-workspace-and-git.md), [06](06-state-and-formal-data.md) |
 | Artifact/log location | Managed immutable content and acknowledged log cursors; no bare local-path artifacts | Object storage and larger retention tiers | [06](06-state-and-formal-data.md) |
@@ -35,7 +39,7 @@ No paper review guarantees freedom from implementation defects. The remaining hi
 | A Node runs on Runner A and fallback exists only on B | Unsupported locality transition is rejected; private edits are not lost by cloning elsewhere |
 | The backend filesystem differs from the Runner filesystem | Workspace/diff/artifact reads go through owning services; no accidental local file access |
 | Backend receives duplicate/reordered Runtime events | Deduplicate by stream sequence; stale events do not revive terminal work |
-| Backend upgrades while a completion operation is unfinished | Recover using the operation's schema version, or migrate explicitly; do not reinterpret it |
+| Current-version backend restarts while a completion operation is unfinished | Recover the exact admitted operation; do not reinterpret or duplicate its effect |
 | A passes tests, B subsequently integrates nonconflicting code | A's evidence remains tied to its tested revision; final combined result is not falsely marked verified |
 | Cancellation arrives after Git integration started but before formal commit | Reconcile side effects without granting current completion evidence or unlocking downstream work |
 | Local worktrees are cleaned after delivery | Published managed Artifacts remain retrievable independently of those paths |
@@ -70,4 +74,4 @@ The conversation closure cases in module 09 are required alongside the original 
 
 ## Single-host V1 gate
 
-Module 09's single-host release matrix is the V1 completion criterion; passing Stage A alone is insufficient. Module 11 now defines first-run bootstrap, local Owner authentication, Runner enrollment, two-account repository permissions, privileged supervision, and storage/upgrade behavior. Verify all of these on one host together with module-03 reboot recovery and module-04 provider polling without webhooks. These are required implementation checks, not deferred multi-Runner features or claims that the current repository already runs them.
+Module 09's single-host release matrix is the V1 completion criterion; passing Stage A alone is insufficient. Module 11 defines fresh first-run bootstrap, local Owner authentication, Runner enrollment, two-account repository permissions, privileged supervision and current-run storage/restart behavior. Verify these on one host together with module-03 reboot recovery and module-04 provider polling without webhooks. Historical deployment/version/data migration is excluded before actual use under module12. These are required current-version checks, not deferred multi-Runner features or claims that the current repository already runs them.

@@ -20,7 +20,7 @@ Every command, dispatch, normalized Runtime event, recovery page or backend/Runn
 
 Commands, normalized events and backend/Runner frames carry explicit schema versions. Negotiate before dispatch; unsupported required semantics fail clearly. Optional fields are absent, not null. Unknown fields and command/frame-specific irrelevant fields are rejected by schema conditionals. Use the same schema definitions in OpenAPI, not hand-maintained DTOs.
 
-Counters are integers in `0..9007199254740991`, with event sequences starting at 1. Do not conflate domain IDs, Node activation, Attempt fencing, connection incarnation, event sequence and message cutoff. Stored operations retain their original schema version. Changing historical meaning requires an explicit migration, not a regenerated reinterpretation.
+Counters are integers in `0..9007199254740991`, with event sequences starting at 1. Do not conflate domain IDs, Node activation, Attempt fencing, connection incarnation, event sequence and message cutoff. During an execution, stored operations retain their admitted schema and meaning. Before actual use begins, breaking development versions update all current producers/consumers and use fresh scoped test state; historical wire/schema migration support is not required. See the [development policy](../../../docs/12-product-naming-and-upgrades.md). Never reinterpret a live admitted operation to fabricate a new receipt or successful recovery.
 
 RFC 8785 canonical JSON defines the immutable UTF-8 envelope and SHA256 digest. Reject malformed Unicode before language decoders can substitute a different string. Preserve absent versus empty arrays and exact payloads on replay.
 

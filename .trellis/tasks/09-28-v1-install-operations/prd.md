@@ -34,7 +34,7 @@ First-run and Settings UI follow the [visual contract](../../spec/frontend/visua
 
 - [ ] Empty product state supports Owner authentication, Runner enrollment and required settings without database edits.
 - [ ] Provider polling works without webhooks; managed artifacts remain accessible after cleanup; credential, tool and disk failures have actionable recovery.
-- [ ] Persistent storage, supported upgrades and backend/Runner/host restarts preserve recoverable state.
+- [ ] Fresh current-version initialization, persistent storage and backend/Runner/host restarts preserve the current execution's recoverable state. Historical version/data upgrades are outside pre-use scope under the [development policy](../../../docs/12-product-naming-and-upgrades.md).
 
 ## Out of scope
 

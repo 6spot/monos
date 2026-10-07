@@ -1,5 +1,7 @@
 # Backend Development
 
+Current stage: [pre-use development](../../../docs/12-product-naming-and-upgrades.md). Historical architecture, version and data compatibility are not required; implement and verify the current version. Current-run recovery and ownership contracts still apply.
+
 Status: `apps/server` implements the Stage A foundation, Todo Discussion/Task creation,
 explicit initial planning and canonical Single-Node execution with Artifacts and
 completion recovery, ordered Task Conversation, explicit guidance handling and exact

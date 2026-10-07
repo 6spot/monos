@@ -66,7 +66,12 @@ Use real PostgreSQL for locking/constraints. Race independent workers and inject
 
 [postgres.test.ts](../../../apps/server/test/postgres.test.ts) covers the probe's concurrent receipt/capacity races, outbox starvation, restart fencing, recovery reads, Unicode/operation pagination and original-operation capture repair. Run `pnpm test:db` against an isolated real PostgreSQL database; this does not substitute for the full multi-worker or delivery matrix.
 
-Reviewed migrations run under one migration lock before compatible server startup. Verify clean install, upgrade, constraints and persisted operation-version compatibility; document rollback/data-loss behavior.
+Reviewed schema initialization runs under one migration lock before current server
+startup. Verify fresh initialization and current constraints. Under the
+[pre-use development policy](../../../docs/12-product-naming-and-upgrades.md), old
+development database upgrades, historical operation-version compatibility and
+cross-version rollback are not required gates. Current-run receipt replay and
+crash recovery remain required; migration work is scoped after actual use begins.
 
 Independent claim tests live in `apps/server/test/postgres-claims.test.ts`, with a
 test-only IPC child under `test/fixtures`. Different Node processes must report
