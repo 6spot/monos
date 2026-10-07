@@ -10,7 +10,7 @@ Backlog leaf; refine source-backed design, execution checklist and contexts befo
 
 ## Dependencies and order
 
-- [10-03-a-review-correction](../10-03-a-review-correction/prd.md).
+- [10-03-a-review-correction](../archive/2026-10/10-03-a-review-correction/prd.md).
 
 ## Requirements
 

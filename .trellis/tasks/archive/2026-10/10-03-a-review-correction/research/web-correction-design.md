@@ -8,9 +8,9 @@ operation, and creates no product implementation or test result.
 
 ## Requirements and current support
 
-Authority is [Owner UI](../../../../docs/07-owner-review-and-ui.md:642),
-[review-feedback planning](../../../../docs/02-planner-and-planning.md:360), and
-[delivery correction guards](../../../../docs/04-workspace-and-git.md:315).
+Authority is [Owner UI](../../../../../../docs/07-owner-review-and-ui.md:642),
+[review-feedback planning](../../../../../../docs/02-planner-and-planning.md:360), and
+[delivery correction guards](../../../../../../docs/04-workspace-and-git.md:315).
 Request Changes records an explicit Owner decision, stays REVIEW during routing,
 and asks the Planner for within-scope Rework, a real insufficient-graph Replan,
 an exact requirement proposal, or a planning issue. No Owner Node/DAG selection,

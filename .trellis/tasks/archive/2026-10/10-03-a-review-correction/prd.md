@@ -9,7 +9,7 @@ the same Task's correction. Explicit exits preserve feedback and remote truth.
 
 ## Background and order
 
-Upstream [exact Owner delivery](../archive/2026-10/10-03-a-owner-delivery/prd.md)
+Upstream [exact Owner delivery](../10-03-a-owner-delivery/prd.md)
 was accepted at `c0212a9`, archived at `80f57b5` and recorded at `ea1a15d` on
 2026-10-05. It supplies genuine authority, frozen batch/cutoff, automatic accepted
 preparation, expected-head finality and original-effect Retry/Cancel. It intentionally
