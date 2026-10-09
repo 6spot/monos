@@ -35,13 +35,9 @@ func TestConversationUsesFrozenOneShotPromptAndExplicitTaskTools(t *testing.T) {
 		t.Fatal("conversation scratch/CLI permission mismatch", err)
 	}
 	calls := 0
-	err = runWithSink(d, func(cmd *exec.Cmd) error {
+	err = runWithPreflight(d, func(cmd *exec.Cmd) error {
 		if cmd.Dir != host.Path(d.AttemptID, "scratch") {
 			t.Fatal("conversation left scratch")
-		}
-		if cmd.Args[1] == "api" {
-			_, err := io.WriteString(cmd.Stdout, modelCatalogAt(cmd.Dir, host.FreeModel, freeCost))
-			return err
 		}
 		calls++
 		raw, err := io.ReadAll(cmd.Stdin)
@@ -54,7 +50,7 @@ func TestConversationUsesFrozenOneShotPromptAndExplicitTaskTools(t *testing.T) {
 			}
 		}
 		return nil
-	}, outputSink{stdout: io.Discard, stderr: io.Discard})
+	}, outputSink{stdout: io.Discard, stderr: io.Discard}, successfulTestPreflight)
 	if err != nil || calls != 1 {
 		t.Fatal("conversation synthesized follow-up run", calls, err)
 	}

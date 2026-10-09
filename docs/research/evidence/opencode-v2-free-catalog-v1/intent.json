@@ -1,0 +1,11 @@
+{
+  "trial": "one_no_model_catalog_observation",
+  "source_sha256": "a5e2166fd56b553480bfb0de7c4dc866c96f8cbe7e7cc7bc4914104c33df143e",
+  "host": "100.120.14.84",
+  "allowed_endpoints": [
+    "GET /api/event",
+    "GET /api/model"
+  ],
+  "inference_authorized": false,
+  "started_at_epoch": 1791536870.3540769
+}

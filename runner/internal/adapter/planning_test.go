@@ -29,13 +29,9 @@ func TestInitialPlannerHasPhaseSpecificProtocolAndFreshScratchInvocation(t *test
 		t.Fatal("initial Planner lost scratch/CLI permissions", err)
 	}
 	calls := 0
-	err = runWithSink(d, func(cmd *exec.Cmd) error {
+	err = runWithPreflight(d, func(cmd *exec.Cmd) error {
 		if cmd.Dir != host.Path(d.AttemptID, "scratch") {
 			t.Error("initial Planner left its reserved scratch directory")
-		}
-		if cmd.Args[1] == "api" {
-			_, err := io.WriteString(cmd.Stdout, modelCatalogAt(cmd.Dir, host.FreeModel, freeCost))
-			return err
 		}
 		calls++
 		raw, err := io.ReadAll(cmd.Stdin)
@@ -48,7 +44,7 @@ func TestInitialPlannerHasPhaseSpecificProtocolAndFreshScratchInvocation(t *test
 			}
 		}
 		return nil // A bare process exit must not synthesize another planning run.
-	}, outputSink{stdout: io.Discard, stderr: io.Discard})
+	}, outputSink{stdout: io.Discard, stderr: io.Discard}, successfulTestPreflight)
 	if err != nil || calls != 1 {
 		t.Fatal("initial planning invocation changed", calls, err)
 	}

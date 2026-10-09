@@ -246,14 +246,10 @@ func TestUnapprovedModelNeverReachesCatalogOrRun(t *testing.T) {
 
 func TestWorkerRetainsCaptureFailureWhenMarkerCannotPersist(t *testing.T) {
 	execute := func(cmd *exec.Cmd) error {
-		if cmd.Args[1] == "api" {
-			_, err := io.WriteString(cmd.Stdout, modelCatalogAt(cmd.Dir, host.FreeModel, freeCost))
-			return err
-		}
 		_, err := cmd.Stdout.Write([]byte("output"))
 		return err
 	}
-	err := runWithSink(protocol.Dispatch{RuntimeID: protocol.Opencode, Model: host.FreeModel, AttemptID: "a"}, execute, outputSink{stdout: failingOutput{}, stderr: io.Discard, mark: func(string) { /* failed marker persistence */ }})
+	err := runWithPreflight(protocol.Dispatch{RuntimeID: protocol.Opencode, Model: host.FreeModel, AttemptID: "a"}, execute, outputSink{stdout: failingOutput{}, stderr: io.Discard, mark: func(string) { /* failed marker persistence */ }}, successfulTestPreflight)
 	if !errors.Is(err, ErrCaptureFailure) {
 		t.Fatalf("capture fact lost: %v", err)
 	}
@@ -264,14 +260,9 @@ func TestTodoUsesFreshScratchContextAndOneFormalHandoffProtocol(t *testing.T) {
 	d := protocol.Dispatch{AttemptID: "todo-attempt", TodoID: &todo, SourceMessageID: &source, Kind: "planner", RuntimeID: protocol.Opencode, Model: host.FreeModel, Prompt: "authoritative Todo-only context\nsource_message_id: source-a"}
 	var calls int
 	var preflightEnv []string
-	err := runWithSink(d, func(cmd *exec.Cmd) error {
+	err := runWithPreflight(d, func(cmd *exec.Cmd) error {
 		if cmd.Dir != host.Path(d.AttemptID, "scratch") {
 			t.Error("Todo left its reserved scratch directory")
-		}
-		if cmd.Args[1] == "api" {
-			preflightEnv = append([]string(nil), cmd.Env...)
-			_, err := io.WriteString(cmd.Stdout, modelCatalogAt(cmd.Dir, host.FreeModel, freeCost))
-			return err
 		}
 		calls++
 		if strings.Join(cmd.Env, "\n") != strings.Join(preflightEnv, "\n") {
@@ -288,7 +279,10 @@ func TestTodoUsesFreshScratchContextAndOneFormalHandoffProtocol(t *testing.T) {
 			}
 		}
 		return nil // Exit without a tool must not create another model invocation.
-	}, outputSink{stdout: io.Discard, stderr: io.Discard})
+	}, outputSink{stdout: io.Discard, stderr: io.Discard}, func(_ protocol.Dispatch, env []string) error {
+		preflightEnv = append([]string(nil), env...)
+		return nil
+	})
 	if err != nil || calls != 1 {
 		t.Fatalf("unexpected model invocation count=%d: %v", calls, err)
 	}

@@ -1,9 +1,9 @@
 package adapter
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os/exec"
 	"strings"
@@ -13,27 +13,19 @@ import (
 	"monos.local/runner/internal/host"
 )
 
-// Query the same isolated OpenCode v2 configuration used by the actual run.
-// --standalone keeps the private server inside the supervised process tree.
-func verifyModel(d protocol.Dispatch, env []string, execute func(*exec.Cmd) error) error {
+// A cold v2 catalog can be empty before configured plugins activate. Subscribe
+// and read within one private lifetime, with the actual Attempt configuration.
+func verifyModel(d protocol.Dispatch, env []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	cmd := exec.CommandContext(ctx, host.Runtime, "api", "--standalone", "model.list")
-	cmd.Env = env
-	cmd.Dir = host.Path(d.AttemptID, "scratch")
-	cmd.WaitDelay = time.Second
-	var output bytes.Buffer
-	bounded := &BoundedWriter{W: &output, Remaining: 4 << 20}
-	cmd.Stdout = bounded
-	// Catalog/config diagnostics can contain provider details; never echo them.
-	if err := execute(cmd); err != nil {
-		return fmt.Errorf("OpenCode model catalog preflight failed")
-	}
-	if bounded.Truncated {
-		return fmt.Errorf("OpenCode model catalog exceeds limit")
-	}
-	return validateCatalog(output.String(), string(d.Model), cmd.Dir)
+	return verifyCatalogServer(ctx, string(d.Model), host.Path(d.AttemptID, "scratch"), env, catalogServerCommand)
 }
+
+func catalogServerCommand(ctx context.Context) *exec.Cmd {
+	return exec.CommandContext(ctx, host.Runtime, "serve", "--stdio", "--hostname", "127.0.0.1", "--port", "0")
+}
+
+var errCatalogPending = errors.New("approved OpenCode model unavailable in Attempt catalog")
 
 type modelCost struct {
 	Input  *float64 `json:"input"`
@@ -58,7 +50,7 @@ func validateCatalog(output, selected, scratch string) error {
 		Location struct {
 			Directory string `json:"directory"`
 		} `json:"location"`
-		Data []struct {
+		Data []*struct {
 			ID           string `json:"id"`
 			ModelID      string `json:"modelID"`
 			ProviderID   string `json:"providerID"`
@@ -76,8 +68,14 @@ func validateCatalog(output, selected, scratch string) error {
 	if catalog.Location.Directory != scratch {
 		return fmt.Errorf("OpenCode catalog location differs from Attempt scratch")
 	}
+	if catalog.Data == nil {
+		return fmt.Errorf("invalid OpenCode model catalog")
+	}
 	matches := 0
 	for _, model := range catalog.Data {
+		if model == nil || model.ID == "" || model.ProviderID == "" {
+			return fmt.Errorf("invalid OpenCode model catalog entry")
+		}
 		if model.ProviderID+"/"+model.ID != selected {
 			continue
 		}
@@ -99,8 +97,11 @@ func validateCatalog(output, selected, scratch string) error {
 			}
 		}
 	}
+	if matches == 0 {
+		return errCatalogPending
+	}
 	if matches != 1 {
-		return fmt.Errorf("approved OpenCode model unavailable in Attempt catalog")
+		return fmt.Errorf("duplicate approved OpenCode model in Attempt catalog")
 	}
 	return nil
 }

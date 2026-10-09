@@ -197,6 +197,10 @@ func run(d protocol.Dispatch, execute func(*exec.Cmd) error) error {
 }
 
 func runWithSink(d protocol.Dispatch, execute func(*exec.Cmd) error, sink outputSink) error {
+	return runWithPreflight(d, execute, sink, verifyModel)
+}
+
+func runWithPreflight(d protocol.Dispatch, execute func(*exec.Cmd) error, sink outputSink, preflight func(protocol.Dispatch, []string) error) error {
 	if d.RuntimeID != protocol.Opencode || !host.ApprovedModel(string(d.Model)) {
 		return fmt.Errorf("unapproved runtime/model")
 	}
@@ -209,7 +213,7 @@ func runWithSink(d protocol.Dispatch, execute func(*exec.Cmd) error, sink output
 	// The Owner-authorized paid model therefore uses native startup errors;
 	// the free target retains its separate fail-closed pricing requirement.
 	if string(d.Model) == host.FreeModel {
-		if err = verifyModel(d, env, execute); err != nil {
+		if err = preflight(d, env); err != nil {
 			return err
 		}
 	}

@@ -3,9 +3,6 @@ package adapter
 import (
 	"encoding/json"
 	"errors"
-	"io"
-	"os/exec"
-	"reflect"
 	"strings"
 	"testing"
 
@@ -126,55 +123,28 @@ func TestCatalogRejectsUnapprovedModel(t *testing.T) {
 	}
 }
 
-func TestCatalogPreflightRunsInActualAttemptContext(t *testing.T) {
-	model := protocol.Model(host.FreeModel)
-	d := protocol.Dispatch{AttemptID: "catalog-test", Kind: protocol.Node, RuntimeID: protocol.Opencode, Model: model}
-	var commands []*exec.Cmd
-	err := run(d, func(cmd *exec.Cmd) error {
-		commands = append(commands, cmd)
-		if len(commands) == 1 {
-			if !reflect.DeepEqual(cmd.Args[1:], []string{"api", "--standalone", "model.list"}) {
-				t.Fatal(cmd.Args)
-			}
-			_, err := io.WriteString(cmd.Stdout, modelCatalogAt(cmd.Dir, string(model), freeCost))
-			return err
-		}
-		return nil
-	})
-	if err != nil || len(commands) != 2 {
-		t.Fatalf("commands=%d err=%v", len(commands), err)
-	}
-	if commands[0].Path != commands[1].Path || commands[0].Dir != commands[1].Dir || !reflect.DeepEqual(commands[0].Env, commands[1].Env) {
-		t.Fatal("catalog verified outside actual runtime context")
-	}
-}
+func successfulTestPreflight(protocol.Dispatch, []string) error { return nil }
 
-func TestFailedCatalogNeverRunsModel(t *testing.T) {
-	d := protocol.Dispatch{AttemptID: "catalog-test", Kind: protocol.Node, RuntimeID: protocol.Opencode, Model: host.FreeModel}
-	for _, failure := range []string{"unavailable", "command", "overflow", "wrong location"} {
-		t.Run(failure, func(t *testing.T) {
-			calls := 0
-			err := run(d, func(cmd *exec.Cmd) error {
-				calls++
-				if calls != 1 {
-					t.Fatal("model invoked after failed catalog verification")
-				}
-				if failure == "command" {
-					return errors.New("private diagnostic must not escape")
-				}
-				output := catalogEnvelope(cmd.Dir)
-				if failure == "overflow" {
-					output = modelCatalog(host.FreeModel, freeCost) + strings.Repeat("x", (4<<20)+1)
-				}
-				if failure == "wrong location" {
-					output = modelCatalogAt(cmd.Dir+"-other", host.FreeModel, freeCost)
-				}
-				_, err := io.WriteString(cmd.Stdout, output)
-				return err
-			})
-			if calls != 1 || err == nil || strings.Contains(err.Error(), "private diagnostic") {
-				t.Fatalf("calls=%d err=%v", calls, err)
-			}
-		})
+func TestCatalogPendingRequiresWellFormedSnapshot(t *testing.T) {
+	for _, raw := range []string{catalogEnvelope(catalogScratch), catalogEnvelope(catalogScratch, catalogEntry("other/model", ""))} {
+		if err := validateCatalog(raw, host.FreeModel, catalogScratch); !errors.Is(err, errCatalogPending) {
+			t.Fatal("missing selected entry was not pending", err)
+		}
+	}
+	valid := catalog(freeCost)
+	for _, raw := range []string{
+		`{"location":{"directory":"` + catalogScratch + `"}}`,
+		`{"location":{"directory":"` + catalogScratch + `"},"data":null}`,
+		`{"location":{"directory":"` + catalogScratch + `"},"data":{}}`,
+		catalogEnvelope(catalogScratch, "null"),
+		catalogEnvelope(catalogScratch, "{}"),
+		catalogEnvelope(catalogScratch, catalogEntry(host.FreeModel, freeCost), catalogEntry(host.FreeModel, freeCost)),
+		strings.Replace(valid, `"input":0`, `"input":1`, 1),
+		strings.Replace(valid, `"enabled":true`, `"enabled":false`, 1),
+		modelCatalogAt(catalogScratch+"-other", host.FreeModel, freeCost),
+	} {
+		if err := validateCatalog(raw, host.FreeModel, catalogScratch); err == nil || errors.Is(err, errCatalogPending) {
+			t.Fatalf("invalid snapshot treated as ready or pending: %v", err)
+		}
 	}
 }

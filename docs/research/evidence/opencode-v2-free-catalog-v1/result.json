@@ -1,0 +1,209 @@
+{
+  "argv": [
+    "/home/linuxbrew/.linuxbrew/Cellar/opencode/2.0.20/bin/opencode",
+    "serve",
+    "--stdio",
+    "--hostname",
+    "127.0.0.1",
+    "--port",
+    "0"
+  ],
+  "binary": {
+    "path": "/home/linuxbrew/.linuxbrew/Cellar/opencode/2.0.20/bin/opencode",
+    "sha256": "90e905f6e9b6babd60e6bb1ad3b87e8405421cb84a64b088550620f8e9011051"
+  },
+  "cleanup": {
+    "completed_s": 0.8777,
+    "isolated_directory_removed": true,
+    "mechanism": "stdin_eof_then_owned_identity_term_kill",
+    "native_returncode": 0,
+    "process_tree_absent": true,
+    "reader_threads_stopped": true,
+    "remaining": {},
+    "signals": [],
+    "started_s": 0.7899
+  },
+  "discovery_end_s": 0.7897,
+  "endpoint": "http://127.0.0.1:34101",
+  "environment": {
+    "HOME": "/tmp/monos-opencode-free-catalog-v1-do9bk425/scratch",
+    "LANG": "C.UTF-8",
+    "LOGNAME": "me",
+    "OPENCODE_CONFIG": "/home/me/.config/opencode/opencode.json",
+    "OPENCODE_DISABLE_PROJECT_CONFIG": "1",
+    "PATH": "/usr/local/bin:/home/linuxbrew/.linuxbrew/bin:/usr/bin:/bin",
+    "PWD": "/tmp/monos-opencode-free-catalog-v1-do9bk425/scratch",
+    "SHELL": "/bin/bash",
+    "TMPDIR": "/tmp/monos-opencode-free-catalog-v1-do9bk425/tmp",
+    "USER": "me",
+    "XDG_CACHE_HOME": "/tmp/monos-opencode-free-catalog-v1-do9bk425/cache",
+    "XDG_CONFIG_HOME": "/tmp/monos-opencode-free-catalog-v1-do9bk425/config",
+    "XDG_DATA_HOME": "/tmp/monos-opencode-free-catalog-v1-do9bk425/data",
+    "XDG_STATE_HOME": "/tmp/monos-opencode-free-catalog-v1-do9bk425/state"
+  },
+  "events": [
+    {
+      "at_s": 0.405,
+      "location": null,
+      "location_matches": false,
+      "type": "server.connected"
+    },
+    {
+      "at_s": 0.4563,
+      "location": "/tmp/monos-opencode-free-catalog-v1-do9bk425/scratch",
+      "location_matches": true,
+      "type": "project.updated"
+    },
+    {
+      "at_s": 0.7806,
+      "location": "/tmp/monos-opencode-free-catalog-v1-do9bk425/scratch",
+      "location_matches": true,
+      "type": "integration.updated"
+    },
+    {
+      "at_s": 0.7807,
+      "location": "/tmp/monos-opencode-free-catalog-v1-do9bk425/scratch",
+      "location_matches": true,
+      "type": "provider.updated"
+    },
+    {
+      "at_s": 0.7807,
+      "location": "/tmp/monos-opencode-free-catalog-v1-do9bk425/scratch",
+      "location_matches": true,
+      "type": "model.updated"
+    }
+  ],
+  "execution_uid_gid": [
+    1000,
+    1000
+  ],
+  "handshake_s": 0.398,
+  "host": "100.120.14.84",
+  "inference_requests": 0,
+  "managed_config": {
+    "agents": {
+      "compaction": {
+        "model": "opencode/longcat-2.5-preview-free"
+      },
+      "monos-probe": {
+        "mode": "primary",
+        "model": "opencode/longcat-2.5-preview-free",
+        "permissions": [
+          {
+            "action": "*",
+            "effect": "allow",
+            "resource": "*"
+          },
+          {
+            "action": "edit",
+            "effect": "deny",
+            "resource": "*"
+          },
+          {
+            "action": "question",
+            "effect": "deny",
+            "resource": "*"
+          },
+          {
+            "action": "subagent",
+            "effect": "deny",
+            "resource": "*"
+          },
+          {
+            "action": "skill",
+            "effect": "deny",
+            "resource": "*"
+          }
+        ],
+        "system": "No-model catalog observation. Never run a session or infer."
+      },
+      "summary": {
+        "model": "opencode/longcat-2.5-preview-free"
+      },
+      "title": {
+        "model": "opencode/longcat-2.5-preview-free"
+      }
+    },
+    "formatter": false,
+    "lsp": false,
+    "model": "opencode/longcat-2.5-preview-free",
+    "share": "disabled",
+    "shell": "/bin/bash",
+    "snapshots": false,
+    "update": "disable"
+  },
+  "managed_config_sha256": "0a062e3138ac8da4c84f49b101e3b2e7a2a9e4512c17507c380a1389ecd9d093",
+  "model": "opencode/longcat-2.5-preview-free",
+  "native_identity": {
+    "birth": 84202599,
+    "pgid": 87166,
+    "ppid": 87145,
+    "state": "R"
+  },
+  "native_pid": 87166,
+  "native_start_s": 0.1334,
+  "probe_source_sha256": "a5e2166fd56b553480bfb0de7c4dc866c96f8cbe7e7cc7bc4914104c33df143e",
+  "requests": [
+    {
+      "at_s": 0.3982,
+      "method": "GET",
+      "path": "/api/event"
+    },
+    {
+      "at_s": 0.4051,
+      "method": "GET",
+      "path": "/api/model"
+    },
+    {
+      "at_s": 0.7807,
+      "method": "GET",
+      "path": "/api/model"
+    }
+  ],
+  "result": "selected_snapshot_passed",
+  "schema": 1,
+  "snapshots": [
+    {
+      "at_s": 0.4562,
+      "bytes": 91,
+      "entry_count": 0,
+      "location": "/tmp/monos-opencode-free-catalog-v1-do9bk425/scratch",
+      "qualifies": false,
+      "selected": [],
+      "selected_count": 0
+    },
+    {
+      "at_s": 0.7897,
+      "bytes": 22413,
+      "entry_count": 24,
+      "location": "/tmp/monos-opencode-free-catalog-v1-do9bk425/scratch",
+      "qualifies": true,
+      "selected": [
+        {
+          "active": true,
+          "cost": [
+            {
+              "cache": {
+                "read": 0,
+                "write": 0
+              },
+              "input": 0,
+              "output": 0,
+              "tier_present": false
+            }
+          ],
+          "enabled": true,
+          "explicit_all_tier_zero": true,
+          "id": "longcat-2.5-preview-free",
+          "providerID": "opencode",
+          "tools": true
+        }
+      ],
+      "selected_count": 1
+    }
+  ],
+  "source_version": "v2.0.20",
+  "stdout_bytes": 33,
+  "supervisor_uid": 0,
+  "trial": "one_no_model_catalog_observation"
+}
