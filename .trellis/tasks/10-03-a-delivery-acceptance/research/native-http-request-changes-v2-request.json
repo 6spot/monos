@@ -1,0 +1,25 @@
+{
+  "path": "/v1/owner/tasks/review/commands",
+  "method": "POST",
+  "body": {
+    "schema_version": 1,
+    "task_id": "b5fa877d-7e24-4472-a13f-9c53944157a4",
+    "request_id": "324aa168-6c4e-4395-8429-fcc1276c4ef1",
+    "name": "request_changes",
+    "payload": {
+      "feedback_id": "001ea5cd-23e4-4b04-b748-0ba2ba383249",
+      "text": "Please improve the tests within the current greeting specification. The test named test_no_network_or_filesystem_side_effects currently only compares two return values; that does not test the no-I/O requirement. Replace it with a meaningful guard that would fail if greeting attempts filesystem or network I/O. Also add regressions showing that Unicode surrounding whitespace is trimmed and that a decomposed name containing combining marks is preserved literally without normalization. Keep the same greeting behavior, same Node, standard-library-only dependencies, and exact documented test command. Preserve all existing repository files and README content. Run the documented tests and report the actual results.",
+      "basis": {
+        "control_version": 5,
+        "plan_id": "plan-d0ab3670-d333-44b9-8356-2ddc215a563b",
+        "review_result_digest": "50ddcd071214583242b4bffdd6325ec7d52c3f65436cfc37c57435b32ded4cd8",
+        "specification_id": "309ac1ef-d174-418c-be9d-5d373fa04dbc"
+      },
+      "accepted_batch": {
+        "content_digest": "02d1f9eae61f2f9a1d404d2baa37c7d885cf4d0c6e52e6c197b75ba999353e55",
+        "expected_version": 31,
+        "operation_id": "256ad5c3-aac9-4060-b426-754912328d39"
+      }
+    }
+  }
+}

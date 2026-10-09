@@ -1,0 +1,44 @@
+{
+  "automatic_retry": false,
+  "directory": "/root/monos-optional-http-owner-requests-v1/get-712cbe52-9639-4ea7-bc1c-33e8a487f854",
+  "input_sha256": "fcf177429535ca63f81091a1d22376f6853484c407e2990345bd86f8214cdd82",
+  "method": "GET",
+  "outcome": "pass",
+  "owner_logged_out": true,
+  "path": "/v1/owner/tasks/a53d17f3-451b-4616-82f5-559f2ef29f59",
+  "receipt_confirmed": false,
+  "receipt_path": null,
+  "request_id": null,
+  "responses": [
+    {
+      "body": {
+        "control_version": 1,
+        "created_at": "2026-10-09T04:25:39.192Z",
+        "event_cursor": "eyJhZnRlciI6MSwidGFza19pZCI6ImE1M2QxN2YzLTQ1MWItNDYxNi04MmY1LTU1OWYyZWYyOWY1OSIsInZlcnNpb24iOjF9",
+        "held_attempts": 0,
+        "initial_specification_id": "d8a89e9e-e38b-4530-ab60-98ca9bffd598",
+        "nodes": {
+          "blocked": 0,
+          "cancelled": 0,
+          "completed": 0,
+          "pending": 0,
+          "running": 0
+        },
+        "open_operations": 0,
+        "project_id": "delivery-acceptance-project-v1",
+        "queued_attempts": 0,
+        "schema_version": 1,
+        "specification": "# Execution Task: Add farewell.py with unittest tests and README documentation\n\n## Summary\nIn the controlled acceptance repository delivery-acceptance-repo-v1 (project delivery-acceptance-project-v1, default branch main, default ref aa274b45f50c514ed1be500473bc4a284325f375), add a new top-level module farewell.py exposing a pure farewell(name: str) -> str function, add meaningful standard-library unittest tests under a tests/ directory, and add an additive README section documenting the literal command `python3 -m unittest discover -s tests -v`. Preserve all existing files and behavior. Add no dependencies. Do not change .github/workflows. Keep the implementation to one small Node.\n\n## Requirements\n\n### 1. farewell.py (new file at repository root)\n- Define farewell(name: str) -> str as a pure function:\n  - Trim surrounding whitespace from the input name (e.g., name.strip()).\n  - If the trimmed name is nonempty, return \"Goodbye, <name>!\" using the trimmed name.\n  - If the trimmed name is blank (empty or whitespace-only), return \"Goodbye, friend!\".\n  - Preserve Unicode characters exactly (no transliteration, no ASCII folding, no encoding changes).\n  - Perform no filesystem or network I/O. Use only the Python standard library.\n\n### 2. Tests (new files under tests/)\n- Add meaningful standard-library unittest tests covering at least:\n  - Nonempty name returns \"Goodbye, <name>!\".\n  - Blank name returns \"Goodbye, friend!\".\n  - Surrounding whitespace is trimmed from the name.\n  - Unicode characters in names are preserved.\n- The tests must be discoverable and runnable by the literal command `python3 -m unittest discover -s tests -v`.\n\n### 3. README documentation (additive)\n- Append an additive README section that documents the literal command `python3 -m unittest discover -s tests -v` (for example, a \"Running tests\" section). Do not remove or alter existing README content.\n\n### 4. Constraints\n- Preserve all existing files and behavior.\n- Add no dependencies (no third-party packages; standard library only).\n- Do not change .github/workflows or any CI workflow files.\n- The function must not perform filesystem or network I/O.\n- Implementation is confined to one small Node; no additional Nodes.\n\n## Definition of Done\n- farewell.py exists at the repository root and defines the pure farewell function with the behavior above.\n- tests/ contains meaningful standard-library unittest tests.\n- README contains an additive section with the literal command `python3 -m unittest discover -s tests -v`.\n- `python3 -m unittest discover -s tests -v` passes.\n- All existing files and behavior are preserved; no dependencies added; .github/workflows unchanged.",
+        "specification_id": "d8a89e9e-e38b-4530-ab60-98ca9bffd598",
+        "state": "PLANNING",
+        "task_id": "a53d17f3-451b-4616-82f5-559f2ef29f59",
+        "title": "Add pure farewell module with unittest tests and README documentation",
+        "todo_id": "0b247336-8acf-49b7-b143-69d1427a1255"
+      },
+      "path": "/v1/owner/tasks/a53d17f3-451b-4616-82f5-559f2ef29f59",
+      "status": 200
+    }
+  ],
+  "session_unknown": false,
+  "submitted": false
+}

@@ -1,0 +1,899 @@
+{
+  "physical": {
+    "time": "2026-10-09T06:47:32Z",
+    "helper_sha256": "ce2f7381ef5628cf638b3dba36c67b91b12aa8b999c34431a07a8d6252437669",
+    "boot_id": "eb12bbe6-c63c-4e2e-8463-82b3e780aca1",
+    "units": [
+      {
+        "LoadState": "loaded",
+        "ActiveState": "failed",
+        "SubState": "failed",
+        "Transient": "yes",
+        "Result": "signal",
+        "KillMode": "control-group",
+        "RemainAfterExit": "yes",
+        "Restart": "no",
+        "unit": "monos-probe-a-0470064c-b8ea-4e18-a4bb-b3baaa631637.service",
+        "kind": "attempt",
+        "identifier": "0470064c-b8ea-4e18-a4bb-b3baaa631637",
+        "dispatch_id": "a2d2e1ac-7adf-467c-aacd-67c0773932b3",
+        "main_pid": 0,
+        "exec_main_pid": 3606253,
+        "exec_main_code": 2,
+        "exec_main_status": 9,
+        "invocation_id": "3e4eb20e866043cdbfa52408dce4b63e",
+        "expected_cgroup": "/system.slice/monos-probe-a-0470064c-b8ea-4e18-a4bb-b3baaa631637.service",
+        "reported_cgroup_matches": false,
+        "service_account_matches": false,
+        "execution_account_matches": true,
+        "cgroup": {
+          "status": "missing",
+          "empty_proven": false,
+          "two_reads_equal": true
+        },
+        "exec_main_pid_current_identity": null
+      },
+      {
+        "LoadState": "loaded",
+        "ActiveState": "failed",
+        "SubState": "failed",
+        "Transient": "yes",
+        "Result": "signal",
+        "KillMode": "control-group",
+        "RemainAfterExit": "yes",
+        "Restart": "no",
+        "unit": "monos-probe-a-18af0e33-33d1-456e-99a4-405c09a10359.service",
+        "kind": "attempt",
+        "identifier": "18af0e33-33d1-456e-99a4-405c09a10359",
+        "dispatch_id": "8ccc49b8-a2bd-4046-b24f-15c62af0eea3",
+        "main_pid": 0,
+        "exec_main_pid": 3497468,
+        "exec_main_code": 2,
+        "exec_main_status": 9,
+        "invocation_id": "adab169025974497bda3dfdbcca46863",
+        "expected_cgroup": "/system.slice/monos-probe-a-18af0e33-33d1-456e-99a4-405c09a10359.service",
+        "reported_cgroup_matches": false,
+        "service_account_matches": false,
+        "execution_account_matches": true,
+        "cgroup": {
+          "status": "missing",
+          "empty_proven": false,
+          "two_reads_equal": true
+        },
+        "exec_main_pid_current_identity": null
+      },
+      {
+        "LoadState": "loaded",
+        "ActiveState": "failed",
+        "SubState": "failed",
+        "Transient": "yes",
+        "Result": "signal",
+        "KillMode": "control-group",
+        "RemainAfterExit": "yes",
+        "Restart": "no",
+        "unit": "monos-probe-a-27cc61cc-d683-4ce8-9b0a-553044cd1a48.service",
+        "kind": "attempt",
+        "identifier": "27cc61cc-d683-4ce8-9b0a-553044cd1a48",
+        "dispatch_id": "5fa7216f-168e-4505-84b5-49f4c6380568",
+        "main_pid": 0,
+        "exec_main_pid": 3515877,
+        "exec_main_code": 2,
+        "exec_main_status": 9,
+        "invocation_id": "db3dd3c2427d41628e27c11d6b2b9298",
+        "expected_cgroup": "/system.slice/monos-probe-a-27cc61cc-d683-4ce8-9b0a-553044cd1a48.service",
+        "reported_cgroup_matches": false,
+        "service_account_matches": false,
+        "execution_account_matches": true,
+        "cgroup": {
+          "status": "missing",
+          "empty_proven": false,
+          "two_reads_equal": true
+        },
+        "exec_main_pid_current_identity": null
+      },
+      {
+        "LoadState": "loaded",
+        "ActiveState": "failed",
+        "SubState": "failed",
+        "Transient": "yes",
+        "Result": "signal",
+        "KillMode": "control-group",
+        "RemainAfterExit": "yes",
+        "Restart": "no",
+        "unit": "monos-probe-a-5a3d1a2d-fae9-477b-8a5d-3b9ab2821e1a.service",
+        "kind": "attempt",
+        "identifier": "5a3d1a2d-fae9-477b-8a5d-3b9ab2821e1a",
+        "dispatch_id": "df095c83-51aa-40bf-be9e-3a988946a446",
+        "main_pid": 0,
+        "exec_main_pid": 3394806,
+        "exec_main_code": 2,
+        "exec_main_status": 9,
+        "invocation_id": "a4e536f6c1a04faebf368d019674f5e9",
+        "expected_cgroup": "/system.slice/monos-probe-a-5a3d1a2d-fae9-477b-8a5d-3b9ab2821e1a.service",
+        "reported_cgroup_matches": false,
+        "service_account_matches": false,
+        "execution_account_matches": true,
+        "cgroup": {
+          "status": "missing",
+          "empty_proven": false,
+          "two_reads_equal": true
+        },
+        "exec_main_pid_current_identity": null
+      },
+      {
+        "LoadState": "loaded",
+        "ActiveState": "failed",
+        "SubState": "failed",
+        "Transient": "yes",
+        "Result": "signal",
+        "KillMode": "control-group",
+        "RemainAfterExit": "yes",
+        "Restart": "no",
+        "unit": "monos-probe-a-9d76a0e4-ec98-4bff-b3a3-8003c75d77f2.service",
+        "kind": "attempt",
+        "identifier": "9d76a0e4-ec98-4bff-b3a3-8003c75d77f2",
+        "dispatch_id": "a5a6ad89-f588-4323-99a6-c3feba0ec360",
+        "main_pid": 0,
+        "exec_main_pid": 3513603,
+        "exec_main_code": 2,
+        "exec_main_status": 9,
+        "invocation_id": "5868d3b60fa44a8e9400670eeb8a8dd3",
+        "expected_cgroup": "/system.slice/monos-probe-a-9d76a0e4-ec98-4bff-b3a3-8003c75d77f2.service",
+        "reported_cgroup_matches": false,
+        "service_account_matches": false,
+        "execution_account_matches": true,
+        "cgroup": {
+          "status": "missing",
+          "empty_proven": false,
+          "two_reads_equal": true
+        },
+        "exec_main_pid_current_identity": null
+      },
+      {
+        "LoadState": "loaded",
+        "ActiveState": "failed",
+        "SubState": "failed",
+        "Transient": "yes",
+        "Result": "exit-code",
+        "KillMode": "control-group",
+        "RemainAfterExit": "yes",
+        "Restart": "no",
+        "unit": "monos-probe-a-a19218c5-2c9c-4166-b38a-ffbb2cb61146.service",
+        "kind": "attempt",
+        "identifier": "a19218c5-2c9c-4166-b38a-ffbb2cb61146",
+        "dispatch_id": "bc7ee267-cbce-4713-9f66-214203848e4b",
+        "main_pid": 0,
+        "exec_main_pid": 3672481,
+        "exec_main_code": 1,
+        "exec_main_status": 1,
+        "invocation_id": "c5ab32a691bb441cbaaac8c813a4b7f1",
+        "expected_cgroup": "/system.slice/monos-probe-a-a19218c5-2c9c-4166-b38a-ffbb2cb61146.service",
+        "reported_cgroup_matches": false,
+        "service_account_matches": false,
+        "execution_account_matches": true,
+        "cgroup": {
+          "status": "missing",
+          "empty_proven": false,
+          "two_reads_equal": true
+        },
+        "exec_main_pid_current_identity": null
+      },
+      {
+        "LoadState": "loaded",
+        "ActiveState": "failed",
+        "SubState": "failed",
+        "Transient": "yes",
+        "Result": "signal",
+        "KillMode": "control-group",
+        "RemainAfterExit": "yes",
+        "Restart": "no",
+        "unit": "monos-probe-a-a31478df-df17-482e-b7d9-93499443b0f0.service",
+        "kind": "attempt",
+        "identifier": "a31478df-df17-482e-b7d9-93499443b0f0",
+        "dispatch_id": "1f79e4ac-2fcc-42fd-98e3-2718a13375ab",
+        "main_pid": 0,
+        "exec_main_pid": 3227822,
+        "exec_main_code": 2,
+        "exec_main_status": 9,
+        "invocation_id": "a4f0cc1257434aaba837308e82131f9c",
+        "expected_cgroup": "/system.slice/monos-probe-a-a31478df-df17-482e-b7d9-93499443b0f0.service",
+        "reported_cgroup_matches": false,
+        "service_account_matches": false,
+        "execution_account_matches": true,
+        "cgroup": {
+          "status": "missing",
+          "empty_proven": false,
+          "two_reads_equal": true
+        },
+        "exec_main_pid_current_identity": null
+      },
+      {
+        "LoadState": "loaded",
+        "ActiveState": "failed",
+        "SubState": "failed",
+        "Transient": "yes",
+        "Result": "signal",
+        "KillMode": "control-group",
+        "RemainAfterExit": "yes",
+        "Restart": "no",
+        "unit": "monos-probe-a-af4fb360-0650-473a-ab7a-084d54f700eb.service",
+        "kind": "attempt",
+        "identifier": "af4fb360-0650-473a-ab7a-084d54f700eb",
+        "dispatch_id": "5f4a9a2d-9cac-4fb3-9bc0-6a8c56e6b9bb",
+        "main_pid": 0,
+        "exec_main_pid": 3510783,
+        "exec_main_code": 2,
+        "exec_main_status": 9,
+        "invocation_id": "b3cdbb4901a6485da582a54ee563732c",
+        "expected_cgroup": "/system.slice/monos-probe-a-af4fb360-0650-473a-ab7a-084d54f700eb.service",
+        "reported_cgroup_matches": false,
+        "service_account_matches": false,
+        "execution_account_matches": true,
+        "cgroup": {
+          "status": "missing",
+          "empty_proven": false,
+          "two_reads_equal": true
+        },
+        "exec_main_pid_current_identity": null
+      },
+      {
+        "LoadState": "loaded",
+        "ActiveState": "failed",
+        "SubState": "failed",
+        "Transient": "yes",
+        "Result": "signal",
+        "KillMode": "control-group",
+        "RemainAfterExit": "yes",
+        "Restart": "no",
+        "unit": "monos-probe-a-c7bffec8-dc07-450f-a174-ab0e638acebc.service",
+        "kind": "attempt",
+        "identifier": "c7bffec8-dc07-450f-a174-ab0e638acebc",
+        "dispatch_id": "e414941a-babd-443a-bf82-fad22d11d474",
+        "main_pid": 0,
+        "exec_main_pid": 3249668,
+        "exec_main_code": 2,
+        "exec_main_status": 9,
+        "invocation_id": "3ca6d56e1a6f488b8d8816c8ff3479fa",
+        "expected_cgroup": "/system.slice/monos-probe-a-c7bffec8-dc07-450f-a174-ab0e638acebc.service",
+        "reported_cgroup_matches": false,
+        "service_account_matches": false,
+        "execution_account_matches": true,
+        "cgroup": {
+          "status": "missing",
+          "empty_proven": false,
+          "two_reads_equal": true
+        },
+        "exec_main_pid_current_identity": null
+      },
+      {
+        "LoadState": "loaded",
+        "ActiveState": "failed",
+        "SubState": "failed",
+        "Transient": "yes",
+        "Result": "signal",
+        "KillMode": "control-group",
+        "RemainAfterExit": "yes",
+        "Restart": "no",
+        "unit": "monos-probe-a-d3deea6f-297d-4d6a-8b9d-cf0d04478f0b.service",
+        "kind": "attempt",
+        "identifier": "d3deea6f-297d-4d6a-8b9d-cf0d04478f0b",
+        "dispatch_id": "e6a6dd40-157c-45ba-a7b3-a33c94482ff9",
+        "main_pid": 0,
+        "exec_main_pid": 3251340,
+        "exec_main_code": 2,
+        "exec_main_status": 9,
+        "invocation_id": "4c1bb971743a4a9c9974a6702f81b543",
+        "expected_cgroup": "/system.slice/monos-probe-a-d3deea6f-297d-4d6a-8b9d-cf0d04478f0b.service",
+        "reported_cgroup_matches": false,
+        "service_account_matches": false,
+        "execution_account_matches": true,
+        "cgroup": {
+          "status": "missing",
+          "empty_proven": false,
+          "two_reads_equal": true
+        },
+        "exec_main_pid_current_identity": null
+      },
+      {
+        "LoadState": "loaded",
+        "ActiveState": "failed",
+        "SubState": "failed",
+        "Transient": "yes",
+        "Result": "signal",
+        "KillMode": "control-group",
+        "RemainAfterExit": "yes",
+        "Restart": "no",
+        "unit": "monos-probe-a-d5706933-fe21-4781-a10f-4feb496bfade.service",
+        "kind": "attempt",
+        "identifier": "d5706933-fe21-4781-a10f-4feb496bfade",
+        "dispatch_id": "8b385112-49fa-423a-92c9-0a0a71b53396",
+        "main_pid": 0,
+        "exec_main_pid": 3610457,
+        "exec_main_code": 2,
+        "exec_main_status": 9,
+        "invocation_id": "1256aca565554b4bb99019654753762a",
+        "expected_cgroup": "/system.slice/monos-probe-a-d5706933-fe21-4781-a10f-4feb496bfade.service",
+        "reported_cgroup_matches": false,
+        "service_account_matches": false,
+        "execution_account_matches": true,
+        "cgroup": {
+          "status": "missing",
+          "empty_proven": false,
+          "two_reads_equal": true
+        },
+        "exec_main_pid_current_identity": null
+      },
+      {
+        "LoadState": "loaded",
+        "ActiveState": "failed",
+        "SubState": "failed",
+        "Transient": "yes",
+        "Result": "signal",
+        "KillMode": "control-group",
+        "RemainAfterExit": "yes",
+        "Restart": "no",
+        "unit": "monos-probe-a-dc81ef63-55d3-4031-aebc-c065e9faa514.service",
+        "kind": "attempt",
+        "identifier": "dc81ef63-55d3-4031-aebc-c065e9faa514",
+        "dispatch_id": "40187bcd-3219-4874-b434-9f22f699d530",
+        "main_pid": 0,
+        "exec_main_pid": 3396539,
+        "exec_main_code": 2,
+        "exec_main_status": 9,
+        "invocation_id": "e20a5e3f5cf14174992edc7da32b18b0",
+        "expected_cgroup": "/system.slice/monos-probe-a-dc81ef63-55d3-4031-aebc-c065e9faa514.service",
+        "reported_cgroup_matches": false,
+        "service_account_matches": false,
+        "execution_account_matches": true,
+        "cgroup": {
+          "status": "missing",
+          "empty_proven": false,
+          "two_reads_equal": true
+        },
+        "exec_main_pid_current_identity": null
+      },
+      {
+        "LoadState": "loaded",
+        "ActiveState": "failed",
+        "SubState": "failed",
+        "Transient": "yes",
+        "Result": "signal",
+        "KillMode": "control-group",
+        "RemainAfterExit": "yes",
+        "Restart": "no",
+        "unit": "monos-probe-a-f9a27671-19dc-4f0a-a320-efd52689f437.service",
+        "kind": "attempt",
+        "identifier": "f9a27671-19dc-4f0a-a320-efd52689f437",
+        "dispatch_id": "6099e771-1df2-4630-903c-cffb3f0c94dc",
+        "main_pid": 0,
+        "exec_main_pid": 3297723,
+        "exec_main_code": 2,
+        "exec_main_status": 9,
+        "invocation_id": "fdbbd3a38d8c41c29b5580ab371e6bc9",
+        "expected_cgroup": "/system.slice/monos-probe-a-f9a27671-19dc-4f0a-a320-efd52689f437.service",
+        "reported_cgroup_matches": false,
+        "service_account_matches": false,
+        "execution_account_matches": true,
+        "cgroup": {
+          "status": "missing",
+          "empty_proven": false,
+          "two_reads_equal": true
+        },
+        "exec_main_pid_current_identity": null
+      },
+      {
+        "LoadState": "loaded",
+        "ActiveState": "active",
+        "SubState": "running",
+        "Transient": "no",
+        "Result": "success",
+        "KillMode": "control-group",
+        "RemainAfterExit": "no",
+        "Restart": "on-failure",
+        "unit": "monos-probe-runner.service",
+        "kind": "runner",
+        "identifier": null,
+        "dispatch_id": null,
+        "main_pid": 3469381,
+        "exec_main_pid": 3469381,
+        "exec_main_code": 0,
+        "exec_main_status": 0,
+        "invocation_id": "9448e517cbe249d1b7f61c650b988909",
+        "expected_cgroup": "/system.slice/monos-probe-runner.service",
+        "reported_cgroup_matches": true,
+        "service_account_matches": true,
+        "execution_account_matches": false,
+        "cgroup": {
+          "status": "present",
+          "nodes": [
+            {
+              "relative_path_sha256": "cdb4ee2aea69cc6a83331bbe96dc2caa9a299d21329efb0336fc02a82e1839a8",
+              "populated": 1,
+              "pids": [
+                3469381
+              ],
+              "thread_ids": [
+                3469381,
+                3469383,
+                3469384,
+                3469385,
+                3469387,
+                3469388,
+                3469394,
+                3469395,
+                3469399,
+                3469400,
+                3469404,
+                3469405,
+                3469423,
+                3469759,
+                3470124
+              ]
+            }
+          ],
+          "empty_proven": false,
+          "two_reads_equal": true
+        },
+        "main_pid_current_identity": {
+          "pid": 3469381,
+          "ppid": 1,
+          "birth_ticks": 82651813,
+          "uid": [
+            997,
+            997,
+            997,
+            997
+          ],
+          "gid": [
+            986,
+            986,
+            986,
+            986
+          ],
+          "state": "S",
+          "unit": "monos-probe-runner.service",
+          "references": [
+            "argv_fixed_path",
+            "exe",
+            "fd_fixed_path",
+            "mapped_fixed_path",
+            "selected_socket_fd"
+          ],
+          "executable": {
+            "selected_binary": "monos-runner",
+            "deleted": false,
+            "device": 66306,
+            "inode": 17080773,
+            "installed_inode_matches": true
+          }
+        },
+        "exec_main_pid_current_identity": {
+          "pid": 3469381,
+          "ppid": 1,
+          "birth_ticks": 82651813,
+          "uid": [
+            997,
+            997,
+            997,
+            997
+          ],
+          "gid": [
+            986,
+            986,
+            986,
+            986
+          ],
+          "state": "S",
+          "unit": "monos-probe-runner.service",
+          "references": [
+            "argv_fixed_path",
+            "exe",
+            "fd_fixed_path",
+            "mapped_fixed_path",
+            "selected_socket_fd"
+          ],
+          "executable": {
+            "selected_binary": "monos-runner",
+            "deleted": false,
+            "device": 66306,
+            "inode": 17080773,
+            "installed_inode_matches": true
+          }
+        }
+      }
+    ],
+    "jobs": [],
+    "current_accounts": {
+      "service_uid": 997,
+      "execution_uid": 1000,
+      "read_group_gid": 986
+    },
+    "unexpected_target_name_count": 0,
+    "processes": {
+      "scanned_count": 260,
+      "successfully_observed_count": 260,
+      "vanished_during_scan_count": 0,
+      "newcomers_classified_count": 0,
+      "complete": true,
+      "selected": [
+        {
+          "pid": 3469381,
+          "ppid": 1,
+          "birth_ticks": 82651813,
+          "uid": [
+            997,
+            997,
+            997,
+            997
+          ],
+          "gid": [
+            986,
+            986,
+            986,
+            986
+          ],
+          "state": "S",
+          "unit": "monos-probe-runner.service",
+          "references": [
+            "argv_fixed_path",
+            "exe",
+            "fd_fixed_path",
+            "mapped_fixed_path",
+            "selected_socket_fd"
+          ],
+          "executable": {
+            "selected_binary": "monos-runner",
+            "deleted": false,
+            "device": 66306,
+            "inode": 17080773,
+            "installed_inode_matches": true
+          }
+        }
+      ]
+    },
+    "selected_socket_inodes": [
+      {
+        "inode": 136162734,
+        "listener": true
+      }
+    ],
+    "selected_files": {
+      "monos": {
+        "status": "present",
+        "uid": 0,
+        "gid": 0,
+        "mode": "0o755",
+        "device": 66306,
+        "inode": 17080776,
+        "regular": true,
+        "directory": false,
+        "socket": false,
+        "symlink": false,
+        "sha256": "02843de0bd084d6d622ef19cfc577efb548014bce657e981806979da4c26c2fa"
+      },
+      "monos-runner": {
+        "status": "present",
+        "uid": 0,
+        "gid": 0,
+        "mode": "0o755",
+        "device": 66306,
+        "inode": 17080773,
+        "regular": true,
+        "directory": false,
+        "socket": false,
+        "symlink": false,
+        "sha256": "544dc7db0faec8fea342904f66e3a729eb8db8a99a9739b5e42773cef573ae3b"
+      },
+      "monos-probe-launch": {
+        "status": "present",
+        "uid": 0,
+        "gid": 0,
+        "mode": "0o755",
+        "device": 66306,
+        "inode": 17080774,
+        "regular": true,
+        "directory": false,
+        "socket": false,
+        "symlink": false,
+        "sha256": "19accbb0692122a4d943e4f171e05f2a9b3efda052ea6cb68b3417d29b9b4bfe"
+      },
+      "monos-probe-exec": {
+        "status": "present",
+        "uid": 0,
+        "gid": 0,
+        "mode": "0o755",
+        "device": 66306,
+        "inode": 17080775,
+        "regular": true,
+        "directory": false,
+        "socket": false,
+        "symlink": false,
+        "sha256": "1b028398326a89329b3d26400077313203f053ad12e2c734d890fdb2b6464fc5"
+      },
+      "runtime_root": {
+        "status": "present",
+        "uid": 0,
+        "gid": 0,
+        "mode": "0o755",
+        "device": 66306,
+        "inode": 18391876,
+        "regular": false,
+        "directory": true,
+        "socket": false,
+        "symlink": false
+      },
+      "command_socket": {
+        "status": "present",
+        "uid": 997,
+        "gid": 986,
+        "mode": "0o660",
+        "device": 25,
+        "inode": 5565725,
+        "regular": false,
+        "directory": false,
+        "socket": true,
+        "symlink": false
+      }
+    },
+    "physical_observation_complete": false,
+    "unknown": [
+      {
+        "code": "cgroup_missing_not_empty_proof",
+        "unit": "monos-probe-a-0470064c-b8ea-4e18-a4bb-b3baaa631637.service"
+      },
+      {
+        "code": "cgroup_missing_not_empty_proof",
+        "unit": "monos-probe-a-18af0e33-33d1-456e-99a4-405c09a10359.service"
+      },
+      {
+        "code": "cgroup_missing_not_empty_proof",
+        "unit": "monos-probe-a-27cc61cc-d683-4ce8-9b0a-553044cd1a48.service"
+      },
+      {
+        "code": "cgroup_missing_not_empty_proof",
+        "unit": "monos-probe-a-5a3d1a2d-fae9-477b-8a5d-3b9ab2821e1a.service"
+      },
+      {
+        "code": "cgroup_missing_not_empty_proof",
+        "unit": "monos-probe-a-9d76a0e4-ec98-4bff-b3a3-8003c75d77f2.service"
+      },
+      {
+        "code": "cgroup_missing_not_empty_proof",
+        "unit": "monos-probe-a-a19218c5-2c9c-4166-b38a-ffbb2cb61146.service"
+      },
+      {
+        "code": "cgroup_missing_not_empty_proof",
+        "unit": "monos-probe-a-a31478df-df17-482e-b7d9-93499443b0f0.service"
+      },
+      {
+        "code": "cgroup_missing_not_empty_proof",
+        "unit": "monos-probe-a-af4fb360-0650-473a-ab7a-084d54f700eb.service"
+      },
+      {
+        "code": "cgroup_missing_not_empty_proof",
+        "unit": "monos-probe-a-c7bffec8-dc07-450f-a174-ab0e638acebc.service"
+      },
+      {
+        "code": "cgroup_missing_not_empty_proof",
+        "unit": "monos-probe-a-d3deea6f-297d-4d6a-8b9d-cf0d04478f0b.service"
+      },
+      {
+        "code": "cgroup_missing_not_empty_proof",
+        "unit": "monos-probe-a-d5706933-fe21-4781-a10f-4feb496bfade.service"
+      },
+      {
+        "code": "cgroup_missing_not_empty_proof",
+        "unit": "monos-probe-a-dc81ef63-55d3-4031-aebc-c065e9faa514.service"
+      },
+      {
+        "code": "cgroup_missing_not_empty_proof",
+        "unit": "monos-probe-a-f9a27671-19dc-4f0a-a320-efd52689f437.service"
+      }
+    ],
+    "limits": [
+      "Current read-only physical observations only; no canonical settlement/release claim.",
+      "Missing cgroup is not empty proof; root must review unresolved ownership before replacement.",
+      "No unrelated monolab unit control, argv/environment/SQLite export or host mutation."
+    ]
+  },
+  "canonical": {
+    "tasks": [
+      {
+        "id": "a53d17f3-451b-4616-82f5-559f2ef29f59",
+        "state": "CANCELLED",
+        "control_version": 6
+      },
+      {
+        "id": "b5fa877d-7e24-4472-a13f-9c53944157a4",
+        "state": "COMPLETED",
+        "control_version": 14
+      }
+    ],
+    "attempts": [
+      {
+        "id": "0470064c-b8ea-4e18-a4bb-b3baaa631637",
+        "task_id": "b5fa877d-7e24-4472-a13f-9c53944157a4",
+        "state": "SUCCEEDED",
+        "process_absent": true,
+        "process_released": true
+      },
+      {
+        "id": "18af0e33-33d1-456e-99a4-405c09a10359",
+        "task_id": "b5fa877d-7e24-4472-a13f-9c53944157a4",
+        "state": "SUCCEEDED",
+        "process_absent": true,
+        "process_released": true
+      },
+      {
+        "id": "27cc61cc-d683-4ce8-9b0a-553044cd1a48",
+        "task_id": "b5fa877d-7e24-4472-a13f-9c53944157a4",
+        "state": "SUCCEEDED",
+        "process_absent": true,
+        "process_released": true
+      },
+      {
+        "id": "5a3d1a2d-fae9-477b-8a5d-3b9ab2821e1a",
+        "task_id": "a53d17f3-451b-4616-82f5-559f2ef29f59",
+        "state": "SUCCEEDED",
+        "process_absent": true,
+        "process_released": true
+      },
+      {
+        "id": "9d76a0e4-ec98-4bff-b3a3-8003c75d77f2",
+        "task_id": "b5fa877d-7e24-4472-a13f-9c53944157a4",
+        "state": "SUCCEEDED",
+        "process_absent": true,
+        "process_released": true
+      },
+      {
+        "id": "a19218c5-2c9c-4166-b38a-ffbb2cb61146",
+        "task_id": "b5fa877d-7e24-4472-a13f-9c53944157a4",
+        "state": "FAILED",
+        "process_absent": true,
+        "process_released": true
+      },
+      {
+        "id": "a31478df-df17-482e-b7d9-93499443b0f0",
+        "task_id": null,
+        "state": "SUCCEEDED",
+        "process_absent": true,
+        "process_released": true
+      },
+      {
+        "id": "af4fb360-0650-473a-ab7a-084d54f700eb",
+        "task_id": "b5fa877d-7e24-4472-a13f-9c53944157a4",
+        "state": "SUCCEEDED",
+        "process_absent": true,
+        "process_released": true
+      },
+      {
+        "id": "c7bffec8-dc07-450f-a174-ab0e638acebc",
+        "task_id": "b5fa877d-7e24-4472-a13f-9c53944157a4",
+        "state": "SUCCEEDED",
+        "process_absent": true,
+        "process_released": true
+      },
+      {
+        "id": "d3deea6f-297d-4d6a-8b9d-cf0d04478f0b",
+        "task_id": "b5fa877d-7e24-4472-a13f-9c53944157a4",
+        "state": "SUCCEEDED",
+        "process_absent": true,
+        "process_released": true
+      },
+      {
+        "id": "d5706933-fe21-4781-a10f-4feb496bfade",
+        "task_id": "b5fa877d-7e24-4472-a13f-9c53944157a4",
+        "state": "SUCCEEDED",
+        "process_absent": true,
+        "process_released": true
+      },
+      {
+        "id": "dc81ef63-55d3-4031-aebc-c065e9faa514",
+        "task_id": "a53d17f3-451b-4616-82f5-559f2ef29f59",
+        "state": "SUCCEEDED",
+        "process_absent": true,
+        "process_released": true
+      },
+      {
+        "id": "f9a27671-19dc-4f0a-a320-efd52689f437",
+        "task_id": null,
+        "state": "SUCCEEDED",
+        "process_absent": true,
+        "process_released": true
+      }
+    ],
+    "unreleased_leases": 0,
+    "open_operations": 0,
+    "pending_delivery_operations": 0,
+    "remote_operations": [
+      {
+        "id": "0d21fdef-ab6d-4300-aefa-a44a04b8c509",
+        "kind": "create_pr",
+        "state": "settled",
+        "active": false,
+        "effect_owned": false,
+        "may_have_mutated": true
+      },
+      {
+        "id": "1225ae51-b501-4f2b-a1ad-d7b6c36b3a4c",
+        "kind": "update_pr",
+        "state": "settled",
+        "active": false,
+        "effect_owned": false,
+        "may_have_mutated": true
+      },
+      {
+        "id": "4ca9d2c9-e8a2-41eb-bf05-7509c36bdbab",
+        "kind": "push",
+        "state": "settled",
+        "active": false,
+        "effect_owned": false,
+        "may_have_mutated": true
+      },
+      {
+        "id": "72459599-d6a9-4c93-872f-d7b42a4d7f3f",
+        "kind": "create_pr",
+        "state": "settled",
+        "active": false,
+        "effect_owned": false,
+        "may_have_mutated": true
+      },
+      {
+        "id": "a5b045f3-9d0d-4680-bf2b-f8b005c0ee2d",
+        "kind": "push",
+        "state": "settled",
+        "active": false,
+        "effect_owned": false,
+        "may_have_mutated": true
+      },
+      {
+        "id": "a8fd65fd-fd16-4098-bb59-c8e8b6883f79",
+        "kind": "close_pr",
+        "state": "settled",
+        "active": false,
+        "effect_owned": false,
+        "may_have_mutated": true
+      },
+      {
+        "id": "b95bbeb3-9932-4e48-af9a-203365852f16",
+        "kind": "push",
+        "state": "settled",
+        "active": false,
+        "effect_owned": false,
+        "may_have_mutated": true
+      },
+      {
+        "id": "cc3b35a7-b156-4681-b471-5eeb3ab44fe0",
+        "kind": "update_pr",
+        "state": "settled",
+        "active": false,
+        "effect_owned": false,
+        "may_have_mutated": true
+      }
+    ],
+    "merge_operations": [
+      {
+        "id": "3e9aed77-2df6-4337-96e4-7452a5d020d8",
+        "status": "succeeded",
+        "effect_owned": false,
+        "has_claim": false,
+        "may_have_mutated": true
+      }
+    ],
+    "runner": {
+      "id": "delivery-fresh-runner-v1",
+      "incarnation": 27,
+      "ready": true,
+      "connected": true,
+      "recent": true
+    }
+  },
+  "interpretation": "Historical missing cgroups are not standalone absence proof. Combine canonical released/absent Attempts with complete process scan and no current jobs/leases/effect owners. Settled historical may_have_mutated records are retained.",
+  "combined_conclusion": {
+    "no_live_attempt_or_operation_ownership": true,
+    "all_attempts_absent_and_released": 13,
+    "only_selected_process": "monos-probe-runner.service",
+    "runner_ready": true,
+    "historical_cgroup_absence_alone_is_not_proof": true
+  }
+}

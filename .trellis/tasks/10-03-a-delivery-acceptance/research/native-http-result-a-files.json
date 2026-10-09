@@ -1,0 +1,119 @@
+{
+  "greeting.py": {
+    "current": true,
+    "object": {
+      "mode": "100644",
+      "oid": "cf4a5b5e242c7dc55d23041c6e107993aeb5568d",
+      "size": 771
+    },
+    "request": {
+      "identity": {
+        "attempt_id": "d3deea6f-297d-4d6a-8b9d-cf0d04478f0b",
+        "base_commit": "aa274b45f50c514ed1be500473bc4a284325f375",
+        "dispatch_id": "e6a6dd40-157c-45ba-a7b3-a33c94482ff9",
+        "generation": 1,
+        "git_commit": "4066b2bf5588fb8e462f3169bc7f1099d3876f0c",
+        "git_tree": "c0340695ded1d63c17758794712f3246d1fa4fab",
+        "lease_id": "91889fc6-f8a7-4470-b258-57015bd17cce",
+        "manifest_digest": "51039d03a161d462a74a157bde30f591df3fa0838e94e8869145b3f8d76e3d49",
+        "node_activation": 1,
+        "node_id": "node-4b65aed1-7fed-4ad8-b956-0e76e39fb367",
+        "operation_id": "79f776a4-7bfc-429b-8a55-c55d091174c6",
+        "operation_identity_digest": "50b24b4a215926d3edbfa2af134d3d0e27955c4b21beb677163b6cef68534398",
+        "plan_id": "plan-d0ab3670-d333-44b9-8356-2ddc215a563b",
+        "repository_identity": "github.com/6spot/monolab-feasibility-20260928-160020-public",
+        "resource_id": "delivery-acceptance-repo-v1",
+        "runner_id": "delivery-fresh-runner-v1",
+        "specification_id": "309ac1ef-d174-418c-be9d-5d373fa04dbc",
+        "storage_id": "864d3d99-24dc-43fe-9a19-ffce52557648",
+        "task_id": "b5fa877d-7e24-4472-a13f-9c53944157a4",
+        "workspace_id": "ws_9385294369445e6c3d9a8a7d7ee93af7cd8569bb96e949bcbdb60fcd23384894"
+      },
+      "identity_digest": "d4e8baaa8bcfb9eec90e5d44e1d625c246fd50ddca35e5320bd4bb4496fd8053",
+      "mode": "file",
+      "path": "greeting.py",
+      "side": "result"
+    },
+    "schema_version": 1,
+    "status": "available",
+    "text": "\"\"\"Greeting module for the monolab feasibility repository.\n\nExposes :func:`greeting`, a pure function with no network or filesystem\nside effects.\n\"\"\"\n\n\ndef greeting(name: str) -> str:\n    \"\"\"Return a greeting for ``name``, preserving the name literally.\n\n    Leading and trailing whitespace is stripped from ``name``.  If the\n    stripped result is nonempty, it is substituted literally into\n    ``\"Hello, <name>!\"``.  If the stripped result is empty or\n    whitespace-only, ``\"Hello, friend!\"`` is returned instead.  Unicode\n    names are preserved as literal text: no normalization, encoding\n    conversion, or transliteration is applied.\n    \"\"\"\n    stripped = name.strip()\n    if not stripped:\n        return \"Hello, friend!\"\n    return \"Hello, {}!\".format(stripped)\n"
+  },
+  "tests/test_greeting.py": {
+    "current": true,
+    "object": {
+      "mode": "100644",
+      "oid": "06d89b3898f87a0d9e03c3c629ad4e17fc56fb58",
+      "size": 1422
+    },
+    "request": {
+      "identity": {
+        "attempt_id": "d3deea6f-297d-4d6a-8b9d-cf0d04478f0b",
+        "base_commit": "aa274b45f50c514ed1be500473bc4a284325f375",
+        "dispatch_id": "e6a6dd40-157c-45ba-a7b3-a33c94482ff9",
+        "generation": 1,
+        "git_commit": "4066b2bf5588fb8e462f3169bc7f1099d3876f0c",
+        "git_tree": "c0340695ded1d63c17758794712f3246d1fa4fab",
+        "lease_id": "91889fc6-f8a7-4470-b258-57015bd17cce",
+        "manifest_digest": "51039d03a161d462a74a157bde30f591df3fa0838e94e8869145b3f8d76e3d49",
+        "node_activation": 1,
+        "node_id": "node-4b65aed1-7fed-4ad8-b956-0e76e39fb367",
+        "operation_id": "79f776a4-7bfc-429b-8a55-c55d091174c6",
+        "operation_identity_digest": "50b24b4a215926d3edbfa2af134d3d0e27955c4b21beb677163b6cef68534398",
+        "plan_id": "plan-d0ab3670-d333-44b9-8356-2ddc215a563b",
+        "repository_identity": "github.com/6spot/monolab-feasibility-20260928-160020-public",
+        "resource_id": "delivery-acceptance-repo-v1",
+        "runner_id": "delivery-fresh-runner-v1",
+        "specification_id": "309ac1ef-d174-418c-be9d-5d373fa04dbc",
+        "storage_id": "864d3d99-24dc-43fe-9a19-ffce52557648",
+        "task_id": "b5fa877d-7e24-4472-a13f-9c53944157a4",
+        "workspace_id": "ws_9385294369445e6c3d9a8a7d7ee93af7cd8569bb96e949bcbdb60fcd23384894"
+      },
+      "identity_digest": "d4e8baaa8bcfb9eec90e5d44e1d625c246fd50ddca35e5320bd4bb4496fd8053",
+      "mode": "file",
+      "path": "tests/test_greeting.py",
+      "side": "result"
+    },
+    "schema_version": 1,
+    "status": "available",
+    "text": "\"\"\"Unit tests for the greeting module.\n\nUses only the Python 3 standard library (``unittest``); no third-party\ndependencies.\n\"\"\"\n\nimport unittest\n\nfrom greeting import greeting\n\n\nclass GreetingTestCase(unittest.TestCase):\n    \"\"\"Coverage for the greeting() contract.\"\"\"\n\n    def test_normal_name(self):\n        self.assertEqual(greeting(\"Alice\"), \"Hello, Alice!\")\n\n    def test_leading_and_trailing_whitespace_is_trimmed(self):\n        self.assertEqual(greeting(\"  Bob  \"), \"Hello, Bob!\")\n        self.assertEqual(greeting(\"\\tCarol\\n\"), \"Hello, Carol!\")\n\n    def test_blank_name_returns_friend_greeting(self):\n        self.assertEqual(greeting(\"\"), \"Hello, friend!\")\n\n    def test_whitespace_only_name_returns_friend_greeting(self):\n        self.assertEqual(greeting(\"   \"), \"Hello, friend!\")\n        self.assertEqual(greeting(\"\\t\\n \"), \"Hello, friend!\")\n\n    def test_unicode_name_is_preserved_literally(self):\n        self.assertEqual(greeting(\"Zoë\"), \"Hello, Zoë!\")\n        self.assertEqual(greeting(\"José García\"), \"Hello, José García!\")\n        self.assertEqual(greeting(\"名古屋\"), \"Hello, 名古屋!\")\n\n    def test_no_network_or_filesystem_side_effects(self):\n        # The function must be side-effect free; calling it repeatedly\n        # with the same input must yield the same pure result.\n        self.assertEqual(greeting(\"Alice\"), greeting(\"Alice\"))\n\n\nif __name__ == \"__main__\":\n    unittest.main()\n"
+  },
+  "README.md": {
+    "current": true,
+    "object": {
+      "mode": "100644",
+      "oid": "bcf32597c421b74a27368787455cd839cab13d1b",
+      "size": 758
+    },
+    "request": {
+      "identity": {
+        "attempt_id": "d3deea6f-297d-4d6a-8b9d-cf0d04478f0b",
+        "base_commit": "aa274b45f50c514ed1be500473bc4a284325f375",
+        "dispatch_id": "e6a6dd40-157c-45ba-a7b3-a33c94482ff9",
+        "generation": 1,
+        "git_commit": "4066b2bf5588fb8e462f3169bc7f1099d3876f0c",
+        "git_tree": "c0340695ded1d63c17758794712f3246d1fa4fab",
+        "lease_id": "91889fc6-f8a7-4470-b258-57015bd17cce",
+        "manifest_digest": "51039d03a161d462a74a157bde30f591df3fa0838e94e8869145b3f8d76e3d49",
+        "node_activation": 1,
+        "node_id": "node-4b65aed1-7fed-4ad8-b956-0e76e39fb367",
+        "operation_id": "79f776a4-7bfc-429b-8a55-c55d091174c6",
+        "operation_identity_digest": "50b24b4a215926d3edbfa2af134d3d0e27955c4b21beb677163b6cef68534398",
+        "plan_id": "plan-d0ab3670-d333-44b9-8356-2ddc215a563b",
+        "repository_identity": "github.com/6spot/monolab-feasibility-20260928-160020-public",
+        "resource_id": "delivery-acceptance-repo-v1",
+        "runner_id": "delivery-fresh-runner-v1",
+        "specification_id": "309ac1ef-d174-418c-be9d-5d373fa04dbc",
+        "storage_id": "864d3d99-24dc-43fe-9a19-ffce52557648",
+        "task_id": "b5fa877d-7e24-4472-a13f-9c53944157a4",
+        "workspace_id": "ws_9385294369445e6c3d9a8a7d7ee93af7cd8569bb96e949bcbdb60fcd23384894"
+      },
+      "identity_digest": "d4e8baaa8bcfb9eec90e5d44e1d625c246fd50ddca35e5320bd4bb4496fd8053",
+      "mode": "file",
+      "path": "README.md",
+      "side": "result"
+    },
+    "schema_version": 1,
+    "status": "available",
+    "text": "# monolab-feasibility-20260928-160020-public\nSynthetic MonoLab provider feasibility fixture; no product source.\n\n## greeting module\n\n`greeting.py` at the repository root exposes `greeting(name: str) -> str`:\n\n- Leading and trailing whitespace is stripped from `name`.\n- A nonempty stripped name is substituted literally: `Hello, <name>!`.\n- A blank or whitespace-only name produces `Hello, friend!`.\n- Unicode names are preserved literally (no normalization, encoding\n  conversion, or transliteration).\n\nThe function is pure: it performs no network or filesystem access.\n\nTests live in `tests/test_greeting.py` and use only the Python 3 standard\nlibrary (`unittest`). Run them from the repository root with:\n\n```\npython3 -m unittest discover -s tests -v\n```\n"
+  }
+}

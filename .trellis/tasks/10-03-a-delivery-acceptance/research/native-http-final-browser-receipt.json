@@ -1,0 +1,17 @@
+{
+  "path": "/v1/owner/tasks/b5fa877d-7e24-4472-a13f-9c53944157a4/delivery/commands/15bcb869-eaeb-41b1-9a4e-7f6e2bb07e58",
+  "status": 200,
+  "receipt": {
+    "name": "accept_delivery",
+    "status": "committed",
+    "task_id": "b5fa877d-7e24-4472-a13f-9c53944157a4",
+    "request_id": "15bcb869-eaeb-41b1-9a4e-7f6e2bb07e58",
+    "proposal_id": "705481be-dc12-4ee1-a54f-ae5f89583983",
+    "input_cutoff": 2,
+    "operation_id": "30389a92-ed08-44f3-a7bd-90c937f11701",
+    "content_digest": "151e9b4a2234b22676381199cc7856fb9887cb9d3e9c9bbea38b6477c6fe9599",
+    "schema_version": 1,
+    "confirmation_id": "3004cc3c-241c-44b4-a714-4f43ffc8dbd9",
+    "operation_version": 1
+  }
+}

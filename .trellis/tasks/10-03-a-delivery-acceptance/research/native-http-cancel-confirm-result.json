@@ -1,0 +1,44 @@
+{
+  "automatic_retry": false,
+  "directory": "/root/monos-optional-http-owner-requests-v1/post-6d20fea4-a225-4f1e-ba6e-82febcab9ca5",
+  "input_sha256": "824b72313a545723f1165e5f01171df11b2d1b9247546293cad6484d53afeeff",
+  "method": "POST",
+  "outcome": "pass",
+  "owner_logged_out": true,
+  "path": "/v1/owner/task-previews/commands",
+  "receipt_confirmed": true,
+  "receipt_path": "/v1/owner/task-previews/commands/6d20fea4-a225-4f1e-ba6e-82febcab9ca5",
+  "request_id": "6d20fea4-a225-4f1e-ba6e-82febcab9ca5",
+  "responses": [
+    {
+      "body": {
+        "confirmation_id": "f9aa2734-98b3-4e8c-b285-c276ba0faea1",
+        "content_digest": "feee5408237fd1bb875fc1a325aec493addd5834680f728ddcbdc8785cec880f",
+        "outcome": "confirmed",
+        "proposal_message_id": "ec7ef0be-b536-42f0-99c4-9fd08fb1c501",
+        "request_id": "6d20fea4-a225-4f1e-ba6e-82febcab9ca5",
+        "schema_version": 1,
+        "status": "committed",
+        "todo_id": "0b247336-8acf-49b7-b143-69d1427a1255"
+      },
+      "path": "/v1/owner/task-previews/commands",
+      "status": 200
+    },
+    {
+      "body": {
+        "confirmation_id": "f9aa2734-98b3-4e8c-b285-c276ba0faea1",
+        "content_digest": "feee5408237fd1bb875fc1a325aec493addd5834680f728ddcbdc8785cec880f",
+        "outcome": "confirmed",
+        "proposal_message_id": "ec7ef0be-b536-42f0-99c4-9fd08fb1c501",
+        "request_id": "6d20fea4-a225-4f1e-ba6e-82febcab9ca5",
+        "schema_version": 1,
+        "status": "committed",
+        "todo_id": "0b247336-8acf-49b7-b143-69d1427a1255"
+      },
+      "path": "/v1/owner/task-previews/commands/6d20fea4-a225-4f1e-ba6e-82febcab9ca5",
+      "status": 200
+    }
+  ],
+  "session_unknown": false,
+  "submitted": true
+}

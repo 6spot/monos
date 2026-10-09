@@ -1,0 +1,14 @@
+{
+  "path": "/v1/owner/tasks/conversation/commands",
+  "method": "POST",
+  "body": {
+    "schema_version": 1,
+    "task_id": "b5fa877d-7e24-4472-a13f-9c53944157a4",
+    "request_id": "18f879f1-e98f-4887-9e3b-45825b05e3cf",
+    "name": "submit_task_message",
+    "payload": {
+      "message_id": "0c1a7759-d35d-48af-abe9-521cb2960b3c",
+      "content": "Thanks. I will close this browser now. Please give a brief explanation of the verified greeting behavior; do not change the accepted result or its requirements."
+    }
+  }
+}

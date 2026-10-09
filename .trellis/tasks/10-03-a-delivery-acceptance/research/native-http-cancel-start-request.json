@@ -1,0 +1,14 @@
+{
+  "path": "/v1/owner/commands",
+  "method": "POST",
+  "body": {
+    "schema_version": 1,
+    "request_id": "4295d63a-7f33-4591-8a10-4ee538ddb5a1",
+    "scope_id": "a53d17f3-451b-4616-82f5-559f2ef29f59",
+    "expected_control_version": 1,
+    "name": "start_task",
+    "payload": {
+      "specification_id": "d8a89e9e-e38b-4530-ab60-98ca9bffd598"
+    }
+  }
+}

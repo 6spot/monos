@@ -1,0 +1,6 @@
+{
+  "outcome": "failed",
+  "reason": "unexpected_unit",
+  "automatic_retry": false,
+  "reconcile_before_continuation": true
+}

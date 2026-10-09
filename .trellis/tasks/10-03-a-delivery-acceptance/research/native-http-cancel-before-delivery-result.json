@@ -1,0 +1,34 @@
+{
+  "automatic_retry": false,
+  "directory": "/root/monos-optional-http-owner-requests-v1/get-eca7ce82-8c07-4aab-9f69-51a5f6622e2d",
+  "input_sha256": "b53f8dee8a27c148a28a1155e41b708e5f9b05a9758f4fa54ff96edff178ff3c",
+  "method": "GET",
+  "outcome": "pass",
+  "owner_logged_out": true,
+  "path": "/v1/owner/tasks/a53d17f3-451b-4616-82f5-559f2ef29f59/delivery",
+  "receipt_confirmed": false,
+  "receipt_path": null,
+  "request_id": null,
+  "responses": [
+    {
+      "body": {
+        "accept_allowed": true,
+        "basis": {
+          "control_version": 5,
+          "plan_id": "plan-7980d52e-48bb-4e13-bc46-362752544308-20261009-01",
+          "specification_id": "d8a89e9e-e38b-4530-ab60-98ca9bffd598"
+        },
+        "batches": [],
+        "batches_has_more": false,
+        "proposals": [],
+        "proposals_has_more": false,
+        "schema_version": 1,
+        "task_id": "a53d17f3-451b-4616-82f5-559f2ef29f59"
+      },
+      "path": "/v1/owner/tasks/a53d17f3-451b-4616-82f5-559f2ef29f59/delivery",
+      "status": 200
+    }
+  ],
+  "session_unknown": false,
+  "submitted": false
+}

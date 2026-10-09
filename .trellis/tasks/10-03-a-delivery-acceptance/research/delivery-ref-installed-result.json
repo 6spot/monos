@@ -1,0 +1,120 @@
+{
+  "outcome": "pass",
+  "candidate_commit": "0a1e62f2fec5c31b380311ae658e2e0f376d92ff",
+  "server_image": "sha256:1f9674e653c2d80378ad66246c9d3a6e5ba65079d679a8c49f7c13548b87a67c",
+  "server": [
+    "e3debe19453659b0d8f82d4fde04d945de9457e31bae3a7c0ee4a131a76c378c",
+    "2026-10-09T04:19:51.814911432Z",
+    0
+  ],
+  "endpoint": "http://127.0.0.1:18445",
+  "database": "a650c142fb83ff89b93de6ec4e5f3584a330927b4c40f4796bff4a2afcb0fa01",
+  "storage": "864d3d99-24dc-43fe-9a19-ffce52557648",
+  "binaries": {
+    "monos": {
+      "path": "/root/monos-delivery-ref-release-v1/bin/monos",
+      "sha256": "bf4fd63c542c72c5e96234c15f002fec39624ba62a8c3b7fb905410add735c8a"
+    },
+    "monos-probe-launch": {
+      "path": "/root/monos-delivery-ref-release-v1/bin/monos-probe-launch",
+      "sha256": "56433a784dffe0eeed7d7bef846fea718b7637f540db9d02f92cd6c1e5365971"
+    },
+    "monos-runner": {
+      "path": "/root/monos-delivery-ref-release-v1/bin/monos-runner",
+      "sha256": "10d2a1901de46a5c32dc3f7bec141ded68e159b851a405067f667c317b051f28"
+    },
+    "monos-probe-exec": {
+      "path": "/root/monos-delivery-ref-release-v1/bin/monos-probe-exec",
+      "sha256": "92f961911982d6661b66b2e5d85550b24bd423f1af5d55b32f986c283fafd0bd"
+    }
+  },
+  "before": {
+    "attempts": [
+      {
+        "id": "a31478df-df17-482e-b7d9-93499443b0f0",
+        "process_absent": true,
+        "process_released": true,
+        "state": "SUCCEEDED"
+      },
+      {
+        "id": "c7bffec8-dc07-450f-a174-ab0e638acebc",
+        "process_absent": true,
+        "process_released": true,
+        "state": "SUCCEEDED"
+      },
+      {
+        "id": "d3deea6f-297d-4d6a-8b9d-cf0d04478f0b",
+        "process_absent": true,
+        "process_released": true,
+        "state": "SUCCEEDED"
+      },
+      {
+        "id": "f9a27671-19dc-4f0a-a320-efd52689f437",
+        "process_absent": true,
+        "process_released": true,
+        "state": "SUCCEEDED"
+      }
+    ],
+    "remote_possible": 0,
+    "runner": {
+      "connected": true,
+      "id": "delivery-fresh-runner-v1",
+      "incarnation": 24,
+      "ready": true,
+      "recent": true
+    },
+    "tasks": [
+      {
+        "control_version": 5,
+        "id": "b5fa877d-7e24-4472-a13f-9c53944157a4",
+        "state": "REVIEW"
+      }
+    ]
+  },
+  "ready": {
+    "tasks": [
+      {
+        "id": "b5fa877d-7e24-4472-a13f-9c53944157a4",
+        "state": "REVIEW",
+        "control_version": 5
+      }
+    ],
+    "attempts": [
+      {
+        "id": "a31478df-df17-482e-b7d9-93499443b0f0",
+        "state": "SUCCEEDED",
+        "process_absent": true,
+        "process_released": true
+      },
+      {
+        "id": "c7bffec8-dc07-450f-a174-ab0e638acebc",
+        "state": "SUCCEEDED",
+        "process_absent": true,
+        "process_released": true
+      },
+      {
+        "id": "d3deea6f-297d-4d6a-8b9d-cf0d04478f0b",
+        "state": "SUCCEEDED",
+        "process_absent": true,
+        "process_released": true
+      },
+      {
+        "id": "f9a27671-19dc-4f0a-a320-efd52689f437",
+        "state": "SUCCEEDED",
+        "process_absent": true,
+        "process_released": true
+      }
+    ],
+    "remote_possible": 0,
+    "runner": {
+      "id": "delivery-fresh-runner-v1",
+      "incarnation": 25,
+      "ready": true,
+      "connected": true,
+      "recent": true
+    }
+  },
+  "automatic_retry": false,
+  "prior_failure": "/root/monos-delivery-ref-install-v2/failure.json",
+  "container_environment_compared_as_mapping": true
+}

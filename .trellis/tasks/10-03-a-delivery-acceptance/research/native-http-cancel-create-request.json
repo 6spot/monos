@@ -1,0 +1,15 @@
+{
+  "path": "/v1/owner/task-previews/commands",
+  "method": "POST",
+  "body": {
+    "schema_version": 1,
+    "request_id": "5673dfca-7815-4b31-b11a-c750e570096d",
+    "todo_id": "0b247336-8acf-49b7-b143-69d1427a1255",
+    "name": "create_execution_task",
+    "payload": {
+      "proposal_message_id": "ec7ef0be-b536-42f0-99c4-9fd08fb1c501",
+      "confirmation_id": "f9aa2734-98b3-4e8c-b285-c276ba0faea1",
+      "content_digest": "feee5408237fd1bb875fc1a325aec493addd5834680f728ddcbdc8785cec880f"
+    }
+  }
+}

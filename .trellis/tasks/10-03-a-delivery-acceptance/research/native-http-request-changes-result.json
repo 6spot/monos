@@ -1,0 +1,28 @@
+{
+  "automatic_retry": false,
+  "directory": "/root/monos-optional-http-owner-requests-v1/post-08255e19-48f5-4e91-8a00-869754ed0970",
+  "input_sha256": "59c2efc3c1fffe34554203d27e8006b76749040f08b5801c998261da0135ff07",
+  "method": "POST",
+  "outcome": "failed",
+  "owner_logged_out": true,
+  "path": "/v1/owner/tasks/review/commands",
+  "reason": "original_receipt_unconfirmed",
+  "receipt_confirmed": false,
+  "receipt_path": "/v1/owner/tasks/b5fa877d-7e24-4472-a13f-9c53944157a4/review/commands/08255e19-48f5-4e91-8a00-869754ed0970",
+  "request_id": "08255e19-48f5-4e91-8a00-869754ed0970",
+  "responses": [
+    {
+      "body": {
+        "request_id": "08255e19-48f5-4e91-8a00-869754ed0970",
+        "schema_version": 1,
+        "status": "unknown",
+        "task_id": "b5fa877d-7e24-4472-a13f-9c53944157a4"
+      },
+      "path": "/v1/owner/tasks/b5fa877d-7e24-4472-a13f-9c53944157a4/review/commands/08255e19-48f5-4e91-8a00-869754ed0970",
+      "status": 200
+    }
+  ],
+  "session_unknown": false,
+  "submit_observation": "http_status_409",
+  "submitted": true
+}

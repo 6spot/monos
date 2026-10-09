@@ -1,0 +1,162 @@
+{
+  "automatic_retry": false,
+  "directory": "/root/monos-optional-http-owner-requests-v1/get-2e5f9f13-95d5-472b-a2b0-99b31a1b1eef",
+  "input_sha256": "638abaa9fe9f322272532882fcfc548c82531f4f47a15337da30698624c3eb4e",
+  "method": "GET",
+  "outcome": "pass",
+  "owner_logged_out": true,
+  "path": "/v1/owner/tasks/b5fa877d-7e24-4472-a13f-9c53944157a4/remote-preparation/ab9e9063-9dab-48ab-82e4-1da932228754",
+  "receipt_confirmed": false,
+  "receipt_path": null,
+  "request_id": null,
+  "responses": [
+    {
+      "body": {
+        "candidate": {
+          "candidate_id": "c740abd5-cb77-4e87-874e-f645dfe4b2af",
+          "construction_digest": "421a356ee5d6074933415a16e6e941c18cd447b578a14e50a5f46ed6e51f29e5",
+          "construction_id": "6f9de5b5-817c-4f1f-be8e-222820f9c36a",
+          "head": "fab7aead32830a3ec0c655975a5d6948cc47f680",
+          "parents": [
+            "4df7bbf61d05d3db97c1a6865ea1a4d9c8a9b2af"
+          ],
+          "schema_version": 1,
+          "source_digest": "80335e37b51ee7d2f35fa39b9a50ab77521edd40d2d5815274800b08d0dd551d",
+          "tree": "565493dbd713eb9e05dad9bcffaca50de100a1a8"
+        },
+        "candidate_manifest_digest": "fc4b9a249391a57a74516da8b70d609cc8b8359d2ebe716aba2a34bc5b1e5097",
+        "checks": {
+          "aggregate": "no_checks",
+          "base_head": "aa274b45f50c514ed1be500473bc4a284325f375",
+          "complete": true,
+          "current": true,
+          "head": "fab7aead32830a3ec0c655975a5d6948cc47f680",
+          "mergeability": "mergeable",
+          "observation_id": "e99ded75-055a-48ec-9ceb-28dba0ed8bd9",
+          "observed_at": "2026-10-09T05:39:45.068Z",
+          "required_checks": "unknown",
+          "stale": false
+        },
+        "cleanup_allowed": false,
+        "current": true,
+        "delivery_ref": "refs/heads/monos/task/b5fa877d-7e24-4472-a13f-9c53944157a4/delivery-acceptance-repo-v1",
+        "effective_basis": {
+          "completion_manifest_digest": "7e81847eeec9dd85df233e56197813d7037f656097b27c7f96126d8f665fad54",
+          "completion_operation_id": "80a92fb1-2436-4481-ae28-a883b75e8160",
+          "plan_id": "plan-d0ab3670-d333-44b9-8356-2ddc215a563b",
+          "specification_id": "309ac1ef-d174-418c-be9d-5d373fa04dbc",
+          "task_id": "b5fa877d-7e24-4472-a13f-9c53944157a4"
+        },
+        "effective_basis_digest": "5df74db2bfe05df027fdc5a6549f61c4bc324423f6493563aa7b992b8fb4ca56",
+        "item_id": "ab9e9063-9dab-48ab-82e4-1da932228754",
+        "known_public_exposure_count": 0,
+        "operation": {
+          "kind": "update_pr",
+          "may_have_mutated": true,
+          "next_attempt_at": "2026-10-09T05:35:26.119Z",
+          "operation_id": "1225ae51-b501-4f2b-a1ad-d7b6c36b3a4c",
+          "reconcile_only": false,
+          "request_digest": "e4befa9bcdec5843ddcb7f58d3e795e20bc75e473d4a9fd0b17d228ca84db0e7",
+          "state": "settled",
+          "version": 3,
+          "worker_absent": true
+        },
+        "published": {
+          "candidate": {
+            "candidate_id": "c740abd5-cb77-4e87-874e-f645dfe4b2af",
+            "construction_digest": "421a356ee5d6074933415a16e6e941c18cd447b578a14e50a5f46ed6e51f29e5",
+            "construction_id": "6f9de5b5-817c-4f1f-be8e-222820f9c36a",
+            "head": "fab7aead32830a3ec0c655975a5d6948cc47f680",
+            "parents": [
+              "4df7bbf61d05d3db97c1a6865ea1a4d9c8a9b2af"
+            ],
+            "schema_version": 1,
+            "source_digest": "80335e37b51ee7d2f35fa39b9a50ab77521edd40d2d5815274800b08d0dd551d",
+            "tree": "565493dbd713eb9e05dad9bcffaca50de100a1a8"
+          },
+          "candidate_manifest_digest": "fc4b9a249391a57a74516da8b70d609cc8b8359d2ebe716aba2a34bc5b1e5097",
+          "delivery_ref": "refs/heads/monos/task/b5fa877d-7e24-4472-a13f-9c53944157a4/delivery-acceptance-repo-v1",
+          "item_id": "ab9e9063-9dab-48ab-82e4-1da932228754",
+          "observation": {
+            "delivery_ref": "refs/heads/monos/task/b5fa877d-7e24-4472-a13f-9c53944157a4/delivery-acceptance-repo-v1",
+            "head": "fab7aead32830a3ec0c655975a5d6948cc47f680",
+            "item_id": "ab9e9063-9dab-48ab-82e4-1da932228754",
+            "observation_id": "7c97c7966d4c2e2472c0771eae16a676f5a0481254695b31a778dabd1e28d6e3",
+            "observed_at": "2026-10-09T05:35:25.330Z",
+            "operation_id": "b95bbeb3-9932-4e48-af9a-203365852f16",
+            "repository_id": "1393178791",
+            "repository_identity": "github.com/6spot/monolab-feasibility-20260928-160020-public",
+            "resource_id": "delivery-acceptance-repo-v1",
+            "runner_id": "delivery-fresh-runner-v1",
+            "schema_version": 1,
+            "status": "present",
+            "storage_id": "864d3d99-24dc-43fe-9a19-ffce52557648",
+            "task_id": "b5fa877d-7e24-4472-a13f-9c53944157a4"
+          },
+          "observation_digest": "25df52d9abc531ef3abc3d35dda36cab4a054f8795fa3a470d989802e1e812ff",
+          "operation_id": "b95bbeb3-9932-4e48-af9a-203365852f16",
+          "repository_id": "1393178791",
+          "repository_identity": "github.com/6spot/monolab-feasibility-20260928-160020-public",
+          "request_digest": "7be583181a1e3861d1d884e49d107cadf4f23998b74342e046e9e483abf821e3",
+          "resource_id": "delivery-acceptance-repo-v1",
+          "result_digest": "ba5cc644254df577c1fbd26f0f8a3d198c66c9d6326f28941a07e329df77f543",
+          "runner_id": "delivery-fresh-runner-v1",
+          "schema_version": 1,
+          "storage_id": "864d3d99-24dc-43fe-9a19-ffce52557648",
+          "task_id": "b5fa877d-7e24-4472-a13f-9c53944157a4"
+        },
+        "published_digest": "37a8fa5f8d2c180964d516025736c6a22cd8f707d4711df8a8aaef5d9a5f6d19",
+        "read_retry_allowed": false,
+        "remote_preparation": "automatic",
+        "repository_id": "1393178791",
+        "repository_identity": "github.com/6spot/monolab-feasibility-20260928-160020-public",
+        "resource_id": "delivery-acceptance-repo-v1",
+        "retry_allowed": false,
+        "review": {
+          "base_ref": "main",
+          "head_ref": "monos/task/b5fa877d-7e24-4472-a13f-9c53944157a4/delivery-acceptance-repo-v1",
+          "marker": "<!-- monos-delivery-item:ab9e9063-9dab-48ab-82e4-1da932228754 -->",
+          "pr_id": "4796113908",
+          "pr_number": 6,
+          "repository_id": "1393178791",
+          "state": "open",
+          "url": "https://github.com/6spot/monolab-feasibility-20260928-160020-public/pull/6"
+        },
+        "runner_id": "delivery-fresh-runner-v1",
+        "scan_applicable": true,
+        "scan_digest": "d73b6e6f99bb212d63adebb48d9ae3ab31265da1d71591b4e5f138177c9a9fe8",
+        "schema_version": 1,
+        "source": {
+          "attempt_id": "d5706933-fe21-4781-a10f-4feb496bfade",
+          "base_commit": "aa274b45f50c514ed1be500473bc4a284325f375",
+          "dispatch_id": "8b385112-49fa-423a-92c9-0a0a71b53396",
+          "generation": 1,
+          "git_commit": "4cfcb0a809d06c08b0355fe8e4a3d26b7fd4cffc",
+          "git_tree": "565493dbd713eb9e05dad9bcffaca50de100a1a8",
+          "lease_id": "328c1946-d5de-4fc4-abd0-12e806885875",
+          "manifest_digest": "7e81847eeec9dd85df233e56197813d7037f656097b27c7f96126d8f665fad54",
+          "node_activation": 3,
+          "node_id": "node-4b65aed1-7fed-4ad8-b956-0e76e39fb367",
+          "operation_id": "80a92fb1-2436-4481-ae28-a883b75e8160",
+          "operation_identity_digest": "9f79fbdc1fbc0970081abaf02af50fe0a3401641ab88eaa3e72426c2ff14f471",
+          "plan_id": "plan-d0ab3670-d333-44b9-8356-2ddc215a563b",
+          "repository_identity": "github.com/6spot/monolab-feasibility-20260928-160020-public",
+          "resource_id": "delivery-acceptance-repo-v1",
+          "runner_id": "delivery-fresh-runner-v1",
+          "specification_id": "309ac1ef-d174-418c-be9d-5d373fa04dbc",
+          "storage_id": "864d3d99-24dc-43fe-9a19-ffce52557648",
+          "task_id": "b5fa877d-7e24-4472-a13f-9c53944157a4",
+          "workspace_id": "ws_9385294369445e6c3d9a8a7d7ee93af7cd8569bb96e949bcbdb60fcd23384894"
+        },
+        "source_digest": "80335e37b51ee7d2f35fa39b9a50ab77521edd40d2d5815274800b08d0dd551d",
+        "status": "prepared",
+        "target_branch": "main",
+        "task_id": "b5fa877d-7e24-4472-a13f-9c53944157a4"
+      },
+      "path": "/v1/owner/tasks/b5fa877d-7e24-4472-a13f-9c53944157a4/remote-preparation/ab9e9063-9dab-48ab-82e4-1da932228754",
+      "status": 200
+    }
+  ],
+  "session_unknown": false,
+  "submitted": false
+}

@@ -1,0 +1,38 @@
+{
+  "automatic_retry": false,
+  "directory": "/root/monos-optional-http-owner-requests-v1/post-dc08934b-b84b-4d03-931b-22185c7d15d5",
+  "input_sha256": "94f67567860c1d69b67776e548117f7eeffa7991fe15e72b61c21d299fd4a736",
+  "method": "POST",
+  "outcome": "pass",
+  "owner_logged_out": true,
+  "path": "/v1/owner/configuration/commands",
+  "receipt_confirmed": true,
+  "receipt_path": "/v1/owner/configuration/commands/dc08934b-b84b-4d03-931b-22185c7d15d5",
+  "request_id": "dc08934b-b84b-4d03-931b-22185c7d15d5",
+  "responses": [
+    {
+      "body": {
+        "control_version": 4,
+        "entity_id": "delivery-acceptance-role-v1",
+        "request_id": "dc08934b-b84b-4d03-931b-22185c7d15d5",
+        "schema_version": 1,
+        "status": "committed"
+      },
+      "path": "/v1/owner/configuration/commands",
+      "status": 200
+    },
+    {
+      "body": {
+        "control_version": 4,
+        "entity_id": "delivery-acceptance-role-v1",
+        "request_id": "dc08934b-b84b-4d03-931b-22185c7d15d5",
+        "schema_version": 1,
+        "status": "committed"
+      },
+      "path": "/v1/owner/configuration/commands/dc08934b-b84b-4d03-931b-22185c7d15d5",
+      "status": 200
+    }
+  ],
+  "session_unknown": false,
+  "submitted": true
+}

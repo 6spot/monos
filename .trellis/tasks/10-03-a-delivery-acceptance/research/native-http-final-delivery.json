@@ -1,0 +1,89 @@
+{
+  "automatic_retry": false,
+  "directory": "/root/monos-optional-http-owner-requests-v1/get-01919243-e192-4882-95bc-fe4b3a6915fb",
+  "input_sha256": "0b507291f01be6dc2bdbdd0ed3b982aa24bc6b75b65196b0015b13e2682e7637",
+  "method": "GET",
+  "outcome": "pass",
+  "owner_logged_out": true,
+  "path": "/v1/owner/tasks/b5fa877d-7e24-4472-a13f-9c53944157a4/delivery",
+  "receipt_confirmed": false,
+  "receipt_path": null,
+  "request_id": null,
+  "responses": [
+    {
+      "body": {
+        "accept_allowed": false,
+        "accepted_delivery_input_cutoff": 2,
+        "accepted_delivery_operation_id": "30389a92-ed08-44f3-a7bd-90c937f11701",
+        "basis": {
+          "control_version": 13,
+          "plan_id": "plan-d0ab3670-d333-44b9-8356-2ddc215a563b",
+          "specification_id": "309ac1ef-d174-418c-be9d-5d373fa04dbc"
+        },
+        "batches": [
+          {
+            "accepted_at": "2026-10-09T05:46:27.307Z",
+            "cancel_allowed": true,
+            "content_digest": "151e9b4a2234b22676381199cc7856fb9887cb9d3e9c9bbea38b6477c6fe9599",
+            "finalized_items": 0,
+            "input_cutoff": 2,
+            "modified_items": 1,
+            "operation_id": "30389a92-ed08-44f3-a7bd-90c937f11701",
+            "reason": "required_check_pending",
+            "retry_allowed": true,
+            "status": "waiting",
+            "version": 11
+          },
+          {
+            "accepted_at": "2026-10-09T04:54:54.859Z",
+            "cancel_allowed": false,
+            "content_digest": "02d1f9eae61f2f9a1d404d2baa37c7d885cf4d0c6e52e6c197b75ba999353e55",
+            "finalized_items": 0,
+            "input_cutoff": 0,
+            "modified_items": 1,
+            "operation_id": "256ad5c3-aac9-4060-b426-754912328d39",
+            "reason": "required_check_pending",
+            "retry_allowed": false,
+            "status": "revoked",
+            "version": 32
+          }
+        ],
+        "batches_has_more": false,
+        "proposals": [
+          {
+            "basis": {
+              "control_version": 13,
+              "plan_id": "plan-d0ab3670-d333-44b9-8356-2ddc215a563b",
+              "specification_id": "309ac1ef-d174-418c-be9d-5d373fa04dbc"
+            },
+            "confirmation_id": "3004cc3c-241c-44b4-a714-4f43ffc8dbd9",
+            "content_digest": "151e9b4a2234b22676381199cc7856fb9887cb9d3e9c9bbea38b6477c6fe9599",
+            "current": false,
+            "expires_at": "2026-10-09T06:42:18.171Z",
+            "proposal_id": "705481be-dc12-4ee1-a54f-ae5f89583983"
+          },
+          {
+            "basis": {
+              "control_version": 5,
+              "plan_id": "plan-d0ab3670-d333-44b9-8356-2ddc215a563b",
+              "specification_id": "309ac1ef-d174-418c-be9d-5d373fa04dbc"
+            },
+            "confirmation_id": "c984e97c-88a1-41c7-befb-af12ee16db9d",
+            "content_digest": "02d1f9eae61f2f9a1d404d2baa37c7d885cf4d0c6e52e6c197b75ba999353e55",
+            "current": false,
+            "expires_at": "2026-10-09T05:53:27.533Z",
+            "proposal_id": "a6c2d23f-6265-417c-b0a1-e8f7f0161ae5"
+          }
+        ],
+        "proposals_has_more": false,
+        "reason": "accepted",
+        "schema_version": 1,
+        "task_id": "b5fa877d-7e24-4472-a13f-9c53944157a4"
+      },
+      "path": "/v1/owner/tasks/b5fa877d-7e24-4472-a13f-9c53944157a4/delivery",
+      "status": 200
+    }
+  ],
+  "session_unknown": false,
+  "submitted": false
+}

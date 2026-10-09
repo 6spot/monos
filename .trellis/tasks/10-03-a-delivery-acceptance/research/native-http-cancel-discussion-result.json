@@ -1,0 +1,40 @@
+{
+  "automatic_retry": false,
+  "directory": "/root/monos-optional-http-owner-requests-v1/post-a5356c93-a6f7-48b9-b0a1-9c6df56220a0",
+  "input_sha256": "3f72d4af400b954fad0ddbd43dc5a1c34c48c5854520c1985811e73e5a10f1d0",
+  "method": "POST",
+  "outcome": "pass",
+  "owner_logged_out": true,
+  "path": "/v1/owner/todos/discussion/commands",
+  "receipt_confirmed": true,
+  "receipt_path": "/v1/owner/todos/discussion/commands/a5356c93-a6f7-48b9-b0a1-9c6df56220a0",
+  "request_id": "a5356c93-a6f7-48b9-b0a1-9c6df56220a0",
+  "responses": [
+    {
+      "body": {
+        "discussion_version": 1,
+        "message_id": "90413c53-21a8-4dcb-ac9d-4bea8830ab86",
+        "request_id": "a5356c93-a6f7-48b9-b0a1-9c6df56220a0",
+        "schema_version": 1,
+        "status": "committed",
+        "todo_id": "0b247336-8acf-49b7-b143-69d1427a1255"
+      },
+      "path": "/v1/owner/todos/discussion/commands",
+      "status": 200
+    },
+    {
+      "body": {
+        "discussion_version": 1,
+        "message_id": "90413c53-21a8-4dcb-ac9d-4bea8830ab86",
+        "request_id": "a5356c93-a6f7-48b9-b0a1-9c6df56220a0",
+        "schema_version": 1,
+        "status": "committed",
+        "todo_id": "0b247336-8acf-49b7-b143-69d1427a1255"
+      },
+      "path": "/v1/owner/todos/discussion/commands/a5356c93-a6f7-48b9-b0a1-9c6df56220a0",
+      "status": 200
+    }
+  ],
+  "session_unknown": false,
+  "submitted": true
+}

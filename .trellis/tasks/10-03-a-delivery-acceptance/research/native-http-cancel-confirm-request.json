@@ -1,0 +1,15 @@
+{
+  "path": "/v1/owner/task-previews/commands",
+  "method": "POST",
+  "body": {
+    "schema_version": 1,
+    "request_id": "6d20fea4-a225-4f1e-ba6e-82febcab9ca5",
+    "todo_id": "0b247336-8acf-49b7-b143-69d1427a1255",
+    "name": "confirm_task_preview",
+    "payload": {
+      "proposal_message_id": "ec7ef0be-b536-42f0-99c4-9fd08fb1c501",
+      "project_id": "delivery-acceptance-project-v1",
+      "content_digest": "feee5408237fd1bb875fc1a325aec493addd5834680f728ddcbdc8785cec880f"
+    }
+  }
+}

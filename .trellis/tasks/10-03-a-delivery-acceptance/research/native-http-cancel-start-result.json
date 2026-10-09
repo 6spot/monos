@@ -1,0 +1,40 @@
+{
+  "automatic_retry": false,
+  "directory": "/root/monos-optional-http-owner-requests-v1/post-4295d63a-7f33-4591-8a10-4ee538ddb5a1",
+  "input_sha256": "1aa77007053a1390384901d3858c7fcfa6aca6f333c7ece695084909051dbebe",
+  "method": "POST",
+  "outcome": "pass",
+  "owner_logged_out": true,
+  "path": "/v1/owner/commands",
+  "receipt_confirmed": true,
+  "receipt_path": "/v1/owner/scopes/a53d17f3-451b-4616-82f5-559f2ef29f59/commands/4295d63a-7f33-4591-8a10-4ee538ddb5a1",
+  "request_id": "4295d63a-7f33-4591-8a10-4ee538ddb5a1",
+  "responses": [
+    {
+      "body": {
+        "control_version": 2,
+        "planning_intent_id": "7980d52e-48bb-4e13-bc46-362752544308",
+        "request_id": "4295d63a-7f33-4591-8a10-4ee538ddb5a1",
+        "schema_version": 1,
+        "status": "committed",
+        "task_id": "a53d17f3-451b-4616-82f5-559f2ef29f59"
+      },
+      "path": "/v1/owner/commands",
+      "status": 200
+    },
+    {
+      "body": {
+        "control_version": 2,
+        "planning_intent_id": "7980d52e-48bb-4e13-bc46-362752544308",
+        "request_id": "4295d63a-7f33-4591-8a10-4ee538ddb5a1",
+        "schema_version": 1,
+        "status": "committed",
+        "task_id": "a53d17f3-451b-4616-82f5-559f2ef29f59"
+      },
+      "path": "/v1/owner/scopes/a53d17f3-451b-4616-82f5-559f2ef29f59/commands/4295d63a-7f33-4591-8a10-4ee538ddb5a1",
+      "status": 200
+    }
+  ],
+  "session_unknown": false,
+  "submitted": true
+}

@@ -1,0 +1,133 @@
+{
+  "build": {
+    "outcome": "pass",
+    "candidate_commit": "74fc8a8993bfe7bab8c21367485b47241b651e64",
+    "image_id": "sha256:b98a85f9f438ec8b0efbe6dbf1afdd93beed186db591d95302b0d4d89532ac88",
+    "source_sha256": "158de486e8485e01cd3105dccefe4cf8fd14614567030165856c76dd7ea1fe57",
+    "binaries": {
+      "monos": {
+        "path": "/root/monos-opencode-v2-release-v1/bin/monos",
+        "sha256": "9d88cf6c362b85a82ad34d3bfe20501d3f95598b4a67c9e8fb33e848f6ca1d6a"
+      },
+      "monos-probe-launch": {
+        "path": "/root/monos-opencode-v2-release-v1/bin/monos-probe-launch",
+        "sha256": "0b00cc894ef4a183e5bd3bc954f201ea447550b92a427775b6becbff155da320"
+      },
+      "monos-runner": {
+        "path": "/root/monos-opencode-v2-release-v1/bin/monos-runner",
+        "sha256": "0604d198a0f79efc180ccb56f4497459dd681d3cdcd3ff1b9c7f62433d4d8c06"
+      },
+      "monos-probe-exec": {
+        "path": "/root/monos-opencode-v2-release-v1/bin/monos-probe-exec",
+        "sha256": "608de6ff0067dc78095ccb253a314078c3de40373f2edcbe421f10ff77d85b0b"
+      }
+    }
+  },
+  "first_install": {
+    "automatic_retry": false,
+    "outcome": "failed",
+    "reason": "AssertionError",
+    "reconcile_before_continuation": true
+  },
+  "discovery_build": {
+    "outcome": "pass",
+    "candidate_commit": "f4240fbaa6b8d92bcfbce30e6303f5ef25ae6e13",
+    "source_sha256": "b058fc0c640caa81c5539c7f3830249301646ef23d869dbb3c2687479ede9001",
+    "server_source_commit": "74fc8a8993bfe7bab8c21367485b47241b651e64",
+    "image_id": "sha256:b98a85f9f438ec8b0efbe6dbf1afdd93beed186db591d95302b0d4d89532ac88",
+    "binaries": {
+      "monos": {
+        "path": "/root/monos-opencode-v2-discovery-v1/bin/monos",
+        "sha256": "c494a2b88f093bb73937567f728178193bffed0632a722b272ee8a7010d8f111"
+      },
+      "monos-probe-launch": {
+        "path": "/root/monos-opencode-v2-discovery-v1/bin/monos-probe-launch",
+        "sha256": "d34e73cd5c7d884b6a1af1d615a4c8ead58e9c677d3bc28ecebe23ba80189410"
+      },
+      "monos-runner": {
+        "path": "/root/monos-opencode-v2-discovery-v1/bin/monos-runner",
+        "sha256": "4359213a78e20a28fb5e76c5fb61cc81649d689c4827a8c1576ae8c22cd354ef"
+      },
+      "monos-probe-exec": {
+        "path": "/root/monos-opencode-v2-discovery-v1/bin/monos-probe-exec",
+        "sha256": "c895c46a8da00a092800b2a04ae6e165c2a081510a968381b4568b0a19e1dfa7"
+      }
+    }
+  },
+  "install": {
+    "automatic_retry": false,
+    "binaries": {
+      "monos": {
+        "path": "/root/monos-opencode-v2-discovery-v1/bin/monos",
+        "sha256": "c494a2b88f093bb73937567f728178193bffed0632a722b272ee8a7010d8f111"
+      },
+      "monos-probe-exec": {
+        "path": "/root/monos-opencode-v2-discovery-v1/bin/monos-probe-exec",
+        "sha256": "c895c46a8da00a092800b2a04ae6e165c2a081510a968381b4568b0a19e1dfa7"
+      },
+      "monos-probe-launch": {
+        "path": "/root/monos-opencode-v2-discovery-v1/bin/monos-probe-launch",
+        "sha256": "d34e73cd5c7d884b6a1af1d615a4c8ead58e9c677d3bc28ecebe23ba80189410"
+      },
+      "monos-runner": {
+        "path": "/root/monos-opencode-v2-discovery-v1/bin/monos-runner",
+        "sha256": "4359213a78e20a28fb5e76c5fb61cc81649d689c4827a8c1576ae8c22cd354ef"
+      }
+    },
+    "candidate_commit": "f4240fbaa6b8d92bcfbce30e6303f5ef25ae6e13",
+    "database": "a650c142fb83ff89b93de6ec4e5f3584a330927b4c40f4796bff4a2afcb0fa01",
+    "endpoint": "http://127.0.0.1:18445",
+    "outcome": "pass",
+    "ready": {
+      "counts": {
+        "attempts": 0,
+        "delivery_operations": 0,
+        "operations": 0,
+        "owner_delivery_batches": 0,
+        "owner_delivery_merge_operations": 0,
+        "publication_candidates": 0,
+        "remote_preparation_operations": 0,
+        "runtime_events": 0,
+        "task_review_operations": 0,
+        "tasks": 0,
+        "workspace_leases": 0
+      },
+      "n": 1,
+      "runner": {
+        "boot": "eb12bbe6-c63c-4e2e-8463-82b3e780aca1",
+        "capacity": 2,
+        "connected": true,
+        "connection": "ae7ae2d6-735f-4312-b819-1f294b5b801b",
+        "credential_matches": true,
+        "id": "delivery-fresh-runner-v1",
+        "incarnation": 24,
+        "ready": true,
+        "recent": true,
+        "report": 24
+      },
+      "runtimes": [
+        {
+          "incarnation": 24,
+          "observation": {
+            "availability": "detected",
+            "executable": "/home/linuxbrew/.linuxbrew/bin/opencode",
+            "model_ids": [],
+            "runtime_id": "opencode",
+            "supports_model": true,
+            "supports_thinking": false,
+            "version": "2.0.20"
+          },
+          "runner": "delivery-fresh-runner-v1"
+        }
+      ]
+    },
+    "server": [
+      "617bcf7d70b595a2115bece9f2dc8712e86bd23cff818419aaa14a5fd5798d50",
+      "2026-10-09T03:29:52.425069057Z",
+      0
+    ],
+    "server_image": "sha256:b98a85f9f438ec8b0efbe6dbf1afdd93beed186db591d95302b0d4d89532ac88",
+    "server_source_commit": "74fc8a8993bfe7bab8c21367485b47241b651e64",
+    "storage": "864d3d99-24dc-43fe-9a19-ffce52557648"
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "automatic_retry": false,
+  "directory": "/root/monos-optional-http-owner-requests-v1/get-c8f89f74-65f6-4b5d-870f-161062e9a391",
+  "input_sha256": "a70dc6bb9233e02d0f3dfc8ef40331d0748d2d0ffada5cbc0ea84afac54e44b1",
+  "method": "GET",
+  "outcome": "pass",
+  "owner_logged_out": true,
+  "path": "/v1/owner/tasks/b5fa877d-7e24-4472-a13f-9c53944157a4",
+  "receipt_confirmed": false,
+  "receipt_path": null,
+  "request_id": null,
+  "responses": [
+    {
+      "body": {
+        "accepted_delivery_input_cutoff": 2,
+        "accepted_delivery_operation_id": "30389a92-ed08-44f3-a7bd-90c937f11701",
+        "control_version": 14,
+        "created_at": "2026-10-09T03:40:40.256Z",
+        "event_cursor": "eyJhZnRlciI6MTUsInRhc2tfaWQiOiJiNWZhODc3ZC03ZTI0LTQ0NzItYTEzZi05YzUzOTQ0MTU3YTQiLCJ2ZXJzaW9uIjoxfQ",
+        "held_attempts": 0,
+        "initial_specification_id": "309ac1ef-d174-418c-be9d-5d373fa04dbc",
+        "nodes": {
+          "blocked": 0,
+          "cancelled": 0,
+          "completed": 1,
+          "pending": 0,
+          "running": 0
+        },
+        "open_operations": 0,
+        "plan_id": "plan-d0ab3670-d333-44b9-8356-2ddc215a563b",
+        "project_id": "delivery-acceptance-project-v1",
+        "queued_attempts": 0,
+        "schema_version": 1,
+        "specification": "# Execution Task: Add Python 3 greeting module with tests and README section\n\n## Scope\n- One small Node in the selected controlled Project `delivery-acceptance-project-v1`, using the selected Role and the repository resource `delivery-acceptance-repo-v1` (default branch `main`).\n- Confine all work to that repository; preserve every existing repository file and behavior.\n\n## Deliverables\n1. `greeting.py` (Python 3 module, repository root)\n   - Expose `greeting(name: str) -> str`.\n   - Strip leading and trailing whitespace from `name`.\n   - If the stripped result is nonempty, return `\"Hello, <name>!\"` with the stripped name substituted literally.\n   - If the stripped result is empty or whitespace-only, return `\"Hello, friend!\"`.\n   - Preserve Unicode names as literal text: no normalization, encoding conversion, or transliteration of the name.\n\n2. `tests/test_greeting.py`\n   - Meaningful tests using only the Python 3 standard library (`unittest`).\n   - Cover at least: a normal name, a name with leading/trailing whitespace (trimmed), blank and whitespace-only names (friend case), and a Unicode name preserved literally.\n   - No third-party dependencies.\n\n3. `README.md`\n   - Add an additive section (do not remove or alter existing content) that documents the module and includes the exact command:\n     `python3 -m unittest discover -s tests -v`\n\n## Constraints\n- Do not change `.github/workflows`.\n- The function must have no network or filesystem side effects.\n- No new dependencies; no credentials; do not publish private execution history.\n- Keep the change to one small Node; do not create additional Tasks or Nodes.\n\n## Acceptance check\n- `python3 -m unittest discover -s tests -v` runs green using only the standard library.\n- All pre-existing repository files and behavior remain intact.",
+        "specification_id": "309ac1ef-d174-418c-be9d-5d373fa04dbc",
+        "state": "COMPLETED",
+        "task_id": "b5fa877d-7e24-4472-a13f-9c53944157a4",
+        "title": "Add Python 3 greeting module with tests and README section",
+        "todo_id": "0c06605d-b8cb-471a-a28b-2a930a8016fe"
+      },
+      "path": "/v1/owner/tasks/b5fa877d-7e24-4472-a13f-9c53944157a4",
+      "status": 200
+    }
+  ],
+  "session_unknown": false,
+  "submitted": false
+}

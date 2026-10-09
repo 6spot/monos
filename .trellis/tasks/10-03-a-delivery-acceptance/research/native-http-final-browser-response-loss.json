@@ -1,0 +1,21 @@
+{
+  "armed": false,
+  "dropped": true,
+  "command": {
+    "schema_version": 1,
+    "task_id": "b5fa877d-7e24-4472-a13f-9c53944157a4",
+    "request_id": "15bcb869-eaeb-41b1-9a4e-7f6e2bb07e58",
+    "name": "accept_delivery",
+    "payload": {
+      "proposal_id": "705481be-dc12-4ee1-a54f-ae5f89583983",
+      "confirmation_id": "3004cc3c-241c-44b4-a714-4f43ffc8dbd9",
+      "content_digest": "151e9b4a2234b22676381199cc7856fb9887cb9d3e9c9bbea38b6477c6fe9599",
+      "basis": {
+        "plan_id": "plan-d0ab3670-d333-44b9-8356-2ddc215a563b",
+        "control_version": 13,
+        "specification_id": "309ac1ef-d174-418c-be9d-5d373fa04dbc"
+      }
+    }
+  },
+  "response_status": 200
+}

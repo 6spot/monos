@@ -1,0 +1,7 @@
+{
+  "todo_id": "0b247336-8acf-49b7-b143-69d1427a1255",
+  "message_id": "90413c53-21a8-4dcb-ac9d-4bea8830ab86",
+  "capture_request_id": "f5fdebbf-7394-4660-942e-a6600662e518",
+  "discussion_request_id": "a5356c93-a6f7-48b9-b0a1-9c6df56220a0",
+  "request": "In the selected controlled test repository, add farewell.py with a pure farewell(name: str) -> str function. Trim surrounding whitespace. For a nonempty name return \"Goodbye, <name>!\" and for a blank name return \"Goodbye, friend!\". Preserve Unicode characters. Add meaningful standard-library unittest tests and an additive README section documenting the literal command python3 -m unittest discover -s tests -v. Preserve all existing files and behavior, add no dependencies, do not change .github/workflows, and perform no filesystem or network I/O in the function. Keep the implementation to one small Node."
+}

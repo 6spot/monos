@@ -1,0 +1,9 @@
+{
+  "number": 7,
+  "state": "closed",
+  "merged": false,
+  "merged_at": null,
+  "head": "9cb5e554e4f7cd59bec5cdf05b7d13aa1cfb25d8",
+  "branch_retained": true,
+  "ref": "refs/heads/monos/task/a53d17f3-451b-4616-82f5-559f2ef29f59/delivery-acceptance-repo-v1"
+}

@@ -1,0 +1,41 @@
+{
+  "automatic_retry": false,
+  "directory": "/root/monos-optional-http-owner-requests-v1/get-dc5efd0f-7c58-4217-8817-05f547e19ce3",
+  "input_sha256": "1badf3ffde796fb00ba474b40fa0964cebf4a1516af0db5d305a8cefc45eb88f",
+  "method": "GET",
+  "outcome": "pass",
+  "owner_logged_out": true,
+  "path": "/v1/owner/tasks/b5fa877d-7e24-4472-a13f-9c53944157a4/review",
+  "receipt_confirmed": false,
+  "receipt_path": null,
+  "request_id": null,
+  "responses": [
+    {
+      "body": {
+        "accepted_batch": {
+          "content_digest": "02d1f9eae61f2f9a1d404d2baa37c7d885cf4d0c6e52e6c197b75ba999353e55",
+          "expected_version": 13,
+          "operation_id": "256ad5c3-aac9-4060-b426-754912328d39"
+        },
+        "basis": {
+          "control_version": 5,
+          "plan_id": "plan-d0ab3670-d333-44b9-8356-2ddc215a563b",
+          "review_result_digest": "50ddcd071214583242b4bffdd6325ec7d52c3f65436cfc37c57435b32ded4cd8",
+          "specification_id": "309ac1ef-d174-418c-be9d-5d373fa04dbc"
+        },
+        "feedback": null,
+        "history": [],
+        "history_has_more": false,
+        "inputs": [],
+        "inputs_has_more": false,
+        "request_changes_allowed": true,
+        "schema_version": 1,
+        "task_id": "b5fa877d-7e24-4472-a13f-9c53944157a4"
+      },
+      "path": "/v1/owner/tasks/b5fa877d-7e24-4472-a13f-9c53944157a4/review",
+      "status": 200
+    }
+  ],
+  "session_unknown": false,
+  "submitted": false
+}

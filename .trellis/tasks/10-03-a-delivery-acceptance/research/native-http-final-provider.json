@@ -1,0 +1,14 @@
+{
+  "pr_number": 6,
+  "url": "https://github.com/6spot/monolab-feasibility-20260928-160020-public/pull/6",
+  "merged": true,
+  "merged_at": "2026-10-09T05:54:52Z",
+  "merge_commit": "bebe1aec1544b5fae107d80c23fafc8b00f27947",
+  "final_tree": "565493dbd713eb9e05dad9bcffaca50de100a1a8",
+  "parents": [
+    "aa274b45f50c514ed1be500473bc4a284325f375",
+    "fab7aead32830a3ec0c655975a5d6948cc47f680"
+  ],
+  "accepted_head": "fab7aead32830a3ec0c655975a5d6948cc47f680",
+  "main_head": "bebe1aec1544b5fae107d80c23fafc8b00f27947"
+}

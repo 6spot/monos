@@ -1,0 +1,17 @@
+{
+  "path": "/v1/owner/tasks/delivery/commands",
+  "method": "POST",
+  "body": {
+    "schema_version": 1,
+    "request_id": "3acc32de-3ecf-427f-a1b8-8f4f9ae1b164",
+    "task_id": "b5fa877d-7e24-4472-a13f-9c53944157a4",
+    "name": "prepare_delivery_acceptance",
+    "payload": {
+      "basis": {
+        "control_version": 5,
+        "plan_id": "plan-d0ab3670-d333-44b9-8356-2ddc215a563b",
+        "specification_id": "309ac1ef-d174-418c-be9d-5d373fa04dbc"
+      }
+    }
+  }
+}

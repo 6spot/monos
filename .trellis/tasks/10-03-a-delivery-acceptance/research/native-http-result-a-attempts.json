@@ -1,0 +1,63 @@
+{
+  "automatic_retry": false,
+  "directory": "/root/monos-optional-http-owner-requests-v1/get-2a258d06-d136-40a4-88b9-ec46067fe81d",
+  "input_sha256": "49d28e992e8884688a8cd7ede8ac0515a4dd183fbb9fc0250dafe8ae8f2ea7bd",
+  "method": "GET",
+  "outcome": "pass",
+  "owner_logged_out": true,
+  "path": "/v1/owner/tasks/b5fa877d-7e24-4472-a13f-9c53944157a4/attempts",
+  "receipt_confirmed": false,
+  "receipt_path": null,
+  "request_id": null,
+  "responses": [
+    {
+      "body": {
+        "attempts": [
+          {
+            "activity_at": "2026-10-09T03:44:27.762Z",
+            "attempt_id": "d3deea6f-297d-4d6a-8b9d-cf0d04478f0b",
+            "created_at": "2026-10-09T03:42:57.650Z",
+            "kind": "node",
+            "latest_sequence": 21,
+            "log_mode": "ordered_v1",
+            "mutation_allowed": false,
+            "node_id": "node-4b65aed1-7fed-4ad8-b956-0e76e39fb367",
+            "process_absent": true,
+            "process_released": true,
+            "runner_id": "delivery-fresh-runner-v1",
+            "schema_version": 1,
+            "started": true,
+            "state": "SUCCEEDED",
+            "task_id": "b5fa877d-7e24-4472-a13f-9c53944157a4",
+            "visible_sequence": 21
+          },
+          {
+            "activity_at": "2026-10-09T03:42:57.767Z",
+            "attempt_id": "c7bffec8-dc07-450f-a174-ab0e638acebc",
+            "created_at": "2026-10-09T03:42:29.622Z",
+            "kind": "planner",
+            "latest_sequence": 5,
+            "log_mode": "ordered_v1",
+            "mutation_allowed": false,
+            "process_absent": true,
+            "process_released": true,
+            "runner_id": "delivery-fresh-runner-v1",
+            "schema_version": 1,
+            "started": true,
+            "state": "SUCCEEDED",
+            "task_id": "b5fa877d-7e24-4472-a13f-9c53944157a4",
+            "visible_sequence": 5
+          }
+        ],
+        "cursor": "eyJhdHRlbXB0X2lkIjoiYzdiZmZlYzgtZGMwNy00NTBmLWExNzQtYWIwZTYzOGFjZWJjIiwiY3JlYXRlZF9hdCI6IjIwMjYtMTAtMDkgMDM6NDI6MjkuNjIyNzY3KzAwIiwidGFza19pZCI6ImI1ZmE4NzdkLTdlMjQtNDQ3Mi1hMTNmLTljNTM5NDQxNTdhNCIsInZlcnNpb24iOjF9",
+        "has_more": false,
+        "schema_version": 1,
+        "task_id": "b5fa877d-7e24-4472-a13f-9c53944157a4"
+      },
+      "path": "/v1/owner/tasks/b5fa877d-7e24-4472-a13f-9c53944157a4/attempts",
+      "status": 200
+    }
+  ],
+  "session_unknown": false,
+  "submitted": false
+}

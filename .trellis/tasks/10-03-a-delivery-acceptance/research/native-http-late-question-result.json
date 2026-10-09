@@ -1,0 +1,42 @@
+{
+  "automatic_retry": false,
+  "directory": "/root/monos-optional-http-owner-requests-v1/post-0b4a1b5a-a6c9-4c8c-87f3-6767b9ea1242",
+  "input_sha256": "f1e324ee74371c5805a90d9e1fd3eb4f3d757b55e3336f777d4026306bc12604",
+  "method": "POST",
+  "outcome": "pass",
+  "owner_logged_out": true,
+  "path": "/v1/owner/tasks/conversation/commands",
+  "receipt_confirmed": true,
+  "receipt_path": "/v1/owner/tasks/b5fa877d-7e24-4472-a13f-9c53944157a4/conversation/commands/0b4a1b5a-a6c9-4c8c-87f3-6767b9ea1242",
+  "request_id": "0b4a1b5a-a6c9-4c8c-87f3-6767b9ea1242",
+  "responses": [
+    {
+      "body": {
+        "input_id": "6f85dd3b-4e94-430e-8ca0-73412c22e781",
+        "message_id": "f885223d-95fb-49a7-b0f2-8af7563f2fdb",
+        "request_id": "0b4a1b5a-a6c9-4c8c-87f3-6767b9ea1242",
+        "schema_version": 1,
+        "status": "committed",
+        "task_id": "b5fa877d-7e24-4472-a13f-9c53944157a4",
+        "version": 1
+      },
+      "path": "/v1/owner/tasks/conversation/commands",
+      "status": 200
+    },
+    {
+      "body": {
+        "input_id": "6f85dd3b-4e94-430e-8ca0-73412c22e781",
+        "message_id": "f885223d-95fb-49a7-b0f2-8af7563f2fdb",
+        "request_id": "0b4a1b5a-a6c9-4c8c-87f3-6767b9ea1242",
+        "schema_version": 1,
+        "status": "committed",
+        "task_id": "b5fa877d-7e24-4472-a13f-9c53944157a4",
+        "version": 1
+      },
+      "path": "/v1/owner/tasks/b5fa877d-7e24-4472-a13f-9c53944157a4/conversation/commands/0b4a1b5a-a6c9-4c8c-87f3-6767b9ea1242",
+      "status": 200
+    }
+  ],
+  "session_unknown": false,
+  "submitted": true
+}

@@ -1,0 +1,11 @@
+{
+  "late_question_id": "f885223d-95fb-49a7-b0f2-8af7563f2fdb",
+  "late_question_request_id": "0b4a1b5a-a6c9-4c8c-87f3-6767b9ea1242",
+  "late_question": "Does the greeting preserve decomposed Unicode combining marks exactly, including when the name is surrounded by Unicode whitespace? Please explain the existing behavior; this question does not request a requirements change.",
+  "feedback_id": "001ea5cd-23e4-4b04-b748-0ba2ba383249",
+  "feedback_request_id": "08255e19-48f5-4e91-8a00-869754ed0970",
+  "feedback": "Please improve the tests within the current greeting specification. The test named test_no_network_or_filesystem_side_effects currently only compares two return values; that does not test the no-I/O requirement. Replace it with a meaningful guard that would fail if greeting attempts filesystem or network I/O. Also add regressions showing that Unicode surrounding whitespace is trimmed and that a decomposed name containing combining marks is preserved literally without normalization. Keep the same greeting behavior, same Node, standard-library-only dependencies, and exact documented test command. Preserve all existing repository files and README content. Run the documented tests and report the actual results.",
+  "final_chat_id": "0c1a7759-d35d-48af-abe9-521cb2960b3c",
+  "final_chat_request_id": "18f879f1-e98f-4887-9e3b-45825b05e3cf",
+  "final_chat": "Thanks. I will close this browser now. Please give a brief explanation of the verified greeting behavior; do not change the accepted result or its requirements."
+}

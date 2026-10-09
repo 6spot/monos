@@ -1,0 +1,14 @@
+{
+  "path": "/v1/owner/tasks/delivery/commands",
+  "method": "POST",
+  "body": {
+    "schema_version": 1,
+    "request_id": "966cc2d0-3c46-4665-b241-4bee1c7b348f",
+    "task_id": "b5fa877d-7e24-4472-a13f-9c53944157a4",
+    "name": "confirm_delivery_acceptance",
+    "payload": {
+      "proposal_id": "a6c2d23f-6265-417c-b0a1-e8f7f0161ae5",
+      "content_digest": "02d1f9eae61f2f9a1d404d2baa37c7d885cf4d0c6e52e6c197b75ba999353e55"
+    }
+  }
+}

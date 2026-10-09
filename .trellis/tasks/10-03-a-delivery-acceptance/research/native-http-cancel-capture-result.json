@@ -1,0 +1,56 @@
+{
+  "automatic_retry": false,
+  "directory": "/root/monos-optional-http-owner-requests-v1/post-f5fdebbf-7394-4660-942e-a6600662e518",
+  "input_sha256": "83318f50623fe1dcbeea648e068c5544be3382a8d07148e2c3a31431c17bc8a4",
+  "method": "POST",
+  "outcome": "pass",
+  "owner_logged_out": true,
+  "path": "/v1/owner/todos/commands",
+  "receipt_confirmed": true,
+  "receipt_path": "/v1/owner/todos/commands/f5fdebbf-7394-4660-942e-a6600662e518",
+  "request_id": "f5fdebbf-7394-4660-942e-a6600662e518",
+  "responses": [
+    {
+      "body": {
+        "request_id": "f5fdebbf-7394-4660-942e-a6600662e518",
+        "schema_version": 1,
+        "status": "committed",
+        "todo": {
+          "archived": false,
+          "control_version": 1,
+          "created_at": "2026-10-09T03:56:58.795Z",
+          "discussion_activity_at": "2026-10-09T03:56:58.795Z",
+          "label": "In the selected controlled test repository, add farewell.py with a pure farewell(name: str) -> str function. Trim surrounding whitespace. For a nonempty name re",
+          "original_capture": "In the selected controlled test repository, add farewell.py with a pure farewell(name: str) -> str function. Trim surrounding whitespace. For a nonempty name return \"Goodbye, <name>!\" and for a blank name return \"Goodbye, friend!\". Preserve Unicode characters. Add meaningful standard-library unittest tests and an additive README section documenting the literal command python3 -m unittest discover -s tests -v. Preserve all existing files and behavior, add no dependencies, do not change .github/workflows, and perform no filesystem or network I/O in the function. Keep the implementation to one small Node.",
+          "project_id": "delivery-acceptance-project-v1",
+          "schema_version": 1,
+          "todo_id": "0b247336-8acf-49b7-b143-69d1427a1255"
+        }
+      },
+      "path": "/v1/owner/todos/commands",
+      "status": 200
+    },
+    {
+      "body": {
+        "request_id": "f5fdebbf-7394-4660-942e-a6600662e518",
+        "schema_version": 1,
+        "status": "committed",
+        "todo": {
+          "archived": false,
+          "control_version": 1,
+          "created_at": "2026-10-09T03:56:58.795Z",
+          "discussion_activity_at": "2026-10-09T03:56:58.795Z",
+          "label": "In the selected controlled test repository, add farewell.py with a pure farewell(name: str) -> str function. Trim surrounding whitespace. For a nonempty name re",
+          "original_capture": "In the selected controlled test repository, add farewell.py with a pure farewell(name: str) -> str function. Trim surrounding whitespace. For a nonempty name return \"Goodbye, <name>!\" and for a blank name return \"Goodbye, friend!\". Preserve Unicode characters. Add meaningful standard-library unittest tests and an additive README section documenting the literal command python3 -m unittest discover -s tests -v. Preserve all existing files and behavior, add no dependencies, do not change .github/workflows, and perform no filesystem or network I/O in the function. Keep the implementation to one small Node.",
+          "project_id": "delivery-acceptance-project-v1",
+          "schema_version": 1,
+          "todo_id": "0b247336-8acf-49b7-b143-69d1427a1255"
+        }
+      },
+      "path": "/v1/owner/todos/commands/f5fdebbf-7394-4660-942e-a6600662e518",
+      "status": 200
+    }
+  ],
+  "session_unknown": false,
+  "submitted": true
+}

@@ -1,0 +1,40 @@
+{
+  "automatic_retry": false,
+  "directory": "/root/monos-optional-http-owner-requests-v1/post-ce3a939c-9e41-4970-b9af-8c0a3fca6d5b",
+  "input_sha256": "5d43b1473d818387b80858b0e7d04460a37eb5eed9f7ce24b7103da14b8af0c7",
+  "method": "POST",
+  "outcome": "pass",
+  "owner_logged_out": true,
+  "path": "/v1/owner/commands",
+  "receipt_confirmed": true,
+  "receipt_path": "/v1/owner/scopes/b5fa877d-7e24-4472-a13f-9c53944157a4/commands/ce3a939c-9e41-4970-b9af-8c0a3fca6d5b",
+  "request_id": "ce3a939c-9e41-4970-b9af-8c0a3fca6d5b",
+  "responses": [
+    {
+      "body": {
+        "control_version": 2,
+        "planning_intent_id": "defaa955-63b1-4790-92e8-f243d9b74928",
+        "request_id": "ce3a939c-9e41-4970-b9af-8c0a3fca6d5b",
+        "schema_version": 1,
+        "status": "committed",
+        "task_id": "b5fa877d-7e24-4472-a13f-9c53944157a4"
+      },
+      "path": "/v1/owner/commands",
+      "status": 200
+    },
+    {
+      "body": {
+        "control_version": 2,
+        "planning_intent_id": "defaa955-63b1-4790-92e8-f243d9b74928",
+        "request_id": "ce3a939c-9e41-4970-b9af-8c0a3fca6d5b",
+        "schema_version": 1,
+        "status": "committed",
+        "task_id": "b5fa877d-7e24-4472-a13f-9c53944157a4"
+      },
+      "path": "/v1/owner/scopes/b5fa877d-7e24-4472-a13f-9c53944157a4/commands/ce3a939c-9e41-4970-b9af-8c0a3fca6d5b",
+      "status": 200
+    }
+  ],
+  "session_unknown": false,
+  "submitted": true
+}

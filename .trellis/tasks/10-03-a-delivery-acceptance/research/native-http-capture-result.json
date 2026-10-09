@@ -1,0 +1,56 @@
+{
+  "automatic_retry": false,
+  "directory": "/root/monos-optional-http-owner-requests-v1/post-3e226d23-7c75-4b98-8c75-ca451d466deb",
+  "input_sha256": "061962697839746eb69758da8094a32c45f46cddaee6008d05e0c2c40a3a375f",
+  "method": "POST",
+  "outcome": "pass",
+  "owner_logged_out": true,
+  "path": "/v1/owner/todos/commands",
+  "receipt_confirmed": true,
+  "receipt_path": "/v1/owner/todos/commands/3e226d23-7c75-4b98-8c75-ca451d466deb",
+  "request_id": "3e226d23-7c75-4b98-8c75-ca451d466deb",
+  "responses": [
+    {
+      "body": {
+        "request_id": "3e226d23-7c75-4b98-8c75-ca451d466deb",
+        "schema_version": 1,
+        "status": "committed",
+        "todo": {
+          "archived": false,
+          "control_version": 1,
+          "created_at": "2026-10-09T03:21:16.747Z",
+          "discussion_activity_at": "2026-10-09T03:21:16.747Z",
+          "label": "Add a Python 3 module greeting.py exposing greeting(name: str) -> str. Strip leading and trailing whitespace from name. For a nonempty result return \"Hello, <na",
+          "original_capture": "Add a Python 3 module greeting.py exposing greeting(name: str) -> str. Strip leading and trailing whitespace from name. For a nonempty result return \"Hello, <name>!\"; for an empty or whitespace-only name return \"Hello, friend!\". Preserve Unicode names as literal text. Add meaningful standard-library unittest tests for normal, trimmed, blank and Unicode names in tests/test_greeting.py. Add an additive README section with the exact command python3 -m unittest discover -s tests -v. Preserve all existing repository files and behavior. Do not change .github/workflows, use network or filesystem side effects in the function, add dependencies, publish credentials or publish private execution history. Keep this to one small Node in the selected controlled Project.",
+          "project_id": "delivery-acceptance-project-v1",
+          "schema_version": 1,
+          "todo_id": "0c06605d-b8cb-471a-a28b-2a930a8016fe"
+        }
+      },
+      "path": "/v1/owner/todos/commands",
+      "status": 200
+    },
+    {
+      "body": {
+        "request_id": "3e226d23-7c75-4b98-8c75-ca451d466deb",
+        "schema_version": 1,
+        "status": "committed",
+        "todo": {
+          "archived": false,
+          "control_version": 1,
+          "created_at": "2026-10-09T03:21:16.747Z",
+          "discussion_activity_at": "2026-10-09T03:21:16.747Z",
+          "label": "Add a Python 3 module greeting.py exposing greeting(name: str) -> str. Strip leading and trailing whitespace from name. For a nonempty result return \"Hello, <na",
+          "original_capture": "Add a Python 3 module greeting.py exposing greeting(name: str) -> str. Strip leading and trailing whitespace from name. For a nonempty result return \"Hello, <name>!\"; for an empty or whitespace-only name return \"Hello, friend!\". Preserve Unicode names as literal text. Add meaningful standard-library unittest tests for normal, trimmed, blank and Unicode names in tests/test_greeting.py. Add an additive README section with the exact command python3 -m unittest discover -s tests -v. Preserve all existing repository files and behavior. Do not change .github/workflows, use network or filesystem side effects in the function, add dependencies, publish credentials or publish private execution history. Keep this to one small Node in the selected controlled Project.",
+          "project_id": "delivery-acceptance-project-v1",
+          "schema_version": 1,
+          "todo_id": "0c06605d-b8cb-471a-a28b-2a930a8016fe"
+        }
+      },
+      "path": "/v1/owner/todos/commands/3e226d23-7c75-4b98-8c75-ca451d466deb",
+      "status": 200
+    }
+  ],
+  "session_unknown": false,
+  "submitted": true
+}

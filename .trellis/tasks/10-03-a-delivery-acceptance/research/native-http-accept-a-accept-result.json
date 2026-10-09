@@ -1,0 +1,50 @@
+{
+  "automatic_retry": false,
+  "directory": "/root/monos-optional-http-owner-requests-v1/post-da814578-ffa6-4a22-8651-4fd28eae2a7a",
+  "input_sha256": "0028456079337e951151b4e4ee67952d5d939c32abe7a04a2f7abe26cb8d9331",
+  "method": "POST",
+  "outcome": "pass",
+  "owner_logged_out": true,
+  "path": "/v1/owner/tasks/delivery/commands",
+  "receipt_confirmed": true,
+  "receipt_path": "/v1/owner/tasks/b5fa877d-7e24-4472-a13f-9c53944157a4/delivery/commands/da814578-ffa6-4a22-8651-4fd28eae2a7a",
+  "request_id": "da814578-ffa6-4a22-8651-4fd28eae2a7a",
+  "responses": [
+    {
+      "body": {
+        "confirmation_id": "c984e97c-88a1-41c7-befb-af12ee16db9d",
+        "content_digest": "02d1f9eae61f2f9a1d404d2baa37c7d885cf4d0c6e52e6c197b75ba999353e55",
+        "input_cutoff": 0,
+        "name": "accept_delivery",
+        "operation_id": "256ad5c3-aac9-4060-b426-754912328d39",
+        "operation_version": 1,
+        "proposal_id": "a6c2d23f-6265-417c-b0a1-e8f7f0161ae5",
+        "request_id": "da814578-ffa6-4a22-8651-4fd28eae2a7a",
+        "schema_version": 1,
+        "status": "committed",
+        "task_id": "b5fa877d-7e24-4472-a13f-9c53944157a4"
+      },
+      "path": "/v1/owner/tasks/delivery/commands",
+      "status": 200
+    },
+    {
+      "body": {
+        "confirmation_id": "c984e97c-88a1-41c7-befb-af12ee16db9d",
+        "content_digest": "02d1f9eae61f2f9a1d404d2baa37c7d885cf4d0c6e52e6c197b75ba999353e55",
+        "input_cutoff": 0,
+        "name": "accept_delivery",
+        "operation_id": "256ad5c3-aac9-4060-b426-754912328d39",
+        "operation_version": 1,
+        "proposal_id": "a6c2d23f-6265-417c-b0a1-e8f7f0161ae5",
+        "request_id": "da814578-ffa6-4a22-8651-4fd28eae2a7a",
+        "schema_version": 1,
+        "status": "committed",
+        "task_id": "b5fa877d-7e24-4472-a13f-9c53944157a4"
+      },
+      "path": "/v1/owner/tasks/b5fa877d-7e24-4472-a13f-9c53944157a4/delivery/commands/da814578-ffa6-4a22-8651-4fd28eae2a7a",
+      "status": 200
+    }
+  ],
+  "session_unknown": false,
+  "submitted": true
+}

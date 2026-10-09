@@ -1,0 +1,484 @@
+{
+  "automatic_retry": false,
+  "directory": "/root/monos-optional-http-owner-requests-v1/get-d27dcda6-8b68-4d2a-98fd-b043daaac5ed",
+  "input_sha256": "6154143ceeeae2bdbd8cf63c30aaf33f8948aaa5e2bd52a3e2e79b933cadb523",
+  "method": "GET",
+  "outcome": "pass",
+  "owner_logged_out": true,
+  "path": "/v1/owner/tasks/b5fa877d-7e24-4472-a13f-9c53944157a4/delivery/proposals/705481be-dc12-4ee1-a54f-ae5f89583983",
+  "receipt_confirmed": false,
+  "receipt_path": null,
+  "request_id": null,
+  "responses": [
+    {
+      "body": {
+        "manifest": {
+          "basis": {
+            "control_version": 13,
+            "plan_id": "plan-d0ab3670-d333-44b9-8356-2ddc215a563b",
+            "specification_id": "309ac1ef-d174-418c-be9d-5d373fa04dbc"
+          },
+          "outputs": [
+            {
+              "artifacts": [],
+              "completion": {
+                "artifact_ids": [],
+                "attempt_id": "d5706933-fe21-4781-a10f-4feb496bfade",
+                "content_digest": "7e81847eeec9dd85df233e56197813d7037f656097b27c7f96126d8f665fad54",
+                "handled_guidance_ids": [],
+                "manifest_version": 2,
+                "node_activation": 3,
+                "node_id": "node-4b65aed1-7fed-4ad8-b956-0e76e39fb367",
+                "operation_id": "80a92fb1-2436-4481-ae28-a883b75e8160",
+                "plan_id": "plan-d0ab3670-d333-44b9-8356-2ddc215a563b",
+                "source_id": "82bde556-5647-4542-9222-8d319eeac9fe",
+                "specification_id": "309ac1ef-d174-418c-be9d-5d373fa04dbc",
+                "summary": "Implemented the review rework (feedback 0bd0380c-dc9d-4ec7-af0f-19158f729324) in the managed worktree (ws_9385294369445e6c3d9a8a7d7ee93af7cd8569bb96e949bcbdb60fcd23384894) on top of the previous finalized state (commit 1cdb6f6), committed as dd3303f. Changed only tests/test_greeting.py (+40/-3): (1) replaced test_no_network_or_filesystem_side_effects with a meaningful guard that swaps builtins.open and socket.socket for functions raising AssertionError, so the test fails if greeting() attempts filesystem or network I/O (verified by poisoning greeting() with open() and socket.socket() in a sandbox: both produced the guard's AssertionError and a failing test); (2) added test_unicode_surrounding_whitespace_is_trimmed covering U+00A0 and U+3000 trimmed while the Unicode name is preserved; (3) added test_decomposed_unicode_name_is_preserved_literally asserting NFD 'Jose\\u0301' is returned with exact code points and not normalized to composed 'Jos\u00e9'; also extended the whitespace-only case with '\\u00a0\\u3000'. greeting.py, README.md (additive section with the literal command 'python3 -m unittest discover -s tests -v' at line 20) and all other pre-existing files are unchanged; no .github/workflows exists in this repo and none was added. Ran the exact documented command from the repository root on Python 3.13.5: python3 -m unittest discover -s tests -v -> Ran 8 tests, OK, exit 0, using only the standard library. Working tree is clean; no credentials or private history published; no network/filesystem side effects in the function.",
+                "task_id": "b5fa877d-7e24-4472-a13f-9c53944157a4"
+              },
+              "completion_manifest_digest": "7e81847eeec9dd85df233e56197813d7037f656097b27c7f96126d8f665fad54",
+              "effective_basis": {
+                "completion_manifest_digest": "7e81847eeec9dd85df233e56197813d7037f656097b27c7f96126d8f665fad54",
+                "completion_operation_id": "80a92fb1-2436-4481-ae28-a883b75e8160",
+                "plan_id": "plan-d0ab3670-d333-44b9-8356-2ddc215a563b",
+                "specification_id": "309ac1ef-d174-418c-be9d-5d373fa04dbc",
+                "task_id": "b5fa877d-7e24-4472-a13f-9c53944157a4"
+              },
+              "effective_basis_digest": "5df74db2bfe05df027fdc5a6549f61c4bc324423f6493563aa7b992b8fb4ca56",
+              "node_activation": 3,
+              "node_id": "node-4b65aed1-7fed-4ad8-b956-0e76e39fb367",
+              "repository_free": false,
+              "source": {
+                "attempt_id": "d5706933-fe21-4781-a10f-4feb496bfade",
+                "base_commit": "aa274b45f50c514ed1be500473bc4a284325f375",
+                "dispatch_id": "8b385112-49fa-423a-92c9-0a0a71b53396",
+                "generation": 1,
+                "git_commit": "4cfcb0a809d06c08b0355fe8e4a3d26b7fd4cffc",
+                "git_tree": "565493dbd713eb9e05dad9bcffaca50de100a1a8",
+                "lease_id": "328c1946-d5de-4fc4-abd0-12e806885875",
+                "manifest_digest": "7e81847eeec9dd85df233e56197813d7037f656097b27c7f96126d8f665fad54",
+                "node_activation": 3,
+                "node_id": "node-4b65aed1-7fed-4ad8-b956-0e76e39fb367",
+                "operation_id": "80a92fb1-2436-4481-ae28-a883b75e8160",
+                "operation_identity_digest": "9f79fbdc1fbc0970081abaf02af50fe0a3401641ab88eaa3e72426c2ff14f471",
+                "plan_id": "plan-d0ab3670-d333-44b9-8356-2ddc215a563b",
+                "repository_identity": "github.com/6spot/monolab-feasibility-20260928-160020-public",
+                "resource_id": "delivery-acceptance-repo-v1",
+                "runner_id": "delivery-fresh-runner-v1",
+                "specification_id": "309ac1ef-d174-418c-be9d-5d373fa04dbc",
+                "storage_id": "864d3d99-24dc-43fe-9a19-ffce52557648",
+                "task_id": "b5fa877d-7e24-4472-a13f-9c53944157a4",
+                "workspace_id": "ws_9385294369445e6c3d9a8a7d7ee93af7cd8569bb96e949bcbdb60fcd23384894"
+              },
+              "source_digest": "80335e37b51ee7d2f35fa39b9a50ab77521edd40d2d5815274800b08d0dd551d"
+            }
+          ],
+          "plan_digest": "94d9a26a8b6ea594075bd9721807bec4eee99ccedbc58b66891eb78211ed043a",
+          "repositories": [
+            {
+              "candidate": {
+                "candidate_id": "c740abd5-cb77-4e87-874e-f645dfe4b2af",
+                "construction_digest": "421a356ee5d6074933415a16e6e941c18cd447b578a14e50a5f46ed6e51f29e5",
+                "construction_id": "6f9de5b5-817c-4f1f-be8e-222820f9c36a",
+                "head": "fab7aead32830a3ec0c655975a5d6948cc47f680",
+                "parents": [
+                  "4df7bbf61d05d3db97c1a6865ea1a4d9c8a9b2af"
+                ],
+                "schema_version": 1,
+                "source_digest": "80335e37b51ee7d2f35fa39b9a50ab77521edd40d2d5815274800b08d0dd551d",
+                "tree": "565493dbd713eb9e05dad9bcffaca50de100a1a8"
+              },
+              "candidate_manifest_digest": "fc4b9a249391a57a74516da8b70d609cc8b8359d2ebe716aba2a34bc5b1e5097",
+              "delivery_ref": "refs/heads/monos/task/b5fa877d-7e24-4472-a13f-9c53944157a4/delivery-acceptance-repo-v1",
+              "effective_basis": {
+                "completion_manifest_digest": "7e81847eeec9dd85df233e56197813d7037f656097b27c7f96126d8f665fad54",
+                "completion_operation_id": "80a92fb1-2436-4481-ae28-a883b75e8160",
+                "plan_id": "plan-d0ab3670-d333-44b9-8356-2ddc215a563b",
+                "specification_id": "309ac1ef-d174-418c-be9d-5d373fa04dbc",
+                "task_id": "b5fa877d-7e24-4472-a13f-9c53944157a4"
+              },
+              "effective_basis_digest": "5df74db2bfe05df027fdc5a6549f61c4bc324423f6493563aa7b992b8fb4ca56",
+              "item_id": "ab9e9063-9dab-48ab-82e4-1da932228754",
+              "marker": "<!-- monos-delivery-item:ab9e9063-9dab-48ab-82e4-1da932228754 -->",
+              "merge_method": "merge",
+              "outcome": "modified",
+              "permission_proof": {
+                "app_id": "5237783",
+                "configuration_fingerprint": "c1a3cb061c8c608c484eb9bdb1be8a9e99550139968f9c1070a89f1a8d7c2c57",
+                "expires_at": "2026-10-09T05:43:58Z",
+                "installation_id": "169256543",
+                "key_fingerprint": "4c6ee0f9aed7a1ab1071fd40276ffd6be6f44fa12de771feb33ba2c213d4851e",
+                "observation_id": "9edbdd72-c1d8-46be-8d56-0b470f101d40",
+                "observed_at": "2026-10-09T04:43:59.135Z",
+                "permission_fingerprint": "f50c12c055a4cbd5596dc707b51e6fefc957ef1884a7e4f5ef8e9ba8a9c26ff9",
+                "permissions": {
+                  "contents": "write",
+                  "metadata": "read"
+                },
+                "repository_id": "1393178791",
+                "repository_identity": "github.com/6spot/monolab-feasibility-20260928-160020-public",
+                "resource_id": "delivery-acceptance-repo-v1",
+                "schema_version": 1
+              },
+              "permission_proof_digest": "33270a5d7ac833b7771f84a2524c909560eab03774436380e813762956de1beb",
+              "preparation_request": {
+                "configuration": {
+                  "deadline_seconds": 120,
+                  "local_blob_limit": 52428800,
+                  "max_aggregate_bytes": 536870912,
+                  "max_blob_bytes": 134217728,
+                  "max_commits": 256,
+                  "max_evidence_bytes": 8388608,
+                  "max_findings": 4096,
+                  "max_paths": 8192,
+                  "max_versions": 32768,
+                  "permission_fingerprint": "f50c12c055a4cbd5596dc707b51e6fefc957ef1884a7e4f5ef8e9ba8a9c26ff9",
+                  "policy_version": "local_publication_v1",
+                  "provider_blob_limit": 104857600,
+                  "rule_version": "credential_rules_v1",
+                  "schema_version": 1,
+                  "traversal_version": "all_parents_final_tree_v1",
+                  "workflow_write": "unknown"
+                },
+                "configuration_digest": "ba2937ff403cd3b3176efcd5aa11a0cb979b390770aac6540761c242019fd36f",
+                "construction": {
+                  "author_email": "monos@localhost",
+                  "author_name": "monos",
+                  "candidate_id": "c740abd5-cb77-4e87-874e-f645dfe4b2af",
+                  "construction_id": "6f9de5b5-817c-4f1f-be8e-222820f9c36a",
+                  "message": "monos Task b5fa877d-7e24-4472-a13f-9c53944157a4 result v1",
+                  "parents": [
+                    {
+                      "commit": "4df7bbf61d05d3db97c1a6865ea1a4d9c8a9b2af",
+                      "kind": "published",
+                      "published_proof": {
+                        "candidate": {
+                          "candidate_id": "1dbd680f-fd56-4690-a7e7-76bec81b2ee4",
+                          "construction_digest": "dbd7a5299fe3afadd99b35b24cf7d8b04d549b8b84f9cba1d71b93f8c49d7164",
+                          "construction_id": "7671b088-7f0c-4f9e-b5bf-f97f68f852fb",
+                          "head": "4df7bbf61d05d3db97c1a6865ea1a4d9c8a9b2af",
+                          "parents": [
+                            "aa274b45f50c514ed1be500473bc4a284325f375"
+                          ],
+                          "schema_version": 1,
+                          "source_digest": "d4e8baaa8bcfb9eec90e5d44e1d625c246fd50ddca35e5320bd4bb4496fd8053",
+                          "tree": "c0340695ded1d63c17758794712f3246d1fa4fab"
+                        },
+                        "candidate_manifest_digest": "6b3d1be3da9e37e76ccbb1ab7d6ca494618631742e94a2c594b0b38d2f84cce1",
+                        "delivery_ref": "refs/heads/monos/task/b5fa877d-7e24-4472-a13f-9c53944157a4/delivery-acceptance-repo-v1",
+                        "item_id": "ab9e9063-9dab-48ab-82e4-1da932228754",
+                        "observation": {
+                          "delivery_ref": "refs/heads/monos/task/b5fa877d-7e24-4472-a13f-9c53944157a4/delivery-acceptance-repo-v1",
+                          "head": "4df7bbf61d05d3db97c1a6865ea1a4d9c8a9b2af",
+                          "item_id": "ab9e9063-9dab-48ab-82e4-1da932228754",
+                          "observation_id": "4d57a67ddafe30126e898c3ae7d9a1637cb519d3127cd2b01d4a6ca211c73c91",
+                          "observed_at": "2026-10-09T04:49:34.395Z",
+                          "operation_id": "a5b045f3-9d0d-4680-bf2b-f8b005c0ee2d",
+                          "repository_id": "1393178791",
+                          "repository_identity": "github.com/6spot/monolab-feasibility-20260928-160020-public",
+                          "resource_id": "delivery-acceptance-repo-v1",
+                          "runner_id": "delivery-fresh-runner-v1",
+                          "schema_version": 1,
+                          "status": "present",
+                          "storage_id": "864d3d99-24dc-43fe-9a19-ffce52557648",
+                          "task_id": "b5fa877d-7e24-4472-a13f-9c53944157a4"
+                        },
+                        "observation_digest": "62820866b048a61e660f9f2f575e715810439a4859d7de1257fafccac3faa7a8",
+                        "operation_id": "a5b045f3-9d0d-4680-bf2b-f8b005c0ee2d",
+                        "repository_id": "1393178791",
+                        "repository_identity": "github.com/6spot/monolab-feasibility-20260928-160020-public",
+                        "request_digest": "c020aab17baf11ad35a1a35717843038cc84642cfe28ab9a067dbb33de746c92",
+                        "resource_id": "delivery-acceptance-repo-v1",
+                        "result_digest": "8b5fa9fe7e70a0a565c87f1feb2386d8252e896e02b0f7e56242638d2549035a",
+                        "runner_id": "delivery-fresh-runner-v1",
+                        "schema_version": 1,
+                        "storage_id": "864d3d99-24dc-43fe-9a19-ffce52557648",
+                        "task_id": "b5fa877d-7e24-4472-a13f-9c53944157a4"
+                      },
+                      "published_proof_digest": "3644f4045275460546e28170e9d2a26b7afa8fc03344ce7770b38397a42729c0",
+                      "repository_identity": "github.com/6spot/monolab-feasibility-20260928-160020-public"
+                    }
+                  ],
+                  "repository_identity": "github.com/6spot/monolab-feasibility-20260928-160020-public",
+                  "schema_version": 1,
+                  "source_digest": "80335e37b51ee7d2f35fa39b9a50ab77521edd40d2d5815274800b08d0dd551d",
+                  "target_branch": "main",
+                  "timestamp": "1791524114 +0000"
+                },
+                "construction_digest": "421a356ee5d6074933415a16e6e941c18cd447b578a14e50a5f46ed6e51f29e5",
+                "effective_basis": {
+                  "completion_manifest_digest": "7e81847eeec9dd85df233e56197813d7037f656097b27c7f96126d8f665fad54",
+                  "completion_operation_id": "80a92fb1-2436-4481-ae28-a883b75e8160",
+                  "plan_id": "plan-d0ab3670-d333-44b9-8356-2ddc215a563b",
+                  "specification_id": "309ac1ef-d174-418c-be9d-5d373fa04dbc",
+                  "task_id": "b5fa877d-7e24-4472-a13f-9c53944157a4"
+                },
+                "effective_basis_digest": "5df74db2bfe05df027fdc5a6549f61c4bc324423f6493563aa7b992b8fb4ca56",
+                "operation_id": "42210142-e64b-4bbe-9072-bbfd8da74f41",
+                "permission_proof": {
+                  "app_id": "5237783",
+                  "configuration_fingerprint": "c1a3cb061c8c608c484eb9bdb1be8a9e99550139968f9c1070a89f1a8d7c2c57",
+                  "expires_at": "2026-10-09T05:43:58Z",
+                  "installation_id": "169256543",
+                  "key_fingerprint": "4c6ee0f9aed7a1ab1071fd40276ffd6be6f44fa12de771feb33ba2c213d4851e",
+                  "observation_id": "9edbdd72-c1d8-46be-8d56-0b470f101d40",
+                  "observed_at": "2026-10-09T04:43:59.135Z",
+                  "permission_fingerprint": "f50c12c055a4cbd5596dc707b51e6fefc957ef1884a7e4f5ef8e9ba8a9c26ff9",
+                  "permissions": {
+                    "contents": "write",
+                    "metadata": "read"
+                  },
+                  "repository_id": "1393178791",
+                  "repository_identity": "github.com/6spot/monolab-feasibility-20260928-160020-public",
+                  "resource_id": "delivery-acceptance-repo-v1",
+                  "schema_version": 1
+                },
+                "permission_proof_digest": "33270a5d7ac833b7771f84a2524c909560eab03774436380e813762956de1beb",
+                "published": {
+                  "candidate": {
+                    "candidate_id": "1dbd680f-fd56-4690-a7e7-76bec81b2ee4",
+                    "construction_digest": "dbd7a5299fe3afadd99b35b24cf7d8b04d549b8b84f9cba1d71b93f8c49d7164",
+                    "construction_id": "7671b088-7f0c-4f9e-b5bf-f97f68f852fb",
+                    "head": "4df7bbf61d05d3db97c1a6865ea1a4d9c8a9b2af",
+                    "parents": [
+                      "aa274b45f50c514ed1be500473bc4a284325f375"
+                    ],
+                    "schema_version": 1,
+                    "source_digest": "d4e8baaa8bcfb9eec90e5d44e1d625c246fd50ddca35e5320bd4bb4496fd8053",
+                    "tree": "c0340695ded1d63c17758794712f3246d1fa4fab"
+                  },
+                  "candidate_manifest_digest": "6b3d1be3da9e37e76ccbb1ab7d6ca494618631742e94a2c594b0b38d2f84cce1",
+                  "delivery_ref": "refs/heads/monos/task/b5fa877d-7e24-4472-a13f-9c53944157a4/delivery-acceptance-repo-v1",
+                  "item_id": "ab9e9063-9dab-48ab-82e4-1da932228754",
+                  "observation": {
+                    "delivery_ref": "refs/heads/monos/task/b5fa877d-7e24-4472-a13f-9c53944157a4/delivery-acceptance-repo-v1",
+                    "head": "4df7bbf61d05d3db97c1a6865ea1a4d9c8a9b2af",
+                    "item_id": "ab9e9063-9dab-48ab-82e4-1da932228754",
+                    "observation_id": "4d57a67ddafe30126e898c3ae7d9a1637cb519d3127cd2b01d4a6ca211c73c91",
+                    "observed_at": "2026-10-09T04:49:34.395Z",
+                    "operation_id": "a5b045f3-9d0d-4680-bf2b-f8b005c0ee2d",
+                    "repository_id": "1393178791",
+                    "repository_identity": "github.com/6spot/monolab-feasibility-20260928-160020-public",
+                    "resource_id": "delivery-acceptance-repo-v1",
+                    "runner_id": "delivery-fresh-runner-v1",
+                    "schema_version": 1,
+                    "status": "present",
+                    "storage_id": "864d3d99-24dc-43fe-9a19-ffce52557648",
+                    "task_id": "b5fa877d-7e24-4472-a13f-9c53944157a4"
+                  },
+                  "observation_digest": "62820866b048a61e660f9f2f575e715810439a4859d7de1257fafccac3faa7a8",
+                  "operation_id": "a5b045f3-9d0d-4680-bf2b-f8b005c0ee2d",
+                  "repository_id": "1393178791",
+                  "repository_identity": "github.com/6spot/monolab-feasibility-20260928-160020-public",
+                  "request_digest": "c020aab17baf11ad35a1a35717843038cc84642cfe28ab9a067dbb33de746c92",
+                  "resource_id": "delivery-acceptance-repo-v1",
+                  "result_digest": "8b5fa9fe7e70a0a565c87f1feb2386d8252e896e02b0f7e56242638d2549035a",
+                  "runner_id": "delivery-fresh-runner-v1",
+                  "schema_version": 1,
+                  "storage_id": "864d3d99-24dc-43fe-9a19-ffce52557648",
+                  "task_id": "b5fa877d-7e24-4472-a13f-9c53944157a4"
+                },
+                "published_digest": "3644f4045275460546e28170e9d2a26b7afa8fc03344ce7770b38397a42729c0",
+                "scan_run_id": "ced20518-2438-469e-9b32-f46adf43e7c4",
+                "schema_version": 1,
+                "source": {
+                  "attempt_id": "d5706933-fe21-4781-a10f-4feb496bfade",
+                  "base_commit": "aa274b45f50c514ed1be500473bc4a284325f375",
+                  "dispatch_id": "8b385112-49fa-423a-92c9-0a0a71b53396",
+                  "generation": 1,
+                  "git_commit": "4cfcb0a809d06c08b0355fe8e4a3d26b7fd4cffc",
+                  "git_tree": "565493dbd713eb9e05dad9bcffaca50de100a1a8",
+                  "lease_id": "328c1946-d5de-4fc4-abd0-12e806885875",
+                  "manifest_digest": "7e81847eeec9dd85df233e56197813d7037f656097b27c7f96126d8f665fad54",
+                  "node_activation": 3,
+                  "node_id": "node-4b65aed1-7fed-4ad8-b956-0e76e39fb367",
+                  "operation_id": "80a92fb1-2436-4481-ae28-a883b75e8160",
+                  "operation_identity_digest": "9f79fbdc1fbc0970081abaf02af50fe0a3401641ab88eaa3e72426c2ff14f471",
+                  "plan_id": "plan-d0ab3670-d333-44b9-8356-2ddc215a563b",
+                  "repository_identity": "github.com/6spot/monolab-feasibility-20260928-160020-public",
+                  "resource_id": "delivery-acceptance-repo-v1",
+                  "runner_id": "delivery-fresh-runner-v1",
+                  "specification_id": "309ac1ef-d174-418c-be9d-5d373fa04dbc",
+                  "storage_id": "864d3d99-24dc-43fe-9a19-ffce52557648",
+                  "task_id": "b5fa877d-7e24-4472-a13f-9c53944157a4",
+                  "workspace_id": "ws_9385294369445e6c3d9a8a7d7ee93af7cd8569bb96e949bcbdb60fcd23384894"
+                },
+                "source_digest": "80335e37b51ee7d2f35fa39b9a50ab77521edd40d2d5815274800b08d0dd551d"
+              },
+              "preparation_request_digest": "f4675f2ec93d66e1a49bd1cb3b3d80e9043aaf1e150758ab4ae94fa0371a64be",
+              "preparation_result": {
+                "candidate": {
+                  "candidate_id": "c740abd5-cb77-4e87-874e-f645dfe4b2af",
+                  "construction_digest": "421a356ee5d6074933415a16e6e941c18cd447b578a14e50a5f46ed6e51f29e5",
+                  "construction_id": "6f9de5b5-817c-4f1f-be8e-222820f9c36a",
+                  "head": "fab7aead32830a3ec0c655975a5d6948cc47f680",
+                  "parents": [
+                    "4df7bbf61d05d3db97c1a6865ea1a4d9c8a9b2af"
+                  ],
+                  "schema_version": 1,
+                  "source_digest": "80335e37b51ee7d2f35fa39b9a50ab77521edd40d2d5815274800b08d0dd551d",
+                  "tree": "565493dbd713eb9e05dad9bcffaca50de100a1a8"
+                },
+                "candidate_manifest_digest": "fc4b9a249391a57a74516da8b70d609cc8b8359d2ebe716aba2a34bc5b1e5097",
+                "operation_id": "42210142-e64b-4bbe-9072-bbfd8da74f41",
+                "request_digest": "f4675f2ec93d66e1a49bd1cb3b3d80e9043aaf1e150758ab4ae94fa0371a64be",
+                "scan": {
+                  "candidate_manifest_digest": "fc4b9a249391a57a74516da8b70d609cc8b8359d2ebe716aba2a34bc5b1e5097",
+                  "configuration_digest": "ba2937ff403cd3b3176efcd5aa11a0cb979b390770aac6540761c242019fd36f",
+                  "coverage": {
+                    "commits": 1,
+                    "paths": 7,
+                    "unique_blob_bytes": 4796,
+                    "versions": 8
+                  },
+                  "findings_bytes": 2,
+                  "findings_count": 0,
+                  "findings_digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+                  "scan_id": "ced20518-2438-469e-9b32-f46adf43e7c4",
+                  "schema_version": 1,
+                  "status": "complete",
+                  "workflow_changes": false
+                },
+                "scan_digest": "d73b6e6f99bb212d63adebb48d9ae3ab31265da1d71591b4e5f138177c9a9fe8",
+                "schema_version": 1,
+                "status": "prepared"
+              },
+              "preparation_result_digest": "1cf0c6679a3da04e6296e7dd2b10e06cf39f923c768c2dad4af3f6bc4906eb7d",
+              "provider_content": {
+                "body": "Implemented the review rework (feedback 0bd0380c-dc9d-4ec7-af0f-19158f729324) in the managed worktree (ws_9385294369445e6c3d9a8a7d7ee93af7cd8569bb96e949bcbdb60fcd23384894) on top of the previous finalized state (commit 1cdb6f6), committed as dd3303f. Changed only tests/test_greeting.py (+40/-3): (1) replaced test_no_network_or_filesystem_side_effects with a meaningful guard that swaps builtins.open and socket.socket for functions raising AssertionError, so the test fails if greeting() attempts filesystem or network I/O (verified by poisoning greeting() with open() and socket.socket() in a sandbox: both produced the guard's AssertionError and a failing test); (2) added test_unicode_surrounding_whitespace_is_trimmed covering U+00A0 and U+3000 trimmed while the Unicode name is preserved; (3) added test_decomposed_unicode_name_is_preserved_literally asserting NFD 'Jose\\u0301' is returned with exact code points and not normalized to composed 'Jos\u00e9'; also extended the whitespace-only case with '\\u00a0\\u3000'. greeting.py, README.md (additive section with the literal command 'python3 -m unittest discover -s tests -v' at line 20) and all other pre-existing files are unchanged; no .github/workflows exists in this repo and none was added. Ran the exact documented command from the repository root on Python 3.13.5: python3 -m unittest discover -s tests -v -> Ran 8 tests, OK, exit 0, using only the standard library. Working tree is clean; no credentials or private history published; no network/filesystem side effects in the function.\n\nTask: b5fa877d-7e24-4472-a13f-9c53944157a4\nDelivery ref: refs/heads/monos/task/b5fa877d-7e24-4472-a13f-9c53944157a4/delivery-acceptance-repo-v1\n\n<!-- monos-delivery-item:ab9e9063-9dab-48ab-82e4-1da932228754 -->",
+                "title": "Add Python 3 greeting module with tests and README section"
+              },
+              "provider_content_digest": "1a2948efcac8914c2572dc8abb8b5e957069d63b3ca43beef8054dfc48783cf5",
+              "provider_metadata": {
+                "github": {
+                  "repository_id": "1393178791"
+                }
+              },
+              "published": {
+                "candidate": {
+                  "candidate_id": "c740abd5-cb77-4e87-874e-f645dfe4b2af",
+                  "construction_digest": "421a356ee5d6074933415a16e6e941c18cd447b578a14e50a5f46ed6e51f29e5",
+                  "construction_id": "6f9de5b5-817c-4f1f-be8e-222820f9c36a",
+                  "head": "fab7aead32830a3ec0c655975a5d6948cc47f680",
+                  "parents": [
+                    "4df7bbf61d05d3db97c1a6865ea1a4d9c8a9b2af"
+                  ],
+                  "schema_version": 1,
+                  "source_digest": "80335e37b51ee7d2f35fa39b9a50ab77521edd40d2d5815274800b08d0dd551d",
+                  "tree": "565493dbd713eb9e05dad9bcffaca50de100a1a8"
+                },
+                "candidate_manifest_digest": "fc4b9a249391a57a74516da8b70d609cc8b8359d2ebe716aba2a34bc5b1e5097",
+                "delivery_ref": "refs/heads/monos/task/b5fa877d-7e24-4472-a13f-9c53944157a4/delivery-acceptance-repo-v1",
+                "item_id": "ab9e9063-9dab-48ab-82e4-1da932228754",
+                "observation": {
+                  "delivery_ref": "refs/heads/monos/task/b5fa877d-7e24-4472-a13f-9c53944157a4/delivery-acceptance-repo-v1",
+                  "head": "fab7aead32830a3ec0c655975a5d6948cc47f680",
+                  "item_id": "ab9e9063-9dab-48ab-82e4-1da932228754",
+                  "observation_id": "7c97c7966d4c2e2472c0771eae16a676f5a0481254695b31a778dabd1e28d6e3",
+                  "observed_at": "2026-10-09T05:35:25.330Z",
+                  "operation_id": "b95bbeb3-9932-4e48-af9a-203365852f16",
+                  "repository_id": "1393178791",
+                  "repository_identity": "github.com/6spot/monolab-feasibility-20260928-160020-public",
+                  "resource_id": "delivery-acceptance-repo-v1",
+                  "runner_id": "delivery-fresh-runner-v1",
+                  "schema_version": 1,
+                  "status": "present",
+                  "storage_id": "864d3d99-24dc-43fe-9a19-ffce52557648",
+                  "task_id": "b5fa877d-7e24-4472-a13f-9c53944157a4"
+                },
+                "observation_digest": "25df52d9abc531ef3abc3d35dda36cab4a054f8795fa3a470d989802e1e812ff",
+                "operation_id": "b95bbeb3-9932-4e48-af9a-203365852f16",
+                "repository_id": "1393178791",
+                "repository_identity": "github.com/6spot/monolab-feasibility-20260928-160020-public",
+                "request_digest": "7be583181a1e3861d1d884e49d107cadf4f23998b74342e046e9e483abf821e3",
+                "resource_id": "delivery-acceptance-repo-v1",
+                "result_digest": "ba5cc644254df577c1fbd26f0f8a3d198c66c9d6326f28941a07e329df77f543",
+                "runner_id": "delivery-fresh-runner-v1",
+                "schema_version": 1,
+                "storage_id": "864d3d99-24dc-43fe-9a19-ffce52557648",
+                "task_id": "b5fa877d-7e24-4472-a13f-9c53944157a4"
+              },
+              "published_digest": "37a8fa5f8d2c180964d516025736c6a22cd8f707d4711df8a8aaef5d9a5f6d19",
+              "remote_preparation": "automatic",
+              "repository_identity": "github.com/6spot/monolab-feasibility-20260928-160020-public",
+              "resource_id": "delivery-acceptance-repo-v1",
+              "review": {
+                "base_ref": "main",
+                "head_ref": "monos/task/b5fa877d-7e24-4472-a13f-9c53944157a4/delivery-acceptance-repo-v1",
+                "marker": "<!-- monos-delivery-item:ab9e9063-9dab-48ab-82e4-1da932228754 -->",
+                "pr_id": "4796113908",
+                "pr_number": 6,
+                "repository_id": "1393178791",
+                "state": "open",
+                "url": "https://github.com/6spot/monolab-feasibility-20260928-160020-public/pull/6"
+              },
+              "scan": {
+                "candidate_manifest_digest": "fc4b9a249391a57a74516da8b70d609cc8b8359d2ebe716aba2a34bc5b1e5097",
+                "configuration_digest": "ba2937ff403cd3b3176efcd5aa11a0cb979b390770aac6540761c242019fd36f",
+                "coverage": {
+                  "commits": 1,
+                  "paths": 7,
+                  "unique_blob_bytes": 4796,
+                  "versions": 8
+                },
+                "findings_bytes": 2,
+                "findings_count": 0,
+                "findings_digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+                "scan_id": "ced20518-2438-469e-9b32-f46adf43e7c4",
+                "schema_version": 1,
+                "status": "complete",
+                "workflow_changes": false
+              },
+              "scan_digest": "d73b6e6f99bb212d63adebb48d9ae3ab31265da1d71591b4e5f138177c9a9fe8",
+              "source": {
+                "attempt_id": "d5706933-fe21-4781-a10f-4feb496bfade",
+                "base_commit": "aa274b45f50c514ed1be500473bc4a284325f375",
+                "dispatch_id": "8b385112-49fa-423a-92c9-0a0a71b53396",
+                "generation": 1,
+                "git_commit": "4cfcb0a809d06c08b0355fe8e4a3d26b7fd4cffc",
+                "git_tree": "565493dbd713eb9e05dad9bcffaca50de100a1a8",
+                "lease_id": "328c1946-d5de-4fc4-abd0-12e806885875",
+                "manifest_digest": "7e81847eeec9dd85df233e56197813d7037f656097b27c7f96126d8f665fad54",
+                "node_activation": 3,
+                "node_id": "node-4b65aed1-7fed-4ad8-b956-0e76e39fb367",
+                "operation_id": "80a92fb1-2436-4481-ae28-a883b75e8160",
+                "operation_identity_digest": "9f79fbdc1fbc0970081abaf02af50fe0a3401641ab88eaa3e72426c2ff14f471",
+                "plan_id": "plan-d0ab3670-d333-44b9-8356-2ddc215a563b",
+                "repository_identity": "github.com/6spot/monolab-feasibility-20260928-160020-public",
+                "resource_id": "delivery-acceptance-repo-v1",
+                "runner_id": "delivery-fresh-runner-v1",
+                "specification_id": "309ac1ef-d174-418c-be9d-5d373fa04dbc",
+                "storage_id": "864d3d99-24dc-43fe-9a19-ffce52557648",
+                "task_id": "b5fa877d-7e24-4472-a13f-9c53944157a4",
+                "workspace_id": "ws_9385294369445e6c3d9a8a7d7ee93af7cd8569bb96e949bcbdb60fcd23384894"
+              },
+              "source_digest": "80335e37b51ee7d2f35fa39b9a50ab77521edd40d2d5815274800b08d0dd551d",
+              "target_branch": "main",
+              "waivers": []
+            }
+          ],
+          "schema_version": 1,
+          "specification_digest": "aa55693f5a7b01d200949534bda1771eba8ab089a38183e33049e80ed21f2800",
+          "task_id": "b5fa877d-7e24-4472-a13f-9c53944157a4"
+        },
+        "proposal": {
+          "basis": {
+            "control_version": 13,
+            "plan_id": "plan-d0ab3670-d333-44b9-8356-2ddc215a563b",
+            "specification_id": "309ac1ef-d174-418c-be9d-5d373fa04dbc"
+          },
+          "content_digest": "151e9b4a2234b22676381199cc7856fb9887cb9d3e9c9bbea38b6477c6fe9599",
+          "current": true,
+          "expires_at": "2026-10-09T06:42:18.171Z",
+          "proposal_id": "705481be-dc12-4ee1-a54f-ae5f89583983"
+        },
+        "schema_version": 1,
+        "task_id": "b5fa877d-7e24-4472-a13f-9c53944157a4"
+      },
+      "path": "/v1/owner/tasks/b5fa877d-7e24-4472-a13f-9c53944157a4/delivery/proposals/705481be-dc12-4ee1-a54f-ae5f89583983",
+      "status": 200
+    }
+  ],
+  "session_unknown": false,
+  "submitted": false
+}

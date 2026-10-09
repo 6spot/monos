@@ -1,0 +1,15 @@
+{
+  "path": "/v1/owner/commands",
+  "method": "POST",
+  "body": {
+    "schema_version": 1,
+    "request_id": "74b8276f-2ebe-4b74-b1c9-ae321682fff9",
+    "scope_id": "a53d17f3-451b-4616-82f5-559f2ef29f59",
+    "expected_control_version": 5,
+    "name": "cancel_task",
+    "payload": {
+      "specification_id": "d8a89e9e-e38b-4530-ab60-98ca9bffd598",
+      "plan_id": "plan-7980d52e-48bb-4e13-bc46-362752544308-20261009-01"
+    }
+  }
+}

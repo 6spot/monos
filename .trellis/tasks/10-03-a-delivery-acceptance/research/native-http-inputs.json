@@ -1,0 +1,18 @@
+{
+  "ids": {
+    "save_policies": "888ec37d-cfd5-4ee9-b185-263753d5f92a",
+    "save_planner_guidance": "609f9047-105c-430a-866a-65e791cb4aab",
+    "save_role": "dc08934b-b84b-4d03-931b-22185c7d15d5",
+    "save_project": "e8a1529d-6023-4754-bc88-e0ce06b6a813",
+    "capture": "3e226d23-7c75-4b98-8c75-ca451d466deb",
+    "todo": "0c06605d-b8cb-471a-a28b-2a930a8016fe",
+    "discussion": "1dc473a9-4907-4445-b05a-1a0a1d007ac4",
+    "message": "ca398d44-868b-48fc-aedb-7c1da8a28401"
+  },
+  "specification": "Add a Python 3 module greeting.py exposing greeting(name: str) -> str. Strip leading and trailing whitespace from name. For a nonempty result return \"Hello, <name>!\"; for an empty or whitespace-only name return \"Hello, friend!\". Preserve Unicode names as literal text. Add meaningful standard-library unittest tests for normal, trimmed, blank and Unicode names in tests/test_greeting.py. Add an additive README section with the exact command python3 -m unittest discover -s tests -v. Preserve all existing repository files and behavior. Do not change .github/workflows, use network or filesystem side effects in the function, add dependencies, publish credentials or publish private execution history. Keep this to one small Node in the selected controlled Project.",
+  "project_id": "delivery-acceptance-project-v1",
+  "role_id": "delivery-acceptance-role-v1",
+  "resource_id": "delivery-acceptance-repo-v1",
+  "starting_ref": "aa274b45f50c514ed1be500473bc4a284325f375",
+  "test_command": "python3 -m unittest discover -s tests -v"
+}

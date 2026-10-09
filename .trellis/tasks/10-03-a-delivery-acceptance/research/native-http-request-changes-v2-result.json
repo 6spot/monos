@@ -1,0 +1,60 @@
+{
+  "automatic_retry": false,
+  "directory": "/root/monos-optional-http-owner-requests-v1/post-324aa168-6c4e-4395-8429-fcc1276c4ef1",
+  "input_sha256": "2129ca848997e333d5d1e093f5b68c8eed3933e5848ab187b8844450a7fe46bc",
+  "method": "POST",
+  "outcome": "pass",
+  "owner_logged_out": true,
+  "path": "/v1/owner/tasks/review/commands",
+  "receipt_confirmed": true,
+  "receipt_path": "/v1/owner/tasks/b5fa877d-7e24-4472-a13f-9c53944157a4/review/commands/324aa168-6c4e-4395-8429-fcc1276c4ef1",
+  "request_id": "324aa168-6c4e-4395-8429-fcc1276c4ef1",
+  "responses": [
+    {
+      "body": {
+        "feedback_id": "001ea5cd-23e4-4b04-b748-0ba2ba383249",
+        "name": "request_changes",
+        "operation_id": "d866958c-5c11-4a73-a5bd-1607e3cb3745",
+        "operation_version": 1,
+        "request_id": "324aa168-6c4e-4395-8429-fcc1276c4ef1",
+        "review_result_digest": "50ddcd071214583242b4bffdd6325ec7d52c3f65436cfc37c57435b32ded4cd8",
+        "revoked_batch": {
+          "content_digest": "02d1f9eae61f2f9a1d404d2baa37c7d885cf4d0c6e52e6c197b75ba999353e55",
+          "input_cutoff": 0,
+          "operation_id": "256ad5c3-aac9-4060-b426-754912328d39",
+          "operation_version": 32,
+          "revocation_id": "9cba951e-315e-4358-be7a-6af757111ff2"
+        },
+        "schema_version": 1,
+        "status": "committed",
+        "task_id": "b5fa877d-7e24-4472-a13f-9c53944157a4"
+      },
+      "path": "/v1/owner/tasks/review/commands",
+      "status": 200
+    },
+    {
+      "body": {
+        "feedback_id": "001ea5cd-23e4-4b04-b748-0ba2ba383249",
+        "name": "request_changes",
+        "operation_id": "d866958c-5c11-4a73-a5bd-1607e3cb3745",
+        "operation_version": 1,
+        "request_id": "324aa168-6c4e-4395-8429-fcc1276c4ef1",
+        "review_result_digest": "50ddcd071214583242b4bffdd6325ec7d52c3f65436cfc37c57435b32ded4cd8",
+        "revoked_batch": {
+          "content_digest": "02d1f9eae61f2f9a1d404d2baa37c7d885cf4d0c6e52e6c197b75ba999353e55",
+          "input_cutoff": 0,
+          "operation_id": "256ad5c3-aac9-4060-b426-754912328d39",
+          "operation_version": 32,
+          "revocation_id": "9cba951e-315e-4358-be7a-6af757111ff2"
+        },
+        "schema_version": 1,
+        "status": "committed",
+        "task_id": "b5fa877d-7e24-4472-a13f-9c53944157a4"
+      },
+      "path": "/v1/owner/tasks/b5fa877d-7e24-4472-a13f-9c53944157a4/review/commands/324aa168-6c4e-4395-8429-fcc1276c4ef1",
+      "status": 200
+    }
+  ],
+  "session_unknown": false,
+  "submitted": true
+}
