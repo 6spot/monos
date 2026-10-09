@@ -1,0 +1,19 @@
+{
+  "server_id": "ed4742360c0362d95e16d5cb172f35b46f739fbc366e77e03bee1a0cb8a9e27d",
+  "endpoint": "http://127.0.0.1:18445",
+  "statuses": {
+    "before_login": 401,
+    "login": 200,
+    "session": 200,
+    "cross_origin_logout": 403,
+    "logout": 200,
+    "after_logout": 401
+  },
+  "cookie": {
+    "name": "monos",
+    "httponly": true,
+    "same_site": "Strict",
+    "secure": false
+  },
+  "outcome": "pass"
+}

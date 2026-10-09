@@ -1,0 +1,20 @@
+{
+  "remote_exit": 0,
+  "result": {
+    "app_id": "5237783",
+    "automatic_retry": false,
+    "catalog_pages": 1,
+    "command_digest": "a96e72315fb949bbfcd215694acc2f18199f0a86c78c1513e73df3b879e3accf",
+    "installation_id": "169256543",
+    "key_fingerprint": "4c6ee0f9aed7a1ab1071fd40276ffd6be6f44fa12de771feb33ba2c213d4851e",
+    "outcome": "pass",
+    "receipt_confirmed": true,
+    "repository_id": "1393178791",
+    "request_id": "b175aca2-34a0-4a39-83b7-923c47d2da9c",
+    "response_committed": true,
+    "server_id": "ed4742360c0362d95e16d5cb172f35b46f739fbc366e77e03bee1a0cb8a9e27d",
+    "session_unknown": false,
+    "submitted": true
+  },
+  "transport_closed": true
+}

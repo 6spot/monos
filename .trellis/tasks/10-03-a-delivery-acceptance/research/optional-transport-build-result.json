@@ -1,0 +1,43 @@
+{
+  "result": {
+    "outcome": "pass",
+    "candidate_commit": "4a48cdc7f7eb78f201828733307b030c3de4448a",
+    "image_id": "sha256:f8577deb0497677c32c4ff4ed9121dcd5400a5722a5bdf5fa78c8c0dbbff5d32",
+    "binaries": {
+      "monos": {
+        "path": "/root/monos-optional-transport-release-v1/bin/monos",
+        "sha256": "656c9b5053fb7282efbe6b5b0b44865893324a4cf9f3d944c76489301d1f9ed5"
+      },
+      "monos-runner": {
+        "path": "/root/monos-optional-transport-release-v1/bin/monos-runner",
+        "sha256": "59c09f22f2e0492b4e4ceb77ab1e8520ad2f63503a47573ec8c908a8248c1e69"
+      },
+      "monos-probe-launch": {
+        "path": "/root/monos-optional-transport-release-v1/bin/monos-probe-launch",
+        "sha256": "88a3706e964ef587be0614de850735a3311545933bcb1df7e4f6dacb7f67978e"
+      },
+      "monos-probe-exec": {
+        "path": "/root/monos-optional-transport-release-v1/bin/monos-probe-exec",
+        "sha256": "75103986428e4ccee0dd70e59c062f8842abb141db5f9b2437a069ed71e29faa"
+      }
+    },
+    "assets": {
+      "assets/index-CDYDw6Vm.css": "90913bdae0315da53398e57a8ae6f76c4cbaf2493692e8a6bda01a0b9a364f64",
+      "assets/index-CthgOnwB.js": "67608f5a47ff85cdc414671b3ef8b90a23b51e63aaa02472a17e6bae64bebc1f",
+      "index.html": "c25fa0ef4bbbb278b44102b05da3d2cd1adddc72b714473bb62fbd83bc4d398c"
+    },
+    "source_manifest_path": "/root/monos-optional-transport-release-v1/source-manifest.json",
+    "source_manifest_sha256": "7d819273f80a3b3a8b9ee5b61255cd76ef2323cdff4df227e55869bc7ab7f72e",
+    "audit": {
+      "source_files": 309,
+      "assets": {
+        "assets/index-CDYDw6Vm.css": "90913bdae0315da53398e57a8ae6f76c4cbaf2493692e8a6bda01a0b9a364f64",
+        "assets/index-CthgOnwB.js": "67608f5a47ff85cdc414671b3ef8b90a23b51e63aaa02472a17e6bae64bebc1f",
+        "index.html": "c25fa0ef4bbbb278b44102b05da3d2cd1adddc72b714473bb62fbd83bc4d398c"
+      },
+      "node": "v24.21.0",
+      "native_imports": true
+    }
+  },
+  "build_result_sha256": "6f12d92307199888437a7a61421fc286318d17bce731e0c4f1700015cd04d85c"
+}
