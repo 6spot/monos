@@ -1,3 +1,4 @@
+import { randomUUID } from '../lib/browser-crypto.ts';
 import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { DeliveryAcceptanceManifest, DeliveryBatch, DeliveryBatchSummary, DeliveryProposalSummary, OwnerDeliveryCommandName, OwnerDeliveryPayload } from '../../../../packages/protocol/generated/types.ts';
@@ -31,7 +32,7 @@ const reasonText: Record<string, string> = {
 };
 const explain = (reason: string) => reasonText[reason] ?? human(reason);
 function deliveryCommand(props: TaskViewProps, scope: string, name: OwnerDeliveryCommandName, payload: OwnerDeliveryPayload) {
-  return props.commands.execute(props.task.task_id, scope, { family: 'delivery', command: { schema_version: 1, task_id: props.task.task_id, request_id: crypto.randomUUID(), name, payload } });
+  return props.commands.execute(props.task.task_id, scope, { family: 'delivery', command: { schema_version: 1, task_id: props.task.task_id, request_id: randomUUID(), name, payload } });
 }
 function useMounted() {
   const mounted = useRef(true);

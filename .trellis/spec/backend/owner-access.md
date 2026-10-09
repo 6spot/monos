@@ -29,12 +29,17 @@ creates the opaque hashed-token session in the same transaction. Avoid throwing
 inside that transaction for ordinary password rejection, which would roll back
 the failure count. Crypto work is bounded by the serialized access-row lock.
 
-Cookie is `__Host-monos`, Secure, HttpOnly, SameSite=Strict, Path=/, no Domain.
+HTTPS Cookie is `__Host-monos`, Secure, HttpOnly, SameSite=Strict, Path=/, no Domain.
+HTTP Cookie is `monos` with the same flags except Secure, allowing certificate-free
+local use. Select and clear only the cookie for the actual listener protocol;
+never fall back to the other name. Both modes require the same server-side session.
 Explicit Bearer takes precedence; invalid Bearer never falls back to Cookie.
 Duplicate Cookie names fail authentication. Cookie writes and login require Origin
 equal to the request's HTTP(S) origin. Forwarded headers are not trusted by default.
-Deploy browser access over HTTPS, preserve public Host/protocol through ingress and
-keep the frontend same-origin. All Owner responses are no-store.
+Keep the frontend same-origin. Forwarded protocol/host headers do not change the
+cookie mode or accepted Origin. Direct TLS or TLS pass-through preserves HTTPS
+behavior; TLS termination into HTTP is not automatically trusted. See
+[optional transport](../protocol/transport.md). All Owner responses are no-store.
 
 Expired/revoked sessions cannot read or mutate. Logout is idempotent for a syntactically
 valid token, even after expiry. Runner and Attempt routes still require their own
@@ -68,8 +73,9 @@ counter or a password/token appears in process arguments, responses or diagnosti
 ## 6. Tests Required
 
 `postgres-owner-access.test.ts` covers initialization/hash storage, concurrent failure
-accounting, restart/throttle reset, rotation, cookie flags/origin/duplicates, expiry,
-logout and a real native CLI bootstrap subprocess with synthetic stdin. Preserve
+accounting, restart/throttle reset, rotation, real HTTP/HTTPS cookie flags and
+session reads/logout, origin/duplicates, forwarded-header rejection, expiry and
+a real native CLI bootstrap subprocess with synthetic stdin. Preserve
 all earlier Owner/Runner/Attempt scope and protocol fixtures.
 
 ## 7. Wrong vs Correct

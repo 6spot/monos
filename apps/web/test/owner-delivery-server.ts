@@ -47,7 +47,7 @@ const server = createServer((request, response) => { void (async () => {
       await app.ready();
       const heartbeat = setInterval(() => { void fixture.service.touch(fixture.f.runner, fixture.f.incarnation, true).catch(() => {}); }, 1000);
       current = { fixture, app, heartbeat, second, schema };
-      response.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'Set-Cookie': `__Host-monos=${fixture.token}; Path=/; HttpOnly; SameSite=Strict; Secure` });
+      response.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'Set-Cookie': `monos=${fixture.token}; Path=/; HttpOnly; SameSite=Strict` });
       response.end(JSON.stringify({ task: fixture.f.task, second, schema })); return;
     }
     if (!current) throw new Error('Scenario is not initialized');

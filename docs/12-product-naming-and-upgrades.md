@@ -11,7 +11,7 @@ documentation, command examples and executable names.
 | TypeScript workspace packages | `@monos/server`, `@monos/web`, `@monos/protocol`, `@monos/domain`, `@monos/db` |
 | Go modules | `monos.local/runner`, `monos.local/protocol` |
 | Product environment variables | `MONOS_*`, including `MONOS_SOCKET` |
-| Owner session cookie | `__Host-monos` |
+| Owner session cookie | `monos` over HTTP; `__Host-monos` over HTTPS |
 | Fresh probe Compose project | `monos-boundary-probe` |
 | Fresh probe database/user | `monos` |
 | Fresh probe service/config/storage | `monos-probe*`, `/etc/monos-probe`, `/var/lib/monos-probe`, `/run/monos-probe` |

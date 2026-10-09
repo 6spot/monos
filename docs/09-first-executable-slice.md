@@ -90,7 +90,7 @@ Demonstrate the full flow against an Owner-designated test repository and one re
 | CLI response is lost and its input file changes | Retry uses the retained original envelope; same ID with different payload is rejected; no duplicate effect or automatic fresh ID |
 | Crash before/after request send and backend admission | Journal failure prevents sending; restart queries receipt truth; uncertainty is retained, and unaccepted work is never replayed under revoked authority |
 | Completion stops the CLI before its response; old credential expires | Runner/backend recover the admitted operation and UI result through scoped reads; no old-credential renewal or dependency on the stopped process |
-| Planner invokes `monos` under read-only execution | Submit long JSON through stdin and, where required, reserved scratch files; CLI/socket/HTTPS access works without interactive approval while repository writes fail. Record the supported Runtime version/settings; unsupported combinations fail the probe |
+| Planner invokes `monos` under read-only execution | Submit long JSON through stdin and, where required, reserved scratch files; CLI/socket/HTTP(S) access works without interactive approval while repository writes fail. Record the supported Runtime version/settings; unsupported combinations fail the probe |
 | Simulate lost PR-create or merge response | Query remote truth before retry; no duplicate PR or invented failure |
 | Request Changes after REVIEW | REVIEW while routing, then RUNNING on Rework with no REPLAN_REQUIRED; same Task/Node/PR, new activation; obsolete outputs not current evidence |
 | Change PR head after acceptance | Old acceptance cannot merge the changed result |
@@ -121,7 +121,7 @@ Plain-Git delivery, the full repository picker, and broader settings/UI can foll
 
 ## Selected technology and remaining feasibility work
 
-[Technology & Deployment](11-technology-and-deployment.md) fixes React/Vite/TypeScript Web, Fastify/Node.js backend, PostgreSQL/Drizzle, a Go Runner on Linux invoking host-installed CLIs as native processes, and HTTPS/SSE/WSS transports. These are accepted choices, not open language/framework questions.
+[Technology & Deployment](11-technology-and-deployment.md) fixes React/Vite/TypeScript Web, Fastify/Node.js backend, PostgreSQL/Drizzle, a Go Runner on Linux invoking host-installed CLIs as native processes, and HTTP(S)/SSE/WS(S) transports with optional TLS. These are accepted choices, not open language/framework questions.
 
 Before broad implementation, verify PostgreSQL transaction/claim behavior, the native host process-supervision and workspace-permission design, and cross-process protocol generation/validation. Select an actually available Owner-installed host CLI and test its existing authentication, `monos` commands and lazy workspace access. Configure an authorized GitHub test repository and verify expected-head merge/check behavior. Choose the Owner sign-in and TLS setup before exposing the service.
 

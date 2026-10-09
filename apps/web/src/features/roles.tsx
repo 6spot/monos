@@ -1,3 +1,4 @@
+import { randomUUID } from '../lib/browser-crypto.ts';
 import { useEffect, useState } from 'react';
 import type { ConfigurationResult, ConfigurationSnapshot, InfrastructureSnapshot, RoleConfiguration } from '../../../../packages/protocol/generated/types.ts';
 import { Button } from '../components/ui/button.tsx';
@@ -13,7 +14,7 @@ export function Roles({ snapshot, infrastructure, save, disabled, committed }: {
   const saved = snapshot.roles.find((role) => role.id === id);
   const draft = id ? drafts[id] ?? (saved ? { value: saved, basis: snapshot.control_version } : undefined) : undefined;
   function update(value: RoleConfiguration) { setDrafts((all) => ({ ...all, [value.id]: { value, basis: draft?.basis ?? snapshot.control_version } })); }
-  function create() { const value = { id: crypto.randomUUID(), name: '', description: '', instructions: '', archived: false }; setDrafts((all) => ({ ...all, [value.id]: { value, basis: snapshot.control_version } })); setSelected(value.id); }
+  function create() { const value = { id: randomUUID(), name: '', description: '', instructions: '', archived: false }; setDrafts((all) => ({ ...all, [value.id]: { value, basis: snapshot.control_version } })); setSelected(value.id); }
   function clear() { if (id) setDrafts((all) => { const next = { ...all }; delete next[id]; return next; }); }
   const rows = [...snapshot.roles, ...Object.values(drafts).filter((row) => !snapshot.roles.some((r) => r.id === row.value.id)).map((row) => row.value)];
   return <><PageHeading title="Roles" description="Reusable instructions for how your agents work." action={<Button disabled={disabled} onClick={create}>New role</Button>} />

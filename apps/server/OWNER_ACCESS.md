@@ -22,21 +22,29 @@ the database stores a random salt and fixed-parameter scrypt hash, not the passw
 Browser API sequence:
 
 1. Same-origin `POST /v1/owner/login` with `{schema_version:1,password}`.
-2. The server sets the Secure, HttpOnly, SameSite=Strict `__Host-monos` cookie.
+2. HTTP sets the HttpOnly, SameSite=Strict `monos` cookie. HTTPS sets the Secure,
+   HttpOnly, SameSite=Strict `__Host-monos` cookie. Both use Path=/ and no Domain.
 3. `GET /v1/owner/session` revalidates expiry/revocation. Existing Owner APIs accept
    this cookie; cookie-authenticated writes require matching Origin.
 4. `POST /v1/owner/logout` revokes the session and expires the cookie.
 
-Serve browser traffic over HTTPS. The application does not trust forwarded origin
-headers by default. Keep the public Host/protocol consistent through ingress and
-do not enable cross-origin access. Explicit Bearer authentication remains available
-for existing trusted API clients; Runner and Attempt credentials are never accepted.
+With both `MONOS_TLS_KEY_FILE` and `MONOS_TLS_CERT_FILE` omitted, the backend serves
+HTTP and WS without certificates. Set both to readable matching PEM files to serve
+HTTPS and WSS; a partial or invalid pair fails before database initialization.
+HTTPS clients must verify the server certificate. Use HTTPS when transport encryption
+is needed; HTTP carries credentials and content without encryption.
+
+The application does not trust forwarded origin headers. Cookie selection and
+Origin checks use the actual backend connection, so preserve the public Host and
+protocol through ingress and keep the frontend same-origin. Explicit Bearer
+authentication remains available for existing trusted API clients; Runner and
+Attempt credentials are never accepted.
 
 Five failed password attempts in a minute throttle further login with HTTP 429 and
 Retry-After. This is persisted across backend restarts. Login/session responses are
 no-store. Passwords are bounded to at least 12 characters and at most 1024 UTF-8 bytes.
 
-Build with `pnpm build` and open the backend HTTPS origin to use the protected
+Build with `pnpm build` and open the backend HTTP or HTTPS origin to use the protected
 configuration UI. The server serves its built assets from `apps/web/dist`; container
 builds include them automatically. See `apps/web/README.md` for development/testing.
 Owner credentials must still be initialized through the local management command.
@@ -61,7 +69,8 @@ are storage for the forthcoming production Runtime integration, not a change to
 the boundary probe's fixed/free launch target.
 
 GitHub payload: `app_id`, `installation_id`, and write-only `private_key` PEM.
-Send secrets only in a same-origin HTTPS body, never argv, URLs, logs or source.
+Send secrets in a same-origin request body, never argv, URLs, logs or source;
+use HTTPS to encrypt the transport.
 The App must already be installed on the selected repositories with Contents and
 Metadata read permission. monos mints only temporary read-only installation
 tokens for the repository picker. Future delivery requires separately validated

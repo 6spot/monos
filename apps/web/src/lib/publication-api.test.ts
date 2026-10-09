@@ -22,6 +22,15 @@ async function finding(record: PublicationRecord): Promise<PublicationFinding> {
   return { ...facts, finding_id: await publicationDigest({ candidate_manifest_digest: record.candidate_manifest_digest, configuration_digest: record.scan!.configuration_digest, scan_run_id: record.scan!.scan_id, finding_facts_without_id: facts }) };
 }
 
+it('verifies WebCrypto publication evidence on HTTP without SubtleCrypto and rejects tampered digests', async () => {
+  const record = await evidence();
+  vi.stubGlobal('crypto', {});
+  vi.stubGlobal('fetch', async () => Response.json(record));
+  await expect(publicationCandidate('task-a', 'candidate-a', 'session-a', source.operation_id)).resolves.toEqual(record);
+  vi.stubGlobal('fetch', async () => Response.json({ ...record, candidate_manifest_digest: 'f'.repeat(64) }));
+  await expect(publicationCandidate('task-a', 'candidate-a', 'session-a', source.operation_id)).rejects.toMatchObject({ code: 'invalid_response' });
+});
+
 it('reads exact source history and direct older candidates with session, abort and no-store binding', async () => {
   const record = await evidence(), calls: { path: string; init: RequestInit }[] = [], controller = new AbortController();
   vi.stubGlobal('fetch', async (path: string, init: RequestInit) => { calls.push({ path, init }); return Response.json(path.includes('candidate-a') ? record : { schema_version: 1, task_id: source.task_id, items: [record], next_cursor: 'exact-cursor' }); });

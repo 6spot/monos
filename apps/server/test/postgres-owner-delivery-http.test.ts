@@ -13,7 +13,7 @@ suite('Owner delivery HTTP boundary', () => {
     try {
       const session = await new OwnerAccess(x.db).session(x.token);
       const task = x.f.task, root = `/v1/owner/tasks/${task}/delivery`;
-      const headers = { host: 'monos.test', cookie: `__Host-monos=${x.token}`, 'x-monos-session': session.session_id };
+      const headers = { host: 'monos.test', cookie: `monos=${x.token}`, 'x-monos-session': session.session_id };
       const paths = [root, `${root}/proposals/${randomUUID()}`, `${root}/batches/${randomUUID()}`, `${root}/commands/${randomUUID()}`];
       for (const url of paths) {
         const denied = await app.inject({ url });

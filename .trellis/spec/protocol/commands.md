@@ -4,7 +4,7 @@ Source: [Tool Protocol](../../../docs/05-tool-protocol.md).
 
 ## 1. Scope / Trigger
 
-Owner HTTPS commands, Agent `monos` commands, Runner WSS RPC/events and scoped recovery reads.
+Owner HTTP(S) commands, Agent `monos` commands, Runner WS(S) RPC/events and scoped recovery reads. Transport selection follows [optional HTTP/TLS](transport.md); envelopes and authorization are unchanged.
 
 ## 2. Signatures
 
@@ -76,7 +76,7 @@ independent Owner input controls.
 | Accepted asynchronous command | Return stable operation reference |
 | Inventory snapshot changed | `version_conflict`; restart all pages without releasing ownership |
 | Malformed signed credential | `unauthorized`, not an internal error |
-| CLI journal write fails | Do not send HTTPS |
+| CLI journal write fails | Do not send HTTP(S) |
 | Receipt missing but send uncertain | Preserve uncertainty; reconcile |
 
 ## 5. Good / Base / Bad Cases

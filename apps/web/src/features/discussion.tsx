@@ -1,3 +1,4 @@
+import { randomUUID } from '../lib/browser-crypto.ts';
 import { useEffect, useId, useRef } from 'react';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import type { ConfigurationSnapshot, DiscussionCommand, TodoRecord } from '../../../../packages/protocol/generated/types.ts';
@@ -61,7 +62,7 @@ export function Discussion({ todo, snapshot, onUnauthorized }: { todo?: TodoReco
   function action(name: 'retry_discussion_turn' | 'withdraw_discussion_turn' | 'stop_discussion_turn') {
     if (!id || !current || !status.data) return;
     if (name === 'stop_discussion_turn' && !current.attempt_id) return;
-    const command: DiscussionCommand = { schema_version: 1, request_id: crypto.randomUUID(), todo_id: id, name,
+    const command: DiscussionCommand = { schema_version: 1, request_id: randomUUID(), todo_id: id, name,
       expected_discussion_version: status.data.discussion_version, payload: { source_message_id: current.message_id,
         ...(name === 'stop_discussion_turn' ? { attempt_id: current.attempt_id } : {}) } };
     void local.execute(command);
@@ -99,7 +100,7 @@ export function Discussion({ todo, snapshot, onUnauthorized }: { todo?: TodoReco
       </div>
     </div>}
     {status.data?.working_requirement_state && <details className="subsection"><summary>Current understanding</summary><p className="discussion-content">{status.data.working_requirement_state}</p></details>}
-    <form className="discussion-composer subsection" aria-label="Discussion composer" onSubmit={(event) => { event.preventDefault(); void local.execute({ schema_version: 1, request_id: crypto.randomUUID(), todo_id: id, name: 'submit_discussion_message', payload: { message_id: crypto.randomUUID(), content: state?.draft ?? '' } }); }}>
+    <form className="discussion-composer subsection" aria-label="Discussion composer" onSubmit={(event) => { event.preventDefault(); void local.execute({ schema_version: 1, request_id: randomUUID(), todo_id: id, name: 'submit_discussion_message', payload: { message_id: randomUUID(), content: state?.draft ?? '' } }); }}>
       <div className="field"><Label htmlFor={composerId}>Message Planner</Label><Textarea id={composerId} ref={composer} rows={4} required maxLength={65536} disabled={disabled} value={state?.draft ?? ''} onChange={(event) => local.setDraft(id, event.target.value)} aria-describedby={`${composerId}-hint${state?.notice ? ` ${noticeId}` : ''}`} /><p id={`${composerId}-hint`} className="hint">{current ? 'New messages are saved and queued behind this request.' : 'Sending a message starts a Planner discussion for this Todo.'}</p></div>
       <Button type="submit" disabled={disabled || !state?.draft.trim()}>{state?.busy ? 'Saving message…' : 'Send message'}</Button>
     </form>

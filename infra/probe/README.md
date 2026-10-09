@@ -160,7 +160,7 @@ python3 infra/probe/stop_probe.py --evidence /root/monos-stop-evidence --action 
 
 First run native Linux `go test -race ./...` with CGO enabled and the isolated
 PostgreSQL test suite from `infra/compose/README.md`. Then provision the Runner
-config/CA/token and the service-owned Git fixture after the reviewed
+config/token and the service-owned Git fixture after the reviewed
 `infra/runner/bootstrap.sh` and `infra/compose/prepare.mjs` have completed:
 
 ```sh
@@ -168,9 +168,23 @@ cd /root/monos-boundary-probe-src
 python3 infra/probe/provision.py
 ```
 
+The default endpoint is `http://127.0.0.1:18443`; no certificate or OpenSSL is
+required. For the optional TLS Compose recipe, use:
+
+```sh
+python3 infra/probe/provision.py --endpoint https://127.0.0.1:18443 --ca-file infra/compose/private/ca.crt
+```
+
+For system-trusted HTTPS, set `--endpoint` and omit `--ca-file`. A custom CA is
+accepted only with HTTPS and extends normal certificate/hostname verification.
+Recovery and Owner probes use the configured scheme; the Owner cookie jar handles
+the HTTP `monos` cookie or HTTPS `__Host-monos` cookie. Probe Compose restarts add
+`compose.tls.yaml` when the configured endpoint uses HTTPS. For manual Compose
+commands in this guide, also add `-f infra/compose/compose.tls.yaml` in TLS mode.
+
 Provisioning validates the bootstrap marker, identities and task-owned paths.
 It privately copies the generated Runner credential to a service-owned `0600`
-file, copies only the public CA, writes non-secret `runner-a` settings with the
+file, copies the public CA only when supplied, writes non-secret `runner-a` settings with the
 actual `me` UID, and creates a one-commit local Git fixture **as the service
 identity**. Enrollment uses capacity 2. Different existing files/repositories
 are preserved and rejected; identical valid material is verified on rerun.
@@ -247,7 +261,7 @@ report must cite the actual output files from the authorized host.
 
 | Acceptance area | Harness / test | Evidence kind and remaining limit |
 | --- | --- | --- |
-| AC1 HTTPS/WSS/schema/scope | Real trial receipts + Go/TS shared corpus + backend socket tests | Real host trial required; backend socket test uses fake control actor with real transport |
+| AC1 HTTP/WS or HTTPS/WSS/schema/scope | Real trial receipts + Go/TS shared corpus + backend socket tests | Real host trial required; backend socket test uses fake control actor with real transport |
 | AC2 installed CLI, help, long payload, Planner access | `trial node-01`, `trial planner-01` | Real OpenCode invokes deterministic native-bash driver; unexpected permission outcome fails |
 | AC3 lazy workspace/common directory and snapshots | Node/Planner driver checks, finalized service export, `permissions node-01` | Real host cache/journal/credential denial and service result reads |
 | AC4 same-UID caller attribution | `restart-pair`, forged fields, shared request ID, Linux SO_PEERCRED unit test | Real concurrent cgroups plus kernel test; deliberate PID reuse is a local deterministic test |

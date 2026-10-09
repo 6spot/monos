@@ -1,3 +1,4 @@
+import { randomUUID } from './browser-crypto.ts';
 import { useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import type { TaskPreviewCommand, TaskPreviewStatus } from '../../../../packages/protocol/generated/types.ts';
@@ -33,7 +34,7 @@ export function useTaskPreviews(onUnauthorized: () => void) {
         // The API adapter verified the confirmation and exact digest. Store the
         // second immutable envelope before sending, so recovery cannot reconfirm.
         if (!result.confirmation_id || !command.payload.content_digest) throw new UncertainError();
-        command = { schema_version: 1, request_id: crypto.randomUUID(), todo_id: command.todo_id, name: 'create_execution_task',
+        command = { schema_version: 1, request_id: randomUUID(), todo_id: command.todo_id, name: 'create_execution_task',
           payload: { proposal_message_id: command.payload.proposal_message_id, confirmation_id: result.confirmation_id, content_digest: command.payload.content_digest } };
         update(key, { pending: command });
         await submitTaskPreview(command);
@@ -56,10 +57,10 @@ export function useTaskPreviews(onUnauthorized: () => void) {
     },
     create: (status: TaskPreviewStatus) => {
       if (status.state !== 'eligible' || !status.selected_project_id || !status.content_digest) return Promise.resolve();
-      return execute({ schema_version: 1, request_id: crypto.randomUUID(), todo_id: status.todo_id, name: 'confirm_task_preview',
+      return execute({ schema_version: 1, request_id: randomUUID(), todo_id: status.todo_id, name: 'confirm_task_preview',
         payload: { proposal_message_id: status.proposal_message_id, project_id: status.selected_project_id, content_digest: status.content_digest } });
     },
-    cancel: (todoId: string, proposalId: string) => execute({ schema_version: 1, request_id: crypto.randomUUID(), todo_id: todoId, name: 'cancel_task_preview', payload: { proposal_message_id: proposalId } }),
+    cancel: (todoId: string, proposalId: string) => execute({ schema_version: 1, request_id: randomUUID(), todo_id: todoId, name: 'cancel_task_preview', payload: { proposal_message_id: proposalId } }),
     recover: (todoId: string, proposalId: string) => {
       const pending = local.current[previewKey(todoId, proposalId)]?.pending;
       return pending ? execute(pending, true) : Promise.resolve();

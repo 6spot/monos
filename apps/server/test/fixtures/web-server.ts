@@ -28,7 +28,7 @@ const remote = new RemotePreparation(db, service.instanceId, remoteProvider);
 const app = createApp(service, undefined, fileURLToPath(new URL('../../../web/dist', import.meta.url)), { remoteProvider });
 function fixtureOwner(request: FastifyRequest): string {
   if (request.headers.origin !== 'http://127.0.0.1:18555') throw new Error('Test fixture requires same origin');
-  return (request.headers.cookie ?? '').split(';').map((value) => value.trim()).find((value) => value.startsWith('__Host-monos='))?.slice('__Host-monos='.length) ?? '';
+  return (request.headers.cookie ?? '').split(';').map((value) => value.trim()).find((value) => value.startsWith('monos='))?.slice('monos='.length) ?? '';
 }
 // These routes exist only in this isolated browser fixture, never createApp/main.
 app.post<{ Body: { todo_id: string; title: string; specification: string; content?: string } }>('/__test__/discussion-proposal', async (request) => {

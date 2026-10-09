@@ -2,6 +2,7 @@ import type { OwnerCommand, OwnerCommandResult, TaskConversationCommand, TaskCon
 import { validate } from '../../../../packages/protocol/src/validation.ts';
 import { APIError, UncertainError, request } from './api.ts';
 import { taskStorageEpoch } from './task-storage.ts';
+import { sha256 } from './browser-crypto.ts';
 
 export type TaskIntent =
   | { family: 'execution'; command: OwnerCommand }
@@ -201,8 +202,8 @@ export async function resultRead(taskId: string, operationId: string, identity: 
   // Identity is a flat generated scalar projection. Verify its complete digest,
   // rather than accepting an echoed digest beside unrelated identity fields.
   const canonical = JSON.stringify(Object.fromEntries(Object.entries(r.identity).sort(([a],[b]) => a < b ? -1 : a > b ? 1 : 0)));
-  const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(canonical));
+  const hash = await sha256(canonical);
   signal?.throwIfAborted();
-  if (Array.from(new Uint8Array(hash), byte => byte.toString(16).padStart(2,'0')).join('') !== identity) throw new APIError('invalid_response', 'Result response did not match the selected identity.');
+  if (hash !== identity) throw new APIError('invalid_response', 'Result response did not match the selected identity.');
   return response;
 }

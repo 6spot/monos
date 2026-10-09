@@ -124,7 +124,7 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Project and Role confi
     const session = await issueOwnerSession(db); const c = await command(role());
     try {
       for (const headers of [{}, { authorization: 'Bearer runner-test-token' }]) expect((await app.inject({ method: 'GET', url: '/v1/owner/configuration', headers })).statusCode).toBe(401);
-      const cookie = `__Host-monos=${session.token}`;
+      const cookie = `monos=${session.token}`;
       expect((await app.inject({ method: 'POST', url: '/v1/owner/configuration/commands', headers: { cookie }, payload: c })).statusCode).toBe(403);
       const headers = { authorization: `Bearer ${session.token}` };
       const saved = await app.inject({ method: 'POST', url: '/v1/owner/configuration/commands', headers, payload: c });

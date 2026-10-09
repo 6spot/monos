@@ -1,3 +1,4 @@
+import { randomUUID } from '../lib/browser-crypto.ts';
 import { useEffect, useState } from "react";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
@@ -262,7 +263,7 @@ export function executeOwner(
     family: "execution",
     command: {
       schema_version: 1,
-      request_id: crypto.randomUUID(),
+      request_id: randomUUID(),
       scope_id: props.task.task_id,
       expected_control_version: version,
       name,

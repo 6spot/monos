@@ -10,12 +10,12 @@ import http.cookiejar
 import json
 import os
 import pathlib
-import ssl
 import time
 import urllib.parse
 import urllib.request
 
 from probe import Probe, ROOT, checked_id
+from transport import authenticated_opener, endpoint_origin
 
 
 def append_page(events, page, attempt):
@@ -39,12 +39,8 @@ class LogsProbe(Probe):
         path = pathlib.Path(password_file)
         if path.is_symlink() or path.stat().st_uid != 0 or path.stat().st_mode & 0o077:
             raise RuntimeError('Owner password file must be root-private')
-        self.endpoint = self.config['endpoint'].rstrip('/')
-        if not self.endpoint.startswith('https://'):
-            raise RuntimeError('HTTPS Owner endpoint required')
-        self.browser = urllib.request.build_opener(
-            urllib.request.HTTPSHandler(context=ssl.create_default_context(cafile=self.config['ca_file'])),
-            urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
+        self.endpoint = endpoint_origin(self.config['endpoint'])
+        self.browser = authenticated_opener(self.config, http.cookiejar.CookieJar())
         request = urllib.request.Request(self.endpoint + '/v1/owner/login',
             data=json.dumps({'schema_version': 1, 'password': path.read_text().strip()}).encode(),
             headers={'Content-Type': 'application/json', 'Origin': self.endpoint})

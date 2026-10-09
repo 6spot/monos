@@ -1,3 +1,4 @@
+import { randomUUID } from '../lib/browser-crypto.ts';
 import { useState } from "react";
 import type {
   TaskConversationStatus,
@@ -58,10 +59,10 @@ export function TaskConversationView(props: TaskViewProps) {
       family: "conversation",
       command: {
         schema_version: 1,
-        request_id: crypto.randomUUID(),
+        request_id: randomUUID(),
         task_id: props.task.task_id,
         name: "submit_task_message",
-        payload: { message_id: crypto.randomUUID(), content: draft },
+        payload: { message_id: randomUUID(), content: draft },
       },
     });
   }
@@ -270,7 +271,7 @@ function InputOperation({
                 family: "conversation",
                 command: {
                   schema_version: 1,
-                  request_id: crypto.randomUUID(),
+                  request_id: randomUUID(),
                   task_id: props.task.task_id,
                   name,
                   expected_version: item.version,

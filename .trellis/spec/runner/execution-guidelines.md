@@ -12,23 +12,23 @@ Dispatch carries stable Attempt/dispatch ID, owner/fencing, selected target, Run
 
 Generate transport types from protocol schemas. Current entrypoints:
 
-- `monos-runner --config /etc/monos-probe/runner.json`: endpoint, CA path, private token path, Runner ID, SQLite path, socket path and execution UID.
+- `monos-runner --config /etc/monos-probe/runner.json`: HTTP(S) endpoint, optional CA path, private token path, Runner ID, SQLite path, socket path and execution UID.
 - `monos <command> --input <file|-> --request-id <id> --output json`; `retry` and `command-status` take the existing ID and no replacement input.
 - The service account invokes only `/usr/local/libexec/monos-probe-launch` with no argv. Bounded JSON stdin selects a fixed action and validated dispatch/operation; it cannot choose executable, UID or arbitrary systemd properties. See [helper](../../../runner/internal/host/helper.go) and [bootstrap](../../../infra/runner/bootstrap.sh).
 - [Socket attribution](../../../runner/internal/local/socket.go), [Linux process identity](../../../runner/internal/host/process_linux.go), [journal](../../../runner/internal/journal/journal.go) and [control reconciliation](../../../runner/internal/daemon/daemon.go) own the corresponding boundaries.
 
 ## 3. Contracts
 
-- Use resolved executables and structured argument arrays with explicit environment/cwd. Prefer Go standard library; choose unavoidable WSS/SQLite/schema dependencies deliberately.
-- Runner initiates authenticated WSS; it has no direct product DB access.
+- Use resolved executables and structured argument arrays with explicit environment/cwd. Prefer Go standard library; choose unavoidable WebSocket/SQLite/schema dependencies deliberately.
+- Runner initiates authenticated WS(S) following [optional HTTP/TLS transport](../protocol/transport.md); it has no direct product DB access.
 - Persist start intent before spawn, discover ownership across the spawn/ack crash window, and tombstone cancelled dispatches.
 - Two identities: service account owns credentials/journal/cache; execution account owns Agent processes/workspaces and Owner-managed CLI logins.
 - A narrow privileged launcher/systemd policy starts fixed execution-account processes in owned cgroups. No arbitrary root shell surface.
 - CLI socket identity uses kernel peer credentials, process birth/boot identity and cgroup membership. UID or caller-supplied scope alone is insufficient.
-- Persist immutable request envelopes outside the Agent tree before HTTPS send; no bearer credential in journal.
+- Persist immutable request envelopes outside the Agent tree before HTTP(S) send; no bearer credential in journal.
 - Freeze/stop entire trees before workspace handoff; terminal DB state does not prove absence.
 - Heartbeat loss is connectivity, not failure. Offline computation may continue; unaccepted formal mutations cannot be replayed automatically.
-- Planner repository access remains read-only while CLI/socket/HTTPS and reserved scratch are usable.
+- Planner repository access remains read-only while CLI/socket/HTTP(S) and reserved scratch are usable.
 - Native shell and Node workspace writes are allowed under the execution account. Do not add shell-command allowlists, global read-only mounts or PID namespaces to the baseline. Reserve paths for workspace placement, not hostile-code containment.
 - Enforce Planner snapshot immutability through service-owned snapshot files/parents and execution-readable modes; an edit-tool denial alone is insufficient. Ordinary bash/external-directory access remains enabled.
 - No runtime install/login automation. Verify the actual execution account and existing CLI configuration.
@@ -103,7 +103,7 @@ fixture must acknowledge a real live process, let it exit normally, and replay t
 same Stop without external unit cleanup. Label Host-only proof separately from
 Task/daemon canonical settlement.
 
-Verify shell-based snapshot write/chmod/root-replacement attempts fail while Node workspace writes, Planner scratch writes and socket/HTTPS commands succeed. Do not require a whole-host read-only view or same-UID hostile-process containment to pass this baseline.
+Verify shell-based snapshot write/chmod/root-replacement attempts fail while Node workspace writes, Planner scratch writes and socket/HTTP(S) commands succeed. Do not require a whole-host read-only view or same-UID hostile-process containment to pass this baseline.
 
 [Adapter catalog tests](../../../runner/internal/adapter/catalog_test.go) must verify exact env/cwd parity, bounded output, absent/duplicate model rejection, malformed/missing/nonzero pricing and no model execution after preflight failure. Real CLI trials must include fresh Attempt caches; a smoke run with the Owner's existing cache does not establish Adapter compatibility.
 

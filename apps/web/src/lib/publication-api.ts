@@ -2,6 +2,7 @@ import type { PublicationCandidatePage, PublicationCandidateQuery, PublicationFi
 import { validate } from '../../../../packages/protocol/src/validation.ts';
 import { APIError } from './api.ts';
 import { taskRead } from './task-api.ts';
+import { sha256 } from './browser-crypto.ts';
 
 function canonical(value: unknown): string {
   if (Array.isArray(value)) return `[${value.map(canonical).join(',')}]`;
@@ -9,8 +10,7 @@ function canonical(value: unknown): string {
   return JSON.stringify(value);
 }
 export async function publicationDigest(value: unknown): Promise<string> {
-  const bytes = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(canonical(value)));
-  return Array.from(new Uint8Array(bytes), byte => byte.toString(16).padStart(2, '0')).join('');
+  return sha256(canonical(value));
 }
 function mismatch(): never { throw new APIError('invalid_response', 'Publication evidence did not match the selected result.'); }
 

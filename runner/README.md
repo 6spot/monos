@@ -1,10 +1,19 @@
 # Go boundary probe
 
-`monos-runner` owns the authenticated WSS client, local SQLite infrastructure
+`monos-runner` owns the authenticated WS/WSS client, local SQLite infrastructure
 journal, attributed Unix socket, supervised process lifecycle and limited local
 Git effects. `monos` validates input, gets an immutable journal acknowledgement
-and an Attempt token, then sends HTTPS directly. The daemon never reads the
+and an Attempt token, then sends HTTP/HTTPS directly. The daemon never reads the
 product database. The bundled CLI never sees Runner enrollment credentials.
+
+Set `endpoint` to an HTTP or HTTPS backend origin, for example
+`http://127.0.0.1:3000` or `https://monos.example.com`. Credentials, query strings,
+fragments and paths other than `/` are rejected. The Runner selects WS for HTTP
+and WSS for HTTPS. `ca_file` is optional: HTTPS uses system trust when omitted;
+an explicit PEM certificate bundle adds trusted roots. Empty, unreadable or invalid
+explicit CA files fail startup. HTTP needs no certificate. HTTPS always verifies
+the server certificate and hostname, requires TLS 1.2 or newer, and never falls
+back to HTTP. Command and recovery clients do not follow redirects.
 
 ```sh
 go test ./...
@@ -16,7 +25,7 @@ Run in `runner/`. Go 1.26+ and a C compiler are required. Protocol code and the
 embedded JSON Schema are generated from `packages/protocol`; do not edit them
 here. Shared protocol fixtures are consumed by Go tests.
 
-Dependencies are deliberate: `coder/websocket` implements WSS absent from the
+Dependencies are deliberate: `coder/websocket` implements WS/WSS absent from the
 Go standard library; `mattn/go-sqlite3` supplies transactional durable SQLite;
 `santhosh-tekuri/jsonschema/v6` validates the authoritative schema including
 conditional frame/payload rules; `cyberphone/json-canonicalization` implements

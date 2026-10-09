@@ -27,14 +27,14 @@ Main-session host preparation must provision these files privately:
 - `/etc/monos-probe/runner-token`: Runner credential matching the backend;
   mode `0640`, owner `root`, group `monos-probe-read` is **not sufficient**,
   because `me` belongs to that read group. Use owner `monos-probe`, mode `0600`.
-- `/etc/monos-probe/ca.pem`: public task CA certificate, mode `0644`.
+- `/etc/monos-probe/ca.pem`: optional public custom CA certificate for HTTPS,
+  mode `0644`; omit this file and `ca_file` for HTTP or system-trusted HTTPS.
 - `/etc/monos-probe/runner.json`: non-secret settings, mode `0640`, owner
   `monos-probe`; never put a bearer in JSON or an argv.
 
 ```json
 {
-  "endpoint": "https://127.0.0.1:18443",
-  "ca_file": "/etc/monos-probe/ca.pem",
+  "endpoint": "http://127.0.0.1:18443",
   "token_file": "/etc/monos-probe/runner-token",
   "runner_id": "runner-a",
   "journal": "/var/lib/monos-probe/service/journal.sqlite",
@@ -43,11 +43,18 @@ Main-session host preparation must provision these files privately:
 }
 ```
 
+The endpoint selects HTTP/WS or HTTPS/WSS for Runner and bundled command traffic.
+For HTTPS, set `endpoint` to the HTTPS origin; add `ca_file` only for a custom CA.
+System trust and hostname verification remain enabled. `ca_file` with HTTP is a
+configuration error. HTTP sends credentials without encryption; the default
+Compose endpoint is loopback-only. Use HTTPS or trusted private transport for
+other deployments. Local socket attribution and bearer scopes are unchanged.
+
 Create a small initialized bare Git fixture as `monos-probe` at
 `/var/lib/monos-probe/cache/fixture.git`. Use umask `0027`; the shared read
 group makes it execution-readable, while service ownership excludes execution
-writes. Do not put credentials in the fixture. Start the unit only after CA,
-backend/database and fixture are ready:
+writes. Do not put credentials in the fixture. Start the unit only after
+backend/database, fixture and any required custom CA are ready:
 
 ```sh
 systemctl start monos-probe-runner.service

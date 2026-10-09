@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"context"
 	"crypto/rand"
-	"crypto/tls"
-	"crypto/x509"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -51,17 +49,20 @@ func (e *HTTPError) Error() string { return fmt.Sprintf("Runner read denied: HTT
 var errSnapshotChanged = errors.New("inventory snapshot changed")
 
 func New(c Config) (*Client, error) {
-	parsed, err := url.Parse(c.Endpoint)
-	if err != nil || parsed.Scheme != "https" || parsed.Host == "" || parsed.User != nil || parsed.RawQuery != "" || parsed.Fragment != "" {
-		return nil, fmt.Errorf("verified HTTPS endpoint required")
-	}
-	pool := x509.NewCertPool()
-	ca, err := os.ReadFile(c.CAFile)
-	if err != nil {
+	if _, err := backendOrigin(c.Endpoint); err != nil {
 		return nil, err
 	}
-	if !pool.AppendCertsFromPEM(ca) {
-		return nil, fmt.Errorf("invalid CA")
+	var ca []byte
+	var err error
+	if c.CAFile != "" {
+		ca, err = os.ReadFile(c.CAFile)
+		if err != nil {
+			return nil, err
+		}
+	}
+	client, err := NewHTTPClient(c.Endpoint, ca)
+	if err != nil {
+		return nil, err
 	}
 	token, err := os.ReadFile(c.TokenFile)
 	if err != nil {
@@ -77,8 +78,7 @@ func New(c Config) (*Client, error) {
 	if len(strings.TrimSpace(string(token))) < 16 {
 		return nil, fmt.Errorf("missing Runner credential")
 	}
-	transport := &http.Transport{TLSClientConfig: &tls.Config{RootCAs: pool, MinVersion: tls.VersionTLS12}}
-	return &Client{Config: c, HTTP: &http.Client{Transport: transport, Timeout: 15 * time.Second, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}, token: strings.TrimSpace(string(token)), pending: map[string]chan protocol.Frame{}}, nil
+	return &Client{Config: c, HTTP: client, token: strings.TrimSpace(string(token)), pending: map[string]chan protocol.Frame{}}, nil
 }
 func (c *Client) Get(ctx context.Context, path, name string, out any) error {
 	request, err := http.NewRequestWithContext(ctx, "GET", strings.TrimRight(c.Config.Endpoint, "/")+path, nil)
@@ -252,7 +252,17 @@ func (c *Client) Run(ctx context.Context, boot string, h Handler) error {
 	defer cancelConnection()
 	header := http.Header{}
 	header.Set("Authorization", "Bearer "+c.token)
-	conn, _, err := websocket.Dial(ctx, "wss"+strings.TrimPrefix(strings.TrimRight(c.Config.Endpoint, "/"), "https")+"/v1/runner", &websocket.DialOptions{HTTPClient: c.HTTP, HTTPHeader: header})
+	endpoint, err := backendOrigin(c.Config.Endpoint)
+	if err != nil {
+		return err
+	}
+	if endpoint.Scheme == "http" {
+		endpoint.Scheme = "ws"
+	} else {
+		endpoint.Scheme = "wss"
+	}
+	endpoint.Path = "/v1/runner"
+	conn, _, err := websocket.Dial(ctx, endpoint.String(), &websocket.DialOptions{HTTPClient: c.HTTP, HTTPHeader: header})
 	if err != nil {
 		return fmt.Errorf("Runner connection unavailable")
 	}

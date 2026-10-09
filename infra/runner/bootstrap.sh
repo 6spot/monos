@@ -179,4 +179,4 @@ path=Path('/var/lib/monos-probe/launch/installed-by-boundary-probe')
 path.write_text('monos-boundary-probe-v1\n')
 PY
 chmod 0600 /var/lib/monos-probe/launch/installed-by-boundary-probe
-echo "Installed confined launcher and Runner unit. Provision private config/CA/token and fixture; start explicitly after review."
+echo "Installed confined launcher and Runner unit. Provision private config/token and fixture, plus a public CA if required for HTTPS; start explicitly after review."

@@ -187,7 +187,7 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Todo capture and lifec
     const paths = ['/v1/owner/todos?scope=all', `/v1/owner/todos/${command.payload.todo_id}`, `/v1/owner/todos/commands/${command.request_id}`];
     try {
       for (const path of paths) for (const headers of [{}, { authorization: 'Bearer runner-invalid' }]) expect((await app.inject({ method: 'GET', url: path, headers })).statusCode).toBe(401);
-      const cookie = `__Host-monos=${session.token}`;
+      const cookie = `monos=${session.token}`;
       expect((await app.inject({ method: 'POST', url: '/v1/owner/todos/commands', headers: { cookie }, payload: command })).statusCode).toBe(403);
       const headers = { authorization: `Bearer ${session.token}` };
       const saved = await app.inject({ method: 'POST', url: '/v1/owner/todos/commands', headers, payload: command });

@@ -1,3 +1,4 @@
+import { randomUUID } from '../lib/browser-crypto.ts';
 import { useState } from "react";
 import type {
   ReplanImpact,
@@ -55,7 +56,7 @@ function specCommand(
     family: "specification",
     command: {
       schema_version: 1,
-      request_id: crypto.randomUUID(),
+      request_id: randomUUID(),
       task_id: props.task.task_id,
       name,
       payload,
@@ -74,7 +75,7 @@ function replanCommand(
     ...(review_origin?{review_origin}:{}),
     command: {
       schema_version: 1,
-      request_id: crypto.randomUUID(),
+      request_id: randomUUID(),
       task_id: props.task.task_id,
       name,
       payload,
@@ -1099,7 +1100,7 @@ function RequirementEditor({
                   "requirements-edit",
                   "edit_specification",
                   {
-                    proposal_id: crypto.randomUUID(),
+                    proposal_id: randomUUID(),
                     specification: draft.text,
                     summary,
                     basis: draft.basis,

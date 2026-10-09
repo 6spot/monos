@@ -10,14 +10,17 @@ receipts. Session cookies and provider keys never enter browser persistent stora
 ## Run
 
 Use the root workspace Node/pnpm versions and `pnpm install --frozen-lockfile`.
-`pnpm build` builds both backend and Web output. The normal HTTPS backend serves
+`pnpm build` builds both backend and Web output. The backend serves
 `/` and hashed `/assets/` files after the local Owner bootstrap described in
 `apps/server/OWNER_ACCESS.md`. The production Docker target includes Web output.
 
-For development, run the TLS backend at `https://127.0.0.1:18443`, trust its test CA
-with `NODE_EXTRA_CA_CERTS`, and run `pnpm --filter @monos/web dev`. Open exactly
-`http://127.0.0.1:5173`. The fixed loopback proxy verifies TLS and translates only
-this local Origin to the backend origin; foreign/missing Origins still fail guards.
+For development, run the backend at `http://127.0.0.1:18443` and run
+`pnpm --filter @monos/web dev`. Open exactly `http://127.0.0.1:5173`.
+Set `MONOS_API_ORIGIN` to an HTTP(S) origin to change the proxy target. For an HTTPS
+backend, set it to `https://127.0.0.1:18443` and supply a custom CA through
+`NODE_EXTRA_CA_CERTS` if needed; system-trusted certificates need no CA setting.
+The proxy keeps TLS verification enabled and translates only this local Origin
+to the backend origin; foreign/missing Origins still fail guards.
 Do not use the development server as production ingress.
 
 ## Verify
@@ -34,8 +37,8 @@ allows up to 15 seconds for cleanup. PostgreSQL must allow schema creation; port
 and any chosen local DB tunnel must be available. Tests use real HTTP/backend/DB
 flows. GitHub repository access and the Discussion recovery/reply projection case
 use explicit response fixtures; browser tests do not establish real model execution.
-Chromium's loopback secure-context
-exception permits the Secure cookie in this test harness; production requires HTTPS.
+HTTP uses the HttpOnly `monos` session cookie; HTTPS uses Secure `__Host-monos`.
+Both retain SameSite=Strict and exact same-origin write guards.
 Screenshots and failure traces are local ignored `test-results/` artifacts.
 
 ## Boundaries

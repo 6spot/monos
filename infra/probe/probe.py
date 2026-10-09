@@ -2,7 +2,7 @@
 """Explicit root-side operations for the isolated Linux boundary probe.
 
 Only task-owned units/paths/Compose services are targeted. Credentials go through
-private reads and stdin/HTTPS headers, never argv, evidence or printed output.
+private reads and stdin/authenticated HTTP(S) headers, never argv, evidence or printed output.
 """
 import argparse
 import hashlib
@@ -11,11 +11,12 @@ import os
 import pathlib
 import re
 import sqlite3
-import ssl
 import subprocess
 import sys
 import time
 import urllib.request
+
+from transport import authenticated_opener, endpoint_origin, tls_context
 
 ROOT = pathlib.Path("/var/lib/monos-probe")
 CONFIG = pathlib.Path("/etc/monos-probe/runner.json")
@@ -101,6 +102,10 @@ class Probe:
         os.chmod(self.evidence, 0o700)
         self.compose = ["docker", "compose", "-f", str(self.source / "infra/compose/compose.yaml")]
         self.config = json.loads(CONFIG.read_text())
+        endpoint = endpoint_origin(self.config['endpoint'])
+        tls_context(self.config)  # Reject invalid trust configuration before any admission.
+        if endpoint.startswith('https://'):
+            self.compose += ['-f', str(self.source / 'infra/compose/compose.tls.yaml')]
         self.runner = checked_id(self.config["runner_id"])
 
     def call(self, command, data=None, timeout=60, cwd=None):
@@ -206,7 +211,7 @@ class Probe:
         prompt = ("This is the authorized monos boundary test. Use your native bash tool to execute exactly the following command, with a 600000 ms tool timeout. "
                   "The root-owned test driver calls bundled monos --help, submits formal workspace and lifecycle commands using input files, tests retries and normal shell/Git. "
                   "Do not replace it with a text answer or skip failed cases. Completion can stop this process tree before a final answer; that is expected.\n" + command)
-        hashes = {name: hashlib.sha256((self.source / "infra/probe" / name).read_bytes()).hexdigest() for name in ("driver.py", "probe.py")}
+        hashes = {name: hashlib.sha256((self.source / "infra/probe" / name).read_bytes()).hexdigest() for name in ("driver.py", "probe.py", "transport.py")}
         trial = {"attempt_id": attempt, "kind": kind, "model": catalog, "hold": hold, "pre_plan": pre_plan, "prepared_at": time.time(), "harness_sha256": hashes}
         if peer_attempt:
             trial["peer_attempt"] = peer_attempt
@@ -327,10 +332,9 @@ class Probe:
 
     def recovery(self, attempt, request_id):
         token = pathlib.Path(self.config["token_file"]).read_text().strip()
-        url = self.config["endpoint"].rstrip("/") + "/v1/recovery/attempts/" + checked_id(attempt) + "/commands/" + checked_id(request_id)
+        url = endpoint_origin(self.config["endpoint"]) + "/v1/recovery/attempts/" + checked_id(attempt) + "/commands/" + checked_id(request_id)
         request = urllib.request.Request(url, headers={"Authorization": "Bearer " + token})
-        context = ssl.create_default_context(cafile=self.config["ca_file"])
-        with urllib.request.urlopen(request, context=context, timeout=15) as response:
+        with authenticated_opener(self.config).open(request, timeout=15) as response:
             body = json.load(response)
         # Planner reply/large payloads are not included in evidence.
         return {key: body[key] for key in ("schema_version", "status", "request_id", "operation_id") if key in body}

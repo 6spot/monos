@@ -4,6 +4,7 @@
 Run after infra/runner/bootstrap.sh. This never starts a service, installs or
 authenticates a Runtime, publishes Git, or overwrites differing existing data.
 """
+import argparse
 import grp
 import json
 import os
@@ -13,6 +14,8 @@ import ssl
 import stat
 import subprocess
 import sys
+
+from transport import endpoint_origin, tls_context
 
 SOURCE = pathlib.Path("/root/monos-boundary-probe-src")
 ROOT = pathlib.Path("/var/lib/monos-probe")
@@ -121,8 +124,15 @@ print(json.dumps({'fixture':result,'commit':commit,'tree':tree}))
 
 
 def main():
-    if len(sys.argv) != 1 or os.geteuid() != 0 or sys.platform != "linux":
-        raise RuntimeError("run without arguments as root on the authorized Linux host")
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--endpoint', default='http://127.0.0.1:18443', help='backend HTTP(S) origin')
+    parser.add_argument('--ca-file', type=pathlib.Path, help='optional public custom CA for HTTPS')
+    args = parser.parse_args()
+    endpoint = endpoint_origin(args.endpoint)
+    if args.ca_file and endpoint.startswith('http://'):
+        raise ValueError('--ca-file requires an HTTPS endpoint')
+    if os.geteuid() != 0 or sys.platform != "linux":
+        raise RuntimeError("run as root on the authorized Linux host")
     service = pwd.getpwnam("monos-probe")
     execution = pwd.getpwnam("me")
     shared = grp.getgrnam("monos-probe-read")
@@ -150,19 +160,24 @@ def main():
         directory(path, 0)
     directory(private, 0, mode=0o700)
     regular(private / "runner_credential", 0, 0o600)
-    regular(private / "ca.crt", 0)
     token = (private / "runner_credential").read_bytes()
     if len(token.strip()) < 32 or any(byte not in b"0123456789abcdef\n" for byte in token):
         raise RuntimeError("generated Runner credential has unexpected format")
-    ca = (private / "ca.crt").read_bytes()
-    if b"PRIVATE KEY" in ca:
-        raise RuntimeError("expected a public CA certificate")
-    ssl.PEM_cert_to_DER_cert(ca.decode("ascii"))
-    settings = {"endpoint": "https://127.0.0.1:18443", "ca_file": str(CONFIG / "ca.pem"), "token_file": str(CONFIG / "runner-token"), "runner_id": "runner-a", "journal": str(ROOT / "service/journal.sqlite"), "socket": "/run/monos-probe/command.sock", "execution_uid": execution.pw_uid}
+    settings = {"endpoint": endpoint, "token_file": str(CONFIG / "runner-token"), "runner_id": "runner-a", "journal": str(ROOT / "service/journal.sqlite"), "socket": "/run/monos-probe/command.sock", "execution_uid": execution.pw_uid}
+    ca = None
+    if args.ca_file:
+        regular(args.ca_file, 0)
+        ca = args.ca_file.read_bytes()
+        if b"PRIVATE KEY" in ca:
+            raise RuntimeError("expected a public CA certificate")
+        ssl.PEM_cert_to_DER_cert(ca.decode("ascii"))
+        tls_context({'endpoint': endpoint, 'ca_file': str(args.ca_file)})
+        settings['ca_file'] = str(CONFIG / 'ca.pem')
     config = (json.dumps(settings, indent=2, sort_keys=True) + "\n").encode()
     files = [(CONFIG / "runner-token", token, service.pw_uid, shared.gr_gid, 0o600),
-             (CONFIG / "ca.pem", ca, 0, 0, 0o644),
              (CONFIG / "runner.json", config, service.pw_uid, shared.gr_gid, 0o640)]
+    if ca is not None:
+        files.append((CONFIG / "ca.pem", ca, 0, 0, 0o644))
     existing = [check_existing(*entry) for entry in files]
     # All conflicts are checked before any new target is created.
     for entry, present in zip(files, existing):

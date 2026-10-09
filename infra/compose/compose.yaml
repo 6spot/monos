@@ -20,11 +20,9 @@ services:
     environment:
       MONOS_DATABASE_URL_FILE: /run/secrets/database_url
       MONOS_SIGNING_KEY_FILE: /run/secrets/signing_key
-      MONOS_TLS_KEY_FILE: /run/secrets/tls_key
-      MONOS_TLS_CERT_FILE: /run/secrets/tls_cert
       MONOS_LISTEN_HOST: 0.0.0.0
       MONOS_PORT: "18443"
-    secrets: [database_url, signing_key, tls_key, tls_cert]
+    secrets: [database_url, signing_key]
     ports: ["127.0.0.1:18443:18443"]
     networks: [control, ingress]
     depends_on: { database: { condition: service_healthy } }
@@ -52,5 +50,3 @@ secrets:
   db_password: { file: ./private/db_password }
   database_url: { file: ./private/database_url }
   signing_key: { file: ./private/signing_key }
-  tls_key: { file: ./private/server.key }
-  tls_cert: { file: ./private/server.crt }

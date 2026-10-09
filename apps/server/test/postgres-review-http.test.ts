@@ -10,7 +10,7 @@ suite('protected review correction HTTP',()=>{
  it('enforces session and Origin, exact source reads and immutable same-ID receipt after withdrawal',async()=>{
   const x=await ownerDeliveryFixture(),app=createApp(x.service);
   try{
-   const root=`/v1/owner/tasks/${x.f.task}/review`,session=await new OwnerAccess(x.db).session(x.token),headers={host:'monos.test',cookie:`__Host-monos=${x.token}`,'x-monos-session':session.session_id};
+   const root=`/v1/owner/tasks/${x.f.task}/review`,session=await new OwnerAccess(x.db).session(x.token),headers={host:'monos.test',cookie:`monos=${x.token}`,'x-monos-session':session.session_id};
    for(const url of [root,`${root}/feedback/${randomUUID()}`,`${root}/operations/${randomUUID()}`,`${root}/commands/${randomUUID()}`]){const r=await app.inject({url});expect(r.statusCode).toBe(401);expect(r.headers['cache-control']).toBe('no-store');expect(r.headers['x-content-type-options']).toBe('nosniff');}
    expect((await app.inject({url:root,headers:{...headers,'x-monos-session':randomUUID()}})).statusCode).toBe(401);expect((await app.inject({url:root+'?feedback_cursor=bad!',headers})).statusCode).toBe(409);
    const current=await app.inject({url:root,headers});expect(current.statusCode,current.body).toBe(200);const state=current.json<OwnerReviewStatus>();expect(state.request_changes_allowed).toBe(true);

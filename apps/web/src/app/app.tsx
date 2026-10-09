@@ -1,3 +1,4 @@
+import { randomUUID } from '../lib/browser-crypto.ts';
 import { useCallback, useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Folder, GitBranch, Inbox, Layers, LogOut, Settings2, Columns3, Menu } from 'lucide-react';
@@ -41,7 +42,7 @@ function Workspace({ sessionId, onUnauthorized }: { sessionId: string; onUnautho
   useEffect(() => { if (view === 'board' || view === 'task') void refreshConfiguration(); }, [view, taskId, refreshConfiguration]);
   const command = useCommand(onUnauthorized);
   useEffect(() => { if ([configuration.error, infrastructure.error].some((error) => error instanceof APIError && error.code === 'unauthorized')) onUnauthorized(); }, [configuration.error, infrastructure.error, onUnauthorized]);
-  const save: Save = (name, payload, basis) => command.execute({ schema_version: 1, request_id: crypto.randomUUID(), expected_control_version: basis, name, payload });
+  const save: Save = (name, payload, basis) => command.execute({ schema_version: 1, request_id: randomUUID(), expected_control_version: basis, name, payload });
   const disabled = command.busy || !!command.pending;
   const navigate = (id: ReturnType<typeof currentView>) => { setView(id); setMenuOpen(false); };
   const navigation = <nav className="workspace-nav" aria-label="Workspace navigation">{views.map(({ id, label, icon: Icon }) => <a key={id} href={`#${id}`} onClick={() => navigate(id)} aria-current={view === id || (id === 'board' && view === 'task') ? 'page' : undefined}><Icon size={17} strokeWidth={1.7} /><span>{label}</span></a>)}</nav>;

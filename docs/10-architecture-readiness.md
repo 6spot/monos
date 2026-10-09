@@ -54,7 +54,7 @@ Use deterministic fault-injection tests for the control races, isolated process 
 
 ## Decisions that cannot remain implicit
 
-The selected stack, transports, bundled Agent command CLI, and host identity profile are defined in [Technology & Deployment](11-technology-and-deployment.md). Before broad implementation, probe native Linux process supervision and workspace access with the first Owner-installed Runtime Adapter. Verify PostgreSQL claim/transaction behavior, how the Runner journal and Git results survive supported restart, and how the GitHub adapter enforces expected-head merge. Exercise HTTPS/WSS transport and generated JSON Schema contracts in a separate-process test.
+The selected stack, transports, bundled Agent command CLI, and host identity profile are defined in [Technology & Deployment](11-technology-and-deployment.md). Before broad implementation, probe native Linux process supervision and workspace access with the first Owner-installed Runtime Adapter. Verify PostgreSQL claim/transaction behavior, how the Runner journal and Git results survive supported restart, and how the GitHub adapter enforces expected-head merge. Exercise both HTTP/WS and verified HTTPS/WSS transport and generated JSON Schema contracts in a separate-process test.
 
 Runtime-native sandbox behavior, non-interactive permission modes, reserved-path grants for dynamic workspace exposure, `monos` invocation under Node/Planner permissions and request-ID replay, commit-call reliability, session resume, provider check semantics, and process-tree termination must be established by observation/documentation for the chosen implementation. They are not guaranteed by naming an Adapter interface.
 
@@ -62,7 +62,7 @@ Do not expand scope to automatic cross-Runner failover, distributed transactions
 
 ## CLI command recovery gate
 
-Module 05 owns CLI attribution, immutable request replay and terminal-result lookup. Before product implementation, exercise the module-09 cases with two concurrent same-UID Attempts, a forged/missing scope hint, a modified input file after uncertain submission, journal-write failure, crash around backend admission, and expired credentials after completion stops the caller. Prove that the existing Runner can perform scoped result reads without restoring Agent write authority. Validate Planner long-payload submission, local socket access and backend HTTPS while repository writes remain denied. These are probe requirements, not claims that the installed CLI versions already satisfy them.
+Module 05 owns CLI attribution, immutable request replay and terminal-result lookup. Before product implementation, exercise the module-09 cases with two concurrent same-UID Attempts, a forged/missing scope hint, a modified input file after uncertain submission, journal-write failure, crash around backend admission, and expired credentials after completion stops the caller. Prove that the existing Runner can perform scoped result reads without restoring Agent write authority. Validate Planner long-payload submission, local socket access and backend HTTP(S) while repository writes remain denied. These are probe requirements, not claims that the installed CLI versions already satisfy them.
 
 ## Conversational Task gate
 

@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { database } from '../../../packages/db/src/index.ts';
 import type { Database } from '../../../packages/db/src/index.ts';
 import { migrate } from '../../../packages/db/src/migrate.ts';
@@ -331,6 +331,7 @@ describe.skipIf(!enabled)('real PostgreSQL boundary admission', () => {
   it('runs the real socket handshake/RPC and rejects missing authentication and incompatible versions', async () => {
     // Loopback harness checks framing only; deployment tests must additionally prove real TLS trust.
     const f = await fixture(); const app = createApp(f.service);
+    const pending = vi.spyOn(f.service, 'pending');
     await app.listen({ host: '127.0.0.1', port: 0 });
     const url = `ws://127.0.0.1:${(app.server.address() as AddressInfo).port}/v1/runner`;
     const socket = new WebSocket(url, { headers: { authorization: `Bearer ${f.runnerToken}` } });
@@ -352,6 +353,11 @@ describe.skipIf(!enabled)('real PostgreSQL boundary admission', () => {
       await once(socket, 'open');
       socket.send(JSON.stringify({ schema_version: 1, type: 'hello', runner_id: f.runnerId, boot_id: 'boot-test' }));
       const welcome = await next('welcome');
+      // Inventory and runtime discovery may span multiple control polls before Ready.
+      await expect.poll(() => pending.mock.calls.length).toBeGreaterThanOrEqual(2);
+      expect(socket.readyState).toBe(WebSocket.OPEN);
+      expect(queued).toEqual([]);
+      expect((await db.pool.query('SELECT ready FROM runners WHERE id=$1', [f.runnerId])).rows[0].ready).toBe(false);
       socket.send(JSON.stringify({ schema_version: 1, type: 'ready', incarnation: welcome.incarnation, log_modes: ['ordered_v1'] }));
       socket.send(JSON.stringify({ schema_version: 1, type: 'authorize_dispatch', incarnation: welcome.incarnation, dispatch_id: f.launch.dispatch_id, correlation_id: 'rpc-1' }));
       const authorization = await next('authorization');
@@ -366,6 +372,6 @@ describe.skipIf(!enabled)('real PostgreSQL boundary admission', () => {
       const closed = once(incompatible, 'close');
       incompatible.send(JSON.stringify({ schema_version: 2, type: 'hello', runner_id: f.runnerId, boot_id: 'boot-test' }));
       expect((await closed)[0]).toBe(4000);
-    } finally { socket.terminate(); await app.close(); }
+    } finally { socket.terminate(); await app.close(); pending.mockRestore(); }
   });
 });

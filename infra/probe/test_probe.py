@@ -179,7 +179,7 @@ class AcceptanceTests(unittest.TestCase):
         self.instance.runner = "runner-a"
         scripts = self.root / "infra/probe"
         scripts.mkdir(parents=True)
-        for name in ("probe.py", "driver.py"):
+        for name in ("probe.py", "driver.py", "transport.py"):
             (scripts / name).write_text("fixture")
 
     def test_idle_restart_refuses_live_claim_without_service_changes(self):

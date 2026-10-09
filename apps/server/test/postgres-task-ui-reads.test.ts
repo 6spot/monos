@@ -299,7 +299,7 @@ suite("Execution UI canonical reads", () => {
       const cookie = {
         host: "monos.test",
         origin: "http://monos.test",
-        cookie: `__Host-monos=${replacement.token}`,
+        cookie: `monos=${replacement.token}`,
         "x-monos-session": original.session_id,
       };
       expect(

@@ -206,7 +206,7 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('exact Task preview and
     try {
       const url = `/v1/owner/todos/${p.todo_id}/task-previews/${p.proposal_message_id}?project_id=${chosen.id}`;
       expect((await app.inject({ url })).statusCode).toBe(401); const read = await app.inject({ url, headers }); expect(read.statusCode).toBe(200); validate('TaskPreviewStatus', read.json()); expect(read.headers['cache-control']).toBe('no-store');
-      expect((await app.inject({ method: 'POST', url: '/v1/owner/task-previews/commands', headers: { cookie: `__Host-monos=${session.token}`, origin: 'https://foreign.invalid' }, payload: creation(c) })).statusCode).toBe(403);
+      expect((await app.inject({ method: 'POST', url: '/v1/owner/task-previews/commands', headers: { cookie: `monos=${session.token}`, origin: 'https://foreign.invalid' }, payload: creation(c) })).statusCode).toBe(403);
       expect((await app.inject({ url: `${url}&extra=true`, headers })).statusCode).toBe(409);
       expect((await app.inject({ method: 'POST', url: '/v1/owner/task-previews/commands', headers, payload: { ...creation(c), payload: { ...creation(c).payload, start: true } } })).statusCode).toBe(409);
       await revokeOwnerSession(db, session.session_id); expect((await app.inject({ url: `/v1/owner/task-previews/commands/${c.command.request_id}`, headers })).statusCode).toBe(401);

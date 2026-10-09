@@ -58,13 +58,15 @@ function sameOrigin(request: FastifyRequest): void {
 
 function ownerCredential(request: FastifyRequest): string {
   if (request.headers.authorization !== undefined) return bearer(request);
-  const cookies = (request.headers.cookie ?? '').split(';').map((item) => item.trim()).filter((item) => item.startsWith('__Host-monos='));
+  const name = sessionCookieName(request);
+  const cookies = (request.headers.cookie ?? '').split(';').map((item) => item.trim()).filter((item) => item.startsWith(`${name}=`));
   if (cookies.length !== 1) throw new CommandError('unauthorized', 'Owner session required');
   if (!['GET', 'HEAD'].includes(request.method)) sameOrigin(request);
-  return cookies[0]!.slice('__Host-monos='.length);
+  return cookies[0]!.slice(name.length + 1);
 }
 
-const sessionCookie = (token: string, maxAge: number) => `__Host-monos=${token}; Path=/; Secure; HttpOnly; SameSite=Strict; Max-Age=${maxAge}`;
+const sessionCookieName = (request: FastifyRequest) => request.protocol === 'https' ? '__Host-monos' : 'monos';
+const sessionCookie = (request: FastifyRequest, token: string, maxAge: number) => `${sessionCookieName(request)}=${token}; Path=/;${request.protocol === 'https' ? ' Secure;' : ''} HttpOnly; SameSite=Strict; Max-Age=${maxAge}`;
 
 function errorResult(error: unknown): CommandResult {
   if (error instanceof ProtocolVersionError) return { schema_version: 1, status: 'error', error: { code: 'unsupported_version', message: 'Unsupported protocol version' } };
@@ -74,7 +76,7 @@ function errorResult(error: unknown): CommandResult {
 }
 
 export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: Buffer }, webRoot?: string, options:{remoteProvider?:GitHubRemote}={}) {
-  const app = Fastify({ ...(tls ? { https: tls } : {}), bodyLimit: MAX_BODY_BYTES, logger: { level: 'warn', redact: ['req.headers.authorization', 'req.headers.cookie', 'res.headers.set-cookie'] }, disableRequestLogging: true });
+  const app = Fastify({ ...(tls ? { https: tls } : {}), trustProxy: false, bodyLimit: MAX_BODY_BYTES, logger: { level: 'warn', redact: ['req.headers.authorization', 'req.headers.cookie', 'res.headers.set-cookie'] }, disableRequestLogging: true });
   app.setErrorHandler((error: unknown, request: FastifyRequest, reply: FastifyReply) => {
     if (webRoot && (request.url === '/' || request.url.startsWith('/assets/')) && error && typeof error === 'object' && 'statusCode' in error && typeof error.statusCode === 'number' && [400, 403, 404].includes(error.statusCode)) {
       void reply.header('Cache-Control', 'no-store').code(error.statusCode).send({ error: 'Static resource unavailable' });
@@ -180,14 +182,14 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
     sameOrigin(request);
     const body = validate<{ schema_version: 1; password: string }>('OwnerLogin', request.body);
     const session = await access.login(body.password);
-    void reply.header('Set-Cookie', sessionCookie(session.token, Math.max(0, Math.floor((Date.parse(session.expires_at) - Date.now()) / 1000))));
+    void reply.header('Set-Cookie', sessionCookie(request, session.token, Math.max(0, Math.floor((Date.parse(session.expires_at) - Date.now()) / 1000))));
     return validate('OwnerSessionStatus', { schema_version: 1, authenticated: true, session_id: session.session_id, expires_at: session.expires_at });
   });
   app.get('/v1/owner/session', async (request) => validate('OwnerSessionStatus', await access.session(ownerCredential(request))));
   app.post('/v1/owner/logout', async (request, reply) => {
     if (request.body !== undefined) throw new CommandError('invalid_input', 'Logout does not accept a payload');
     await access.logout(ownerCredential(request));
-    void reply.header('Set-Cookie', sessionCookie('', 0));
+    void reply.header('Set-Cookie', sessionCookie(request, '', 0));
     return { schema_version: 1, authenticated: false };
   });
   app.get('/v1/owner/tasks', async request => taskBoard(service.db, ownerCredential(request), request.query));

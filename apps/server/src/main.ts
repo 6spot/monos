@@ -18,8 +18,10 @@ import { NodeExecution } from './node-execution.ts';
 import { TaskPlanning } from './task-planning.ts';
 import { Discussion } from './discussion.ts';
 import { fileURLToPath } from 'node:url';
+import { serverTLS } from './transport-config.ts';
 
 const required = (name: string): string => { const value = process.env[name]; if (!value) throw new Error(`${name} is required`); return value; };
+const tls = await serverTLS(process.env);
 const databaseURL = process.env.MONOS_DATABASE_URL_FILE ? (await readFile(process.env.MONOS_DATABASE_URL_FILE, 'utf8')).trim() : required('DATABASE_URL');
 const db = database(databaseURL);
 await migrate(db);
@@ -34,10 +36,7 @@ const remoteProvider=new GitHubRemote(new GitHub(signingKey));
 const remote=new RemotePreparation(db,service.instanceId,remoteProvider);
 const ownerDelivery=new OwnerDeliveryWorker(db,service.instanceId,new GitHubFinalization(remoteProvider));
 const review=new TaskReviewCoordinator(db,service.instanceId,ownerReviewHooks);
-const app = createApp(service, {
-  key: await readFile(required('MONOS_TLS_KEY_FILE')),
-  cert: await readFile(required('MONOS_TLS_CERT_FILE')),
-}, fileURLToPath(new URL('../../web/dist', import.meta.url)),{remoteProvider});
+const app = createApp(service, tls, fileURLToPath(new URL('../../web/dist', import.meta.url)),{remoteProvider});
 let scheduling: Promise<void> | undefined;
 let discussionTimer: ReturnType<typeof setInterval> | undefined = undefined;
 const publication = new PublicationPreparation(db,service.instanceId);

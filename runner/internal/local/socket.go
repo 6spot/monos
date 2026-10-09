@@ -123,9 +123,12 @@ func (s *Service) Handle(ctx context.Context, conn *net.UnixConn, r Request) (Re
 		}
 		return Response{}, err
 	}
-	ca, err := os.ReadFile(s.Control.Config.CAFile)
-	if err != nil {
-		return Response{}, err
+	var ca []byte
+	if s.Control.Config.CAFile != "" {
+		ca, err = os.ReadFile(s.Control.Config.CAFile)
+		if err != nil {
+			return Response{}, err
+		}
 	}
 	return Response{EnvelopeJSON: string(retained.Raw), Digest: retained.Digest, Credential: credential, Endpoint: s.Control.Config.Endpoint, CA: ca}, nil
 }

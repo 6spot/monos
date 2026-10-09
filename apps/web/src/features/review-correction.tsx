@@ -1,3 +1,4 @@
+import { randomUUID } from '../lib/browser-crypto.ts';
 import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { OwnerReviewCommandName, OwnerReviewPayload, OwnerReviewStatus, ReviewFeedbackSummary, ReviewInputSummary, ReviewOperationSummary } from '../../../../packages/protocol/generated/types.ts';
@@ -20,7 +21,7 @@ function useMounted() {
   return mounted;
 }
 function command(props: TaskViewProps, scope: string, name: OwnerReviewCommandName, payload: OwnerReviewPayload) {
-  return props.commands.execute(props.task.task_id,scope,{family:'review',command:{schema_version:1,task_id:props.task.task_id,request_id:crypto.randomUUID(),name,payload}});
+  return props.commands.execute(props.task.task_id,scope,{family:'review',command:{schema_version:1,task_id:props.task.task_id,request_id:randomUUID(),name,payload}});
 }
 const reasons: Record<string,string> = {
   not_review: 'Request Changes is available for a current result in Review.',
@@ -113,7 +114,7 @@ function RequestChanges({data,readable,...props}:TaskViewProps & {data:OwnerRevi
   }
   async function submit() {
     if(!fresh || !draft.review || !draft.text.trim())return;
-    const result=await command(props,scope,'request_changes',{feedback_id:crypto.randomUUID(),text:draft.text,basis:draft.review.basis,...(draft.review.accepted_batch?{accepted_batch:draft.review.accepted_batch}:{})});
+    const result=await command(props,scope,'request_changes',{feedback_id:randomUUID(),text:draft.text,basis:draft.review.basis,...(draft.review.accepted_batch?{accepted_batch:draft.review.accepted_batch}:{})});
     if(mounted.current && result)setOpen(false);
   }
   return <>

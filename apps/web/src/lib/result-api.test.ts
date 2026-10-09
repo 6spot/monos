@@ -16,6 +16,14 @@ const path = 'src/literal: name\n文件.txt';
 const value = (): ResultReadResponse => ({ schema_version: 1, current: true, status: 'available', request: { identity, identity_digest: digest, mode: 'file', path, side: 'base' }, object: { oid: 'd'.repeat(40), mode: '100644', size: 0 }, text: '' });
 afterEach(() => vi.unstubAllGlobals());
 
+it('verifies exact result identities on HTTP without SubtleCrypto and still rejects tampered identity fields', async () => {
+  vi.stubGlobal('crypto', {});
+  vi.stubGlobal('fetch', async () => Response.json(value()));
+  await expect(resultRead('task-a', 'operation-a', digest, 'file', { path, side: 'base' }, 'session-a')).resolves.toMatchObject({ status: 'available' });
+  vi.stubGlobal('fetch', async () => Response.json({ ...value(), request: { ...value().request, identity: { ...identity, storage_id: 'other-storage' } } }));
+  await expect(resultRead('task-a', 'operation-a', digest, 'file', { path, side: 'base' }, 'session-a')).rejects.toMatchObject({ code: 'invalid_response' });
+});
+
 it('encodes the exact literal path/side/digest and carries session and AbortSignal; empty file remains available', async () => {
   const controller = new AbortController();
   const fetch = vi.fn(async () => Response.json(value())); vi.stubGlobal('fetch', fetch);

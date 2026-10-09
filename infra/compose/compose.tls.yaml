@@ -1,0 +1,10 @@
+# Opt-in TLS: use alongside compose.yaml after prepare.mjs --tls.
+services:
+  server:
+    environment:
+      MONOS_TLS_KEY_FILE: /run/secrets/tls_key
+      MONOS_TLS_CERT_FILE: /run/secrets/tls_cert
+    secrets: [tls_key, tls_cert]
+secrets:
+  tls_key: { file: ./private/server.key }
+  tls_cert: { file: ./private/server.crt }

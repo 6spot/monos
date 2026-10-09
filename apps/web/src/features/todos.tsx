@@ -1,3 +1,4 @@
+import { randomUUID } from '../lib/browser-crypto.ts';
 import { useEffect, useId, useRef, useState } from 'react';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import type { ConfigurationSnapshot, TodoPage, TodoRecord } from '../../../../packages/protocol/generated/types.ts';
@@ -115,7 +116,7 @@ export function Todos({ snapshot, onUnauthorized }: { snapshot: ConfigurationSna
           {snapshot.projects.filter((project) => !project.archived || project.id === filter.projectId).map((project) => <option key={project.id} value={`project:${project.id}`}>{project.name}{project.archived ? ' (archived)' : ''}</option>)}
         </Select>
         <form className="todo-capture" aria-label="Quick capture" onSubmit={(event) => {
-          event.preventDefault(); void command.execute({ schema_version: 1, request_id: crypto.randomUUID(), name: 'capture_todo', payload: { todo_id: crypto.randomUUID(), original_capture: capture, ...(captureProject ? { project_id: captureProject } : {}) } });
+          event.preventDefault(); void command.execute({ schema_version: 1, request_id: randomUUID(), name: 'capture_todo', payload: { todo_id: randomUUID(), original_capture: capture, ...(captureProject ? { project_id: captureProject } : {}) } });
         }}>
           <fieldset disabled={disabled}>
             <div className="field"><Label htmlFor={captureId}>Capture an idea</Label><Textarea id={captureId} ref={captureInput} rows={3} required maxLength={65536} value={capture} onChange={(event) => setCapture(event.target.value)} placeholder="What's on your mind?" aria-describedby={`${captureId}-hint${command.notice ? ` ${noticeId}` : ''}`} /><p id={`${captureId}-hint`} className="hint">Your original words stay intact.</p></div>
@@ -145,13 +146,13 @@ export function Todos({ snapshot, onUnauthorized }: { snapshot: ConfigurationSna
             <p className="hint">{projectName(todo.project_id)}{snapshot.projects.find((project) => project.id === todo.project_id)?.archived ? ' (archived Project)' : ''}</p>
             <section className="subsection" aria-label="Original Capture"><h3>Original Capture</h3><p className="todo-original">{todo.original_capture}</p><p className="hint">Captured <time dateTime={todo.created_at}>{new Date(todo.created_at).toLocaleString()}</time></p></section>
             <details key={todo.todo_id} className="todo-organization"><summary>Organize Todo</summary>
-            <form className="subsection" aria-label="Todo organization" onSubmit={(event) => { event.preventDefault(); void command.execute({ schema_version: 1, request_id: crypto.randomUUID(), name: 'assign_todo_project', expected_control_version: draft?.basis ?? todo.control_version, payload: { todo_id: todo.todo_id, ...(assignment ? { project_id: assignment } : {}) } }); }}>
+            <form className="subsection" aria-label="Todo organization" onSubmit={(event) => { event.preventDefault(); void command.execute({ schema_version: 1, request_id: randomUUID(), name: 'assign_todo_project', expected_control_version: draft?.basis ?? todo.control_version, payload: { todo_id: todo.todo_id, ...(assignment ? { project_id: assignment } : {}) } }); }}>
               <fieldset disabled={disabled}><h3>Organization</h3><Select label="Todo Project" value={assignment} onChange={(event) => setDrafts((all) => ({ ...all, [todo.todo_id]: { projectId: event.target.value, basis: draft?.basis ?? todo.control_version } }))}>
                 <option value="">Inbox — no Project</option>{activeProjects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
                 {assignment && !activeProjects.some((project) => project.id === assignment) && <option value={assignment} disabled>{projectName(assignment)} (unavailable)</option>}
               </Select><div className="button-row"><Button type="submit" disabled={disabled || !draft}>Save Project</Button>{draft && <Button type="button" variant="outline" onClick={() => clearDraft(todo.todo_id)}>Reload saved Project</Button>}</div>{draft && <p className="hint">Unsaved Project change</p>}</fieldset>
             </form>
-            <div className="subsection"><p className="hint">{todo.archived ? 'Restore this Todo to your active ideas.' : 'Archive this Todo when you want to set it aside.'}</p><Button variant="outline" disabled={disabled} onClick={() => { void command.execute({ schema_version: 1, request_id: crypto.randomUUID(), name: 'set_todo_archived', expected_control_version: todo.control_version, payload: { todo_id: todo.todo_id, archived: !todo.archived } }); }}>{todo.archived ? 'Restore Todo' : 'Archive Todo'}</Button></div>
+            <div className="subsection"><p className="hint">{todo.archived ? 'Restore this Todo to your active ideas.' : 'Archive this Todo when you want to set it aside.'}</p><Button variant="outline" disabled={disabled} onClick={() => { void command.execute({ schema_version: 1, request_id: randomUUID(), name: 'set_todo_archived', expected_control_version: todo.control_version, payload: { todo_id: todo.todo_id, archived: !todo.archived } }); }}>{todo.archived ? 'Restore Todo' : 'Archive Todo'}</Button></div>
             </details>
           </article>}
         </> : <div className="empty-state"><h2>No Todo selected</h2><p>Select a Todo from the list to view its original capture or start a discussion.</p><Button variant="outline" onClick={() => captureInput.current?.focus()}>Create Todo</Button></div>}

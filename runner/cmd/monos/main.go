@@ -2,14 +2,11 @@ package main
 
 import (
 	"context"
-	"crypto/tls"
-	"crypto/x509"
 	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
 	"net"
-	"net/http"
 	"os"
 	"strings"
 	"time"
@@ -194,11 +191,11 @@ func run(args []string) (protocol.CommandResult, error) {
 	if response.Result != nil {
 		return *response.Result, nil
 	}
-	pool := x509.NewCertPool()
-	if !pool.AppendCertsFromPEM(response.CA) {
-		return result, fmt.Errorf("invalid trusted CA")
+	client, err := control.NewHTTPClient(response.Endpoint, response.CA)
+	if err != nil {
+		return result, err
 	}
-	client := &http.Client{Transport: &http.Transport{TLSClientConfig: &tls.Config{MinVersion: tls.VersionTLS12, RootCAs: pool}}, Timeout: 20 * time.Second, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
+	client.Timeout = 20 * time.Second
 	ctx, cancel := context.WithTimeout(context.Background(), 25*time.Second)
 	defer cancel()
 	submitted, err := control.Submit(ctx, client, response.Endpoint, response.Credential, []byte(response.EnvelopeJSON), response.Digest)

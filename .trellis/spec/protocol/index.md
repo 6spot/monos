@@ -6,7 +6,7 @@ Status: implemented boundary-probe schemas, generated TypeScript/Go types, OpenA
 
 ## Pre-Development Checklist
 
-Read [command contracts](commands.md), [schema generation](schema-generation.md), [Tool Protocol](../../../docs/05-tool-protocol.md) and [technology](../../../docs/11-technology-and-deployment.md). Changes to delivery/input also require [acceptance contracts](../backend/delivery-contracts.md).
+Read [command contracts](commands.md), [optional HTTP/TLS transport](transport.md), [schema generation](schema-generation.md), [Tool Protocol](../../../docs/05-tool-protocol.md) and [technology](../../../docs/11-technology-and-deployment.md). Changes to delivery/input also require [acceptance contracts](../backend/delivery-contracts.md).
 
 ## Quality Check
 
