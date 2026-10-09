@@ -169,7 +169,7 @@ invent graph changes. Backend settlement uses existing Stop/completion effects.
 The constrained helper additionally accepts `{action:"discover",attempt_id:""}`
 with no dispatch/operation. `discovery.go` executes fixed OpenCode `--version` as
 `me` (non-root UID/GID), explicit home/PATH and no inherited service environment.
-Output is limited to 4096 bytes and a parsed semver; deadline is 10 seconds with
+Output is limited to 4096 bytes and a parsed semver (plain or the exact `opencode v` prefix emitted by v2); deadline is 10 seconds with
 process-group cancellation. Discovery on reconnect reports objective installation
 facts in optional `ready.runtimes`. Missing older-client reports retain history;
 they cannot mark it current for a new incarnation. A detected version establishes

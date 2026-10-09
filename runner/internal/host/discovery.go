@@ -19,6 +19,11 @@ import (
 
 var versionPattern = regexp.MustCompile(`^[0-9]+\.[0-9]+\.[0-9]+(?:[-+][A-Za-z0-9.-]+)?$`)
 
+func runtimeVersion(output string) (string, bool) {
+	version := strings.TrimPrefix(strings.TrimSpace(output), "opencode v")
+	return version, len(version) <= 128 && versionPattern.MatchString(version)
+}
+
 type discoveryOutput struct {
 	bytes.Buffer
 	exceeded bool
@@ -77,8 +82,8 @@ func discover(ctx context.Context) (Status, error) {
 	if errors.Is(err, os.ErrNotExist) {
 		row.Availability = "not_found"
 	}
-	version := strings.TrimSpace(output.String())
-	if err == nil && !output.exceeded && len(version) <= 128 && versionPattern.MatchString(version) {
+	version, valid := runtimeVersion(output.String())
+	if err == nil && !output.exceeded && valid {
 		row.Availability = "detected"
 		row.Version = &version
 	}

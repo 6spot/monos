@@ -35,3 +35,16 @@ func TestDiscoveryFixedExecutionIdentity(t *testing.T) {
 		t.Fatal("invalid version parsing")
 	}
 }
+
+func TestDiscoveryVersionOutput(t *testing.T) {
+	for _, raw := range []string{"2.0.20", "opencode v2.0.20\n"} {
+		if version, ok := runtimeVersion(raw); !ok || version != "2.0.20" {
+			t.Fatal("installed version not recognized", version, ok)
+		}
+	}
+	for _, raw := range []string{"other v2.0.20", "opencode v2.0.20\nprivate diagnostic", "opencode v"} {
+		if _, ok := runtimeVersion(raw); ok {
+			t.Fatal("diagnostic accepted as version")
+		}
+	}
+}
