@@ -1,0 +1,16 @@
+{
+  "source": "acff7663209949929c11d7543eb6453e19cee6ea",
+  "image": "sha256:17b4a92c74067892685fe2b126578a0132335d1610bf7c1f87ad66409e84b92c",
+  "server_id": "cbb5b4213ff702cc6af5eb944bb8eeff2b0a686d3abd6d0a7e70b9b3fbf1dec7",
+  "started_at": "2026-10-09T05:29:17.844056497Z",
+  "assets": [
+    {
+      "path": "/app/apps/web/dist/assets/index-DLIqtKoo.js",
+      "sha256": "ed24e10a4deaeccd8d9453f346a6de18f513ed8acef82b53cf923157e52aba49"
+    },
+    {
+      "path": "/app/apps/web/dist/assets/index-CDYDw6Vm.css",
+      "sha256": "90913bdae0315da53398e57a8ae6f76c4cbaf2493692e8a6bda01a0b9a364f64"
+    }
+  ]
+}

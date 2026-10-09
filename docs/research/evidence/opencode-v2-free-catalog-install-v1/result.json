@@ -1,0 +1,15 @@
+{
+  "automatic_retry": false,
+  "automatic_rollback": false,
+  "canonical_release": "not claimed",
+  "outcome": "failed",
+  "progress": {
+    "claimed": true,
+    "replaced": [],
+    "start_attempted": false,
+    "start_returned": false,
+    "stop_attempted": false,
+    "stop_returned": false
+  },
+  "reason": "historical_attempt_not_proven_absent"
+}

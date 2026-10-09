@@ -1,0 +1,62 @@
+{
+  "automatic_retry": false,
+  "directory": "/root/monos-optional-http-owner-requests-v1/get-3f16cccb-cbd6-496f-8404-d0d18305d56a",
+  "input_sha256": "f2d225f523e7cce9d8175afa231b55309195af0601851101ff09c321afa47592",
+  "method": "GET",
+  "outcome": "pass",
+  "owner_logged_out": true,
+  "path": "/v1/owner/todos/0c06605d-b8cb-471a-a28b-2a930a8016fe/attempts",
+  "receipt_confirmed": false,
+  "receipt_path": null,
+  "request_id": null,
+  "responses": [
+    {
+      "body": {
+        "attempts": [
+          {
+            "activity_at": "2026-10-09T14:18:17.010Z",
+            "attempt_id": "2e673ca7-990c-4e15-8945-01e71d8b633b",
+            "created_at": "2026-10-09T14:17:25.062Z",
+            "kind": "planner",
+            "latest_sequence": 4,
+            "log_mode": "ordered_v1",
+            "mutation_allowed": true,
+            "process_absent": false,
+            "process_released": false,
+            "runner_id": "delivery-fresh-runner-v1",
+            "schema_version": 1,
+            "started": true,
+            "state": "RUNNING",
+            "todo_id": "0c06605d-b8cb-471a-a28b-2a930a8016fe",
+            "visible_sequence": 4
+          },
+          {
+            "activity_at": "2026-10-09T04:22:37.648Z",
+            "attempt_id": "a31478df-df17-482e-b7d9-93499443b0f0",
+            "created_at": "2026-10-09T03:36:10.516Z",
+            "kind": "planner",
+            "latest_sequence": 21,
+            "log_mode": "ordered_v1",
+            "mutation_allowed": false,
+            "process_absent": true,
+            "process_released": true,
+            "runner_id": "delivery-fresh-runner-v1",
+            "schema_version": 1,
+            "started": true,
+            "state": "SUCCEEDED",
+            "todo_id": "0c06605d-b8cb-471a-a28b-2a930a8016fe",
+            "visible_sequence": 21
+          }
+        ],
+        "cursor": "eyJhdHRlbXB0X2lkIjoiYTMxNDc4ZGYtZGYxNy00ODJlLWI3ZDktOTM0OTk0NDNiMGYwIiwiY3JlYXRlZF9hdCI6IjIwMjYtMTAtMDkgMDM6MzY6MTAuNTE2NDU3KzAwIiwidG9kb19pZCI6IjBjMDY2MDVkLWI4Y2ItNDcxYS1hMjhiLTJhOTMwYTgwMTZmZSIsInZlcnNpb24iOjF9",
+        "has_more": false,
+        "schema_version": 1,
+        "todo_id": "0c06605d-b8cb-471a-a28b-2a930a8016fe"
+      },
+      "path": "/v1/owner/todos/0c06605d-b8cb-471a-a28b-2a930a8016fe/attempts",
+      "status": 200
+    }
+  ],
+  "session_unknown": false,
+  "submitted": false
+}

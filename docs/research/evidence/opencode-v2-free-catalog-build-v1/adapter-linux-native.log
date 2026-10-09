@@ -1,0 +1,172 @@
+=== RUN   TestCatalogServerHelper
+--- PASS: TestCatalogServerHelper (0.00s)
+=== RUN   TestCatalogServerActualAttemptConfiguration
+--- PASS: TestCatalogServerActualAttemptConfiguration (0.00s)
+=== RUN   TestCatalogServerGatesRunAndSettlesNativeProcess
+=== RUN   TestCatalogServerGatesRunAndSettlesNativeProcess/normal
+=== RUN   TestCatalogServerGatesRunAndSettlesNativeProcess/updated
+=== RUN   TestCatalogServerGatesRunAndSettlesNativeProcess/lingering
+=== RUN   TestCatalogServerGatesRunAndSettlesNativeProcess/paid
+=== RUN   TestCatalogServerGatesRunAndSettlesNativeProcess/duplicate
+=== RUN   TestCatalogServerGatesRunAndSettlesNativeProcess/wrong-location
+=== RUN   TestCatalogServerGatesRunAndSettlesNativeProcess/null-data
+=== RUN   TestCatalogServerGatesRunAndSettlesNativeProcess/catalog-overflow
+=== RUN   TestCatalogServerGatesRunAndSettlesNativeProcess/http-failure
+=== RUN   TestCatalogServerGatesRunAndSettlesNativeProcess/pending
+=== RUN   TestCatalogServerGatesRunAndSettlesNativeProcess/redirect
+=== RUN   TestCatalogServerGatesRunAndSettlesNativeProcess/sse-eof
+=== RUN   TestCatalogServerGatesRunAndSettlesNativeProcess/bad-event
+=== RUN   TestCatalogServerGatesRunAndSettlesNativeProcess/event-overflow
+=== RUN   TestCatalogServerGatesRunAndSettlesNativeProcess/early-exit
+=== RUN   TestCatalogServerGatesRunAndSettlesNativeProcess/bad-handshake
+=== RUN   TestCatalogServerGatesRunAndSettlesNativeProcess/handshake-overflow
+=== RUN   TestCatalogServerGatesRunAndSettlesNativeProcess/stdout-overflow
+--- PASS: TestCatalogServerGatesRunAndSettlesNativeProcess (1.27s)
+    --- PASS: TestCatalogServerGatesRunAndSettlesNativeProcess/normal (0.04s)
+    --- PASS: TestCatalogServerGatesRunAndSettlesNativeProcess/updated (0.04s)
+    --- PASS: TestCatalogServerGatesRunAndSettlesNativeProcess/lingering (0.09s)
+    --- PASS: TestCatalogServerGatesRunAndSettlesNativeProcess/paid (0.04s)
+    --- PASS: TestCatalogServerGatesRunAndSettlesNativeProcess/duplicate (0.04s)
+    --- PASS: TestCatalogServerGatesRunAndSettlesNativeProcess/wrong-location (0.04s)
+    --- PASS: TestCatalogServerGatesRunAndSettlesNativeProcess/null-data (0.04s)
+    --- PASS: TestCatalogServerGatesRunAndSettlesNativeProcess/catalog-overflow (0.09s)
+    --- PASS: TestCatalogServerGatesRunAndSettlesNativeProcess/http-failure (0.04s)
+    --- PASS: TestCatalogServerGatesRunAndSettlesNativeProcess/pending (0.50s)
+    --- PASS: TestCatalogServerGatesRunAndSettlesNativeProcess/redirect (0.03s)
+    --- PASS: TestCatalogServerGatesRunAndSettlesNativeProcess/sse-eof (0.03s)
+    --- PASS: TestCatalogServerGatesRunAndSettlesNativeProcess/bad-event (0.03s)
+    --- PASS: TestCatalogServerGatesRunAndSettlesNativeProcess/event-overflow (0.05s)
+    --- PASS: TestCatalogServerGatesRunAndSettlesNativeProcess/early-exit (0.04s)
+    --- PASS: TestCatalogServerGatesRunAndSettlesNativeProcess/bad-handshake (0.04s)
+    --- PASS: TestCatalogServerGatesRunAndSettlesNativeProcess/handshake-overflow (0.04s)
+    --- PASS: TestCatalogServerGatesRunAndSettlesNativeProcess/stdout-overflow (0.06s)
+=== RUN   TestCatalogEndpointRejectsUnexpectedHandshake
+--- PASS: TestCatalogEndpointRejectsUnexpectedHandshake (0.00s)
+=== RUN   TestCatalogEventViolationDuringCleanupStillRejectsSnapshot
+=== RUN   TestCatalogEventViolationDuringCleanupStillRejectsSnapshot/malformed_JSON
+=== RUN   TestCatalogEventViolationDuringCleanupStillRejectsSnapshot/invalid_framing
+=== RUN   TestCatalogEventViolationDuringCleanupStillRejectsSnapshot/intentional_EOF
+=== RUN   TestCatalogEventViolationDuringCleanupStillRejectsSnapshot/frame_overflow
+=== RUN   TestCatalogEventViolationDuringCleanupStillRejectsSnapshot/stream_overflow
+--- PASS: TestCatalogEventViolationDuringCleanupStillRejectsSnapshot (0.14s)
+    --- PASS: TestCatalogEventViolationDuringCleanupStillRejectsSnapshot/malformed_JSON (0.00s)
+    --- PASS: TestCatalogEventViolationDuringCleanupStillRejectsSnapshot/invalid_framing (0.00s)
+    --- PASS: TestCatalogEventViolationDuringCleanupStillRejectsSnapshot/intentional_EOF (0.00s)
+    --- PASS: TestCatalogEventViolationDuringCleanupStillRejectsSnapshot/frame_overflow (0.00s)
+    --- PASS: TestCatalogEventViolationDuringCleanupStillRejectsSnapshot/stream_overflow (0.13s)
+=== RUN   TestCatalogRequiresExactEnabledActiveToolModel
+=== RUN   TestCatalogRequiresExactEnabledActiveToolModel/valid
+=== RUN   TestCatalogRequiresExactEnabledActiveToolModel/unrelated_entry
+=== RUN   TestCatalogRequiresExactEnabledActiveToolModel/upstream_model_ID_differs
+=== RUN   TestCatalogRequiresExactEnabledActiveToolModel/missing_status
+=== RUN   TestCatalogRequiresExactEnabledActiveToolModel/old_tool_capability
+=== RUN   TestCatalogRequiresExactEnabledActiveToolModel/missing_location
+=== RUN   TestCatalogRequiresExactEnabledActiveToolModel/empty_directory
+=== RUN   TestCatalogRequiresExactEnabledActiveToolModel/trailing_JSON
+=== RUN   TestCatalogRequiresExactEnabledActiveToolModel/invalid_JSON
+=== RUN   TestCatalogRequiresExactEnabledActiveToolModel/missing_enabled
+=== RUN   TestCatalogRequiresExactEnabledActiveToolModel/duplicate_entry
+=== RUN   TestCatalogRequiresExactEnabledActiveToolModel/missing_directory
+=== RUN   TestCatalogRequiresExactEnabledActiveToolModel/wrong_directory
+=== RUN   TestCatalogRequiresExactEnabledActiveToolModel/refresh_message_only
+=== RUN   TestCatalogRequiresExactEnabledActiveToolModel/missing_model
+=== RUN   TestCatalogRequiresExactEnabledActiveToolModel/wrong_exact_ID
+=== RUN   TestCatalogRequiresExactEnabledActiveToolModel/disabled
+=== RUN   TestCatalogRequiresExactEnabledActiveToolModel/no_tools
+=== RUN   TestCatalogRequiresExactEnabledActiveToolModel/wrong_provider
+=== RUN   TestCatalogRequiresExactEnabledActiveToolModel/missing_data
+=== RUN   TestCatalogRequiresExactEnabledActiveToolModel/qualified_ID
+=== RUN   TestCatalogRequiresExactEnabledActiveToolModel/deprecated
+--- PASS: TestCatalogRequiresExactEnabledActiveToolModel (0.00s)
+    --- PASS: TestCatalogRequiresExactEnabledActiveToolModel/valid (0.00s)
+    --- PASS: TestCatalogRequiresExactEnabledActiveToolModel/unrelated_entry (0.00s)
+    --- PASS: TestCatalogRequiresExactEnabledActiveToolModel/upstream_model_ID_differs (0.00s)
+    --- PASS: TestCatalogRequiresExactEnabledActiveToolModel/missing_status (0.00s)
+    --- PASS: TestCatalogRequiresExactEnabledActiveToolModel/old_tool_capability (0.00s)
+    --- PASS: TestCatalogRequiresExactEnabledActiveToolModel/missing_location (0.00s)
+    --- PASS: TestCatalogRequiresExactEnabledActiveToolModel/empty_directory (0.00s)
+    --- PASS: TestCatalogRequiresExactEnabledActiveToolModel/trailing_JSON (0.00s)
+    --- PASS: TestCatalogRequiresExactEnabledActiveToolModel/invalid_JSON (0.00s)
+    --- PASS: TestCatalogRequiresExactEnabledActiveToolModel/missing_enabled (0.00s)
+    --- PASS: TestCatalogRequiresExactEnabledActiveToolModel/duplicate_entry (0.00s)
+    --- PASS: TestCatalogRequiresExactEnabledActiveToolModel/missing_directory (0.00s)
+    --- PASS: TestCatalogRequiresExactEnabledActiveToolModel/wrong_directory (0.00s)
+    --- PASS: TestCatalogRequiresExactEnabledActiveToolModel/refresh_message_only (0.00s)
+    --- PASS: TestCatalogRequiresExactEnabledActiveToolModel/missing_model (0.00s)
+    --- PASS: TestCatalogRequiresExactEnabledActiveToolModel/wrong_exact_ID (0.00s)
+    --- PASS: TestCatalogRequiresExactEnabledActiveToolModel/disabled (0.00s)
+    --- PASS: TestCatalogRequiresExactEnabledActiveToolModel/no_tools (0.00s)
+    --- PASS: TestCatalogRequiresExactEnabledActiveToolModel/wrong_provider (0.00s)
+    --- PASS: TestCatalogRequiresExactEnabledActiveToolModel/missing_data (0.00s)
+    --- PASS: TestCatalogRequiresExactEnabledActiveToolModel/qualified_ID (0.00s)
+    --- PASS: TestCatalogRequiresExactEnabledActiveToolModel/deprecated (0.00s)
+=== RUN   TestFreeCatalogRequiresExplicitZeroPricingInEveryTier
+=== RUN   TestFreeCatalogRequiresExplicitZeroPricingInEveryTier/missing_cost
+=== RUN   TestFreeCatalogRequiresExplicitZeroPricingInEveryTier/null_cost
+=== RUN   TestFreeCatalogRequiresExplicitZeroPricingInEveryTier/empty_tiers
+=== RUN   TestFreeCatalogRequiresExplicitZeroPricingInEveryTier/null_tier
+=== RUN   TestFreeCatalogRequiresExplicitZeroPricingInEveryTier/missing_prices
+=== RUN   TestFreeCatalogRequiresExplicitZeroPricingInEveryTier/unknown_price
+=== RUN   TestFreeCatalogRequiresExplicitZeroPricingInEveryTier/paid_later_tier
+=== RUN   TestFreeCatalogRequiresExplicitZeroPricingInEveryTier/null_price
+=== RUN   TestFreeCatalogRequiresExplicitZeroPricingInEveryTier/missing_cache_read
+=== RUN   TestFreeCatalogRequiresExplicitZeroPricingInEveryTier/old_object_shape
+=== RUN   TestFreeCatalogRequiresExplicitZeroPricingInEveryTier/paid_input
+=== RUN   TestFreeCatalogRequiresExplicitZeroPricingInEveryTier/paid_output
+=== RUN   TestFreeCatalogRequiresExplicitZeroPricingInEveryTier/paid_cache_read
+=== RUN   TestFreeCatalogRequiresExplicitZeroPricingInEveryTier/paid_cache_write
+--- PASS: TestFreeCatalogRequiresExplicitZeroPricingInEveryTier (0.00s)
+    --- PASS: TestFreeCatalogRequiresExplicitZeroPricingInEveryTier/missing_cost (0.00s)
+    --- PASS: TestFreeCatalogRequiresExplicitZeroPricingInEveryTier/null_cost (0.00s)
+    --- PASS: TestFreeCatalogRequiresExplicitZeroPricingInEveryTier/empty_tiers (0.00s)
+    --- PASS: TestFreeCatalogRequiresExplicitZeroPricingInEveryTier/null_tier (0.00s)
+    --- PASS: TestFreeCatalogRequiresExplicitZeroPricingInEveryTier/missing_prices (0.00s)
+    --- PASS: TestFreeCatalogRequiresExplicitZeroPricingInEveryTier/unknown_price (0.00s)
+    --- PASS: TestFreeCatalogRequiresExplicitZeroPricingInEveryTier/paid_later_tier (0.00s)
+    --- PASS: TestFreeCatalogRequiresExplicitZeroPricingInEveryTier/null_price (0.00s)
+    --- PASS: TestFreeCatalogRequiresExplicitZeroPricingInEveryTier/missing_cache_read (0.00s)
+    --- PASS: TestFreeCatalogRequiresExplicitZeroPricingInEveryTier/old_object_shape (0.00s)
+    --- PASS: TestFreeCatalogRequiresExplicitZeroPricingInEveryTier/paid_input (0.00s)
+    --- PASS: TestFreeCatalogRequiresExplicitZeroPricingInEveryTier/paid_output (0.00s)
+    --- PASS: TestFreeCatalogRequiresExplicitZeroPricingInEveryTier/paid_cache_read (0.00s)
+    --- PASS: TestFreeCatalogRequiresExplicitZeroPricingInEveryTier/paid_cache_write (0.00s)
+=== RUN   TestCatalogRejectsUnapprovedModel
+--- PASS: TestCatalogRejectsUnapprovedModel (0.00s)
+=== RUN   TestCatalogPendingRequiresWellFormedSnapshot
+--- PASS: TestCatalogPendingRequiresWellFormedSnapshot (0.00s)
+=== RUN   TestConversationUsesFrozenOneShotPromptAndExplicitTaskTools
+--- PASS: TestConversationUsesFrozenOneShotPromptAndExplicitTaskTools (0.16s)
+=== RUN   TestNodeGuidanceProtocolRequiresExplicitDeclaration
+--- PASS: TestNodeGuidanceProtocolRequiresExplicitDeclaration (0.00s)
+=== RUN   TestNativeFreeCatalogPreflightOnly
+    native_catalog_preflight_linux_test.go:42: native no-model free catalog passed in 769.694776ms
+--- PASS: TestNativeFreeCatalogPreflightOnly (0.77s)
+=== RUN   TestDurableOutputStopsOnSpoolFailureWithoutTruncating
+--- PASS: TestDurableOutputStopsOnSpoolFailureWithoutTruncating (0.01s)
+=== RUN   TestLogTruncationIsVisibleExactlyOnce
+--- PASS: TestLogTruncationIsVisibleExactlyOnce (0.00s)
+=== RUN   TestSelectedModelAppliesToPrimaryAndAuxiliaryAgents
+=== RUN   TestSelectedModelAppliesToPrimaryAndAuxiliaryAgents/opencode/longcat-2.5-preview-free
+=== RUN   TestSelectedModelAppliesToPrimaryAndAuxiliaryAgents/volcengine/deepseek-v4-flash-ga-260731
+--- PASS: TestSelectedModelAppliesToPrimaryAndAuxiliaryAgents (0.00s)
+    --- PASS: TestSelectedModelAppliesToPrimaryAndAuxiliaryAgents/opencode/longcat-2.5-preview-free (0.00s)
+    --- PASS: TestSelectedModelAppliesToPrimaryAndAuxiliaryAgents/volcengine/deepseek-v4-flash-ga-260731 (0.00s)
+=== RUN   TestEnvironmentIsolatesHomeAndLoadsExplicitOwnerConfig
+--- PASS: TestEnvironmentIsolatesHomeAndLoadsExplicitOwnerConfig (0.00s)
+=== RUN   TestOwnerAuthorizedDeepSeekRunsNativelyWithoutCatalogOrFallback
+--- PASS: TestOwnerAuthorizedDeepSeekRunsNativelyWithoutCatalogOrFallback (0.00s)
+=== RUN   TestUnapprovedModelNeverReachesCatalogOrRun
+--- PASS: TestUnapprovedModelNeverReachesCatalogOrRun (0.00s)
+=== RUN   TestWorkerRetainsCaptureFailureWhenMarkerCannotPersist
+--- PASS: TestWorkerRetainsCaptureFailureWhenMarkerCannotPersist (0.00s)
+=== RUN   TestTodoUsesFreshScratchContextAndOneFormalHandoffProtocol
+--- PASS: TestTodoUsesFreshScratchContextAndOneFormalHandoffProtocol (0.00s)
+=== RUN   TestInitialPlannerHasPhaseSpecificProtocolAndFreshScratchInvocation
+--- PASS: TestInitialPlannerHasPhaseSpecificProtocolAndFreshScratchInvocation (0.00s)
+=== RUN   TestMalformedInitialPlannerDoesNotReachModelPreflight
+--- PASS: TestMalformedInitialPlannerDoesNotReachModelPreflight (0.00s)
+=== RUN   TestReplanPromptAndReadOnlyConfiguration
+--- PASS: TestReplanPromptAndReadOnlyConfiguration (0.00s)
+=== RUN   TestSpecificationPromptSeparatesProposalAuthorizationAndTurnOutcome
+--- PASS: TestSpecificationPromptSeparatesProposalAuthorizationAndTurnOutcome (0.00s)
+PASS

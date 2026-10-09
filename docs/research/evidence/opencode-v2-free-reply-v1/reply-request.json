@@ -1,0 +1,14 @@
+{
+  "path": "/v1/owner/todos/discussion/commands",
+  "method": "POST",
+  "body": {
+    "schema_version": 1,
+    "request_id": "84cee32a-92be-4983-a4ee-32f43c265391",
+    "todo_id": "0c06605d-b8cb-471a-a28b-2a930a8016fe",
+    "name": "submit_discussion_message",
+    "payload": {
+      "message_id": "9caa50b4-2d67-41cc-af7a-bf70f64d6180",
+      "content": "这是免费模型启动验证。请只在当前 Todo 的 Discussion 中简短回复“免费模型已就绪”，并通过本阶段的正式回复工具提交。不要创建或预览执行任务，不访问仓库，不提出需求变更，不修改仓库文件。"
+    }
+  }
+}

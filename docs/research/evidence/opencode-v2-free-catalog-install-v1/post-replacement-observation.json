@@ -1,0 +1,54 @@
+{
+  "changed": {
+    "remote_preparation_items": {
+      "before": {
+        "count": 2,
+        "sha256": "db01e9eb5e9b7aa35557ac00f1b5e38037535430073d3018d6ed6ae11b2c3e5a"
+      },
+      "after": {
+        "count": 2,
+        "sha256": "2c1e9cec77773edc49a4ae01a529ec352c8a9ca448e52e292dffccc5c98cb771"
+      }
+    },
+    "github_remote_cooldowns": {
+      "before": {
+        "count": 1,
+        "sha256": "c061fa165e3aaff565f55f4e7e125cf47250236a4c90323663c6065d11c2fbba"
+      },
+      "after": {
+        "count": 1,
+        "sha256": "f7aa35e842c6fe83bae39316ef2329bad44133fedfb0ee77a37af144fa0cb7c3"
+      }
+    }
+  },
+  "counts": {
+    "held_attempts": 0,
+    "leases": 0,
+    "operations": 0,
+    "outbox": 0,
+    "delivery": 0,
+    "remote": 0,
+    "merge": 0,
+    "batch": 0,
+    "review": 0,
+    "publication_slots": 0,
+    "todo_sources": 0,
+    "planning_sources": 0,
+    "node_sources": 0,
+    "conversation_sources": 0,
+    "review_sources": 0
+  },
+  "runner": {
+    "id": "delivery-fresh-runner-v1",
+    "capacity": 2,
+    "incarnation": 27,
+    "report": 27,
+    "ready": false,
+    "connected": false,
+    "recent": false,
+    "boot": "eb12bbe6-c63c-4e2e-8463-82b3e780aca1",
+    "connection": "1fe527d9-d7ec-406a-a0ce-e600585193e2",
+    "credential_matches": true
+  },
+  "service": "MainPID=0\nActiveState=inactive\nInvocationID=\n"
+}

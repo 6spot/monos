@@ -1,0 +1,196 @@
+{
+  "outcome": "pass",
+  "candidate_commit": "a93f3002ae0127098063bc08006a854af547d160",
+  "source_manifest_path": "/root/monos-free-catalog-release-v2/source-manifest.json",
+  "source_manifest_sha256": "40aeb79bc2ac7bc520e2a31f7b56575a5cefed63c17b5c702a291e1214fb6c9c",
+  "binaries": {
+    "monos": {
+      "path": "/root/monos-free-catalog-release-v2/bin/monos",
+      "sha256": "01e5e9452f4450a7eade4526e8d1fd3211de87004379b08967832f7717d9ae22"
+    },
+    "monos-runner": {
+      "path": "/root/monos-free-catalog-release-v2/bin/monos-runner",
+      "sha256": "5bd9b3f7613468ccb01c910a5864b03310c586d67d416e6a5f90b124fe15035f"
+    },
+    "monos-probe-launch": {
+      "path": "/root/monos-free-catalog-release-v2/bin/monos-probe-launch",
+      "sha256": "1b4e8ab2b0480b985527f1bd44fc96d002e4e4f0951bc750f01e184aeec01730"
+    },
+    "monos-probe-exec": {
+      "path": "/root/monos-free-catalog-release-v2/bin/monos-probe-exec",
+      "sha256": "255ad60e31fd6f6fd9c50a7169c8e7bb40821b21bf340c85c39692e157dce724"
+    }
+  },
+  "runtime": {
+    "path": "/home/linuxbrew/.linuxbrew/Cellar/opencode/2.0.20/bin/opencode",
+    "sha256": "90e905f6e9b6babd60e6bb1ad3b87e8405421cb84a64b088550620f8e9011051"
+  },
+  "unit_before_cleanup": {
+    "ExecMainCode": "1",
+    "ExecMainStatus": "0",
+    "ControlGroup": "",
+    "LoadState": "loaded",
+    "ActiveState": "active",
+    "SubState": "exited"
+  },
+  "verification": {
+    "outcome": "pass",
+    "uid": 1000,
+    "gid": 1000,
+    "groups": [
+      1000
+    ],
+    "inference_calls": 0,
+    "attempt_id": "native-free-catalog-a93f3002ae01-v1",
+    "test_pid": 828878,
+    "test_identity": {
+      "ppid": 828877,
+      "group": 828877,
+      "birth": 85628322,
+      "state": "R"
+    },
+    "test_exit": 0,
+    "cleanup": {
+      "process_tree_absent": true,
+      "remaining": {},
+      "interventions": [],
+      "reaper_joined": true
+    },
+    "observed_processes": {
+      "828878": {
+        "ppid": 828877,
+        "group": 828877,
+        "birth": 85628322,
+        "state": "Z"
+      },
+      "828889": {
+        "ppid": 828878,
+        "group": 828889,
+        "birth": 85628325,
+        "state": "S"
+      },
+      "828899": {
+        "ppid": 828878,
+        "group": 828899,
+        "birth": 85628329,
+        "state": "R"
+      },
+      "828906": {
+        "ppid": 828878,
+        "group": 828906,
+        "birth": 85628332,
+        "state": "S"
+      },
+      "828913": {
+        "ppid": 828906,
+        "group": 828906,
+        "birth": 85628335,
+        "state": "R"
+      },
+      "828932": {
+        "ppid": 828878,
+        "group": 828932,
+        "birth": 85628344,
+        "state": "S"
+      },
+      "828940": {
+        "ppid": 828878,
+        "group": 828940,
+        "birth": 85628348,
+        "state": "R"
+      },
+      "828947": {
+        "ppid": 828878,
+        "group": 828947,
+        "birth": 85628352,
+        "state": "R"
+      },
+      "828955": {
+        "ppid": 828878,
+        "group": 828955,
+        "birth": 85628355,
+        "state": "S"
+      },
+      "828969": {
+        "ppid": 828878,
+        "group": 828969,
+        "birth": 85628365,
+        "state": "R"
+      },
+      "828976": {
+        "ppid": 828878,
+        "group": 828976,
+        "birth": 85628368,
+        "state": "S"
+      },
+      "828986": {
+        "ppid": 828878,
+        "group": 828986,
+        "birth": 85628418,
+        "state": "R"
+      },
+      "828992": {
+        "ppid": 828878,
+        "group": 828992,
+        "birth": 85628422,
+        "state": "R"
+      },
+      "828999": {
+        "ppid": 828878,
+        "group": 828999,
+        "birth": 85628425,
+        "state": "R"
+      },
+      "829006": {
+        "ppid": 828878,
+        "group": 829006,
+        "birth": 85628429,
+        "state": "R"
+      },
+      "829072": {
+        "ppid": 828878,
+        "group": 829072,
+        "birth": 85628434,
+        "state": "R"
+      },
+      "829091": {
+        "ppid": 828878,
+        "group": 829091,
+        "birth": 85628438,
+        "state": "R"
+      },
+      "829147": {
+        "ppid": 828878,
+        "group": 829147,
+        "birth": 85628442,
+        "state": "R"
+      },
+      "829158": {
+        "ppid": 828878,
+        "group": 829158,
+        "birth": 85628446,
+        "state": "S"
+      },
+      "829170": {
+        "ppid": 828878,
+        "group": 829170,
+        "birth": 85628483,
+        "state": "R"
+      }
+    }
+  },
+  "cleanup": {
+    "fixture_created": true,
+    "unit_started": true,
+    "unit_after_stop": {
+      "ExecMainCode": "0",
+      "ExecMainStatus": "0",
+      "ControlGroup": "",
+      "LoadState": "not-found",
+      "ActiveState": "inactive",
+      "SubState": "dead"
+    },
+    "cgroup_absent": true,
+    "fixture_removed": true
+  }
+}

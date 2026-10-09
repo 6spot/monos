@@ -1,0 +1,14 @@
+{
+  "candidate_commit": "a93f3002ae0127098063bc08006a854af547d160",
+  "build_sha256": "d104602e4540b8b455433ff64af3c17b7cea4612a1a783f50cf610f8ceacd677",
+  "helper_sha256": "71fe39ceeeb68dc8a802f1502e7b6468a83826ed4706fcb37bccd04284cd52a5",
+  "archive_sha256": "7609f28eedc018142c42c2c88f7c5b37add2f4dfaad53d0933e60bfb833afe04",
+  "source_file_count": 144,
+  "source_manifest_sha256": "40aeb79bc2ac7bc520e2a31f7b56575a5cefed63c17b5c702a291e1214fb6c9c",
+  "stage": {
+    "sha256": "71fe39ceeeb68dc8a802f1502e7b6468a83826ed4706fcb37bccd04284cd52a5",
+    "uid": 0,
+    "mode": "0o600"
+  },
+  "prior_failure_sha256": "697f46a8378847330ea91a02da41647185592196741e6d96cd62b7e518538de4"
+}

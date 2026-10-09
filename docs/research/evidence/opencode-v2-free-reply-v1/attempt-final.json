@@ -1,0 +1,37 @@
+{
+  "automatic_retry": false,
+  "directory": "/root/monos-optional-http-owner-requests-v1/get-63084d70-9636-4f5f-9fd2-81ba4b338387",
+  "input_sha256": "0afd83c29dec6b4cc39527d8b0706eaea99085c4f3ada9c1979390abcf5eaa7f",
+  "method": "GET",
+  "outcome": "pass",
+  "owner_logged_out": true,
+  "path": "/v1/owner/todos/0c06605d-b8cb-471a-a28b-2a930a8016fe/attempts/2e673ca7-990c-4e15-8945-01e71d8b633b",
+  "receipt_confirmed": false,
+  "receipt_path": null,
+  "request_id": null,
+  "responses": [
+    {
+      "body": {
+        "activity_at": "2026-10-09T14:20:26.013Z",
+        "attempt_id": "2e673ca7-990c-4e15-8945-01e71d8b633b",
+        "created_at": "2026-10-09T14:17:25.062Z",
+        "kind": "planner",
+        "latest_sequence": 5,
+        "log_mode": "ordered_v1",
+        "mutation_allowed": false,
+        "process_absent": true,
+        "process_released": true,
+        "runner_id": "delivery-fresh-runner-v1",
+        "schema_version": 1,
+        "started": true,
+        "state": "SUCCEEDED",
+        "todo_id": "0c06605d-b8cb-471a-a28b-2a930a8016fe",
+        "visible_sequence": 5
+      },
+      "path": "/v1/owner/todos/0c06605d-b8cb-471a-a28b-2a930a8016fe/attempts/2e673ca7-990c-4e15-8945-01e71d8b633b",
+      "status": 200
+    }
+  ],
+  "session_unknown": false,
+  "submitted": false
+}

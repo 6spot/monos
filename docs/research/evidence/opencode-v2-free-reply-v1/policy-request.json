@@ -1,0 +1,20 @@
+{
+  "path": "/v1/owner/configuration/commands",
+  "method": "POST",
+  "body": {
+    "schema_version": 1,
+    "request_id": "64bdc223-3476-44fb-a797-62554c7851cb",
+    "expected_control_version": 5,
+    "name": "save_policies",
+    "payload": {
+      "global": {
+        "default_target": {
+          "runtime_id": "opencode",
+          "runner_id": "delivery-fresh-runner-v1",
+          "model_id": "opencode/longcat-2.5-preview-free"
+        },
+        "fallback_targets": []
+      }
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "old_pid_exists": false,
+  "old_stat": null,
+  "files": [],
+  "interruptions": {},
+  "verification_unit": "LoadState=not-found\n",
+  "outcome": "transport_timeout_before_archive_complete",
+  "timeout_seconds": 700,
+  "archive_file_bytes": 131298073,
+  "archive_sha256": "fc4f428c02a7b473e0b6daca7631d01efbee82b7eef08ff2954a2b765655d004",
+  "candidate_commit": "a93f3002ae0127098063bc08006a854af547d160",
+  "root": "/root/monos-free-catalog-release-v1",
+  "signal_sent": false,
+  "reason": "explicit interruption precondition found original upload process already absent",
+  "source_written": false,
+  "build_started": false,
+  "model_invocation": false,
+  "installation": false
+}

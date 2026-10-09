@@ -1,0 +1,20 @@
+{
+  "automatic_retry": false,
+  "automatic_rollback": false,
+  "canonical_release": "not claimed",
+  "outcome": "failed",
+  "progress": {
+    "claimed": true,
+    "replaced": [
+      "monos",
+      "monos-runner",
+      "monos-probe-launch",
+      "monos-probe-exec"
+    ],
+    "start_attempted": false,
+    "start_returned": false,
+    "stop_attempted": true,
+    "stop_returned": true
+  },
+  "reason": "canonical_fingerprints_changed"
+}

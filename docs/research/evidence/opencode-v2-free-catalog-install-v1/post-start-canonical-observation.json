@@ -1,0 +1,72 @@
+{
+  "changed": {
+    "attempt_log_entries": {
+      "before": {
+        "count": 178,
+        "sha256": "679833152bb866c2e59deb555492f4d6070d6fd6e0e99cf6132afa13054ca427"
+      },
+      "after": {
+        "count": 180,
+        "sha256": "090a6de29dcf04511f105c8412d8b34d56047533975c06f091901748ed910326"
+      }
+    },
+    "attempts": {
+      "before": {
+        "count": 13,
+        "sha256": "e18617584b0208e97779af03457117a15025f4e9b9b563310321c20460abe3a2"
+      },
+      "after": {
+        "count": 13,
+        "sha256": "0f8c0159c73261d7f7e0596ec8119238102e5174a87251d5b74c79cebc185d84"
+      }
+    },
+    "github_remote_cooldowns": {
+      "before": {
+        "count": 1,
+        "sha256": "c061fa165e3aaff565f55f4e7e125cf47250236a4c90323663c6065d11c2fbba"
+      },
+      "after": {
+        "count": 1,
+        "sha256": "633b4344bc0cd855ed9b6bbbeb6a29776e3158e533558861c93249b78a808784"
+      }
+    },
+    "remote_preparation_items": {
+      "before": {
+        "count": 2,
+        "sha256": "db01e9eb5e9b7aa35557ac00f1b5e38037535430073d3018d6ed6ae11b2c3e5a"
+      },
+      "after": {
+        "count": 2,
+        "sha256": "3178dfd0688690036355462aaaf1b35711221d628354f256b8a130b2121e299c"
+      }
+    },
+    "runtime_events": {
+      "before": {
+        "count": 178,
+        "sha256": "ed044ec6d779f4ba09824af73e2aac36c3f2261d39c1eaf87291cf217059cfa9"
+      },
+      "after": {
+        "count": 180,
+        "sha256": "74db4ec3d4184152975576abfea0a21c4f148554c5a262ed9e0dc7baba338f4e"
+      }
+    }
+  },
+  "attempt_projections_equal": true,
+  "counts": {
+    "held_attempts": 0,
+    "leases": 0,
+    "operations": 0,
+    "outbox": 0,
+    "delivery": 0,
+    "remote": 0,
+    "merge": 0,
+    "batch": 0,
+    "review": 0,
+    "publication_slots": 0,
+    "todo_sources": 0,
+    "planning_sources": 0,
+    "node_sources": 0,
+    "conversation_sources": 0,
+    "review_sources": 0
+  }
+}

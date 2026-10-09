@@ -1,0 +1,73 @@
+{
+  "inspected_on": "2026-10-09",
+  "scope": "Local inspection of retained terminal screenshots and provenance only; no browser, host, model or provider calls.",
+  "outcome": "selected_terminal_images_inspected",
+  "build_manifest": {
+    "file": "build.json",
+    "sha256": "7dec686cd64cc778fffe886029f72a6d2bd814fea615421b3643ed5204676c12",
+    "server_source": "acff7663209949929c11d7543eb6453e19cee6ea"
+  },
+  "reference": {
+    "contract": "../../../../.trellis/spec/frontend/visual-design.md",
+    "recorded_multica_revision": "44ea3b40c8b4f54f4c76d1dd3e3c92e0c0cabd19",
+    "basis": "Repository visual contract and accepted migration; reference checkout not reexamined."
+  },
+  "capture_manifests": [
+    {
+      "file": "capture.json",
+      "sha256": "499bd767fb97de934b88a9c7b92dc71fc8b3a3e481027749b14aa98044baa7c5",
+      "image_count": 4,
+      "disposition": "selected; all four saved images visually reinspected locally"
+    },
+    {
+      "file": "delivery/capture.json",
+      "sha256": "5c98adc907b706758378a5e85cc80c4e777760ecbd308ca866befdc8c2001835",
+      "image_count": 4,
+      "disposition": "superseded; README records asynchronous layout shift in cancelled desktop"
+    },
+    {
+      "file": "settled-delivery/capture.json",
+      "sha256": "da5c6a69d335cac80a173a80111e60071563a42465e55bc87742420dbe885230",
+      "image_count": 0,
+      "disposition": "no images; README records expired forwarding before login"
+    },
+    {
+      "file": "settled-delivery-v2/capture.json",
+      "sha256": "1d7b92849633d82172831c2d7fa7c88ee071ec69d4b8165c5c68961ccf5b9fab",
+      "image_count": 4,
+      "disposition": "selected; all four saved images visually reinspected locally"
+    }
+  ],
+  "checks": {
+    "png_digests_and_dimensions": "12 of 12 match their capture manifests; screenshots unchanged.",
+    "selected_images_visually_inspected": 8,
+    "viewports": [
+      [
+        1440,
+        1000
+      ],
+      [
+        390,
+        844
+      ]
+    ],
+    "saved_scroll_widths": "All 12 equal their recorded viewport width.",
+    "captured_assets": "All three successful capture manifests match both installed asset digests in build.json.",
+    "captured_terminal_states": "Completed control 14 and cancelled control 6; zero held/queued Attempts and open operations in all saved Task responses.",
+    "capture_records": "All three successful captures record no page errors or business mutations and confirmed logout."
+  },
+  "observations": [
+    "Header views preserve the neutral shell, selected Task tab, readable title/status and Specification; mobile menu and Back to Todo remain visible.",
+    "Completed delivery views show one finalized repository item, accepted head, verified final commit and the independent-Task boundary.",
+    "Cancelled desktop shows no acceptance, disabled review preparation, cancellation cleanup, retained branch and closed PR; mobile shows no acceptance and retained cleanup with wrapped repository/branch text.",
+    "Historical provider evidence is labelled separately from current authority. Long content wraps within the saved viewports.",
+    "monos navigation, delivery language, vertically growing titles/Specification and wrapped exact hashes are intentional adaptations of the reference."
+  ],
+  "limits": [
+    "Captured outcomes remain unchanged; this record supplies the later local inspection result.",
+    "PNG and JSON consistency is not a fresh assertion about the running host or an independent network observation.",
+    "No keyboard/focus, accessibility, navigation, live Node or transient waiting/recovery behavior was reexecuted.",
+    "Only the eight selected images were visually reinspected; the four superseded images received digest/dimension checks.",
+    "These terminal views do not complete Stage A or resolve A06, A25, A30, C02, C03 or E01."
+  ]
+}

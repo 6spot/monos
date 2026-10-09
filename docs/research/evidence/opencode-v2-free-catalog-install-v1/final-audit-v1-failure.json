@@ -1,0 +1,8 @@
+{
+  "outcome": "failed",
+  "reason": "canonical_fingerprints_changed",
+  "source_sha256": "c0d9c0353486179f5e85b6496b030186430eec4ba08a458a2a4ee11dd947f18f",
+  "remote_script": "/root/monos-free-catalog-final-audit.py",
+  "service_actions": [],
+  "description": "Two late exit events reached the backend after the earlier journal comparison. The v1 read-only audit required unchanged full-table fingerprints and stopped before completing its reads."
+}

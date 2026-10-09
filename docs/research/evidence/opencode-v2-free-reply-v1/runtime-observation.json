@@ -1,0 +1,54 @@
+{
+  "attempt": {
+    "id": "2e673ca7-990c-4e15-8945-01e71d8b633b",
+    "dispatch_id": "8bfd911e-07f5-48d8-8882-602a980ebc8a",
+    "state": "SUCCEEDED",
+    "process_absent": true,
+    "process_released": true,
+    "end_reason": null,
+    "selection": {
+      "runtime_id": "opencode",
+      "model": "opencode/longcat-2.5-preview-free",
+      "thinking": null,
+      "executable": null
+    }
+  },
+  "events": [
+    {
+      "kind": "started",
+      "stream_id": "runtime",
+      "sequence": 1,
+      "order_sequence": 1
+    },
+    {
+      "kind": "output",
+      "stream_id": "stdout",
+      "sequence": 1,
+      "order_sequence": 2,
+      "native_type": "step_start",
+      "tool": null,
+      "tool_status": null
+    },
+    {
+      "kind": "output",
+      "stream_id": "stdout",
+      "sequence": 2,
+      "order_sequence": 3
+    },
+    {
+      "kind": "output",
+      "stream_id": "stdout",
+      "sequence": 3,
+      "order_sequence": 4,
+      "native_type": "step_start",
+      "tool": null,
+      "tool_status": null
+    },
+    {
+      "kind": "output",
+      "stream_id": "stdout",
+      "sequence": 4,
+      "order_sequence": 5
+    }
+  ]
+}

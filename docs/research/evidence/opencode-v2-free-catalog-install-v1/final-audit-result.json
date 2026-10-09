@@ -1,0 +1,124 @@
+{
+  "outcome": "pass",
+  "candidate_commit": "a93f3002ae0127098063bc08006a854af547d160",
+  "runner": {
+    "id": "delivery-fresh-runner-v1",
+    "capacity": 2,
+    "incarnation": 28,
+    "report": 28,
+    "ready": true,
+    "connected": true,
+    "recent": true,
+    "boot": "eb12bbe6-c63c-4e2e-8463-82b3e780aca1",
+    "connection": "1fe527d9-d7ec-406a-a0ce-e600585193e2",
+    "credential_matches": true
+  },
+  "identity": {
+    "pid": 972670,
+    "invocation_id": "ef43b5da1d5f4d4285907cb8792d6259",
+    "birth_ticks": 85903119
+  },
+  "binaries": {
+    "monos": {
+      "path": "/root/monos-free-catalog-release-v2/bin/monos",
+      "sha256": "01e5e9452f4450a7eade4526e8d1fd3211de87004379b08967832f7717d9ae22"
+    },
+    "monos-runner": {
+      "path": "/root/monos-free-catalog-release-v2/bin/monos-runner",
+      "sha256": "5bd9b3f7613468ccb01c910a5864b03310c586d67d416e6a5f90b124fe15035f"
+    },
+    "monos-probe-launch": {
+      "path": "/root/monos-free-catalog-release-v2/bin/monos-probe-launch",
+      "sha256": "1b4e8ab2b0480b985527f1bd44fc96d002e4e4f0951bc750f01e184aeec01730"
+    },
+    "monos-probe-exec": {
+      "path": "/root/monos-free-catalog-release-v2/bin/monos-probe-exec",
+      "sha256": "255ad60e31fd6f6fd9c50a7169c8e7bb40821b21bf340c85c39692e157dce724"
+    }
+  },
+  "runtime": [
+    {
+      "runner": "delivery-fresh-runner-v1",
+      "incarnation": 28,
+      "observation": {
+        "version": "2.0.20",
+        "model_ids": [],
+        "executable": "/home/linuxbrew/.linuxbrew/bin/opencode",
+        "runtime_id": "opencode",
+        "availability": "detected",
+        "supports_model": true,
+        "supports_thinking": false
+      }
+    }
+  ],
+  "original_tables_except_polling_and_attempt_projection_preserved": true,
+  "recorded_attempt_identity_state_ownership_preserved": true,
+  "attempt_projection_evidence_limit": "Original complete Attempt rows were retained as hashes only. The recorded identity/state/ownership projection is equal; full prior equality of other Attempt columns is not established.",
+  "original_backend_event_rows_preserved_by_hash": 178,
+  "original_local_event_rows_byte_preserved": 178,
+  "local_events_after": 180,
+  "late_exit_events": [
+    {
+      "key": [
+        "0470064c-b8ea-4e18-a4bb-b3baaa631637",
+        "runtime",
+        2
+      ],
+      "event": {
+        "attempt_id": "0470064c-b8ea-4e18-a4bb-b3baaa631637",
+        "boot_id": "eb12bbe6-c63c-4e2e-8463-82b3e780aca1",
+        "dispatch_id": "a2d2e1ac-7adf-467c-aacd-67c0773932b3",
+        "kind": "exited",
+        "order_sequence": 15,
+        "sequence": 2,
+        "stream_id": "runtime",
+        "text": "runtime main process exited; formal completion is independent"
+      },
+      "raw_sha256": "e1ea1e0b99fc29fdcad18b3f5c9f9199d7e47036cf1d0cdd78026de96458f0fa",
+      "backend_digest": "e1ea1e0b99fc29fdcad18b3f5c9f9199d7e47036cf1d0cdd78026de96458f0fa"
+    },
+    {
+      "key": [
+        "d5706933-fe21-4781-a10f-4feb496bfade",
+        "runtime",
+        2
+      ],
+      "event": {
+        "attempt_id": "d5706933-fe21-4781-a10f-4feb496bfade",
+        "boot_id": "eb12bbe6-c63c-4e2e-8463-82b3e780aca1",
+        "dispatch_id": "8b385112-49fa-423a-92c9-0a0a71b53396",
+        "kind": "exited",
+        "order_sequence": 29,
+        "sequence": 2,
+        "stream_id": "runtime",
+        "text": "runtime main process exited; formal completion is independent"
+      },
+      "raw_sha256": "ade71a79e06b112bbd9dc082956368b2108a752d8f8b58fab80f97eb093c98b0",
+      "backend_digest": "ade71a79e06b112bbd9dc082956368b2108a752d8f8b58fab80f97eb093c98b0"
+    }
+  ],
+  "other_journal_tables_preserved": true,
+  "historical_physical_identities_preserved": true,
+  "polling_stable_fields_preserved_since_reference": true,
+  "polling_evidence_limit": "Original polling rows were retained only as full hashes; their prior stable-field equality is not established.",
+  "private_configuration_and_containers_preserved": true,
+  "counts": {
+    "held_attempts": 0,
+    "leases": 0,
+    "operations": 0,
+    "outbox": 0,
+    "delivery": 0,
+    "remote": 0,
+    "merge": 0,
+    "batch": 0,
+    "review": 0,
+    "publication_slots": 0,
+    "todo_sources": 0,
+    "planning_sources": 0,
+    "node_sources": 0,
+    "conversation_sources": 0,
+    "review_sources": 0
+  },
+  "model_invocation": false,
+  "service_actions": []
+}

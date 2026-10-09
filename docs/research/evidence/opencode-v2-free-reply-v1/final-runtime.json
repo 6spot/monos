@@ -1,0 +1,138 @@
+{
+  "counts": {
+    "held_attempts": 0,
+    "leases": 0,
+    "operations": 0,
+    "outbox": 0,
+    "delivery": 0,
+    "remote": 0,
+    "merge": 0,
+    "batch": 0,
+    "review": 0,
+    "publication_slots": 0,
+    "todo_sources": 0,
+    "planning_sources": 0,
+    "node_sources": 0,
+    "conversation_sources": 0,
+    "review_sources": 0
+  },
+  "task_count": 2,
+  "attempt_count": 14,
+  "tasks": [
+    {
+      "id": "a53d17f3-451b-4616-82f5-559f2ef29f59",
+      "state": "CANCELLED",
+      "control_version": 6
+    },
+    {
+      "id": "b5fa877d-7e24-4472-a13f-9c53944157a4",
+      "state": "COMPLETED",
+      "control_version": 14
+    }
+  ],
+  "receipts": [
+    {
+      "request_id": "discussion-turn-9caa50b4",
+      "command_name": "commit_discussion_turn",
+      "digest": "d68d9249ec0b3d5972ba4ec0e12e4cd028e1c004795bf3f1906f85671960fe24",
+      "response": {
+        "result": {
+          "reply": "\u514d\u8d39\u6a21\u578b\u5df2\u5c31\u7eea",
+          "message_id": "8019183c-f3bf-459b-9567-8633fcb36f0c",
+          "cache_updated": true,
+          "source_watermark": 3
+        },
+        "status": "committed",
+        "request_id": "discussion-turn-9caa50b4",
+        "operation_id": "1a9a3ac4-efbc-4416-b7f0-988c53a39846",
+        "schema_version": 1
+      }
+    }
+  ],
+  "policies": {
+    "global": {
+      "default_target": {
+        "model_id": "opencode/longcat-2.5-preview-free",
+        "runner_id": "delivery-fresh-runner-v1",
+        "runtime_id": "opencode"
+      },
+      "fallback_targets": []
+    }
+  },
+  "new_attempt_units": [
+    {
+      "LoadState": "loaded",
+      "ActiveState": "failed",
+      "SubState": "failed",
+      "Transient": "yes",
+      "Result": "signal",
+      "KillMode": "control-group",
+      "RemainAfterExit": "yes",
+      "Restart": "no",
+      "unit": "monos-probe-a-2e673ca7-990c-4e15-8945-01e71d8b633b.service",
+      "kind": "attempt",
+      "identifier": "2e673ca7-990c-4e15-8945-01e71d8b633b",
+      "dispatch_id": "8bfd911e-07f5-48d8-8882-602a980ebc8a",
+      "main_pid": 0,
+      "exec_main_pid": 1055339,
+      "exec_main_code": 2,
+      "exec_main_status": 9,
+      "invocation_id": "70b808b9a1e741dc99aae54bce2642fe",
+      "expected_cgroup": "/system.slice/monos-probe-a-2e673ca7-990c-4e15-8945-01e71d8b633b.service",
+      "reported_cgroup_matches": false,
+      "service_account_matches": false,
+      "execution_account_matches": true,
+      "cgroup": {
+        "status": "missing",
+        "empty_proven": false,
+        "two_reads_equal": true
+      },
+      "exec_main_pid_current_identity": null
+    }
+  ],
+  "processes": {
+    "scanned_count": 260,
+    "successfully_observed_count": 260,
+    "vanished_during_scan_count": 0,
+    "newcomers_classified_count": 0,
+    "complete": true,
+    "selected": [
+      {
+        "pid": 972670,
+        "ppid": 1,
+        "birth_ticks": 85903119,
+        "uid": [
+          997,
+          997,
+          997,
+          997
+        ],
+        "gid": [
+          986,
+          986,
+          986,
+          986
+        ],
+        "state": "S",
+        "unit": "monos-probe-runner.service",
+        "references": [
+          "argv_fixed_path",
+          "exe",
+          "fd_fixed_path",
+          "mapped_fixed_path",
+          "selected_socket_fd"
+        ],
+        "executable": {
+          "selected_binary": "monos-runner",
+          "deleted": false,
+          "device": 66306,
+          "inode": 17080776,
+          "installed_inode_matches": true
+        }
+      }
+    ]
+  },
+  "boot_id": "eb12bbe6-c63c-4e2e-8463-82b3e780aca1",
+  "jobs": [],
+  "unexpected_target_name_count": 0
+}

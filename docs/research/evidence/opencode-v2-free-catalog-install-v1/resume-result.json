@@ -1,0 +1,16 @@
+{
+  "automatic_retry": false,
+  "automatic_rollback": false,
+  "evidence_limit": "Original polling rows were retained only as full hashes; their prior stable-field equality is not established.",
+  "outcome": "failed",
+  "progress": {
+    "claimed": true,
+    "new_runner": {
+      "invocation_id": "ef43b5da1d5f4d4285907cb8792d6259",
+      "pid": 972670
+    },
+    "start_attempted": true,
+    "start_returned": true
+  },
+  "reason": "journal_history_changed"
+}
