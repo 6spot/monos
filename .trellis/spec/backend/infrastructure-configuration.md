@@ -27,9 +27,13 @@ GitHub API host is fixed, redirects forbidden, requests have a 10-second timeout
 
 Runner reports replace only that Runner's registry under its current incarnation and backend-instance lock. Missing optional reports retain observations marked non-current after reconnect. Backend restart makes old connections offline until reconnect. Reported timestamps are server time; current/online/availability are separate. Discovery runs only supported OpenCode --version as fixed non-root execution UID/GID with a controlled environment, output bound and deadline/process-group kill. It never accepts a caller path/flag/account, logs CLI diagnostics, launches a model or checks login. Probe helper remains account/path-specific until production host configuration work.
 
+The actual `/v1/runner` WSS handshake is Hello → Welcome → inventory/reconciliation/discovery → Ready. `app.ts` polls every250 ms after Welcome, so `PublicationPreparation.pending(runnerId, incarnation, supported): Promise<Frame[]>` must return `[]` before any transaction when `supported` is false. Native version discovery may take several polls. Capability is advertised only after successful Ready processing. Once supported, pending retains connected+ready, exact incarnation/backend instance and heartbeat freshness checks; this early no-work return grants no dispatch authority.
+
 ## 4. Validation & Error Matrix
 | Condition | Result |
 | --- | --- |
+| Pre-Ready or unsupported publication lane | Empty frames; no transaction or delivery mutation |
+| Supported lane with stale/not-ready connection | stale_execution; no dispatch |
 | Stale config/replay | Existing configuration version/receipt rules |
 | Invalid/missing new App key | invalid_input; no partial edit |
 | Changed service key/ciphertext binding | unmet_precondition; re-enter key |
@@ -41,9 +45,13 @@ Runner reports replace only that Runner's registry under its current incarnation
 | Version command error/timeout/missing CLI | unavailable/not_found, never login inference |
 
 ## 5. Good / Base / Bad Cases
+Good: delayed native discovery survives multiple control polls without publication work, then current Ready enables ordinary dispatch. Bad: throw stale_execution for an unadvertised publication lane and close the valid handshake.
+
 Good: manually select a new model without waiting for a cached catalog. Base: disconnected Runner retains its observed installation version. Bad: call a detected version executable-ready, or expose provider private keys in receipts.
 
 ## 6. Tests Required
+`postgres-publication.test.ts` must exercise actual TLS WSS with at least two polls before Ready: only Welcome frames, socket remains open, no delivery sent timestamps. Its direct pending test asserts unsupported/no-side-effect behavior, supported not-ready/stale-incarnation/foreign-instance rejection, and subsequent current Ready dispatch.
+
 `postgres-infrastructure.test.ts` covers policy persistence, encrypted key storage/replay, RSA JWT signature, requested read permissions, provider errors/response bounds, invalid keys, key rotation and Runner incarnation/instance/omitted-report behavior. Go discovery tests assert fixed non-root identity/env/argv and bounded version output. Shared fixtures cover complete fallbacks and strict ready reports. Real --version discovery is separate from live model/CLI tool invocation acceptance.
 
 `github-compatibility.test.ts` records an earlier synthetic ciphertext regression.
@@ -57,3 +65,6 @@ Correct: fixed non-root discovery; Owner manages CLI installation/login, and onl
 
 Wrong: expose a provider key or ciphertext envelope in a receipt.
 Correct: keep encrypted key storage private and return only safe fingerprints.
+
+Wrong: check Ready availability before returning from an unsupported publication lane.
+Correct: return an empty frame array before the transaction; keep all supported connection and dispatch guards.

@@ -105,11 +105,13 @@ export class PublicationPreparation {
   });
  }
  async pending(runnerId:string,incarnation:number,supported:boolean):Promise<Frame[]> {
+  // Hello starts polling while the Runner reconciles and discovers its runtimes.
+  // Publication support is advertised only by Ready; this lane has no work yet.
+  if(!supported)return [];
   return transaction(this.db,async tx=>{
    await lockConfiguration(tx);
    const runner=(await tx.query<{available:boolean}>("SELECT connected AND ready AND connection_instance=$3 AND incarnation=$2 AND last_seen>now()-interval '15 seconds' AS available FROM runners WHERE id=$1 FOR UPDATE",[runnerId,incarnation,this.instanceId])).rows[0];
    if(!runner?.available)throw new CommandError('stale_execution','Publication Runner connection changed');
-   if(!supported)return [];
    const rows=(await tx.query<DeliveryOperation>(`SELECT o.* FROM delivery_operations o JOIN tasks t ON t.id=o.task_id
     WHERE o.runner_id=$1 AND o.state='pending' AND o.dispatch_active AND o.next_attempt_at<=clock_timestamp() AND t.state='REVIEW'
      AND NOT EXISTS(SELECT 1 FROM task_publication_slots s WHERE s.task_id=o.task_id)

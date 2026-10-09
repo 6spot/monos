@@ -10,7 +10,7 @@ import {once} from 'node:events';
 import type {AddressInfo} from 'node:net';
 import {WebSocket} from 'ws';
 import {randomUUID} from 'node:crypto';
-import {describe,it,expect} from 'vitest';
+import {describe,it,expect,vi} from 'vitest';
 import {transaction} from '../../../packages/db/src/index.ts';
 import {PublicationPreparation,ensureLocalCandidate} from '../src/publication-candidates.ts';
 import {PublicationCandidateReads,knownPublicExposureCount} from '../src/publication-candidate-reads.ts';
@@ -26,6 +26,19 @@ import {submission,canonicalJSON} from '../../../packages/protocol/src/index.ts'
 import type {Frame,PublicationCommand,PublicationResultPage,CommandEnvelope} from '../../../packages/protocol/src/index.ts';
 const suite=process.env.MONOS_TEST_DATABASE==='1'?describe:describe.skip;
 suite('Durable local publication',()=>{
+ it('leaves unsupported discovery polls untouched and fences supported dispatch until the current Runner is Ready',async()=>{
+  const x=await publicationFixture();try {
+   const incarnation=await x.service.connect(x.f.runner,'publication-discovery-test');
+   const before=(await x.db.pool.query('SELECT * FROM delivery_operations')).rows;
+   expect(await x.preparation.pending(x.f.runner,incarnation,false)).toEqual([]);
+   await expect(x.preparation.pending(x.f.runner,incarnation,true)).rejects.toMatchObject({detail:{code:'stale_execution'}});
+   await x.service.touch(x.f.runner,incarnation,true);
+   await expect(x.preparation.pending(x.f.runner,incarnation-1,true)).rejects.toMatchObject({detail:{code:'stale_execution'}});
+   await expect(new PublicationPreparation(x.db,randomUUID()).pending(x.f.runner,incarnation,true)).rejects.toMatchObject({detail:{code:'stale_execution'}});
+   expect((await x.db.pool.query('SELECT * FROM delivery_operations')).rows).toEqual(before);
+   expect((await x.preparation.pending(x.f.runner,incarnation,true)).map(f=>f.publication_prepare)).toEqual([x.request]);
+  }finally{await x.close();}
+ });
  it('pins direct candidate authority while a real Owner carry publishes a new Specification',async()=>{
   const x=await publicationFixture(),blocker=await x.db.pool.connect();const pending:Promise<unknown>[]=[];
   try {
@@ -247,6 +260,7 @@ suite('Durable local publication',()=>{
  });
  it('uses actual authenticated TLS WSS capability, scoped pages, no premature ack and historical late settlement',async()=>{
   const x=await publicationFixture();let directory:string|undefined,app:ReturnType<typeof createApp>|undefined,socket:WebSocket|undefined;
+  const pending=vi.spyOn(x.service,'pending');
   try {
   directory=await mkdtemp(join(tmpdir(),'monos-publication-tls-'));
   execFileSync('/usr/bin/openssl',['req','-x509','-newkey','rsa:2048','-nodes','-subj','/CN=127.0.0.1','-addext','subjectAltName=IP:127.0.0.1','-days','1','-keyout',join(directory,'key.pem'),'-out',join(directory,'cert.pem')],{stdio:'ignore'});
@@ -258,6 +272,13 @@ suite('Durable local publication',()=>{
    const inbound:Frame[]=[];socket.on('message',body=>inbound.push(JSON.parse(body.toString()) as Frame));
    socket.send(JSON.stringify({schema_version:1,type:'hello',runner_id:x.f.runner,boot_id:'publication-native-transport-test'}));
    await expect.poll(()=>inbound.find(f=>f.type==='welcome')).toBeTruthy();const incarnation=inbound.find(f=>f.type==='welcome')!.incarnation!;
+   // Native inventory/reconciliation and CLI discovery can take multiple polls.
+   // With no Ready yet, the current socket must survive without dispatching work.
+   await expect.poll(()=>pending.mock.calls.length).toBeGreaterThanOrEqual(2);
+   expect(socket.readyState).toBe(WebSocket.OPEN);
+   expect((await x.db.pool.query('SELECT ready FROM runners WHERE id=$1',[x.f.runner])).rows[0]!.ready).toBe(false);
+   expect(inbound.map(f=>f.type)).toEqual(['welcome']);
+   expect((await x.db.pool.query('SELECT sent_incarnation,last_sent_at FROM delivery_operations WHERE id=$1',[x.deliveryOperationId])).rows[0]).toEqual({sent_incarnation:null,last_sent_at:null});
    socket.send(JSON.stringify({schema_version:1,type:'ready',incarnation,log_modes:['ordered_v1']}));
    await expect.poll(async()=>(await x.db.pool.query('SELECT ready FROM runners WHERE id=$1',[x.f.runner])).rows[0]!.ready).toBe(true);
    const url=`/v1/owner/tasks/${x.f.task}/publication-candidates`,headers={authorization:`Bearer ${x.token}`};
@@ -274,7 +295,7 @@ suite('Durable local publication',()=>{
    expect(inbound.find(f=>f.type==='publication_ack')!.publication_ack?.result_digest).toBe(hash(pages[0]!.result));
    const record=(await app.inject({url,headers})).json().items[0];expect(record).toMatchObject({status:'prepared',current:false,scan_applicable:false,override_allowed:false});
    expect((await x.db.pool.query('SELECT count(*) n FROM publication_scans')).rows[0]!.n).toBe('1');
-  }finally{socket?.terminate();await app?.close();await x.close();if(directory)await rm(directory,{recursive:true,force:true});}
+  }finally{socket?.terminate();await app?.close();pending.mockRestore();await x.close();if(directory)await rm(directory,{recursive:true,force:true});}
  },30000);
  it('settles true no-change without creating an item and guards actual authenticated Owner routes',async()=>{
   const x=await publicationFixture(),app=createApp(x.service);try{
