@@ -58,6 +58,20 @@ func discoveryCommand(ctx context.Context, uid, gid uint32) *exec.Cmd {
 	return cmd
 }
 
+func runDiscoveryCommand(cmd *exec.Cmd) error {
+	if err := cmd.Start(); err != nil {
+		return err
+	}
+	err := cmd.Wait()
+	// Successful output and pipe EOF do not prove that probe descendants left
+	// the owned group. Reuse the bounded settlement even after cancellation;
+	// only a started command supplies a group we are allowed to clean up.
+	if absent, _ := settlePublicationRemoteGroup(cmd.Process.Pid); !absent {
+		return errors.Join(err, fmt.Errorf("version probe process cleanup unresolved"))
+	}
+	return err
+}
+
 func discover(ctx context.Context) (Status, error) {
 	u, err := user.Lookup("me")
 	if err != nil {
@@ -78,7 +92,7 @@ func discover(ctx context.Context) (Status, error) {
 	var output discoveryOutput
 	cmd.Stdout = &output
 	// Discard stderr: CLI diagnostics can expose provider configuration.
-	err = cmd.Run()
+	err = runDiscoveryCommand(cmd)
 	if errors.Is(err, os.ErrNotExist) {
 		row.Availability = "not_found"
 	}

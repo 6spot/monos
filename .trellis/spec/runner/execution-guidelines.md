@@ -171,7 +171,14 @@ The constrained helper additionally accepts `{action:"discover",attempt_id:""}`
 with no dispatch/operation. `discovery.go` executes fixed OpenCode `--version` as
 `me` (non-root UID/GID), explicit home/PATH and no inherited service environment.
 Output is limited to 4096 bytes and a parsed semver (plain or the exact `opencode v` prefix emitted by v2); deadline is 10 seconds with
-process-group cancellation. Discovery on reconnect reports objective installation
+process-group cancellation and a 1-second pipe wait. After any started command
+returns, settle its owned process group even on success; the existing settlement
+adds at most 3 seconds. Report `detected` only when that group is absent. This
+probe-only guarantee covers inherited group members, not escaped descendants or
+Attempt/cgroup release. The [process regression](../../../runner/internal/host/discovery_process_test.go)
+must reproduce a successful parent leaving a live child with closed output,
+then verify absence before returning, while preserving ordinary exit/start errors.
+Discovery on reconnect reports objective installation
 facts in optional `ready.runtimes`. Missing older-client reports retain history;
 they cannot mark it current for a new incarnation. A detected version establishes
 neither coding-CLI login nor real tool/Stop acceptance. See the backend
