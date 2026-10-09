@@ -91,7 +91,12 @@ contents permission; an actual workflow change requires the workflows-write gran
 and a matching refreshed scan context. Finding absence and old grants do not
 establish this fact. Unchanged final workflows and zero-new-commit mappings are
 false, while introduced/modified/deleted workflow versions in the public range
-are true. Final-tree policy scanning still applies.
+are true. An exact complete `workflow_changes=false` scan may use the current
+least-privilege proof without `workflows:write`, whose scan configuration records
+`workflow_write=unknown`. Runner still validates the proof and scan identities;
+only actual workflow changes require `workflow_write=allowed` and a matching
+write grant. Unknown permission never substitutes for a missing workflow-change
+fact. Final-tree policy scanning still applies.
 
 ### Public ancestry, result mapping and immutable recovery
 

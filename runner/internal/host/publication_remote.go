@@ -52,7 +52,7 @@ func validatePublicationPushIdentity(r protocol.PublicationPushRequest, requireW
 	s := r.Preparation.Source
 	if requireWorkflow {
 		p := r.Preparation.PermissionProof
-		if p == nil || r.Preparation.PermissionProofDigest == nil || r.Preparation.Configuration.WorkflowWrite == "unknown" || p.RepositoryID != r.RepositoryID || p.ConfigurationFingerprint != r.PermissionProof.ConfigurationFingerprint || p.PermissionFingerprint != r.PermissionProof.PermissionFingerprint || p.AppID != r.PermissionProof.AppID || p.InstallationID != r.PermissionProof.InstallationID || p.KeyFingerprint != r.PermissionProof.KeyFingerprint {
+		if p == nil || r.Preparation.PermissionProofDigest == nil || r.WorkflowChanges && r.Preparation.Configuration.WorkflowWrite != "allowed" || p.RepositoryID != r.RepositoryID || p.ConfigurationFingerprint != r.PermissionProof.ConfigurationFingerprint || p.PermissionFingerprint != r.PermissionProof.PermissionFingerprint || p.AppID != r.PermissionProof.AppID || p.InstallationID != r.PermissionProof.InstallationID || p.KeyFingerprint != r.PermissionProof.KeyFingerprint {
 			return errors.New("publication scan permission context mismatch")
 		}
 	}

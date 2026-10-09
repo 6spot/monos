@@ -54,7 +54,8 @@ func publicationPushTestFixtureForResource(t *testing.T, evidence, resourceID st
 	permission.PermissionFingerprint = publicationDigest(map[string]any{"configuration_fingerprint": permission.ConfigurationFingerprint, "repository_id": permission.RepositoryID, "permissions": permission.Permissions})
 	r.PermissionProof = &permission
 	r.PermissionProofDigest = publicationPointer(publicationDigest(permission))
-	r.Configuration.WorkflowWrite = "denied"
+	// Production grants omit workflows when the exact scan has no workflow changes.
+	r.Configuration.WorkflowWrite = "unknown"
 	r.Configuration.PermissionFingerprint = permission.PermissionFingerprint
 	r.ConfigurationDigest = publicationDigest(r.Configuration)
 	if ValidatePublicationRequest(r) != nil {
@@ -147,6 +148,40 @@ func TestRemotePreparationNamedResourceRef(t *testing.T) {
 		t.Fatal("named resource ref did not publish the exact candidate")
 	}
 	f.ack(t, result)
+}
+
+func TestRemotePreparationLeastPrivilegeWorkflowGuard(t *testing.T) {
+	f := publicationPushTestFixture(t)
+	if f.request.Preparation.Configuration.WorkflowWrite != "unknown" || f.request.PermissionProof.Permissions.Workflows != nil || f.request.Prepared.Scan.WorkflowChanges == nil || *f.request.Prepared.Scan.WorkflowChanges {
+		t.Fatal("fixture does not model a least-privilege production grant and complete unchanged-workflow scan")
+	}
+	for _, permission := range []protocol.WorkflowWrite{"unknown", "denied"} {
+		t.Run(string(permission), func(t *testing.T) {
+			changed := f.request
+			scan := *changed.Prepared.Scan
+			changed.Prepared.Scan = &scan
+			changed.WorkflowChanges = true
+			changed.Prepared.Scan.WorkflowChanges = publicationPointer(true)
+			changed.Preparation.Configuration.WorkflowWrite = permission
+			changed.Preparation.ConfigurationDigest = publicationDigest(changed.Preparation.Configuration)
+			changed.Prepared.RequestDigest = publicationDigest(changed.Preparation)
+			changed.Prepared.Scan.ConfigurationDigest = changed.Preparation.ConfigurationDigest
+			changed.Prepared.ScanDigest = publicationPointer(publicationDigest(changed.Prepared.Scan))
+			changed.PreparationResultDigest = publicationDigest(changed.Prepared)
+			if ValidatePublicationRequest(changed.Preparation) != nil {
+				t.Fatal("least-privilege preparation identity changed")
+			}
+			if ValidatePublicationPushRequest(changed) == nil {
+				t.Fatal("changed workflow accepted without workflows write permission")
+			}
+		})
+	}
+	crossed := f.request
+	crossed.PermissionProof.AppID = "other-app"
+	crossed.PermissionProofDigest = publicationDigest(crossed.PermissionProof)
+	if ValidatePublicationPushRequest(crossed) == nil {
+		t.Fatal("crossed scan and push permission contexts accepted")
+	}
 }
 
 func TestRemotePreparationDurablePushEffectLossAndACKReplay(t *testing.T) {
