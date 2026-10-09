@@ -94,6 +94,15 @@ evidence. Its own feedback/source is excluded from Rework preconditions; indepen
 Stop/input/requirement/issue holds remain. Node promotion distinguishes guidance
 assigned for that Node to execute from unresolved classification/control guards.
 
+The subsequent Node source freezes `review_rework`: original Owner feedback text
+and basis, Planner routing reason, feedback/operation/source/Attempt/request IDs,
+and the selected Node/activation. Read the immutable resolved Rework whose exact
+Spec/Plan and target Node match; the frozen reviewed output activation plus one
+must equal the new activation. This retains context on same-activation Retry and
+excludes unrelated feedback and earlier corrections from later activations. Keep
+feedback distinct from Task guidance and the Specification. Existing source prompt,
+digest and byte-budget guards apply; never refresh already-frozen sources.
+
 Graph insufficiency creates a genuine review-origin Replan, with no fabricated
 Node/input. Dismiss creates a new routing operation linked to the immutable
 predecessor and actual Owner direction. Its own control bump, a fresh source or

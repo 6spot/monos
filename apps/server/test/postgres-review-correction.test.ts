@@ -21,6 +21,42 @@ suite('actual review correction authority and semantics',()=>{
   const b=await x.reviewTurn();expect(b.dispatch.task_review_source!.source_id).not.toBe(a.dispatch.task_review_source!.source_id);expect((await x.reviewReads.operation(x.token,x.f.task,feedback.operation_id!)).operation.previous_source_id).toBe(a.dispatch.task_review_source!.source_id);
   const outcome=await x.agent(b,'apply_review_rework',{...x.reviewBinding(b),basis:x.reviewActionBasis(b),node_ids:[x.f.node],reason:'Existing graph suffices'});expect(outcome.result?.message).toBe('rework');expect((await x.db.pool.query('SELECT activation,state FROM nodes WHERE id=$1',[x.f.node])).rows[0]).toMatchObject({activation:'2',state:'PENDING'});await x.finish(outcome.operation_id!,b.dispatch.attempt_id);await new Promise(resolve=>setTimeout(resolve,1100));await x.reviewCoordinator.pump();expect((await x.reviewReads.task(x.token,x.f.task)).feedback).toBeNull();const next=await x.node();expect(next.dispatch.node_activation).toBe(2);
  }finally{await x.close();}});
+ it('freezes exact Owner feedback and Planner correction in only the selected next Node activation',async()=>{
+  const x=await reviewCorrectionFixture();try{
+   const original=(await x.db.pool.query('SELECT context,prompt,context_digest FROM node_execution_outbox WHERE node_id=$1 AND node_activation=1',[x.f.node])).rows[0]!;
+   expect(original.context.review_rework??[]).toEqual([]);
+   const retained:{id:string;prompt:string;context_digest:string}[]=[];
+   for(const activation of [2,3]){
+    const text=`Correction ${activation}: guard file/network I/O and preserve Unicode whitespace \u2003 and decomposed e\u0301.`,reason=`Implement correction ${activation} in the existing Node: replace repeat-call equality with actual I/O guards and add combining-mark regression.`;
+    const feedback=await x.requestChanges(text),planner=await x.reviewTurn(),requestId=randomUUID();
+    const rework=await x.agent(planner,'apply_review_rework',{...x.reviewBinding(planner),basis:x.reviewActionBasis(planner),node_ids:[x.f.node],reason},requestId);
+    await x.finish(rework.operation_id!,planner.dispatch.attempt_id);await new Promise(resolve=>setTimeout(resolve,1100));await x.reviewCoordinator.pump();
+    const next=await x.node(),source=(await x.db.pool.query('SELECT id,context,prompt,context_digest FROM node_execution_outbox WHERE id=$1',[next.dispatch.node_execution_source!.source_id])).rows[0]!;
+    expect(next.dispatch.node_activation).toBe(activation);
+    expect(source.context.review_rework).toEqual([{feedback_id:feedback.feedback_id,owner_request_id:(await x.db.pool.query('SELECT request_id FROM task_review_feedback WHERE id=$1',[feedback.feedback_id])).rows[0]!.request_id,text,basis:(await x.reviewReads.feedback(x.token,x.f.task,feedback.feedback_id!)).basis,operation_id:feedback.operation_id,review_source_id:planner.dispatch.task_review_source!.source_id,planner_attempt_id:planner.dispatch.attempt_id,routing_request_id:requestId,reason,node_id:x.f.node,node_activation:activation}]);
+    expect(source.context.guidance).toEqual({items:[],required_guidance_ids:[]});
+    expect(source.context.specification).toBe(original.context.specification);
+    expect(source.context.node).toEqual(original.context.node);
+    expect(next.dispatch.prompt).toBe(source.prompt);
+    expect(JSON.parse(next.dispatch.prompt!)).toEqual(source.context);
+    expect(hash(source.context)).toBe(source.context_digest);
+    for(const earlier of retained)expect((await x.db.pool.query('SELECT prompt,context_digest FROM node_execution_outbox WHERE id=$1',[earlier.id])).rows[0]).toEqual({prompt:earlier.prompt,context_digest:earlier.context_digest});
+    retained.push(source);
+    let executing=next;
+    if(activation===2){
+     const target={node_id:x.f.node,node_activation:activation,source_id:next.dispatch.node_execution_source!.source_id};
+     const stopped=await x.owner('stop_node',target);await x.finish(stopped.operation_id!,next.dispatch.attempt_id);
+     const paused=await x.execution.status(x.token,x.f.task,x.f.node);
+     await x.owner('continue_node',{...target,blocker_id:paused.blocker!.id});executing=await x.node();
+     expect(executing.dispatch.node_activation).toBe(activation);
+     expect(executing.dispatch.node_execution_source!.source_id).not.toBe(target.source_id);
+     expect(JSON.parse(executing.dispatch.prompt).review_rework).toEqual(source.context.review_rework);
+    }
+    const done=await x.agent(executing,'complete_node',{summary:`Corrected output ${activation}`});await x.finish(done.operation_id!,executing.dispatch.attempt_id);
+   }
+   expect((await x.db.pool.query('SELECT context,prompt,context_digest FROM node_execution_outbox WHERE node_id=$1 AND node_activation=1',[x.f.node])).rows[0]).toEqual(original);
+  }finally{await x.close();}
+ },10000);
  it('transfers actual review into Replan, Dismiss creates a same-feedback successor and Retry cannot repeat structural request',async()=>{const x=await reviewCorrectionFixture();try{
   const feedback=await x.requestChanges(),a=await x.reviewTurn(),out=await x.agent(a,'request_replan',{reason:'Current single Node cannot satisfy required structure'});await x.finish(out.operation_id!,a.dispatch.attempt_id);
   const replan=new TaskReplan(x.db,{},x.service.instanceId),request=(await x.db.pool.query('SELECT * FROM replan_requests WHERE task_id=$1',[x.f.task])).rows[0]!;expect(request.review_operation_id).toBe(feedback.operation_id);expect(request.origin_node_id).toBeNull();expect(request.input_id).toBeNull();

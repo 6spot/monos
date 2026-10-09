@@ -81,6 +81,7 @@ export async function assertNodeSource(
 }
 const protocol = [
   'You execute exactly the bound Node. Only monos Tool Protocol commands change formal state. Follow the effective Specification, exact Node requirements, current Role instructions and formal Owner answers. Todo, prior Tasks and Runtime memory are not authority.',
+  'Apply the exact review_rework feedback and Planner routing reason for this activation. They request correction within the effective Specification; they do not replace the Specification or create guidance IDs.',
   'Use monos open_workspace with resource_id only when repository work is needed. Work freely within that managed workspace; preserve previous private work and fixed Git ancestry. Do not create your own repository as a substitute for managed work.',
   'Optional durable outputs use monos publish_artifact with artifact_id, title, content:{text,media_type}, optional references:[{url,label?}] and supersedes. UTF-8 text is limited to 256 KiB. Artifact publication is not completion. Read exact Task content with monos read_artifact {artifact_id}. HTML is managed data.',
   'Finish with monos complete_node {summary,artifact_ids?,handled_guidance_ids?}. Explicitly declare every required_guidance_id you have handled; absence declares none and rejects missing required handling. If blocked, use block_node with the precise reason. Guidance launch is not proof of handling. Omitted artifact_ids selects outputs from this Attempt; [] selects none; explicit IDs select same Node/activation outputs. No Artifact or repository is mandatory. If a previous Attempt left a private workspace checkpoint, reopen and finalize it before completion. Complete closes mutation authority and the system stops the process and finalizes Git; prose/process exit never completes.',
@@ -174,6 +175,15 @@ export async function prepareNodeSource(
       context = {
         protocol,
         guidance,
+        review_rework:(await tx.query(`SELECT f.id feedback_id,f.request_id owner_request_id,f.text,f.basis,
+          o.id operation_id,r.source_id review_source_id,r.attempt_id planner_attempt_id,r.request_id routing_request_id,
+          r.body->>'reason' reason,$2::text node_id,$3::bigint node_activation
+          FROM task_review_feedback f JOIN task_review_operations o ON o.id=f.current_operation_id AND o.feedback_id=f.id AND o.task_id=f.task_id
+          JOIN task_review_resolutions r ON r.operation_id=o.id AND r.task_id=f.task_id
+          WHERE f.task_id=$1 AND f.status='resolved' AND o.purpose='route_feedback' AND o.status='rework' AND r.kind='rework'
+            AND o.basis->>'specification_id'=$4 AND o.basis->>'plan_id'=$5 AND r.body->'node_ids' ? $2
+            AND f.manifest->'outputs' @> jsonb_build_array(jsonb_build_object('node_id',$2::text,'node_activation',$3::bigint-1))
+          ORDER BY r.created_at,r.operation_id`,[task.id,node.id,node.activation,task.specification_id,task.plan_id])).rows.map(r=>({...r,node_activation:Number(r.node_activation)})),
         binding,
         specification,
         node: definition,
