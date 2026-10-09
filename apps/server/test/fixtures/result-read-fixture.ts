@@ -1,10 +1,10 @@
 import { randomUUID } from 'node:crypto';
 import { Configuration } from '../../src/configuration.ts';
 import { conversationFixture } from './task-conversation-fixture.ts';
-export async function resultReadFixture(options:{runnerCredential?:string}={}) {
+export async function resultReadFixture(options:{runnerCredential?:string;resourceId?:string}={}) {
  const x=await conversationFixture(options);
  try {
- const resource=randomUUID(),configuration=new Configuration(x.db);
+ const resource=options.resourceId??randomUUID(),configuration=new Configuration(x.db);
  await configuration.save(x.token,{schema_version:1,request_id:randomUUID(),expected_control_version:(await configuration.read(x.token)).control_version,name:'save_project',payload:{id:x.f.project,name:'Result project',context:'Exact result fixture',resources:[{id:resource,remote_url:'https://github.com/example/result.git',remote_preparation:'after_acceptance',default_branch:'main'}],role_ids:[x.f.role],archived:false}});
  await x.start();const node=await x.node();const opened=await x.agent(node,'open_workspace',{resource_id:resource});const op=await x.service.recoverOperation(x.f.runner,opened.operation_id!);const w=op.workspace!;
  const metadata={generation:w.generation,storage_id:'result-read-storage',provider_metadata:{github:{repository_id:'42'}},lease_id:w.lease_id,repository_identity:w.resource.repository_identity,base_commit:'a'.repeat(40),target_branch:'main',target_commit:'a'.repeat(40),finalized_commit:'a'.repeat(40)};

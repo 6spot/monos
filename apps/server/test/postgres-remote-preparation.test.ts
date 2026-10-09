@@ -25,8 +25,8 @@ import {once} from 'node:events';
 import type {AddressInfo} from 'node:net';
 import type {Frame} from '../../../packages/protocol/src/index.ts';
 
-async function remoteFixture(credentialFinding=false,legacyCurrent=false,workflowChanges=false) {
- const credential=randomUUID(),x=await publicationFixture({runnerCredential:credential});
+async function remoteFixture(credentialFinding=false,legacyCurrent=false,workflowChanges=false,resourceId?:string) {
+ const credential=randomUUID(),x=await publicationFixture({runnerCredential:credential,resourceId});
  const github=new GitHub(x.service.options.signingKey),config=new Configuration(x.db,github),save=async(name:'save_github'|'save_project',payload:object)=>config.save(x.token,{schema_version:1,request_id:randomUUID(),expected_control_version:(await config.read(x.token)).control_version,name,payload});
  try {
   await save('save_github',{app_id:'7',installation_id:'8',private_key:generateKeyPairSync('rsa',{modulusLength:2048}).privateKey.export({type:'pkcs8',format:'pem'}).toString()});
@@ -72,6 +72,20 @@ async function remoteFixture(credentialFinding=false,legacyCurrent=false,workflo
 
 const suite=process.env.MONOS_TEST_DATABASE==='1'?describe:describe.skip;
 suite('remote preparation durable boundary',()=>{
+ it('reads remote preparation and delivery for a named resource through authenticated Owner routes',async()=>{
+  const x=await remoteFixture(false,false,false,'Delivery_Acceptance-repo-v1'),app=createApp(x.service,undefined,undefined,{remoteProvider:x.provider});
+  try {
+   const deliveryRef=`refs/heads/monos/task/${x.f.task}/${x.resource}`;
+   expect(x.push.delivery_ref).toBe(deliveryRef);
+   const remote=await app.inject({method:'GET',url:`/v1/owner/tasks/${x.f.task}/remote-preparation`,headers:{authorization:'Bearer '+x.token}});
+   expect(remote.statusCode).toBe(200);
+   expect(JSON.stringify(remote.json())).toContain(deliveryRef);
+   const delivery=await app.inject({method:'GET',url:`/v1/owner/tasks/${x.f.task}/delivery`,headers:{authorization:'Bearer '+x.token}});
+   expect(delivery.statusCode).toBe(200);
+   expect(delivery.json()).toMatchObject({task_id:x.f.task,accept_allowed:true});
+   expect(x.calls.filter(c=>c.method!=='GET')).toEqual([]);
+  }finally{await app.close();await x.close();}
+ });
  it('resumes bounded checks across turns without partial success and marks retained evidence stale on unavailable refresh',async()=>{
   const x=await remoteFixture();try {
    await x.claim();x.state.head=x.push.prepared.candidate!.head;await x.remote.finish(x.f.runner,x.f.incarnation,x.result('published',true));await x.due();await x.remote.pump();x.state.checks=600;

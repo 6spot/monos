@@ -14332,9 +14332,7 @@
           "pattern": "^[1-9][0-9]{0,15}$"
         },
         "delivery_ref": {
-          "type": "string",
-          "pattern": "^refs/heads/monos/task/[0-9a-f-]{36}/[0-9a-f-]{36}$",
-          "maxLength": 128
+          "$ref": "#/definitions/DeliveryRef"
         },
         "status": {
           "type": "string",
@@ -14515,9 +14513,7 @@
           "pattern": "^[1-9][0-9]{0,15}$"
         },
         "delivery_ref": {
-          "type": "string",
-          "pattern": "^refs/heads/monos/task/[0-9a-f-]{36}/[0-9a-f-]{36}$",
-          "maxLength": 128
+          "$ref": "#/definitions/DeliveryRef"
         },
         "candidate": {
           "$ref": "#/definitions/PublicationCandidateManifest"
@@ -14724,9 +14720,7 @@
           "maxLength": 2048
         },
         "delivery_ref": {
-          "type": "string",
-          "pattern": "^refs/heads/monos/task/[0-9a-f-]{36}/[0-9a-f-]{36}$",
-          "maxLength": 128
+          "$ref": "#/definitions/DeliveryRef"
         },
         "target_branch": {
           "type": "string",
@@ -14840,9 +14834,7 @@
           "$ref": "#/definitions/SHA256"
         },
         "delivery_ref": {
-          "type": "string",
-          "pattern": "^refs/heads/monos/task/[0-9a-f-]{36}/[0-9a-f-]{36}$",
-          "maxLength": 128
+          "$ref": "#/definitions/DeliveryRef"
         },
         "candidate_head": {
           "$ref": "#/definitions/GitOID"
@@ -15098,9 +15090,7 @@
           "pattern": "^[1-9][0-9]{0,15}$"
         },
         "delivery_ref": {
-          "type": "string",
-          "pattern": "^refs/heads/monos/task/[0-9a-f-]{36}/[0-9a-f-]{36}$",
-          "maxLength": 128
+          "$ref": "#/definitions/DeliveryRef"
         },
         "candidate_head": {
           "$ref": "#/definitions/GitOID"
@@ -15643,9 +15633,7 @@
           "pattern": "^[1-9][0-9]{0,15}$"
         },
         "delivery_ref": {
-          "type": "string",
-          "pattern": "^refs/heads/monos/task/[0-9a-f-]{36}/[0-9a-f-]{36}$",
-          "maxLength": 128
+          "$ref": "#/definitions/DeliveryRef"
         },
         "target_branch": {
           "type": "string",
@@ -16103,9 +16091,7 @@
           "maxLength": 2048
         },
         "delivery_ref": {
-          "type": "string",
-          "pattern": "^refs/heads/monos/task/[0-9a-f-]{36}/[0-9a-f-]{36}$",
-          "maxLength": 128
+          "$ref": "#/definitions/DeliveryRef"
         },
         "target_branch": {
           "type": "string",
@@ -16451,9 +16437,7 @@
           "pattern": "^[^\\x00]*$"
         },
         "delivery_ref": {
-          "type": "string",
-          "pattern": "^refs/heads/monos/task/[0-9a-f-]{36}/[0-9a-f-]{36}$",
-          "maxLength": 128
+          "$ref": "#/definitions/DeliveryRef"
         },
         "marker": {
           "type": "string",
@@ -19488,6 +19472,11 @@
         "specification_id",
         "plan_id"
       ]
+    },
+    "DeliveryRef": {
+      "type": "string",
+      "pattern": "^refs/heads/monos/task/[0-9a-f-]{36}/[A-Za-z0-9_-]{1,128}$",
+      "maxLength": 187
     }
   }
 }

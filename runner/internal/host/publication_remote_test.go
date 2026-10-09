@@ -34,9 +34,12 @@ func publicationPushTestFixture(t *testing.T) *publicationPushFixture {
 	return publicationPushTestFixtureAt(t, "")
 }
 func publicationPushTestFixtureAt(t *testing.T, evidence string) *publicationPushFixture {
+	return publicationPushTestFixtureForResource(t, evidence, "22222222-2222-4222-8222-222222222222")
+}
+func publicationPushTestFixtureForResource(t *testing.T, evidence, resourceID string) *publicationPushFixture {
 	t.Helper()
 	f, r, _ := publicationPrepareFixture(t)
-	r.Source.ResourceID = "22222222-2222-4222-8222-222222222222"
+	r.Source.ResourceID = resourceID
 	r.Source.RepositoryIdentity = "github.com/example/repository"
 	r.SourceDigest = publicationDigest(r.Source)
 	r.Construction.SourceDigest = r.SourceDigest
@@ -126,6 +129,24 @@ func (f *publicationPushFixture) ack(t *testing.T, result protocol.PublicationPu
 func (f *publicationPushFixture) proof(result protocol.PublicationPushResult) protocol.PublicationPublishedProof {
 	r := f.request
 	return protocol.PublicationPublishedProof{SchemaVersion: 1, OperationID: r.OperationID, RequestDigest: publicationDigest(r), ResultDigest: publicationDigest(result), ItemID: r.ItemID, TaskID: r.TaskID, ResourceID: r.ResourceID, RunnerID: r.RunnerID, StorageID: r.StorageID, RepositoryIdentity: r.RepositoryIdentity, RepositoryID: r.RepositoryID, DeliveryRef: r.DeliveryRef, Candidate: *r.Prepared.Candidate, CandidateManifestDigest: *r.Prepared.CandidateManifestDigest, Observation: result.Observation, ObservationDigest: result.ObservationDigest}
+}
+
+func TestRemotePreparationNamedResourceRef(t *testing.T) {
+	f := publicationPushTestFixtureForResource(t, "", "Delivery_Acceptance-repo-v1")
+	crossed := f.request
+	crossed.DeliveryRef = "refs/heads/monos/task/" + crossed.TaskID + "/other-resource"
+	if ValidatePublicationPushRequest(crossed) == nil {
+		t.Fatal("crossed resource ref accepted")
+	}
+	result, err := f.run(context.Background())
+	if err != nil || result.Status != "published" || !result.WorkerAbsent || f.pushes.Load() != 1 {
+		t.Fatalf("named resource push failed: %v %+v", err, result)
+	}
+	raw := resultTestGit(t, f.remote, nil, "rev-parse", "--verify", f.request.DeliveryRef)
+	if strings.TrimSpace(raw) != f.request.Prepared.Candidate.Head {
+		t.Fatal("named resource ref did not publish the exact candidate")
+	}
+	f.ack(t, result)
 }
 
 func TestRemotePreparationDurablePushEffectLossAndACKReplay(t *testing.T) {

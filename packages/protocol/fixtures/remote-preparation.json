@@ -6025,6 +6025,279 @@
         "findings_digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
         "workflow_changes": "false"
       }
+    },
+    {
+      "schema": "PublicationRefObservation",
+      "valid": true,
+      "name": "delivery ref named resource",
+      "value": {
+        "schema_version": 1,
+        "observation_id": "30000000-0000-4000-8000-000000000004",
+        "operation_id": "30000000-0000-4000-8000-000000000003",
+        "item_id": "30000000-0000-4000-8000-000000000001",
+        "task_id": "30000000-0000-4000-8000-000000000090",
+        "resource_id": "delivery-acceptance-repo-v1",
+        "runner_id": "runner_id",
+        "storage_id": "storage_id",
+        "repository_identity": "github.com/example/result",
+        "repository_id": "42",
+        "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/delivery-acceptance-repo-v1",
+        "status": "present",
+        "head": "dddddddddddddddddddddddddddddddddddddddd",
+        "observed_at": "2026-10-04T12:00:00.000Z"
+      }
+    },
+    {
+      "schema": "PublicationRefObservation",
+      "valid": true,
+      "name": "delivery ref uppercase and underscore resource",
+      "value": {
+        "schema_version": 1,
+        "observation_id": "30000000-0000-4000-8000-000000000004",
+        "operation_id": "30000000-0000-4000-8000-000000000003",
+        "item_id": "30000000-0000-4000-8000-000000000001",
+        "task_id": "30000000-0000-4000-8000-000000000090",
+        "resource_id": "Repo_A-1",
+        "runner_id": "runner_id",
+        "storage_id": "storage_id",
+        "repository_identity": "github.com/example/result",
+        "repository_id": "42",
+        "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/Repo_A-1",
+        "status": "present",
+        "head": "dddddddddddddddddddddddddddddddddddddddd",
+        "observed_at": "2026-10-04T12:00:00.000Z"
+      }
+    },
+    {
+      "schema": "PublicationRefObservation",
+      "valid": true,
+      "name": "delivery ref minimum resource",
+      "value": {
+        "schema_version": 1,
+        "observation_id": "30000000-0000-4000-8000-000000000004",
+        "operation_id": "30000000-0000-4000-8000-000000000003",
+        "item_id": "30000000-0000-4000-8000-000000000001",
+        "task_id": "30000000-0000-4000-8000-000000000090",
+        "resource_id": "_",
+        "runner_id": "runner_id",
+        "storage_id": "storage_id",
+        "repository_identity": "github.com/example/result",
+        "repository_id": "42",
+        "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/_",
+        "status": "present",
+        "head": "dddddddddddddddddddddddddddddddddddddddd",
+        "observed_at": "2026-10-04T12:00:00.000Z"
+      }
+    },
+    {
+      "schema": "PublicationRefObservation",
+      "valid": true,
+      "name": "delivery ref maximum resource",
+      "value": {
+        "schema_version": 1,
+        "observation_id": "30000000-0000-4000-8000-000000000004",
+        "operation_id": "30000000-0000-4000-8000-000000000003",
+        "item_id": "30000000-0000-4000-8000-000000000001",
+        "task_id": "30000000-0000-4000-8000-000000000090",
+        "resource_id": "RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR",
+        "runner_id": "runner_id",
+        "storage_id": "storage_id",
+        "repository_identity": "github.com/example/result",
+        "repository_id": "42",
+        "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR",
+        "status": "present",
+        "head": "dddddddddddddddddddddddddddddddddddddddd",
+        "observed_at": "2026-10-04T12:00:00.000Z"
+      }
+    },
+    {
+      "schema": "PublicationRefObservation",
+      "valid": false,
+      "name": "delivery ref overlong resource",
+      "value": {
+        "schema_version": 1,
+        "observation_id": "30000000-0000-4000-8000-000000000004",
+        "operation_id": "30000000-0000-4000-8000-000000000003",
+        "item_id": "30000000-0000-4000-8000-000000000001",
+        "task_id": "30000000-0000-4000-8000-000000000090",
+        "resource_id": "valid-resource",
+        "runner_id": "runner_id",
+        "storage_id": "storage_id",
+        "repository_identity": "github.com/example/result",
+        "repository_id": "42",
+        "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR",
+        "status": "present",
+        "head": "dddddddddddddddddddddddddddddddddddddddd",
+        "observed_at": "2026-10-04T12:00:00.000Z"
+      }
+    },
+    {
+      "schema": "PublicationRefObservation",
+      "valid": false,
+      "name": "delivery ref empty resource",
+      "value": {
+        "schema_version": 1,
+        "observation_id": "30000000-0000-4000-8000-000000000004",
+        "operation_id": "30000000-0000-4000-8000-000000000003",
+        "item_id": "30000000-0000-4000-8000-000000000001",
+        "task_id": "30000000-0000-4000-8000-000000000090",
+        "resource_id": "valid-resource",
+        "runner_id": "runner_id",
+        "storage_id": "storage_id",
+        "repository_identity": "github.com/example/result",
+        "repository_id": "42",
+        "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/",
+        "status": "present",
+        "head": "dddddddddddddddddddddddddddddddddddddddd",
+        "observed_at": "2026-10-04T12:00:00.000Z"
+      }
+    },
+    {
+      "schema": "PublicationRefObservation",
+      "valid": false,
+      "name": "delivery ref path traversal",
+      "value": {
+        "schema_version": 1,
+        "observation_id": "30000000-0000-4000-8000-000000000004",
+        "operation_id": "30000000-0000-4000-8000-000000000003",
+        "item_id": "30000000-0000-4000-8000-000000000001",
+        "task_id": "30000000-0000-4000-8000-000000000090",
+        "resource_id": "valid-resource",
+        "runner_id": "runner_id",
+        "storage_id": "storage_id",
+        "repository_identity": "github.com/example/result",
+        "repository_id": "42",
+        "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/../repo",
+        "status": "present",
+        "head": "dddddddddddddddddddddddddddddddddddddddd",
+        "observed_at": "2026-10-04T12:00:00.000Z"
+      }
+    },
+    {
+      "schema": "PublicationRefObservation",
+      "valid": false,
+      "name": "delivery ref extra segment",
+      "value": {
+        "schema_version": 1,
+        "observation_id": "30000000-0000-4000-8000-000000000004",
+        "operation_id": "30000000-0000-4000-8000-000000000003",
+        "item_id": "30000000-0000-4000-8000-000000000001",
+        "task_id": "30000000-0000-4000-8000-000000000090",
+        "resource_id": "valid-resource",
+        "runner_id": "runner_id",
+        "storage_id": "storage_id",
+        "repository_identity": "github.com/example/result",
+        "repository_id": "42",
+        "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/repo/other",
+        "status": "present",
+        "head": "dddddddddddddddddddddddddddddddddddddddd",
+        "observed_at": "2026-10-04T12:00:00.000Z"
+      }
+    },
+    {
+      "schema": "PublicationRefObservation",
+      "valid": false,
+      "name": "delivery ref dot lock",
+      "value": {
+        "schema_version": 1,
+        "observation_id": "30000000-0000-4000-8000-000000000004",
+        "operation_id": "30000000-0000-4000-8000-000000000003",
+        "item_id": "30000000-0000-4000-8000-000000000001",
+        "task_id": "30000000-0000-4000-8000-000000000090",
+        "resource_id": "valid-resource",
+        "runner_id": "runner_id",
+        "storage_id": "storage_id",
+        "repository_identity": "github.com/example/result",
+        "repository_id": "42",
+        "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/repo.lock",
+        "status": "present",
+        "head": "dddddddddddddddddddddddddddddddddddddddd",
+        "observed_at": "2026-10-04T12:00:00.000Z"
+      }
+    },
+    {
+      "schema": "PublicationRefObservation",
+      "valid": false,
+      "name": "delivery ref colon",
+      "value": {
+        "schema_version": 1,
+        "observation_id": "30000000-0000-4000-8000-000000000004",
+        "operation_id": "30000000-0000-4000-8000-000000000003",
+        "item_id": "30000000-0000-4000-8000-000000000001",
+        "task_id": "30000000-0000-4000-8000-000000000090",
+        "resource_id": "valid-resource",
+        "runner_id": "runner_id",
+        "storage_id": "storage_id",
+        "repository_identity": "github.com/example/result",
+        "repository_id": "42",
+        "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/repo:other",
+        "status": "present",
+        "head": "dddddddddddddddddddddddddddddddddddddddd",
+        "observed_at": "2026-10-04T12:00:00.000Z"
+      }
+    },
+    {
+      "schema": "PublicationRefObservation",
+      "valid": false,
+      "name": "delivery ref control character",
+      "value": {
+        "schema_version": 1,
+        "observation_id": "30000000-0000-4000-8000-000000000004",
+        "operation_id": "30000000-0000-4000-8000-000000000003",
+        "item_id": "30000000-0000-4000-8000-000000000001",
+        "task_id": "30000000-0000-4000-8000-000000000090",
+        "resource_id": "valid-resource",
+        "runner_id": "runner_id",
+        "storage_id": "storage_id",
+        "repository_identity": "github.com/example/result",
+        "repository_id": "42",
+        "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/repo\n",
+        "status": "present",
+        "head": "dddddddddddddddddddddddddddddddddddddddd",
+        "observed_at": "2026-10-04T12:00:00.000Z"
+      }
+    },
+    {
+      "schema": "PublicationRefObservation",
+      "valid": false,
+      "name": "delivery ref keeps task constraint",
+      "value": {
+        "schema_version": 1,
+        "observation_id": "30000000-0000-4000-8000-000000000004",
+        "operation_id": "30000000-0000-4000-8000-000000000003",
+        "item_id": "30000000-0000-4000-8000-000000000001",
+        "task_id": "30000000-0000-4000-8000-000000000090",
+        "resource_id": "valid-resource",
+        "runner_id": "runner_id",
+        "storage_id": "storage_id",
+        "repository_identity": "github.com/example/result",
+        "repository_id": "42",
+        "delivery_ref": "refs/heads/monos/task/task-name/repo",
+        "status": "present",
+        "head": "dddddddddddddddddddddddddddddddddddddddd",
+        "observed_at": "2026-10-04T12:00:00.000Z"
+      }
+    },
+    {
+      "schema": "PublicationRefObservation",
+      "valid": false,
+      "name": "delivery ref keeps namespace",
+      "value": {
+        "schema_version": 1,
+        "observation_id": "30000000-0000-4000-8000-000000000004",
+        "operation_id": "30000000-0000-4000-8000-000000000003",
+        "item_id": "30000000-0000-4000-8000-000000000001",
+        "task_id": "30000000-0000-4000-8000-000000000090",
+        "resource_id": "valid-resource",
+        "runner_id": "runner_id",
+        "storage_id": "storage_id",
+        "repository_identity": "github.com/example/result",
+        "repository_id": "42",
+        "delivery_ref": "refs/tags/monos/task/30000000-0000-4000-8000-000000000090/repo",
+        "status": "present",
+        "head": "dddddddddddddddddddddddddddddddddddddddd",
+        "observed_at": "2026-10-04T12:00:00.000Z"
+      }
     }
   ]
 }

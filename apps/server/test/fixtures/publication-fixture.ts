@@ -3,7 +3,7 @@ import { PublicationPreparation } from '../../src/publication-candidates.ts';
 import { publicationDigest as hash } from '../../src/publication-policy.ts';
 import { canonicalJSON,validate } from '../../../../packages/protocol/src/index.ts';
 import type { PublicationPrepareRequest,PublicationCandidateManifest,PublicationFinding,PublicationResult,PublicationResultPage } from '../../../../packages/protocol/src/index.ts';
-export async function publicationFixture(options:{runnerCredential?:string}={}) {
+export async function publicationFixture(options:{runnerCredential?:string;resourceId?:string}={}) {
  const x=await resultReadFixture(options);
  try {
   const preparation=new PublicationPreparation(x.db,x.service.instanceId);

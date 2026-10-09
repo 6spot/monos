@@ -27,6 +27,8 @@ type TaskListCursor string
 
 type ResultPath string
 
+type DeliveryRef string
+
 type CommandEnvelope struct {
 	ExpectedControlVersion int64               `json:"expected_control_version"`
 	Name                   CommandEnvelopeName `json:"name"`

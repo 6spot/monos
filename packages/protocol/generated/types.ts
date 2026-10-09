@@ -25,6 +25,8 @@ type TaskListCursor = string;
 
 type ResultPath = string;
 
+type DeliveryRef = string;
+
 export interface CommandEnvelope {
     expected_control_version: number;
     name:                     CommandEnvelopeName;

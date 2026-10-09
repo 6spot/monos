@@ -64,11 +64,15 @@ item is necessary; settled uncertain pushes also require item-level fencing.
 ### Exact scope and new-effect admission
 
 An item permanently binds Task/resource/repository/Runner/storage, fixed target,
-`refs/heads/monos/task/<Task UUID>/<resource UUID>` and
+`refs/heads/monos/task/<Task UUID>/<resource ID>` and
 `<!-- monos-delivery-item:<item UUID> -->`. Numeric repository IDs must be
 canonical positive safe decimal integers before credential issuance. An existing
 PR also binds exact numeric PR identity, repository, head ref, base ref and marker.
 Closed/merged/foreign/ambiguous reviews never authorize replacement or reopening.
+The resource segment uses the existing `Id` alphabet `[A-Za-z0-9_-]` and length
+`1..128`; it is not restricted to UUIDs. Shared `DeliveryRef` validation preserves
+the Task segment constraint and fixed namespace. Producers derive the exact ref
+from Task/resource identity, and database/Runner guards compare that same ref.
 
 Before every ordinary mutation, and again after token I/O, require settled REVIEW,
 exact current original result/carry and effective Spec/Plan, finalized local
