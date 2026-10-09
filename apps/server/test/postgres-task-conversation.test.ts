@@ -4,6 +4,8 @@ import { conversationFixture } from './fixtures/task-conversation-fixture.ts';
 import { submission } from '../../../packages/protocol/src/index.ts';
 import { BoundaryService } from '../src/service.ts';
 import { Configuration } from '../src/configuration.ts';
+import { OwnerDeliveryCommands } from '../src/owner-delivery-commands.ts';
+import type { OwnerDeliveryCommand } from '../../../packages/protocol/src/index.ts';
 
 describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')(
   'ordered Task conversation',
@@ -54,6 +56,55 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')(
       });
       expect((await x.conversation.messages(x.token, x.f.task)).messages[0]?.disposition).toBe('withdrawn');
       expect(await x.version()).toBe(1);
+    });
+    it('progress reply preserves the running Node and records its observation without creating revisions', async () => {
+      await x.start();
+      const node = await x.node();
+      // Normalized fake Runner event: this test proves canonical continuity, not native liveness.
+      await x.service.event(x.f.runner, x.f.incarnation, {
+        attempt_id: node.dispatch.attempt_id, dispatch_id: node.dispatch.dispatch_id,
+        stream_id: 'lifecycle', sequence: 1, order_sequence: 1,
+        boot_id: 'progress-test', kind: 'started', text: '',
+      });
+      const executionFacts = async () => (await x.db.pool.query(`SELECT
+        (SELECT jsonb_build_object('state',state,'control_version',control_version,
+          'specification_id',specification_id,'plan_id',plan_id) FROM tasks WHERE id=$1) task,
+        (SELECT to_jsonb(n) FROM nodes n WHERE id=$2) node,
+        (SELECT to_jsonb(a) FROM attempts a WHERE id=$3) attempt,
+        (SELECT jsonb_agg(o ORDER BY id) FROM outbox o WHERE attempt_id=$3) outbox,
+        (SELECT jsonb_agg(s ORDER BY id) FROM specification_revisions s WHERE task_id=$1) specifications,
+        (SELECT jsonb_agg(p ORDER BY id) FROM plan_revisions p WHERE task_id=$1) plans,
+        (SELECT count(*) FROM node_execution_outbox WHERE task_id=$1) node_sources,
+        (SELECT count(*) FROM operations WHERE attempt_id=$3) node_operations,
+        (SELECT count(*) FROM task_guidance_obligations WHERE task_id=$1) guidance,
+        (SELECT count(*) FROM requirement_proposals WHERE task_id=$1) proposals`,
+      [x.f.task, x.f.node, node.dispatch.attempt_id])).rows[0];
+      const before = await executionFacts();
+      expect(before.task.state).toBe('RUNNING');
+      expect(before.node.state).toBe('RUNNING');
+      expect(before.attempt).toMatchObject({ started: true, mutation_allowed: true, process_released: false });
+      const input = await x.send('What is the current progress?');
+      const turn = await x.turn();
+      const source = (await x.db.pool.query('SELECT context FROM task_conversation_outbox WHERE id=$1',
+        [turn.dispatch.task_conversation_source!.source_id])).rows[0];
+      expect(JSON.parse(source.context.observation.snapshot).nodes).toEqual([
+        expect.objectContaining({ id: x.f.node, state: 'RUNNING', execution_source_id: node.dispatch.node_execution_source!.source_id }),
+      ]);
+      const reply = await x.reply(turn);
+      await x.finish(reply.operation_id!, turn.dispatch.attempt_id);
+      await x.conversation.pump();
+      await x.execution.pump();
+      expect(await executionFacts()).toEqual(before);
+      const message = (await x.db.pool.query("SELECT source_id, observed_control_version, observed_at FROM task_messages WHERE input_id=$1 AND author='assistant'",
+        [input.input_id])).rows[0];
+      expect(message.source_id).toBe(turn.dispatch.task_conversation_source!.source_id);
+      expect(Number(message.observed_control_version)).toBe(source.context.observation.basis.control_version);
+      expect(message.observed_at.toISOString()).toBe(source.context.observation.observed_at);
+      expect(await x.queue.promoteNext(x.f.runner, x.service.instanceId, x.f.incarnation)).toBeNull();
+      // The original credential/source still admits completion after the progress-only reply.
+      const completion = await x.agent(node, 'complete_node', { summary: 'Same Node continued after the progress reply' });
+      await x.finish(completion.operation_id!, node.dispatch.attempt_id);
+      expect((await x.db.pool.query('SELECT state FROM tasks WHERE id=$1', [x.f.task])).rows[0].state).toBe('REVIEW');
     });
     it('reply survives unrelated Node progress; stale action is atomic and correctable', async () => {
       await x.start();
@@ -337,11 +388,25 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')(
       },
       30000,
     );
-    it('terminal and accepted-cutoff input remain reply-only; proposal alone is not acceptance', async () => {
-      await x.db.pool.query(
-        'UPDATE tasks SET accepted_delivery_operation_id=$2,accepted_delivery_input_cutoff=0 WHERE id=$1',
-        [x.f.task, 'future-delivery-fixture'],
-      );
+    it('a genuinely accepted repository-free Task keeps later input reply-only', async () => {
+      await x.start();
+      const node = await x.node();
+      const completion = await x.agent(node, 'complete_node', { summary: 'Repository-free result' });
+      await x.finish(completion.operation_id!, node.dispatch.attempt_id);
+      const commands = new OwnerDeliveryCommands(x.db);
+      const delivery = (name: OwnerDeliveryCommand['name'], payload: OwnerDeliveryCommand['payload']) =>
+        commands.command(x.token, { schema_version: 1, request_id: randomUUID(), task_id: x.f.task, name, payload });
+      const basis = { control_version: await x.version(), specification_id: x.f.spec, plan_id: x.f.plan };
+      const proposal = await delivery('prepare_delivery_acceptance', { basis });
+      const confirmation = await delivery('confirm_delivery_acceptance', {
+        proposal_id: proposal.proposal_id, content_digest: proposal.content_digest,
+      });
+      const accepted = await delivery('accept_delivery', {
+        proposal_id: proposal.proposal_id, content_digest: proposal.content_digest,
+        confirmation_id: confirmation.confirmation_id, basis,
+      });
+      expect((await x.db.pool.query('SELECT state, accepted_delivery_operation_id FROM tasks WHERE id=$1', [x.f.task])).rows[0])
+        .toEqual({ state: 'COMPLETED', accepted_delivery_operation_id: accepted.operation_id });
       await x.send('new request');
       const t = await x.turn();
       expect(t.dispatch.task_conversation_source!.reply_only).toBe(true);

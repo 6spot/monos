@@ -1,0 +1,115 @@
+{
+  "date": "2026-10-10",
+  "timezone": "Asia/Singapore",
+  "base_commit": "ae7bbd7",
+  "result": "pass",
+  "scope": "A25, C02, C03 and E01 focused control-layer acceptance; no product or installed changes",
+  "environment": {
+    "node": "26.3.0",
+    "pnpm": "12.6.0",
+    "postgresql": "17.11",
+    "platform": "macOS",
+    "database": "isolated temporary local cluster; unique per-test schemas"
+  },
+  "checks": [
+    {
+      "command": "pnpm exec vitest run apps/server/test/postgres-task-conversation.test.ts",
+      "database_tests_enabled": true,
+      "passed": 18,
+      "failed": 0,
+      "duration_seconds": 8.44,
+      "executor": "main"
+    },
+    {
+      "command": "pnpm exec vitest run apps/server/test/postgres-task-conversation-process.test.ts apps/server/test/postgres-task-specification-inputs.test.ts",
+      "database_tests_enabled": true,
+      "passed": 13,
+      "failed": 0,
+      "duration_seconds": 5.77,
+      "executor": "main"
+    },
+    {
+      "command": "pnpm exec vitest run apps/server/test/postgres-runner-roots.test.ts",
+      "database_tests_enabled": true,
+      "passed": 1,
+      "failed": 0,
+      "duration_seconds": 2.16,
+      "executor": "runner_roots worker; unchanged inputs reused"
+    },
+    {
+      "command": "pnpm exec eslint <five TypeScript files in inputs> --max-warnings 0",
+      "result": "pass",
+      "execution": "scoped groups by assigned owner"
+    },
+    {
+      "command": "pnpm exec tsc --noEmit",
+      "result": "pass",
+      "executor": "main"
+    }
+  ],
+  "inputs": [
+    {
+      "path": "apps/server/test/postgres-task-conversation.test.ts",
+      "sha256": "0836dfe5a0667ec99fbb42041faea058520cebb590730bc6190294eb68b23d83"
+    },
+    {
+      "path": "apps/server/test/postgres-task-conversation-process.test.ts",
+      "sha256": "bb9b014874f0ea4f65eda0278e929dbcd20dd2e5205f46e30863c82096abe7b1"
+    },
+    {
+      "path": "apps/server/test/postgres-task-specification-inputs.test.ts",
+      "sha256": "8557ccf11e7127e30915777174beaa03dbea8d802d22ba21163882f29349b8de"
+    },
+    {
+      "path": "apps/server/test/postgres-runner-roots.test.ts",
+      "sha256": "4be0074b2db3ff47cc6da5d1df6df8dd03b0a9589bb6e2f258f7c418f5c1583b"
+    },
+    {
+      "path": "apps/server/test/fixtures/rooted-runner.ts",
+      "sha256": "e4d82278ee05b342dc827c739247791dd69cbe60bc8e91251ca34e258a0369a3"
+    },
+    {
+      "path": "package.json",
+      "sha256": "afbf5f1343ef9fae8b1a6a9434d035d67921d5ce3c6de8f7343215996808765e"
+    }
+  ],
+  "review": {
+    "independent": [
+      "A25",
+      "accepted-delivery fixture repair",
+      "E01"
+    ],
+    "main": [
+      "C02",
+      "C03",
+      "integrated inputs and checks"
+    ],
+    "findings_remaining": []
+  },
+  "prior_failures": [
+    {
+      "scope": "conversation suite",
+      "passed": 17,
+      "failed": 1,
+      "reason": "obsolete fixture attempted to install fabricated accepted-delivery pointer",
+      "resolution": "real prepare/confirm/accept Owner commands"
+    },
+    {
+      "scope": "C02/C03 suites",
+      "passed": 12,
+      "failed": 1,
+      "reason": "reconnect fixture omitted Runtime observation for current Runner incarnation",
+      "resolution": "report existing Runtime with service.touch after reconnect"
+    }
+  ],
+  "remaining_partial": [
+    "A06",
+    "A30"
+  ],
+  "limitations": [
+    "Normalized Runner events and settlement declarations are fixtures, not native physical absence proof.",
+    "E01 tests real processes/roots and backend admission, not Go daemon isolation or workspace transfer.",
+    "No new model, deployed service, browser or provider verification.",
+    "Stage A and V1 remain open."
+  ]
+}

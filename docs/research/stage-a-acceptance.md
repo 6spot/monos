@@ -20,8 +20,9 @@ checklist changes are made here.
 boundary at its own revision. It does not mean the whole case was repeated on
 the latest build. **Partial** identifies an exact observation or evidence link
 not established by this bounded audit; it is not automatically a product defect
-or a request for a new native trial. Current test files cited as locators were
-read, not executed by this audit.
+or a request for a new native trial. Test files cited by the original locator audit were read, not executed. The
+subsequent [focused gap checks][gap-checks] record their own executed tests and
+updated input hashes.
 
 ### Revision and environment boundaries
 
@@ -38,7 +39,9 @@ read, not executed by this audit.
 The free-only v2 cold-catalog and formal-reply continuation is now recorded
 separately above. The historical native delivery report still claims neither a
 policy switch nor free-model delivery. Its paid-model execution is not relabelled
-as free-model acceptance. The new reply does not close the partial cases below.
+as free-model acceptance. The new reply does not close the observation gaps by itself. The subsequent
+[focused gap checks][gap-checks] supply A25, C02, C03 and E01 at their explicit
+PostgreSQL/process/fake-Runner boundaries; A06 and A30 remain partial.
 
 ### Main matrix: capture, execution and recovery
 
@@ -62,7 +65,7 @@ IDs follow the 34 Module 09 exercise rows in order.
 | A14 Completion stops caller; old credential expires | **Mapped:** [Probe][probe] fresh stopped handoffs and scoped expired-grant recovery; no renewed Agent mutation authority. |
 | A15 Planner CLI under read-only repository access | **Mapped at the recorded Runtime profile:** [Probe][probe] native 160,000-character submission, socket/HTTPS, scratch, and snapshot write/chmod/rename denial. Later [Execution][execution] retains Planner source/context and no writable workspace. The old v1 smoke is not a new v2 long-payload/DAC trial. |
 | A20 Remove opaque session before Retry | **Mapped for the observable fresh-context contract:** [Execution][execution] binds actual same-Node/activation Retry to a new source, independently recomputed context/prompt and successful native completion. [Planning tests][planning-tests] retain multiple exact answers in a fresh prompt and exclude other Task/Todo context; [Node tests][node-tests] preserve activation, carry the exact recovery answer and prevent overlap. The supported fresh-run path does not require a prior Runtime session. A literal deletion setup was not performed/located and is not claimed. See the exact checkpoint below. |
-| A25 Progress question while Node runs | **Partial:** [conversation tests][conversation-tests]:58 sends `status` while a Node runs, then completes the Node, rejects stale guidance and accepts a reply without changing control version. This is a reply across completion, not proof of an uninterrupted live Node after a progress-only reply. [Conversation][conversation] native guidance stops its Node; that native-specific observation remains unlocated. |
+| A25 Progress question while Node runs | **Mapped:** [Focused gap checks][gap-checks] exercise a started Node and an overlapping progress-only Conversation reply in real PostgreSQL. Exact observation provenance is retained; Node/source/Attempt/Start, control, Spec/Plan and mutation authority are unchanged, and the original credential then completes the same Node. This is canonical continuity with normalized fake Runner events, not a new native liveness trial. |
 | A26 Change requirements during execution, then restart | **Mapped:** [Spec review][spec] native exact proposal/publication, physical old-writer settlement, retained same activation/workspace and fresh execution; backend/Runner restart persistence. [Replan review][replan] supplies confirmed replacement-Node lineage. Those restart trials are idle after settlement, not live-change restart claims. |
 | A27 Input while Planner busy or Node completes | **Mapped:** [Conversation][conversation] ordered native input plus real PG guidance/completion orderings; [Delivery][delivery] and [Correction][correction] accepted cutoff and reply-only/reconsidered input guards. |
 | A29 Chat before Start, stopped or terminal | **Mapped:** [Conversation][conversation] native pre-Start replies, stopped conversation without implicit resume and terminal Stop/Retry/Withdraw followed by one formal reply. [Native][native] adds accepted late conversation. |
@@ -94,8 +97,8 @@ IDs follow Module 09's nine closure bullets; none is replaced by a blanket
 | Case | Evidence and limit |
 | --- | --- |
 | C01 Joint replacement Plan/Spec, new Node, preserved workspace | **Mapped:** [Replan review][replan] exact standalone/joint publication, unfinished/completed private-work inheritance and new Node's own completion. |
-| C02 Prepared proposal then crash before canonical reply | **Partial:** [Spec tests][spec-tests]:19 rejects draft confirmation, then attaches/commits one proposal and replays exact application once. [conversation process tests][conversation-process-tests]:90 sends real SIGKILL before/after reply COMMIT and checks zero/one receipts, resolutions and Stop ownership, but its routing is guidance and it does not retry a prepared requirement draft. These accepted component checks do not establish the exact prepared-proposal→crash→same-input Retry chain. |
-| C03 Progress during confirmation/settlement without holding publication lock | **Partial, with confirmation branch located:** [Spec input tests][spec-input-tests]:19 sends `What changed?` after a canonical proposal, reads the exact proposed Specification from Task context, commits a reply, verifies the proposal remains, then successfully confirms/applies it. That establishes reply-before-confirmation continuity. A reply while already settling, with explicit observation provenance/publication-lock noninterference, remains unlocated; the separate fairness case at :29 is not that scenario. |
+| C02 Prepared proposal then crash before canonical reply | **Mapped:** [Focused gap checks][gap-checks] prepare a real draft through Tool Protocol admission, then kill an independent backend process immediately before/after proposal-reply COMMIT. Before COMMIT the retained draft is unconfirmable; Owner Stop and trusted fixture settlement permit same-input Retry with a fresh source and proposal. Both branches end with exactly one canonical reply, attachment and eligible proposal; receipt replay cannot duplicate them. Process death is real; Runner absence is a trusted test fixture. |
+| C03 Progress during confirmation/settlement without holding publication lock | **Mapped:** [Spec input tests][spec-input-tests] retain the confirmation branch. [Focused gap checks][gap-checks] add a settling change with an unreleased writer, hold its exact publication-slot row lock, observe another PostgreSQL connection blocked on that row, and complete a progress reply while the lock remains held. Reply provenance is exact; change/slot/Spec/Plan/authorization remain intact. Only original Stop settlement enables one publication. This does not claim a native writer or model run. |
 | C04 Withdraw admitted change after writers stop | **Mapped:** [Spec tests][spec-tests] withdrawal retains old effective Spec and fresh eligible work; Owner Stop remains explicit. [Replan review][replan] independently withdraws requirements without dismissing the graph request. [Correction][correction] preserves revoked acceptance rather than resurrecting it. |
 | C05 Guidance immediately before/after completion | **Mapped:** [Conversation][conversation] accepted real PG/Runner ordering and native handled assignments; [conversation tests][conversation-tests] retain frozen manifest and one follow-up activation. Delivered-but-unhandled is not completion evidence. |
 | C06 Withdraw failed input without Planner availability | **Mapped:** [Capture][capture] and [Conversation][conversation] Owner-only withdrawal, ordered advancement and settled old execution without model availability. |
@@ -107,7 +110,7 @@ IDs follow Module 09's nine closure bullets; none is replaced by a blanket
 
 | Guard | Evidence and limit |
 | --- | --- |
-| E01 Cardinalities, logical Runtime selection, two fake Runners/distinct roots, locality and stale dispatch | **Mapped control guards, remaining root-combination evidence:** [scheduling tests][scheduling-tests]:121 registers two fake Runners, rejects ambiguous Auto, then honors an explicit logical target/pin; :141 serializes Auto against another Runner becoming eligible. [dispatch tests][dispatch-tests]:108 claims one Runner and rejects movement to another, preserving canonical locality. [Probe][probe] AC1 separately proves disjoint backend/Runner roots and AC7 delayed revoked dispatch. These are the architectural control/placement guards, not a demand for actual multi-host transfer. A retained fixture combining both fake Runner identities with distinct filesystem roots is still unlocated. |
+| E01 Cardinalities, logical Runtime selection, two fake Runners/distinct roots, locality and stale dispatch | **Mapped:** [Focused gap checks][gap-checks] combine two child fake Runners with distinct real filesystem roots and authenticated backend WebSockets. Logical Auto, ambiguous placement refusal, explicit B selection, pinned Task locality, cross-Runner authorization denial and a revoked held Start all use the real scheduling/authorization paths. Markers bind process/root/Runner/Task/Attempt/dispatch and appear only after authorization. This proves the requested fixture control/placement boundary, not native permissions or workspace transfer. |
 | E02 Second backend cannot double-claim/oversubscribe or own one effect twice | **Mapped:** [Claims][claims] separate Node processes/PG sessions, four workers/capacity two and observed locks; [Dispatch][dispatch] one durable Start around COMMIT death; [Delivery][delivery] shared effect-claim exclusion and [Correction][correction] original-effect ordering. |
 | E03 Duplicate/reordered normalized transport events | **Mapped:** [Dispatch][dispatch] late/duplicate event behavior, [Probe][probe] duplicate/lost-ack/versioned channel recovery and [Runtime][runtime] durable ordered logs/reconnect. These do not establish multi-Runner failover. |
 
@@ -131,17 +134,18 @@ its reported Linux PG run passed 254 cases including lifecycle/process suites.
 The native terminal reply checkpoint in [independent review][conversation-review]
 retains original input `d474a359-a27c-4382-8d6c-e5932b142a86` and fresh Attempt
 `971c4dd3-8ec6-453f-86a2-84a5a90c3006`; it does not document the further-implementation
-handoff requested by A30. The process test last changed in
-`609e3925f57aa881448d9287453889e87ddcb28b`; current file SHA-256 is
+handoff requested by A30. At the original locator audit, the process test last changed in
+`609e3925f57aa881448d9287453889e87ddcb28b`; its then-recorded SHA-256 was
 `493262062fdb67aa85bdee067c472400e926c3df39316aaf2da33286afd48d84`.
 
-For C03, the located specification input test last changed in
-`f4114bff30c1f3c027f45f01f3461b86af787ea3`; current SHA-256 is
+For C03, at the original locator audit the specification input test last changed in
+`f4114bff30c1f3c027f45f01f3461b86af787ea3`; its then-recorded SHA-256 was
 `4f19b97f7c61d0bc1b2fafcc795a8083a0bb02e574411cb1fa57dcd036458417`.
 [Spec review][spec] binds the accepted installed v2 archive to SHA-256
 `996211bfa1acf3eb5eaeef5c9a7d7a5994c13dab0ad7350e94d470ba1d3293d2` and explicitly
 reuses the unchanged non-Runner inputs from its 292-case PG result. This preserves
-the confirmation-branch evidence without inventing a settling-branch assertion.
+the confirmation-branch evidence. The later [gap checks][gap-checks] bind
+updated test hashes and the new settling-branch assertions separately.
 
 For E01, [Scheduling][scheduling] records 81 PG cases including the selected-path
 guards; [Dispatch][dispatch] records 49 including locality. Current scheduling
@@ -188,16 +192,15 @@ browser session or native trial was rerun for that check.
 
 ### Remaining decisions and smallest next work
 
-1. Resolve the remaining observation/evidence portions of **A06, A25, A30, C02,
-   C03 and E01**. A20 now maps the observable fresh-context contract without
+1. Resolve the remaining observation/evidence portions of **A06 and A30**. A20 now maps the observable fresh-context contract without
    pretending a literal deletion trial occurred. The remaining portions are
-   incomplete mappings, not six demonstrated implementation defects.
+   incomplete mappings, not demonstrated implementation defects.
    First use accepted reports and their retained tests/checkpoints; add a bounded
    check only when a required behavior actually lacks valid evidence. Do not
    repeat the full matrix or all historical native races.
-2. Current terminal visual provenance is recorded above; the separate free-only
-   cold-start work continues. A later combined claim must name its actual validated source;
-   this audit does not certify ongoing changes or install them.
+2. Current terminal visual provenance and the completed free-only cold-start
+   installation/reply are recorded above. The [focused gap checks][gap-checks]
+   change tests and evidence only; the installed service sources remain as recorded.
 3. Keep A33's distinction explicit: the supported automatic-permission profile
    has no ordinary Owner approval wait; generic login/global forms have no verified
    waiting signal or Owner projection. Do not infer a wait from silence/raw text,
@@ -249,3 +252,5 @@ source conclusions are attributed to [the OpenCode audit][approval] and
 [spec-input-tests]: ../../apps/server/test/postgres-task-specification-inputs.test.ts
 [approval]: opencode-v2-noninteractive-approval.md
 [multica]: multica-agent-adapters.md
+
+[gap-checks]: evidence/stage-a-gap-checks-v1/README.md
