@@ -24,7 +24,8 @@ func TestInitialPlannerHasPhaseSpecificProtocolAndFreshScratchInvocation(t *test
 		}
 	}
 	config, err := Config(d)
-	if err != nil || !strings.Contains(config, `"edit":"deny"`) || !strings.Contains(config, `"bash":"allow"`) {
+	assertPlannerPermissions(t, config)
+	if err != nil {
 		t.Fatal("initial Planner lost scratch/CLI permissions", err)
 	}
 	calls := 0
@@ -32,8 +33,8 @@ func TestInitialPlannerHasPhaseSpecificProtocolAndFreshScratchInvocation(t *test
 		if cmd.Dir != host.Path(d.AttemptID, "scratch") {
 			t.Error("initial Planner left its reserved scratch directory")
 		}
-		if cmd.Args[1] == "models" {
-			_, err := io.WriteString(cmd.Stdout, host.FreeModel+"\n"+`{"id":"longcat-2.5-preview-free","providerID":"opencode","status":"active","capabilities":{"toolcall":true},"cost":{"input":0,"output":0,"cache":{"read":0,"write":0}}}`)
+		if cmd.Args[1] == "api" {
+			_, err := io.WriteString(cmd.Stdout, modelCatalogAt(cmd.Dir, host.FreeModel, freeCost))
 			return err
 		}
 		calls++

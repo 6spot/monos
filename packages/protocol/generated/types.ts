@@ -487,7 +487,7 @@ export type DispatchKind = "node" | "planner";
 
 export type LogModeElement = "ordered_v1";
 
-export type Model = "opencode/mimo-v2.6-flash-free" | "opencode/longcat-2.5-preview-free";
+export type Model = "opencode/mimo-v2.6-flash-free" | "opencode/longcat-2.5-preview-free" | "volcengine/deepseek-v4-flash-ga-260731";
 
 export interface NodeExecutionSource {
     context_digest:   string;

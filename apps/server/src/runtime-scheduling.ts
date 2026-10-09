@@ -5,7 +5,8 @@ import type { ExecutionPolicy, ExecutionTarget, PolicyConfiguration, RuntimeInst
 import { lockConfiguration } from './configuration-guards.ts';
 import type { DispatchQueue, QueueInput } from './dispatch-queue.ts';
 
-const supportedModel = 'opencode/longcat-2.5-preview-free';
+const freeModel = 'opencode/longcat-2.5-preview-free';
+const deepSeekModel = 'volcengine/deepseek-v4-flash-ga-260731';
 type Source = 'explicit' | 'planner' | 'role' | 'global';
 export type SelectionReason = 'policy_missing' | 'role_missing' | 'unsupported_runtime' | 'unsupported_model' |
   'unsupported_thinking' | 'runner_missing' | 'runner_offline' | 'installation_stale' |
@@ -70,10 +71,10 @@ export class RuntimeScheduling {
         request.kind === 'node' && rolePolicy ? 'role' : 'global';
     const target = request.explicit_target ?? (source === 'planner' ? policies.planner : source === 'role' ? rolePolicy : policies.global)?.default_target;
     if (!target) return { status: 'unavailable', reason: 'policy_missing', source };
-    // The current adapter pins both the runtime and model. In particular, an
+    // The current adapter supports explicit runtime/model pairs. An
     // absent model cannot be interpreted as the approved model implicitly.
     if (target.runtime_id !== 'opencode') return { status: 'unavailable', reason: 'unsupported_runtime', source, target };
-    if (target.model_id !== supportedModel) return { status: 'unavailable', reason: 'unsupported_model', source, target };
+    if (target.model_id !== freeModel && target.model_id !== deepSeekModel) return { status: 'unavailable', reason: 'unsupported_model', source, target };
     if (target.thinking_level !== undefined) return { status: 'unavailable', reason: 'unsupported_thinking', source, target };
 
     // Auto must see one stable Runner set through queue admission. EXCLUSIVE
@@ -113,7 +114,7 @@ export class RuntimeScheduling {
       kind: request.kind, expected: request.expected, resource_id: request.resource_id,
       ...(request.legacy_probe ? { legacy_probe: true as const } : {}),
       prompt: request.prompt, source_watermark: request.source_watermark,
-      runner_id: chosen.id, runtime_id: 'opencode', model: supportedModel, selection_context,
+      runner_id: chosen.id, runtime_id: 'opencode', model: target.model_id, selection_context,
     });
     return { status: 'queued', dispatch_id, runner_id: chosen.id, source, target };
   }

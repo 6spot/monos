@@ -70,7 +70,7 @@ func ValidateRequest(r Request) error {
 				return err
 			}
 		}
-		if r.Dispatch.AttemptID != r.AttemptID || r.Dispatch.RuntimeID != protocol.Opencode || string(r.Dispatch.Model) != FreeModel {
+		if r.Dispatch.AttemptID != r.AttemptID || r.Dispatch.RuntimeID != protocol.Opencode || !ApprovedModel(string(r.Dispatch.Model)) {
 			return fmt.Errorf("dispatch mismatch")
 		}
 		if (r.Action == "start") != r.Dispatch.MutationAllowed {

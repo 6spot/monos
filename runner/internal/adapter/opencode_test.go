@@ -9,6 +9,7 @@ import (
 	protocol "monos.local/protocol"
 	"monos.local/runner/internal/host"
 	"os/exec"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -71,45 +72,182 @@ func TestLogTruncationIsVisibleExactlyOnce(t *testing.T) {
 	}
 }
 
-func TestOnlyExplicitFreeModelsAndUnrestrictedShell(t *testing.T) {
-	cfg, err := Config(protocol.Dispatch{Kind: protocol.Node, AttemptID: "a"})
-	if err != nil {
-		t.Fatal(err)
-	}
-	var v map[string]any
-	if err = json.Unmarshal([]byte(cfg), &v); err != nil {
-		t.Fatal(err)
-	}
-	if v["model"] != host.FreeModel || v["small_model"] != host.FreeModel {
-		t.Fatal("model drift")
-	}
-	agents := v["agent"].(map[string]any)
-	for _, name := range []string{"monos-probe", "title", "summary", "compaction"} {
-		if agents[name].(map[string]any)["model"] != host.FreeModel {
-			t.Fatal(name)
+// Decode the public v2 permission shape independently of the production struct.
+func permissionEffect(t *testing.T, config, action string) string {
+	t.Helper()
+	var cfg struct {
+		Agents map[string]struct {
+			Permissions []struct{ Action, Resource, Effect string }
 		}
 	}
-	if !strings.Contains(cfg, `"bash":"allow"`) || !strings.Contains(cfg, `"external_directory":"allow"`) {
-		t.Fatal("shell/path restriction introduced")
+	if err := json.Unmarshal([]byte(config), &cfg); err != nil {
+		t.Fatal(err)
 	}
-	args := strings.Join(Arguments(protocol.Dispatch{AttemptID: "a"}), " ")
-	if !strings.Contains(args, "--auto") || !strings.Contains(args, "--model "+host.FreeModel) {
-		t.Fatal("unattended/free model invocation missing")
+	effect := ""
+	for _, rule := range cfg.Agents["monos-probe"].Permissions {
+		if (rule.Action == "*" || rule.Action == action) && rule.Resource == "*" {
+			effect = rule.Effect
+		}
 	}
-	planner, err := Config(protocol.Dispatch{Kind: "planner", AttemptID: "p"})
+	return effect
+}
+
+func assertPlannerPermissions(t *testing.T, config string) {
+	t.Helper()
+	if permissionEffect(t, config, "edit") != "deny" || permissionEffect(t, config, "shell") != "allow" || permissionEffect(t, config, "read") != "allow" {
+		t.Fatal("Planner must retain shell/read while edit tool is denied")
+	}
+}
+
+func TestSelectedModelAppliesToPrimaryAndAuxiliaryAgents(t *testing.T) {
+	for _, model := range []protocol.Model{host.FreeModel, host.DeepSeekModel} {
+		t.Run(string(model), func(t *testing.T) {
+			d := protocol.Dispatch{Kind: protocol.Node, AttemptID: "a", Model: model}
+			cfg, err := Config(d)
+			if err != nil {
+				t.Fatal(err)
+			}
+			var v map[string]any
+			if err = json.Unmarshal([]byte(cfg), &v); err != nil {
+				t.Fatal(err)
+			}
+			if v["model"] != string(model) {
+				t.Fatal("primary model drift")
+			}
+			agents := v["agents"].(map[string]any)
+			for _, name := range []string{"monos-probe", "title", "summary", "compaction"} {
+				if agents[name].(map[string]any)["model"] != string(model) {
+					t.Fatal("agent model drift", name)
+				}
+			}
+			primary := agents["monos-probe"].(map[string]any)
+			if primary["mode"] != "primary" || primary["system"] != fixedProtocol(d) {
+				t.Fatal("fixed native protocol missing")
+			}
+			for key, want := range map[string]any{"update": "disable", "snapshots": false, "lsp": false, "share": "disabled", "shell": "/bin/bash", "formatter": false} {
+				if v[key] != want {
+					t.Fatal("unexpected runtime setting", key, v[key])
+				}
+			}
+			for _, old := range []string{"agent", "small_model", "autoupdate", "snapshot"} {
+				if _, ok := v[old]; ok {
+					t.Fatal("obsolete v1 config field", old)
+				}
+			}
+			for _, action := range []string{"shell", "read", "edit"} {
+				if permissionEffect(t, cfg, action) != "allow" {
+					t.Fatal("Node lost native permission", action)
+				}
+			}
+			for _, action := range []string{"question", "subagent", "skill"} {
+				if permissionEffect(t, cfg, action) != "deny" {
+					t.Fatal("unattended boundary lost", action)
+				}
+			}
+			if strings.Contains(cfg, "plan_enter") || strings.Contains(cfg, "plan_exit") {
+				t.Fatal("obsolete v1 permission")
+			}
+			args := Arguments(d)
+			want := []string{"run", "--standalone", "--auto", "--format", "json", "--model", string(model), "--agent", "monos-probe"}
+			if !reflect.DeepEqual(args, want) {
+				t.Fatal("unexpected v2 invocation", args)
+			}
+			d.Kind = "planner"
+			planner, err := Config(d)
+			if err != nil {
+				t.Fatal(err)
+			}
+			assertPlannerPermissions(t, planner)
+		})
+	}
+}
+
+func TestEnvironmentIsolatesHomeAndLoadsExplicitOwnerConfig(t *testing.T) {
+	t.Setenv("OWNER_PRIVATE_TOKEN", "must-not-be-inherited")
+	t.Setenv("OPENCODE_CONFIG", "/untrusted/inherited/config")
+	d := protocol.Dispatch{Kind: protocol.Node, AttemptID: "isolated", Model: host.DeepSeekModel}
+	env, err := Environment(d)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(planner, `"edit":"deny"`) || !strings.Contains(planner, `"bash":"allow"`) {
-		t.Fatal("Planner must retain shell while edit tool is denied")
+	values := make(map[string]string)
+	for _, entry := range env {
+		key, value, ok := strings.Cut(entry, "=")
+		if !ok {
+			t.Fatal("malformed environment entry")
+		}
+		if _, exists := values[key]; exists {
+			t.Fatal("duplicate environment key", key)
+		}
+		values[key] = value
+	}
+	for key, want := range map[string]string{
+		"HOME": host.Path(d.AttemptID, "scratch"), "PWD": host.Path(d.AttemptID, "scratch"),
+		"TMPDIR": host.Path(d.AttemptID, "tmp"), "XDG_DATA_HOME": host.Path(d.AttemptID, "data"),
+		"XDG_CONFIG_HOME": host.Path(d.AttemptID, "config"), "XDG_CACHE_HOME": host.Path(d.AttemptID, "cache"),
+		"XDG_STATE_HOME": host.Path(d.AttemptID, "state"), "OPENCODE_CONFIG": "/home/me/.config/opencode/opencode.json",
+		"OPENCODE_DISABLE_PROJECT_CONFIG": "1", "MONOS_SOCKET": host.Socket,
+	} {
+		if values[key] != want {
+			t.Fatal("runtime environment drift", key)
+		}
+	}
+	if _, present := values["OWNER_PRIVATE_TOKEN"]; present {
+		t.Fatal("inherited credential environment")
+	}
+	cfg, err := Config(d)
+	if err != nil || values["OPENCODE_CONFIG_CONTENT"] != cfg {
+		t.Fatal("selected runtime config missing", err)
+	}
+}
+
+func TestOwnerAuthorizedDeepSeekRunsNativelyWithoutCatalogOrFallback(t *testing.T) {
+	d := protocol.Dispatch{RuntimeID: protocol.Opencode, Kind: protocol.Node, AttemptID: "paid", Model: host.DeepSeekModel, Prompt: "frozen native context"}
+	for _, nativeError := range []error{nil, errors.New("native authentication required"), errors.New("native model unavailable")} {
+		calls := 0
+		err := runWithSink(d, func(cmd *exec.Cmd) error {
+			calls++
+			wantArgs := []string{"run", "--standalone", "--auto", "--format", "json", "--model", host.DeepSeekModel, "--agent", "monos-probe"}
+			if cmd.Path != host.Runtime || !reflect.DeepEqual(cmd.Args[1:], wantArgs) {
+				t.Fatal("authorized model did not go directly to native run", cmd.Args)
+			}
+			if cmd.Dir != host.Path(d.AttemptID, "scratch") {
+				t.Fatal("native run left Attempt scratch")
+			}
+			prompt, err := io.ReadAll(cmd.Stdin)
+			if err != nil || string(prompt) != d.Prompt {
+				t.Fatal("native run lost authoritative context", err)
+			}
+			env, err := Environment(d)
+			if err != nil || !reflect.DeepEqual(cmd.Env, env) {
+				t.Fatal("native run lost managed configuration", err)
+			}
+			return nativeError
+		}, outputSink{stdout: io.Discard, stderr: io.Discard})
+		if calls != 1 || err != nativeError {
+			t.Fatalf("native result changed or fallback executed: calls=%d err=%v want=%v", calls, err, nativeError)
+		}
+	}
+}
+
+func TestUnapprovedModelNeverReachesCatalogOrRun(t *testing.T) {
+	for _, model := range []protocol.Model{"", "opencode/mimo-v2.6-flash-free", "volcengine/other", host.DeepSeekModel + "-other"} {
+		d := protocol.Dispatch{RuntimeID: protocol.Opencode, Kind: protocol.Node, AttemptID: "invalid", Model: model}
+		if _, err := Config(d); err == nil {
+			t.Fatal("unapproved model configured", model)
+		}
+		calls := 0
+		err := runWithSink(d, func(*exec.Cmd) error { calls++; return nil }, outputSink{stdout: io.Discard, stderr: io.Discard})
+		if err == nil || calls != 0 {
+			t.Fatal("unapproved model reached runtime", model, calls, err)
+		}
 	}
 }
 
 func TestWorkerRetainsCaptureFailureWhenMarkerCannotPersist(t *testing.T) {
 	execute := func(cmd *exec.Cmd) error {
-		if cmd.Args[1] == "models" {
-			_, err := io.WriteString(cmd.Stdout, host.FreeModel+`
-{"id":"longcat-2.5-preview-free","providerID":"opencode","status":"active","capabilities":{"toolcall":true},"cost":{"input":0,"output":0,"cache":{"read":0,"write":0}}}`)
+		if cmd.Args[1] == "api" {
+			_, err := io.WriteString(cmd.Stdout, modelCatalogAt(cmd.Dir, host.FreeModel, freeCost))
 			return err
 		}
 		_, err := cmd.Stdout.Write([]byte("output"))
@@ -130,10 +268,9 @@ func TestTodoUsesFreshScratchContextAndOneFormalHandoffProtocol(t *testing.T) {
 		if cmd.Dir != host.Path(d.AttemptID, "scratch") {
 			t.Error("Todo left its reserved scratch directory")
 		}
-		if cmd.Args[1] == "models" {
+		if cmd.Args[1] == "api" {
 			preflightEnv = append([]string(nil), cmd.Env...)
-			_, err := io.WriteString(cmd.Stdout, host.FreeModel+`
-{"id":"longcat-2.5-preview-free","providerID":"opencode","status":"active","capabilities":{"toolcall":true},"cost":{"input":0,"output":0,"cache":{"read":0,"write":0}}}`)
+			_, err := io.WriteString(cmd.Stdout, modelCatalogAt(cmd.Dir, host.FreeModel, freeCost))
 			return err
 		}
 		calls++
@@ -168,7 +305,8 @@ func TestTodoUsesFreshScratchContextAndOneFormalHandoffProtocol(t *testing.T) {
 		t.Fatal("legacy Task protocol inherited Todo context")
 	}
 	cfg, err := Config(d)
-	if err != nil || !strings.Contains(cfg, `"edit":"deny"`) || !strings.Contains(cfg, `"bash":"allow"`) {
+	assertPlannerPermissions(t, cfg)
+	if err != nil {
 		t.Fatal("Todo lost Planner filesystem or tool permissions", err)
 	}
 }

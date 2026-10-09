@@ -30,7 +30,8 @@ func TestConversationUsesFrozenOneShotPromptAndExplicitTaskTools(t *testing.T) {
 		}
 	}
 	config, err := Config(d)
-	if err != nil || !strings.Contains(config, `"edit":"deny"`) || !strings.Contains(config, `"bash":"allow"`) {
+	assertPlannerPermissions(t, config)
+	if err != nil {
 		t.Fatal("conversation scratch/CLI permission mismatch", err)
 	}
 	calls := 0
@@ -38,8 +39,8 @@ func TestConversationUsesFrozenOneShotPromptAndExplicitTaskTools(t *testing.T) {
 		if cmd.Dir != host.Path(d.AttemptID, "scratch") {
 			t.Fatal("conversation left scratch")
 		}
-		if cmd.Args[1] == "models" {
-			_, err := io.WriteString(cmd.Stdout, host.FreeModel+"\n"+`{"id":"longcat-2.5-preview-free","providerID":"opencode","status":"active","capabilities":{"toolcall":true},"cost":{"input":0,"output":0,"cache":{"read":0,"write":0}}}`)
+		if cmd.Args[1] == "api" {
+			_, err := io.WriteString(cmd.Stdout, modelCatalogAt(cmd.Dir, host.FreeModel, freeCost))
 			return err
 		}
 		calls++

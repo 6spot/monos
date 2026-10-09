@@ -17,7 +17,8 @@ func TestReplanPromptAndReadOnlyConfiguration(t *testing.T) {
 		}
 	}
 	config, err := Config(d)
-	if err != nil || !strings.Contains(config, `"edit":"deny"`) || !strings.Contains(config, `"bash":"allow"`) {
+	assertPlannerPermissions(t, config)
+	if err != nil {
 		t.Fatal(config, err)
 	}
 	d.ControlVersion++

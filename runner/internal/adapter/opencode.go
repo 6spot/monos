@@ -17,23 +17,11 @@ import (
 	"monos.local/runner/internal/wire"
 )
 
-// Policy order is significant to OpenCode; this struct keeps '*' first.
-type permissions struct {
-	All       string          `json:"*"`
-	Read      string          `json:"read"`
-	Glob      string          `json:"glob"`
-	Grep      string          `json:"grep"`
-	Bash      string          `json:"bash"`
-	Edit      string          `json:"edit"`
-	External  json.RawMessage `json:"external_directory"`
-	Question  string          `json:"question"`
-	Task      string          `json:"task"`
-	Skill     string          `json:"skill"`
-	LSP       string          `json:"lsp"`
-	Webfetch  string          `json:"webfetch"`
-	Websearch string          `json:"websearch"`
-	PlanEnter string          `json:"plan_enter"`
-	PlanExit  string          `json:"plan_exit"`
+// OpenCode v2 evaluates matching permission rules in order; later rules win.
+type permission struct {
+	Action   string `json:"action"`
+	Resource string `json:"resource"`
+	Effect   string `json:"effect"`
 }
 
 func fixedProtocol(d protocol.Dispatch) string {
@@ -75,6 +63,9 @@ func fixedProtocol(d protocol.Dispatch) string {
 }
 
 func Config(d protocol.Dispatch) (string, error) {
+	if !host.ApprovedModel(string(d.Model)) {
+		return "", fmt.Errorf("unapproved model")
+	}
 	if d.TaskReviewSource != nil || d.TaskReplanSource != nil || d.TaskPlanningSource != nil || d.NodeExecutionSource != nil || d.TaskConversationSource != nil {
 		if _, err := wire.ScopeID(d); err != nil {
 			return "", err
@@ -84,13 +75,10 @@ func Config(d protocol.Dispatch) (string, error) {
 	if d.Kind == protocol.Node {
 		edit = "allow"
 	}
-	external := `"allow"`
-	// Only interactive questions, unreviewed skill/subagent delegation and role
-	// switching are excluded from this single-runtime, explicitly free probe.
-	perms := permissions{"allow", "allow", "allow", "allow", "allow", edit, json.RawMessage(external), "deny", "deny", "deny", "allow", "allow", "allow", "deny", "deny"}
-	fixed := map[string]any{"model": host.FreeModel}
-	cfg := map[string]any{"model": host.FreeModel, "small_model": host.FreeModel, "share": "disabled", "snapshot": false, "autoupdate": false, "shell": "/bin/bash", "agent": map[string]any{
-		"monos-probe": map[string]any{"mode": "primary", "model": host.FreeModel, "permission": perms, "prompt": fixedProtocol(d)}, "title": fixed, "summary": fixed, "compaction": fixed}}
+	perms := []permission{{"*", "*", "allow"}, {"edit", "*", edit}, {"question", "*", "deny"}, {"subagent", "*", "deny"}, {"skill", "*", "deny"}}
+	fixed := map[string]any{"model": d.Model}
+	cfg := map[string]any{"model": d.Model, "share": "disabled", "shell": "/bin/bash", "formatter": false, "snapshots": false, "update": "disable", "lsp": false, "agents": map[string]any{
+		"monos-probe": map[string]any{"mode": "primary", "model": d.Model, "permissions": perms, "system": fixedProtocol(d)}, "title": fixed, "summary": fixed, "compaction": fixed}}
 	raw, err := json.Marshal(cfg)
 	return string(raw), err
 }
@@ -100,7 +88,7 @@ func Environment(d protocol.Dispatch) ([]string, error) {
 		return nil, err
 	}
 	base := host.AttemptRoot(d.AttemptID)
-	return []string{"HOME=/home/me", "PWD=" + host.Path(d.AttemptID, "scratch"), "USER=me", "LOGNAME=me", "PATH=/usr/local/bin:/home/linuxbrew/.linuxbrew/bin:/usr/bin:/bin", "LANG=C.UTF-8", "SHELL=/bin/bash", "TMPDIR=" + filepath.Join(base, "tmp"), "XDG_DATA_HOME=" + filepath.Join(base, "data"), "XDG_CACHE_HOME=" + filepath.Join(base, "cache"), "XDG_CONFIG_HOME=" + filepath.Join(base, "config"), "XDG_STATE_HOME=" + filepath.Join(base, "state"), "MONOS_SOCKET=" + host.Socket, "OPENCODE_CONFIG_CONTENT=" + config, "OPENCODE_DISABLE_PROJECT_CONFIG=1", "OPENCODE_DISABLE_AUTOUPDATE=1", "OPENCODE_DISABLE_LSP_DOWNLOAD=1", "OPENCODE_DISABLE_EXTERNAL_SKILLS=1", "OPENCODE_DISABLE_CLAUDE_CODE=1"}, nil
+	return []string{"HOME=" + host.Path(d.AttemptID, "scratch"), "PWD=" + host.Path(d.AttemptID, "scratch"), "USER=me", "LOGNAME=me", "PATH=/usr/local/bin:/home/linuxbrew/.linuxbrew/bin:/usr/bin:/bin", "LANG=C.UTF-8", "SHELL=/bin/bash", "TMPDIR=" + filepath.Join(base, "tmp"), "XDG_DATA_HOME=" + filepath.Join(base, "data"), "XDG_CACHE_HOME=" + filepath.Join(base, "cache"), "XDG_CONFIG_HOME=" + filepath.Join(base, "config"), "XDG_STATE_HOME=" + filepath.Join(base, "state"), "MONOS_SOCKET=" + host.Socket, "OPENCODE_CONFIG=/home/me/.config/opencode/opencode.json", "OPENCODE_CONFIG_CONTENT=" + config, "OPENCODE_DISABLE_PROJECT_CONFIG=1"}, nil
 }
 
 // BoundedWriter preserves partial output but bounds retained logs per Attempt.
@@ -209,15 +197,21 @@ func run(d protocol.Dispatch, execute func(*exec.Cmd) error) error {
 }
 
 func runWithSink(d protocol.Dispatch, execute func(*exec.Cmd) error, sink outputSink) error {
-	if d.RuntimeID != protocol.Opencode || string(d.Model) != host.FreeModel {
+	if d.RuntimeID != protocol.Opencode || !host.ApprovedModel(string(d.Model)) {
 		return fmt.Errorf("unapproved runtime/model")
 	}
 	env, err := Environment(d)
 	if err != nil {
 		return err
 	}
-	if err = verifyModel(d, env, execute); err != nil {
-		return err
+	// OpenCode v2 model.list is an initialization snapshot. The native prompt
+	// path waits for plugin activation before resolving an explicit model.
+	// The Owner-authorized paid model therefore uses native startup errors;
+	// the free target retains its separate fail-closed pricing requirement.
+	if string(d.Model) == host.FreeModel {
+		if err = verifyModel(d, env, execute); err != nil {
+			return err
+		}
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -242,5 +236,5 @@ func runWithSink(d protocol.Dispatch, execute func(*exec.Cmd) error, sink output
 }
 
 func Arguments(d protocol.Dispatch) []string {
-	return []string{"run", "--pure", "--auto", "--format", "json", "--model", host.FreeModel, "--agent", "monos-probe", "--dir", host.Path(d.AttemptID, "scratch")}
+	return []string{"run", "--standalone", "--auto", "--format", "json", "--model", string(d.Model), "--agent", "monos-probe"}
 }

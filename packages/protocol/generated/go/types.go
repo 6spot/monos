@@ -3360,8 +3360,9 @@ const (
 type Model string
 
 const (
-	OpencodeLongcat25PreviewFree Model = "opencode/longcat-2.5-preview-free"
-	OpencodeMIMOV26FlashFree     Model = "opencode/mimo-v2.6-flash-free"
+	OpencodeLongcat25PreviewFree      Model = "opencode/longcat-2.5-preview-free"
+	OpencodeMIMOV26FlashFree          Model = "opencode/mimo-v2.6-flash-free"
+	VolcengineDeepseekV4FlashGa260731 Model = "volcengine/deepseek-v4-flash-ga-260731"
 )
 
 type RuntimeID string

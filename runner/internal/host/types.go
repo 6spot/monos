@@ -21,6 +21,9 @@ const Worker = "/usr/local/libexec/monos-probe-exec"
 const CLI = "/usr/local/bin/monos"
 const Runtime = "/home/linuxbrew/.linuxbrew/bin/opencode"
 const FreeModel = "opencode/longcat-2.5-preview-free"
+const DeepSeekModel = "volcengine/deepseek-v4-flash-ga-260731"
+
+func ApprovedModel(model string) bool { return model == FreeModel || model == DeepSeekModel }
 
 // Reserved worker exit status for a checked stdout/stderr write or sync failure.
 const CaptureFailureExitCode = 74

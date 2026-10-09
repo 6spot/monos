@@ -1158,7 +1158,8 @@
           "type": "string",
           "enum": [
             "opencode/mimo-v2.6-flash-free",
-            "opencode/longcat-2.5-preview-free"
+            "opencode/longcat-2.5-preview-free",
+            "volcengine/deepseek-v4-flash-ga-260731"
           ]
         },
         "prompt": {

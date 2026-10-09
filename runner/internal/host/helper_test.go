@@ -136,6 +136,22 @@ func TestDispatchIdentityMustMatchHelperRequest(t *testing.T) {
 	}
 }
 
+func TestHelperLaunchRequiresExplicitApprovedModel(t *testing.T) {
+	d := protocol.Dispatch{AttemptID: "a", DispatchID: "d", RunnerID: "runner", TaskID: ptr("task"), ResourceID: ptr("repo"), Kind: protocol.Node, RuntimeID: protocol.Opencode, MutationAllowed: true, Prompt: "probe"}
+	for _, model := range []protocol.Model{FreeModel, DeepSeekModel} {
+		d.Model = model
+		if err := ValidateRequest(Request{Action: "start", AttemptID: "a", Dispatch: &d}); err != nil {
+			t.Fatalf("approved model rejected: %s: %v", model, err)
+		}
+	}
+	for _, model := range []protocol.Model{"", "opencode/mimo-v2.6-flash-free", "volcengine/other", DeepSeekModel + "-other"} {
+		d.Model = model
+		if err := ValidateRequest(Request{Action: "start", AttemptID: "a", Dispatch: &d}); err == nil {
+			t.Fatalf("unapproved model launch accepted: %q", model)
+		}
+	}
+}
+
 func TestRevocationTombstoneRejectsLateStartAndOwnershipReplacement(t *testing.T) {
 	d := protocol.Dispatch{AttemptID: "a", DispatchID: "d", RunnerID: "runner", TaskID: ptr("task"), ResourceID: ptr("repo"), Kind: protocol.Node, RuntimeID: protocol.Opencode, Model: FreeModel, Prompt: "probe"}
 	if err := ValidateRequest(Request{Action: "tombstone", AttemptID: "a", Dispatch: &d}); err != nil {

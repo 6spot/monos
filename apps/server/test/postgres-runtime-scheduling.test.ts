@@ -74,6 +74,21 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('production Runtime tar
     expect(stored.launch).toMatchObject({ runtime_id: 'opencode', model, control_version: planner.expected.control_version });
   });
 
+  it('preserves an explicitly selected DeepSeek model through dispatch and replay', async () => {
+    const r = await runner();
+    const selected = 'volcengine/deepseek-v4-flash-ga-260731';
+    await db.pool.query('UPDATE execution_policies SET policies=$1', [{ global: { default_target: { runtime_id: 'opencode', model_id: selected, runner_id: r.id }, fallback_targets: [] } }]);
+    const value = await request();
+    const result = await submit(r.service, value);
+    expect(result).toMatchObject({ status: 'queued', target: { model_id: selected } });
+    const stored = (await db.pool.query('SELECT selection_context,launch FROM attempts WHERE id=$1', [value.attempt_id])).rows[0];
+    expect(stored.selection_context.target.model_id).toBe(selected);
+    expect(stored.launch.model).toBe(selected);
+    await db.pool.query('UPDATE execution_policies SET policies=$1', [{ global: policy(r.id) }]);
+    expect(await submit(r.service, value)).toEqual(result);
+    expect((await queue.promoteNext(r.id, r.service.instanceId, r.incarnation))?.model).toBe(selected);
+  });
+
   it('returns factual incompatibility and keeps hard pins, stale reports and disconnected queues', async () => {
     const r = await runner(); await db.pool.query('UPDATE execution_policies SET policies=$1', [{ global: policy(r.id) }]);
     const value = await request();
