@@ -338,7 +338,9 @@ export async function prepareConversationSource(
     const guidance = (await tx.query('SELECT planner_guidance FROM execution_policies')).rows[0]
       .planner_guidance;
     context = {
-      protocol,
+      protocol: ['COMPLETED', 'CANCELLED'].includes(task.state)
+        ? `${protocol}\nThis Task has ended (${task.state}) and cannot be reopened. If the Owner asks for further implementation, explain that they must return to the originating Todo Discussion, describe the work there and explicitly confirm a new independent Task. Do not suggest revising this terminal Task, prepare a new Task preview here, or automatically transfer its requirements, conversation, Plan or execution context. Explain the next step in plain user-facing language, without tool or source-permission jargon.`
+        : protocol,
       binding: {
         source_id: id,
         input_id: input.id,
