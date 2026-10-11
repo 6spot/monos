@@ -220,7 +220,7 @@ func TestCanonicalRepositoryFreeScopeCannotBecomeFixtureGit(t *testing.T) {
 	if err := ValidateEffectScope(d, op); err != nil {
 		t.Fatal(err)
 	}
-	for _, mode := range []string{"no-source", "planner", "changed-source", "resource", "workspace", "no-manifest"} {
+	for _, mode := range []string{"no-source", "planner", "changed-source", "resource", "workspace", "no-manifest", "missing-repository-free", "false-repository-free", "stale-attempt", "stale-dispatch"} {
 		t.Run(mode, func(t *testing.T) {
 			var other protocol.Dispatch
 			raw, _ := json.Marshal(d)
@@ -240,6 +240,14 @@ func TestCanonicalRepositoryFreeScopeCannotBecomeFixtureGit(t *testing.T) {
 				bad.Workspace = with.Workspace
 			case "no-manifest":
 				bad.CompletionManifestDigest = nil
+			case "missing-repository-free":
+				bad.RepositoryFree = nil
+			case "false-repository-free":
+				bad.RepositoryFree = ptr(false)
+			case "stale-attempt":
+				bad.AttemptID = "previous-attempt"
+			case "stale-dispatch":
+				bad.DispatchID = "previous-dispatch"
 			}
 			if ValidateEffectScope(other, bad) == nil {
 				t.Fatal("invalid no-repository source allowed")

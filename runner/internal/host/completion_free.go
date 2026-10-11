@@ -22,8 +22,9 @@ func completeWithoutRepository(ctx context.Context, d protocol.Dispatch, op prot
 	} else if !os.IsNotExist(err) {
 		return Status{}, err
 	}
-	// Backend checks all same-activation retained private work; independently
-	// reject any local reserved materialization needing settlement as well.
+	// Backend authorizes checkpoint destinations. Root independently rejects live
+	// allocations and any workspace opened by this Attempt; a released predecessor
+	// checkpoint can belong to a later Node and must remain untouched here.
 	for _, reservation := range d.WorkspaceReservations.Resources {
 		r, err := readWorkspaceRecord(reservation.WorkspaceID)
 		if os.IsNotExist(err) {
@@ -32,8 +33,8 @@ func completeWithoutRepository(ctx context.Context, d protocol.Dispatch, op prot
 		if err != nil {
 			return Status{}, err
 		}
-		if !r.Released || r.PrivateCheckpoint != nil {
-			return Status{}, fmt.Errorf("retained workspace requires finalization")
+		if err := validateRepositoryFreeWorkspace(r, op.AttemptID); err != nil {
+			return Status{}, err
 		}
 	}
 	status, err := stop(ctx, op.AttemptID)
@@ -50,4 +51,11 @@ func completeWithoutRepository(ctx context.Context, d protocol.Dispatch, op prot
 	}
 	err = saveRecord(operationPath(op.OperationID), operationRecord{Operation: op, BootID: boot, Settled: true, Status: status})
 	return status, err
+}
+
+func validateRepositoryFreeWorkspace(r workspaceRecord, attemptID string) error {
+	if !r.Released || r.Operation.AttemptID == attemptID {
+		return fmt.Errorf("retained workspace requires finalization")
+	}
+	return nil
 }

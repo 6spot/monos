@@ -57,7 +57,10 @@ explicit exits and uncertain-response recovery remain available.
   Protocol generation drift passed, with 19 additional shared validation fixtures.
 - Go CLI, local socket, Adapter and wire tests passed; all packages compiled and
   passed vet. Focused Host transfer/Replan race tests passed. No Host implementation
-  changed in this milestone.
+  changed in the initial feature commit. A follow-up Host review corrected the
+  repository-free completion guard: released foreign-Attempt checkpoints remain
+  untouched, while live or current-Attempt allocations still reject completion.
+  Focused trusted-record/scope tests and Host vet passed for that follow-up.
 - TypeScript, scoped ESLint, native Node entry import and production build passed.
   The existing build chunk-size advisory remains.
 - Three browser cases passed: joint publication/exits, exact dual-approval and
