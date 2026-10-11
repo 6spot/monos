@@ -54,6 +54,9 @@ func validateWorkspaceScope(d protocol.Dispatch, op protocol.Operation) error {
 		return fmt.Errorf("workspace ownership mismatch")
 	}
 	if t := w.Transfer; t != nil {
+		if t.Purpose != nil && (*t.Purpose != protocol.Serial || t.FromPlanID != t.ToPlanID || t.Kind != "completed" || t.PublicationID != nil || t.ProposalID != nil) {
+			return fmt.Errorf("workspace serial transfer scope mismatch")
+		}
 		if w.Basis == nil || d.NodeExecutionSource == nil || t.ToPlanID != d.NodeExecutionSource.PlanID || t.ToNodeID != w.NodeID || t.ToNodeActivation != w.NodeActivation || t.TaskID != w.TaskID || t.WorkspaceID != w.WorkspaceID || t.ResourceID != w.ResourceID || t.RunnerID != w.RunnerID || t.Metadata.Generation != w.Generation {
 			return fmt.Errorf("workspace transfer target source mismatch")
 		}

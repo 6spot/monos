@@ -2229,7 +2229,7 @@
     "valid": false
   },
   {
-    "name": "initial Plan structural graph remains transportable for explicit unsupported response",
+    "name": "initial Plan transports a serial dependency graph",
     "schema": "CommandEnvelope",
     "value": {
       "schema_version": 1,
@@ -9606,5 +9606,180 @@
       "exit_code": 75,
       "runtime_failure": null
     }
+  },
+  {
+    "name": "serial completed workspace handoff",
+    "schema": "WorkspaceTransfer",
+    "value": {
+      "workspace_id": "workspace",
+      "task_id": "task",
+      "resource_id": "resource",
+      "runner_id": "runner",
+      "from_plan_id": "plan",
+      "from_node_id": "upstream",
+      "from_attempt_id": "old-attempt",
+      "from_lease_id": "old-lease",
+      "settle_operation_id": "completion",
+      "from_node_activation": 1,
+      "kind": "completed",
+      "metadata": {
+        "generation": 1,
+        "storage_id": "storage",
+        "lease_id": "old-lease",
+        "repository_identity": "https://example.com/repo.git",
+        "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "target_branch": "main",
+        "target_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "finalized_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "completion_operation_id": "completion",
+      "completion_manifest_digest": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "finalized_tree": "dddddddddddddddddddddddddddddddddddddddd",
+      "to_plan_id": "plan",
+      "to_node_id": "next",
+      "to_node_activation": 1,
+      "purpose": "serial"
+    },
+    "valid": true
+  },
+  {
+    "name": "serial workspace rejects fabricated Replan publication",
+    "schema": "WorkspaceTransfer",
+    "value": {
+      "workspace_id": "workspace",
+      "task_id": "task",
+      "resource_id": "resource",
+      "runner_id": "runner",
+      "from_plan_id": "plan",
+      "from_node_id": "upstream",
+      "from_attempt_id": "old-attempt",
+      "from_lease_id": "old-lease",
+      "settle_operation_id": "completion",
+      "from_node_activation": 1,
+      "kind": "completed",
+      "metadata": {
+        "generation": 1,
+        "storage_id": "storage",
+        "lease_id": "old-lease",
+        "repository_identity": "https://example.com/repo.git",
+        "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "target_branch": "main",
+        "target_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "finalized_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "completion_operation_id": "completion",
+      "completion_manifest_digest": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "finalized_tree": "dddddddddddddddddddddddddddddddddddddddd",
+      "to_plan_id": "plan",
+      "to_node_id": "next",
+      "to_node_activation": 1,
+      "purpose": "serial",
+      "publication_id": "invented"
+    },
+    "valid": false
+  },
+  {
+    "name": "serial workspace rejects checkpoint",
+    "schema": "WorkspaceTransfer",
+    "value": {
+      "workspace_id": "workspace",
+      "task_id": "task",
+      "resource_id": "resource",
+      "runner_id": "runner",
+      "from_plan_id": "plan",
+      "from_node_id": "upstream",
+      "from_attempt_id": "old-attempt",
+      "from_lease_id": "old-lease",
+      "settle_operation_id": "completion",
+      "from_node_activation": 1,
+      "kind": "checkpoint",
+      "metadata": {
+        "generation": 1,
+        "storage_id": "storage",
+        "lease_id": "old-lease",
+        "repository_identity": "https://example.com/repo.git",
+        "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "target_branch": "main",
+        "target_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "finalized_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "completion_operation_id": "completion",
+      "completion_manifest_digest": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "finalized_tree": "dddddddddddddddddddddddddddddddddddddddd",
+      "to_plan_id": "plan",
+      "to_node_id": "next",
+      "to_node_activation": 1,
+      "purpose": "serial"
+    },
+    "valid": false
+  },
+  {
+    "name": "serial workspace rejects unknown purpose",
+    "schema": "WorkspaceTransfer",
+    "value": {
+      "workspace_id": "workspace",
+      "task_id": "task",
+      "resource_id": "resource",
+      "runner_id": "runner",
+      "from_plan_id": "plan",
+      "from_node_id": "upstream",
+      "from_attempt_id": "old-attempt",
+      "from_lease_id": "old-lease",
+      "settle_operation_id": "completion",
+      "from_node_activation": 1,
+      "kind": "completed",
+      "metadata": {
+        "generation": 1,
+        "storage_id": "storage",
+        "lease_id": "old-lease",
+        "repository_identity": "https://example.com/repo.git",
+        "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "target_branch": "main",
+        "target_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "finalized_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "completion_operation_id": "completion",
+      "completion_manifest_digest": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "finalized_tree": "dddddddddddddddddddddddddddddddddddddddd",
+      "to_plan_id": "plan",
+      "to_node_id": "next",
+      "to_node_activation": 1,
+      "purpose": "unknown"
+    },
+    "valid": false
+  },
+  {
+    "name": "workspace transfer requires serial or exact Replan provenance",
+    "schema": "WorkspaceTransfer",
+    "value": {
+      "workspace_id": "workspace",
+      "task_id": "task",
+      "resource_id": "resource",
+      "runner_id": "runner",
+      "from_plan_id": "plan",
+      "from_node_id": "upstream",
+      "from_attempt_id": "old-attempt",
+      "from_lease_id": "old-lease",
+      "settle_operation_id": "completion",
+      "from_node_activation": 1,
+      "kind": "completed",
+      "metadata": {
+        "generation": 1,
+        "storage_id": "storage",
+        "lease_id": "old-lease",
+        "repository_identity": "https://example.com/repo.git",
+        "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "target_branch": "main",
+        "target_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "finalized_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "completion_operation_id": "completion",
+      "completion_manifest_digest": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "finalized_tree": "dddddddddddddddddddddddddddddddddddddddd",
+      "to_plan_id": "plan",
+      "to_node_id": "next",
+      "to_node_activation": 1
+    },
+    "valid": false
   }
 ]

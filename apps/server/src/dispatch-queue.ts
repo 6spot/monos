@@ -37,6 +37,38 @@ export interface QueueInput {
 export type TaskQueueInput = QueueInput & { task_id: string; expected: ControlBasis };
 interface Queued { planning_intent_id: string | null; id: string; task_id: string | null; todo_id: string | null; node_id: string | null; owner_key: string; state: string; launch: Dispatch; specification_id: string; plan_id: string | null; selection_context: QueueInput['selection_context'] | null }
 
+export async function nodeDependenciesReady(tx: Transaction, planId: string, nodeId: string): Promise<boolean> {
+  const missing = await tx.query(`SELECT dependency FROM plan_nodes pn,
+    jsonb_array_elements_text(pn.definition->'dependencies') dependency
+    WHERE pn.plan_id=$1 AND pn.node_id=$2 AND NOT EXISTS (
+      SELECT 1 FROM nodes n JOIN node_completions c ON c.node_id=n.id AND c.activation=n.activation
+      JOIN plan_nodes member ON member.plan_id=pn.plan_id AND member.node_id=n.id
+      JOIN tasks t ON t.id=n.task_id AND t.plan_id=member.plan_id
+      WHERE n.id=dependency AND n.state='COMPLETED'
+        AND activation_applies(t.id,n.id,n.activation,t.specification_id,t.plan_id))`, [planId, nodeId]);
+  return !missing.rowCount;
+}
+
+/** Caller holds Task control. Reserve one runnable source at a time, before
+ * freezing its context, and retain that reservation through physical settlement.
+ * Owner-created successor intents may coexist; the oldest current intent wins. */
+export async function serialNodeReady(tx: Transaction, taskId: string, nodeId: string, sourceId?: string): Promise<boolean> {
+  const held = await tx.query(`SELECT 1 FROM attempts a WHERE a.task_id=$1 AND a.kind='node'
+      AND (NOT a.process_released OR EXISTS (
+        SELECT 1 FROM operations o WHERE o.attempt_id=a.id AND o.state NOT IN ('succeeded','cancelled'))
+        OR (a.state='QUEUED' AND a.node_id<>$2))
+    UNION ALL SELECT 1 FROM workspace_leases WHERE task_id=$1 AND state<>'released'
+    UNION ALL SELECT 1 FROM nodes n JOIN tasks t ON t.id=n.task_id JOIN plan_nodes p ON p.plan_id=t.plan_id AND p.node_id=n.id
+      WHERE t.id=$1 AND n.id<>$2 AND n.state='RUNNING'
+    UNION ALL SELECT 1 FROM node_execution_outbox s JOIN nodes n ON n.execution_source_id=s.id
+      JOIN tasks t ON t.id=s.task_id
+      WHERE s.task_id=$1 AND s.node_id<>$2 AND NOT s.done AND n.state='PENDING'
+        AND n.activation=s.node_activation AND t.specification_id=s.specification_id AND t.plan_id=s.plan_id
+        AND ($3::text IS NULL OR (s.created_at,s.id)<(
+          SELECT current.created_at,current.id FROM node_execution_outbox current WHERE current.id=$3))`, [taskId, nodeId, sourceId ?? null]);
+  return !held.rowCount;
+}
+
 export class DispatchQueue {
   readonly db: Database;
   readonly hooks: { beforeCommit?: () => void; afterCommit?: () => void };
@@ -77,7 +109,7 @@ export class DispatchQueue {
     }
     if (!input.task_conversation_source && task.state !== (input.task_review_source?'REVIEW':input.task_replan_source?'REPLAN_REQUIRED':'RUNNING')) throw new CommandError('unmet_precondition', 'Task is not executing');
     if (input.legacy_probe ? !input.resource_id : !task.project_id || input.resource_id !== undefined) throw new CommandError('denied_scope', 'Canonical Task requires its Project and no fixture resource');
-    if (!input.task_conversation_source && (Number(task.control_version) !== input.expected.control_version || task.specification_id !== input.expected.specification_id || task.plan_id !== input.expected.plan_id)) throw new CommandError('version_conflict', 'Queue input revision basis changed');
+    if (!input.task_conversation_source && ((!input.node_execution_source && Number(task.control_version) !== input.expected.control_version) || task.specification_id !== input.expected.specification_id || task.plan_id !== input.expected.plan_id)) throw new CommandError('version_conflict', 'Queue input revision basis changed');
     await this.checkLocality(tx, input.task_id, input.runner_id);
     let activation = 0;
     if (input.kind === 'node') {
@@ -86,7 +118,8 @@ export class DispatchQueue {
       if (!node) throw new CommandError('denied_scope', 'Node belongs to another Task');
       activation = Number(node.activation);
       if ((await assertCurrentNode(tx, { task_id: input.task_id, node_id: input.node_id, node_activation: activation })).state !== 'PENDING') throw new CommandError('unmet_precondition', 'Node is not pending');
-      if (!(await this.dependenciesReady(tx, input.expected.plan_id!, input.node_id))) throw new CommandError('unmet_precondition', 'Upstream results are not current');
+      if (!(await nodeDependenciesReady(tx, input.expected.plan_id!, input.node_id))) throw new CommandError('unmet_precondition', 'Upstream results are not current');
+      if (input.node_execution_source && !await serialNodeReady(tx, input.task_id, input.node_id, input.node_execution_source.source_id)) throw new CommandError('unmet_precondition', 'Prior serial Node execution must settle');
     } else if (input.node_id) throw new CommandError('invalid_input', 'Planner is not a Node');
     const owner = input.kind === 'node' ? `node:${input.node_id}` : `planner:${input.task_id}`;
     if ((await tx.query("SELECT id FROM attempts WHERE owner_key=$1 AND state='QUEUED'", [owner])).rowCount) throw new CommandError('unmet_precondition', 'Owner already has selected queued work');
@@ -150,16 +183,6 @@ export class DispatchQueue {
         AND (queue_digest IS NULL OR EXISTS (SELECT 1 FROM outbox o WHERE o.attempt_id=a.id AND o.kind='start'))`, [taskId, runnerId])).rowCount) throw new CommandError('unmet_precondition', 'Task workspace belongs to another Runner; transfer is unsupported');
   }
 
-  private async dependenciesReady(tx: Transaction, planId: string, nodeId: string): Promise<boolean> {
-    const missing = await tx.query(`SELECT dependency FROM plan_nodes pn,
-      jsonb_array_elements_text(pn.definition->'dependencies') dependency
-      WHERE pn.plan_id=$1 AND pn.node_id=$2 AND NOT EXISTS (
-        SELECT 1 FROM nodes n JOIN node_completions c ON c.node_id=n.id AND c.activation=n.activation
-        JOIN plan_nodes member ON member.plan_id=pn.plan_id AND member.node_id=n.id
-        WHERE n.id=dependency AND n.state='COMPLETED')`, [planId, nodeId]);
-    return !missing.rowCount;
-  }
-
   async promoteNext(runnerId: string, connectionInstance: string, incarnation: number): Promise<Dispatch | null> {
     const retry = Symbol('cancelled queued candidate');
     // A stale row must not consume a whole Runner poll. Bound cleanup work per
@@ -186,7 +209,7 @@ export class DispatchQueue {
           const task = candidate.task_id ? (await tx.query<{ state: string; control_version: string; specification_id: string; plan_id: string | null }>('SELECT state,control_version,specification_id,plan_id FROM tasks WHERE id=$1 FOR UPDATE', [candidate.task_id])).rows[0]! : null;
           const row = (await tx.query<Queued>('SELECT * FROM attempts WHERE id=$1 FOR UPDATE', [candidate.id])).rows[0]!;
           if (row.state !== 'QUEUED') return retry;
-          let current = discussion ? Number(discussion.version) === row.launch.control_version && discussion.source_message_id === row.launch.source_message_id && discussion.desired_attempt_id === row.id : !!task && task.state === 'RUNNING' && Number(task.control_version) === row.launch.control_version && task.specification_id === row.specification_id && task.plan_id === row.plan_id;
+          let current = discussion ? Number(discussion.version) === row.launch.control_version && discussion.source_message_id === row.launch.source_message_id && discussion.desired_attempt_id === row.id : !!task && task.state === 'RUNNING' && (!!row.launch.node_execution_source || Number(task.control_version) === row.launch.control_version) && task.specification_id === row.specification_id && task.plan_id === row.plan_id;
           if(row.launch.task_review_source){try{await assertReviewSource(tx,row.task_id!,row.launch.task_review_source,row.id,row.launch.prompt);current=true;}catch(e){if(!(e instanceof CommandError))throw e;current=false;}}
           if(row.launch.task_replan_source){try{await assertReplanSource(tx,row.task_id!,row.launch.task_replan_source,row.id,row.launch.prompt);current=true;}catch(e){if(!(e instanceof CommandError))throw e;current=false;}}
           if(current&&row.node_id){try{await assertNoReplan(tx,row.task_id!);if(await reviewDispatchBlocked(tx,row.task_id!))throw new CommandError('unmet_precondition','Review obligations block Node dispatch');}catch(e){if(!(e instanceof CommandError))throw e;current=false;}}
@@ -200,7 +223,7 @@ export class DispatchQueue {
           if(current && row.task_id && !row.launch.task_conversation_source){try{await assertSpecificationUnfrozen(tx,row.task_id);}catch(error){if(!(error instanceof CommandError))throw error;current=false;}}
           if(current && row.launch.node_execution_source) {try { await assertNodeSource(tx,row.task_id!,row.launch.node_execution_source,row.id,row.launch.prompt); } catch(error){if(!(error instanceof CommandError))throw error;current=false;} }
           if (current && row.node_id) {
-            try { current = (await assertCurrentNode(tx, { task_id: row.task_id!, node_id: row.node_id, node_activation: row.launch.node_activation })).state === (row.launch.node_execution_source ? 'RUNNING' : 'PENDING') && await this.dependenciesReady(tx, row.plan_id!, row.node_id); }
+            try { current = (await assertCurrentNode(tx, { task_id: row.task_id!, node_id: row.node_id, node_activation: row.launch.node_activation })).state === (row.launch.node_execution_source ? 'RUNNING' : 'PENDING') && await nodeDependenciesReady(tx, row.plan_id!, row.node_id); }
             catch (error) { if (!(error instanceof CommandError)) throw error; current = false; }
           }
           if (!current) { await tx.query("UPDATE attempts SET state='CANCELLED',process_absent=true,end_reason='stale_queue_basis' WHERE id=$1", [row.id]); return retry; }

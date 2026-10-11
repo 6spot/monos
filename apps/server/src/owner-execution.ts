@@ -27,8 +27,9 @@ export async function derivedTaskState(tx: Transaction, planId: string): Promise
       SELECT 1 FROM jsonb_array_elements_text(COALESCE(pn.definition->'dependencies','[]'::jsonb)) dep
       LEFT JOIN nodes upstream ON upstream.id=dep.value AND upstream.state='COMPLETED'
       LEFT JOIN node_completions c ON c.node_id=upstream.id AND c.activation=upstream.activation
-      WHERE upstream.id IS NULL OR c.node_id IS NULL)) AS runnable
-    FROM plan_nodes pn JOIN nodes n ON n.id=pn.node_id WHERE pn.plan_id=$1`, [planId])).rows;
+      WHERE upstream.id IS NULL OR c.node_id IS NULL
+        OR NOT activation_applies(n.task_id,upstream.id,upstream.activation,t.specification_id,t.plan_id))) AS runnable
+    FROM plan_nodes pn JOIN nodes n ON n.id=pn.node_id JOIN tasks t ON t.id=n.task_id WHERE pn.plan_id=$1`, [planId])).rows;
   if (rows.some((row) => row.runnable)) return 'RUNNING';
   if (rows.some((row) => row.state !== 'COMPLETED')) return 'BLOCKED';
   const held = await tx.query(`SELECT 1 FROM attempts a JOIN tasks t ON t.id=a.task_id WHERE t.plan_id=$1 AND (NOT a.process_released OR EXISTS(SELECT 1 FROM operations o WHERE o.attempt_id=a.id AND o.state NOT IN ('succeeded','cancelled'))) UNION SELECT 1 FROM workspace_leases l JOIN tasks t ON t.id=l.task_id WHERE t.plan_id=$1 AND l.state<>'released'`, [planId]);

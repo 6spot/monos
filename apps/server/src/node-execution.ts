@@ -18,7 +18,8 @@ import type {
 } from '../../../packages/protocol/src/index.ts';
 import { lockConfiguration } from './configuration-guards.ts';
 import { authenticateOwner } from './owner-commands.ts';
-import { DispatchQueue } from './dispatch-queue.ts';
+import { derivedTaskState } from './owner-execution.ts';
+import { DispatchQueue, nodeDependenciesReady, serialNodeReady } from './dispatch-queue.ts';
 import { RuntimeScheduling } from './runtime-scheduling.ts';
 import { planningEvent, planningText } from './task-planning-state.ts';
 import { assertNodeSource, blockNodeSource, exhaustNodeRuntimeFallback, nodeSource, prepareNodeSource } from './node-execution-state.ts';
@@ -163,10 +164,22 @@ export class NodeExecution {
     try {
       const fresh = (
         await this.db.pool.query<{ task_id: string; node_id: string }>(
-          `SELECT t.id task_id,n.id node_id FROM tasks t JOIN plan_nodes pn ON pn.plan_id=t.plan_id JOIN nodes n ON n.id=pn.node_id
+          `SELECT DISTINCT ON (t.id) t.id task_id,n.id node_id FROM tasks t JOIN plan_nodes pn ON pn.plan_id=t.plan_id JOIN nodes n ON n.id=pn.node_id
     WHERE t.state='RUNNING' AND n.state='PENDING' AND n.execution_source_id IS NULL AND (EXISTS(
      SELECT 1 FROM task_events e JOIN attempts a ON a.id=e.attempt_id JOIN task_planning_outbox p ON p.id=a.planning_intent_id
      WHERE e.task_id=t.id AND a.task_id=t.id AND p.task_id=t.id AND e.kind='plan_published' AND e.body->>'plan_id'=t.plan_id AND e.body->>'planning_intent_id'=p.id) OR EXISTS(SELECT 1 FROM replan_publications rp WHERE rp.task_id=t.id AND rp.new_plan_id=t.plan_id))
+    AND NOT EXISTS(SELECT 1 FROM jsonb_array_elements_text(pn.definition->'dependencies') dep WHERE NOT EXISTS(
+      SELECT 1 FROM nodes upstream JOIN node_completions c ON c.node_id=upstream.id AND c.activation=upstream.activation
+      JOIN plan_nodes member ON member.plan_id=t.plan_id AND member.node_id=upstream.id
+      WHERE upstream.id=dep.value AND upstream.state='COMPLETED'
+        AND activation_applies(t.id,upstream.id,upstream.activation,t.specification_id,t.plan_id)))
+    AND NOT EXISTS(SELECT 1 FROM attempts a WHERE a.task_id=t.id AND a.kind='node' AND
+      (a.state='QUEUED' OR NOT a.process_released OR EXISTS(SELECT 1 FROM operations o WHERE o.attempt_id=a.id AND o.state NOT IN ('succeeded','cancelled'))))
+    AND NOT EXISTS(SELECT 1 FROM workspace_leases l WHERE l.task_id=t.id AND l.state<>'released')
+    AND NOT EXISTS(SELECT 1 FROM nodes running JOIN plan_nodes member ON member.plan_id=t.plan_id AND member.node_id=running.id WHERE running.state='RUNNING')
+    AND NOT EXISTS(SELECT 1 FROM node_execution_outbox s JOIN nodes pending ON pending.execution_source_id=s.id
+      WHERE s.task_id=t.id AND NOT s.done AND pending.state='PENDING' AND pending.activation=s.node_activation
+        AND s.specification_id=t.specification_id AND s.plan_id=t.plan_id)
     ORDER BY t.id,n.id LIMIT $1`,
           [limit]
         )
@@ -179,7 +192,8 @@ export class NodeExecution {
           const node = (
             await tx.query<ExecutionNode>('SELECT * FROM nodes WHERE id=$1 FOR UPDATE', [candidate.node_id])
           ).rows[0]!;
-          if (!(await specificationFrozen(tx,task.id)) && task.state === 'RUNNING' && node.state === 'PENDING' && !node.execution_source_id)
+          if (!(await specificationFrozen(tx,task.id)) && task.state === 'RUNNING' && node.state === 'PENDING' && !node.execution_source_id &&
+              await nodeDependenciesReady(tx, task.plan_id, node.id) && await serialNodeReady(tx, task.id, node.id))
             await prepareNodeSource(tx, task, node, version);
         });
       const sources = (
@@ -499,7 +513,7 @@ export class NodeExecution {
               await resolveInheritedHold(tx,node.id,blocker!.id,command.request_id);
               const nextBlocker=await activateInheritedHold(tx,source);
               if(!nextBlocker)await tx.query("UPDATE nodes SET state='COMPLETED',blocker_id=NULL,guidance_paused=false WHERE id=$1",[node.id]);
-              await tx.query('UPDATE tasks SET state=$2,control_version=control_version+1 WHERE id=$1',[task.id,nextBlocker?'BLOCKED':'REVIEW']);
+              await tx.query("UPDATE tasks SET state=CASE WHEN state='REPLAN_REQUIRED' THEN state ELSE $2 END,control_version=control_version+1 WHERE id=$1",[task.id,await derivedTaskState(tx,task.plan_id)]);
               await planningEvent(tx,task.id,command.name,{node_id:node.id,node_activation:Number(node.activation),source_id:source.id,blocker_id:blocker!.id,...(target.answer?{answer:target.answer}:{})});
               return this.receipt(tx,command,hash,json,{schema_version:1,request_id:command.request_id,status:'committed',task_id:task.id,control_version:Number(task.control_version)+1,source_id:source.id,...(nextBlocker?{blocker_id:nextBlocker}:{})});
             }
@@ -618,6 +632,11 @@ export class NodeExecution {
         )
       ).rows[0];
       if (manifest) manifest.node_activation = Number(manifest.node_activation);
+      let waitingReason = source?.waiting_reason ?? null;
+      if (!source && node.state === 'PENDING' && task.plan_id) {
+        if (!await nodeDependenciesReady(tx, task.plan_id, node.id)) waitingReason = 'waiting_for_dependencies';
+        else if (!await serialNodeReady(tx, task.id, node.id)) waitingReason = 'waiting_for_serial_execution';
+      }
       const result = {
         schema_version: 1,
         task_id: taskId,
@@ -630,7 +649,7 @@ export class NodeExecution {
         guidance_paused:node.guidance_paused,
         guidance_followup_pending:!!(await tx.query("SELECT 1 FROM task_guidance_followups WHERE node_id=$1 AND status='waiting'",[nodeId])).rowCount,
         source: source ? nodeSource(source) : null,
-        waiting_reason: continuation ? (continuation.reason ?? (continuation.state === 'settling' ? 'runtime_fallback_settling' : 'runtime_fallback_pending')) : source?.waiting_reason ?? null,
+        waiting_reason: continuation ? (continuation.reason ?? (continuation.state === 'settling' ? 'runtime_fallback_settling' : 'runtime_fallback_pending')) : waitingReason,
         attempt: attempt
           ? {
               attempt_id: attempt.id,

@@ -328,7 +328,7 @@ func reuseWorkspaceRecord(r workspaceRecord, op protocol.Operation, storage stri
 	if b == nil || b.StorageID != storage || b.RepositoryIdentity != r.Metadata.RepositoryIdentity || b.BaseCommit != r.Metadata.BaseCommit || b.TargetBranch != r.Metadata.TargetBranch || b.FinalizedCommit != r.Metadata.FinalizedCommit || !reflect.DeepEqual(b.ProviderMetadata, r.Metadata.ProviderMetadata) {
 		return r, fmt.Errorf("storage_unavailable: fixed workspace basis changed")
 	}
-	if w.Transfer != nil || old.NodeID != w.NodeID || r.PrivateCheckpoint != nil && old.NodeActivation != w.NodeActivation {
+	if w.Transfer != nil || old.NodeID != w.NodeID || old.NodeActivation != w.NodeActivation {
 		if err := validateWorkspaceTransfer(r, op); err != nil {
 			return r, err
 		}

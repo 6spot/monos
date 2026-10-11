@@ -69,7 +69,23 @@ reconnect or explicit scoped repair; no timer loop or automatic Agent retry.
 
 The probe's `createTraversalRoot(path, uid, gid)` explicitly applies `0755` after creating/chowning a new Attempt parent; `mkdir(0755)` alone is filtered by the service's `0027` umask. Execution-owned children explicitly receive `02750`. Existing parents must already have the exact expected owner/group/type/mode; reject symlinks or mismatches without taking them over. Preserve failed Attempt directories and use a fresh Attempt ID after verified release.
 
-One direct workspace lease prevents other Node dispatch for that Task. Multiple admitted Nodes use isolated worktrees from finalized revisions. Serialize integration and reserve a whole multi-repository completion boundary before partial effects can become visible.
+One direct workspace lease prevents other Node dispatch for that Task. The serial
+execution path preserves the same Task worktree across Nodes and activations.
+Serialize integration and reserve a whole multi-repository completion boundary
+before partial effects can become visible.
+
+An immutable open descriptor may carry `WorkspaceTransfer.purpose: serial` only
+for a completed predecessor in the same Plan. It carries no Replan publication or
+proposal ID and cannot adopt a private checkpoint. Bind both sides to the exact
+Task/Runner/workspace, predecessor Attempt/lease/activation and target canonical
+dispatch Plan. Before first adoption, verify the root-owned predecessor manifest,
+released workspace record and settled completion operation, including writer
+absence, exact metadata, completion manifest digest and finalized commit/tree.
+Changing either Node or activation requires an explicit valid transfer. Preserve
+the fixed basis and existing code; historical completed code after Review Rework
+is physical lineage, not completion evidence for the new activation. Once adopted,
+replay uses the immutable new lease without adopting its predecessor again. Replan
+transfers retain their cross-Plan publication/proposal and checkpoint contracts.
 
 Stop writers, finalize, integrate, then grant completion evidence. Preserve operation-specific refs and local journal stages. Interrupted private work is not a completed integrated result. Rework corrects existing code rather than automatically reverting it.
 
@@ -115,6 +131,11 @@ Bad: expose partially integrated repositories to downstream work or publish all 
 ## 6. Tests Required
 
 Exercise two-account fetch/clone/export, direct-lease late repository access, concurrent integrations, crash after each effect, retained private work, cleanup protection and exact candidate-tree equality. Test capture/publication limits separately. Provider write tests require an explicitly authorized test repository.
+
+Use real local Git to prove completed serial handoff preserves actual HEAD/tree
+and code for both a new Node and a new activation, with exact lease replay. Reject
+cross-Plan serial transfers, checkpoints, mismatched source/target or manifest/tree,
+and unreleased writers/effects. Keep the existing Replan transfer cases passing.
 
 Run traversal-root tests under umask `0027`, asserting final `0755`, and reject existing files, symlinks and wrong ownership without chmod/replacement. Probe-tool installation separately tests root umask `0077` so its shared driver remains readable.
 

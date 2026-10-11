@@ -12,6 +12,7 @@ import type { NodeTask, ExecutionNode } from './node-execution-state.ts';
 import { prepareNodeSource } from './node-execution-state.ts';
 import { admitWorkspaceEffect } from './workspaces.ts';
 import { reactivateSettledNodes } from './task-records.ts';
+import { nodeDependenciesReady, serialNodeReady } from './dispatch-queue.ts';
 import { planningEvent } from './task-planning-state.ts';
 
 export async function bindTaskGuidance(
@@ -345,18 +346,11 @@ export async function advanceGuidanceFollowup(
     ).rowCount
   )
     return;
-  const held = (
-    await tx.query(
-      `SELECT 1 FROM attempts a WHERE a.task_id=$1 AND a.node_id=$2 AND (NOT a.process_released OR EXISTS(SELECT 1 FROM operations o WHERE o.attempt_id=a.id AND o.state NOT IN ('succeeded','cancelled')))`,
-      [task.id, node.id],
-    )
-  ).rowCount;
-  if (held) return;
-  if (
-    (await tx.query("SELECT 1 FROM workspace_leases WHERE task_id=$1 AND state<>'released'", [task.id]))
-      .rowCount
-  )
-    return;
+  // Guidance may target a future dependent or completed work whose descendants
+  // still own the serial workspace. Retain the obligation until it can safely
+  // build current context or reactivate the settled subgraph.
+  if (!await nodeDependenciesReady(tx, task.plan_id, node.id) ||
+      !await serialNodeReady(tx, task.id, node.id, node.execution_source_id ?? undefined)) return;
   // An Owner Retry/Continue may already have prepared a source containing all
   // pending guidance; consume follow-up responsibility without replacing it.
   if (

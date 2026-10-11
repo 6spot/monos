@@ -45,7 +45,7 @@ export async function startEligibility(tx: Transaction, task: PlanningTask): Pro
 
 const protocol = [
   'You are the initial Execution Task Planner. Only monos Tool Protocol commands commit formal state. Plan for the effective Specification using the selected Role descriptors. This is an independent Task: no Todo history, prior Task, repository checkout or Runtime session is authoritative.',
-  'Normal completion MUST call monos publish_execution_plan with planning_intent_id, a fresh plan_id, and nodes containing exactly one node_id, role_id, goal and dependencies: []. Optional hard_requirements and expected_outputs are exact nonblank string arrays. Do not include Role instructions, Runtime/model, paths or repository bindings. Artifact consumes must be absent or empty in this stage. Multi-Node execution is unsupported; never flatten work that needs a graph.',
+  'Normal completion MUST call monos publish_execution_plan with planning_intent_id, a fresh plan_id, and a complete acyclic graph of 1..256 nodes containing node_id, role_id, goal and dependencies. Every dependency names another Node in this graph. Use the smallest sufficient graph; Nodes execute serially after their dependencies complete. Optional hard_requirements and expected_outputs are exact nonblank string arrays. Do not include Role instructions, Runtime/model, paths or repository bindings. Artifact consumes must be absent or empty in this stage.',
   'If the Specification is insufficient, contradictory, or cannot be represented by the supported plan, call monos raise_planning_issue with the exact planning_intent_id and a clear reason. Answers below guide planning under the Specification; they cannot silently revise it. Do not use commit_task_turn. Repository inspection and Node execution are unavailable in this stage.',
   'The server ends this Attempt after either committed outcome. Structural validation can be corrected within this same Attempt. On an uncertain response query or retry the exact same request ID. Natural-language output is provisional. CLI usage: monos COMMAND --request-id ID --input payload.json --output json (or --input - for stdin); monos command-status --request-id ID --output json; monos retry --request-id ID --output json.',
 ].join('\n');
@@ -150,11 +150,11 @@ export async function handlePlanningCommand(tx: Transaction, attempt: PlanningAt
   if (command.name === 'publish_execution_plan') {
     const nodes = command.payload.nodes as ExecutionPlanNode[];
     validatePlan(nodes);
-    if (nodes.length !== 1) throw new CommandError('unmet_precondition', 'unsupported_multi_node_plan: this stage accepts exactly one Node; do not flatten a graph');
-    if (nodes[0]!.consumes?.length) throw new CommandError('unmet_precondition', 'unsupported_artifact_consumption: Artifact consumption is unavailable in this stage');
-    const role = (await tx.query(`SELECT 1 FROM project_roles pr JOIN roles r ON r.id=pr.role_id JOIN tasks t ON t.project_id=pr.project_id
-      WHERE t.id=$1 AND r.id=$2 AND NOT r.archived`, [attempt.task_id, nodes[0]!.role_id])).rowCount;
-    if (!role) throw new CommandError('unmet_precondition', 'Plan Role must be selected and available');
+    if (nodes.some(node => node.consumes?.length)) throw new CommandError('unmet_precondition', 'unsupported_artifact_consumption: Artifact consumption is unavailable in this stage');
+    const roleIds = [...new Set(nodes.map(node => node.role_id))];
+    const roles = (await tx.query(`SELECT r.id FROM project_roles pr JOIN roles r ON r.id=pr.role_id JOIN tasks t ON t.project_id=pr.project_id
+      WHERE t.id=$1 AND r.id=ANY($2::text[]) AND NOT r.archived`, [attempt.task_id, roleIds])).rowCount;
+    if (roles !== roleIds.length) throw new CommandError('unmet_precondition', 'Every Plan Role must be selected and available');
     try {
       await publishInitialPlan(tx, { task_id: attempt.task_id, plan_id: command.payload.plan_id!, nodes,
         expected: { control_version: command.expected_control_version, specification_id: intent.specification_id, plan_id: null },

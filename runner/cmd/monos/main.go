@@ -59,8 +59,9 @@ or use block_node for unresolved work. Exact assignments are validated by backen
 Initial Task Plan: {"planning_intent_id":"INTENT","plan_id":"PLAN","nodes":[{"node_id":"NODE","role_id":"ROLE","goal":"work to perform","dependencies":[]}]}
 Initial planning issue: {"planning_intent_id":"INTENT","reason":"Owner direction needed"}
 Only the source-bound initial Task Planner may publish a Plan or raise an initial
-planning issue. Use its supplied planning_intent_id. Exactly one Node is supported;
-preserve optional hard_requirements and expected_outputs when supplied.
+planning issue. Use its supplied planning_intent_id. Plans support 1..256 Nodes
+with acyclic dependencies, executed serially per Task. Preserve optional
+hard_requirements and expected_outputs. Omit consumes or use [] in this slice.
 Only these two commands end initial planning; commit_task_turn does not.
 Task context: {}; current formal facts include the separate action basis.
 Task history: {} or {"query":"search text"} or {"cursor":"CURSOR"}; source-cutoff bound.

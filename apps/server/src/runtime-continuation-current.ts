@@ -19,7 +19,8 @@ export async function preparedRuntimeSourceCurrent(
         AND n.state IN ('PENDING','RUNNING') AND t.state='RUNNING'
         AND t.accepted_delivery_operation_id IS NULL
         AND t.specification_id=s.specification_id AND t.plan_id=s.plan_id
-        AND t.control_version=s.expected_version AND s.preparation_failure IS NULL`,
+        AND s.preparation_failure IS NULL AND NOT s.done
+        AND NOT EXISTS(SELECT 1 FROM task_guidance_followups f WHERE f.source_id=s.id AND f.status='waiting')`,
     [plannedAttemptID, predecessor.task_id, predecessor.node_id])).rowCount;
   }
   if (predecessor.launch.task_planning_source) {

@@ -23,7 +23,7 @@ The bundled [monos](../../../runner/cmd/monos/main.go) supports immutable retry/
 
 ## 3. Contracts
 
-Single-Node execution adds `publish_artifact`, `read_artifact`, `block_node`,
+Canonical Node execution adds `publish_artifact`, `read_artifact`, `block_node`,
 `Dispatch.node_execution_source`, explicit repository-free completion and exact
 `settle_completion` pairs. See [Node execution](../backend/node-execution.md) for
 strict payloads, omitted/empty Artifact selection and canonical Owner controls.
@@ -139,3 +139,11 @@ IDs; Replan exposes actual review feedback/predecessor/successor. Delivery adds
 `revoked`, selected detail `revocation` and separate item `reconciliation` facts.
 See [review correction](../backend/review-correction.md) for signatures, SQL,
 error matrix and required authority/race checks.
+
+Canonical Node envelope control binds its immutable `node_execution_source`, while
+Owner execution commands retain live Task CAS. Initial Plan transport supports
+1..256 Nodes with dependencies; backend validates DAG completeness and current Roles.
+`SpecificationImpact` transports up to 256 Node observations, without granting
+multi-Node requirement-publication authority. `WorkspaceTransfer.purpose: serial`
+permits completed same-Plan handoff and forbids Replan provenance fields; absent
+purpose still requires the genuine Replan proposal and publication pair.

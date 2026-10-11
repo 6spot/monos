@@ -643,8 +643,9 @@ export interface WorkspaceTransfer {
     from_plan_id:                string;
     kind:                        ReplanWorkspaceInputKind;
     metadata:                    WorkspaceMetadata;
-    proposal_id:                 string;
-    publication_id:              string;
+    proposal_id?:                string;
+    publication_id?:             string;
+    purpose?:                    WorkspaceTransferPurpose;
     resource_id:                 string;
     runner_id:                   string;
     settle_operation_id:         string;
@@ -654,6 +655,8 @@ export interface WorkspaceTransfer {
     to_plan_id:                  string;
     workspace_id:                string;
 }
+
+export type WorkspaceTransferPurpose = "serial";
 
 export interface OperationResult {
     attempt_id:                 string;

@@ -8998,7 +8998,7 @@
           "items": {
             "$ref": "#/definitions/SpecificationImpactNode"
           },
-          "maxItems": 1,
+          "maxItems": 256,
           "uniqueItems": true
         },
         "guidance": {
@@ -10300,6 +10300,10 @@
         },
         "to_node_activation": {
           "$ref": "#/definitions/PositiveCounter"
+        },
+        "purpose": {
+          "type": "string",
+          "const": "serial"
         }
       },
       "required": [
@@ -10315,8 +10319,6 @@
         "from_node_activation",
         "kind",
         "metadata",
-        "publication_id",
-        "proposal_id",
         "to_plan_id",
         "to_node_id",
         "to_node_activation"
@@ -10366,6 +10368,38 @@
               "finalized_tree": {}
             },
             "type": "object"
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "purpose"
+            ],
+            "type": "object",
+            "properties": {
+              "purpose": {}
+            }
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "const": "completed"
+              },
+              "publication_id": false,
+              "proposal_id": false
+            }
+          },
+          "else": {
+            "type": "object",
+            "required": [
+              "publication_id",
+              "proposal_id"
+            ],
+            "properties": {
+              "publication_id": {},
+              "proposal_id": {}
+            }
           }
         }
       ]

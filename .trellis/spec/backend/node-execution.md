@@ -1,9 +1,9 @@
-# Single-Node execution, Artifacts and recovery
+# Serial Node execution, Artifacts and recovery
 
 Sources: `apps/server/src/{node-execution,node-execution-state,node-completion,artifacts}.ts`,
 `packages/db/migrations/0018_node_execution.sql` and the shared protocol schema.
 Task Conversation extends these contracts via [guidance handling](task-conversation.md).
-Spec/Plan changes and delivery remain separate roadmap tasks.
+Multi-Node replacement Plans and new Agent-requested Rework remain subsequent work.
 
 ## 1. Scope / Trigger
 
@@ -43,6 +43,23 @@ Artifact/recovery metadata, plus active applicable Task guidance and exact sourc
 assignments. Exclude Todo/cache/sessions, Planner Guidance, other Roles/Tasks, raw
 logs and Git bytes. Historical Artifact publication is not current
 completion. Queue identity and prompt cannot refresh after configuration changes.
+
+Automatic source preparation waits for current completed dependencies and all prior
+Task Node processes, operations and leases to settle. Prepare one serial candidate
+at a time, so a downstream source observes current Role configuration and completion
+evidence. Explicit Owner/guidance/Runtime continuation intents may be retained before
+settlement, but cannot queue or promote before their dependency and physical barriers.
+
+`node-upstream-context.ts` includes current completed direct dependencies, exact
+completion/manifest identity, summary/revision and only selected Artifact metadata.
+Bodies remain behind `read_artifact`; unselected and obsolete activation outputs
+do not become upstream evidence. Refuse an oversized context without clipping.
+
+Canonical Node command versions bind the frozen Node source. A Task control change
+for another Node cannot revoke that source: continue to validate the exact current
+source pointer, activation, effective Spec/Plan, mutation authority and freeze guards.
+Owner commands still compare the live Task control version. Source replacement,
+Rework and requirement changes fence affected work explicitly.
 
 Queue admission makes Node RUNNING. Offline/no-Runner/stale observation waits
 durably; unsupported or exhausted selection records a factual blocker. Retry reads
@@ -95,7 +112,7 @@ source or launching a correcting Agent.
 | Changed same request/Artifact ID | Conflict; original bytes retained |
 | Oversized text, wrapper or context | Bounded error/preparation failure; no clipping |
 | No Runner or stale observation | Durable waiting; no fake failed Attempt |
-| Unsupported multi-Node Plan / exhausted policy | Factual blocker; Owner Retry |
+| Exhausted policy | Factual Node blocker; Owner Retry; independent runnable work stays RUNNING |
 | Hard Git failure / absent objects | Retain ownership; no fabricated success |
 | Semantic retry without exact answer | Reject; blocker remains unresolved |
 | Cancelled Task cleanup retry | Exact physical retry only; no revival |

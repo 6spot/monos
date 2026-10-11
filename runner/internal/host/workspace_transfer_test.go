@@ -27,7 +27,7 @@ func transferFixture(t *testing.T) (workspaceRecord, protocol.Operation, Manifes
 	metadata := r.Metadata
 	metadata.Checkpoint = r.PrivateCheckpoint
 	old := r.Operation.Workspace
-	w.Transfer = &protocol.WorkspaceTransfer{PublicationID: "publication", ProposalID: "proposal", WorkspaceID: w.WorkspaceID, TaskID: w.TaskID, ResourceID: w.ResourceID, RunnerID: w.RunnerID, FromPlanID: "old-plan", ToPlanID: "new-plan", FromNodeID: old.NodeID, FromNodeActivation: old.NodeActivation, FromAttemptID: r.Operation.AttemptID, FromLeaseID: old.LeaseID, ToNodeID: w.NodeID, ToNodeActivation: w.NodeActivation, SettleOperationID: "old-stop", Kind: "checkpoint", Metadata: metadata}
+	w.Transfer = &protocol.WorkspaceTransfer{PublicationID: ptr("publication"), ProposalID: ptr("proposal"), WorkspaceID: w.WorkspaceID, TaskID: w.TaskID, ResourceID: w.ResourceID, RunnerID: w.RunnerID, FromPlanID: "old-plan", ToPlanID: "new-plan", FromNodeID: old.NodeID, FromNodeActivation: old.NodeActivation, FromAttemptID: r.Operation.AttemptID, FromLeaseID: old.LeaseID, ToNodeID: w.NodeID, ToNodeActivation: w.NodeActivation, SettleOperationID: "old-stop", Kind: "checkpoint", Metadata: metadata}
 	_, digest, _ := wire.Canonical(w)
 	op.WorkspaceDigest = &digest
 	m := Manifest{Dispatch: protocol.Dispatch{AttemptID: r.Operation.AttemptID, DispatchID: r.Operation.DispatchID, NodeExecutionSource: &protocol.NodeExecutionSource{PlanID: "old-plan", NodeID: old.NodeID, NodeActivation: old.NodeActivation}}}

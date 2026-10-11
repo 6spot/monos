@@ -50,14 +50,15 @@ retained `context_budget_exceeded` preparation failure with no executable prompt
 the pump cannot refresh it. Explicit Retry creates a new context source.
 
 Source identity supplements claim/fence/connection/Spec/control guards. A Planner
-kind alone grants no initial publication authority. Exactly one Node, no
-dependencies and absent/empty `consumes` are accepted at this public Stage A
-boundary; the shared graph primitive still handles 1..256 Nodes. Preserve
+kind alone grants no initial publication authority. Initial publication accepts
+1..256 Nodes with unique IDs and a complete acyclic dependency graph. Every distinct
+Role must be selected and available. Execution is serial per Task; `consumes` remains
+absent/empty until explicit Artifact-consumption hints are implemented. Preserve
 optional `hard_requirements`, `expected_outputs` and absent/empty arrays exactly.
 No Runtime/model, full Role instructions or repository binding belongs in a Node.
 
 Publication or issue, event, receipt, SUCCEEDED/fenced Attempt and repository-free
-Stop admission share one transaction. Publication leaves a PENDING Node; cleanup
+Stop admission share one transaction. Publication leaves PENDING Nodes; cleanup
 retains physical ownership until proven Stop. Committed outcome wins over later
 exit. An exit without an outcome remains interrupted/failed and requires Retry.
 Structural validation remains correctable within the same Attempt.

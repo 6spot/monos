@@ -3,7 +3,7 @@
 Current stage: [pre-use development](../../../docs/12-product-naming-and-upgrades.md). Historical architecture, version and data compatibility are not required; implement and verify the current version. Current-run recovery and ownership contracts still apply.
 
 Status: `apps/server` implements the Stage A foundation, Todo Discussion/Task creation,
-explicit initial planning and canonical Single-Node execution with Artifacts and
+explicit initial planning and canonical serial multi-Node execution with Artifacts and
 completion recovery, ordered Task Conversation, explicit guidance handling and exact
 Specification revision settlement and independently accepted one-Node replacement
 Plans with standalone/joint publication and independent exits, exact local/remote
@@ -22,7 +22,7 @@ and [technology](../../../docs/11-technology-and-deployment.md).
 - For ordered Todo input, Planner replies, cache and Retry/Withdraw, read [Discussion](discussion.md).
 - For exact proposal confirmation and independent Task creation, read [Task preview](task-preview.md).
 - For explicit Start, initial Plan/issue and pre-Plan controls, read [Task planning](task-planning.md).
-- For Single-Node dispatch, Artifacts and completion recovery, read [Node execution](node-execution.md).
+- For serial Node dispatch, Artifacts and completion recovery, read [Node execution](node-execution.md).
 - For ordered Task input, independent conversation authority and guidance handling, read [Task Conversation](task-conversation.md).
 - For exact requirement proposals, authorization and settled publication, read [Specification revisions](task-specification.md).
 - For replacement graphs, joint publication and private-work transfer, read [Replan](task-replan.md).

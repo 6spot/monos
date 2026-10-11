@@ -6,8 +6,9 @@
 `owner-review-control.ts`, migration `0025_review_correction.sql` and the protected
 Task UI implement explicit correction. Read [Owner delivery](owner-delivery.md),
 [Replan](task-replan.md), [requirements](task-specification.md) and
-[Conversation](task-conversation.md). Stage A remains one Node and zero/one modified
-automatic GitHub repository; this adds no Task state or provider method.
+[Conversation](task-conversation.md). Serial multi-Node review uses the same canonical
+result collection and zero/one modified automatic GitHub repository; no new Task
+state or provider method is introduced.
 
 ## 2. Signatures
 
@@ -88,9 +89,12 @@ Missing formal outcome is failure; process launch/exit/prose never resolves feed
 
 ### Semantic outcomes and preserved obligations
 
-Main routing stays REVIEW until a real outcome. Sufficient Rework names the exact
-current Node and retains Task/Node/code/public lineage while invalidating result
-evidence. Its own feedback/source is excluded from Rework preconditions; independent
+Main routing stays REVIEW until a real outcome. Sufficient Rework names a nonempty
+subset of current Nodes; the program invalidates that subset and its descendants
+after settlement, retaining unrelated current results and all historical evidence.
+The resolution retains exact requested `node_ids` and records the full sorted
+`affected_node_ids`; downstream correction context uses the latter. Task/Node/code/
+public lineage remains intact. Its own feedback/source is excluded from Rework preconditions; independent
 Stop/input/requirement/issue holds remain. Node promotion distinguishes guidance
 assigned for that Node to execute from unresolved classification/control guards.
 
@@ -103,7 +107,7 @@ excludes unrelated feedback and earlier corrections from later activations. Keep
 feedback distinct from Task guidance and the Specification. Existing source prompt,
 digest and byte-budget guards apply; never refresh already-frozen sources.
 
-Graph insufficiency creates a genuine review-origin Replan, with no fabricated
+Single-Node graph insufficiency creates a genuine review-origin Replan, with no fabricated
 Node/input. Dismiss creates a new routing operation linked to the immutable
 predecessor and actual Owner direction. Its own control bump, a fresh source or
 Retry without a new answer does not permit same-feedback/Spec/Plan/result automatic
@@ -184,3 +188,7 @@ Wrong: clear acceptance -> old linked operation falls back to ordinary authority
 Correct: exact Owner revocation -> original settlement -> immutable reconsideration
          -> source-bound semantic outcome -> actual successor and exact approval
 ```
+
+Multi-Node Specification/Replan mutation remains explicitly unavailable in this
+increment. Reject it before creating a request, freeze or operation. Ordinary
+Conversation/Review reads include the complete bounded graph and stay available.

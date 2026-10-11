@@ -45,14 +45,15 @@ describe('Specification changes independent wire review', () => {
     }))).toThrow();
   });
 
-  it('restricts the graph shape and requires exact Node evidence coverage fields', () => {
+  it('transports bounded multi-Node observations and requires exact evidence fields', () => {
     const node = { node_id: 'node', node_activation: 1, source_id: 'source',
       completion_operation_id: 'completion', completion_manifest_digest: 'b'.repeat(64), disposition: 'carry' };
     const impact = { graph_sufficient: true, nodes: [node], guidance: [] };
     expect(() => validate('SpecificationImpact', impact)).not.toThrow();
+    expect(() => validate('SpecificationImpact', { ...impact, nodes: [node, { ...node, node_id: 'other' }] })).not.toThrow();
     for (const value of [
       { ...impact, graph_sufficient: false },
-      { ...impact, nodes: [node, { ...node, node_id: 'other' }] },
+      { ...impact, nodes: Array.from({ length: 257 }, (_, i) => ({ ...node, node_id: `node-${i}` })) },
       { ...impact, nodes: [{ ...node, goal: 'Silently replace definition' }] },
       { ...impact, nodes: [{ ...node, completion_manifest_digest: 12 }] },
       { ...impact, nodes: [{ ...node, disposition: 'unaffected_live' }] },

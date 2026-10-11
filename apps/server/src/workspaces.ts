@@ -1,5 +1,6 @@
 import type { WorkspaceTransfer } from '../../../packages/protocol/src/index.ts';
 import { workspaceTransfer } from './task-replan-state.ts';
+import { serialWorkspaceTransfer } from './workspace-serial-transfer.ts';
 import { randomUUID } from 'node:crypto';
 import type { Transaction } from '../../../packages/db/src/index.ts';
 import { CommandError } from '../../../packages/domain/src/commands.ts';
@@ -89,8 +90,11 @@ export async function admitWorkspaceOpen(tx: Transaction, attempt: WorkspaceAtte
   let transfer: WorkspaceTransfer|undefined;
   if (workspace) {
     const interrupted = (await tx.query<Lease>('SELECT * FROM workspace_leases WHERE workspace_id=$1 ORDER BY created_at DESC,id DESC LIMIT 1', [workspace.id])).rows[0];
-    if(interrupted&&(interrupted.node_id!==attempt.node_id||interrupted.node_activation!==attempt.node_activation))transfer=await workspaceTransfer(tx,attempt.task_id,attempt.node_id,Number(attempt.node_activation),workspace.id,interrupted.id);
-    if (interrupted && !transfer && ((workspace.ever_materialized && interrupted.node_id !== attempt.node_id) || (interrupted.checkpoint && interrupted.node_activation !== attempt.node_activation))) throw new CommandError('unmet_precondition', 'Interrupted workspace requires explicit activation disposition');
+    if (interrupted && (interrupted.node_id !== attempt.node_id || interrupted.node_activation !== attempt.node_activation)) {
+      transfer = await workspaceTransfer(tx, attempt.task_id, attempt.node_id, Number(attempt.node_activation), workspace.id, interrupted.id)
+        ?? await serialWorkspaceTransfer(tx, attempt, workspace.id, interrupted.id);
+      if (!transfer && workspace.ever_materialized) throw new CommandError('unmet_precondition', 'Interrupted workspace requires explicit activation disposition');
+    }
   }
   const id = randomUUID(), leaseId = randomUUID();
   const snapshot = workspace?.ever_materialized ? workspace.resource : resourceSnapshot(resource);

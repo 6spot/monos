@@ -11,6 +11,8 @@ import { CommandError } from '../../../packages/domain/src/commands.ts';
 import { canonicalJSON, digest, MAX_ITEM_BYTES, workspaceId } from '../../../packages/protocol/src/index.ts';
 import type { NodeExecutionSource } from '../../../packages/protocol/src/index.ts';
 import { planningEvent } from './task-planning-state.ts';
+import { derivedTaskState } from './owner-execution.ts';
+import { nodeUpstreamContext } from './node-upstream-context.ts';
 
 export interface NodeSource {
   id: string;
@@ -70,7 +72,9 @@ export async function assertNodeSource(
     await tx.query<NodeSource>(
       `SELECT s.* FROM node_execution_outbox s JOIN tasks t ON t.id=s.task_id JOIN nodes n ON n.id=s.node_id
   WHERE s.id=$1 AND s.task_id=$2 AND s.planned_attempt_id=$3 AND n.execution_source_id=s.id AND n.activation=s.node_activation
-  AND t.specification_id=s.specification_id AND t.plan_id=s.plan_id AND t.control_version=s.expected_version AND t.state='RUNNING'`,
+  AND t.specification_id=s.specification_id AND t.plan_id=s.plan_id AND t.state='RUNNING'
+  AND (NOT s.done OR EXISTS(SELECT 1 FROM attempts a WHERE a.id=$3 AND a.node_execution_source_id=s.id))
+  AND NOT EXISTS(SELECT 1 FROM task_guidance_followups f WHERE f.source_id=s.id AND f.status='waiting')`,
       [source.source_id, taskId, attemptId]
     )
   ).rows[0];
@@ -86,6 +90,7 @@ export async function assertNodeSource(
 const protocol = [
   'You execute exactly the bound Node. Only monos Tool Protocol commands change formal state. Follow the effective Specification, exact Node requirements, current Role instructions and formal Owner answers. Todo, prior Tasks and Runtime memory are not authority.',
   'Apply the exact review_rework feedback and Planner routing reason for this activation. They request correction within the effective Specification; they do not replace the Specification or create guidance IDs.',
+  'upstream_outputs contains current completed direct dependencies and their selected Artifact metadata. Read exact content with read_artifact. Historical output and earlier Git revisions do not prove that the current combined result is valid.',
   'Use monos open_workspace with resource_id only when repository work is needed. Work freely within that managed workspace; preserve previous private work and fixed Git ancestry. Do not create your own repository as a substitute for managed work.',
   'Optional durable outputs use monos publish_artifact with artifact_id, title, content:{text,media_type}, optional references:[{url,label?}] and supersedes. UTF-8 text is limited to 256 KiB. Artifact publication is not completion. Read exact Task content with monos read_artifact {artifact_id}. HTML is managed data.',
   'Finish with monos complete_node {summary,artifact_ids?,handled_guidance_ids?}. Explicitly declare every required_guidance_id you have handled; absence declares none and rejects missing required handling. If blocked, use block_node with the precise reason. Guidance launch is not proof of handling. Omitted artifact_ids selects outputs from this Attempt; [] selects none; explicit IDs select same Node/activation outputs. No Artifact or repository is mandatory. If a previous Attempt left a private workspace checkpoint, reopen and finalize it before completion. Complete closes mutation authority and the system stops the process and finalizes Git; prose/process exit never completes.',
@@ -104,7 +109,7 @@ export async function prepareNodeSource(
   const id = randomUUID(),
     attemptId = randomUUID();
   const definition = (
-    await tx.query<{ definition: { role_id: string } }>(
+    await tx.query<{ definition: { role_id: string; dependencies: string[] } }>(
       'SELECT definition FROM plan_nodes WHERE plan_id=$1 AND node_id=$2',
       [task.plan_id, node.id]
     )
@@ -120,11 +125,13 @@ export async function prepareNodeSource(
     planned_attempt_id: attemptId,
     configuration_version: configurationVersion,
   };
-  const count = Number(
-    (await tx.query<{ count: string }>('SELECT count(*) FROM plan_nodes WHERE plan_id=$1', [task.plan_id])).rows[0]!
-      .count
-  );
-  let failure: string | null = count !== 1 ? 'unsupported_multi_node_plan' : null;
+  let failure: string | null = null;
+  let upstream: Awaited<ReturnType<typeof nodeUpstreamContext>> | undefined;
+  try { upstream = await nodeUpstreamContext(tx, task.id, task.plan_id, definition.dependencies); }
+  catch (error) {
+    if (!(error instanceof CommandError) || error.message !== 'context_budget_exceeded') throw error;
+    failure = 'context_budget_exceeded';
+  }
   let context: object | null = null,
     prompt: string | null = null;
   const bytes = Number(
@@ -179,13 +186,14 @@ export async function prepareNodeSource(
       context = {
         protocol,
         guidance,
+        upstream_outputs: upstream,
         review_rework:(await tx.query(`SELECT f.id feedback_id,f.request_id owner_request_id,f.text,f.basis,
           o.id operation_id,r.source_id review_source_id,r.attempt_id planner_attempt_id,r.request_id routing_request_id,
           r.body->>'reason' reason,$2::text node_id,$3::bigint node_activation
           FROM task_review_feedback f JOIN task_review_operations o ON o.id=f.current_operation_id AND o.feedback_id=f.id AND o.task_id=f.task_id
           JOIN task_review_resolutions r ON r.operation_id=o.id AND r.task_id=f.task_id
           WHERE f.task_id=$1 AND f.status='resolved' AND o.purpose='route_feedback' AND o.status='rework' AND r.kind='rework'
-            AND o.basis->>'specification_id'=$4 AND o.basis->>'plan_id'=$5 AND r.body->'node_ids' ? $2
+            AND o.basis->>'specification_id'=$4 AND o.basis->>'plan_id'=$5 AND COALESCE(r.body->'affected_node_ids',r.body->'node_ids') ? $2
             AND f.manifest->'outputs' @> jsonb_build_array(jsonb_build_object('node_id',$2::text,'node_activation',$3::bigint-1))
           ORDER BY r.created_at,r.operation_id`,[task.id,node.id,node.activation,task.specification_id,task.plan_id])).rows.map(r=>({...r,node_activation:Number(r.node_activation)})),
         binding,
@@ -279,7 +287,7 @@ export async function blockNodeSource(
     [id, source.task_id, source.node_id, source.node_activation, source.id, attemptId ?? null, kind, reason]
   );
   await tx.query("UPDATE nodes SET state='BLOCKED',blocker_id=$2 WHERE id=$1", [source.node_id, id]);
-  await tx.query("UPDATE tasks SET state='BLOCKED' WHERE id=$1 AND state='RUNNING'", [source.task_id]);
+  await tx.query("UPDATE tasks SET state=$2 WHERE id=$1 AND state IN ('RUNNING','BLOCKED')", [source.task_id, await derivedTaskState(tx, source.plan_id)]);
   await tx.query('UPDATE node_execution_outbox SET done=true,waiting_reason=$2 WHERE id=$1', [
     source.id,
     reason.length <= 128 ? reason : kind,
@@ -313,7 +321,7 @@ export async function inspectNodeRuntimeFallback(tx: Transaction, predecessor: R
       source.planned_attempt_id !== predecessor.id || node.execution_source_id !== source.id ||
       Number(node.activation) !== Number(source.node_activation) || Number(node.activation) !== Number(predecessor.node_activation) ||
       source.specification_id !== predecessor.specification_id || source.plan_id !== predecessor.plan_id ||
-      task.specification_id !== source.specification_id || task.plan_id !== source.plan_id || Number(task.control_version) !== Number(source.expected_version) ||
+      task.specification_id !== source.specification_id || task.plan_id !== source.plan_id ||
       canonicalJSON(nodeSource(source)) !== canonicalJSON(binding) || source.prompt !== predecessor.launch.prompt)
     return { status: 'superseded', reason: 'node_source_obsolete' };
   if (task.accepted_delivery_operation_id || task.state !== 'RUNNING' || node.state !== 'RUNNING' || node.blocker_id || node.guidance_paused)
@@ -353,7 +361,7 @@ export async function prepareNodeRuntimeFallback(tx: Transaction, predecessor: R
 export async function exhaustNodeRuntimeFallback(tx: Transaction, plannedAttemptId: string, reason: string): Promise<boolean> {
   const source = (await tx.query<NodeSource>(`SELECT s.* FROM node_execution_outbox s JOIN nodes n ON n.id=s.node_id JOIN tasks t ON t.id=s.task_id
     WHERE s.planned_attempt_id=$1 AND n.execution_source_id=s.id AND n.activation=s.node_activation
-      AND t.specification_id=s.specification_id AND t.plan_id=s.plan_id AND t.control_version=s.expected_version
+      AND t.specification_id=s.specification_id AND t.plan_id=s.plan_id
       AND t.accepted_delivery_operation_id IS NULL AND t.state IN('RUNNING','BLOCKED')`, [plannedAttemptId])).rows[0];
   if (!source) return false;
   const node = (await tx.query<ExecutionNode>('SELECT * FROM nodes WHERE id=$1', [source.node_id])).rows[0]!;

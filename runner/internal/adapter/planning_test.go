@@ -18,7 +18,7 @@ func initialPlanner() protocol.Dispatch {
 func TestInitialPlannerHasPhaseSpecificProtocolAndFreshScratchInvocation(t *testing.T) {
 	d := initialPlanner()
 	text := fixedProtocol(d)
-	for _, required := range []string{"initial Execution Task Planner", `planning_intent_id "intent"`, "monos publish_execution_plan", "monos raise_planning_issue", "dependencies: []", "hard_requirements", "expected_outputs", "multi-Node Plans are unsupported", "Never use commit_task_turn", "Todo Discussion", "Repository inspection is unavailable", "same retained request ID", "do not execute the Node"} {
+	for _, required := range []string{"initial Execution Task Planner", `planning_intent_id "intent"`, "monos publish_execution_plan", "monos raise_planning_issue", "same acyclic graph", "hard_requirements", "expected_outputs", "1..256 Nodes", "execute serially", "Nonempty consumes is unsupported", "Never use commit_task_turn", "Todo Discussion", "Repository inspection is unavailable", "same retained request ID", "do not execute the Node"} {
 		if !strings.Contains(text, required) {
 			t.Fatal("initial planning fixed protocol missing", required)
 		}

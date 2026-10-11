@@ -74,6 +74,15 @@ outbox, operation, dispatch, database journal or Agent environment.
   Check Runner/operation/lease authority before and after provider HTTP calls,
   including connected pre-ready recovery and already-fenced admitted operations.
 
+A `WorkspaceTransfer` with `purpose: serial` admits same-Plan handoff of a completed
+workspace between Nodes/activations. It forbids Replan proposal/publication IDs and
+checkpoint kind. Bind the genuine previous completed operation, manifest/tree,
+released lease and exact Task/Plan/Runner/fixed basis to the current target source.
+The admitted open descriptor persists this proof; Runner verifies retained predecessor
+manifest and settlement evidence before adoption. Historical completed code may
+remain the physical basis after Review Rework without becoming current evidence.
+Ordinary cross-Plan Replan transfer retains exact proposal/publication provenance.
+
 ## 4. Validation & Error Matrix
 
 | Condition | Result |

@@ -107,10 +107,13 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('explicit initial Task 
     expect((await db.pool.query("SELECT 1 FROM operations WHERE kind='stop'")).rowCount).toBe(1); await noWorkspace();
   });
 
-  it('rejects unsupported graphs/Artifacts/unknown fields and archived Roles without ending the correctable Attempt', async () => {
+  it('rejects missing graph dependencies/Artifacts/unknown fields and archived Roles without ending the correctable Attempt', async () => {
     const f = await task(); const r = await runner(); await start(f); const a = await launch(f, r); const n = node(f);
-    for (const nodes of [[n, { ...node(f), dependencies: [n.node_id] }], [{ ...n, consumes: ['unavailable-artifact'] }]]) {
-      await expect(service.admit(a.credential, submission(outcome(a.dispatch, 'publish_execution_plan', { plan_id: randomUUID(), nodes })))).rejects.toMatchObject(fault('unmet_precondition'));
+    for (const [nodes, code] of [
+      [[{ ...n, dependencies: ['missing-node'] }], 'invalid_input'],
+      [[{ ...n, consumes: ['unavailable-artifact'] }], 'unmet_precondition'],
+    ] as const) {
+      await expect(service.admit(a.credential, submission(outcome(a.dispatch, 'publish_execution_plan', { plan_id: randomUUID(), nodes })))).rejects.toMatchObject(fault(code));
     }
     const bad = outcome(a.dispatch, 'publish_execution_plan', { plan_id: randomUUID(), nodes: [{ ...n, role_instructions: 'not permitted' }] });
     const json = canonicalJSON(bad); await expect(service.admit(a.credential, { envelope_json: json, sha256: digest(json) })).rejects.toMatchObject(fault('invalid_input'));

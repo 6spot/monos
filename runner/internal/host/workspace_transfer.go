@@ -9,7 +9,7 @@ import (
 	"monos.local/runner/internal/wire"
 )
 
-// A transfer is system-owned publication input, never authority supplied by the
+// A transfer is system-owned admission input, never authority supplied by the
 // execution account. Check the released predecessor before replacing its lease.
 func validateWorkspaceTransfer(r workspaceRecord, op protocol.Operation) error {
 	w, old := op.Workspace, r.Operation.Workspace
@@ -24,7 +24,11 @@ func validateWorkspaceTransfer(r workspaceRecord, op protocol.Operation) error {
 	if err = wire.Validate("WorkspaceTransfer", raw); err != nil {
 		return err
 	}
-	if !r.Released || t.WorkspaceID != old.WorkspaceID || t.WorkspaceID != w.WorkspaceID || t.TaskID != old.TaskID || t.TaskID != w.TaskID || t.ResourceID != old.ResourceID || t.ResourceID != w.ResourceID || t.RunnerID != old.RunnerID || t.RunnerID != w.RunnerID || t.FromAttemptID != r.Operation.AttemptID || t.FromLeaseID != old.LeaseID || t.FromNodeID != old.NodeID || t.FromNodeActivation != old.NodeActivation || t.ToNodeID != w.NodeID || t.ToNodeActivation != w.NodeActivation || t.FromPlanID == t.ToPlanID {
+	serial := t.Purpose != nil && *t.Purpose == protocol.Serial
+	if serial && (t.FromPlanID != t.ToPlanID || t.Kind != "completed") || !serial && t.FromPlanID == t.ToPlanID {
+		return fmt.Errorf("ownership_unresolved: workspace transfer Plan mismatch")
+	}
+	if !r.Released || t.WorkspaceID != old.WorkspaceID || t.WorkspaceID != w.WorkspaceID || t.TaskID != old.TaskID || t.TaskID != w.TaskID || t.ResourceID != old.ResourceID || t.ResourceID != w.ResourceID || t.RunnerID != old.RunnerID || t.RunnerID != w.RunnerID || t.FromAttemptID != r.Operation.AttemptID || t.FromLeaseID != old.LeaseID || t.FromNodeID != old.NodeID || t.FromNodeActivation != old.NodeActivation || t.ToNodeID != w.NodeID || t.ToNodeActivation != w.NodeActivation {
 		return fmt.Errorf("ownership_unresolved: workspace transfer ownership mismatch")
 	}
 	metadata := r.Metadata
@@ -84,6 +88,9 @@ func validateWorkspaceTransferProof(r workspaceRecord, op protocol.Operation, m 
 	}
 	t := op.Workspace.Transfer
 	s := m.Dispatch.NodeExecutionSource
+	if t.Purpose != nil && *t.Purpose == protocol.Serial && (m.Dispatch.TaskID == nil || *m.Dispatch.TaskID != t.TaskID || m.Dispatch.RunnerID != t.RunnerID) {
+		return fmt.Errorf("ownership_unresolved: serial predecessor manifest scope mismatch")
+	}
 	if s == nil || s.PlanID != t.FromPlanID || s.NodeID != t.FromNodeID || s.NodeActivation != t.FromNodeActivation || m.Dispatch.AttemptID != t.FromAttemptID || m.Dispatch.DispatchID != r.Operation.DispatchID {
 		return fmt.Errorf("ownership_unresolved: transfer predecessor source mismatch")
 	}
@@ -91,6 +98,9 @@ func validateWorkspaceTransferProof(r workspaceRecord, op protocol.Operation, m 
 		return fmt.Errorf("ownership_unresolved: transfer settlement missing")
 	}
 	result := proof.Status.Result
+	if t.Purpose != nil && *t.Purpose == protocol.Serial && (result.WriterAbsent == nil || !*result.WriterAbsent || result.WorkspaceID == nil || *result.WorkspaceID != t.WorkspaceID || result.WorkspaceMetadata == nil || !reflect.DeepEqual(*result.WorkspaceMetadata, t.Metadata)) {
+		return fmt.Errorf("ownership_unresolved: serial completion settlement mismatch")
+	}
 	if t.Kind == "checkpoint" {
 		if result.WriterAbsent == nil || !*result.WriterAbsent || result.WorkspaceMetadata == nil || !reflect.DeepEqual(*result.WorkspaceMetadata, t.Metadata) {
 			return fmt.Errorf("ownership_unresolved: transfer Stop proof mismatch")

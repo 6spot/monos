@@ -585,26 +585,27 @@ type WorkspaceResource struct {
 }
 
 type WorkspaceTransfer struct {
-	CompletionManifestDigest *string                  `json:"completion_manifest_digest,omitempty"`
-	CompletionOperationID    *string                  `json:"completion_operation_id,omitempty"`
-	FinalizedTree            *string                  `json:"finalized_tree,omitempty"`
-	FromAttemptID            string                   `json:"from_attempt_id"`
-	FromLeaseID              string                   `json:"from_lease_id"`
-	FromNodeActivation       int64                    `json:"from_node_activation"`
-	FromNodeID               string                   `json:"from_node_id"`
-	FromPlanID               string                   `json:"from_plan_id"`
-	Kind                     ReplanWorkspaceInputKind `json:"kind"`
-	Metadata                 WorkspaceMetadata        `json:"metadata"`
-	ProposalID               string                   `json:"proposal_id"`
-	PublicationID            string                   `json:"publication_id"`
-	ResourceID               string                   `json:"resource_id"`
-	RunnerID                 string                   `json:"runner_id"`
-	SettleOperationID        string                   `json:"settle_operation_id"`
-	TaskID                   string                   `json:"task_id"`
-	ToNodeActivation         int64                    `json:"to_node_activation"`
-	ToNodeID                 string                   `json:"to_node_id"`
-	ToPlanID                 string                   `json:"to_plan_id"`
-	WorkspaceID              string                   `json:"workspace_id"`
+	CompletionManifestDigest *string                   `json:"completion_manifest_digest,omitempty"`
+	CompletionOperationID    *string                   `json:"completion_operation_id,omitempty"`
+	FinalizedTree            *string                   `json:"finalized_tree,omitempty"`
+	FromAttemptID            string                    `json:"from_attempt_id"`
+	FromLeaseID              string                    `json:"from_lease_id"`
+	FromNodeActivation       int64                     `json:"from_node_activation"`
+	FromNodeID               string                    `json:"from_node_id"`
+	FromPlanID               string                    `json:"from_plan_id"`
+	Kind                     ReplanWorkspaceInputKind  `json:"kind"`
+	Metadata                 WorkspaceMetadata         `json:"metadata"`
+	ProposalID               *string                   `json:"proposal_id,omitempty"`
+	PublicationID            *string                   `json:"publication_id,omitempty"`
+	Purpose                  *WorkspaceTransferPurpose `json:"purpose,omitempty"`
+	ResourceID               string                    `json:"resource_id"`
+	RunnerID                 string                    `json:"runner_id"`
+	SettleOperationID        string                    `json:"settle_operation_id"`
+	TaskID                   string                    `json:"task_id"`
+	ToNodeActivation         int64                     `json:"to_node_activation"`
+	ToNodeID                 string                    `json:"to_node_id"`
+	ToPlanID                 string                    `json:"to_plan_id"`
+	WorkspaceID              string                    `json:"workspace_id"`
 }
 
 type OperationResult struct {
@@ -3420,6 +3421,12 @@ const (
 	PurpleCancelled OpenStateEnum = "cancelled"
 	PurpleRecovery  OpenStateEnum = "recovery"
 	PurpleSucceeded OpenStateEnum = "succeeded"
+)
+
+type WorkspaceTransferPurpose string
+
+const (
+	Serial WorkspaceTransferPurpose = "serial"
 )
 
 type FailureKind string

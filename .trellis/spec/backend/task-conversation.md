@@ -107,6 +107,12 @@ Owner Stop and unrelated blockers. Both the ordinary Node pump and guidance pump
 must recognize intentional `guidance_followup` cancellation; treating it as Runtime
 failure blocks the continuation and is a correctness bug.
 
+For serial multi-Node plans, follow-ups wait for current dependency completion and
+Task Node writer/effect/lease settlement before preparing a source or reactivating
+completed work with descendants. Keep the obligation waiting; a not-yet-ready Node
+must not throw repeatedly and starve other Task follow-ups. Pending guidance bound
+to a retired source prevents its admission even when a scheduler read it earlier.
+
 Completion admission freezes its manifest. Later guidance remains a separate pending
 obligation and cannot join that completion. After successful physical settlement,
 required later work uses settled reactivation plus a fresh canonical source; clear
