@@ -7,7 +7,6 @@ import (
 	"reflect"
 
 	protocol "monos.local/protocol"
-	"monos.local/runner/internal/wire"
 )
 
 // Logical workspace identity is stable; writable files, administrative Git data,
@@ -83,19 +82,28 @@ func validateRecoveredWorkspaceSource(op protocol.Operation, source protocol.Wor
 
 func validateWorkspaceSourceFacts(op protocol.Operation, source protocol.WorkspaceCanonicalSource, scope protocol.Operation, status Status, result protocol.EffectResult, m Manifest, conflict bool) error {
 	w, old := op.Workspace, scope.Workspace
-	if old == nil || scope.AttemptID != source.AttemptID || result.WorkspaceID == nil || *result.WorkspaceID != w.WorkspaceID || result.WorkspaceMetadata == nil || !reflect.DeepEqual(*result.WorkspaceMetadata, source.Metadata) || !reflect.DeepEqual(result.Integration, source.Integration) {
+	var integration *protocol.WorkspaceIntegrationResult
+	if source.Kind == string(protocol.KindCompleteNode) {
+		input, item, err := selectedCompletionEvidence(scope, result, w.ResourceID, w.WorkspaceID)
+		if err != nil {
+			return err
+		}
+		if !reflect.DeepEqual(source.Capture, item.Capture) || !reflect.DeepEqual(source.CompletionOutcome, result.CompletionOutcome) {
+			return fmt.Errorf("storage_unavailable: source capture or parent outcome changed")
+		}
+		old, integration = &input.Workspace, item.Integration
+		result = workspaceResultProjection(*item)
+	} else if source.Capture != nil || source.CompletionOutcome != nil {
+		return fmt.Errorf("original open cannot claim completion capture")
+	}
+	if old == nil || scope.AttemptID != source.AttemptID || result.WorkspaceID == nil || *result.WorkspaceID != w.WorkspaceID || result.WorkspaceMetadata == nil || !reflect.DeepEqual(*result.WorkspaceMetadata, source.Metadata) || !reflect.DeepEqual(integration, source.Integration) {
 		return fmt.Errorf("storage_unavailable: retained canonical source differs")
 	}
 	if old.TaskID != w.TaskID || old.ResourceID != w.ResourceID || old.WorkspaceID != w.WorkspaceID || old.RunnerID != w.RunnerID || old.ProjectID != w.ProjectID || old.Generation != w.Generation || !reflect.DeepEqual(old.Resource, w.Resource) || m.Dispatch.AttemptID != source.AttemptID || m.Dispatch.DispatchID != scope.DispatchID || m.Dispatch.TaskID == nil || *m.Dispatch.TaskID != w.TaskID || m.Dispatch.RunnerID != w.RunnerID || m.Dispatch.NodeID == nil || *m.Dispatch.NodeID != old.NodeID || m.Dispatch.NodeActivation != old.NodeActivation {
 		return fmt.Errorf("storage_unavailable: canonical source ownership differs")
 	}
-	if source.Kind == string(protocol.KindCompleteNode) {
-		if err := wire.ValidateWorkspaceIntegration(scope, result); err != nil {
-			return err
-		}
-	}
 	if conflict {
-		if source.Kind != string(protocol.KindCompleteNode) || source.Integration == nil || string(source.Integration.Outcome) != "conflict" || old.NodeID != w.NodeID || old.NodeActivation != w.NodeActivation || old.Isolation == nil || old.Isolation.AllocationID == w.Isolation.AllocationID || status.Populated || result.WriterAbsent == nil || !*result.WriterAbsent {
+		if source.Kind != string(protocol.KindCompleteNode) || source.Capture == nil || source.CompletionOutcome == nil || *source.CompletionOutcome != "conflict" || old.NodeID != w.NodeID || old.NodeActivation != w.NodeActivation || old.Isolation == nil || old.Isolation.AllocationID == w.Isolation.AllocationID || status.Populated || result.WriterAbsent == nil || !*result.WriterAbsent {
 			return fmt.Errorf("storage_unavailable: conflict retry requires a fresh allocation for the same Node activation")
 		}
 		return nil
@@ -105,7 +113,7 @@ func validateWorkspaceSourceFacts(op protocol.Operation, source protocol.Workspa
 		return fmt.Errorf("storage_unavailable: canonical source does not establish the frozen basis")
 	}
 	if source.Kind == string(protocol.KindCompleteNode) {
-		if result.GitCommit == nil || *result.GitCommit != b.FinalizedCommit || result.GitTree == nil || status.Populated || result.WriterAbsent == nil || !*result.WriterAbsent || source.Integration != nil && string(source.Integration.Outcome) != "integrated" {
+		if source.CompletionOutcome == nil || *source.CompletionOutcome != "finalized" || result.GitCommit == nil || *result.GitCommit != b.FinalizedCommit || result.GitTree == nil || status.Populated || result.WriterAbsent == nil || !*result.WriterAbsent || source.Integration != nil && string(source.Integration.Outcome) != "integrated" {
 			return fmt.Errorf("storage_unavailable: canonical completion proof incomplete")
 		}
 	} else if source.Kind != string(protocol.KindOpenWorkspace) || source.Integration != nil || result.Path == nil || *result.Path != WorkspacePath(old, "worktree") {
@@ -134,7 +142,10 @@ func seedIsolatedWorkspace(cache string, op protocol.Operation, metadata *protoc
 	}
 	metadata.Isolation = &protocol.WorkspaceIsolationMetadata{AllocationID: w.Isolation.AllocationID, StartCommit: start}
 	if source := w.CanonicalSource; source != nil && source.Kind == string(protocol.KindCompleteNode) {
-		repository := filepath.Join(Root, "results", source.OperationID)
+		repository, err := completionResultPath(source.OperationID, w.WorkspaceID, false)
+		if err != nil {
+			return err
+		}
 		if err := verifyProtectedWorkspaceResult(repository, source.Metadata.FinalizedCommit, ""); err != nil {
 			return err
 		}
@@ -149,8 +160,14 @@ func seedIsolatedWorkspace(cache string, op protocol.Operation, metadata *protoc
 		return err
 	}
 	if source := w.ConflictSource; source != nil {
-		value := source.Integration
-		repository := privateNodeResultPath(source.OperationID)
+		value := source.Capture
+		if value == nil {
+			return fmt.Errorf("missing conflict capture")
+		}
+		repository, pathErr := completionResultPath(source.OperationID, w.WorkspaceID, true)
+		if pathErr != nil {
+			return pathErr
+		}
 		if err := verifyProtectedWorkspaceResult(repository, value.NodeCommit, value.NodeTree); err != nil {
 			return err
 		}
@@ -212,12 +229,21 @@ func readWorkspaceReservation(id string, isolation *protocol.WorkspaceIsolation)
 }
 
 func validateWorkspaceIsolation(d protocol.Dispatch, op protocol.Operation) error {
-	w := op.Workspace
-	if !reflect.DeepEqual(d.WorkspaceReservations.Isolation, w.Isolation) {
+	return validateWorkspaceIsolationInput(d, op.Kind, op.Workspace, nil)
+}
+
+func validateWorkspaceIsolationInput(d protocol.Dispatch, kind protocol.OperationKind, w *protocol.WorkspaceDescriptor, integration *protocol.WorkspaceIntegration) error {
+	matched := false
+	for _, reservation := range d.WorkspaceReservations.Resources {
+		if reservation.ResourceID == w.ResourceID && reservation.WorkspaceID == w.WorkspaceID && reflect.DeepEqual(reservation.Isolation, w.Isolation) {
+			matched = true
+		}
+	}
+	if !matched {
 		return fmt.Errorf("workspace allocation was not reserved by this Attempt")
 	}
 	if w.Isolation == nil {
-		if op.Integration != nil || w.CanonicalSource != nil || w.ConflictSource != nil {
+		if integration != nil || w.CanonicalSource != nil || w.ConflictSource != nil {
 			return fmt.Errorf("direct workspace cannot claim isolated sources or integration")
 		}
 		return nil
@@ -225,10 +251,10 @@ func validateWorkspaceIsolation(d protocol.Dispatch, op protocol.Operation) erro
 	if !ValidID(w.Isolation.AllocationID) {
 		return fmt.Errorf("invalid workspace allocation identity")
 	}
-	if op.Integration != nil && (op.Kind != protocol.KindCompleteNode || !objectID.MatchString(op.Integration.ExpectedTaskCommit)) {
+	if integration != nil && (kind != protocol.KindCompleteNode || !objectID.MatchString(integration.ExpectedTaskCommit)) {
 		return fmt.Errorf("invalid isolated completion integration")
 	}
-	if op.Kind == protocol.KindCompleteNode && op.Integration == nil {
+	if kind == protocol.KindCompleteNode && integration == nil {
 		return fmt.Errorf("isolated completion requires frozen Task revision")
 	}
 	if w.Basis != nil && w.CanonicalSource == nil {

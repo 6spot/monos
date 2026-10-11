@@ -38,7 +38,6 @@ export async function frozenDeliveryRepository(
   if (!resource?.active || resource.repository_identity !== item.repository_identity || resource.settings.provider_repo_id !== item.repository_id || (resource.settings.remote_preparation ?? 'automatic') !== repository.remote_preparation || resource.settings.merge_method !== repository.merge_method) throw new RemoteAdmissionError('configuration_changed');
   const destination=(await tx.query<{remote_url:string}>('SELECT remote_url FROM remote_preparation_items WHERE item_id=$1 AND task_id=$2',[repository.item_id,item.task_id])).rows[0];
   if(!destination||resource.remote_url!==destination.remote_url)throw new RemoteAdmissionError('configuration_changed');
-  if (repository.remote_preparation !== 'automatic') throw new RemoteAdmissionError('mode_deferred');
   if (!(await effectiveResult(tx, request)).current) throw new RemoteAdmissionError('source_changed');
   if (hash(await publicationConfiguration(tx, item.resource_id)) !== request.configuration_digest || !repository.permission_proof || repository.permission_proof.configuration_fingerprint !== await permissionConfigurationFingerprint(tx, item.resource_id)) throw new RemoteAdmissionError('configuration_changed');
   const local = (await tx.query<{ request_digest: string; result_digest: string; state: string }>('SELECT request_digest,result_digest,state FROM delivery_operations WHERE id=$1 AND task_id=$2 AND resource_id=$3', [request.operation_id, item.task_id, item.resource_id])).rows[0];
@@ -67,8 +66,8 @@ export async function frozenDeliveryRepository(
   return { batch, repository };
 }
 
-export async function remoteSourceAdmission(tx: Transaction, item: Pick<RemoteItem, 'task_id' | 'resource_id' | 'repository_identity' | 'repository_id'>, request: PublicationPrepareRequest): Promise<void> {
-  if (!await frozenDeliveryRepository(tx, item, request)) await freshRemoteSource(tx, item, request);
+export async function remoteSourceAdmission(tx: Transaction, item: Pick<RemoteItem, 'task_id' | 'resource_id' | 'repository_identity' | 'repository_id'>, request: PublicationPrepareRequest, purpose: 'preparation'|'permission' = 'preparation'): Promise<void> {
+  if (!await frozenDeliveryRepository(tx, item, request)) await freshRemoteSource(tx, item, request, purpose);
 }
 
 export async function remoteAdmissionForOperation(tx: Transaction, item: RemoteItem, request: PublicationPrepareRequest, result: PublicationResult, operationId?: string): Promise<PublicationOverrideProof[]> {

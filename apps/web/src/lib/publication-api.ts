@@ -35,8 +35,8 @@ export async function publicationEvidence(evidence: Evidence, task: string): Pro
   await publicationProof(mapping.published, mapping.published_digest, evidence);
 }
 
-async function checkedRecord(record: PublicationRecord, task: string, source?: string, candidate?: string): Promise<PublicationRecord> {
-  if ((source !== undefined && record.source.operation_id !== source) || (candidate !== undefined && record.candidate?.candidate_id !== candidate)) mismatch();
+async function checkedRecord(record: PublicationRecord, task: string, source?: string, candidate?: string, resource?: string): Promise<PublicationRecord> {
+  if ((resource !== undefined && record.source.resource_id !== resource) || (source !== undefined && record.source.operation_id !== source) || (candidate !== undefined && record.candidate?.candidate_id !== candidate)) mismatch();
   await publicationEvidence(record, task);
   if (['prepared', 'mapped'].includes(record.status) && (!record.candidate || !record.candidate_manifest_digest || !record.scan || !record.scan_digest)) mismatch();
   if ((record.status === 'mapped') !== !!record.mapping) mismatch();
@@ -51,13 +51,13 @@ export async function publicationCandidates(task: string, query: PublicationCand
   validate('PublicationCandidateQuery', query);
   const page = await taskRead<PublicationCandidatePage>(task, '/publication-candidates', 'PublicationCandidatePage', { ...query }, session, signal);
   if (query.cursor !== undefined && page.next_cursor === query.cursor || new Set(page.items.map(record => record.operation_id)).size !== page.items.length) mismatch();
-  await Promise.all(page.items.map(record => checkedRecord(record, task, query.source_operation_id)));
+  await Promise.all(page.items.map(record => checkedRecord(record, task, query.source_operation_id, undefined, query.resource_id)));
   signal?.throwIfAborted(); return page;
 }
-export async function publicationCandidate(task: string, candidate: string, session: string, source?: string, signal?: AbortSignal): Promise<PublicationRecord> {
+export async function publicationCandidate(task: string, candidate: string, session: string, source?: string, signal?: AbortSignal, resource?: string): Promise<PublicationRecord> {
   validate('Id', candidate);
   const record = await taskRead<PublicationRecord>(task, `/publication-candidates/${encodeURIComponent(candidate)}`, 'PublicationRecord', undefined, session, signal);
-  await checkedRecord(record, task, source, candidate);
+  await checkedRecord(record, task, source, candidate, resource);
   signal?.throwIfAborted(); return record;
 }
 export async function publicationFindings(task: string, record: PublicationRecord, query: PublicationFindingsQuery, session: string, signal?: AbortSignal): Promise<PublicationFindingPage> {

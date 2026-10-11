@@ -87,9 +87,9 @@ suite('accepted GitHub worker durable boundary',()=>{
  });
  it('refreshes expired actual pages and rejects truncated persisted collections before any effect',async()=>{
   const x=await fixture();try {
-   await x.prepareChecks();await x.db.pool.query("UPDATE owner_delivery_batches SET checkpoint=jsonb_set(checkpoint,'{stage,collections,head,0,pages,0,observed_at}',to_jsonb($2::text)) WHERE id=$1",[x.accepted.operation_id,new Date(Date.now()-16_000).toISOString()]);
+   await x.prepareChecks();await x.db.pool.query("UPDATE owner_delivery_item_readiness SET stage=jsonb_set(stage,'{collections,head,0,pages,0,observed_at}',to_jsonb($2::text)) WHERE batch_id=$1",[x.accepted.operation_id,new Date(Date.now()-16_000).toISOString()]);
    const pages=x.calls.filter(c=>c.path.includes('/check-runs')).length;await x.pump();expect(x.calls.filter(c=>c.path.includes('/check-runs')).length).toBeGreaterThan(pages);expect(x.calls.filter(c=>c.method==='PUT')).toHaveLength(0);
-   await x.db.pool.query("UPDATE owner_delivery_batches SET checkpoint=jsonb_set(checkpoint,'{stage,collections,head,0,pages,0,total}','2'::jsonb) WHERE id=$1",[x.accepted.operation_id]);
+   await x.db.pool.query("UPDATE owner_delivery_item_readiness SET stage=jsonb_set(stage,'{collections,head,0,pages,0,total}','2'::jsonb) WHERE batch_id=$1",[x.accepted.operation_id]);
    await x.pump();expect(x.calls.filter(c=>c.method==='PUT')).toHaveLength(0);expect((await x.db.pool.query('SELECT status,attention_reason FROM owner_delivery_batches')).rows[0]).toMatchObject({status:'attention',attention_reason:'identity_mismatch'});
   }finally{await x.close();}
  });

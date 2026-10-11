@@ -39,7 +39,7 @@ interface Checkpoint {schema_version: 1; claim?: {id: string; instance: string; 
 interface Work {
  batch: DeliveryBatchRecord; item: RemoteItem; repository: DeliveryRepository;
  scope: GitHubRemoteScope; fingerprint: string; intent: FinalizationIntent;
- claim: string; reservation?: Date; checkpoint: Checkpoint; merge?: MergeRow;
+ claim: string; preflight: boolean; reservation?: Date; checkpoint: Checkpoint; merge?: MergeRow;
 }
 const same = (a: unknown,b: unknown) => canonicalJSON(a)===canonicalJSON(b);
 function fingerprint(scope: GitHubRemoteScope): string {
@@ -111,6 +111,7 @@ function validateMerge(row: MergeRow,work: Work): void {
 export async function retryAcceptedMerge(tx: Transaction,batch: DeliveryBatchRecord): Promise<void> {
  await assertDeliveryBatchAuthority(tx,batch);
  for(const repository of batch.manifest.repositories.filter(r=>r.outcome==='modified')) {
+  if((await tx.query('SELECT 1 FROM owner_delivery_finalizations WHERE batch_id=$1 AND item_id=$2',[batch.id,repository.item_id])).rowCount)continue;
   await tx.query('SELECT item_id FROM remote_preparation_items WHERE item_id=$1 FOR UPDATE',[repository.item_id]);
   const old=(await tx.query<MergeRow>('SELECT * FROM owner_delivery_merge_operations WHERE batch_id=$1 AND item_id=$2 ORDER BY created_at DESC,id DESC LIMIT 1 FOR UPDATE',[batch.id,repository.item_id])).rows[0];
   if(!old||old.status!=='failed')continue;
@@ -148,7 +149,13 @@ export class OwnerDeliveryWorker {
    const batch=(await tx.query<DeliveryBatchRecord>('SELECT * FROM owner_delivery_batches WHERE id=$1 AND task_id=$2 FOR UPDATE',[batchId,taskId])).rows[0];
    if(!batch||batch.status==='completed'||batch.status==='failed'||batch.status==='attention')return;
    await assertDeliveryBatchAuthority(tx,batch);
-   const repository=batch.manifest.repositories.find(r=>r.outcome==='modified'); if(!repository)return;
+   const progress=(await tx.query<{item_id:string;finalized:boolean;validated:boolean;recovering:boolean}>(`SELECT member.item_id,
+    EXISTS(SELECT 1 FROM owner_delivery_finalizations f WHERE f.batch_id=member.batch_id AND f.item_id=member.item_id) finalized,
+    EXISTS(SELECT 1 FROM owner_delivery_item_validations v WHERE v.batch_id=member.batch_id AND v.item_id=member.item_id) validated,
+    EXISTS(SELECT 1 FROM owner_delivery_merge_operations m WHERE m.batch_id=member.batch_id AND m.item_id=member.item_id AND m.may_have_mutated AND m.status IN('started','unknown')) recovering
+    FROM owner_delivery_batch_items member WHERE member.batch_id=$1 AND member.repository->>'outcome'='modified' ORDER BY member.resource_id COLLATE "C"`,[batch.id])).rows;
+   const selected=progress.find(p=>p.recovering)??progress.find(p=>!p.finalized&&!p.validated)??progress.find(p=>!p.finalized);
+   const repository=batch.manifest.repositories.find(r=>r.item_id===selected?.item_id);if(!selected||!repository)return;
    const item=(await tx.query<RemoteItem>('SELECT * FROM remote_preparation_items WHERE item_id=$1 AND task_id=$2 FOR UPDATE',[repository.item_id,taskId])).rows[0];if(!item)throw new RemoteAdmissionError('identity_mismatch');
    const merge=(await tx.query<MergeRow>('SELECT * FROM owner_delivery_merge_operations WHERE batch_id=$1 AND item_id=$2 ORDER BY created_at DESC,id DESC LIMIT 1 FOR UPDATE',[batch.id,item.item_id])).rows[0];
    const recovery=merge?.may_have_mutated&&['started','unknown'].includes(merge.status);
@@ -166,13 +173,15 @@ export class OwnerDeliveryWorker {
    if(!scope.config||!original)throw new RemoteProviderError('credentials_missing');
    const intent:FinalizationIntent=recovery?merge!.request.intent:{item_id:item.item_id,delivery_ref:item.delivery_ref,target_branch:item.target_branch,kind:'update_pr',review:original,accepted_head:repository.candidate!.head};
    const cp=checkpoint(batch.checkpoint);
+   const cached=(await tx.query<{stage:Stage|null}>('SELECT stage FROM owner_delivery_item_readiness WHERE batch_id=$1 AND item_id=$2',[batch.id,item.item_id])).rows[0];
+   if(cached?.stage){validateStage(cached.stage);cp.stage=cached.stage;}
    if(cp.claim&&Date.parse(cp.claim.expires_at)>Date.now())return;
    if(recovery&&merge!.claim_expires_at&&merge!.claim_expires_at.getTime()>Date.now()&&merge!.backend_instance===this.instanceId)return;
    const reservation=await reserveRemoteProvider(tx,scope),claim=randomUUID();
-   const work:Work={batch,item,repository,scope,fingerprint:fp,intent,claim,reservation,checkpoint:cp,...(merge?{merge}:{})};
+   const work:Work={batch,item,repository,scope,fingerprint:fp,intent,claim,preflight:!selected.validated,reservation,checkpoint:cp,...(merge?{merge}:{})};
    if(merge)validateMerge(merge,work);
    cp.claim={id:claim,instance:this.instanceId,expires_at:new Date(Date.now()+120_000).toISOString()};
-   await tx.query('UPDATE owner_delivery_batches SET checkpoint=$2 WHERE id=$1',[batch.id,cp]);
+   await tx.query('UPDATE owner_delivery_batches SET checkpoint=$2 WHERE id=$1',[batch.id,{schema_version:1,claim:cp.claim}]);
    if(recovery)await tx.query("UPDATE owner_delivery_merge_operations SET status='unknown',claim=$2,backend_instance=$3,claim_expires_at=clock_timestamp()+interval '120 seconds',version=version+1 WHERE id=$1",[merge!.id,claim,this.instanceId]);
    return work;
   });
@@ -244,9 +253,29 @@ export class OwnerDeliveryWorker {
   if(!method) {await this.save(work,work.checkpoint,'attention','merge_method_unavailable',1000);return;}
   const after=await this.provider.review(work.scope,work.intent,read,budget);
   if(!bracket(before,after)||after.mergeability!=='mergeable'||evaluateReadiness({review:after,policy,collections:stage.collections,ancestry:stage.ancestry}).state!=='ready'||budget.remaining!==1) {await this.save(work,{schema_version:1},'waiting','readiness_changed',1000);return;}
+  if(work.preflight){
+   await transaction(this.db,async tx=>{
+    await this.guard(tx,work);
+    if(!currentPages(stage))throw new RemoteAdmissionError('identity_mismatch');
+    stage.review=after;stage.policy=policy;stage.phase='ready';stage.decision=evaluateReadiness({review:after,policy,collections:stage.collections,ancestry:stage.ancestry});
+    const id=await this.observe(tx,work,null,'readiness',{batch_id:work.batch.id,content_digest:work.batch.content_digest,repository_digest:hash(work.repository),scope_fingerprint:work.fingerprint,stage,settings,method});
+    await tx.query('INSERT INTO owner_delivery_item_validations(batch_id,item_id,observation_id) VALUES($1,$2,$3) ON CONFLICT DO NOTHING',[work.batch.id,work.item.item_id,id]);
+    await this.saveStage(tx,work,stage,'waiting',null);
+    await tx.query("UPDATE owner_delivery_batches SET checkpoint=checkpoint-'claim',status='active',attention_reason=NULL,due_at=clock_timestamp(),version=version+1 WHERE id=$1",[work.batch.id]);
+   });
+   return;
+  }
   const row=await transaction(this.db,async tx=>{
    await this.guard(tx,work);
    if(!currentPages(stage))throw new RemoteAdmissionError('identity_mismatch');
+   // Revalidate the complete frozen local authority before admitting any new
+   // mutation. Remote preflight remains historical; this item's checks are fresh.
+   for(const repository of work.batch.manifest.repositories.filter(r=>r.outcome==='modified')){
+    const item=(await tx.query<RemoteItem>('SELECT * FROM remote_preparation_items WHERE item_id=$1 FOR UPDATE',[repository.item_id])).rows[0]!;
+    const authority=await frozenDeliveryRepository(tx,item,repository.preparation_request,repository.preparation_result);
+    if(!authority||authority.batch.id!==work.batch.id)throw new RemoteAdmissionError('identity_mismatch');
+   }
+
    let merge=(await tx.query<MergeRow>('SELECT * FROM owner_delivery_merge_operations WHERE batch_id=$1 AND item_id=$2 ORDER BY created_at DESC,id DESC LIMIT 1 FOR UPDATE',[work.batch.id,work.item.item_id])).rows[0];
    if(merge) {validateMerge(merge,work);if(merge.status!=='pending'||merge.may_have_mutated)throw new RemoteAdmissionError('possible_publication');}
    else {
@@ -291,11 +320,20 @@ export class OwnerDeliveryWorker {
    await tx.query("UPDATE owner_delivery_batches SET checkpoint=checkpoint-'claim' WHERE id=$1",[batch.id]);
   });
  }
- private async observe(tx: Transaction,work: Work,operation: string|null,kind: 'readiness'|'merge'|'reconcile'|'final',facts: unknown): Promise<void> {
-  await tx.query('INSERT INTO owner_delivery_observations(id,batch_id,item_id,operation_id,kind,observation,digest) VALUES($1,$2,$3,$4,$5,$6,$7)',[randomUUID(),work.batch.id,work.item.item_id,operation,kind,facts,hash(facts)]);
+ private async observe(tx: Transaction,work: Work,operation: string|null,kind: 'readiness'|'merge'|'reconcile'|'final',facts: unknown): Promise<string> {
+  const id=randomUUID();
+  await tx.query('INSERT INTO owner_delivery_observations(id,batch_id,item_id,operation_id,kind,observation,digest) VALUES($1,$2,$3,$4,$5,$6,$7)',[id,work.batch.id,work.item.item_id,operation,kind,facts,hash(facts)]);
+  return id;
+ }
+ private async saveStage(tx:Transaction,work:Work,stage:Stage|undefined,status:'waiting'|'attention',reason:string|null):Promise<void>{
+  await tx.query(`INSERT INTO owner_delivery_item_readiness(batch_id,item_id,stage,status,reason) VALUES($1,$2,$3,$4,$5)
+   ON CONFLICT(batch_id,item_id) DO UPDATE SET stage=EXCLUDED.stage,status=EXCLUDED.status,reason=EXCLUDED.reason,updated_at=clock_timestamp()`,[work.batch.id,work.item.item_id,stage??null,status,reason]);
  }
  private async save(work: Work,cp: Checkpoint,status: 'waiting'|'attention',reason: string|null,delay: number): Promise<void> {
-  await transaction(this.db,async tx=>{await this.guard(tx,work);delete cp.claim;await tx.query('UPDATE owner_delivery_batches SET checkpoint=$2,status=$3,attention_reason=$4,due_at=clock_timestamp()+$5*interval \'1 millisecond\',version=version+1 WHERE id=$1',[work.batch.id,cp,status,reason,delay]);});
+  await transaction(this.db,async tx=>{
+   await this.guard(tx,work);await this.saveStage(tx,work,cp.stage,status,reason);
+   await tx.query("UPDATE owner_delivery_batches SET checkpoint=checkpoint-'claim',status=$2,attention_reason=$3,due_at=clock_timestamp()+$4*interval '1 millisecond',version=version+1 WHERE id=$1",[work.batch.id,status,reason,delay]);
+  });
  }
  private async settleError(work: Work,error: unknown): Promise<void> {
   const reason=safeReason(error);
@@ -305,6 +343,7 @@ export class OwnerDeliveryWorker {
    if(!batch||checkpoint(batch.checkpoint).claim?.id!==work.claim)return;
    const possible=(await tx.query<MergeRow>("SELECT * FROM owner_delivery_merge_operations WHERE batch_id=$1 AND item_id=$2 AND may_have_mutated AND status IN ('started','unknown') FOR UPDATE",[batch.id,work.item.item_id])).rows[0];
    if(possible)await tx.query("UPDATE owner_delivery_merge_operations SET status='unknown',reason=$2,claim=NULL,backend_instance=NULL,claim_expires_at=NULL,version=version+1 WHERE id=$1",[possible.id,reason]);
+   await this.saveStage(tx,work,work.checkpoint.stage,'attention',reason);
    const transient=error instanceof RemoteProviderError&&['rate_limited','provider_unavailable'].includes(error.reason)||error instanceof ProviderTurnComplete;
    await tx.query("UPDATE owner_delivery_batches SET status=CASE WHEN status IN ('cancelled','revoked') THEN status WHEN $2 THEN 'reconciling' WHEN $3 THEN 'waiting' ELSE 'attention' END,attention_reason=$4,checkpoint=checkpoint-'claim',due_at=clock_timestamp()+interval '5 seconds',version=version+1 WHERE id=$1",[batch.id,!!possible,transient,reason]);
    await releaseRemoteProvider(tx,work.scope,work.reservation,error);

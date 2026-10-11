@@ -1,0 +1,75 @@
+{
+  "base_commit": "130eec135ca9dc50c9c09cac2f1fb084fc7df68f",
+  "change": "one Node completion with separately selectable repository results and multi-repository GitHub delivery",
+  "routes": [
+    "/#task?task_id=<synthetic Task>&section=overview"
+  ],
+  "viewports": {
+    "desktop": [
+      1440,
+      1000
+    ],
+    "mobile": [
+      390,
+      844
+    ]
+  },
+  "browser_tests": "2 execution/result-collection tests; 6 result-inspector tests; 4 Owner delivery tests passed",
+  "runtime": "Built SPA, actual protected server/PostgreSQL and delivery worker. Runner/Git objects and provider replies are synthetic; no native Linux/CLI or live remote effects.",
+  "inspection": "Inspected desktop/mobile result collections and partial/completed delivery. Both result inspectors retain separate repository names; code stays inside scroll containers, long identifiers wrap, and Retry/Cancel are reachable. Shared neutral shell/typography follows .trellis/spec/frontend/visual-design.md (recorded reference revision 44ea3b40c8b4f54f4c76d1dd3e3c92e0c0cabd19), retaining monos navigation and exact result provenance.",
+  "assets": [
+    {
+      "path": "apps/web/dist/assets/index-B6Ck4wXJ.js",
+      "sha256": "c1fea0d12e992ce759bfc343920101f70b58d7fa4b27136cfe77de254a10a64b"
+    },
+    {
+      "path": "apps/web/dist/assets/index-TKEvhF-s.css",
+      "sha256": "9a7ee1ea709417c88d0cee9a7bf954ccfec714c49e5050b4f2501645a810d85e"
+    }
+  ],
+  "sources": [
+    {
+      "path": "apps/web/src/features/task-overview.tsx",
+      "sha256": "e649309aa6db622ba8ad03a2af2cb7e8fe501a16a06b4ea143311afab1bf8884"
+    },
+    {
+      "path": "apps/web/src/features/result-inspector.tsx",
+      "sha256": "7c1191b3cbcf66a04df2b880082a2c0351f9f3149c9c368299e640f56b67da79"
+    },
+    {
+      "path": "apps/web/src/lib/task-api.ts",
+      "sha256": "18ea3048f9f56212251201b50a0dfd39e6d41428d58f94251ed421bceed13784"
+    },
+    {
+      "path": "apps/server/src/task-result-reads.ts",
+      "sha256": "8feb614fe6132b356ac449e57ad72301ec32e8aab339e30f5ce139f0b7b30fbd"
+    },
+    {
+      "path": "apps/server/test/fixtures/execution-ui-fixture.ts",
+      "sha256": "05b847e5e01c7dade910ae2c0bb223ff89578baa78758fc2cf8d763704939958"
+    },
+    {
+      "path": "apps/web/test/execution.e2e.ts",
+      "sha256": "db70a3e3d2c4147b3d0af7a60e3a1a762c925f5835588fef2c7315ea989f7568"
+    }
+  ],
+  "images": [
+    {
+      "path": "multi-repository-results-desktop-full.png",
+      "sha256": "9c88cc72987736d9acc3c26f7ec6f6285d0048969644012736e6730919808d3f"
+    },
+    {
+      "path": "multi-repository-results-desktop.png",
+      "sha256": "8ae377fe1ea76c7b253d3cd5d734cd668f334ba66c81f453d3fc7d42bcc379b6"
+    },
+    {
+      "path": "multi-repository-results-mobile-full.png",
+      "sha256": "52d10e32f7ce2643c00302969a245a5c3d80b45418c982a3ba41632381032ba7"
+    },
+    {
+      "path": "multi-repository-results-mobile.png",
+      "sha256": "88ca1e025ae015bd2edd4f3968a07c4b1f333fc86623cbfe04eb0fb8490bd369"
+    }
+  ],
+  "delivery_evidence": "Per-run subdirectory JSON binds its own exact source/build bytes, viewport and synthetic state."
+}

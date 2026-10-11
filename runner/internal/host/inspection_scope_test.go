@@ -58,7 +58,7 @@ func TestInspectionAllCanonicalPlannerSourcesAndNoNodeAuthority(t *testing.T) {
 			if e := ValidateEffectScope(dispatch, op); e != nil {
 				t.Fatal("canonical Planner denied", e)
 			}
-			for _, mutate := range []func(*protocol.Operation){func(op *protocol.Operation) { op.Workspace = &protocol.WorkspaceDescriptor{} }, func(op *protocol.Operation) { op.RepositoryFree = ptr(true) }, func(op *protocol.Operation) { op.InspectionDigest = ptr(strings.Repeat("f", 64)) }, func(op *protocol.Operation) { op.ResourceID = ptr("foreign") }} {
+			for _, mutate := range []func(*protocol.Operation){func(op *protocol.Operation) { op.Workspace = &protocol.WorkspaceDescriptor{} }, func(op *protocol.Operation) { op.Workspaces = []protocol.WorkspaceCompletionInput{} }, func(op *protocol.Operation) { op.InspectionDigest = ptr(strings.Repeat("f", 64)) }, func(op *protocol.Operation) { op.ResourceID = ptr("foreign") }} {
 				bad := op
 				mutate(&bad)
 				if ValidateEffectScope(dispatch, bad) == nil {

@@ -3,6 +3,7 @@ package host
 import (
 	"fmt"
 	protocol "monos.local/protocol"
+	"monos.local/runner/internal/wire"
 	"os"
 	"path/filepath"
 	"syscall"
@@ -103,15 +104,60 @@ func Export(id, op, commit, tree string) error {
 }
 
 func ExportWorkspace(op protocol.Operation, result protocol.EffectResult) error {
+	if op.Kind == protocol.KindCompleteNode {
+		if err := wire.ValidateCompletionResult(op, result); err != nil {
+			return err
+		}
+		for _, item := range result.WorkspaceResults {
+			path, err := completionResultPath(op.OperationID, item.WorkspaceID, false)
+			if err != nil {
+				return err
+			}
+			commit, tree := item.Capture.NodeCommit, item.Capture.NodeTree
+			if result.CompletionOutcome != nil && *result.CompletionOutcome == "finalized" {
+				commit, tree = *item.GitCommit, *item.GitTree
+			}
+			if err = verifyProtectedWorkspaceResult(path, commit, tree); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+	if op.Kind == protocol.SettleCompletion {
+		if op.CompletionOperationID == nil {
+			return fmt.Errorf("missing completion target")
+		}
+		parent, err := readOperation(operationPath(*op.CompletionOperationID))
+		if err != nil {
+			return err
+		}
+		if err = wire.ValidateCompletionTarget(op, parent.Operation); err != nil {
+			return err
+		}
+		if len(result.WorkspaceResults) != len(parent.Operation.Workspaces) {
+			return fmt.Errorf("settlement export coverage mismatch")
+		}
+		for i, input := range parent.Operation.Workspaces {
+			item := result.WorkspaceResults[i]
+			w, cp := &input.Workspace, item.WorkspaceMetadata.Checkpoint
+			if item.ResourceID != w.ResourceID || item.WorkspaceID != w.WorkspaceID || cp == nil || cp.OperationID != op.OperationID {
+				return fmt.Errorf("settlement export checkpoint mismatch")
+			}
+			path, err := completionResultPath(op.OperationID, w.WorkspaceID, false)
+			if err != nil {
+				return err
+			}
+			if err = privateServiceDirectory(filepath.Dir(path)); err != nil {
+				return err
+			}
+			if err = exportPathsTo(WorkspacePath(w, "worktree"), WorkspacePath(w, "common"), op.OperationID, cp.CommitID, cp.TreeID, "refs/monos/checkpoints/"+op.OperationID, path); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
 	if op.Workspace == nil {
 		return fmt.Errorf("workspace descriptor required")
-	}
-	if result.Integration != nil {
-		commit, tree := result.Integration.TaskCommit, result.Integration.TaskTree
-		if string(result.Integration.Outcome) == "conflict" {
-			commit, tree = result.Integration.NodeCommit, result.Integration.NodeTree
-		}
-		return verifyProtectedWorkspaceResult(filepath.Join(Root, "results", op.OperationID), commit, tree)
 	}
 	commit, tree, ref := "", "", ""
 	if result.WorkspaceMetadata != nil && result.WorkspaceMetadata.Checkpoint != nil {

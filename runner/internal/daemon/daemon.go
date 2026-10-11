@@ -260,7 +260,7 @@ func effectKey(op protocol.Operation) string {
 	if op.Inspection != nil {
 		return "inspection:" + op.OperationID
 	}
-	if op.Workspace != nil {
+	if canonicalWorkspaceOperation(op) {
 		return "workspace:" + op.OperationID
 	}
 	return "effect:" + op.OperationID
@@ -433,8 +433,8 @@ func (d *Daemon) effect(ctx context.Context, op protocol.Operation) error {
 		// cancellation alone: resume the target pair's export and atomic journal.
 		return d.replayCompletionSettlement(ctx, op, *status.CancelledByOperationID)
 	}
-	if err == nil && op.Kind == protocol.KindCompleteNode && op.Workspace != nil && status.Result != nil {
-		err = wire.ValidateWorkspaceIntegration(op, *status.Result)
+	if err == nil && op.Kind == protocol.KindCompleteNode && op.Workspaces != nil && status.Result != nil {
+		err = wire.ValidateCompletionResult(op, *status.Result)
 	}
 	if err == nil && op.Workspace != nil && status.PriorOperationResult != nil {
 		prior := status.PriorOperationResult
@@ -474,9 +474,9 @@ func (d *Daemon) effect(ctx context.Context, op protocol.Operation) error {
 		} else {
 			err = host.ExportWorkspace(op, *status.Result)
 		}
-	} else if err == nil && op.Workspace != nil && status.Result != nil {
+	} else if err == nil && canonicalWorkspaceOperation(op) && status.Result != nil {
 		err = host.ExportWorkspace(op, *status.Result)
-	} else if err == nil && op.Kind == protocol.KindCompleteNode && op.RepositoryFree == nil && status.Result != nil && status.Result.GitCommit != nil && status.Result.GitTree != nil {
+	} else if err == nil && op.Kind == protocol.KindCompleteNode && op.Workspaces == nil && status.Result != nil && status.Result.GitCommit != nil && status.Result.GitTree != nil {
 		err = host.Export(op.AttemptID, op.OperationID, *status.Result.GitCommit, *status.Result.GitTree)
 	}
 	if err == nil && !status.Known {
@@ -485,14 +485,11 @@ func (d *Daemon) effect(ctx context.Context, op protocol.Operation) error {
 	if err == nil && (op.Kind == protocol.Stop || op.Kind == protocol.KindCompleteNode || op.Kind == protocol.SettleCompletion) && status.Populated {
 		err = fmt.Errorf("writer absence unresolved")
 	}
-	conflicted := status.Result != nil && status.Result.Integration != nil && string(status.Result.Integration.Outcome) == "conflict"
-	if err == nil && op.Kind == protocol.KindCompleteNode && op.RepositoryFree == nil && status.CancelledByOperationID == nil && !conflicted && (status.Result == nil || status.Result.GitCommit == nil || status.Result.GitTree == nil) {
+	if err == nil && op.Kind == protocol.KindCompleteNode && op.Workspaces == nil && status.CancelledByOperationID == nil && (status.Result == nil || status.Result.GitCommit == nil || status.Result.GitTree == nil) {
 		err = fmt.Errorf("missing finalized Git evidence")
 	}
-	if err == nil && op.RepositoryFree != nil {
-		if status.Result == nil || status.Result.WriterAbsent == nil || !*status.Result.WriterAbsent || status.Result.GitCommit != nil || status.Result.GitTree != nil || status.Result.WorkspaceID != nil || status.Result.WorkspaceMetadata != nil || status.Result.Path != nil || status.Result.InstructionFiles != nil {
-			err = fmt.Errorf("invalid repository-free completion evidence")
-		}
+	if err == nil && op.Kind == protocol.KindCompleteNode && op.Workspaces != nil && status.Result == nil {
+		err = fmt.Errorf("missing completion aggregate")
 	}
 	if err != nil {
 		message := "host effect unresolved; retained for recovery"
@@ -505,7 +502,7 @@ func (d *Daemon) effect(ctx context.Context, op protocol.Operation) error {
 		}
 		result.Result.Message = &message
 		result.FailureKind = &kind
-		if op.Workspace != nil {
+		if canonicalWorkspaceOperation(op) {
 			reason := protocol.OwnershipUnresolved
 			for _, candidate := range []protocol.WorkspaceUnavailableReason{protocol.WorkspaceUnavailableReasonCredentialsMissing, protocol.RepositoryDenied, protocol.WorkspaceUnavailableReasonRefUnavailable, protocol.StorageUnavailable, protocol.UnsupportedRemote} {
 				if strings.Contains(err.Error(), string(candidate)) {
@@ -540,7 +537,7 @@ func (d *Daemon) recordEffectAbsence(ctx context.Context, op protocol.Operation,
 	// Canonical network/Git work runs outside mu. Re-read under the short
 	// lifecycle lock so a completed effect cannot overwrite a newer launch or
 	// reconciliation PID/birth/cgroup with its pre-network snapshot.
-	if op.Workspace != nil {
+	if canonicalWorkspaceOperation(op) {
 		d.mu.Lock()
 		defer d.mu.Unlock()
 	}
@@ -873,4 +870,8 @@ func (d *Daemon) Run(ctx context.Context) error {
 		case <-time.After(2 * time.Second):
 		}
 	}
+}
+
+func canonicalWorkspaceOperation(op protocol.Operation) bool {
+	return op.Workspace != nil || op.Workspaces != nil || op.Kind == protocol.SettleCompletion
 }

@@ -13,14 +13,14 @@ export async function resultContent(service: BoundaryService, broker: ResultRead
   const access=new OwnerAccess(service.db);
   const session=await access.session(token);
   if (expectedSession && session.session_id!==expectedSession) throw new CommandError('unauthorized','Owner session changed');
-  const selected=await selectedTaskResult(service.db,token,task,operation);
-  if (input.identity_digest!==selected.item.git!.identity_digest) throw new CommandError('version_conflict','Selected result identity changed; refresh results');
-  const request=validate<ResultReadRequest>('ResultReadRequest',{...input,mode,identity:selected.identity});
+  const selected=await selectedTaskResult(service.db,token,task,operation,input.resource_id!);
+  if (input.identity_digest!==selected.git.identity_digest) throw new CommandError('version_conflict','Selected result identity changed; refresh results');
+  const request=validate<ResultReadRequest>('ResultReadRequest',{...Object.fromEntries(Object.entries(input).filter(([key])=>key!=='resource_id')),mode,identity:selected.identity});
   const available=await service.db.pool.query<{incarnation:string}>('SELECT incarnation FROM runners WHERE id=$1 AND connected AND ready AND incarnation>0 AND connection_instance=$2',[selected.identity.runner_id,service.instanceId]);
   const response:ResultReadResponse=available.rowCount ? await broker.read(request,Number(available.rows[0]!.incarnation)) : {schema_version:1,request,status:'offline'};
   const after=await access.session(token);
   if (session.session_id!==after.session_id || expectedSession && after.session_id!==expectedSession) throw new CommandError('unauthorized','Owner session changed');
-  const fresh=await selectedTaskResult(service.db,token,task,operation);
+  const fresh=await selectedTaskResult(service.db,token,task,operation,input.resource_id!);
   if (canonicalJSON(fresh.identity)!==canonicalJSON(selected.identity)) throw new CommandError('version_conflict','Selected result identity changed');
   const value={...response,current:fresh.item.current};
   return validate('ResultReadResponse',Buffer.byteLength(JSON.stringify(value))>512*1024?{...resultReadOutcome(request,'oversized'),current:fresh.item.current}:value);

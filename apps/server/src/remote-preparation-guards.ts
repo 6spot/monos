@@ -13,10 +13,10 @@ export class RemoteAdmissionError extends CommandError {
  readonly reason:NonNullable<PublicationRefObservation['reason']>;
  constructor(reason:NonNullable<PublicationRefObservation['reason']>) {super('unmet_precondition',reason);this.reason=reason;}
 }
-export async function freshRemoteSource(tx:Transaction,item:Pick<RemoteItem,'task_id'|'resource_id'|'repository_identity'|'repository_id'>,request:PublicationPrepareRequest):Promise<void> {
+export async function freshRemoteSource(tx:Transaction,item:Pick<RemoteItem,'task_id'|'resource_id'|'repository_identity'|'repository_id'>,request:PublicationPrepareRequest,purpose:'preparation'|'permission'='preparation'):Promise<void> {
  const settings=(await tx.query<{repository_identity:string;settings:{remote_preparation?:string;provider_repo_id?:string}}>('SELECT repository_identity,settings FROM project_resources WHERE id=$1',[item.resource_id])).rows[0];
  if(!settings||settings.repository_identity!==item.repository_identity||settings.settings.provider_repo_id!==item.repository_id)throw new RemoteAdmissionError('configuration_changed');
- if((settings.settings.remote_preparation??'automatic')!=='automatic')throw new RemoteAdmissionError('mode_deferred');
+ if(purpose==='preparation'&&(settings.settings.remote_preparation??'automatic')!=='automatic')throw new RemoteAdmissionError('mode_deferred');
  if(!await localAdmissionAllowed(tx,item.task_id))throw new RemoteAdmissionError('source_changed');
  if((await taskInputGuards(tx,item.task_id)).length)throw new RemoteAdmissionError('input_pending');
  if(!(await effectiveResult(tx,request)).current)throw new RemoteAdmissionError('source_changed');

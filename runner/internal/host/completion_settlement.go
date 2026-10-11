@@ -1,7 +1,6 @@
 package host
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -82,7 +81,7 @@ func fenceCompletion(op protocol.Operation) error {
 }
 
 func requireUnfencedCompletion(op protocol.Operation) error {
-	if op.Kind != protocol.KindCompleteNode || op.Workspace == nil {
+	if op.Kind != protocol.KindCompleteNode || op.Workspaces == nil {
 		return nil
 	}
 	fence, err := readCompletionFenceAt(completionFencePath(op.OperationID), op, 0)
@@ -113,126 +112,4 @@ func completionTombstone(op protocol.Operation) (*Status, error) {
 	}
 	prior := pair.CompletionSettlement.CompletionResult
 	return &Status{Known: true, Result: &prior.Result, CancelledByOperationID: prior.CancelledByOperationID}, nil
-}
-
-// The coordinator and writer fences retain physical exclusion through worker
-// crashes. The terminal pair is one fsynced root record; replay reconstructs the
-// original outcome from it even if the second convenience record write was lost.
-func settleCompletion(ctx context.Context, op protocol.Operation, storage string) (Status, error) {
-	original, err := readOperation(operationPath(*op.CompletionOperationID))
-	if err != nil {
-		return Status{}, err
-	}
-	if err = wire.ValidateCompletionTarget(op, original.Operation); err != nil {
-		return Status{}, err
-	}
-	r, err := readWorkspaceAllocation(op.Workspace)
-	if err != nil {
-		return Status{}, err
-	}
-	if !sameWorkspaceOperation(r.Operation, op) || r.Metadata.StorageID != storage || r.OpenResult == nil {
-		return Status{}, fmt.Errorf("completion settlement requires matching initialized lease")
-	}
-	if old, e := readOperation(operationPath(op.OperationID)); e == nil {
-		if !sameOperation(old.Operation, op) {
-			return Status{}, fmt.Errorf("settlement operation identity changed")
-		}
-		if old.Settled && old.Status.Error == "" && old.Status.CompletionSettlement != nil {
-			return persistCompletionSettlement(op, original.Operation, r, old.Status)
-		}
-	} else if !os.IsNotExist(e) {
-		return Status{}, e
-	}
-	if _, err = stop(ctx, op.AttemptID); err != nil {
-		return Status{}, err
-	}
-	var status Status
-	if original.Operation.Integration != nil && original.IntegrationStarted {
-		physical := original.Status
-		if !original.Settled || physical.Error != "" || physical.Result == nil || physical.Result.Integration == nil {
-			physical, err = runWorkspaceWorker(ctx, original.Operation, "integrate", nil)
-			if err != nil {
-				return physical, err
-			}
-		}
-		status = Status{Known: true, Result: &protocol.EffectResult{WriterAbsent: ptr(true)}, CompletionSettlement: &protocol.CompletionSettlement{CompletionOperationID: original.Operation.OperationID, Disposition: protocol.AlreadyFinalized, CompletionResult: protocol.CompletionOperationResult{AttemptID: op.AttemptID, OperationID: original.Operation.OperationID, Success: true, Result: *physical.Result}}}
-	} else if original.Operation.Integration == nil && original.Settled && original.Status.Error == "" && original.Status.Result != nil && original.Status.Result.GitCommit != nil {
-		status = Status{Known: true, Result: &protocol.EffectResult{WriterAbsent: ptr(true)}, CompletionSettlement: &protocol.CompletionSettlement{CompletionOperationID: original.Operation.OperationID, Disposition: protocol.AlreadyFinalized, CompletionResult: protocol.CompletionOperationResult{AttemptID: op.AttemptID, OperationID: original.Operation.OperationID, Success: true, Result: *original.Status.Result}}}
-	} else {
-		status, err = runWorkspaceWorker(ctx, op, "settle_completion", nil)
-		if err != nil {
-			return status, err
-		}
-	}
-	return persistCompletionSettlement(op, original.Operation, r, status)
-}
-
-func persistCompletionSettlement(op, original protocol.Operation, r workspaceRecord, status Status) (Status, error) {
-	if status.Result == nil {
-		return status, fmt.Errorf("missing completion settlement evidence")
-	}
-	pair := protocol.OperationResult{AttemptID: op.AttemptID, OperationID: op.OperationID, Success: true, Result: *status.Result, CompletionSettlement: status.CompletionSettlement}
-	if err := wire.ValidateCompletionPair(op, original, pair); err != nil {
-		return status, err
-	}
-	boot, err := BootID()
-	if err != nil {
-		return status, err
-	}
-	// Pair precedes release and the original tombstone. Until export succeeds the
-	// service/backend retains ownership even though these root writers are absent.
-	if err = saveRecord(operationPath(op.OperationID), operationRecord{Operation: op, BootID: boot, Settled: true, Status: status}); err != nil {
-		return status, err
-	}
-	c := status.CompletionSettlement.CompletionResult
-	if c.Success {
-		r.Metadata = *c.Result.WorkspaceMetadata
-		r.PrivateCheckpoint = nil
-	} else {
-		r.PrivateCheckpoint = status.Result.WorkspaceMetadata.Checkpoint
-	}
-	r.Released = true
-	if err = saveRecord(workspaceAllocationRecordPath(op.Workspace), r); err != nil {
-		return status, err
-	}
-	prior := Status{Known: true, Result: &c.Result, CancelledByOperationID: c.CancelledByOperationID}
-	err = saveRecord(operationPath(original.OperationID), operationRecord{Operation: original, BootID: boot, Settled: true, Status: prior})
-	return status, err
-}
-
-// Run under the execution-account writer lock. Root supplies immutable target
-// identity; no Agent path or reset/rebase instruction is accepted.
-func settlementWorker(op protocol.Operation, original protocol.Operation, metadata protocol.WorkspaceMetadata, workspace, common string) (Status, error) {
-	if err := wire.ValidateCompletionTarget(op, original); err != nil {
-		return Status{}, err
-	}
-	var finalized *protocol.EffectResult
-	if original.Integration == nil {
-		var err error
-		finalized, err = reconcileFinalization(workspace, common, original.OperationID, metadata.FinalizedCommit)
-		if err != nil {
-			return Status{}, err
-		}
-	}
-	p := &protocol.CompletionSettlement{CompletionOperationID: original.OperationID}
-	status := Status{Known: true, Result: &protocol.EffectResult{WriterAbsent: ptr(true)}, CompletionSettlement: p}
-	p.CompletionResult = protocol.CompletionOperationResult{AttemptID: op.AttemptID, OperationID: original.OperationID}
-	if finalized != nil {
-		metadata.FinalizedCommit = *finalized.GitCommit
-		metadata.Checkpoint = nil
-		finalized.WorkspaceID = &op.Workspace.WorkspaceID
-		finalized.WorkspaceMetadata = &metadata
-		p.Disposition, p.CompletionResult.Success, p.CompletionResult.Result = protocol.AlreadyFinalized, true, *finalized
-	} else {
-		cp, e := completionRecoveryCheckpoint(workspace, common, op.OperationID, original.OperationID, *op.CompletionIdentityDigest, metadata.FinalizedCommit)
-		if e != nil {
-			return Status{}, e
-		}
-		metadata.Checkpoint = &cp
-		status.Result.WorkspaceID, status.Result.WorkspaceMetadata = &op.Workspace.WorkspaceID, &metadata
-		p.Disposition = protocol.DispositionCancelled
-		p.CompletionResult.CancelledByOperationID = &op.OperationID
-		p.CompletionResult.Result.WriterAbsent = ptr(true)
-	}
-	return status, nil
 }

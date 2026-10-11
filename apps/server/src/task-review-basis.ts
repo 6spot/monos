@@ -2,7 +2,7 @@ import type {Transaction} from '../../../packages/db/src/index.ts';
 import {CommandError} from '../../../packages/domain/src/commands.ts';
 import {validate} from '../../../packages/protocol/src/index.ts';
 import type {TaskReviewManifest,TaskReviewBasis,DeliveryOutputEvidence,PublicationEffectiveBasis} from '../../../packages/protocol/src/index.ts';
-import {resolveCanonicalResult} from './task-result-reads.ts';
+import {resolveNodeResult} from './task-result-reads.ts';
 import {readArtifact} from './artifacts.ts';
 import {publicationDigest as hash} from './publication-policy.ts';
 
@@ -17,7 +17,7 @@ export async function canonicalReviewManifest(tx:Transaction,taskId:string):Prom
  if(!members.length||members.length>256||members.some(m=>m.state!=='COMPLETED'||!m.operation_id))throw new CommandError('unmet_precondition','work_unsettled');
  const outputs:DeliveryOutputEvidence[]=[];
  for(const m of members){
-  const {item,identity}=await resolveCanonicalResult(tx,taskId,m.operation_id!);
+  const {item,identities}=await resolveNodeResult(tx,taskId,m.operation_id!);
   if(!item.current||item.manifest.node_id!==m.node_id||item.manifest.node_activation!==Number(m.activation))throw new CommandError('unmet_precondition','source_changed');
   const completion=item.manifest,artifacts=[];
   if(new Set(completion.artifact_ids).size!==completion.artifact_ids.length)throw new CommandError('unmet_precondition','identity_mismatch');
@@ -26,7 +26,7 @@ export async function canonicalReviewManifest(tx:Transaction,taskId:string):Prom
    if(a.task_id!==taskId||a.node_id!==m.node_id||a.node_activation!==completion.node_activation)throw new CommandError('unmet_precondition','identity_mismatch');artifacts.push(a);
   }
   const effective:PublicationEffectiveBasis={task_id:taskId,specification_id:task.specification_id,plan_id:task.plan_id,completion_operation_id:completion.operation_id,completion_manifest_digest:completion.content_digest};
-  outputs.push(validate('DeliveryOutputEvidence',{node_id:m.node_id,node_activation:Number(m.activation),completion,completion_manifest_digest:completion.content_digest,effective_basis:effective,effective_basis_digest:hash(effective),artifacts,repository_free:item.repository_free,...(identity?{source:identity,source_digest:hash(identity)}:{})}));
+  outputs.push(validate('DeliveryOutputEvidence',{node_id:m.node_id,node_activation:Number(m.activation),completion,completion_manifest_digest:completion.content_digest,effective_basis:effective,effective_basis_digest:hash(effective),artifacts,repository_free:item.repository_free,sources:identities.map(source=>({source,source_digest:hash(source)}))}));
  }
  return validate('TaskReviewManifest',{schema_version:1,task_id:taskId,specification_id:task.specification_id,plan_id:task.plan_id,...revision,outputs});
 }

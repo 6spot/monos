@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
 import { writeFile } from 'node:fs/promises';
 import { ownerDeliveryFixture } from '../../server/test/fixtures/owner-delivery-fixture.ts';
+import { multiRepositoryDeliveryFixture } from '../../server/test/fixtures/multi-repository-delivery-fixture.ts';
 import { ownerDeliveryHooks } from '../../server/src/owner-delivery-control.ts';
 import { createApp } from '../../server/src/app.ts';
 import { transaction } from '../../../packages/db/src/index.ts';
@@ -12,7 +13,8 @@ import { initializeTask } from '../../server/src/task-records.ts';
 // progress controls below change only synthetic mutable scheduling projections.
 if (!process.env.MONOS_TEST_WEB_DATABASE_URL) throw new Error('Isolated browser database is required');
 process.env.DATABASE_URL = process.env.MONOS_TEST_WEB_DATABASE_URL;
-let current: { fixture: Awaited<ReturnType<typeof ownerDeliveryFixture>>; app: ReturnType<typeof createApp>; heartbeat: NodeJS.Timeout; second: string; schema: string } | undefined;
+type Fixture = Awaited<ReturnType<typeof ownerDeliveryFixture>> | Awaited<ReturnType<typeof multiRepositoryDeliveryFixture>>;
+let current: { fixture: Fixture; app: ReturnType<typeof createApp>; heartbeat: NodeJS.Timeout; second: string; schema: string } | undefined;
 let closing = false;
 let closedSchemas = 0;
 const ownedScopes: string[] = [], closedScopes: string[] = [];
@@ -36,8 +38,8 @@ const server = createServer((request, response) => { void (async () => {
     const body = payload.length ? JSON.parse(payload.toString('utf8')) as Record<string, unknown> : {};
     if (request.url === '/__test__/owner-delivery-scenario') {
       await dispose();
-      if (!['repository_free','modified','no_change'].includes(String(body.mode))) throw new Error('Unknown synthetic mode');
-      const fixture = await ownerDeliveryFixture(body.mode as 'repository_free'|'modified'|'no_change', ownerDeliveryHooks);
+      if (!['repository_free','modified','no_change','multi_deferred'].includes(String(body.mode))) throw new Error('Unknown synthetic mode');
+      const fixture = body.mode === 'multi_deferred' ? await multiRepositoryDeliveryFixture('after_acceptance') : await ownerDeliveryFixture(body.mode as 'repository_free'|'modified'|'no_change', ownerDeliveryHooks);
       const schema = new URL(fixture.databaseUrl).searchParams.get('options')?.match(/search_path=(conversation_[a-z0-9]+)/)?.[1];
       if (!schema) { await fixture.close(); throw new Error('Exact fixture schema is missing'); }
       ownedScopes.push(schema);
@@ -51,6 +53,21 @@ const server = createServer((request, response) => { void (async () => {
       response.end(JSON.stringify({ task: fixture.f.task, second, schema })); return;
     }
     if (!current) throw new Error('Scenario is not initialized');
+    if (request.url === '/__test__/owner-delivery-multi-progress') {
+      const x = current.fixture;
+      if (!('states' in x)) throw new Error('Multiple repositories are required');
+      if (body.action === 'partial') {
+        x.states[1]!.reject = true;
+        await x.prepareRemote();
+      } else if (body.action === 'resume') x.states[1]!.reject = false;
+      else throw new Error('Unknown multi-repository action');
+      for (let i = 0; i < 35; i++) {
+        await x.pump();
+        const row = (await x.db.pool.query('SELECT status FROM owner_delivery_batches WHERE task_id=$1', [x.f.task])).rows[0];
+        if (row?.status === 'failed' || row?.status === 'completed') break;
+      }
+      response.writeHead(200, { 'Content-Type': 'application/json' }); response.end('{"synthetic_provider":true}'); return;
+    }
     if (request.url === '/__test__/owner-delivery-progress') {
       if (!['waiting','failed','reconciling'].includes(String(body.status))) throw new Error('Unknown synthetic progress');
       await current.fixture.db.pool.query('UPDATE owner_delivery_batches SET status=$2,attention_reason=$3,version=version+1 WHERE task_id=$1 AND status NOT IN (\'completed\',\'cancelled\')',[current.fixture.f.task,body.status,body.status==='failed'?'synthetic_provider_unavailable':body.status==='reconciling'?'synthetic_unknown_effect':'synthetic_checks_pending']);
@@ -61,7 +78,7 @@ const server = createServer((request, response) => { void (async () => {
       const batch = (await x.db.pool.query('SELECT id,content_digest,input_cutoff,status FROM owner_delivery_batches WHERE task_id=$1',[x.f.task])).rows;
       const input = (await x.db.pool.query('SELECT m.sequence,i.accepted_delivery_operation_id FROM task_inputs i JOIN task_messages m ON m.id=i.message_id WHERE i.task_id=$1 ORDER BY m.sequence',[x.f.task])).rows;
       const receipts = (await x.db.pool.query('SELECT request_id,envelope,response FROM owner_delivery_command_receipts WHERE task_id=$1 ORDER BY request_id',[x.f.task])).rows;
-      response.writeHead(200, { 'Content-Type': 'application/json' }); response.end(JSON.stringify({ batch,input,receipts,provider_calls:0 })); return;
+      response.writeHead(200, { 'Content-Type': 'application/json' }); response.end(JSON.stringify({ batch,input,receipts,provider_calls:'calls' in x ? x.calls.length : 0 })); return;
     }
     response.writeHead(404); response.end(); return;
   }

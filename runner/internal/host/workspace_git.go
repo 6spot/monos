@@ -492,6 +492,9 @@ func WorkspaceWorker(operation string, input io.Reader) (Status, error) {
 		return Status{Known: true, Result: &result}, err
 	}
 	op := r.Operation
+	if r.Completion != nil {
+		return completionItemWorker(r)
+	}
 	if op.Workspace == nil {
 		return Status{Known: true, Result: &result}, fmt.Errorf("workspace operation required")
 	}
@@ -528,32 +531,10 @@ func WorkspaceWorker(operation string, input io.Reader) (Status, error) {
 			return Status{Known: true, Result: &result}, e
 		}
 	}
-	if r.WorkspaceAction != "integrate" || !r.IntegrationStarted {
-		if err = requireUnfencedCompletion(op); err != nil {
-			return Status{Known: true, Result: &result}, err
-		}
-	}
-	if op.Kind == protocol.SettleCompletion {
-		original, e := readOperation(operationPath(*op.CompletionOperationID))
-		if e != nil {
-			return Status{Known: true, Result: &result}, e
-		}
-		fence, e := readCompletionFenceAt(completionFencePath(original.Operation.OperationID), original.Operation, 0)
-		if e != nil || fence == nil || !sameOperation(*fence, op) {
-			return Status{Known: true, Result: &result}, fmt.Errorf("settlement worker fence changed")
-		}
-		if r.WorkspaceAction != "settle_completion" {
-			return Status{Known: true, Result: &result}, fmt.Errorf("invalid settlement stage")
-		}
-		return settlementWorker(op, original.Operation, metadata, workspace, common)
+	if err = requireUnfencedCompletion(op); err != nil {
+		return Status{Known: true, Result: &result}, err
 	}
 	switch r.WorkspaceAction {
-	case "export_node":
-		result, err = exportWorkspaceCapture(r, metadata)
-		return Status{Known: true, Result: &result}, err
-	case "integrate":
-		result, err = integrateWorkspaceCapture(context.Background(), r, metadata)
-		return Status{Known: true, Result: &result}, err
 	case "history":
 		if err = seedWorkspaceHistory(cache, op); err != nil {
 			return Status{Known: true, Result: &result}, err

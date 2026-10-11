@@ -1,6 +1,6 @@
 # Exact multi-Node replacement Plans
 
-Implementation: `apps/server/src/task-replan*.ts`, migrations 21, 29 and 30, and
+Implementation: `apps/server/src/task-replan*.ts`, migrations 21, 29, 30 and 31, and
 protocol `TaskReplanSource`, `PrepareReplan`, `WorkspaceTransfer`.
 Status: multi-Node extension implemented on 2026-10-11, with PostgreSQL, protocol,
 Runner and browser verification in `docs/research/multi-node-replan.md`. Earlier
@@ -110,15 +110,18 @@ already accounts for pending holds before that source is created.
 
 `workspaces` entries pair exact `input` with approved `target_nodes`. A checkpoint
 requires one exact target activation, which cannot complete without reopening and
-finalizing the retained private work. Completed input can allow several destinations
-or an explicit empty list. Each opener claims its exact immutable transfer
+finalizing that resource's retained private work. Completed input can allow several
+destinations or an explicit empty list. Each opener claims its exact immutable transfer
 under the workspace lock; earlier repository-free work does not force a checkout.
-Inventory includes canonical integrated input and every unconsumed checkpoint,
-keyed by source lease/allocation. General transfer uniqueness is publication,
-source lease and target Node/activation; checkpoint sources additionally have one
+Inventory includes each resource's canonical integrated input and every unconsumed
+checkpoint, keyed by resource and source lease/allocation. General transfer
+uniqueness is publication, source lease and target Node/activation; checkpoint sources additionally have one
 recipient. Completed canonical input can feed multiple approved isolated targets.
-Reject several private checkpoints assigned to one target. Physical completed input
-requires exact successful operation/manifest/released lease/Git proof; it need not
+Reject several private checkpoints for the same target Node/activation/resource;
+one target may inherit different resources with independent retained allocations.
+Physical completed input requires the exact successful parent operation/manifest,
+resource member, released lease, metadata, capture and finalized Git proof. Never
+select a sibling's result or the parent's first member as a substitute. It need not
 retain current semantic `node_completions` evidence after cancellation or Replan.
 Completed code access may follow an approved unchanged Node to its later current
 activation in the same published Plan when original applicability and current Node
@@ -154,7 +157,9 @@ reason text is never blocker identity.
 
 `WorkspaceTransfer` is system-authored from exact approved publication input at first open. It binds actual old
 source Plan/Node/activation/Attempt/lease, Stop/checkpoint or finalized completion,
-fixed Task/resource/storage lineage and target Plan/Node/activation. The old source
+fixed Task/resource/storage lineage and target Plan/Node/activation. Aggregate
+completion proofs retain the original parent identity plus the selected resource's
+member result; the parent digest binds all original members. The old source
 Plan can precede the most recent applicable Plan. Future target Attempt/open/lease
 IDs are bound when the system admits the new descriptor. Backend and root Host
 independently check exact released predecessor. Never clear a checkpoint to bypass

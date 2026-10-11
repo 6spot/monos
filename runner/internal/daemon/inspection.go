@@ -34,7 +34,18 @@ func retainedInspectionOrigin(db *journal.DB, i protocol.InspectionDescriptor) e
 			return err
 		}
 		original, err := db.Operation(o.Identity.OperationID)
-		if err != nil || original.Workspace == nil || original.Workspace.ProjectID != i.ProjectID || original.Workspace.TaskID != i.ScopeID || original.Workspace.RunnerID != i.RunnerID || original.Workspace.Resource.ResourceID != i.Resource.ResourceID || original.Workspace.Resource.RepositoryIdentity != i.Resource.RepositoryIdentity {
+		if err != nil {
+			return err
+		}
+		var w *protocol.WorkspaceDescriptor
+		for index := range original.Workspaces {
+			member := &original.Workspaces[index]
+			if member.Workspace.ResourceID == o.Identity.ResourceID && member.Workspace.WorkspaceID == o.Identity.WorkspaceID {
+				w = &member.Workspace
+				break
+			}
+		}
+		if w == nil || w.ProjectID != i.ProjectID || w.TaskID != i.ScopeID || w.RunnerID != i.RunnerID || w.Resource.ResourceID != i.Resource.ResourceID || w.Resource.RepositoryIdentity != i.Resource.RepositoryIdentity {
 			return fmt.Errorf("completion inspection source mismatch")
 		}
 		return nil

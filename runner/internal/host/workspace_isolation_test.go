@@ -103,7 +103,7 @@ func TestWorkspaceIsolationStopRejectsUnknownOrLostCheckpointState(t *testing.T)
 
 func TestWorkspaceIsolationReservationsSeparatePathsAndRecords(t *testing.T) {
 	d, op := canonicalWorkspace(t)
-	d.WorkspaceReservations.Isolation = &protocol.WorkspaceIsolation{AllocationID: "left"}
+	d.WorkspaceReservations.Resources[0].Isolation = &protocol.WorkspaceIsolation{AllocationID: "left"}
 	op.Workspace.Isolation = &protocol.WorkspaceIsolation{AllocationID: "left"}
 	_, digest, _ := wire.Canonical(op.Workspace)
 	op.WorkspaceDigest = &digest
@@ -114,7 +114,7 @@ func TestWorkspaceIsolationReservationsSeparatePathsAndRecords(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	d.WorkspaceReservations.Isolation = &protocol.WorkspaceIsolation{AllocationID: "right"}
+	d.WorkspaceReservations.Resources[0].Isolation = &protocol.WorkspaceIsolation{AllocationID: "right"}
 	right, err := RuntimePaths(d)
 	if err != nil {
 		t.Fatal(err)
@@ -131,11 +131,11 @@ func TestWorkspaceIsolationReservationsSeparatePathsAndRecords(t *testing.T) {
 		t.Fatal("Attempt opened a sibling allocation")
 	}
 	other := *op.Workspace
-	other.Isolation = d.WorkspaceReservations.Isolation
+	other.Isolation = d.WorkspaceReservations.Resources[0].Isolation
 	if workspaceAllocationRecordPath(&other) == workspaceAllocationRecordPath(op.Workspace) {
 		t.Fatal("allocation records share mutable lease authority")
 	}
-	d.WorkspaceReservations.Isolation.AllocationID = "../outside"
+	d.WorkspaceReservations.Resources[0].Isolation.AllocationID = "../outside"
 	if _, err := RuntimePaths(d); err == nil {
 		t.Fatal("invalid allocation escaped reserved path")
 	}
@@ -143,18 +143,18 @@ func TestWorkspaceIsolationReservationsSeparatePathsAndRecords(t *testing.T) {
 
 func TestWorkspaceIsolationCompletionRequiresFrozenTaskRevision(t *testing.T) {
 	d, op := canonicalWorkspace(t)
-	d.WorkspaceReservations.Isolation = &protocol.WorkspaceIsolation{AllocationID: "isolated"}
-	op.Workspace.Isolation = d.WorkspaceReservations.Isolation
+	d.WorkspaceReservations.Resources[0].Isolation = &protocol.WorkspaceIsolation{AllocationID: "isolated"}
+	op.Workspace.Isolation = d.WorkspaceReservations.Resources[0].Isolation
 	op.Kind = protocol.KindCompleteNode
 	if err := validateWorkspaceIsolation(d, op); err == nil {
 		t.Fatal("isolated completion lacks expected Task revision")
 	}
-	op.Integration = &protocol.WorkspaceIntegration{ExpectedTaskCommit: strings.Repeat("a", 40)}
-	if err := validateWorkspaceIsolation(d, op); err != nil {
+	integration := &protocol.WorkspaceIntegration{ExpectedTaskCommit: strings.Repeat("a", 40)}
+	if err := validateWorkspaceIsolationInput(d, op.Kind, op.Workspace, integration); err != nil {
 		t.Fatal(err)
 	}
 	op.Kind = protocol.Stop
-	if err := validateWorkspaceIsolation(d, op); err == nil {
+	if err := validateWorkspaceIsolationInput(d, op.Kind, op.Workspace, integration); err == nil {
 		t.Fatal("Stop can initiate integration")
 	}
 }
@@ -261,5 +261,38 @@ func TestWorkspaceIsolationRecoveredOpenUsesExactStopPair(t *testing.T) {
 	old.Status.Result = &different
 	if err := validateRecoveredWorkspaceSource(next, source, old, recovery, Manifest{Dispatch: d}, false); err == nil {
 		t.Fatal("recovery replaced original ready evidence")
+	}
+}
+
+func TestWorkspaceReservationsKeepDifferentResourceAllocations(t *testing.T) {
+	d, op := canonicalWorkspace(t)
+	first := d.WorkspaceReservations.Resources[0]
+	first.Isolation = &protocol.WorkspaceIsolation{AllocationID: "checkpoint-first"}
+	second := first
+	second.ResourceID = "second"
+	second.WorkspaceID, _ = TaskWorkspaceID(*d.TaskID, second.ResourceID)
+	second.Isolation = &protocol.WorkspaceIsolation{AllocationID: "checkpoint-second"}
+	d.WorkspaceReservations.Resources = []protocol.WorkspaceReservation{first, second}
+	paths, err := RuntimePaths(d)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, reservation := range d.WorkspaceReservations.Resources {
+		want := reservedWorkspacePath(reservation.WorkspaceID, reservation.Isolation, "common")
+		found := false
+		for _, path := range paths {
+			found = found || path == want
+		}
+		if !found {
+			t.Fatal("resource lost inherited allocation", want)
+		}
+	}
+	op.Workspace.Isolation = first.Isolation
+	if err = validateWorkspaceIsolation(d, op); err != nil {
+		t.Fatal(err)
+	}
+	op.Workspace.Isolation = second.Isolation
+	if validateWorkspaceIsolation(d, op) == nil {
+		t.Fatal("sibling resource allocation accepted")
 	}
 }

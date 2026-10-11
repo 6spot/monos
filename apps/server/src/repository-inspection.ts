@@ -99,10 +99,11 @@ async function inspectionOrigin(tx: Transaction, attempt: AttemptRow, resource: 
   if (workspace.runner_id !== attempt.runner_id || workspace.repository_identity !== resource.repository_identity)
     throw new CommandError('unmet_precondition', 'Finalized Task repository belongs to another host or repository');
   const completed = (await tx.query<{ id: string }>(`SELECT o.id FROM operations o JOIN node_completions c ON c.operation_id=o.id
-    WHERE o.kind='complete_node' AND o.state='succeeded' AND o.workspace_descriptor->>'workspace_id'=$1
-      AND o.result->>'git_commit'=$2 ORDER BY o.created_at DESC,o.id DESC LIMIT 1`, [workspace.id, workspace.finalized_commit])).rows[0];
+    JOIN LATERAL operation_workspace_results(o.id) member ON member.workspace_id=$1
+    WHERE o.kind='complete_node' AND o.state='succeeded' AND o.result->>'completion_outcome'='finalized'
+      AND member.result->>'git_commit'=$2 ORDER BY o.created_at DESC,o.id DESC LIMIT 1`, [workspace.id, workspace.finalized_commit])).rows[0];
   if (completed) {
-    const { identity } = await resolveCanonicalResult(tx, attempt.task_id!, completed.id);
+    const { identity } = await resolveCanonicalResult(tx, attempt.task_id!, completed.id, resource.id);
     if (!identity || identity.workspace_id !== workspace.id || identity.runner_id !== attempt.runner_id || identity.git_commit !== workspace.finalized_commit)
       throw new CommandError('unmet_precondition', 'Finalized Task revision lacks exact completion evidence');
     return { resource: workspace.resource, origin: { kind: 'task_completion', identity, identity_digest: digest(canonicalJSON(identity)) } };

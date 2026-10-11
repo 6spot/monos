@@ -1,6 +1,6 @@
 # Workspace and Git Effects
 
-Sources: [Workspace](../../../docs/04-workspace-and-git.md), [parallel workspaces](../../../docs/research/parallel-workspaces.md), [host permissions](../../../docs/11-technology-and-deployment.md).
+Sources: [Workspace](../../../docs/04-workspace-and-git.md), [parallel workspaces](../../../docs/research/parallel-workspaces.md), [multi-repository completion](../../../docs/research/multi-repository-completion-contract.md), [host permissions](../../../docs/11-technology-and-deployment.md).
 
 ## 1. Scope / Trigger
 
@@ -18,20 +18,27 @@ dispatches retain fixture behavior. Product Start/Node scheduling is backend-own
 hard-recovery pairs. Delivery remains separate work; native serial-workspace acceptance is recorded in the
 [serial-workspace task](../../tasks/archive/2026-09/09-30-a-serial-workspaces/prd.md).
 
-Parallel execution freezes `WorkspaceReservations.isolation.allocation_id` in the
-Attempt launch and repeats it in `WorkspaceDescriptor.isolation`. The open result
-adds `WorkspaceMetadata.isolation: {allocation_id,start_commit}`. Isolated
-`complete_node` admission adds `Operation.integration: {expected_task_commit}`;
-all three identities are immutable across replay and completion settlement.
+Each `WorkspaceReservation.isolation` freezes that resource's allocation in the
+Attempt launch. Different resources may retain different checkpoint allocations.
+`WorkspaceDescriptor.isolation` repeats it, and the open result adds
+`WorkspaceMetadata.isolation: {allocation_id,start_commit}`. Completion requires a
+sorted `Operation.workspaces` array of descriptor/digest/integration inputs (maximum
+64, unique resource/workspace/lease); an explicit empty array means no repository.
+The parent owns the manifest digest and no singular completion fields are accepted.
 
 [Integration](../../../runner/internal/host/workspace_integration.go) exposes:
 
 ```go
-func IntegrateWorkspace(ctx context.Context, input WorkspaceIntegrationInput) (WorkspaceIntegrationResult, error)
+func PrepareWorkspaceIntegration(ctx context.Context, input WorkspaceIntegrationInput) (WorkspaceIntegrationResult, error)
+func PublishWorkspaceIntegration(ctx context.Context, input WorkspaceIntegrationInput) (WorkspaceIntegrationResult, error)
 ```
 
+Preparation protects its result without advancing canonical refs. Publication
+requires the retained preparation; missing state is an error rather than permission
+to prepare again after the parent decision.
+
 Input binds the operation ID, protected Task and Node repositories, expected Task
-commit, Node start commit, produced Node commit and tree. The wire result's
+commit, Node start commit, produced Node commit and tree. Each item's wire
 `integration` object records `outcome`, `start_commit`, `node_commit`, `node_tree`,
 `expected_task_commit`, `task_commit` and `task_tree`. Backend Tool Protocol
 settlement owns canonical Task state and Node completion; a Git ref alone does
@@ -53,9 +60,10 @@ Canonical paths derive from the logical workspace hash and admitted allocation:
 | Direct private workspace | `tasks/<workspace_id>/{worktree,common}` |
 | Isolated private workspace | `tasks/<workspace_id>/allocations/<allocation_id>/{worktree,common}` |
 | Resource object cache | `cache/resources/<resource_id>.git` |
-| Protected original Node result | `service/node-results/<completion_operation_id>` |
+| Protected original Node result | `service/node-results/<completion_operation_id>/<workspace_id>` |
 | Protected canonical Task repository | `service/task-results/<workspace_id>.git` |
-| Retained operation export | `results/<operation_id>` |
+| Completion / aggregate cancellation export | `results/<operation_id>/<workspace_id>` |
+| Ordinary Stop export | `results/<stop_operation_id>` |
 
 `WorkspacePath` and allocation-keyed root records/coordinator/writer locks must
 agree with the launch reservation. One allocation never receives a sibling's
@@ -128,9 +136,9 @@ its first repository open, including queued direct Attempts. Independent isolate
 Attempts may coexist, with one live lease per logical workspace/allocation. The
 backend serializes initial Task materialization and completion admission; an
 already-running sibling can continue using its private allocation. The direct path
-preserves the same Task worktree across Nodes and activations. Stage A still admits
-one materialized repository per Task; a future multi-repository completion needs
-one whole boundary before any partial integration becomes visible.
+preserves the same Task worktree across Nodes and activations. A multi-repository completion retains one whole boundary before any partial
+integration becomes visible. Ordinary Stop stays one operation per lease; sibling
+Stops settle independently, while backend Attempt release waits for all members.
 
 An immutable open descriptor may carry `WorkspaceTransfer.purpose: serial` only
 for a completed predecessor in the same Plan. It carries no Replan publication or
@@ -178,14 +186,21 @@ execution repository are mutable conveniences; exact commit/tree and protected
 export remain authoritative. Raw archives are system recovery data, not an
 Agent-readable history browser.
 
-Stop writers, finalize, integrate, then grant completion evidence. Isolated
-completion first finalizes private Git, then the service `export_node` worker
-retains the exact Node commit/tree under `service/node-results`. Under the same
-root helper lock used by cancellation, persist `IntegrationStarted` with action
-`integrate` before launching the service integration worker. The worker consumes
-only that protected Node export and the service-owned Task repository. Task storage
-has its own initialization intent; missing previously initialized storage is an
-error, never permission to re-clone it.
+[Parent completion](../../../runner/internal/host/completion_batch.go) stops writers,
+captures and protects every repository, then prepares every isolated integration.
+One root operation record retains the true immutable parent and separate member
+capture/protected/prepared/published/exported state. The same sequential worker unit
+records its workspace/action/invocation digest before launch; that digest also binds
+the unit description. Reconcile the prior invocation before reusing the unit.
+Never create protocol Operations by copying the parent's ID into singular items.
+
+Acquire allocation coordinators in sorted resource order. Only after all preparation
+finishes, fsync one parent decision (`publish`, `conflict`, or `cancel`) under the
+short helper lock shared with cancellation. No Git/network operation holds that
+lock. Service workers consume protected Node exports and service-owned Task storage;
+missing initialized storage is an error, never permission to re-clone it. New export
+parents are service-private and workspace path components use validated logical
+workspace hashes, never unchecked resource IDs.
 
 The per-Task integration lock and `monos-integration-<operation_id>.json` retain
 immutable inputs, commit date, expected tree and prepared outcome. Git 2.39's
@@ -205,23 +220,36 @@ changed input/ref or unrelated Task head is an error. A killed Git transaction m
 leave `.lock` files: current recovery retains intent and fails closed; it does not
 remove an unproven lock or claim automatic stale-lock repair.
 
-An integrated result exposes the Task commit/tree as top-level `git_commit` and
-`git_tree`, with the original Node result retained separately. A conflict exposes
-`integration.outcome="conflict"`, the unchanged expected Task commit/tree and
-original Node commit/tree; it has no top-level Git completion fields and cannot
-grant Node completion or unlock dependencies. `results/<operation_id>` contains
-the integrated Task result on success and the original Node result on conflict.
-Only backend settlement advances the logical finalized pointer. Tests on the
-private branch alone do not establish correctness of later integrated code.
+A terminal completion has `writer_absent`, `completion_outcome` and an explicit
+`workspace_results` array covering every admitted member in order. Finalized items
+carry capture plus Git commit/tree; isolated items additionally carry integrated
+proof. Conflict retains every capture, publishes no item Git pair, and keeps each
+original finalized metadata revision. Only actually conflicting items carry conflict
+integration; clean unpublished siblings omit integration. Protected terminal exports
+hold integrated Task output on finalization and original Node output on conflict.
+Only backend settlement advances all logical Task pointers and one Node completion.
 
-Cancellation before the durable integration-start barrier captures private work
-as a checkpoint, even if finalization already produced a commit. Cancellation
-after that barrier reconciles this exact integration and reports the original
-physical integrated/conflict outcome through the `already_finalized` settlement
-pair. Backend cancellation suppresses semantic completion/retry where appropriate;
-uncertain writer or Git ownership remains retained. Interrupted private work is not
-a completed integrated result. Rework corrects code rather than automatically
-reverting it.
+Cancellation before the publish decision checkpoints every initialized member,
+even if private finalization already produced commits. After the publish decision,
+recovery rolls every member forward, including when no ref has moved yet. A retained
+conflict decision also finishes its exact aggregate export. Neither partial ref
+publication nor a single private commit grants parent completion or cancellation.
+Persist the terminal aggregate before releasing any allocation; retain release
+progress so replay does not touch a newer lease.
+
+`settle_completion` names only the original parent and identity digest. Resolve its
+membership from the retained parent, persist the exact terminal pair before release,
+and commit both journal outcomes atomically. `already_finalized` embeds the exact
+finalized/conflict aggregate; `cancelled` embeds the original absence tombstone and
+outer checkpoints for every member. Ordinary Stop exports and original-open recovery
+pairs retain their singular provenance.
+
+Canonical/conflict sources, transfer proofs, immutable reads, Planner inspection
+and publication verify the true parent plus the matching resource/workspace item.
+A clean sibling capture from a conflicting parent is valid retry history. Result
+read identity binds capture and integration, and every trusted consumer validates
+whole-parent coverage before selecting an item. Never select the first result as a
+default repository. Tests of a private branch alone do not validate integrated code.
 
 The probe persists finalization inputs before `commit-tree` and retains an operation-specific ref for replay. Typed `recoverable` failures retain the admitted operation; `capture_hard_limit` and `invalid_finalization` block completion. Retrying repairs the same operation, under current activation/basis guards, rather than granting the terminal Agent a fresh mutation.
 
@@ -248,8 +276,8 @@ Export the exact final tree with controlled public parents; never push private A
 | Integration conflict | Preserve result; bounded retry same Node/activation |
 | Fresh isolated Stop before local open intent, including Rework history | No history worker; persist exact cancelled-open/Stop pair |
 | Lost checkpoint-transfer marker or unknown recovery stage | Error and retain ownership; no empty cancellation |
-| Cancel before integration-start barrier | Preserve checkpoint; canonical Task head unchanged |
-| Cancel after integration-start barrier | Reconcile original operation and retain exact terminal pair |
+| Cancel before parent publish decision | Preserve every checkpoint; canonical Task heads unchanged |
+| Cancel after parent publish decision | Roll every member forward and retain the exact terminal pair |
 | Changed integration inputs/ref or unrelated canonical Task head | Identity/revision error; no replacement integration |
 | Unresolved Git transaction lock after process loss | Retain durable intent; no unproven lock removal |
 | Unexpected revision | Stop for reconciliation |
@@ -305,13 +333,16 @@ and [allocation tests](../../../runner/internal/host/workspace_isolation_test.go
 Use real local Git for disjoint/conflicting edits, immutable start ancestry,
 input/result/ref-stage interruption, partial ref-pair recovery, GC retention and
 replay after later Task advancement. Effect tests assert protected export
-identity, cancellation on both sides of the integration-start barrier and retained
-Node output. Stop tests cover no local open record, partially materialized
+identity, both sides of the parent publish decision, all-member conflict, and
+retained Node output. Inject loss after each capture, protection, preparation,
+publication and export; reload the durable parent before continuing. Stop tests cover no local open record, partially materialized
 unexposed stages, initialized recovery and unknown/checkpoint state rejection.
 Repository-free completion inspects only its own reserved allocation.
 
-The parallel implementation has local Git and focused race-test evidence, including
-the fresh Stop regression and existing initialized/direct Rework recovery. Service
+The multi-repository implementation has real local Git/fault tests, a full Host
+race run, daemon/journal race tests, targeted checks for later export-directory fixes,
+and Go compile/vet evidence. This includes independent sibling Stops, atomic
+multi-item settlement, fresh Stop and initialized/direct Rework regressions. Service
 export tests require a non-root account and skip when run as root. These checks do
 not establish native systemd/cgroup cancellation, deployed two-account permissions,
 live concurrent restart or host reboot behavior. Those real-host parallel acceptance

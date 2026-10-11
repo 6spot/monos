@@ -8,9 +8,113 @@
       "request_id": "request",
       "kind": "complete_node",
       "state": "admitted",
-      "repository_free": true,
-      "completion_manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      "completion_manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "workspaces": []
     },
-    "identity_digest": "01a20ab65ca8d36c626b30babc08a63f663f46f15087c20f0c66525940fb3431"
+    "identity_digest": "47fe2a8536abcfb829e4348294f5ab12a046995aeb0497c622e1b8dd2681aa0d"
+  },
+  {
+    "operation": {
+      "schema_version": 1,
+      "operation_id": "complete-a",
+      "attempt_id": "attempt-a",
+      "dispatch_id": "dispatch-a",
+      "request_id": "request-a",
+      "kind": "complete_node",
+      "state": "admitted",
+      "completion_manifest_digest": "1111111111111111111111111111111111111111111111111111111111111111",
+      "workspaces": [
+        {
+          "workspace": {
+            "schema_version": 1,
+            "workspace_id": "workspace-a",
+            "task_id": "task-a",
+            "project_id": "project-a",
+            "resource_id": "resource-a",
+            "runner_id": "runner-a",
+            "generation": 1,
+            "lease_id": "lease-a",
+            "node_id": "node-a",
+            "node_activation": 1,
+            "open_operation_id": "open-a",
+            "resource": {
+              "resource_id": "resource-a",
+              "repository_identity": "github.com/owner/repo",
+              "remote_url": "https://github.com/owner/repo.git"
+            }
+          },
+          "workspace_digest": "49fce1fb3a96cb081b9fdae6d3c1f8fa5ce0b5c68c7078c7d10078343fe8d84f"
+        },
+        {
+          "workspace": {
+            "schema_version": 1,
+            "workspace_id": "workspace-b",
+            "task_id": "task-a",
+            "project_id": "project-a",
+            "resource_id": "resource-b",
+            "runner_id": "runner-a",
+            "generation": 1,
+            "lease_id": "lease-b",
+            "node_id": "node-a",
+            "node_activation": 1,
+            "open_operation_id": "open-b",
+            "resource": {
+              "resource_id": "resource-b",
+              "repository_identity": "github.com/owner/repo",
+              "remote_url": "https://github.com/owner/repo.git"
+            },
+            "isolation": {
+              "allocation_id": "allocation-a"
+            },
+            "basis": {
+              "storage_id": "storage-a",
+              "repository_identity": "github.com/owner/repo",
+              "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "target_branch": "main",
+              "finalized_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "canonical_source": {
+              "operation_id": "old-completion",
+              "attempt_id": "old-attempt",
+              "kind": "complete_node",
+              "metadata": {
+                "generation": 1,
+                "storage_id": "storage-a",
+                "lease_id": "lease-a",
+                "repository_identity": "github.com/owner/repo",
+                "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "target_branch": "main",
+                "target_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "finalized_commit": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+                "isolation": {
+                  "allocation_id": "allocation-a",
+                  "start_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                }
+              },
+              "integration": {
+                "outcome": "integrated",
+                "start_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "node_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "node_tree": "cccccccccccccccccccccccccccccccccccccccc",
+                "expected_task_commit": "dddddddddddddddddddddddddddddddddddddddd",
+                "task_commit": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+                "task_tree": "ffffffffffffffffffffffffffffffffffffffff"
+              },
+              "capture": {
+                "start_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "node_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "node_tree": "cccccccccccccccccccccccccccccccccccccccc"
+              },
+              "completion_outcome": "finalized"
+            }
+          },
+          "workspace_digest": "6d94a38fe9e9842cc07c78c988302f102733daddb17a5353bd19f99873fab678",
+          "integration": {
+            "expected_task_commit": "dddddddddddddddddddddddddddddddddddddddd"
+          }
+        }
+      ]
+    },
+    "identity_digest": "8a2b55aad187e840c2b1ae211e223337813f5a4b3805e74a727f6a24a49107f2"
   }
 ]

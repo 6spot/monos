@@ -29,9 +29,10 @@ func retainedReadFixture(t *testing.T) (*journal.DB, protocol.Dispatch, protocol
 	if e != nil {
 		t.Fatal(e)
 	}
-	w := op.Workspace
+	w := &op.Workspaces[0].Workspace
 	i := protocol.ResultReadIdentity{TaskID: *d.TaskID, OperationID: op.OperationID, AttemptID: op.AttemptID, DispatchID: op.DispatchID, NodeID: *d.NodeID, NodeActivation: d.NodeActivation, SpecificationID: "spec", PlanID: "plan", WorkspaceID: w.WorkspaceID, ResourceID: w.Resource.ResourceID, RunnerID: d.RunnerID, StorageID: "storage-old", Generation: w.Generation, LeaseID: w.LeaseID, RepositoryIdentity: w.Resource.RepositoryIdentity, ManifestDigest: *op.CompletionManifestDigest, OperationIdentityDigest: digest, BaseCommit: strings.Repeat("1", 40), GitCommit: strings.Repeat("2", 40), GitTree: strings.Repeat("3", 40)}
-	r := protocol.OperationResult{OperationID: op.OperationID, AttemptID: op.AttemptID, Success: true, Result: protocol.EffectResult{WriterAbsent: nodeBool(true), WorkspaceID: &i.WorkspaceID, GitCommit: &i.GitCommit, GitTree: &i.GitTree, WorkspaceMetadata: &protocol.WorkspaceMetadata{StorageID: i.StorageID, Generation: i.Generation, LeaseID: i.LeaseID, RepositoryIdentity: i.RepositoryIdentity, BaseCommit: i.BaseCommit, FinalizedCommit: i.GitCommit, TargetBranch: "main", TargetCommit: i.BaseCommit}}}
+	r := protocol.OperationResult{OperationID: op.OperationID, AttemptID: op.AttemptID, Success: true, Result: completedEffectFixture(op, i.BaseCommit, i.GitCommit, i.GitTree)}
+	i.Capture = *r.Result.WorkspaceResults[0].Capture
 	retainRecovery(t, db, d, op, &r)
 	return db, d, op, i, r
 }
@@ -57,16 +58,18 @@ func TestResultReadBindsPrivateAndIntegratedRevisions(t *testing.T) {
 	db := testDB(t)
 	_, d, op, identity, result := retainedReadFixture(t)
 	isolation := &protocol.WorkspaceIsolation{AllocationID: "allocation"}
-	d.WorkspaceReservations.Isolation, op.Workspace.Isolation = isolation, isolation
-	op.Integration = &protocol.WorkspaceIntegration{ExpectedTaskCommit: identity.BaseCommit}
-	result.Result.WorkspaceMetadata.Isolation = &protocol.WorkspaceIsolationMetadata{AllocationID: isolation.AllocationID, StartCommit: identity.BaseCommit}
-	result.Result.Integration = &protocol.WorkspaceIntegrationResult{Outcome: protocol.Integrated, StartCommit: identity.BaseCommit, NodeCommit: strings.Repeat("4", 40), NodeTree: strings.Repeat("5", 40), ExpectedTaskCommit: identity.BaseCommit, TaskCommit: identity.GitCommit, TaskTree: identity.GitTree}
-	identity.Integration = result.Result.Integration
-	_, descriptorDigest, err := wire.Canonical(op.Workspace)
+	d.WorkspaceReservations.Resources[0].Isolation, op.Workspaces[0].Workspace.Isolation = isolation, isolation
+	op.Workspaces[0].Integration = &protocol.WorkspaceIntegration{ExpectedTaskCommit: identity.BaseCommit}
+	result.Result.WorkspaceResults[0].WorkspaceMetadata.Isolation = &protocol.WorkspaceIsolationMetadata{AllocationID: isolation.AllocationID, StartCommit: identity.BaseCommit}
+	result.Result.WorkspaceResults[0].Integration = &protocol.WorkspaceIntegrationResult{Outcome: protocol.Integrated, StartCommit: identity.BaseCommit, NodeCommit: strings.Repeat("4", 40), NodeTree: strings.Repeat("5", 40), ExpectedTaskCommit: identity.BaseCommit, TaskCommit: identity.GitCommit, TaskTree: identity.GitTree}
+	identity.Integration = result.Result.WorkspaceResults[0].Integration
+	identity.Capture = protocol.WorkspaceCaptureResult{StartCommit: identity.Integration.StartCommit, NodeCommit: identity.Integration.NodeCommit, NodeTree: identity.Integration.NodeTree}
+	result.Result.WorkspaceResults[0].Capture = &identity.Capture
+	_, descriptorDigest, err := wire.Canonical(op.Workspaces[0].Workspace)
 	if err != nil {
 		t.Fatal(err)
 	}
-	op.WorkspaceDigest = &descriptorDigest
+	op.Workspaces[0].WorkspaceDigest = descriptorDigest
 	identity.OperationIdentityDigest, err = wire.OperationIdentity(op)
 	if err != nil {
 		t.Fatal(err)
@@ -124,13 +127,13 @@ func TestResultReadRetainedCompletionMissingEvidenceAndDescriptorDigest(t *testi
 			_, d, op, i, r := retainedReadFixture(t)
 			switch kind {
 			case "descriptor-digest":
-				op.WorkspaceDigest = ptr(strings.Repeat("c", 64))
+				op.Workspaces[0].WorkspaceDigest = strings.Repeat("c", 64)
 			case "manifest":
 				op.CompletionManifestDigest = nil
 			case "physical":
 				r.Result.GitTree = ptr(strings.Repeat("f", 40))
 			case "checkpoint":
-				r.Result.WorkspaceMetadata.Checkpoint = &protocol.WorkspaceCheckpoint{OperationID: "checkpoint", HeadCommit: i.GitCommit, TreeID: i.GitTree, CommitID: i.GitCommit}
+				r.Result.WorkspaceResults[0].WorkspaceMetadata.Checkpoint = &protocol.WorkspaceCheckpoint{OperationID: "checkpoint", HeadCommit: i.GitCommit, TreeID: i.GitTree, CommitID: i.GitCommit}
 			case "writer":
 				r.Result.WriterAbsent = nodeBool(false)
 			}
@@ -144,7 +147,7 @@ func TestResultReadRetainedCompletionMissingEvidenceAndDescriptorDigest(t *testi
 					t.Fatal(e)
 				}
 				if kind != "effect" {
-					if e := db.FinishEffect(r); e != nil {
+					if e := db.FinishEffect(r); e != nil && kind != "descriptor-digest" && kind != "physical" && kind != "checkpoint" && kind != "writer" {
 						t.Fatal(e)
 					}
 				}
@@ -162,6 +165,7 @@ func TestResultReadCompletionRecoveryRetainsOriginalIdentity(t *testing.T) {
 	settle.RequestID = "settle-request"
 	settle.Kind = protocol.SettleCompletion
 	settle.CompletionManifestDigest = nil
+	settle.Workspaces = nil
 	settle.CompletionOperationID = &original.OperationID
 	settle.CompletionIdentityDigest = &i.OperationIdentityDigest
 	if e := db.BeginEffect(settle); e != nil {

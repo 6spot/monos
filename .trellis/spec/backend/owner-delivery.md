@@ -3,16 +3,16 @@
 ## 1. Scope / Trigger
 
 `owner-delivery-{commands,state,reads,guards,preparation,control,worker}.ts`,
-`github-finalization.ts`, migration `0024_owner_delivery.sql` and protected Web
+`github-finalization.ts`, migrations `0024_owner_delivery.sql` /
+`0032_multi_repository_delivery.sql` and protected Web
 implement exact acceptance and finality. Read [delivery contracts](delivery-contracts.md),
 [remote preparation](remote-preparation.md), [candidates](publication-candidates.md)
 and [result identities](result-content-reads.md).
 
-Stage A supports complete collections with zero/one modified automatic GitHub
-repository. Repository-free and actual no-change results complete locally. Mapped
-results remain modified even when publication creates no new commit. Multiple
-modified repositories, plain Git and configured `after_acceptance` final delivery
-reject before approval consumption. Explicit Request Changes, receipt-backed
+Acceptance supports up to 64 repositories, including multiple modified GitHub
+repositories in `automatic` or `after_acceptance` mode. Repository-free and actual
+no-change results complete locally. Mapped results remain modified even when
+publication creates no new commit. Plain-Git final delivery remains unsupported. Explicit Request Changes, receipt-backed
 revocation and input reconsideration follow [review correction](review-correction.md). No new Task states, Runtime work or Agent acceptance.
 
 ## 2. Signatures
@@ -47,6 +47,11 @@ Migration 24 adds command receipts, actual proposal/authorization links, immutab
 batch/manifests/members/preparation links, merge requests, observations/finality.
 Status/version/due/checkpoint are mutable; approved content, admission, confirmation
 and cutoff are immutable. Terminal merge status/result/digest/reason cannot change.
+Migration 32 adds `owner_delivery_item_readiness(batch_id,item_id,stage,status,reason)`
+and immutable `owner_delivery_item_validations(batch_id,item_id,observation_id)`.
+Batch checkpoint retains only the current provider claim; each item owns its cache.
+`completion_result_read_sources(operation_id)` constructs exact sorted source/digest
+pairs from aggregate completion evidence for delivery and review SQL authority.
 
 ## 3. Contracts
 
@@ -54,7 +59,13 @@ and cutoff are immutable. Terminal merge status/result/digest/reason cannot chan
 
 Build from effective Spec/Plan and every completed member's canonical valid evidence.
 Retain original execution attribution and effective basis; do not fabricate carry
-IDs. The complete embedded completion equals the stored canonical completion,
+IDs. Each Node has one output with required
+`sources:[{source:ResultReadIdentity,source_digest:SHA256}]`, sorted by resource ID;
+repository-free outputs use `sources:[]`. Every source includes its own capture,
+workspace, finalized Git pair and the shared parent operation identity digest.
+SQL compares the complete array, including digests, to retained aggregate results.
+Never duplicate the Node output per repository or select only the first resource.
+The complete embedded completion equals the stored canonical completion,
 including Task, Node, activation and digest. Selected Artifact IDs are distinct
 and equal the completion selection, with exact stored metadata. An earlier Attempt within the same valid Node activation
 may contribute; preserve each Artifact's own Attempt/revision attribution.
@@ -68,8 +79,8 @@ fingerprint; first permission establishment cannot change a frozen candidate.
 
 SQL validates actual prepare/confirm/Accept envelopes and committed receipts,
 consumed confirmation, complete membership and selected metadata. Missing JSON
-uses `IS NOT TRUE`; legacy nullable Git `repository_free` uses canonical
-`COALESCE(...,false)`. Count plus membership does not establish distinct completeness.
+uses `IS NOT TRUE`; `repository_free` derives from empty completion workspace
+membership. Count plus membership does not establish distinct completeness.
 Upgrade preflight atomically rejects non-null legacy acceptance seams without
 manufacturing approval or clearing history.
 
@@ -108,7 +119,18 @@ evidence selects that whole input; never borrow individual passing candidate
 contexts. App-bound legacy statuses stay unknown. Validate identity, producer,
 counts and pagination. Each page's actual observation must be at most 15 seconds
 old at mutation admission; collection completion cannot restamp pages. Private
-checkpoint limit is 8 MiB for four bounded collections; public bounds stay 512 KiB.
+cache limit is 8 MiB per item for four bounded collections; public bounds stay
+512 KiB. Every modified item must finish the original readiness/grant/settings
+bracket before the first PUT. Persist an immutable certificate bound to exact
+batch/content, repository/source, head, PR, scope/configuration and chosen method.
+SQL rejects missing certificates and effects that skip a lower resource ID.
+
+This initial barrier records actual observations; it does not promise simultaneous
+provider freshness. Select unfinished resources using PostgreSQL `COLLATE "C"`
+order. Each actual PUT still refreshes its own stale pages and runs the complete
+current eight-call bracket. Recheck all members' frozen local authority before
+admitting each new merge. A changed remote prerequisite may produce partial
+success after the initial barrier; no cross-repository atomicity is claimed.
 
 Protected effect turn: readiness grant, PR before, protection, rules, merge grant,
 repository settings, PR after, PUT: exactly eight calls. Unprotected substitutes
@@ -131,7 +153,11 @@ candidate after squash/rebase; 40/64 lowercase hex is accepted consistently.
 Post-effect settlement retains valid original observed facts despite later source/
 config drift, without granting another read/write credential or mutation. New grants
 retain current guards. Immediate finality and Task completion are distinct. Complete
-only the current authorized Task after all supported items finalize; emit one
+only the current authorized Task after all supported items finalize. Commit each
+item's immutable finalization immediately; an unfinished sibling keeps the batch
+active and Task in REVIEW, without throwing away the successful transaction.
+Retry/preparation skip finalized members. Original unknown merge recovery takes
+priority over any unfinished new merge; emit one
 `delivery_completed`. No-change/repository-free need zero provider calls.
 
 Accepted Cancel locks discovered Runners before Task, revokes new effects and stops/
@@ -172,12 +198,14 @@ implementation links to independent Todo Discussion.
 | Drifted head/base/policy or stale/partial checks | Wait/refresh/attention; no merge |
 | Unknown merge or admitted-effect Cancel | Original read-only recovery; no second PUT |
 | Source/config drift after actual success | Retain truth; no new authority |
+| Missing all-item validation or skipped resource order | SQL rejection before possible-effect admission |
+| One item final, sibling fails | Retain first final; Retry only unchanged remainder |
 | No modified items | Local completion; zero provider effects |
 
 ## 5. Good / Base / Bad Cases
 
 Good: accept before first push, receive later chat, lose merge reply and restart to
-recover the same PR once. Base: repository-free output completes locally. Bad:
+recover the same PR once; retain repository A when B rejects, then retry B only. Base: repository-free output completes locally. Bad:
 duplicate selected Artifact A to omit B, omit a Git repository, or restamp old checks.
 
 ## 6. Tests Required
@@ -185,7 +213,11 @@ duplicate selected Artifact A to omit B, omit a Git repository, or restamp old c
 Apply [verification scope](../guides/verification-scope.md). Owning tests cover real
 PG receipts/SQL authority, upgrade/preflight, observed Task-lock races, process loss
 around COMMIT, cutoff/freeze, nomination/Retry, token-I/O Cancel, shared claims,
-readiness age/count/budget, unknown recovery and terminal precedence. Strict wire/
+readiness age/count/budget, unknown recovery and terminal precedence.
+`postgres-multi-repository-delivery.test.ts` covers both modes, complete `sources[]`,
+all-before-first-PUT, independent checks, partial success/remaining Retry, late chat,
+Request Changes rejection after partial finality, lost second response plus Cancel,
+remaining-only closure, and direct SQL source/certificate/order forgeries. Strict wire/
 shared Go consumer and built Web checks prove their actual boundaries. One authorized
 synthetic GitHub kernel proves current expected-head rejection, protected eight-call
 merge and lost-reply/original PR recovery. OAuth synthetic evidence does not prove

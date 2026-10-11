@@ -4,16 +4,14 @@ import {spawn} from 'node:child_process';
 import {readFile,readdir} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import {describe,it,expect} from 'vitest';
-import type {Transaction} from '../../../packages/db/src/index.ts';
-import type {DeliveryAcceptanceManifest} from '../../../packages/protocol/src/index.ts';
 import {database,transaction} from '../../../packages/db/src/index.ts';
 import {migrate} from '../../../packages/db/src/migrate.ts';
 import {ProtocolValidationError} from '../../../packages/protocol/src/index.ts';
 import {ownerDeliveryFixture} from './fixtures/owner-delivery-fixture.ts';
-import {OwnerCommands,prepareTaskProposal} from '../src/owner-commands.ts';
-import {publicationDigest as hash} from '../src/publication-policy.ts';
+import {OwnerCommands} from '../src/owner-commands.ts';
 import {assertDeliveryBatchAuthority,deliveryBatch} from '../src/owner-delivery-state.ts';
 import {ownerDeliveryHooks} from '../src/owner-delivery-control.ts';
+import {forgedSQLAdmission} from './fixtures/owner-delivery-authority-fixture.ts';
 import {initializeTask} from '../src/task-records.ts';
 
 function independentCommand(input:{database_url:string;token:string;command:unknown;family:'delivery'|'conversation';mode:'hold'|'kill_before'|'kill_after'}){
@@ -24,26 +22,6 @@ function independentCommand(input:{database_url:string;token:string;command:unkn
  child.stderr.on('data',chunk=>{errors+=chunk.toString();});
  const done=new Promise<{code:number|null;signal:NodeJS.Signals|null}>(resolve=>child.once('exit',(code,signal)=>{if(!records.length)rejectReady(new Error('Independent command did not reach commit boundary: '+errors.slice(0,1200)));resolve({code,signal});}));
  child.stdin.write(JSON.stringify(input)+'\n');return {child,ready,done,records};
-}
-
-// Only negative tests call this deliberately forged direct-SQL chain. Successful
-// acceptance tests always use the actual authenticated Owner command path.
-async function forgedSQLAdmission(tx:Transaction,taskId:string,manifest:DeliveryAcceptanceManifest){
-    const proposal=await prepareTaskProposal(tx,{id:randomUUID(),task_id:taskId,action:'accept_delivery',content:manifest});
-    const prepareId=randomUUID(),confirmId=randomUUID(),admissionId=randomUUID(),authorization=randomUUID(),batchId=randomUUID();
-    const receipt=async(requestId:string,name:string,payload:object,outcome:object)=>{const envelope={schema_version:1,task_id:taskId,request_id:requestId,name,payload};await tx.query('INSERT INTO owner_delivery_command_receipts(task_id,request_id,digest,envelope,response) VALUES($1,$2,$3,$4,$5)',[taskId,requestId,hash(envelope),envelope,{schema_version:1,task_id:taskId,request_id:requestId,status:'committed',name,...outcome}]);};
-    await tx.query('INSERT INTO owner_delivery_proposals(proposal_id,task_id,request_id) VALUES($1,$2,$3)',[proposal.proposal_id,taskId,prepareId]);
-    await receipt(prepareId,'prepare_delivery_acceptance',{basis:manifest.basis},{proposal_id:proposal.proposal_id,content_digest:proposal.content_digest});
-    await tx.query('INSERT INTO authorization_receipts(id,proposal_id,consumed_by) VALUES($1,$2,$3)',[authorization,proposal.proposal_id,admissionId]);
-    await tx.query('INSERT INTO owner_delivery_authorization_commands(authorization_id,task_id,request_id) VALUES($1,$2,$3)',[authorization,taskId,confirmId]);
-    await receipt(confirmId,'confirm_delivery_acceptance',{proposal_id:proposal.proposal_id,content_digest:proposal.content_digest},{proposal_id:proposal.proposal_id,confirmation_id:authorization,content_digest:proposal.content_digest});
-    await receipt(admissionId,'accept_delivery',{proposal_id:proposal.proposal_id,confirmation_id:authorization,content_digest:proposal.content_digest,basis:manifest.basis},{proposal_id:proposal.proposal_id,confirmation_id:authorization,content_digest:proposal.content_digest,operation_id:batchId,operation_version:1,input_cutoff:0});
-    await tx.query('INSERT INTO owner_delivery_batches(id,task_id,manifest,content_digest,proposal_id,confirmation_id,admission_request_id,input_cutoff) VALUES($1,$2,$3,$4,$5,$6,$7,0)',[batchId,taskId,manifest,proposal.content_digest,proposal.proposal_id,authorization,admissionId]);
-    for(const [ordinal,r] of manifest.repositories.entries()){
-     if(r.item_id){const url=(await tx.query('SELECT remote_url FROM project_resources WHERE id=$1',[r.resource_id])).rows[0]!.remote_url;
-      await tx.query('INSERT INTO remote_preparation_items(item_id,task_id,resource_id,runner_id,storage_id,repository_identity,repository_id,remote_url,delivery_ref,target_branch,marker) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) ON CONFLICT(item_id) DO NOTHING',[r.item_id,taskId,r.resource_id,r.source.runner_id,r.source.storage_id,r.repository_identity,r.provider_metadata.github!.repository_id,url,r.delivery_ref,r.target_branch,r.marker]);}
-     await tx.query('INSERT INTO owner_delivery_batch_items(batch_id,ordinal,task_id,item_id,resource_id,repository,repository_digest) VALUES($1,$2,$3,$4,$5,$6,$7)',[batchId,ordinal,taskId,r.item_id??null,r.resource_id,r,hash(r)]);
-    }
 }
 
 const suite=process.env.MONOS_TEST_DATABASE==='1'?describe:describe.skip;
@@ -64,7 +42,7 @@ suite('exact Owner delivery authority',()=>{
    expect((await x.db.pool.query("SELECT kind FROM task_events WHERE task_id=$1 AND kind IN ('delivery_accepted','delivery_completed') ORDER BY sequence",[x.f.task])).rows.map(r=>r.kind)).toEqual(['delivery_accepted','delivery_completed']);
   }finally{await x.close();}
  });
- it('rejects missing SQL authority, direct pointers, missing JSON and modified unsupported mode before consuming confirmation',async()=>{
+ it('rejects missing SQL authority, direct pointers, missing JSON and changed preparation mode before consuming confirmation',async()=>{
   const x=await ownerDeliveryFixture('modified');try{
    const p=await x.prepareDelivery(),c=await x.confirmDelivery(p),detail=await x.reads.proposal(x.token,x.f.task,p.proposal_id!);expect(detail.manifest.repositories[0]).toMatchObject({outcome:'modified',scan:{status:'complete',workflow_changes:false}});expect(x.grantCalls()).toBe(1);
    const before=(await x.db.pool.query('SELECT state,control_version,accepted_delivery_operation_id,accepted_delivery_input_cutoff FROM tasks WHERE id=$1',[x.f.task])).rows[0];
@@ -80,7 +58,7 @@ suite('exact Owner delivery authority',()=>{
     await tx.query('INSERT INTO owner_delivery_batches(id,task_id,manifest,content_digest,proposal_id,confirmation_id,admission_request_id,input_cutoff) VALUES($1,$2,$3,$4,$5,$6,$7,0)',[batchId,x.f.task,detail.manifest,p.content_digest,p.proposal_id,c.confirmation_id,requestId]);
    })).rejects.toMatchObject({code:'23514'});
    await x.db.pool.query("UPDATE project_resources SET settings=settings||'{\"remote_preparation\":\"after_acceptance\"}'::jsonb WHERE id=$1",[detail.manifest.repositories[0]!.resource_id]);
-   await expect(x.acceptDelivery(p,c)).rejects.toMatchObject({detail:{code:'unmet_precondition'}});expect((await x.db.pool.query('SELECT consumed_by FROM authorization_receipts WHERE id=$1',[c.confirmation_id])).rows[0]!.consumed_by).toBeNull();expect((await x.db.pool.query('SELECT count(*) n FROM owner_delivery_batches')).rows[0]!.n).toBe('0');
+   await expect(x.acceptDelivery(p,c)).rejects.toMatchObject({detail:{code:'version_conflict'}});expect((await x.db.pool.query('SELECT consumed_by FROM authorization_receipts WHERE id=$1',[c.confirmation_id])).rows[0]!.consumed_by).toBeNull();expect((await x.db.pool.query('SELECT count(*) n FROM owner_delivery_batches')).rows[0]!.n).toBe('0');
   }finally{await x.close();}
  });
  it('retains true no-change preparation and completes locally without a permission grant or fabricated repository identity',async()=>{
@@ -135,7 +113,7 @@ suite('exact Owner delivery authority',()=>{
    }finally{if(child){child.child.kill('SIGKILL');await child.done;}await x.close();}
   }
  },20000);
- it('upgrades exact version 23 to version 26 and atomically refuses legacy nonnull seam values without changing history',async()=>{
+ it('upgrades exact version 23 to version 32 and atomically refuses legacy nonnull seam values without changing history',async()=>{
   for(const legacy of [false,true]){
    const url=new URL(process.env.DATABASE_URL!),admin=database(url.toString()),schema='delivery_upgrade_'+randomUUID().replaceAll('-','');await admin.pool.query(`CREATE SCHEMA ${schema}`);url.searchParams.set('options',`-c search_path=${schema}`);const db=database(url.toString());
    try{
@@ -143,7 +121,7 @@ suite('exact Owner delivery authority',()=>{
     for(const [i,file] of files.slice(0,23).entries()){const sql=await readFile(new URL('../../../packages/db/migrations/'+file,import.meta.url),'utf8');await db.pool.query(sql);await db.pool.query('INSERT INTO schema_migrations VALUES($1,$2)',[i+1,createHash('sha256').update(sql).digest('hex')]);}
     const old=(await db.pool.query('SELECT * FROM schema_migrations ORDER BY version')).rows;
     if(legacy){const task=randomUUID();await transaction(db,tx=>initializeTask(tx,{task_id:task,specification_id:randomUUID(),specification:'Legacy seam test'}));await db.pool.query('UPDATE tasks SET accepted_delivery_operation_id=$2,accepted_delivery_input_cutoff=0 WHERE id=$1',[task,randomUUID()]);await expect(migrate(db)).rejects.toMatchObject({code:'23514'});expect((await db.pool.query("SELECT to_regclass('owner_delivery_batches') present")).rows[0]!.present).toBeNull();expect((await db.pool.query('SELECT * FROM schema_migrations ORDER BY version')).rows).toEqual(old);expect((await db.pool.query('SELECT accepted_delivery_operation_id FROM tasks')).rows[0]!.accepted_delivery_operation_id).not.toBeNull();}
-    else {await migrate(db);expect((await db.pool.query('SELECT * FROM schema_migrations ORDER BY version')).rows.slice(0,23)).toEqual(old);expect((await db.pool.query('SELECT max(version) v FROM schema_migrations')).rows[0]!.v).toBe(30);}
+    else {await migrate(db);expect((await db.pool.query('SELECT * FROM schema_migrations ORDER BY version')).rows.slice(0,23)).toEqual(old);expect((await db.pool.query('SELECT max(version) v FROM schema_migrations')).rows[0]!.v).toBe(32);}
    }finally{await db.pool.end();await admin.pool.query(`DROP SCHEMA ${schema} CASCADE`);await admin.pool.end();}
   }
  },20000);

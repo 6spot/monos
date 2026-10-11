@@ -23,7 +23,7 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Parallel Replan privat
     invalid.workspaces[1]!.target_nodes = structuredClone(invalid.workspaces[0]!.target_nodes);
     await expect(x.db.pool.query(`SELECT validate_replan_graph_impact(jsonb_populate_record(NULL::replan_proposals,
       (SELECT to_jsonb(p)||jsonb_build_object('content',p.content||jsonb_build_object('impact',$2::jsonb)) FROM replan_proposals p WHERE p.id=$1)))`,
-    [p.payload.proposal_id, JSON.stringify(invalid)])).rejects.toMatchObject({ code: '23514', message: 'multiple private checkpoints cannot share one target' });
+    [p.payload.proposal_id, JSON.stringify(invalid)])).rejects.toMatchObject({ code: '23514', message: 'multiple private checkpoints cannot share one target resource' });
     await x.publish(p); await x.execution.pump();
     const targets = [await x.promote(), await x.promote()];
     for (const target of targets) {
@@ -93,11 +93,11 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Parallel Replan privat
     const targets = [await x.promote(), await x.promote()];
     for (const target of targets) {
       const opened = await x.open(target);
-      expect(opened.workspace.transfer).toMatchObject({ kind: 'completed', from_lease_id: canonical.workspace!.lease_id, to_node_id: target.dispatch.node_id });
+      expect(opened.workspace.transfer).toMatchObject({ kind: 'completed', from_lease_id: canonical.workspaces![0]!.workspace.lease_id, to_node_id: target.dispatch.node_id });
       expect(opened.metadata.isolation!.start_commit).toBe('f'.repeat(40));
     }
     expect((await x.db.pool.query('SELECT from_lease_id,target_node_id FROM replan_workspace_transfers')).rows)
-      .toEqual(expect.arrayContaining(targets.map(t => ({ from_lease_id: canonical.workspace!.lease_id, target_node_id: t.dispatch.node_id }))));
+      .toEqual(expect.arrayContaining(targets.map(t => ({ from_lease_id: canonical.workspaces![0]!.workspace.lease_id, target_node_id: t.dispatch.node_id }))));
     expect((await x.db.pool.query('SELECT count(*) FROM replan_workspace_transfers')).rows[0].count).toBe('2');
   });
 
@@ -105,7 +105,7 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Parallel Replan privat
     const carried = x.definition(x.f.node);
     await x.start([carried]);
     const original = await x.node();
-    expect(original.dispatch.workspace_reservations!.isolation).toBeUndefined();
+    expect(original.dispatch.workspace_reservations!.resources[0]!.isolation).toBeUndefined();
     const originalOpen = await x.open(original);
     expect(originalOpen.workspace.isolation).toBeUndefined();
     const originalCompletion = (await x.admitCompletion(original)).operation;
@@ -121,8 +121,8 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Parallel Replan privat
     await x.execution.pump();
     const first = await x.promote(), other = await x.promote();
     expect(new Set([first.dispatch.node_id, other.dispatch.node_id])).toEqual(new Set([left.node_id, right.node_id]));
-    expect(first.dispatch.workspace_reservations!.isolation).toBeDefined();
-    expect(other.dispatch.workspace_reservations!.isolation).toBeDefined();
+    expect(first.dispatch.workspace_reservations!.resources[0]!.isolation).toBeDefined();
+    expect(other.dispatch.workspace_reservations!.resources[0]!.isolation).toBeDefined();
     await x.open(first);
     const otherOpen = await x.open(other);
     await x.settleCompletion(first, (await x.admitCompletion(first)).operation, 'integrated', 'f'.repeat(40));

@@ -145,7 +145,9 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('canonical serial Task 
     expect(op.workspace?.basis).toBeUndefined(); await finish(f, op);
     expect((await open(f)).response).toMatchObject({ status: 'committed', operation_id: op.operation_id, result: opened(op) });
     expect((await db.pool.query('SELECT 1 FROM workspace_leases WHERE task_id=$1', [f.task])).rowCount).toBe(1);
-    await expect(open(f, randomUUID(), f.project.resources[1]!.id)).rejects.toMatchObject(fault('unmet_precondition'));
+    const second = await open(f, randomUUID(), f.project.resources[1]!.id);
+    expect(second.response.status).toBe('admitted');
+    expect((await db.pool.query('SELECT count(*) FROM workspace_leases WHERE attempt_id=$1', [f.attempt])).rows[0].count).toBe('2');
     await expect(save({ ...f.project, resources: [] })).rejects.toMatchObject(fault('unmet_precondition'));
     await expect(db.pool.query("UPDATE operations SET workspace_digest=$2 WHERE id=$1", [op.operation_id, 'f'.repeat(64)])).rejects.toMatchObject({ code: '23514' });
   });
@@ -241,10 +243,14 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('canonical serial Task 
     expect(access.mock.calls[0]![0].provider_metadata).toEqual({ github: { repository_id: '42' } });
     expect(reopened.workspace?.resource.default_branch).toBe('main'); await finish(f, reopened);
     const complete = await f.service.admit(f.token, submission({ schema_version: 1, scope_id: f.task, request_id: randomUUID(), name: 'complete_node', expected_control_version: f.version, payload: { summary: 'Exact completed result' } }));
-    const completion = await operation(f, complete.operation_id!); const completed = opened(completion);
-    completed.writer_absent = true; completed.git_commit = 'e'.repeat(40); completed.git_tree = 'f'.repeat(40); completed.workspace_metadata!.finalized_commit = completed.git_commit;
+    const completion = await operation(f, complete.operation_id!), metadata = opened(reopened).workspace_metadata!;
+    const completed = { writer_absent: true, completion_outcome: 'finalized' as const, workspace_results: [{
+      resource_id: reopened.workspace!.resource_id, workspace_id: reopened.workspace!.workspace_id,
+      workspace_metadata: { ...metadata, finalized_commit: 'e'.repeat(40) },
+      capture: { start_commit: metadata.finalized_commit, node_commit: 'e'.repeat(40), node_tree: 'f'.repeat(40) },
+      git_commit: 'e'.repeat(40), git_tree: 'f'.repeat(40) }] };
     await finish(f, completion, completed);
-    expect((await db.pool.query('SELECT finalized_commit FROM task_workspaces WHERE task_id=$1', [f.task])).rows[0].finalized_commit).toBe(completed.git_commit);
+    expect((await db.pool.query('SELECT finalized_commit FROM task_workspaces WHERE task_id=$1', [f.task])).rows[0].finalized_commit).toBe(completed.workspace_results[0]!.git_commit);
     expect((await db.pool.query('SELECT state FROM tasks WHERE id=$1', [f.task])).rows[0].state).toBe('REVIEW');
   });
 

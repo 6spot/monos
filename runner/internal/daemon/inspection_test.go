@@ -149,7 +149,7 @@ func TestInspectionOriginRetainsFullCompletionProof(t *testing.T) {
 		t.Run(mode, func(t *testing.T) {
 			db, _, op, id, _ := retainedReadFixture(t)
 			_, digest, _ := wire.Canonical(id)
-			i := protocol.InspectionDescriptor{ScopeKind: "task", ScopeID: id.TaskID, ProjectID: op.Workspace.ProjectID, RunnerID: id.RunnerID, Resource: op.Workspace.Resource, Origin: protocol.InspectionOrigin{Kind: "task_completion", Identity: &id, IdentityDigest: &digest}}
+			i := protocol.InspectionDescriptor{ScopeKind: "task", ScopeID: id.TaskID, ProjectID: op.Workspaces[0].Workspace.ProjectID, RunnerID: id.RunnerID, Resource: op.Workspaces[0].Workspace.Resource, Origin: protocol.InspectionOrigin{Kind: "task_completion", Identity: &id, IdentityDigest: &digest}}
 			switch mode {
 			case "digest":
 				digest = strings.Repeat("f", 64)

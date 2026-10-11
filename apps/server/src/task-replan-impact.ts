@@ -121,8 +121,9 @@ export async function checkReplanImpact(tx: Transaction, task: SpecificationTask
   for (const w of impact.workspaces) {
     if (w.input.kind === 'checkpoint') {
       for (const target of w.target_nodes) {
-        if (checkpointTargets.has(target.node_id)) throw new CommandError('invalid_input', 'Multiple private checkpoints cannot be assigned to the same Node');
-        checkpointTargets.add(target.node_id);
+        const key = canonicalJSON([target.node_id, target.node_activation, w.input.resource_id]);
+        if (checkpointTargets.has(key)) throw new CommandError('invalid_input', 'Multiple private checkpoints for one resource cannot be assigned to the same Node activation');
+        checkpointTargets.add(key);
       }
     }
     const actualInput = workspaces.get(w.input.from_lease_id);

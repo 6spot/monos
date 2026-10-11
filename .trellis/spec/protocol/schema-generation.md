@@ -43,16 +43,27 @@ or backend checks for current sources, formal outcomes and physical settlement.
 
 ## 4. Validation & Error Matrix
 
-Parallel workspaces use optional `WorkspaceIsolation`, metadata with immutable
-`start_commit`, exact `WorkspaceCanonicalSource`, and combined completion
-`WorkspaceIntegration`/`WorkspaceIntegrationResult`. Integration is required for
-isolated `complete_node` and forbidden elsewhere. `integrated` requires matching
-top-level Git fields; `conflict` forbids them and cannot advance Task Git. An exact
-`CompletionSettlement` pair with `already_finalized` may contain either terminal
-outcome. Optional result-read/status provenance must survive every consumer.
-Canonical sources exclude conflicts, while `conflict_source` requires one; Stop
-recovery IDs apply only to original open sources. Shared TS/Go fixtures test these
-conditions. Schema shape checks never replace retained identity/source validation.
+Workspace reservations carry optional isolation per resource. A `complete_node`
+operation has one sorted `workspaces` collection, with unique resource/workspace/
+lease identities and exact per-member descriptors and digests; explicit `[]`
+means repository-free completion. Singular completion workspace/Git/integration
+fields are forbidden. Integration input is required exactly for isolated members.
+Success carries `completion_outcome` and the complete sorted `workspace_results`.
+Every member retains its immutable `capture` (start, private Node commit/tree).
+Finalized members also carry Git commit/tree and, when isolated, integrated proof.
+A conflict parent advances no Task head and carries no item Git fields; all captures
+survive, including clean unpublished siblings without individual integration proof.
+The exact `CompletionSettlement` pair binds the original parent/digest and can
+settle finalized, conflict or cancelled results. Generated Go marshaling preserves
+explicit empty input/result collections instead of dropping them as absent.
+
+Source proofs and result reads select the exact parent plus resource, capture and
+completion outcome. `TaskLocalResult.git_results[]` keeps one Node manifest with
+all repository results; content queries additionally require `resource_id`.
+Publication filters bind resource identity to their cursor. Delivery evidence uses
+plural `sources[]`, and Rework exposes exact `stop_operation_ids[]`. Shared TS/Go
+fixtures validate shapes; retained identity, complete membership, source and lease
+checks remain mandatory in trusted consumers and SQL.
 
 | Condition | Result |
 | --- | --- |

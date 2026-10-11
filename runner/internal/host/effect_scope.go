@@ -22,7 +22,7 @@ func ValidateEffectScope(d protocol.Dispatch, op protocol.Operation) error {
 		if _, err := wire.ScopeID(d); err != nil {
 			return err
 		}
-		if op.Kind != protocol.Stop || op.ResourceID != nil || op.Workspace != nil || op.WorkspaceDigest != nil || op.RepositoryFree != nil || op.CompletionManifestDigest != nil || op.CompletionOperationID != nil || op.CompletionIdentityDigest != nil {
+		if op.Kind != protocol.Stop || op.ResourceID != nil || op.Workspace != nil || op.WorkspaceDigest != nil || op.Workspaces != nil || op.CompletionManifestDigest != nil || op.CompletionOperationID != nil || op.CompletionIdentityDigest != nil {
 			return fmt.Errorf("Task review/conversation/Replan permits only repository-free Stop effects")
 		}
 		return nil
@@ -32,14 +32,28 @@ func ValidateEffectScope(d protocol.Dispatch, op protocol.Operation) error {
 			return err
 		}
 	}
-	if op.RepositoryFree != nil {
-		if !*op.RepositoryFree || op.Kind != protocol.KindCompleteNode || d.NodeExecutionSource == nil || op.CompletionManifestDigest == nil || op.ResourceID != nil || op.Workspace != nil || op.WorkspaceDigest != nil {
-			return fmt.Errorf("repository-free completion requires canonical Node source and no workspace")
+	if op.Kind == protocol.KindCompleteNode && d.WorkspaceReservations != nil {
+		if d.NodeExecutionSource == nil || op.CompletionManifestDigest == nil || op.Workspaces == nil || len(op.Workspaces) > 64 || op.Workspace != nil || op.WorkspaceDigest != nil || op.ResourceID != nil {
+			return fmt.Errorf("canonical completion requires whole workspace membership")
+		}
+		workspaces, leases := map[string]bool{}, map[string]bool{}
+		for i, input := range op.Workspaces {
+			w := input.Workspace
+			if i > 0 && op.Workspaces[i-1].Workspace.ResourceID >= w.ResourceID || workspaces[w.WorkspaceID] || leases[w.LeaseID] {
+				return fmt.Errorf("completion members must be unique and sorted")
+			}
+			workspaces[w.WorkspaceID], leases[w.LeaseID] = true, true
+			if err := validateWorkspaceDescriptorScope(d, op, &w, input.WorkspaceDigest, input.Integration); err != nil {
+				return err
+			}
 		}
 		return nil
 	}
-	if op.Kind == protocol.SettleCompletion && (d.NodeExecutionSource == nil || op.CompletionOperationID == nil || op.CompletionIdentityDigest == nil || op.Workspace == nil) {
-		return fmt.Errorf("completion settlement requires source-bound canonical workspace")
+	if op.Kind == protocol.SettleCompletion {
+		if d.NodeExecutionSource == nil || op.CompletionOperationID == nil || op.CompletionIdentityDigest == nil || op.Workspace != nil || op.Workspaces != nil || op.WorkspaceDigest != nil || op.ResourceID != nil || op.CompletionManifestDigest != nil {
+			return fmt.Errorf("completion settlement requires source-bound parent identity")
+		}
+		return nil
 	}
 	if d.TaskPlanningSource != nil {
 		if _, err := wire.ScopeID(d); err != nil {
@@ -85,7 +99,7 @@ func validateInspectionScope(d protocol.Dispatch, op protocol.Operation) error {
 	if err != nil {
 		return err
 	}
-	if i == nil || op.InspectionDigest == nil || op.Kind != protocol.KindInspectRepository || d.Kind != "planner" || d.NodeExecutionSource != nil || op.Workspace != nil || op.WorkspaceDigest != nil || op.RepositoryFree != nil || op.CompletionManifestDigest != nil || op.CompletionOperationID != nil || op.CompletionIdentityDigest != nil || op.ResourceID == nil {
+	if i == nil || op.InspectionDigest == nil || op.Kind != protocol.KindInspectRepository || d.Kind != "planner" || d.NodeExecutionSource != nil || op.Workspace != nil || op.WorkspaceDigest != nil || op.Workspaces != nil || op.CompletionManifestDigest != nil || op.CompletionOperationID != nil || op.CompletionIdentityDigest != nil || op.ResourceID == nil {
 		return fmt.Errorf("invalid Planner inspection effect")
 	}
 	raw, digest, err := wire.Canonical(i)

@@ -28,7 +28,7 @@ func publicationDaemonFixture(t *testing.T, retainOpen bool) (*journal.DB, proto
 	dispatch, completion := recoveryFixture(t, "publication", protocol.KindCompleteNode)
 	task := "11111111-1111-4111-8111-111111111111"
 	dispatch.TaskID = &task
-	w := completion.Workspace
+	w := &completion.Workspaces[0].Workspace
 	id, e := host.TaskWorkspaceID(task, w.ResourceID)
 	if e != nil {
 		t.Fatal(e)
@@ -41,16 +41,17 @@ func publicationDaemonFixture(t *testing.T, retainOpen bool) (*journal.DB, proto
 	dispatch.NodeExecutionSource = &protocol.NodeExecutionSource{SourceID: "source", NodeID: *dispatch.NodeID, NodeActivation: 1, SpecificationID: "original-spec", PlanID: "original-plan", ContextDigest: strings.Repeat("a", 64)}
 	dispatch.ProcessReleased = true
 	dispatch.MutationAllowed = false
-	completion.WorkspaceDigest = ptr(publicationDaemonDigest(t, w))
+	completion.Workspaces[0].WorkspaceDigest = publicationDaemonDigest(t, w)
 	completion.CompletionManifestDigest = ptr(strings.Repeat("c", 64))
 	completion.State = protocol.FluffyAdmitted
 	source := protocol.ResultReadIdentity{TaskID: task, OperationID: completion.OperationID, AttemptID: completion.AttemptID, DispatchID: completion.DispatchID, NodeID: *dispatch.NodeID, NodeActivation: 1, SpecificationID: "original-spec", PlanID: "original-plan", WorkspaceID: id, ResourceID: w.ResourceID, RunnerID: w.RunnerID, StorageID: "storage", Generation: 1, LeaseID: w.LeaseID, RepositoryIdentity: w.Resource.RepositoryIdentity, ManifestDigest: *completion.CompletionManifestDigest, BaseCommit: strings.Repeat("1", 40), GitCommit: strings.Repeat("2", 40), GitTree: strings.Repeat("3", 40)}
+	source.Capture = protocol.WorkspaceCaptureResult{StartCommit: source.BaseCommit, NodeCommit: source.GitCommit, NodeTree: source.GitTree}
 	source.OperationIdentityDigest, e = wire.OperationIdentity(completion)
 	if e != nil {
 		t.Fatal(e)
 	}
 	metadata := protocol.WorkspaceMetadata{StorageID: source.StorageID, BaseCommit: source.BaseCommit, FinalizedCommit: source.GitCommit, TargetCommit: source.BaseCommit, TargetBranch: "main", Generation: 1, LeaseID: source.LeaseID, RepositoryIdentity: source.RepositoryIdentity, ProviderMetadata: w.Resource.ProviderMetadata}
-	outcome := protocol.OperationResult{OperationID: completion.OperationID, AttemptID: completion.AttemptID, Success: true, Result: protocol.EffectResult{WorkspaceID: &source.WorkspaceID, GitCommit: &source.GitCommit, GitTree: &source.GitTree, WriterAbsent: nodeBool(true), WorkspaceMetadata: &metadata}}
+	outcome := protocol.OperationResult{OperationID: completion.OperationID, AttemptID: completion.AttemptID, Success: true, Result: protocol.EffectResult{WriterAbsent: nodeBool(true), CompletionOutcome: ptr("finalized"), WorkspaceResults: []protocol.WorkspaceEffectResult{{ResourceID: source.ResourceID, WorkspaceID: source.WorkspaceID, GitCommit: &source.GitCommit, GitTree: &source.GitTree, WorkspaceMetadata: metadata, Capture: &source.Capture}}}}
 	retainRecovery(t, db, dispatch, completion, &outcome)
 	original := *w
 	original.OpenOperationID = "original-materialization"

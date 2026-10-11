@@ -7,6 +7,7 @@ import { reviewDispatchBlocked } from './task-review-state.ts';
 import type { RuntimeFallbackInspection, RuntimeFallbackPreparation, RuntimePredecessor } from './runtime-continuation-state.ts';
 import { runtimePredecessorSettled } from './runtime-continuation-state.ts';
 import { guidanceContext, assignGuidance } from './task-guidance.ts';
+import { assertCompletionBoundaryAvailable } from './completion-boundary.ts';
 import { randomUUID } from 'node:crypto';
 import type { Transaction } from '../../../packages/db/src/index.ts';
 import { CommandError } from '../../../packages/domain/src/commands.ts';
@@ -96,7 +97,7 @@ const protocol = [
   'You execute exactly the bound Node. Only monos Tool Protocol commands change formal state. Follow the effective Specification, exact Node requirements, current Role instructions and formal Owner answers. Todo, prior Tasks and Runtime memory are not authority.',
   'Apply the exact review_rework feedback and Planner routing reason for this activation. They request correction within the effective Specification; they do not replace the Specification or create guidance IDs.',
   'node_rework records the exact upstream correction request, affected activations and any Owner decision. Applied requests require correction of the existing integrated code. A continued request records the Owner decision to continue without its proposed upstream correction; that proposal was not applied. Prior completion results and private workspace checkpoints are retained history, not completion or validation of this activation. Validate the current result.',
-  'If node_rework contains historical_checkpoint, first successfully open_workspace for its resource_id. Inspect the exact checkpoint.commit_id or git_ref with native git show/diff; the stopped private changes are historical context. Adapt relevant work to the current integrated result. Never automatically checkout, cherry-pick or replay the checkpoint. The original raw workspace remains separately archived by the system.',
+  'For every historical_checkpoints item in node_rework, first successfully open_workspace for its resource_id. Inspect the exact checkpoint.commit_id or git_ref with native git show/diff; the stopped private changes are historical context. Adapt relevant work to the current integrated result. Never automatically checkout, cherry-pick or replay the checkpoint. The original raw workspace remains separately archived by the system.',
   'upstream_outputs contains current completed direct dependencies and their selected Artifact metadata. Read exact content with read_artifact. Historical output and earlier Git revisions do not prove that the current combined result is valid.',
   'Use monos open_workspace with resource_id only when repository work is needed. Work freely within that managed workspace; preserve previous private work and fixed Git ancestry. Do not create your own repository as a substitute for managed work.',
   'Optional durable outputs use monos publish_artifact with artifact_id, title, content:{text,media_type}, optional references:[{url,label?}] and supersedes. UTF-8 text is limited to 256 KiB. Artifact publication is not completion. Read exact Task content with monos read_artifact {artifact_id}. HTML is managed data.',
@@ -121,16 +122,16 @@ async function nodeReworkContext(tx: Transaction, task: NodeTask, node: Executio
         WHERE x.request_id=r.id),
       'owner_decision',CASE WHEN d.owner_request_id IS NOT NULL THEN jsonb_build_object('request_id',d.owner_request_id,
         'name',d.name,'answer',d.answer,'expected_version',d.expected_version) ELSE NULL END,
-      'historical_checkpoint',CASE WHEN r.status='applied' AND stop.result->'workspace_metadata'->'checkpoint' IS NOT NULL THEN
-        jsonb_build_object('workspace_id',stop.workspace_descriptor->>'workspace_id',
+      'historical_checkpoints',COALESCE((SELECT jsonb_agg(jsonb_build_object('workspace_id',stop.workspace_descriptor->>'workspace_id',
           'resource_id',stop.workspace_descriptor->>'resource_id','stop_operation_id',stop.id,
-          'checkpoint',stop.result->'workspace_metadata'->'checkpoint',
-          'git_ref','refs/monos/history/'||r.id) ELSE NULL END,
+          'checkpoint',stop.result->'workspace_metadata'->'checkpoint','git_ref','refs/monos/history/'||r.id) ORDER BY stop.resource_id)
+        FROM node_rework_request_stops member JOIN operations stop ON stop.id=member.operation_id
+        WHERE member.request_id=r.id AND r.status='applied' AND stop.attempt_id=r.requester_attempt_id
+          AND stop.kind='stop' AND stop.state='succeeded' AND stop.request_id=r.agent_request_id
+          AND stop.result->'workspace_metadata'->'checkpoint' IS NOT NULL),'[]'::jsonb),
       'validity','Prior completion identities and results are historical only; they do not complete or validate the reactivated subgraph.') item
     FROM node_rework_requests r JOIN node_rework_targets target ON target.request_id=r.id
     LEFT JOIN node_rework_decisions d ON d.request_id=r.id AND d.owner_request_id=r.owner_decision_request_id
-    LEFT JOIN operations stop ON stop.id=r.stop_operation_id AND stop.attempt_id=r.requester_attempt_id
-      AND stop.kind='stop' AND stop.state='succeeded' AND stop.request_id=r.agent_request_id
     WHERE r.task_id=$1 AND r.specification_id=$2 AND r.plan_id=$3 AND target.node_id=$4
       AND ((r.status='applied' AND target.from_activation+1=$5)
         OR (r.status='continued' AND r.requester_node_id=$4 AND r.requester_activation=$5))
@@ -148,6 +149,7 @@ export async function prepareNodeSource(
   configurationVersion: number,
   options: { request_id?: string; recovery?: object } = {}
 ): Promise<NodeSource> {
+  await assertCompletionBoundaryAvailable(tx, task.id);
   await assertSpecificationUnfrozen(tx,task.id);
   await assertNoReplan(tx,task.id);
   if (await currentNodeRework(tx, task.id, node.id))
@@ -171,11 +173,10 @@ export async function prepareNodeSource(
     planned_attempt_id: attemptId,
     configuration_version: configurationVersion,
   };
-  const isolation = await workspaceIsolation(tx, task.id, node.id, node.activation);
   const conflict = (await tx.query<{ facts: object }>(`SELECT jsonb_build_object('operation_id',o.id,'attempt_id',a.id,
-    'resource_id',o.resource_id) || (o.result->'integration') facts FROM operations o JOIN attempts a ON a.id=o.attempt_id
+    'workspace_results',o.result->'workspace_results') facts FROM operations o JOIN attempts a ON a.id=o.attempt_id
     WHERE a.task_id=$1 AND a.node_id=$2 AND a.node_activation=$3 AND o.kind='complete_node' AND o.state='succeeded'
-      AND o.result->'integration'->>'outcome'='conflict' ORDER BY o.created_at DESC,o.id DESC LIMIT 1`,
+      AND o.result->>'completion_outcome'='conflict' ORDER BY o.created_at DESC,o.id DESC LIMIT 1`,
   [task.id, node.id, node.activation])).rows[0];
   const recovery = { ...(conflict ? { integration_conflict: conflict.facts } : {}), ...options.recovery };
   let failure: string | null = null;
@@ -240,6 +241,12 @@ export async function prepareNodeSource(
     ).rows;
     if (!role || !project) failure = 'configuration_missing';
     else {
+      const resources = [];
+      for (const resource of project.resources as { resource_id: string }[]) {
+        const isolation = await workspaceIsolation(tx, task.id, node.id, node.activation, resource.resource_id);
+        resources.push({ resource_id: resource.resource_id, workspace_id: workspaceId(task.id, resource.resource_id),
+          ...(isolation ? { isolation } : {}) });
+      }
       context = {
         protocol,
         guidance,
@@ -260,13 +267,9 @@ export async function prepareNodeSource(
         role,
         project,
         workspace_reservations: {
-          ...(isolation ? { isolation } : {}),
           project_id: task.project_id,
           configuration_version: configurationVersion,
-          resources: (project.resources as { resource_id: string }[]).map((r) => ({
-            resource_id: r.resource_id,
-            workspace_id: workspaceId(task.id, r.resource_id),
-          })),
+          resources,
         },
         issue_answers: answers,
         artifact_history: {

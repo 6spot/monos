@@ -357,6 +357,7 @@ func TestRemotePreparationRevertToOriginalBaseIsRealFastForward(t *testing.T) {
 	r.Source.NodeActivation++
 	r.Source.GitCommit = commit
 	r.Source.GitTree = tree
+	r.Source.Capture = protocol.WorkspaceCaptureResult{StartCommit: r.Source.BaseCommit, NodeCommit: commit, NodeTree: tree}
 	r.SourceDigest = publicationDigest(r.Source)
 	r.EffectiveBasis.CompletionOperationID = r.Source.OperationID
 	r.EffectiveBasisDigest = publicationDigest(r.EffectiveBasis)
@@ -518,6 +519,7 @@ func TestRemotePreparationWorkflowGrantRescanKeepsConstruction(t *testing.T) {
 	r.ScanRunID = "workflow-denied-scan"
 	r.Source.GitCommit = commit
 	r.Source.GitTree = tree
+	r.Source.Capture = protocol.WorkspaceCaptureResult{StartCommit: r.Source.BaseCommit, NodeCommit: commit, NodeTree: tree}
 	r.SourceDigest = publicationDigest(r.Source)
 	r.Construction.SourceDigest = r.SourceDigest
 	r.Construction.CandidateID = "workflow-candidate"

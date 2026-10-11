@@ -27,6 +27,8 @@ type ResultPath = string;
 
 type DeliveryRef = string;
 
+type CompletionOutcome = string;
+
 export interface CommandEnvelope {
     expected_control_version: number;
     name:                     CommandEnvelopeName;
@@ -309,6 +311,7 @@ export interface EffectResult {
     artifact_id?:                  string;
     blocker_id?:                   string;
     cache_updated?:                boolean;
+    completion_outcome?:           string;
     content_digest?:               string;
     discussion_page?:              DiscussionPage;
     git_commit?:                   string;
@@ -316,7 +319,6 @@ export interface EffectResult {
     input_id?:                     string;
     inspection?:                   InspectionResult;
     instruction_files?:            InstructionFile[];
-    integration?:                  WorkspaceIntegrationResult;
     message?:                      string;
     message_id?:                   string;
     obligation_id?:                string;
@@ -334,6 +336,7 @@ export interface EffectResult {
     task_history?:                 TaskHistoryPage;
     workspace_id?:                 string;
     workspace_metadata?:           WorkspaceMetadata;
+    workspace_results?:            WorkspaceEffectResult[];
     workspace_unavailable_reason?: WorkspaceUnavailableReason;
     writer_absent?:                boolean;
 }
@@ -410,18 +413,6 @@ export type InspectionResultStatus = "available" | "unavailable";
 
 export type InstructionFile = "AGENTS.md" | "CLAUDE.md";
 
-export interface WorkspaceIntegrationResult {
-    expected_task_commit: string;
-    node_commit:          string;
-    node_tree:            string;
-    outcome:              WorkspaceIntegrationResultOutcome;
-    start_commit:         string;
-    task_commit:          string;
-    task_tree:            string;
-}
-
-export type WorkspaceIntegrationResultOutcome = "integrated" | "conflict";
-
 export interface PlanningOutcome {
     issue_sequence?:    number;
     kind:               PlanningOutcomeKind;
@@ -485,6 +476,34 @@ export interface TaskMessage {
     source_id?:                string;
     source_watermark?:         number;
 }
+
+export interface WorkspaceEffectResult {
+    capture?:           WorkspaceCaptureResult;
+    git_commit?:        string;
+    git_tree?:          string;
+    integration?:       WorkspaceIntegrationResult;
+    resource_id:        string;
+    workspace_id:       string;
+    workspace_metadata: WorkspaceMetadata;
+}
+
+export interface WorkspaceCaptureResult {
+    node_commit:  string;
+    node_tree:    string;
+    start_commit: string;
+}
+
+export interface WorkspaceIntegrationResult {
+    expected_task_commit: string;
+    node_commit:          string;
+    node_tree:            string;
+    outcome:              WorkspaceIntegrationResultOutcome;
+    start_commit:         string;
+    task_commit:          string;
+    task_tree:            string;
+}
+
+export type WorkspaceIntegrationResultOutcome = "integrated" | "conflict";
 
 export type WorkspaceUnavailableReason = "unsupported_remote" | "unsupported_multiple_workspaces" | "credentials_missing" | "repository_denied" | "ref_unavailable" | "storage_unavailable" | "ownership_unresolved";
 
@@ -617,18 +636,18 @@ export type ThinkingLevel = "none" | "minimal" | "low" | "medium" | "high" | "xh
 
 export interface WorkspaceReservations {
     configuration_version: number;
-    isolation?:            WorkspaceIsolation;
     project_id:            string;
     resources:             WorkspaceReservation[];
 }
 
-export interface WorkspaceIsolation {
-    allocation_id: string;
-}
-
 export interface WorkspaceReservation {
+    isolation?:   WorkspaceIsolation;
     resource_id:  string;
     workspace_id: string;
+}
+
+export interface WorkspaceIsolation {
+    allocation_id: string;
 }
 
 export interface RuntimeEvent {
@@ -658,10 +677,8 @@ export interface Operation {
     dispatch_id:                 string;
     inspection?:                 InspectionDescriptor;
     inspection_digest?:          string;
-    integration?:                WorkspaceIntegration;
     kind:                        OperationKind;
     operation_id:                string;
-    repository_free?:            boolean;
     request_id:                  string;
     resource_id?:                string;
     result?:                     EffectResult;
@@ -669,6 +686,7 @@ export interface Operation {
     state:                       OpenStateEnum;
     workspace?:                  WorkspaceDescriptor;
     workspace_digest?:           string;
+    workspaces?:                 WorkspaceCompletionInput[];
 }
 
 export interface InspectionDescriptor {
@@ -698,6 +716,7 @@ export interface InspectionOrigin {
 export interface ResultReadIdentity {
     attempt_id:                string;
     base_commit:               string;
+    capture:                   WorkspaceCaptureResult;
     dispatch_id:               string;
     generation:                number;
     git_commit:                string;
@@ -753,6 +772,8 @@ export interface WorkspaceBasis {
 
 export interface WorkspaceCanonicalSource {
     attempt_id:             string;
+    capture?:               WorkspaceCaptureResult;
+    completion_outcome?:    string;
     integration?:           WorkspaceIntegrationResult;
     kind:                   string;
     metadata:               WorkspaceMetadata;
@@ -829,13 +850,19 @@ export type InspectionPlannerSourceKind = "todo_discussion" | "task_initial_plan
 
 export type ScopeKind = "task" | "todo";
 
-export interface WorkspaceIntegration {
-    expected_task_commit: string;
-}
-
 export type OperationKind = "open_workspace" | "inspect_repository" | "complete_node" | "stop" | "settle_completion";
 
 export type OpenStateEnum = "admitted" | "succeeded" | "recovery" | "cancelled";
+
+export interface WorkspaceCompletionInput {
+    integration?:     WorkspaceIntegration;
+    workspace:        WorkspaceDescriptor;
+    workspace_digest: string;
+}
+
+export interface WorkspaceIntegration {
+    expected_task_commit: string;
+}
 
 export interface OperationResult {
     attempt_id:                 string;
@@ -2286,8 +2313,8 @@ export interface CompletionManifest {
 
 export interface NodeExecutionOperationStatus {
     completion_identity_digest?: string;
+    completion_outcome?:         string;
     failure_kind:                null | string;
-    integration?:                WorkspaceIntegrationResult;
     kind:                        OperationKind;
     operation_id:                string;
     state:                       OpenStateEnum;
@@ -2797,12 +2824,13 @@ export interface TaskLocalResult {
     current:                  boolean;
     current_plan_id:          null | string;
     current_specification_id: string;
-    git:                      TaskLocalGitResult | null;
+    git_results:              TaskLocalGitResult[];
     manifest:                 CompletionManifest;
     repository_free:          boolean;
 }
 
 export interface TaskLocalGitResult {
+    capture:         WorkspaceCaptureResult;
     git_commit:      string;
     git_tree:        string;
     identity_digest: string;
@@ -2852,17 +2880,20 @@ export type LeaseState = "held" | "settling" | "released";
 export interface ResultReadChangesQuery {
     cursor?:         string;
     identity_digest: string;
+    resource_id:     string;
 }
 
 export interface ResultReadFileQuery {
     identity_digest: string;
     path:            string;
+    resource_id:     string;
     side:            Side;
 }
 
 export interface ResultReadDiffQuery {
     identity_digest: string;
     path:            string;
+    resource_id:     string;
 }
 
 export interface PublicationCandidatePage {
@@ -2900,6 +2931,7 @@ export type PublicationRecordStatus = "pending" | "preparing" | "offline" | "uns
 
 export interface PublicationCandidateQuery {
     cursor?:              string;
+    resource_id?:         string;
     source_operation_id?: string;
 }
 
@@ -3290,8 +3322,12 @@ export interface DeliveryOutputEvidence {
     node_activation:            number;
     node_id:                    string;
     repository_free:            boolean;
-    source?:                    ResultReadIdentity;
-    source_digest?:             string;
+    sources:                    DeliveryOutputSource[];
+}
+
+export interface DeliveryOutputSource {
+    source:        ResultReadIdentity;
+    source_digest: string;
 }
 
 export interface DeliveryRepository {
@@ -3682,7 +3718,7 @@ export interface NodeReworkSummary {
     requester_node_id:         string;
     rework_request_id:         string;
     status:                    NodeReworkOutcomeStatus;
-    stop_operation_id:         string;
+    stop_operation_ids:        [string, ...string[]];
     target_node_id:            string;
     version:                   number;
     waiting_reason:            null | string;

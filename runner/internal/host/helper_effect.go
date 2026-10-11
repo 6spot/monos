@@ -91,13 +91,12 @@ func validateUnit(values map[string]string, unit, description string) error {
 }
 
 type operationRecord struct {
-	Operation          protocol.Operation     `json:"operation"`
-	BootID             string                 `json:"boot_id"`
-	Settled            bool                   `json:"settled"`
-	Status             Status                 `json:"status"`
-	WorkspaceAction    string                 `json:"workspace_action,omitempty"`
-	FinalizationResult *protocol.EffectResult `json:"finalization_result,omitempty"`
-	IntegrationStarted bool                   `json:"integration_started,omitempty"`
+	Completion      *completionProgress `json:"completion,omitempty"`
+	Operation       protocol.Operation  `json:"operation"`
+	BootID          string              `json:"boot_id"`
+	Settled         bool                `json:"settled"`
+	Status          Status              `json:"status"`
+	WorkspaceAction string              `json:"workspace_action,omitempty"`
 }
 
 func operationPath(id string) string { return filepath.Join(Root, "launch", id+".operation.json") }
@@ -132,7 +131,7 @@ func checkOperationWriters(ctx context.Context, attempt, boot string) error {
 		if record.Operation.AttemptID != attempt || record.Settled || record.BootID != boot {
 			continue
 		}
-		if record.Operation.Workspace != nil {
+		if record.Operation.Workspace != nil || record.Operation.Workspaces != nil || record.Operation.Kind == protocol.SettleCompletion {
 			// Canonical effects have independent durable cgroup ownership. Agent
 			// process inspection must remain usable so an admitted Stop can settle
 			// an unavailable fetch; backend lease barriers still retain the effect.

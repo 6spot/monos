@@ -291,6 +291,11 @@ func finishEffect(tx *sql.Tx, r protocol.OperationResult) error {
 	if op.AttemptID != r.AttemptID {
 		return ErrConflict
 	}
+	if r.Success && op.Kind == protocol.KindCompleteNode && op.Workspaces != nil {
+		if err = wire.ValidateCompletionResult(op, r.Result); err != nil {
+			return err
+		}
+	}
 	if previous != nil {
 		var old protocol.OperationResult
 		if err = json.Unmarshal(previous, &old); err != nil {

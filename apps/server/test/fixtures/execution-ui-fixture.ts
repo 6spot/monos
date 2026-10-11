@@ -4,7 +4,7 @@ import WebSocket from 'ws';
 import { transaction } from '../../../../packages/db/src/index.ts';
 import type { Database } from '../../../../packages/db/src/index.ts';
 import { canonicalJSON, submission, validate } from '../../../../packages/protocol/src/index.ts';
-import type { CommandEnvelope, Dispatch, Frame, OwnerCommand, PrepareReplan, PublicationAccessResult, PublicationFinding, PublicationPrepareRequest, PublicationPushRequest, PublicationResult, PublicationResultPage, ResultChange, ResultObject, ResultReadRequest, ResultReadResponse, TaskActionBasis, TaskSpecificationStatus, WorkspaceMetadata } from '../../../../packages/protocol/src/index.ts';
+import type { CommandEnvelope, Dispatch, Frame, OwnerCommand, PrepareReplan, PublicationAccessResult, PublicationFinding, PublicationPrepareRequest, PublicationPushRequest, PublicationResult, PublicationResultPage, ResultChange, ResultObject, ResultReadRequest, ResultReadResponse, TaskActionBasis, TaskSpecificationStatus, WorkspaceMetadata, Operation, EffectResult } from '../../../../packages/protocol/src/index.ts';
 import { Todos } from '../../src/todos.ts';
 import { TaskPreviews } from '../../src/task-previews.ts';
 import { prepareProposalFixture } from './task-preview-fixture.ts';
@@ -27,7 +27,7 @@ import { GitHub } from '../../src/github.ts';
 import { remoteProfile, RemoteProviderError } from '../../src/github-remote.ts';
 import type { AcquireGitHubRemoteGrant } from '../../src/github-remote.ts';
 
-const scenarios = ['ready', 'board_pages', 'queued', 'planning_issue', 'node_queued', 'running', 'running_workspace', 'review_git', 'result_inspection', 'result_empty', 'log_pages', 'blocked', 'review', 'completion_recovery', 'replan', 'multi_replan', 'replan_issue', 'joint', 'specification', 'guidance', 'input_issue', 'parallel_review', 'parallel_conflict'] as const;
+const scenarios = ['ready', 'board_pages', 'queued', 'planning_issue', 'node_queued', 'running', 'running_workspace', 'review_git', 'result_inspection', 'result_empty', 'log_pages', 'blocked', 'review', 'completion_recovery', 'replan', 'multi_replan', 'replan_issue', 'joint', 'specification', 'guidance', 'input_issue', 'parallel_review', 'parallel_conflict', 'multi_repository_review'] as const;
 type Scenario = typeof scenarios[number];
 interface Context { task: string; spec: string; plan: string; node: string; project: string; role: string; runner: string; incarnation: number; resource_id?: string }
 interface Agent { dispatch: Dispatch; credential: string }
@@ -63,7 +63,7 @@ export class ExecutionUIFixture {
   readonly db: Database;
   readonly service: BoundaryService;
   readonly contexts = new Map<string, Context>();
-  private readonly workspaceSnapshots = new Map<string, { workspace_id: string; metadata: WorkspaceMetadata }>();
+  private readonly workspaceSnapshots = new Map<string, { workspace_id: string; metadata: WorkspaceMetadata }[]>();
   private readonly legacyBoardTasks: Context[] = [];
   private readonly runnerCredentials = new Map<string, string>();
   private readonly readPeers = new Map<string, ReadPeer>();
@@ -260,10 +260,11 @@ export class ExecutionUIFixture {
     if (!scenarios.includes(input.kind) || (input.title !== undefined && (typeof input.title !== 'string' || input.title.length > 256))) throw new Error('Invalid browser scenario');
     const f: Context = { task: randomUUID(), spec: randomUUID(), plan: randomUUID(), node: randomUUID(), project: randomUUID(), role: randomUUID(), runner: randomUUID(), incarnation: 0 };
     const parallel = input.kind === 'parallel_review' || input.kind === 'parallel_conflict';
-    const resource_id = ['running_workspace', 'review_git', 'result_inspection', 'result_empty'].includes(input.kind) || parallel ? randomUUID() : undefined;
+    const resource_id = ['running_workspace', 'review_git', 'result_inspection', 'result_empty', 'multi_repository_review'].includes(input.kind) || parallel ? randomUUID() : undefined;
+    const resourceIds = resource_id ? [resource_id, ...(input.kind === 'multi_repository_review' ? [randomUUID()] : [])] : [];
     const config = new Configuration(this.db);
     await config.save(token, { schema_version: 1, request_id: randomUUID(), expected_control_version: (await config.read(token)).control_version, name: 'save_role', payload: { id: f.role, name: 'Careful builder', description: 'Synthetic browser scenario', instructions: 'Implement the exact requirement and report evidence.', archived: false } });
-    await config.save(token, { schema_version: 1, request_id: randomUUID(), expected_control_version: (await config.read(token)).control_version, name: 'save_project', payload: { id: f.project, name: `Execution UI · ${input.kind}`, context: 'Isolated browser fixture; no real Runtime execution.', resources: resource_id ? [{ id: resource_id, remote_url: 'https://github.com/example/execution-ui.git', remote_preparation: automatic ? 'automatic' : 'after_acceptance', ...(automatic ? { provider: 'github' as const, provider_repo_id: '42' } : {}), default_branch: 'main' }] : [], role_ids: [f.role], archived: false } });
+    await config.save(token, { schema_version: 1, request_id: randomUUID(), expected_control_version: (await config.read(token)).control_version, name: 'save_project', payload: { id: f.project, name: `Execution UI · ${input.kind}`, context: 'Isolated browser fixture; no real Runtime execution.', resources: resourceIds.map((id, index) => ({ id, remote_url: `https://github.com/example/${index ? 'execution-ui-tools' : 'execution-ui'}.git`, remote_preparation: automatic ? 'automatic' as const : 'after_acceptance' as const, ...(automatic ? { provider: 'github' as const, provider_repo_id: String(42 + index) } : {}), default_branch: 'main' })), role_ids: [f.role], archived: false } });
     const todo_id = randomUUID();
     await new Todos(this.db).command(token, { schema_version: 1, request_id: randomUUID(), name: 'capture_todo', payload: { todo_id, original_capture: 'Execution UI browser scenario' } });
     const taskProposal = await prepareProposalFixture(this.db, this.service, token, todo_id);
@@ -348,12 +349,12 @@ export class ExecutionUIFixture {
         const requested = await this.agent(f, agent, 'complete_node', { summary: `Parallel work produced revision ${revision.repeat(40)}; validation applies to that private result.` });
         const op = await this.service.recoverOperation(f.runner, requested.operation_id!);
         const integration = { outcome: conflict ? 'conflict' as const : 'integrated' as const, start_commit: opened.metadata.isolation!.start_commit,
-          node_commit: revision.repeat(40), node_tree: 'd'.repeat(40), expected_task_commit: op.integration!.expected_task_commit,
-          task_commit: conflict ? op.integration!.expected_task_commit : (revision === 'c' ? 'e' : 'f').repeat(40), task_tree: '1'.repeat(40) };
+          node_commit: revision.repeat(40), node_tree: 'd'.repeat(40), expected_task_commit: op.workspaces![0]!.integration!.expected_task_commit,
+          task_commit: conflict ? op.workspaces![0]!.integration!.expected_task_commit : (revision === 'c' ? 'e' : 'f').repeat(40), task_tree: '1'.repeat(40) };
         await this.service.finishOperation(f.runner, f.incarnation, { operation_id: op.operation_id, attempt_id: agent.dispatch.attempt_id,
-          success: true, result: { writer_absent: true, workspace_id: opened.workspace_id, integration,
+          success: true, result: { writer_absent: true, completion_outcome: conflict ? 'conflict' : 'finalized', workspace_results: [{resource_id: resource_id!, workspace_id: opened.workspace_id, integration, capture: { start_commit: integration.start_commit, node_commit: integration.node_commit, node_tree: integration.node_tree },
             workspace_metadata: { ...opened.metadata, finalized_commit: conflict ? opened.metadata.finalized_commit : integration.task_commit },
-            ...(!conflict ? { git_commit: integration.task_commit, git_tree: integration.task_tree } : {}) } });
+            ...(!conflict ? { git_commit: integration.task_commit, git_tree: integration.task_tree } : {}) }] } });
       };
       const a = await open(first); let b = await open(second);
       await finish(first, a, false, 'c');
@@ -380,7 +381,7 @@ export class ExecutionUIFixture {
       }
       return { ...f, attempt_id: node.dispatch.attempt_id, log_count: 70 };
     }
-    if (resource_id) {
+    for (const resource_id of resourceIds) {
       const opened = await this.agent(f, node, 'open_workspace', { resource_id });
       const operation = await this.service.recoverOperation(f.runner, opened.operation_id!);
       const workspace = operation.workspace!;
@@ -393,24 +394,24 @@ export class ExecutionUIFixture {
         operation_id: operation.operation_id, attempt_id: node.dispatch.attempt_id, success: true,
         result: { workspace_id: workspace.workspace_id, path: '/synthetic/private/worktree', instruction_files: [], workspace_metadata: metadata },
       });
-      this.workspaceSnapshots.set(node.dispatch.attempt_id, { workspace_id: workspace.workspace_id, metadata });
+      this.workspaceSnapshots.set(node.dispatch.attempt_id, [...(this.workspaceSnapshots.get(node.dispatch.attempt_id) ?? []), { workspace_id: workspace.workspace_id, metadata }]);
       if (input.kind === 'running_workspace') return { ...f, resource_id, attempt_id: node.dispatch.attempt_id, workspace_id: workspace.workspace_id };
     }
     if (input.kind === 'blocked') {
       const blocked = await this.agent(f, node, 'block_node', { reason: 'Choose the intended fallback behavior before implementation continues.' });
       await this.finish(f, blocked.operation_id!, node.dispatch.attempt_id); return f;
     }
-    if (['review', 'review_git', 'result_inspection', 'result_empty', 'completion_recovery'].includes(input.kind)) {
+    if (['review', 'review_git', 'result_inspection', 'result_empty', 'completion_recovery', 'multi_repository_review'].includes(input.kind)) {
       const artifact_id = randomUUID();
       await this.agent(f, node, 'publish_artifact', { artifact_id, title: 'Verification notes', content: { media_type: 'text/markdown', text: '# Local verification\n\nThe synthetic fixture completed its formal result. No real Runtime or provider ran.\n\n<script>this must remain inert</script>' } });
       const completed = await this.agent(f, node, 'complete_node', { summary: 'The requested local result is ready for Owner review. Verification notes are attached.', artifact_ids: [artifact_id] });
       if (input.kind === 'completion_recovery') await this.service.finishOperation(f.runner, f.incarnation, { operation_id: completed.operation_id!, attempt_id: node.dispatch.attempt_id, success: false, failure_kind: 'recoverable', result: { writer_absent: true } });
       else await this.finish(f, completed.operation_id!, node.dispatch.attempt_id);
-      if (input.kind === 'result_inspection' || input.kind === 'result_empty') {
+      if (input.kind === 'result_inspection' || input.kind === 'result_empty' || input.kind === 'multi_repository_review') {
         this.readCompletions.set(f.task, completed.operation_id!);
         await this.connectReadPeer(f, input.kind === 'result_empty');
       }
-      return { ...f, artifact_id, operation_id: completed.operation_id, ...(resource_id ? { resource_id, attempt_id: node.dispatch.attempt_id, workspace_id: this.workspaceSnapshots.get(node.dispatch.attempt_id)!.workspace_id, git_commit: 'c'.repeat(40), git_tree: 'd'.repeat(40) } : {}) };
+      return { ...f, resource_ids: resourceIds, artifact_id, operation_id: completed.operation_id, ...(resource_id ? { resource_id, attempt_id: node.dispatch.attempt_id, workspace_id: this.workspaceSnapshots.get(node.dispatch.attempt_id)![0]!.workspace_id, git_commit: 'c'.repeat(40), git_tree: 'd'.repeat(40) } : {}) };
     }
     const requested = await this.agent(f, node, 'request_replan', { reason: 'The current work definition needs replacement to satisfy the requested outcome.' });
     await this.finish(f, requested.operation_id!, node.dispatch.attempt_id);
@@ -577,20 +578,27 @@ export class ExecutionUIFixture {
     return { dispatch, credential: grant.credential };
   }
   private agent(f: Context, agent: Agent, name: CommandEnvelope['name'], payload: CommandEnvelope['payload']) { return this.service.admit(agent.credential, submission({ schema_version: 1, request_id: randomUUID(), scope_id: f.task, expected_control_version: agent.dispatch.control_version, name, payload })); }
+  private completedResult(operation: Operation, attemptId: string): EffectResult {
+    return { writer_absent: true, completion_outcome: 'finalized', workspace_results: operation.workspaces!.map(input => {
+      const snapshot = this.workspaceSnapshots.get(attemptId)?.find(value => value.workspace_id === input.workspace.workspace_id);
+      if (!snapshot) throw new Error('Missing synthetic completion member snapshot');
+      const capture = { start_commit: snapshot.metadata.isolation?.start_commit ?? snapshot.metadata.finalized_commit, node_commit: 'c'.repeat(40), node_tree: 'd'.repeat(40) };
+      const integration = input.integration ? { ...capture, outcome: 'integrated' as const, expected_task_commit: input.integration.expected_task_commit, task_commit: capture.node_commit, task_tree: capture.node_tree } : undefined;
+      return { resource_id: input.workspace.resource_id, workspace_id: snapshot.workspace_id, workspace_metadata: { ...snapshot.metadata, finalized_commit: capture.node_commit }, capture, git_commit: capture.node_commit, git_tree: capture.node_tree, ...(integration ? { integration } : {}) };
+    }) };
+  }
   private async finish(f: Context, operation_id: string, attempt_id: string) {
-    const snapshot = this.workspaceSnapshots.get(attempt_id);
-    if (snapshot) {
-      const operation = await this.service.recoverOperation(f.runner, operation_id);
-      if (operation.kind === 'complete_node') {
-        const metadata = { ...snapshot.metadata, finalized_commit: 'c'.repeat(40) };
-        await this.service.finishOperation(f.runner, f.incarnation, { operation_id, attempt_id, success: true, result: { writer_absent: true, workspace_id: snapshot.workspace_id, workspace_metadata: metadata, git_commit: 'c'.repeat(40), git_tree: 'd'.repeat(40) } });
-        this.workspaceSnapshots.set(attempt_id, { ...snapshot, metadata });
-        return;
-      }
-      if (operation.kind === 'stop') {
-        await this.service.finishOperation(f.runner, f.incarnation, { operation_id, attempt_id, success: true, result: { writer_absent: true, workspace_id: snapshot.workspace_id, workspace_metadata: { ...snapshot.metadata, checkpoint: { operation_id, head_commit: 'e'.repeat(40), tree_id: 'f'.repeat(40), commit_id: 'e'.repeat(40) } } } });
-        return;
-      }
+    const operation = await this.service.recoverOperation(f.runner, operation_id);
+    if (operation.kind === 'complete_node') {
+      return this.service.finishOperation(f.runner, f.incarnation, { operation_id, attempt_id, success: true, result: this.completedResult(operation, attempt_id) });
+    }
+    if (operation.kind === 'settle_completion') {
+      const original = await this.service.recoverOperation(f.runner, operation.completion_operation_id!);
+      return this.service.finishOperation(f.runner, f.incarnation, { operation_id, attempt_id, success: true, result: { writer_absent: true }, completion_settlement: { completion_operation_id: original.operation_id, disposition: 'already_finalized', completion_result: { operation_id: original.operation_id, attempt_id, success: true, result: this.completedResult(original, attempt_id) } } });
+    }
+    const snapshot = this.workspaceSnapshots.get(attempt_id)?.find(value => value.workspace_id === operation.workspace?.workspace_id);
+    if (operation.kind === 'stop' && snapshot) {
+      return this.service.finishOperation(f.runner, f.incarnation, { operation_id, attempt_id, success: true, result: { writer_absent: true, workspace_id: snapshot.workspace_id, workspace_metadata: { ...snapshot.metadata, checkpoint: { operation_id, head_commit: 'e'.repeat(40), tree_id: 'f'.repeat(40), commit_id: 'e'.repeat(40) } } } });
     }
     return this.service.finishOperation(f.runner, f.incarnation, { operation_id, attempt_id, success: true, result: { writer_absent: true } });
   }

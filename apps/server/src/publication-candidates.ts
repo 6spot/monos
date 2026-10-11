@@ -18,7 +18,7 @@ export interface DeliveryOperation {
  result:PublicationResult|null;result_digest:string|null;item_id:string|null;sent_incarnation:string|null;
 }
 export async function effectiveResult(tx:Transaction, request:PublicationPrepareRequest) {
- const resolved=await resolveCanonicalResult(tx,request.source.task_id,request.source.operation_id);
+ const resolved=await resolveCanonicalResult(tx,request.source.task_id,request.source.operation_id,request.source.resource_id);
  const basis:PublicationEffectiveBasis={task_id:request.source.task_id,specification_id:resolved.item.current_specification_id,plan_id:resolved.item.current_plan_id!,completion_operation_id:request.source.operation_id,completion_manifest_digest:request.source.manifest_digest};
  const head=(await tx.query<{finalized_commit:string}>('SELECT finalized_commit FROM task_workspaces WHERE id=$1',[request.source.workspace_id])).rows[0];
  return {resolved,basis,current:!!resolved.identity && resolved.item.current && head?.finalized_commit===request.source.git_commit && hash(resolved.identity)===request.source_digest && hash(basis)===request.effective_basis_digest};
@@ -36,13 +36,22 @@ async function sourceParent(tx:Transaction, source:PublicationPrepareRequest['so
  if(workspace.basis || workspace.transfer || workspace.open_operation_id!==row.id || workspace.task_id!==source.task_id || workspace.resource_id!==source.resource_id || workspace.runner_id!==source.runner_id || workspace.workspace_id!==source.workspace_id || hash(workspace)!==row.workspace_digest || row.storage_id!==source.storage_id || row.repository_identity!==source.repository_identity || row.task_id!==source.task_id || row.runner_id!==source.runner_id || row.resource_id!==source.resource_id || (outcome.git_commit!==undefined && outcome.git_commit!==source.base_commit) || outcome.workspace_metadata?.base_commit!==source.base_commit || outcome.workspace_metadata.storage_id!==source.storage_id || outcome.workspace_metadata.repository_identity!==source.repository_identity)throw new CommandError('unmet_precondition','Original public parent evidence differs');
  return {kind:'materialization' as const,commit:source.base_commit,repository_identity:source.repository_identity,observation_operation_id:row.id,workspace,outcome,observation_digest:hash({operation_id:row.id,workspace,outcome})};
 }
-export async function ensureLocalCandidate(tx:Transaction,taskId:string):Promise<string|undefined> {
- if(!await localAdmissionAllowed(tx,taskId))return;
- const sourceId=(await tx.query<{id:string}>(`SELECT o.id FROM operations o JOIN attempts a ON a.id=o.attempt_id JOIN completion_manifests m ON m.operation_id=o.id JOIN task_workspaces w ON w.id=o.workspace_descriptor->>'workspace_id'
- WHERE a.task_id=$1 AND o.kind='complete_node' AND o.state='succeeded' AND w.finalized_commit=o.result->>'git_commit' ORDER BY o.created_at DESC,o.id DESC LIMIT 1`,[taskId])).rows[0]?.id;
- if(!sourceId)return;
- const {item,identity:source}=await resolveCanonicalResult(tx,taskId,sourceId);
- if(!source || !item.current)return;
+export async function ensureLocalCandidate(tx:Transaction,taskId:string):Promise<string[]> {
+ if(!await localAdmissionAllowed(tx,taskId))return [];
+ const sources=(await tx.query<{id:string;resource_id:string}>(`SELECT DISTINCT ON (member.resource_id COLLATE "C") o.id,member.resource_id
+  FROM operations o JOIN attempts a ON a.id=o.attempt_id JOIN completion_manifests m ON m.operation_id=o.id
+  JOIN node_completions c ON c.operation_id=o.id
+  CROSS JOIN LATERAL operation_workspace_results(o.id) member JOIN task_workspaces w ON w.id=member.workspace_id
+  WHERE a.task_id=$1 AND o.kind='complete_node' AND o.state='succeeded' AND o.result->>'completion_outcome'='finalized'
+    AND w.finalized_commit=member.result->>'git_commit'
+  ORDER BY member.resource_id COLLATE "C",o.created_at DESC,o.id DESC`,[taskId])).rows;
+ const ids:string[]=[];
+ for(const source of sources){const id=await ensureResourceCandidate(tx,taskId,source.id,source.resource_id);if(id)ids.push(id);}
+ return ids;
+}
+async function ensureResourceCandidate(tx:Transaction,taskId:string,sourceId:string,resourceId:string):Promise<string|undefined> {
+ const {item,git,identity:source}=await resolveCanonicalResult(tx,taskId,sourceId,resourceId);
+ if(!item.current)return;
  const basis:PublicationEffectiveBasis={task_id:taskId,specification_id:item.current_specification_id,plan_id:item.current_plan_id!,completion_operation_id:source.operation_id,completion_manifest_digest:source.manifest_digest};
  const published=await retainedPublishedProof(tx,taskId,source.resource_id);
  if(published&&(published.storage_id!==source.storage_id||published.runner_id!==source.runner_id||published.repository_identity!==source.repository_identity))throw new CommandError('unmet_precondition','Published source storage lineage differs');
@@ -57,7 +66,7 @@ export async function ensureLocalCandidate(tx:Transaction,taskId:string):Promise
  const existing=prior.find(p=>p.request.source_digest===sourceDigest);
  const construction=existing?.request.construction ?? validate<PublicationPrepareRequest['construction']>('PublicationConstruction',{
   schema_version:1,construction_id:randomUUID(),candidate_id:randomUUID(),source_digest:sourceDigest,repository_identity:source.repository_identity,
-  target_branch:item.git!.metadata.target_branch,parents:published?[{kind:'published',commit:published.candidate.head,repository_identity:published.repository_identity,published_proof:published,published_proof_digest:hash(published)}]:[await sourceParent(tx,source)],author_name:'monos',author_email:'monos@localhost',timestamp:`${Math.floor(Date.now()/1000)} +0000`,message:`monos Task ${taskId} result v1`,
+  target_branch:git.metadata.target_branch,parents:published?[{kind:'published',commit:published.candidate.head,repository_identity:published.repository_identity,published_proof:published,published_proof_digest:hash(published)}]:[await sourceParent(tx,source)],author_name:'monos',author_email:'monos@localhost',timestamp:`${Math.floor(Date.now()/1000)} +0000`,message:`monos Task ${taskId} result v1`,
  });
  const operationId=randomUUID();
  const proof=(await tx.query<{proof:PublicationPermissionProof}>('SELECT proof FROM publication_permission_observations WHERE resource_id=$1 AND configuration_fingerprint=$2 ORDER BY observed_at DESC,id DESC LIMIT 1',[source.resource_id,await permissionConfigurationFingerprint(tx,source.resource_id)])).rows[0]?.proof;

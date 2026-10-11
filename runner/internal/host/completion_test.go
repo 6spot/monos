@@ -172,6 +172,8 @@ func completionOperations(t *testing.T) (protocol.Dispatch, protocol.Operation, 
 	original.OperationID = "completion"
 	original.RequestID = "complete-request"
 	original.CompletionManifestDigest = ptr(strings.Repeat("b", 64))
+	original.Workspaces = []protocol.WorkspaceCompletionInput{{Workspace: *original.Workspace, WorkspaceDigest: *original.WorkspaceDigest}}
+	original.Workspace, original.WorkspaceDigest, original.ResourceID = nil, nil, nil
 	digest, err := wire.OperationIdentity(original)
 	if err != nil {
 		t.Fatal(err)
@@ -181,6 +183,7 @@ func completionOperations(t *testing.T) (protocol.Dispatch, protocol.Operation, 
 	settle.OperationID = "settlement"
 	settle.RequestID = "settle-request"
 	settle.CompletionManifestDigest = nil
+	settle.Workspaces = nil
 	settle.CompletionOperationID = &original.OperationID
 	settle.CompletionIdentityDigest = &digest
 	return d, original, settle
@@ -213,7 +216,7 @@ func TestCompletionFenceBindsOriginalImmutableIdentity(t *testing.T) {
 
 func TestCanonicalRepositoryFreeScopeCannotBecomeFixtureGit(t *testing.T) {
 	d, op, _ := completionOperations(t)
-	op.RepositoryFree = ptr(true)
+	op.Workspaces = []protocol.WorkspaceCompletionInput{}
 	op.ResourceID = nil
 	op.Workspace = nil
 	op.WorkspaceDigest = nil
@@ -237,13 +240,13 @@ func TestCanonicalRepositoryFreeScopeCannotBecomeFixtureGit(t *testing.T) {
 				bad.ResourceID = ptr("fixture")
 			case "workspace":
 				_, with, _ := completionOperations(t)
-				bad.Workspace = with.Workspace
+				bad.Workspace = &with.Workspaces[0].Workspace
 			case "no-manifest":
 				bad.CompletionManifestDigest = nil
 			case "missing-repository-free":
-				bad.RepositoryFree = nil
+				bad.Workspaces = nil
 			case "false-repository-free":
-				bad.RepositoryFree = ptr(false)
+				bad.Workspaces = []protocol.WorkspaceCompletionInput{{}}
 			case "stale-attempt":
 				bad.AttemptID = "previous-attempt"
 			case "stale-dispatch":
@@ -256,41 +259,54 @@ func TestCanonicalRepositoryFreeScopeCannotBecomeFixtureGit(t *testing.T) {
 	}
 }
 
-func TestSettlementWorkerProducesScopedPairAndPreservesCaptureOnFailedReplay(t *testing.T) {
-	for _, completed := range []bool{false, true} {
-		t.Run(fmtBool(completed), func(t *testing.T) {
+func TestCompletionCancellationPreservesCaptureOnFailedReplay(t *testing.T) {
+	for _, captured := range []bool{false, true} {
+		t.Run(fmtBool(captured), func(t *testing.T) {
 			dir, common, base := completionGit(t)
-			_, original, settle := completionOperations(t)
+			_, parent, settle := completionOperations(t)
+			input := parent.Workspaces[0]
 			writeCompletionFile(t, dir, "file", "result\n")
-			if completed {
-				if _, err := finalize(dir, common, original.OperationID, base); err != nil {
+			writeCompletionFile(t, dir, "ignored", "private bytes\n")
+			if captured {
+				if _, err := finalize(dir, common, parent.OperationID, base); err != nil {
 					t.Fatal(err)
 				}
 			}
-			w := original.Workspace
+			index, head := readCompletionFile(t, filepath.Join(common, "index")), gitOK(t, dir, "rev-parse", "HEAD")
+			w := input.Workspace
 			metadata := protocol.WorkspaceMetadata{StorageID: "storage", Generation: w.Generation, LeaseID: w.LeaseID, RepositoryIdentity: w.Resource.RepositoryIdentity, BaseCommit: base, FinalizedCommit: base, TargetBranch: "main", TargetCommit: base}
-			status, err := settlementWorker(settle, original, metadata, dir, common)
+			result, err := checkpointCompletionItem(settle, parent, input, metadata, dir, common)
 			if err != nil {
 				t.Fatal(err)
 			}
-			pair := protocol.OperationResult{AttemptID: settle.AttemptID, OperationID: settle.OperationID, Success: true, Result: *status.Result, CompletionSettlement: status.CompletionSettlement}
-			if err = wire.ValidateCompletionPair(settle, original, pair); err != nil {
-				t.Fatal(err)
+			if result.WorkspaceMetadata.Checkpoint == nil || result.GitCommit != nil || result.WorkspaceMetadata.FinalizedCommit != base {
+				t.Fatal("capture became canonical completion")
 			}
-			if completed && pair.CompletionSettlement.Disposition != protocol.AlreadyFinalized || !completed && pair.CompletionSettlement.Disposition != protocol.DispositionCancelled {
-				t.Fatal("wrong physical disposition")
+			if gitOK(t, dir, "rev-parse", "HEAD") != head || !reflect.DeepEqual(index, readCompletionFile(t, filepath.Join(common, "index"))) || string(readCompletionFile(t, filepath.Join(dir, "ignored"))) != "private bytes\n" {
+				t.Fatal("cancellation mutated private state")
 			}
-			if !completed {
-				intent := filepath.Join(common, "monos-completion-recovery-"+settle.OperationID+".json")
-				before := readCompletionFile(t, intent)
-				writeCompletionFile(t, dir, "file", "unexpected later writer\n")
-				if _, err = settlementWorker(settle, original, metadata, dir, common); err == nil {
-					t.Fatal("changed capture replay accepted")
-				}
-				if string(readCompletionFile(t, intent)) != string(before) {
-					t.Fatal("failed replay rewrote retained capture")
-				}
+			intent := filepath.Join(common, "monos-completion-recovery-"+settle.OperationID+".json")
+			before := readCompletionFile(t, intent)
+			writeCompletionFile(t, dir, "file", "unexpected later writer\n")
+			if _, err = checkpointCompletionItem(settle, parent, input, metadata, dir, common); err == nil {
+				t.Fatal("changed capture replay accepted")
+			}
+			if !reflect.DeepEqual(before, readCompletionFile(t, intent)) {
+				t.Fatal("failed replay rewrote original intent")
 			}
 		})
 	}
+}
+
+func aggregateCompletionProof(t *testing.T, proof *operationRecord, metadata protocol.WorkspaceMetadata, commit, tree string) {
+	t.Helper()
+	op := &proof.Operation
+	if op.Workspaces == nil {
+		op.Workspaces = []protocol.WorkspaceCompletionInput{{Workspace: *op.Workspace, WorkspaceDigest: *op.WorkspaceDigest}}
+	}
+	op.Workspace, op.WorkspaceDigest, op.ResourceID = nil, nil, nil
+	metadata.Checkpoint = nil
+	w := op.Workspaces[0].Workspace
+	capture := &protocol.WorkspaceCaptureResult{StartCommit: metadata.BaseCommit, NodeCommit: commit, NodeTree: tree}
+	proof.Status.Result = &protocol.EffectResult{WriterAbsent: ptr(true), CompletionOutcome: ptr("finalized"), WorkspaceResults: []protocol.WorkspaceEffectResult{{ResourceID: w.ResourceID, WorkspaceID: w.WorkspaceID, WorkspaceMetadata: metadata, Capture: capture, GitCommit: &commit, GitTree: &tree}}}
 }

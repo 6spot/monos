@@ -37,7 +37,7 @@ async function capture(page: Page, info: TestInfo, name: string, state: string) 
   const hashes = Object.fromEntries(await Promise.all([...new Set(sources)].sort().map(async path => [path, createHash('sha256').update(await readFile(resolve(root, path))).digest('hex')])));
   const assets = Object.fromEntries(await Promise.all((await readdir(resolve('dist/assets'))).sort().map(async name => [name, createHash('sha256').update(await readFile(resolve('dist/assets', name))).digest('hex')])));
   const candidate = createHash('sha256').update(JSON.stringify(hashes)).digest('hex'), bundle = createHash('sha256').update(JSON.stringify(assets)).digest('hex');
-  const directory = resolve(root, '.trellis/tasks/10-03-a-local-result-review/research/screenshots', `${candidate.slice(0, 12)}-${bundle.slice(0, 12)}-${evidenceRun}`);
+  const directory = resolve(root, 'test-results/result-inspection', `${candidate.slice(0, 12)}-${bundle.slice(0, 12)}-${evidenceRun}`);
   await mkdir(directory, { recursive: true });
   const metadata: Record<string, unknown> = { dirty_candidate: true, head: execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim(), source_sha256: candidate, source_files: hashes, bundle_sha256: bundle, assets, test: info.title, state, evidence: 'Built SPA + actual Owner/Runner authenticated WebSocket/PG fixture; Git bytes/OIDs explicitly synthetic, no native Runtime/provider', route: page.url(), views: [] };
   for (const viewport of [{ width: 1440, height: 1000, label: 'desktop' }, { width: 390, height: 844, label: 'mobile' }]) {
@@ -98,10 +98,10 @@ test('on-demand exact result navigation reaches all changes, safely inspects bot
   await capture(page, info, 'result-long-path', 'Literal colon/spaces and long path; contained code scroll');
   await file(page, 'Added more/file-61.txt').click(); await expect(selected(page).locator('pre')).toContainText('exact whitespace');
   const observed = await peer(page, f, 'observe'); expect(observed.requests.length).toBeGreaterThan(10);
-  expect(observed.requests.every(request => request.identity.task_id === f.task && request.identity.operation_id === f.operation_id && request.identity.runner_id === f.runner && request.identity_digest === results.items[0]!.git!.identity_digest)).toBe(true);
+  expect(observed.requests.every(request => request.identity.task_id === f.task && request.identity.operation_id === f.operation_id && request.identity.runner_id === f.runner && request.identity_digest === results.items[0]!.git_results[0]!.identity_digest)).toBe(true);
   const cursors = observed.requests.filter(request => request.mode === 'changes').map(request => request.cursor);
   expect(cursors[0]).toBeUndefined(); expect(cursors).toHaveLength(2);
-  expect(JSON.parse(Buffer.from(cursors[1]!, 'base64url').toString())).toEqual({ after: 64, identity: results.items[0]!.git!.identity_digest, version: 1 });
+  expect(JSON.parse(Buffer.from(cursors[1]!, 'base64url').toString())).toEqual({ after: 64, identity: results.items[0]!.git_results[0]!.identity_digest, version: 1 });
   expect((await get<TaskOverview>(page, `/v1/owner/tasks/${f.task}`)).control_version).toBe(before.control_version);
   expect(await get<TaskResultPage>(page, `/v1/owner/tasks/${f.task}/results`)).toEqual(results);
   expect(writes).toHaveLength(0);

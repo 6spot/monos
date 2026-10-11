@@ -14,6 +14,8 @@ import { CommandError } from '../../../packages/domain/src/commands.ts';
 import { canonicalJSON, digest, validate, MAX_BODY_BYTES } from '../../../packages/protocol/src/index.ts';
 import type {
   Operation,
+  WorkspaceCompletionInput,
+  WorkspaceIntegration,
   OwnerCommand,
   OwnerCommandResult,
   NodeExecutionStatus,
@@ -46,7 +48,8 @@ export interface CompletionOperation {
   request_id: string;
   resource_id: string | null;
   workspace_descriptor: Operation['workspace'] | null;
-  integration?: Operation['integration'] | null;
+  integration?: WorkspaceIntegration | null;
+  workspaces?: WorkspaceCompletionInput[] | null;
   result?: Operation['result'] | null;
   workspace_digest: string | null;
   workspace_lease_id: string | null;
@@ -59,6 +62,7 @@ export interface CompletionOperation {
   settlement_purpose: 'correct' | 'cancel_task' | 'specification_change' | null;
 }
 export function completionIdentity(operation: CompletionOperation, dispatchId: string): string {
+  if (!operation.workspaces) throw new CommandError('unmet_precondition', 'Completion membership was not loaded');
   return digest(
     canonicalJSON({
       schema_version: operation.schema_version,
@@ -67,12 +71,7 @@ export function completionIdentity(operation: CompletionOperation, dispatchId: s
       dispatch_id: dispatchId,
       request_id: operation.request_id,
       kind: operation.kind,
-      ...(operation.resource_id ? { resource_id: operation.resource_id } : {}),
-      ...(operation.integration ? { integration: operation.integration } : {}),
-      ...(operation.workspace_descriptor
-        ? { workspace: operation.workspace_descriptor, workspace_digest: operation.workspace_digest }
-        : {}),
-      ...(operation.repository_free ? { repository_free: true } : {}),
+      workspaces: operation.workspaces,
       ...(operation.completion_manifest_digest
         ? { completion_manifest_digest: operation.completion_manifest_digest }
         : {}),
@@ -87,7 +86,7 @@ export async function admitCompletionSettlement(
   purpose: 'correct' | 'cancel_task' | 'specification_change'
 ): Promise<string> {
   if (
-    !original.workspace_descriptor ||
+    !original.workspaces ||
     !original.completion_manifest_digest ||
     !attempt.launch.node_execution_source ||
     original.kind !== 'complete_node'
@@ -99,19 +98,9 @@ export async function admitCompletionSettlement(
   if (prior) return prior.id;
   const id = randomUUID();
   await tx.query(
-    `INSERT INTO operations(id,attempt_id,schema_version,kind,request_id,state,resource_id,workspace_descriptor,workspace_digest,workspace_lease_id,completion_operation_id,completion_identity_digest,settlement_purpose) VALUES($1,$2,1,'settle_completion',$3,'admitted',$4,$5,$6,$7,$8,$9,$10)`,
-    [
-      id,
-      attempt.id,
-      requestId,
-      original.resource_id,
-      original.workspace_descriptor,
-      original.workspace_digest,
-      original.workspace_lease_id,
-      original.id,
-      completionIdentity(original, attempt.dispatch_id),
-      purpose,
-    ]
+    `INSERT INTO operations(id,attempt_id,schema_version,kind,request_id,state,completion_operation_id,completion_identity_digest,settlement_purpose)
+      VALUES($1,$2,1,'settle_completion',$3,'admitted',$4,$5,$6)`,
+    [id, attempt.id, requestId, original.id, completionIdentity(original, attempt.dispatch_id), purpose]
   );
   await tx.query("INSERT INTO outbox(id,runner_id,attempt_id,kind,operation_id) VALUES($1,$2,$3,'effect',$4)", [
     randomUUID(),
@@ -129,7 +118,7 @@ export async function stopAttempt(
 ): Promise<string | undefined> {
   const terminal = (
     await tx.query<CompletionOperation>(
-      "SELECT * FROM operations WHERE attempt_id=$1 AND kind='complete_node' ORDER BY created_at LIMIT 1",
+      "SELECT *,operation_workspace_inputs(id) AS workspaces FROM operations WHERE attempt_id=$1 AND kind='complete_node' ORDER BY created_at LIMIT 1",
       [attempt.id]
     )
   ).rows[0];
@@ -275,8 +264,8 @@ export class NodeExecution {
           const guidanceOwned=(await tx.query("SELECT 1 FROM task_guidance_followups WHERE source_id=$1 AND status='waiting'",[source.id])).rowCount;
           if (!(await specificationFrozen(tx,task.id)) && attempt.end_reason!=='specification_change' && !guidanceOwned && task.state === 'RUNNING' && node.state === 'RUNNING' && node.execution_source_id === source.id) {
             if (attempt.end_reason === 'integration_conflict' && attempt.process_released) {
-              const conflict = (await tx.query<OperationRow>(`SELECT * FROM operations WHERE attempt_id=$1 AND kind='complete_node'
-                AND state='succeeded' AND result->'integration'->>'outcome'='conflict' ORDER BY created_at DESC,id DESC LIMIT 1`, [attempt.id])).rows[0];
+              const conflict = (await tx.query<OperationRow>(`SELECT *,operation_workspace_inputs(id) AS workspaces FROM operations WHERE attempt_id=$1 AND kind='complete_node'
+                AND state='succeeded' AND result->>'completion_outcome'='conflict' ORDER BY created_at DESC,id DESC LIMIT 1`, [attempt.id])).rows[0];
               if (conflict?.result) {
                 await retryIntegrationConflict(tx, attempt, conflict, { operation_id: conflict.id, attempt_id: attempt.id,
                   success: true, result: conflict.result }, configurationVersion);
@@ -377,11 +366,11 @@ export class NodeExecution {
             await lockAttemptWorkspace(tx, attempt.id);
             const original = (
               await tx.query<CompletionOperation>(
-                "SELECT * FROM operations WHERE attempt_id=$1 AND kind='complete_node' AND state NOT IN ('succeeded','cancelled') FOR UPDATE",
+                "SELECT *,operation_workspace_inputs(id) AS workspaces FROM operations WHERE attempt_id=$1 AND kind='complete_node' AND state NOT IN ('succeeded','cancelled') FOR UPDATE",
                 [attempt.id]
               )
             ).rows[0];
-            if (original?.workspace_descriptor)
+            if (original?.workspaces)
               operationId = await admitCompletionSettlement(tx, attempt, original, command.request_id, 'cancel_task');
             else operationId = await stopAttempt(tx, attempt, command.request_id, 'task_cancelled');
             await tx.query('UPDATE attempts SET mutation_allowed=false WHERE id=$1', [attempt.id]);
@@ -417,7 +406,7 @@ export class NodeExecution {
             if (!attempt) throw new CommandError('unmet_precondition', 'Completion has no Attempt');
             await lockAttemptWorkspace(tx, attempt.id);
             const original = (
-              await tx.query<CompletionOperation>('SELECT * FROM operations WHERE id=$1 AND attempt_id=$2 FOR UPDATE', [
+              await tx.query<CompletionOperation>('SELECT *,operation_workspace_inputs(id) AS workspaces FROM operations WHERE id=$1 AND attempt_id=$2 FOR UPDATE', [
                 target.operation_id,
                 attempt.id,
               ])
@@ -632,7 +621,7 @@ export class NodeExecution {
       const rows = attempt
         ? (
             await tx.query<CompletionOperation>(
-              'SELECT * FROM operations WHERE attempt_id=$1 ORDER BY created_at,id LIMIT 257',
+              'SELECT *,operation_workspace_inputs(id) AS workspaces FROM operations WHERE attempt_id=$1 ORDER BY created_at,id LIMIT 257',
               [attempt.id]
             )
           ).rows
@@ -644,7 +633,7 @@ export class NodeExecution {
         kind: o.kind,
         state: o.state,
         failure_kind: o.failure_kind ?? null,
-        ...(o.result?.integration ? { integration: o.result.integration } : {}),
+        ...(o.result?.completion_outcome ? { completion_outcome: o.result.completion_outcome } : {}),
         ...(o.kind === 'complete_node'
           ? { completion_identity_digest: completionIdentity(o, attempt!.dispatch_id) }
           : {}),

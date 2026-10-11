@@ -5,7 +5,7 @@
 Owner inspection of an original successful Git completion through its owning
 Runner. This read-only cross-layer contract adds no command receipt, Agent run,
 Runtime execution capacity, workspace repair or provider effect. Repository-free
-results retain `git:null` and do not offer Git inspection. Publication candidates
+results retain `git_results:[]` and do not offer Git inspection. Publication candidates
 and delivery use separate contracts.
 
 Sources: `task-result-reads.ts`, `result-content-reads.ts`, `result-read-broker.ts`,
@@ -16,13 +16,13 @@ Runner `internal/{daemon,host}/result_read.go`, protocol `contracts.json` and We
 ## 2. Signatures
 
 ```text
-GET /v1/owner/tasks/:task_id/results/:operation_id/changes?identity_digest=...&cursor=...
-GET /v1/owner/tasks/:task_id/results/:operation_id/file?identity_digest=...&path=...&side=result|base
-GET /v1/owner/tasks/:task_id/results/:operation_id/diff?identity_digest=...&path=...
+GET /v1/owner/tasks/:task_id/results/:operation_id/changes?resource_id=...&identity_digest=...&cursor=...
+GET /v1/owner/tasks/:task_id/results/:operation_id/file?resource_id=...&identity_digest=...&path=...&side=result|base
+GET /v1/owner/tasks/:task_id/results/:operation_id/diff?resource_id=...&identity_digest=...&path=...
 ```
 
-`identity_digest` is required in every query; `path` and `side` are required as
-shown, and only the changes query accepts an optional cursor. Unknown parameters
+`resource_id` and `identity_digest` are required in every query; `path` and `side`
+are required as shown, and only the changes query accepts an optional cursor. Unknown parameters
 fail validation. Use generated query schemas and OpenAPI required flags.
 The Owner session cookie authenticates; Web also sends its `X-Monos-Session` UUID.
 Responses use `Cache-Control: no-store` and `X-Content-Type-Options: nosniff`.
@@ -35,16 +35,29 @@ and the complete `ResultReadRequest`; they are not effect/command envelopes.
 
 ### Immutable identity and authorization
 
-`TaskLocalResult.git.identity_digest` is SHA-256 of canonical JSON for the full
-`ResultReadIdentity`. Backend resolves the selected original operation directly,
-including operations outside the first 32-item history page. It joins the exact
+One `TaskLocalResult` represents one Node completion manifest, with `git_results[]`
+sorted by resource ID. Each member's `identity_digest` is SHA-256 of canonical JSON
+for its full `ResultReadIdentity`. Backend resolves the selected original operation
+directly, including operations outside the first 32-item history page. It joins the exact
 canonical completion manifest, successful operation, Node completion and Attempt.
-The identity retains original attribution rather than current revisions:
+`resolveNodeResult(tx, taskId, operationId)` returns `{item, identities}` for the
+whole manifest. `resolveCanonicalResult` and `selectedTaskResult` additionally
+require `resourceId` and return `{item, git, identity}` for that exact member.
+Omitted resource selection must not fall back to the first member. The identity
+retains original attribution rather than current revisions:
 
 | Group | Required fields |
 | --- | --- |
 | Semantic | `task_id`, `operation_id`, `attempt_id`, `dispatch_id`, `node_id`, `node_activation`, `specification_id`, `plan_id`, `manifest_digest`, `operation_identity_digest` |
 | Physical | `workspace_id`, `resource_id`, `runner_id`, `storage_id`, `generation`, `lease_id`, `repository_identity`, `base_commit`, `git_commit`, `git_tree` |
+| Capture | `capture: {start_commit, node_commit, node_tree}` for the selected original member |
+
+`operation_identity_digest` binds the full original parent membership, including
+every workspace descriptor/digest and integration expectation. Backend uses exact
+`operation_workspace_results` lease projections; a Stop or settlement sibling's
+metadata cannot stand in for the selected resource's result. Capture start matches
+the allocation start, or the direct member's frozen finalized basis (initially its
+fixed base). Capture and optional integration must agree with the selected Git result.
 
 Browser supplies the advertised digest and read selection, never a filesystem
 path, arbitrary OID or executable command. The backend constructs the identity.
@@ -57,14 +70,16 @@ Cancellation/revision/replacement cannot relabel an old result current.
 Runner checks retained SQLite operation, Start and successful raw effect. Validate
 Start with `wire.ScopeID` and `host.ValidateEffectScope`, including consistent
 dispatch kind/Task/Node/activation/source. Verify canonical operation and workspace
-digests, effect identity and exact physical facts. Do not require the historical
-Attempt, boot, lease or generation to be live now. Do not expect raw effects to
+digests, full parent membership, selected member capture, effect identity and exact
+physical facts. Do not require the historical Attempt, boot, lease or generation
+to be live now. Do not expect raw effects to
 contain backend-added completion attribution.
 
 Validate both initialized storage records, trusted private export ancestors,
 ownership/modes, retained `refs/monos/result` bound to the original operation's
 directory/identity, exact commit/tree and fixed base. Read
-only the existing service-private `Root/results/<original operation_id>` export,
+only the existing service-private
+`Root/results/<original operation_id>/<workspace_id>` member export,
 including settlement that finalized that original operation. Missing evidence
 does not authorize clone/fetch/re-export, cache substitution or mutable-worktree
 reads. Normal completion preserves append-only ancestry; exporting the exact
@@ -73,8 +88,10 @@ result also retains its reachable fixed base.
 ### Content, limits and response
 
 `ResultReadRequest` has `identity`, `identity_digest`, `mode` (`changes`, `file`,
-`diff`) and only that mode's selection fields. `ResultReadResponse` has required
-`schema_version:1`, complete `request` echo and `status`; content fields are
+`diff`) and only that mode's selection fields. Remove HTTP `resource_id` before
+constructing this request: its authoritative value is already inside `identity`.
+`ResultReadResponse` has required `schema_version:1`, complete `request` echo and
+`status`; content fields are
 strictly mode/status specific. Runner must omit `current`; backend adds fresh
 boolean `current`, which Web requires. Correlation/socket/incarnation and exact
 request echo must all match before resolving an outstanding read.
@@ -98,6 +115,14 @@ both. Objects have OID/mode and byte size; gitlinks (`160000`) omit size. Comple
 scan overflow returns `scan_limit`, never a silently partial list. Cursor is
 canonical base64url JSON `{version:1,identity:<digest>,after:<safe integer>}`.
 It binds an immutable position, not authority; replay is deterministic.
+The identity includes resource selection, so another resource's cursor cannot be reused.
+
+Review and delivery retain one output per Node manifest with
+`sources:[{source,source_digest}]` covering all its Git members. Local candidate
+preparation selects the newest canonical completed result independently for each
+resource: a later Node touching only B does not remove the previous source for A.
+Publication candidate reads optionally filter `resource_id` in SQL and bind that
+filter, Task and source-operation selection into the cursor.
 
 Git commands use literal argument/path handling, no shell, external diff or
 textconv. Reject traversal, absolute/drive paths, backslash, NUL, empty segments
@@ -129,7 +154,7 @@ completed-result entries.
 | Condition | Outcome |
 | --- | --- |
 | Invalid query/path/Unicode/noncanonical cursor | `invalid_input`; reject before WSS admission |
-| Unknown Task/result or cross-result cursor | `denied_scope` |
+| Unknown Task/result/resource or cross-result/resource cursor | `denied_scope` |
 | Session mismatch/revoked/expired, including after read | `unauthorized`; suppress bytes |
 | Advertised digest or post-read identity changed | `version_conflict`; refresh metadata |
 | No connected owning instance/incarnation, closed socket or send failure | `offline`; release pending timer/slot |
@@ -167,6 +192,10 @@ Bad: serving the latest worktree file because an old export is missing, counting
 - Real PostgreSQL/WSS: genuine command-admitted completion chain beyond page one,
   carried/historical applicability, read racing cancellation and unchanged formal
   state/operation/lease/receipt/outbox facts.
+  Multi-repository cases cover one manifest with exact per-resource identities,
+  required resource selection, cross-resource cursor/digest rejection, full Review
+  source coverage and newest-candidate selection when later work touches only one
+  repository.
   Result fixture setup after acquiring a base fixture must close it on failure
   before rethrowing; assert disappearance of that exact owned namespace, not a
   global namespace count that can race other tests. Privately load the fixture's

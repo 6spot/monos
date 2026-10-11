@@ -87,7 +87,7 @@ func (d *Daemon) prepareRecovery(ctx context.Context, inventory protocol.RunnerI
 		}
 		dispatch, exists := dispatches[op.AttemptID]
 		// Only exact source-bound terminal effects gain repository-free replay.
-		nodeFree := dispatch.NodeExecutionSource != nil && (op.Kind == protocol.Stop || op.Kind == protocol.KindCompleteNode && op.RepositoryFree != nil && *op.RepositoryFree)
+		nodeFree := dispatch.NodeExecutionSource != nil && (op.Kind == protocol.Stop || op.Kind == protocol.KindCompleteNode && op.Workspaces != nil || op.Kind == protocol.SettleCompletion)
 		conversationStop := dispatch.TaskConversationSource != nil && op.Kind == protocol.Stop
 		if op.Inspection == nil && op.Workspace == nil && !nodeFree && !conversationStop && (op.Kind != protocol.Stop || dispatch.TaskPlanningSource == nil && dispatch.TaskReplanSource == nil && dispatch.TaskReviewSource == nil) {
 			continue

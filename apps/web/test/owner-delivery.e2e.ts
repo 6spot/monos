@@ -21,7 +21,7 @@ async function read<T>(page: Page, path: string): Promise<T> {
     return response.json();
   }, path);
 }
-async function scenario(page: Page, mode: 'repository_free'|'modified'|'no_change') {
+async function scenario(page: Page, mode: 'repository_free'|'modified'|'no_change'|'multi_deferred') {
   const value = await control<Scenario>(page, '/__test__/owner-delivery-scenario', { mode });
   await page.goto(`/#task?task_id=${value.task}&section=overview`);
   await expect(page.getByRole('heading',{name:'Acceptance and delivery',exact:true})).toBeVisible();
@@ -39,7 +39,7 @@ async function confirm(page: Page) {
   await expect(page.getByRole('dialog')).toContainText('Exact Owner confirmation recorded.');
 }
 async function capture(page: Page, info: TestInfo, name: string, state: string, dialog = false) {
-  const root = resolve('../..'), dir = resolve(root,`.trellis/tasks/10-03-a-owner-delivery/research/evidence/web-owner-delivery-${run}`);
+  const root = resolve('../..'), dir = resolve(root,`docs/research/evidence/multi-repository-ui-v1/owner-delivery-${run}`);
   await mkdir(dir,{recursive:true});
   const sourcePaths = [...execFileSync('rg',['--files','apps/web/src','packages/protocol/src','packages/protocol/schemas','packages/protocol/generated'],{cwd:root,encoding:'utf8'}).trim().split('\n'),'apps/web/test/owner-delivery.e2e.ts','apps/web/test/owner-delivery-server.ts','apps/web/owner-delivery.playwright.config.ts'].sort();
   const source = await Promise.all(sourcePaths.map(async path=>({path,sha256:createHash('sha256').update(await readFile(resolve(root,path))).digest('hex')})));
@@ -50,7 +50,7 @@ async function capture(page: Page, info: TestInfo, name: string, state: string, 
     await page.setViewportSize(viewport);await page.evaluate(()=>document.fonts.ready);
     if(!dialog)await page.getByRole('article',{name:'Accepted delivery batch',exact:true}).scrollIntoViewIfNeeded();
     if(dialog && viewport.label==='mobile'){
-      const action=page.getByRole('button',{name:'Accept & Merge',exact:true});
+      const action=page.getByRole('button',{name:'Accept delivery',exact:true});
       await action.scrollIntoViewIfNeeded();await expect(action).toBeInViewport();
     }
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`${name} page overflow`).toBe(true);
@@ -74,7 +74,7 @@ test('exact modified confirmation admits one frozen batch; later input, lost Ret
   await page.getByRole('button',{name:'Review exact result',exact:true}).click();
   expect((await control<Observed>(page,'/__test__/owner-delivery-observe')).receipts).toHaveLength(1);
   await confirm(page);await capture(page,info,'exact-confirmation','Actual prepared complete modified proposal and actual exact Owner confirmation; no acceptance yet',true);
-  await page.getByRole('button',{name:'Accept & Merge',exact:true}).click();
+  await page.getByRole('button',{name:'Accept delivery',exact:true}).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);await expect(section(page)).toContainText('The accepted result is frozen.');
   const accepted=await control<Observed>(page,'/__test__/owner-delivery-observe');expect(accepted.batch).toHaveLength(1);
   const original=accepted.batch[0]!;expect(accepted.receipts.filter(value=>value.envelope.name==='accept_delivery')).toHaveLength(1);
@@ -116,6 +116,39 @@ test('repository-free acceptance completes locally and preserves immutable accep
   expect(detail.manifest.repositories).toEqual([]);expect(detail.items).toEqual([]);expect(detail.batch.status).toBe('completed');
   expect((await control<Observed>(page,'/__test__/owner-delivery-observe')).provider_calls).toBe(0);
   await capture(page,info,'local-completed','Actual repository-free Owner acceptance and atomic local Task completion, zero provider calls');
+});
+
+test('deferred multi-repository acceptance retains partial success and retries only the remainder', async ({ page }, info) => {
+  const f = await scenario(page, 'multi_deferred');
+  expect((await control<Observed>(page, '/__test__/owner-delivery-observe')).provider_calls).toBe(0);
+  await prepare(page);
+  await expect(page.getByRole('dialog')).toContainText('1 completed output · 2 modified repositories.');
+  await expect(page.getByRole('dialog')).toContainText('github.com/example/multi-0');
+  await expect(page.getByRole('dialog')).toContainText('github.com/example/multi-1');
+  await confirm(page);
+  await page.getByRole('button', { name: 'Accept delivery', exact: true }).click();
+  await expect(section(page)).toContainText('0 of 2 repository items finalized.');
+  await control(page, '/__test__/owner-delivery-multi-progress', { action: 'partial' });
+  await expect(section(page)).toContainText('1 of 2 repository items finalized.');
+  await expect(page.getByRole('article', { name: 'Accepted delivery batch', exact: true })).toContainText('Finalized · github.com/example/multi-0');
+  await expect(page.getByRole('article', { name: 'Accepted delivery batch', exact: true })).toContainText('Failed · github.com/example/multi-1');
+  await expect(page.getByRole('button', { name: 'Retry accepted delivery', exact: true })).toBeEnabled();
+  const status = await read<OwnerDeliveryStatus>(page, `/v1/owner/tasks/${f.task}/delivery`);
+  const id = status.batches[0]!.operation_id;
+  const partial = await read<DeliveryBatch>(page, `/v1/owner/tasks/${f.task}/delivery/batches/${id}`);
+  const delivered = partial.items.find(item => item.status === 'finalized')!;
+  expect(partial.manifest.repositories).toHaveLength(2);
+  expect(partial.batch.status).toBe('failed');
+  await capture(page, info, 'multi-repository-partial', 'Actual exact acceptance, preparation and delivery worker; synthetic second provider rejects after first verified merge. First finalization remains durable.');
+  await page.getByRole('button', { name: 'Retry accepted delivery', exact: true }).click();
+  await expect(section(page)).not.toContainText('Accepted delivery · Failed');
+  await control(page, '/__test__/owner-delivery-multi-progress', { action: 'resume' });
+  await expect(section(page)).toContainText('2 of 2 repository items finalized.');
+  await expect(section(page)).toContainText('This accepted delivery is complete.');
+  const completed = await read<DeliveryBatch>(page, `/v1/owner/tasks/${f.task}/delivery/batches/${id}`);
+  expect(completed.items.find(item => item.item_id === delivered.item_id)).toEqual(delivered);
+  expect(completed.manifest).toEqual(partial.manifest);
+  await capture(page, info, 'multi-repository-completed', 'Actual remaining-item Retry completes the frozen two-repository batch; first finalization is unchanged. Remote provider responses are synthetic.');
 });
 
 test('held delivery reads cannot restore another Task or a signed-out session',async({page})=>{

@@ -200,12 +200,12 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('canonical Node executi
   ) {
     const c = await agent(a, 'complete_node', payload);
     const operation = await service.recoverOperation(f.runner, c.result.operation_id!);
-    expect(operation.repository_free).toBe(true);
+    expect(operation.workspaces).toEqual([]);
     await service.finishOperation(f.runner, f.incarnation, {
       operation_id: operation.operation_id,
       attempt_id: a.dispatch.attempt_id,
       success: true,
-      result: { writer_absent: true },
+      result: { writer_absent: true, completion_outcome: 'finalized', workspace_results: [] },
     });
     return c;
   }
@@ -250,7 +250,7 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('canonical Node executi
     expect((await db.pool.query('SELECT state FROM tasks WHERE id=$1', [f.task])).rows[0].state).toBe('REVIEW');
     expect(
       (await db.pool.query('SELECT result FROM operations WHERE id=$1', [c.result.operation_id])).rows[0].result
-    ).toEqual({ writer_absent: true });
+    ).toEqual({ writer_absent: true, completion_outcome: 'finalized', workspace_results: [] });
     expect((await ownerArtifact(db, token, f.task, id)).metadata.content_digest).toBe(digest(html));
     expect((await ownerArtifacts(db, token, f.task)).artifacts).toHaveLength(1);
     expect((await service.admit(a.credential, submission(published.command))).result).toEqual(published.result.result);
@@ -357,12 +357,13 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('canonical Node executi
     const f = await setup();
     const a = await launch(f);
     const c = await agent(a, 'complete_node', { summary: 'Done' });
-    await owner(f.task, 'cancel_task', { specification_id: f.spec, plan_id: f.plan });
+    const cancelled = await owner(f.task, 'cancel_task', { specification_id: f.spec, plan_id: f.plan });
     await service.finishOperation(f.runner, f.incarnation, {
-      operation_id: c.result.operation_id!,
-      attempt_id: a.dispatch.attempt_id,
-      success: true,
+      operation_id: cancelled.result.operation_id!, attempt_id: a.dispatch.attempt_id, success: true,
       result: { writer_absent: true },
+      completion_settlement: { completion_operation_id: c.result.operation_id!, disposition: 'already_finalized',
+        completion_result: { operation_id: c.result.operation_id!, attempt_id: a.dispatch.attempt_id, success: true,
+          result: { writer_absent: true, completion_outcome: 'finalized', workspace_results: [] } } },
     });
     expect((await db.pool.query('SELECT state FROM tasks WHERE id=$1', [f.task])).rows[0].state).toBe('CANCELLED');
     expect((await db.pool.query('SELECT 1 FROM node_completions')).rowCount).toBe(0);
@@ -407,7 +408,7 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('canonical Node executi
         operation_id: c.result.operation_id!,
         attempt_id: a.dispatch.attempt_id,
         success: true,
-        result: { writer_absent: true },
+        result: { writer_absent: true, completion_outcome: 'finalized', workspace_results: [] },
       });
       expect((await execution.status(token, f.task, f.node)).state).toBe('COMPLETED');
     },
@@ -492,11 +493,11 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('canonical Node executi
       attempt_id: w.a.dispatch.attempt_id,
       success: true,
       result: {
-        writer_absent: true,
-        workspace_id: w.w.workspace_id,
+        writer_absent: true, completion_outcome: 'finalized' as const,
+        workspace_results: [{ resource_id: w.w.resource_id, workspace_id: w.w.workspace_id,
         workspace_metadata: { ...w.metadata, finalized_commit: commit },
-        git_commit: commit,
-        git_tree: tree,
+        capture: { start_commit: w.metadata.finalized_commit, node_commit: commit, node_tree: tree },
+        git_commit: commit, git_tree: tree }],
       },
     });
     expect((await execution.status(token, w.f.task, w.f.node)).state).toBe('COMPLETED');
@@ -523,7 +524,7 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('canonical Node executi
       success: true,
       result: {
         writer_absent: true,
-        workspace_id: w.w.workspace_id,
+        workspace_results: [{ resource_id: w.w.resource_id, workspace_id: w.w.workspace_id,
         workspace_metadata: {
           ...w.metadata,
           checkpoint: {
@@ -534,7 +535,7 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('canonical Node executi
             completion_operation_id: c.result.operation_id!,
             completion_identity_digest: settlement.completion_identity_digest!,
           },
-        },
+        } }],
       },
       completion_settlement: {
         completion_operation_id: c.result.operation_id!,
@@ -553,7 +554,7 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('canonical Node executi
     expect(diagnostics.workspaces[0]).toMatchObject({
       lease_state: 'released', settle_operation_id: c.result.operation_id, settle_state: 'cancelled',
       metadata_operation_id: settlement.operation_id,
-      metadata: pair.result.workspace_metadata,
+      metadata: pair.result.workspace_results[0]!.workspace_metadata,
     });
     expect(diagnostics.workspaces[0]!.metadata!.checkpoint!.operation_id).toBe(settlement.operation_id);
     const status = await execution.status(token, w.f.task, w.f.node);
@@ -586,11 +587,11 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('canonical Node executi
           attempt_id: w.a.dispatch.attempt_id,
           success: true,
           result: {
-            writer_absent: true,
-            workspace_id: w.w.workspace_id,
+            writer_absent: true, completion_outcome: 'finalized' as const,
+            workspace_results: [{ resource_id: w.w.resource_id, workspace_id: w.w.workspace_id,
             workspace_metadata: { ...w.metadata, finalized_commit: commit },
-            git_commit: commit,
-            git_tree: tree,
+            capture: { start_commit: w.metadata.finalized_commit, node_commit: commit, node_tree: tree },
+            git_commit: commit, git_tree: tree }],
           },
         },
       },
@@ -601,7 +602,7 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('canonical Node executi
     expect((await attemptWorkspace(db, token, w.f.task, w.a.dispatch.attempt_id)).workspaces[0]).toMatchObject({
       lease_state: 'released', settle_operation_id: c.result.operation_id, settle_state: 'succeeded',
       metadata_operation_id: c.result.operation_id,
-      metadata: pair.completion_settlement.completion_result.result.workspace_metadata,
+      metadata: pair.completion_settlement.completion_result.result.workspace_results[0]!.workspace_metadata,
     });
     expect((await db.pool.query('SELECT 1 FROM node_execution_outbox')).rowCount).toBe(1);
   }, 20000);
@@ -632,7 +633,7 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('canonical Node executi
       success: true,
       result: {
         writer_absent: true,
-        workspace_id: w.w.workspace_id,
+        workspace_results: [{ resource_id: w.w.resource_id, workspace_id: w.w.workspace_id,
         workspace_metadata: {
           ...w.metadata,
           checkpoint: {
@@ -643,7 +644,7 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('canonical Node executi
             completion_operation_id: c.result.operation_id!,
             completion_identity_digest: settlement.completion_identity_digest!,
           },
-        },
+        } }],
       },
       completion_settlement: {
         completion_operation_id: c.result.operation_id!,

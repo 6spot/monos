@@ -33,7 +33,7 @@ func TestConversationRootScopeGrantsOnlyScratchAndOriginalStop(t *testing.T) {
 	}
 	for _, change := range []func(*protocol.Operation){
 		func(o *protocol.Operation) { o.Kind = protocol.KindOpenWorkspace }, func(o *protocol.Operation) { o.Kind = protocol.KindInspectRepository }, func(o *protocol.Operation) { o.Kind = protocol.KindCompleteNode }, func(o *protocol.Operation) { o.Kind = protocol.SettleCompletion },
-		func(o *protocol.Operation) { o.ResourceID = ptr("fixture") }, func(o *protocol.Operation) { o.Workspace = &protocol.WorkspaceDescriptor{} }, func(o *protocol.Operation) { o.WorkspaceDigest = ptr(strings.Repeat("a", 64)) }, func(o *protocol.Operation) { o.RepositoryFree = ptr(true) }, func(o *protocol.Operation) { o.CompletionManifestDigest = ptr(strings.Repeat("a", 64)) },
+		func(o *protocol.Operation) { o.ResourceID = ptr("fixture") }, func(o *protocol.Operation) { o.Workspace = &protocol.WorkspaceDescriptor{} }, func(o *protocol.Operation) { o.WorkspaceDigest = ptr(strings.Repeat("a", 64)) }, func(o *protocol.Operation) { o.Workspaces = []protocol.WorkspaceCompletionInput{} }, func(o *protocol.Operation) { o.CompletionManifestDigest = ptr(strings.Repeat("a", 64)) },
 	} {
 		bad := op
 		change(&bad)

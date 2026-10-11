@@ -2,6 +2,9 @@ package host
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -11,212 +14,262 @@ import (
 	"monos.local/runner/internal/wire"
 )
 
-func allocationCapture(t *testing.T, f integrationFixture, operation string, files map[string]string) (operationRecord, protocol.WorkspaceMetadata, integrationWorkspacePaths) {
+type completionBatchFixture struct {
+	record       operationRecord
+	repositories []integrationFixture
+	paths        []integrationWorkspacePaths
+	journal      string
+}
+
+func newCompletionBatchFixture(t *testing.T, conflict bool) *completionBatchFixture {
 	t.Helper()
-	_, op := canonicalWorkspace(t)
-	op.Kind, op.OperationID = protocol.KindCompleteNode, operation
-	op.Integration = &protocol.WorkspaceIntegration{ExpectedTaskCommit: f.base}
-	op.Workspace.Isolation = &protocol.WorkspaceIsolation{AllocationID: "allocation-" + operation}
-	op.Workspace.LeaseID = "lease-" + operation
-	metadata := protocol.WorkspaceMetadata{StorageID: "storage", BaseCommit: f.base, FinalizedCommit: f.base, Generation: 1, LeaseID: op.Workspace.LeaseID, RepositoryIdentity: op.Workspace.Resource.RepositoryIdentity, TargetBranch: "master", TargetCommit: f.base, Isolation: &protocol.WorkspaceIsolationMetadata{AllocationID: op.Workspace.Isolation.AllocationID, StartCommit: f.base}}
-	paths := integrationWorkspacePaths{workspace: filepath.Join(f.root, "tree-"+operation), common: filepath.Join(f.root, "common-"+operation), cache: f.task, nodeResult: filepath.Join(f.root, "nodes", operation), taskRepository: filepath.Join(f.root, "canonical", "task.git"), result: filepath.Join(f.root, "results", operation)}
-	for _, dir := range []string{paths.common, filepath.Dir(paths.result)} {
-		if err := os.MkdirAll(dir, 0700); err != nil {
-			t.Fatal(err)
-		}
-	}
-	f.git(f.root, "clone", "--bare", "--no-local", f.seed, paths.common)
-	f.git(paths.common, "worktree", "add", "--detach", paths.workspace, f.base)
-	for name, content := range files {
-		if err := os.WriteFile(filepath.Join(paths.workspace, name), []byte(content), 0600); err != nil {
-			t.Fatal(err)
-		}
-	}
-	capture, err := finalize(paths.workspace, paths.common, operation, f.base)
-	if err != nil {
-		t.Fatal(err)
-	}
-	capturedMetadata := metadata
-	capturedMetadata.FinalizedCommit = *capture.GitCommit
-	capture.WorkspaceID, capture.WorkspaceMetadata = &op.Workspace.WorkspaceID, &capturedMetadata
-	return operationRecord{Operation: op, IntegrationStarted: true, FinalizationResult: &capture, WorkspaceAction: "integrate"}, metadata, paths
-}
-
-func TestWorkspaceIntegrationEffectExportsTaskAndPrivateNodeSeparately(t *testing.T) {
 	if os.Geteuid() == 0 {
-		t.Skip("service export intentionally rejects root; run as unprivileged service identity")
+		t.Skip("service export rejects root; run as unprivileged service identity")
 	}
-	f := newIntegrationFixture(t)
-	a, am, ap := allocationCapture(t, f, "a", map[string]string{"a.txt": "a\n"})
-	b, bm, bp := allocationCapture(t, f, "b", map[string]string{"b.txt": "b\n"})
-	if _, err := exportWorkspaceCaptureAt(a, am, ap); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := exportWorkspaceCaptureAt(b, bm, bp); err != nil {
-		t.Fatal(err)
-	}
-	// Once exported, the protected object is authoritative even if an execution
-	// repository's convenient refs later differ. Integration never reexports it.
-	f.git(ap.common, "update-ref", "refs/monos/operations/a", f.base)
-	f.git(ap.workspace, "update-ref", "HEAD", f.base)
-	one, err := integrateWorkspaceCaptureAt(context.Background(), a, am, ap)
-	if err != nil {
-		t.Fatal(err)
-	}
-	b.Operation.Integration.ExpectedTaskCommit = *one.GitCommit
-	two, err := integrateWorkspaceCaptureAt(context.Background(), b, bm, bp)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if two.Integration == nil || string(two.Integration.Outcome) != "integrated" || two.Integration.NodeCommit != *b.FinalizationResult.GitCommit || two.Integration.TaskCommit != *two.GitCommit || two.WorkspaceMetadata.FinalizedCommit != *two.GitCommit || two.WorkspaceMetadata.Isolation.StartCommit != f.base {
-		t.Fatalf("integration lost input/private/Task distinction: %#v", two)
-	}
-	if err = verifyProtectedWorkspaceResult(bp.result, *two.GitCommit, *two.GitTree); err != nil {
-		t.Fatal(err)
-	}
-	if err = verifyProtectedWorkspaceResult(bp.nodeResult, two.Integration.NodeCommit, two.Integration.NodeTree); err != nil {
-		t.Fatal(err)
-	}
-	if f.git(bp.workspace, "rev-parse", "HEAD") != two.Integration.NodeCommit || f.git(bp.workspace, "rev-parse", "--git-common-dir") == f.git(ap.workspace, "rev-parse", "--git-common-dir") {
-		t.Fatal("integration changed Node revision or shared writable Git state")
-	}
-	// A join's new independent clone checks out both integrated branch results.
-	joinCommon, joinTree := filepath.Join(f.root, "join.git"), filepath.Join(f.root, "join")
-	for _, dir := range []string{joinCommon, joinTree} {
-		if err = os.Mkdir(dir, 0700); err != nil {
+	_, parent, _ := completionOperations(t)
+	template := parent.Workspaces[0].Workspace
+	parent.Workspaces = nil
+	fixture := &completionBatchFixture{record: operationRecord{Operation: parent, BootID: "boot", Completion: &completionProgress{}}, journal: filepath.Join(t.TempDir(), "parent.json")}
+	for i := 0; i < 2; i++ {
+		f := newIntegrationFixture(t)
+		w := template
+		w.ResourceID = fmt.Sprintf("resource-%d", i)
+		w.Resource.ResourceID = w.ResourceID
+		w.WorkspaceID, _ = TaskWorkspaceID(w.TaskID, w.ResourceID)
+		w.OpenOperationID = fmt.Sprintf("open-%d", i)
+		w.LeaseID = fmt.Sprintf("lease-%d", i)
+		w.Isolation = &protocol.WorkspaceIsolation{AllocationID: fmt.Sprintf("allocation-%d", i)}
+		_, digest, _ := wire.Canonical(w)
+		input := protocol.WorkspaceCompletionInput{Workspace: w, WorkspaceDigest: digest, Integration: &protocol.WorkspaceIntegration{ExpectedTaskCommit: f.base}}
+		metadata := protocol.WorkspaceMetadata{StorageID: "storage", BaseCommit: f.base, FinalizedCommit: f.base, Generation: w.Generation, LeaseID: w.LeaseID, RepositoryIdentity: w.Resource.RepositoryIdentity, TargetBranch: "master", TargetCommit: f.base, Isolation: &protocol.WorkspaceIsolationMetadata{AllocationID: w.Isolation.AllocationID, StartCommit: f.base}}
+		paths := integrationWorkspacePaths{workspace: filepath.Join(f.root, "workspace"), common: filepath.Join(f.root, "common"), nodeResult: filepath.Join(f.root, "nodes", parent.OperationID, w.WorkspaceID), taskRepository: f.task, result: filepath.Join(f.root, "results", w.WorkspaceID), cache: f.seed}
+		f.git(f.root, "clone", "--bare", "--no-local", f.seed, paths.common)
+		f.git(paths.common, "worktree", "add", "--detach", paths.workspace, f.base)
+		if err := os.WriteFile(filepath.Join(paths.workspace, "shared.txt"), []byte(fmt.Sprintf("node result %d\n", i)), 0600); err != nil {
 			t.Fatal(err)
 		}
-	}
-	f.git(f.task, "fetch", bp.result, *two.GitCommit)
-	for name, commit := range map[string]string{"base": f.base, "target": f.base, "finalized": *two.GitCommit} {
-		f.git(f.task, "update-ref", "refs/monos/pins/join/"+name, commit)
-	}
-	joinMetadata := *two.WorkspaceMetadata
-	joinMetadata.Isolation = &protocol.WorkspaceIsolationMetadata{AllocationID: "join", StartCommit: *two.GitCommit}
-	if err = clonePinned(f.task, joinCommon, joinMetadata, "join"); err != nil {
-		t.Fatal(err)
-	}
-	if err = checkoutPinned(joinTree, joinCommon, f.task, joinMetadata.FinalizedCommit); err != nil {
-		t.Fatal(err)
-	}
-	for _, name := range []string{"a.txt", "b.txt"} {
-		if _, err = os.Stat(filepath.Join(joinTree, name)); err != nil {
-			t.Fatalf("join did not receive %s: %v", name, err)
+		if _, err := ensureProtectedTaskRepositoryItemAt(context.Background(), &w, input.Integration, metadata, paths.taskRepository, paths.cache); err != nil {
+			t.Fatal(err)
 		}
+		if conflict && i == 1 {
+			other := f.input("preceding", map[string]string{"shared.txt": "other task result\n"})
+			integrated := f.integrate(other)
+			input.Integration.ExpectedTaskCommit = integrated.TaskCommit
+		}
+		fixture.record.Operation.Workspaces = append(fixture.record.Operation.Workspaces, input)
+		fixture.record.Completion.Items = append(fixture.record.Completion.Items, completionItemProgress{WorkspaceID: w.WorkspaceID, Metadata: metadata})
+		fixture.repositories = append(fixture.repositories, f)
+		fixture.paths = append(fixture.paths, paths)
 	}
-	replay, err := integrateWorkspaceCaptureAt(context.Background(), a, am, ap)
-	if err != nil || !reflect.DeepEqual(replay, one) {
-		t.Fatalf("earlier physical completion replay changed: %#v %v", replay, err)
+	if err := saveRecord(fixture.journal, fixture.record); err != nil {
+		t.Fatal(err)
 	}
+	return fixture
 }
 
-func TestWorkspaceIntegrationEffectConflictExportsOnlyPrivateResult(t *testing.T) {
-	if os.Geteuid() == 0 {
-		t.Skip("service export intentionally rejects root; run as unprivileged service identity")
-	}
-	f := newIntegrationFixture(t)
-	a, am, ap := allocationCapture(t, f, "first", map[string]string{"shared.txt": "first\n"})
-	b, bm, bp := allocationCapture(t, f, "conflict", map[string]string{"shared.txt": "second\n"})
-	if _, err := exportWorkspaceCaptureAt(a, am, ap); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := exportWorkspaceCaptureAt(b, bm, bp); err != nil {
-		t.Fatal(err)
-	}
-	one, err := integrateWorkspaceCaptureAt(context.Background(), a, am, ap)
+var errCompletionCrash = errors.New("injected process loss")
+
+func (f *completionBatchFixture) advance(fault string, cancelled bool) (Status, error) {
+	return advanceCompletionBatch(&f.record, func(index int, action string) (Status, error) {
+		f.record.WorkspaceAction = action
+		status, err := performCompletionItemAt(context.Background(), f.record, f.record.Operation.Workspaces[index], f.record.Completion.Items[index], f.paths[index])
+		if err == nil && fault == fmt.Sprintf("%d:%s", index, action) {
+			return status, errCompletionCrash
+		}
+		return status, err
+	}, func() error { return saveRecord(f.journal, f.record) }, func(decision string) error {
+		if cancelled {
+			return fmt.Errorf("parent fenced before decision")
+		}
+		f.record.Completion.Decision = decision
+		if err := saveRecord(f.journal, f.record); err != nil {
+			return err
+		}
+		if fault == "decision" {
+			return errCompletionCrash
+		}
+		return nil
+	})
+}
+
+func (f *completionBatchFixture) reload(t *testing.T) {
+	t.Helper()
+	raw, err := os.ReadFile(f.journal)
 	if err != nil {
 		t.Fatal(err)
 	}
-	b.Operation.Integration.ExpectedTaskCommit = *one.GitCommit
-	conflict, err := integrateWorkspaceCaptureAt(context.Background(), b, bm, bp)
-	if err != nil || conflict.Integration == nil || string(conflict.Integration.Outcome) != "conflict" || conflict.GitCommit != nil || conflict.GitTree != nil || conflict.WorkspaceMetadata.FinalizedCommit != f.base || conflict.Integration.TaskCommit != *one.GitCommit {
-		t.Fatalf("invalid terminal conflict: %#v %v", conflict, err)
-	}
-	if err = verifyProtectedWorkspaceResult(bp.result, conflict.Integration.NodeCommit, conflict.Integration.NodeTree); err != nil {
+	if err = json.Unmarshal(raw, &f.record); err != nil {
 		t.Fatal(err)
-	}
-	if f.git(bp.taskRepository, "rev-parse", WorkspaceTaskFinalizedRef) != *one.GitCommit || f.git(bp.workspace, "rev-parse", "HEAD") != conflict.Integration.NodeCommit {
-		t.Fatal("conflict changed canonical Task or private Node history")
 	}
 }
 
-func TestWorkspaceIntegrationEffectRequiresExactCaptureAndStartBarrier(t *testing.T) {
-	f := newIntegrationFixture(t)
-	r, metadata, paths := allocationCapture(t, f, "authority", map[string]string{"new.txt": "new\n"})
-	if err := validateIntegrationCapture(r.Operation, metadata, r.FinalizationResult); err != nil {
+func TestCompletionBatchPreparesAllBeforePublishingAndRetainsEveryCapture(t *testing.T) {
+	for _, conflict := range []bool{false, true} {
+		t.Run(fmtBool(conflict), func(t *testing.T) {
+			f := newCompletionBatchFixture(t, conflict)
+			identity, _ := wire.OperationIdentity(f.record.Operation)
+			result, err := f.advance("", false)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err = wire.ValidateCompletionResult(f.record.Operation, *result.Result); err != nil {
+				t.Fatal(err)
+			}
+			if got, _ := wire.OperationIdentity(f.record.Operation); got != identity {
+				t.Fatal("item stages changed true parent identity")
+			}
+			for i, item := range result.Result.WorkspaceResults {
+				repo, p := f.repositories[i], f.paths[i]
+				expected := f.record.Operation.Workspaces[i].Integration.ExpectedTaskCommit
+				if conflict {
+					if *result.Result.CompletionOutcome != "conflict" || item.GitCommit != nil || item.GitTree != nil || item.WorkspaceMetadata.FinalizedCommit != repo.base {
+						t.Fatal("partial completion on conflict")
+					}
+					if i == 0 && item.Integration != nil {
+						t.Fatal("clean unpublished sibling claimed integration")
+					}
+				} else {
+					expected = *item.GitCommit
+				}
+				if repo.git(repo.task, "rev-parse", WorkspaceTaskFinalizedRef) != expected {
+					t.Fatal("canonical ref differs from whole-parent decision")
+				}
+				if err = verifyProtectedWorkspaceResult(p.nodeResult, item.Capture.NodeCommit, item.Capture.NodeTree); err != nil {
+					t.Fatal(err)
+				}
+				commit, tree := item.Capture.NodeCommit, item.Capture.NodeTree
+				if !conflict {
+					commit, tree = *item.GitCommit, *item.GitTree
+				}
+				if err = verifyProtectedWorkspaceResult(p.result, commit, tree); err != nil {
+					t.Fatal(err)
+				}
+			}
+			replay, err := f.advance("", false)
+			if err != nil || !reflect.DeepEqual(replay.Result, result.Result) {
+				t.Fatal("replay changed aggregate", err)
+			}
+		})
+	}
+}
+
+func TestCompletionBatchRecoversEveryGitAndDecisionBoundary(t *testing.T) {
+	for _, fault := range []string{"0:capture", "0:protect", "1:capture", "1:protect", "0:prepare", "1:prepare", "decision", "0:publish", "0:export", "1:publish", "1:export"} {
+		t.Run(fault, func(t *testing.T) {
+			f := newCompletionBatchFixture(t, false)
+			if _, err := f.advance(fault, false); !errors.Is(err, errCompletionCrash) {
+				t.Fatal("fault boundary not reached", err)
+			}
+			f.reload(t)
+			if f.record.Settled {
+				t.Fatal("individual worker marked parent settled")
+			}
+			published := f.record.Completion.Decision == "publish"
+			if !published {
+				for i, repo := range f.repositories {
+					if repo.git(repo.task, "rev-parse", WorkspaceTaskFinalizedRef) != f.record.Operation.Workspaces[i].Integration.ExpectedTaskCommit {
+						t.Fatal("preparation published a Task ref")
+					}
+				}
+			}
+			// Once the durable publish decision exists, a later cancellation cannot turn
+			// a partially published parent into checkpoints, even before the first ref.
+			result, err := f.advance("", published)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err = wire.ValidateCompletionResult(f.record.Operation, *result.Result); err != nil {
+				t.Fatal(err)
+			}
+			for i, item := range result.Result.WorkspaceResults {
+				if f.repositories[i].git(f.repositories[i].task, "rev-parse", WorkspaceTaskFinalizedRef) != *item.GitCommit {
+					t.Fatal("recovery failed to roll every member forward")
+				}
+			}
+		})
+	}
+}
+
+func TestCompletionBatchCancellationBeforeDecisionCannotPublish(t *testing.T) {
+	f := newCompletionBatchFixture(t, false)
+	if _, err := f.advance("1:prepare", false); !errors.Is(err, errCompletionCrash) {
 		t.Fatal(err)
 	}
-	r.IntegrationStarted = false
-	if _, err := integrateWorkspaceCaptureAt(context.Background(), r, metadata, paths); err == nil {
-		t.Fatal("integration started without root barrier")
+	f.reload(t)
+	if _, err := f.advance("", true); err == nil {
+		t.Fatal("fenced completion selected publish")
 	}
-	if _, err := os.Stat(filepath.Dir(paths.nodeResult)); !os.IsNotExist(err) {
-		t.Fatal("missing start barrier still caused export mutation")
-	}
-	changed := *r.FinalizationResult
-	changedMetadata := *changed.WorkspaceMetadata
-	changedMetadata.Isolation = &protocol.WorkspaceIsolationMetadata{AllocationID: "foreign", StartCommit: f.base}
-	changed.WorkspaceMetadata = &changedMetadata
-	if err := validateIntegrationCapture(r.Operation, metadata, &changed); err == nil {
-		t.Fatal("foreign allocation capture accepted")
-	}
-	changed = *r.FinalizationResult
-	changed.WriterAbsent = ptr(false)
-	if err := validateIntegrationCapture(r.Operation, metadata, &changed); err == nil {
-		t.Fatal("live capture accepted")
+	for i, repo := range f.repositories {
+		if repo.git(repo.task, "rev-parse", WorkspaceTaskFinalizedRef) != f.record.Operation.Workspaces[i].Integration.ExpectedTaskCommit {
+			t.Fatal("cancelled preparation advanced a Task")
+		}
 	}
 }
 
 func TestWorkspaceIntegrationEffectMissingInitializedTaskIsNotRecloned(t *testing.T) {
-	f := newIntegrationFixture(t)
-	r, metadata, paths := allocationCapture(t, f, "retained", nil)
-	if _, err := ensureProtectedTaskRepositoryAt(context.Background(), r.Operation, metadata, paths.taskRepository, paths.cache); err != nil {
+	f := newCompletionBatchFixture(t, false)
+	input, p := f.record.Operation.Workspaces[0], f.paths[0]
+	if err := os.Rename(p.taskRepository, p.taskRepository+"-lost"); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.Rename(paths.taskRepository, paths.taskRepository+"-lost"); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := ensureProtectedTaskRepositoryAt(context.Background(), r.Operation, metadata, paths.taskRepository, paths.cache); err == nil {
+	if _, err := ensureProtectedTaskRepositoryItemAt(context.Background(), &input.Workspace, input.Integration, f.record.Completion.Items[0].Metadata, p.taskRepository, p.cache); err == nil {
 		t.Fatal("silently recreated lost canonical Task history")
 	}
-	if _, err := os.Stat(paths.taskRepository); !os.IsNotExist(err) {
+	if _, err := os.Stat(p.taskRepository); !os.IsNotExist(err) {
 		t.Fatal("failed recovery changed retained storage")
 	}
 }
 
-func TestIsolatedCompletionCancellationBeforeIntegrationPreservesPrivateFinalization(t *testing.T) {
-	dir, common, base := completionGit(t)
-	_, original, settle := completionOperations(t)
-	original.Workspace.Isolation = &protocol.WorkspaceIsolation{AllocationID: "cancelled-allocation"}
-	original.Integration = &protocol.WorkspaceIntegration{ExpectedTaskCommit: base}
-	_, descriptorDigest, _ := wire.Canonical(original.Workspace)
-	original.WorkspaceDigest = &descriptorDigest
-	settle.Workspace, settle.WorkspaceDigest = original.Workspace, original.WorkspaceDigest
-	identity, err := wire.OperationIdentity(original)
+func TestCompletionConflictSourceUsesMatchingCleanSiblingCapture(t *testing.T) {
+	f := newCompletionBatchFixture(t, true)
+	status, err := f.advance("", false)
 	if err != nil {
 		t.Fatal(err)
 	}
-	settle.CompletionIdentityDigest = &identity
-	writeCompletionFile(t, dir, "file", "private completed edits\n")
-	writeCompletionFile(t, dir, "ignored", "untracked private data\n")
-	finalized, err := finalize(dir, common, original.OperationID, base)
-	if err != nil {
+	parent := f.record.Operation
+	input, item := parent.Workspaces[0], status.Result.WorkspaceResults[0]
+	d, _ := canonicalWorkspace(t)
+	target := protocol.Operation{AttemptID: "retry-attempt", DispatchID: "retry-dispatch", Kind: protocol.KindOpenWorkspace}
+	w := input.Workspace
+	w.Isolation = &protocol.WorkspaceIsolation{AllocationID: "retry-allocation"}
+	target.Workspace = &w
+	source := protocol.WorkspaceCanonicalSource{Kind: string(protocol.KindCompleteNode), OperationID: parent.OperationID, AttemptID: parent.AttemptID, Metadata: item.WorkspaceMetadata, Capture: item.Capture, CompletionOutcome: status.Result.CompletionOutcome}
+	if item.Integration != nil {
+		t.Fatal("fixture clean sibling must omit integration")
+	}
+	if err = validateWorkspaceSourceFacts(target, source, parent, status, *status.Result, Manifest{Dispatch: d}, true); err != nil {
 		t.Fatal(err)
 	}
-	index := readCompletionFile(t, filepath.Join(common, "index"))
-	metadata := protocol.WorkspaceMetadata{StorageID: "storage", Generation: original.Workspace.Generation, LeaseID: original.Workspace.LeaseID, RepositoryIdentity: original.Workspace.Resource.RepositoryIdentity, BaseCommit: base, FinalizedCommit: base, TargetBranch: "main", TargetCommit: base, Isolation: &protocol.WorkspaceIsolationMetadata{AllocationID: original.Workspace.Isolation.AllocationID, StartCommit: base}}
-	status, err := settlementWorker(settle, original, metadata, dir, common)
-	if err != nil {
+	for _, edit := range []func(*protocol.WorkspaceCanonicalSource){func(s *protocol.WorkspaceCanonicalSource) { s.Capture = nil }, func(s *protocol.WorkspaceCanonicalSource) { s.Capture = status.Result.WorkspaceResults[1].Capture }, func(s *protocol.WorkspaceCanonicalSource) { s.CompletionOutcome = ptr("finalized") }} {
+		changed := source
+		edit(&changed)
+		if validateWorkspaceSourceFacts(target, changed, parent, status, *status.Result, Manifest{Dispatch: d}, true) == nil {
+			t.Fatal("crossed capture or parent outcome accepted")
+		}
+	}
+}
+
+func TestCompletionProgressRejectsChangedMembershipCaptureAndDecision(t *testing.T) {
+	f := newCompletionBatchFixture(t, false)
+	if _, err := f.advance("", false); err != nil {
 		t.Fatal(err)
 	}
-	if status.CompletionSettlement.Disposition != protocol.DispositionCancelled || status.CompletionSettlement.CompletionResult.Success || status.Result.WorkspaceMetadata.Checkpoint == nil || status.Result.WorkspaceMetadata.FinalizedCommit != base {
-		t.Fatalf("private finalization granted integrated completion: %#v", status)
-	}
-	if gitOK(t, dir, "rev-parse", "HEAD") != *finalized.GitCommit || !reflect.DeepEqual(index, readCompletionFile(t, filepath.Join(common, "index"))) || string(readCompletionFile(t, filepath.Join(dir, "ignored"))) != "untracked private data\n" {
-		t.Fatal("cancellation changed finalized history, index or ignored bytes")
-	}
-	pair := protocol.OperationResult{AttemptID: settle.AttemptID, OperationID: settle.OperationID, Success: true, Result: *status.Result, CompletionSettlement: status.CompletionSettlement}
-	if err = wire.ValidateCompletionPair(settle, original, pair); err != nil {
+	if err := validateCompletionProgress(f.record, "storage"); err != nil {
 		t.Fatal(err)
+	}
+	raw, _ := json.Marshal(f.record)
+	for _, edit := range []func(*operationRecord){
+		func(r *operationRecord) { r.Completion.Items[0].WorkspaceID = r.Completion.Items[1].WorkspaceID },
+		func(r *operationRecord) { r.Completion.Items[0].Capture = r.Completion.Items[1].Capture },
+		func(r *operationRecord) { r.Completion.Decision = "conflict" },
+		func(r *operationRecord) { r.Completion.Items[1].Prepared = nil },
+		func(r *operationRecord) { r.Completion.Items[0].Metadata.StorageID = "other" },
+	} {
+		var changed operationRecord
+		_ = json.Unmarshal(raw, &changed)
+		edit(&changed)
+		if validateCompletionProgress(changed, "storage") == nil {
+			t.Fatal("corrupt completion progress accepted")
+		}
 	}
 }

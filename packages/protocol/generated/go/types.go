@@ -31,6 +31,8 @@ type DeliveryRef string
 
 type ReworkActivationMap []NodeReworkActivation
 
+type CompletionOutcome string
+
 type CommandEnvelope struct {
 	ExpectedControlVersion int64               `json:"expected_control_version"`
 	Name                   CommandEnvelopeName `json:"name"`
@@ -297,6 +299,7 @@ type EffectResult struct {
 	ArtifactID                 *string                     `json:"artifact_id,omitempty"`
 	BlockerID                  *string                     `json:"blocker_id,omitempty"`
 	CacheUpdated               *bool                       `json:"cache_updated,omitempty"`
+	CompletionOutcome          *string                     `json:"completion_outcome,omitempty"`
 	ContentDigest              *string                     `json:"content_digest,omitempty"`
 	DiscussionPage             *DiscussionPage             `json:"discussion_page,omitempty"`
 	GitCommit                  *string                     `json:"git_commit,omitempty"`
@@ -304,7 +307,6 @@ type EffectResult struct {
 	InputID                    *string                     `json:"input_id,omitempty"`
 	Inspection                 *InspectionResult           `json:"inspection,omitempty"`
 	InstructionFiles           []InstructionFile           `json:"instruction_files,omitempty"`
-	Integration                *WorkspaceIntegrationResult `json:"integration,omitempty"`
 	Message                    *string                     `json:"message,omitempty"`
 	MessageID                  *string                     `json:"message_id,omitempty"`
 	ObligationID               *string                     `json:"obligation_id,omitempty"`
@@ -322,6 +324,7 @@ type EffectResult struct {
 	TaskHistory                *TaskHistoryPage            `json:"task_history,omitempty"`
 	WorkspaceID                *string                     `json:"workspace_id,omitempty"`
 	WorkspaceMetadata          *WorkspaceMetadata          `json:"workspace_metadata,omitempty"`
+	WorkspaceResults           []WorkspaceEffectResult     `json:"workspace_results,omitempty"`
 	WorkspaceUnavailableReason *WorkspaceUnavailableReason `json:"workspace_unavailable_reason,omitempty"`
 	WriterAbsent               *bool                       `json:"writer_absent,omitempty"`
 }
@@ -388,16 +391,6 @@ type InspectionSnapshot struct {
 	Tree               string   `json:"tree"`
 }
 
-type WorkspaceIntegrationResult struct {
-	ExpectedTaskCommit string                            `json:"expected_task_commit"`
-	NodeCommit         string                            `json:"node_commit"`
-	NodeTree           string                            `json:"node_tree"`
-	Outcome            WorkspaceIntegrationResultOutcome `json:"outcome"`
-	StartCommit        string                            `json:"start_commit"`
-	TaskCommit         string                            `json:"task_commit"`
-	TaskTree           string                            `json:"task_tree"`
-}
-
 type PlanningOutcome struct {
 	IssueSequence    *int64              `json:"issue_sequence,omitempty"`
 	Kind             PlanningOutcomeKind `json:"kind"`
@@ -454,6 +447,32 @@ type TaskMessage struct {
 	Sequence               int64   `json:"sequence"`
 	SourceID               *string `json:"source_id,omitempty"`
 	SourceWatermark        *int64  `json:"source_watermark,omitempty"`
+}
+
+type WorkspaceEffectResult struct {
+	Capture           *WorkspaceCaptureResult     `json:"capture,omitempty"`
+	GitCommit         *string                     `json:"git_commit,omitempty"`
+	GitTree           *string                     `json:"git_tree,omitempty"`
+	Integration       *WorkspaceIntegrationResult `json:"integration,omitempty"`
+	ResourceID        string                      `json:"resource_id"`
+	WorkspaceID       string                      `json:"workspace_id"`
+	WorkspaceMetadata WorkspaceMetadata           `json:"workspace_metadata"`
+}
+
+type WorkspaceCaptureResult struct {
+	NodeCommit  string `json:"node_commit"`
+	NodeTree    string `json:"node_tree"`
+	StartCommit string `json:"start_commit"`
+}
+
+type WorkspaceIntegrationResult struct {
+	ExpectedTaskCommit string                            `json:"expected_task_commit"`
+	NodeCommit         string                            `json:"node_commit"`
+	NodeTree           string                            `json:"node_tree"`
+	Outcome            WorkspaceIntegrationResultOutcome `json:"outcome"`
+	StartCommit        string                            `json:"start_commit"`
+	TaskCommit         string                            `json:"task_commit"`
+	TaskTree           string                            `json:"task_tree"`
 }
 
 type Frame struct {
@@ -573,18 +592,18 @@ type TaskReviewSource struct {
 
 type WorkspaceReservations struct {
 	ConfigurationVersion int64                  `json:"configuration_version"`
-	Isolation            *WorkspaceIsolation    `json:"isolation,omitempty"`
 	ProjectID            string                 `json:"project_id"`
 	Resources            []WorkspaceReservation `json:"resources"`
 }
 
-type WorkspaceIsolation struct {
-	AllocationID string `json:"allocation_id"`
+type WorkspaceReservation struct {
+	Isolation   *WorkspaceIsolation `json:"isolation,omitempty"`
+	ResourceID  string              `json:"resource_id"`
+	WorkspaceID string              `json:"workspace_id"`
 }
 
-type WorkspaceReservation struct {
-	ResourceID  string `json:"resource_id"`
-	WorkspaceID string `json:"workspace_id"`
+type WorkspaceIsolation struct {
+	AllocationID string `json:"allocation_id"`
 }
 
 type RuntimeEvent struct {
@@ -602,25 +621,24 @@ type RuntimeEvent struct {
 }
 
 type Operation struct {
-	AttemptID                string                `json:"attempt_id"`
-	CancelledByOperationID   *string               `json:"cancelled_by_operation_id,omitempty"`
-	CompletionIdentityDigest *string               `json:"completion_identity_digest,omitempty"`
-	CompletionManifestDigest *string               `json:"completion_manifest_digest,omitempty"`
-	CompletionOperationID    *string               `json:"completion_operation_id,omitempty"`
-	DispatchID               string                `json:"dispatch_id"`
-	Inspection               *InspectionDescriptor `json:"inspection,omitempty"`
-	InspectionDigest         *string               `json:"inspection_digest,omitempty"`
-	Integration              *WorkspaceIntegration `json:"integration,omitempty"`
-	Kind                     OperationKind         `json:"kind"`
-	OperationID              string                `json:"operation_id"`
-	RepositoryFree           *bool                 `json:"repository_free,omitempty"`
-	RequestID                string                `json:"request_id"`
-	ResourceID               *string               `json:"resource_id,omitempty"`
-	Result                   *EffectResult         `json:"result,omitempty"`
-	SchemaVersion            int64                 `json:"schema_version"`
-	State                    OpenStateEnum         `json:"state"`
-	Workspace                *WorkspaceDescriptor  `json:"workspace,omitempty"`
-	WorkspaceDigest          *string               `json:"workspace_digest,omitempty"`
+	AttemptID                string                     `json:"attempt_id"`
+	CancelledByOperationID   *string                    `json:"cancelled_by_operation_id,omitempty"`
+	CompletionIdentityDigest *string                    `json:"completion_identity_digest,omitempty"`
+	CompletionManifestDigest *string                    `json:"completion_manifest_digest,omitempty"`
+	CompletionOperationID    *string                    `json:"completion_operation_id,omitempty"`
+	DispatchID               string                     `json:"dispatch_id"`
+	Inspection               *InspectionDescriptor      `json:"inspection,omitempty"`
+	InspectionDigest         *string                    `json:"inspection_digest,omitempty"`
+	Kind                     OperationKind              `json:"kind"`
+	OperationID              string                     `json:"operation_id"`
+	RequestID                string                     `json:"request_id"`
+	ResourceID               *string                    `json:"resource_id,omitempty"`
+	Result                   *EffectResult              `json:"result,omitempty"`
+	SchemaVersion            int64                      `json:"schema_version"`
+	State                    OpenStateEnum              `json:"state"`
+	Workspace                *WorkspaceDescriptor       `json:"workspace,omitempty"`
+	WorkspaceDigest          *string                    `json:"workspace_digest,omitempty"`
+	Workspaces               []WorkspaceCompletionInput `json:"workspaces,omitempty"`
 }
 
 type InspectionDescriptor struct {
@@ -650,6 +668,7 @@ type InspectionOrigin struct {
 type ResultReadIdentity struct {
 	AttemptID               string                      `json:"attempt_id"`
 	BaseCommit              string                      `json:"base_commit"`
+	Capture                 WorkspaceCaptureResult      `json:"capture"`
 	DispatchID              string                      `json:"dispatch_id"`
 	Generation              int64                       `json:"generation"`
 	GitCommit               string                      `json:"git_commit"`
@@ -703,6 +722,8 @@ type WorkspaceBasis struct {
 
 type WorkspaceCanonicalSource struct {
 	AttemptID           string                      `json:"attempt_id"`
+	Capture             *WorkspaceCaptureResult     `json:"capture,omitempty"`
+	CompletionOutcome   *string                     `json:"completion_outcome,omitempty"`
 	Integration         *WorkspaceIntegrationResult `json:"integration,omitempty"`
 	Kind                string                      `json:"kind"`
 	Metadata            WorkspaceMetadata           `json:"metadata"`
@@ -771,6 +792,12 @@ type InspectionPlannerSource struct {
 	Kind            InspectionPlannerSourceKind `json:"kind"`
 	SourceID        string                      `json:"source_id"`
 	SourceWatermark int64                       `json:"source_watermark"`
+}
+
+type WorkspaceCompletionInput struct {
+	Integration     *WorkspaceIntegration `json:"integration,omitempty"`
+	Workspace       WorkspaceDescriptor   `json:"workspace"`
+	WorkspaceDigest string                `json:"workspace_digest"`
 }
 
 type WorkspaceIntegration struct {
@@ -2073,12 +2100,12 @@ type CompletionManifest struct {
 }
 
 type NodeExecutionOperationStatus struct {
-	CompletionIdentityDigest *string                     `json:"completion_identity_digest,omitempty"`
-	FailureKind              *string                     `json:"failure_kind"`
-	Integration              *WorkspaceIntegrationResult `json:"integration,omitempty"`
-	Kind                     OperationKind               `json:"kind"`
-	OperationID              string                      `json:"operation_id"`
-	State                    OpenStateEnum               `json:"state"`
+	CompletionIdentityDigest *string       `json:"completion_identity_digest,omitempty"`
+	CompletionOutcome        *string       `json:"completion_outcome,omitempty"`
+	FailureKind              *string       `json:"failure_kind"`
+	Kind                     OperationKind `json:"kind"`
+	OperationID              string        `json:"operation_id"`
+	State                    OpenStateEnum `json:"state"`
 }
 
 type TaskConversationCommand struct {
@@ -2549,16 +2576,17 @@ type TaskResultPage struct {
 }
 
 type TaskLocalResult struct {
-	AdmittedAt             string              `json:"admitted_at"`
-	Current                bool                `json:"current"`
-	CurrentPlanID          *string             `json:"current_plan_id"`
-	CurrentSpecificationID string              `json:"current_specification_id"`
-	Git                    *TaskLocalGitResult `json:"git"`
-	Manifest               CompletionManifest  `json:"manifest"`
-	RepositoryFree         bool                `json:"repository_free"`
+	AdmittedAt             string               `json:"admitted_at"`
+	Current                bool                 `json:"current"`
+	CurrentPlanID          *string              `json:"current_plan_id"`
+	CurrentSpecificationID string               `json:"current_specification_id"`
+	GitResults             []TaskLocalGitResult `json:"git_results"`
+	Manifest               CompletionManifest   `json:"manifest"`
+	RepositoryFree         bool                 `json:"repository_free"`
 }
 
 type TaskLocalGitResult struct {
+	Capture        WorkspaceCaptureResult      `json:"capture"`
 	GitCommit      string                      `json:"git_commit"`
 	GitTree        string                      `json:"git_tree"`
 	IdentityDigest string                      `json:"identity_digest"`
@@ -2606,17 +2634,20 @@ type AttemptWorkspace struct {
 type ResultReadChangesQuery struct {
 	Cursor         *string `json:"cursor,omitempty"`
 	IdentityDigest string  `json:"identity_digest"`
+	ResourceID     string  `json:"resource_id"`
 }
 
 type ResultReadFileQuery struct {
 	IdentityDigest string `json:"identity_digest"`
 	Path           string `json:"path"`
+	ResourceID     string `json:"resource_id"`
 	Side           Side   `json:"side"`
 }
 
 type ResultReadDiffQuery struct {
 	IdentityDigest string `json:"identity_digest"`
 	Path           string `json:"path"`
+	ResourceID     string `json:"resource_id"`
 }
 
 type PublicationCandidatePage struct {
@@ -2652,6 +2683,7 @@ type PublicationRecord struct {
 
 type PublicationCandidateQuery struct {
 	Cursor            *string `json:"cursor,omitempty"`
+	ResourceID        *string `json:"resource_id,omitempty"`
 	SourceOperationID *string `json:"source_operation_id,omitempty"`
 }
 
@@ -3006,8 +3038,12 @@ type DeliveryOutputEvidence struct {
 	NodeActivation           int64                     `json:"node_activation"`
 	NodeID                   string                    `json:"node_id"`
 	RepositoryFree           bool                      `json:"repository_free"`
-	Source                   *ResultReadIdentity       `json:"source,omitempty"`
-	SourceDigest             *string                   `json:"source_digest,omitempty"`
+	Sources                  []DeliveryOutputSource    `json:"sources"`
+}
+
+type DeliveryOutputSource struct {
+	Source       ResultReadIdentity `json:"source"`
+	SourceDigest string             `json:"source_digest"`
 }
 
 type DeliveryRepository struct {
@@ -3370,7 +3406,7 @@ type NodeReworkSummary struct {
 	RequesterNodeID         string                  `json:"requester_node_id"`
 	ReworkRequestID         string                  `json:"rework_request_id"`
 	Status                  NodeReworkOutcomeStatus `json:"status"`
-	StopOperationID         string                  `json:"stop_operation_id"`
+	StopOperationIDS        []string                `json:"stop_operation_ids"`
 	TargetNodeID            string                  `json:"target_node_id"`
 	Version                 int64                   `json:"version"`
 	WaitingReason           *string                 `json:"waiting_reason"`
@@ -3594,13 +3630,6 @@ const (
 	CLAUDEMd InstructionFile = "CLAUDE.md"
 )
 
-type WorkspaceIntegrationResultOutcome string
-
-const (
-	Conflict   WorkspaceIntegrationResultOutcome = "conflict"
-	Integrated WorkspaceIntegrationResultOutcome = "integrated"
-)
-
 type PlanningOutcomeKind string
 
 const (
@@ -3624,6 +3653,13 @@ const (
 	LimitBlocked    NodeReworkOutcomeStatus = "limit_blocked"
 	PurpleCancelled NodeReworkOutcomeStatus = "cancelled"
 	PurpleSettling  NodeReworkOutcomeStatus = "settling"
+)
+
+type WorkspaceIntegrationResultOutcome string
+
+const (
+	Conflict   WorkspaceIntegrationResultOutcome = "conflict"
+	Integrated WorkspaceIntegrationResultOutcome = "integrated"
 )
 
 type WorkspaceUnavailableReason string

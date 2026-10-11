@@ -26,7 +26,7 @@ export async function observePublicationPermission(db:Database,provider:GitHubRe
   await tx.query('SELECT id FROM tasks WHERE id=$1 FOR UPDATE',[op.task_id]);
   const r=(await tx.query<{id:string;repository_identity:string;remote_url:string;settings:{provider_repo_id?:string}}>('SELECT * FROM project_resources WHERE id=$1',[op.resource_id])).rows[0];
   if(!r?.settings.provider_repo_id)throw new RemoteAdmissionError('credentials_missing');
-  const binding={task_id:op.task_id,resource_id:op.resource_id,repository_identity:r.repository_identity,repository_id:r.settings.provider_repo_id};await remoteSourceAdmission(tx,binding,op.request);
+  const binding={task_id:op.task_id,resource_id:op.resource_id,repository_identity:r.repository_identity,repository_id:r.settings.provider_repo_id};await remoteSourceAdmission(tx,binding,op.request,'permission');
   // A permission refresh may precede the next scan, but its workflow scope
   // comes from a verified complete scan of this exact source/range. A broader
   // old grant or absence of a finding is never evidence about changed paths.
@@ -44,7 +44,7 @@ export async function observePublicationPermission(db:Database,provider:GitHubRe
  const proof=validate<PublicationPermissionProof>('PublicationPermissionProof',{schema_version:1,observation_id:randomUUID(),resource_id:before.op.resource_id,repository_identity:before.scope.repository_identity,repository_id:before.scope.repository_id,app_id:before.scope.config!.app_id,installation_id:before.scope.config!.installation_id,key_fingerprint:before.scope.config!.key_fingerprint,configuration_fingerprint:before.fingerprint,permissions:grant.permissions,permission_fingerprint:hash({configuration_fingerprint:before.fingerprint,repository_id:before.scope.repository_id,permissions:grant.permissions}),observed_at:new Date().toISOString(),expires_at:grant.expires_at});
  return transaction(db,async tx=>{
   await lockConfiguration(tx);await tx.query('SELECT id FROM tasks WHERE id=$1 FOR UPDATE',[before.op.task_id]);
-  await remoteSourceAdmission(tx,{task_id:before.op.task_id,...before.scope},before.op.request);
+  await remoteSourceAdmission(tx,{task_id:before.op.task_id,...before.scope},before.op.request,'permission');
   if(await permissionConfigurationFingerprint(tx,before.op.resource_id)!==before.fingerprint)throw new RemoteAdmissionError('configuration_changed');
   await tx.query('INSERT INTO publication_permission_observations(id,resource_id,repository_identity,repository_id,configuration_fingerprint,permission_fingerprint,proof,proof_digest,observed_at,expires_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)',[proof.observation_id,proof.resource_id,proof.repository_identity,proof.repository_id,proof.configuration_fingerprint,proof.permission_fingerprint,proof,hash(proof),proof.observed_at,proof.expires_at]);
   const item=(await tx.query<RemoteItem>('SELECT * FROM remote_preparation_items WHERE task_id=$1 AND resource_id=$2 FOR UPDATE',[before.op.task_id,before.op.resource_id])).rows[0];

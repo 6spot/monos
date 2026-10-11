@@ -11,9 +11,9 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Parallel workspace all
     await x.start([x.definition(x.f.node), x.definition()]); await x.execution.pump();
     expect((await x.db.pool.query("SELECT count(*) FROM attempts WHERE kind='node' AND state='QUEUED'")).rows[0].count).toBe('2');
     let first = await x.promote(), second = await x.promote();
-    expect(first.dispatch.workspace_reservations!.isolation).toBeDefined();
-    expect(second.dispatch.workspace_reservations!.isolation).toBeDefined();
-    expect(first.dispatch.workspace_reservations!.isolation).not.toEqual(second.dispatch.workspace_reservations!.isolation);
+    expect(first.dispatch.workspace_reservations!.resources[0]!.isolation).toBeDefined();
+    expect(second.dispatch.workspace_reservations!.resources[0]!.isolation).toBeDefined();
+    expect(first.dispatch.workspace_reservations!.resources[0]!.isolation).not.toEqual(second.dispatch.workspace_reservations!.resources[0]!.isolation);
     const race = await x.concurrentAdmissions([() => x.admitOpen(first), () => x.admitOpen(second)]);
     expect(race.contenders).toBe(2);
     const winner = race.results.find(result => result.status === 'fulfilled')!, loser = race.results.find(result => result.status === 'rejected')!;
@@ -38,13 +38,13 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Parallel workspace all
   it('keeps a delayed first open direct and excludes late direct leases once isolated successors queue', async () => {
     const root = x.definition(x.f.node), left = x.definition(undefined, [root.node_id]), right = x.definition(undefined, [root.node_id]);
     await x.start([root, left, right]); const turn = await x.node();
-    expect(turn.dispatch.workspace_reservations!.isolation).toBeUndefined();
+    expect(turn.dispatch.workspace_reservations!.resources[0]!.isolation).toBeUndefined();
     await x.execution.pump();
     expect((await x.db.pool.query("SELECT count(*) FROM attempts WHERE kind='node'")).rows[0].count).toBe('1');
     const opened = await x.open(turn);
     await x.settleCompletion(turn, (await x.admitCompletion(turn)).operation);
     await x.execution.pump();
-    expect((await x.db.pool.query("SELECT count(*) FROM attempts WHERE kind='node' AND state='QUEUED' AND launch->'workspace_reservations' ? 'isolation'")).rows[0].count).toBe('2');
+    expect((await x.db.pool.query("SELECT count(*) FROM attempts WHERE kind='node' AND state='QUEUED' AND workspace_reservations_isolated(launch->'workspace_reservations')")).rows[0].count).toBe('2');
     expect((await x.db.pool.query("SELECT count(*) FROM workspace_leases WHERE state<>'released'")).rows[0].count).toBe('0');
     await expect(x.db.pool.query(`INSERT INTO workspace_leases(id,workspace_id,task_id,node_id,node_activation,attempt_id,dispatch_id,generation,open_operation_id)
       SELECT $2,workspace_id,task_id,node_id,node_activation,attempt_id,dispatch_id,generation,$3 FROM workspace_leases WHERE id=$1`,
@@ -77,8 +77,8 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Parallel workspace all
     const completion = await x.admitCompletion(first); await x.settleCompletion(first, completion.operation, 'conflict');
     await x.db.pool.query(`CREATE FUNCTION forge_parallel_conflict_source() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN
       IF NEW.kind='open_workspace' THEN NEW.workspace_descriptor := NEW.workspace_descriptor || jsonb_build_object('conflict_source',
-        (SELECT jsonb_build_object('operation_id',id,'attempt_id',attempt_id,'kind',kind,'metadata',result->'workspace_metadata','integration',result->'integration')
-         FROM operations WHERE result->'integration'->>'outcome'='conflict' LIMIT 1)); END IF; RETURN NEW; END $$;
+        (SELECT jsonb_build_object('operation_id',o.id,'attempt_id',o.attempt_id,'kind',o.kind,'metadata',item.result->'workspace_metadata','integration',item.result->'integration','capture',item.result->'capture','completion_outcome','conflict')
+         FROM operations o CROSS JOIN LATERAL operation_workspace_results(o.id) item WHERE o.result->>'completion_outcome'='conflict' LIMIT 1)); END IF; RETURN NEW; END $$;
       CREATE TRIGGER a_forge_parallel_conflict_source BEFORE INSERT ON operations FOR EACH ROW EXECUTE FUNCTION forge_parallel_conflict_source()`);
     await expect(x.admitOpen(second)).rejects.toMatchObject({ code: '23514', message: 'conflict source requires this exact activation and settled private result' });
     expect((await x.db.pool.query('SELECT count(*) FROM workspace_leases WHERE attempt_id=$1', [second.dispatch.attempt_id])).rows[0].count).toBe('0');

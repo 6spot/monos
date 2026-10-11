@@ -241,44 +241,23 @@ export function TaskResults(props: TaskViewProps) {
         <article className="task-result" key={r.manifest.operation_id}>
           <h3>{r.current ? "Current result" : "Historical result"}</h3>
           <MarkdownText text={r.manifest.summary} />
-          {r.repository_free ? (
-            <p className="task-muted">
-              Repository-free result · no Git commit or tree.
-            </p>
-          ) : (
-            r.git && (
+          {r.repository_free && <p className="task-muted">Repository-free result · no Git commit or tree.</p>}
+          {r.git_results.map((git) => (
+            <section key={git.resource_id} aria-label={`Repository result: ${git.metadata.repository_identity}`}>
+              <h4>{git.metadata.repository_identity}</h4>
               <dl>
-                <Datum label={r.git.integration ? "Combined Task commit" : "Local commit"}>
-                  <code>{r.git.git_commit}</code>
-                </Datum>
-                {r.git.integration && (
-                  <>
-                    <Datum label="Work started from">
-                      <code>{r.git.integration.start_commit}</code>
-                    </Datum>
-                    <Datum label="Work result before integration">
-                      <code>{r.git.integration.node_commit}</code>
-                    </Datum>
-                    <Datum label="Validation scope">
-                      Work reported here applies to its own result. Validation of the combined result requires subsequent work.
-                    </Datum>
-                  </>
-                )}
-                <Datum label="Result tree">
-                  <code>{r.git.git_tree}</code>
-                </Datum>
-                <Datum label="Repository">
-                  {r.git.metadata.repository_identity}
-                </Datum>
-                <Datum label="Target branch">
-                  {r.git.metadata.target_branch}
-                </Datum>
-                <Datum label="Fixed base">
-                  <code>{r.git.metadata.base_commit}</code>
-                </Datum>
+                <Datum label={git.integration ? "Combined Task commit" : "Local commit"}><code>{git.git_commit}</code></Datum>
+                <Datum label="Work started from"><code>{git.capture.start_commit}</code></Datum>
+                <Datum label="Work result before integration"><code>{git.capture.node_commit}</code></Datum>
+                {git.integration && <Datum label="Validation scope">Work reported here applies to its own result. Validation of the combined result requires subsequent work.</Datum>}
+                <Datum label="Result tree"><code>{git.git_tree}</code></Datum>
+                <Datum label="Target branch">{git.metadata.target_branch}</Datum>
+                <Datum label="Fixed base"><code>{git.metadata.base_commit}</code></Datum>
               </dl>
-            )
-          )}
+              <ResultInspector props={props} result={r} git={git} />
+              <PublicationCandidates props={props} result={r} git={git} />
+            </section>
+          ))}
           <DetailIDs>
             <dl>
               <Datum label="Original Specification">
@@ -296,10 +275,6 @@ export function TaskResults(props: TaskViewProps) {
               </Datum>
             </dl>
           </DetailIDs>
-          {r.git && (
-            <ResultInspector key={`${props.commands.sessionId}:${r.manifest.operation_id}:${r.git.identity_digest}`} props={props} result={r} />
-          )}
-          {r.git && <PublicationCandidates key={`publication:${props.commands.sessionId}:${r.manifest.operation_id}:${r.git.identity_digest}`} props={props} result={r} />}
         </article>
       ))}
       <More

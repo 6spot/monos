@@ -55,8 +55,8 @@ describe.skipIf(!enabled)('real PostgreSQL boundary admission', () => {
     expect((await db.pool.query('SELECT state FROM nodes WHERE id=$1', [f.launch.node_id])).rows[0].state).toBe('RUNNING');
     await expect(f.service.admit(f.token, submission({ ...command, request_id: randomUUID() }))).rejects.toMatchObject({ detail: { code: 'stale_execution' } });
     await expect(f.service.admit(f.token, submission({ ...command, payload: { summary: 'changed' } }))).rejects.toMatchObject({ detail: { code: 'payload_conflict' } });
-    await expect(f.service.finishOperation(f.runnerId, f.incarnation, { operation_id: a.operation_id!, attempt_id: f.launch.attempt_id, success: true, result: { git_commit: 'a'.repeat(40), git_tree: 'b'.repeat(40) } })).rejects.toThrow('Whole-tree');
-    const settled = { operation_id: a.operation_id!, attempt_id: f.launch.attempt_id, success: true, result: { writer_absent: true, git_commit: 'a'.repeat(40), git_tree: 'b'.repeat(40) } };
+    await expect(f.service.finishOperation(f.runnerId, f.incarnation, { operation_id: a.operation_id!, attempt_id: f.launch.attempt_id, success: true, result: { completion_outcome: 'finalized', workspace_results: [] } })).rejects.toThrow("required property 'writer_absent'");
+    const settled = { operation_id: a.operation_id!, attempt_id: f.launch.attempt_id, success: true, result: { writer_absent: true, completion_outcome: 'finalized' as const, workspace_results: [] } };
     await f.service.finishOperation(f.runnerId, f.incarnation, settled);
     await f.service.finishOperation(f.runnerId, f.incarnation, settled);
     expect((await f.service.admit(f.token, body)).status).toBe('committed');
@@ -71,7 +71,7 @@ describe.skipIf(!enabled)('real PostgreSQL boundary admission', () => {
       stream_id: 'runtime', sequence: 1, kind: 'process_absent', text: 'verified whole-tree absence' });
     expect((await db.pool.query('SELECT state,exit_observed FROM attempts WHERE id=$1', [f.launch.attempt_id])).rows[0]).toEqual({ state: 'RUNNING', exit_observed: true });
     await f.service.finishOperation(f.runnerId, f.incarnation, { operation_id: admitted.operation_id!, attempt_id: f.launch.attempt_id,
-      success: true, result: { writer_absent: true, git_commit: 'a'.repeat(40), git_tree: 'b'.repeat(40) } });
+      success: true, result: { writer_absent: true, completion_outcome: 'finalized' as const, workspace_results: [] } });
     expect((await db.pool.query('SELECT state FROM nodes WHERE id=$1', [f.launch.node_id])).rows[0].state).toBe('COMPLETED');
     expect((await db.pool.query("SELECT count(*) FROM task_events WHERE attempt_id=$1 AND kind='missing_formal_outcome'", [f.launch.attempt_id])).rows[0].count).toBe('0');
   });
@@ -101,7 +101,7 @@ describe.skipIf(!enabled)('real PostgreSQL boundary admission', () => {
     expect((await db.pool.query('SELECT state FROM nodes WHERE id=$1', [f.launch.node_id])).rows[0].state).toBe('RUNNING');
     expect((await db.pool.query('SELECT process_released FROM attempts WHERE id=$1', [f.launch.attempt_id])).rows[0].process_released).toBe(false);
     await retryOperationFixture(db, admitted.operation_id!);
-    await f.service.finishOperation(f.runnerId, f.incarnation, { attempt_id: f.launch.attempt_id, operation_id: admitted.operation_id!, success: true, result: { writer_absent: true, git_commit: 'a'.repeat(40), git_tree: 'b'.repeat(40) } });
+    await f.service.finishOperation(f.runnerId, f.incarnation, { attempt_id: f.launch.attempt_id, operation_id: admitted.operation_id!, success: true, result: { writer_absent: true, completion_outcome: 'finalized' as const, workspace_results: [] } });
     expect((await db.pool.query('SELECT state FROM nodes WHERE id=$1', [f.launch.node_id])).rows[0].state).toBe('COMPLETED');
   });
 
@@ -262,7 +262,7 @@ describe.skipIf(!enabled)('real PostgreSQL boundary admission', () => {
     await f.service.touch(f.runnerId, f.incarnation);
     const command = complete(f.launch);
     const receipt = await f.service.admit(f.token, submission(command));
-    await f.service.finishOperation(f.runnerId, f.incarnation, { attempt_id: f.launch.attempt_id, operation_id: receipt.operation_id!, success: true, result: { writer_absent: true, git_commit: 'a'.repeat(40), git_tree: 'b'.repeat(40) } });
+    await f.service.finishOperation(f.runnerId, f.incarnation, { attempt_id: f.launch.attempt_id, operation_id: receipt.operation_id!, success: true, result: { writer_absent: true, completion_outcome: 'finalized' as const, workspace_results: [] } });
     const settled = await f.service.inventory(f.runnerId);
     expect(settled.dispatches).toEqual([]); expect(settled.operations).toEqual([]);
     expect((await f.service.recoverCommand(f.runnerId, f.launch.attempt_id, command.request_id)).status).toBe('committed');
@@ -282,7 +282,7 @@ describe.skipIf(!enabled)('real PostgreSQL boundary admission', () => {
     await retryOperationFixture(db, receipt.operation_id!);
     await f.service.finishOperation(f.runnerId, f.incarnation, { ...failure, failure_kind: 'recoverable' });
     await retryOperationFixture(db, receipt.operation_id!);
-    const result = { attempt_id: f.launch.attempt_id, operation_id: receipt.operation_id!, success: true, result: { writer_absent: true, git_commit: 'a'.repeat(40), git_tree: 'b'.repeat(40) } };
+    const result = { attempt_id: f.launch.attempt_id, operation_id: receipt.operation_id!, success: true, result: { writer_absent: true, completion_outcome: 'finalized' as const, workspace_results: [] } };
     await db.pool.query('UPDATE nodes SET activation=2 WHERE id=$1', [f.launch.node_id]);
     await expect(f.service.finishOperation(f.runnerId, f.incarnation, result)).rejects.toMatchObject({ detail: { code: 'stale_execution' } });
     await db.pool.query('UPDATE nodes SET activation=1 WHERE id=$1', [f.launch.node_id]);

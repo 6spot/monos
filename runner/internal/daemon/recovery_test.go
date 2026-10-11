@@ -40,6 +40,12 @@ func recoveryFixture(t *testing.T, suffix string, kind protocol.OperationKind) (
 		id = w.OpenOperationID
 	}
 	op := protocol.Operation{SchemaVersion: 1, OperationID: id, RequestID: "request-" + suffix, AttemptID: dispatch.AttemptID, DispatchID: dispatch.DispatchID, Kind: kind, State: protocol.PurpleRecovery, Workspace: &w, WorkspaceDigest: &digest, ResourceID: &resource}
+	if kind == protocol.KindCompleteNode {
+		op.Workspaces = []protocol.WorkspaceCompletionInput{{Workspace: w, WorkspaceDigest: digest}}
+		op.Workspace, op.WorkspaceDigest, op.ResourceID = nil, nil, nil
+		op.CompletionManifestDigest = ptr(strings.Repeat("b", 64))
+		dispatch.NodeExecutionSource = &protocol.NodeExecutionSource{SourceID: "source", NodeID: *dispatch.NodeID, NodeActivation: dispatch.NodeActivation, SpecificationID: "spec", PlanID: "plan", ContextDigest: strings.Repeat("a", 64)}
+	}
 	return dispatch, op
 }
 
@@ -159,7 +165,8 @@ func TestReconnectSkipsUnadmittedTerminalHardAndMissingEvidence(t *testing.T) {
 			case "admitted", "succeeded", "cancelled":
 				op.State = protocol.OpenStateEnum(mode)
 			case "legacy":
-				op.Workspace, op.WorkspaceDigest = nil, nil
+				op.Workspace, op.WorkspaceDigest, op.Workspaces = nil, nil, nil
+				dispatch.NodeExecutionSource = nil
 			case "capture_hard_limit", "invalid_finalization":
 				kind := protocol.FailureKind(mode)
 				result.FailureKind = &kind
@@ -482,7 +489,7 @@ func TestReconnectTerminalReplayFollowsReadyOnWireWithoutHostEffect(t *testing.T
 			if outcome == "cancelled" {
 				terminal.CancelledByOperationID = ptr("admitted-stop")
 			} else if outcome == "success" {
-				terminal.Result.GitCommit, terminal.Result.GitTree = ptr(strings.Repeat("b", 40)), ptr(strings.Repeat("c", 40))
+				terminal.Result = completedEffectFixture(op, strings.Repeat("a", 40), strings.Repeat("b", 40), strings.Repeat("c", 40))
 			}
 			retainRecovery(t, db, dispatch, op, &terminal)
 			var effects atomic.Int32

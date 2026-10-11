@@ -5,6 +5,7 @@ import { canonicalJSON, validate } from '../../../packages/protocol/src/index.ts
 import type { ReplanImpact, WorkspaceTransfer } from '../../../packages/protocol/src/index.ts';
 import { assertNodeSource } from './node-execution-state.ts';
 import type { WorkspaceAttempt } from './workspaces.ts';
+import { reservationsIsolated } from './workspace-placement.ts';
 
 /** Called while the canonical workspace row is locked. Private input has one
  * recipient; each approved reader of completed code gets an exact transfer. */
@@ -37,9 +38,10 @@ export async function workspaceTransfer(tx: Transaction, attempt: WorkspaceAttem
   }
   // Recheck the physical predecessor, including original Plan attribution. A
   // later Rework can use finalized code without carrying its completion evidence.
-  const physical = (await tx.query<{ metadata: unknown }>(`SELECT op.result->'workspace_metadata' metadata
+  const physical = (await tx.query<{ metadata: unknown }>(`SELECT item.result->'workspace_metadata' metadata
     FROM task_workspaces w JOIN workspace_leases l ON l.workspace_id=w.id JOIN attempts old ON old.id=l.attempt_id
-    JOIN operations op ON op.id=$4 AND op.workspace_lease_id=l.id AND op.attempt_id=old.id
+    JOIN operations op ON op.id=$4 AND op.attempt_id=old.id
+    JOIN LATERAL operation_workspace_results(op.id) item ON item.lease_id=l.id
     WHERE w.id=$1 AND w.task_id=$2 AND w.runner_id=$3 AND w.ever_materialized
       AND l.id=$5 AND l.state='released' AND l.node_id=$6 AND l.node_activation=$7 AND l.attempt_id=$8
       AND old.plan_id=$9 AND old.process_released AND old.process_absent AND NOT old.mutation_allowed
@@ -47,16 +49,16 @@ export async function workspaceTransfer(tx: Transaction, attempt: WorkspaceAttem
       AND (CASE WHEN $10='checkpoint' THEN l.checkpoint->>'operation_id'=$4 ELSE l.checkpoint IS NULL AND l.settle_operation_id=$4 END)
       AND ($10<>'checkpoint' OR NOT EXISTS(SELECT 1 FROM workspace_leases later WHERE later.workspace_id=w.id
         AND later.allocation_id IS NOT DISTINCT FROM l.allocation_id AND (later.created_at,later.id)>(l.created_at,l.id)))
-      AND NOT EXISTS(SELECT 1 FROM workspace_leases live WHERE live.task_id=w.task_id AND live.state<>'released'
+      AND NOT EXISTS(SELECT 1 FROM workspace_leases live WHERE live.task_id=w.task_id AND live.attempt_id<>$11 AND live.state<>'released'
         AND (NOT $12::boolean OR live.allocation_id IS NULL OR ($10='checkpoint' AND live.allocation_id=l.allocation_id)))
       AND NOT EXISTS(SELECT 1 FROM attempts writer WHERE writer.task_id=w.task_id AND writer.kind='node' AND writer.id<>$11
         AND (writer.mutation_allowed OR NOT writer.process_released)
-        AND (NOT $12::boolean OR NOT COALESCE(writer.launch->'workspace_reservations' ? 'isolation',false)))
+        AND (NOT $12::boolean OR NOT workspace_reservations_isolated(writer.launch->'workspace_reservations')))
       AND NOT EXISTS(SELECT 1 FROM operations effect JOIN attempts owner ON owner.id=effect.attempt_id
         WHERE owner.task_id=w.task_id AND owner.kind='node' AND owner.id<>$11 AND effect.state IN ('admitted','recovery')
-        AND (NOT $12::boolean OR NOT COALESCE(owner.launch->'workspace_reservations' ? 'isolation',false)))`,
+        AND (NOT $12::boolean OR NOT workspace_reservations_isolated(owner.launch->'workspace_reservations')))`,
   [workspaceId, attempt.task_id, attempt.runner_id, input.settle_operation_id, leaseId, input.from_node_id,
-    input.from_node_activation, input.from_attempt_id, input.from_plan_id, input.kind, attempt.id, !!attempt.launch.workspace_reservations?.isolation])).rows[0];
+    input.from_node_activation, input.from_attempt_id, input.from_plan_id, input.kind, attempt.id, reservationsIsolated(attempt.launch.workspace_reservations)])).rows[0];
   if (!physical || canonicalJSON(physical.metadata) !== canonicalJSON(input.metadata)) throw new CommandError('unmet_precondition', 'Approved workspace predecessor is no longer exact and settled');
   const descriptor = validate<WorkspaceTransfer>('WorkspaceTransfer', { ...input, publication_id: row.publication_id,
     proposal_id: row.proposal_id, to_plan_id: row.plan_id, to_node_id: attempt.node_id, to_node_activation: Number(attempt.node_activation) });

@@ -24,6 +24,26 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE!=='1')('exact Specification chan
  it('withdraw after Stop keeps old effective Spec without resurrecting Attempt',async()=>{await x.start();const n=await x.node();const result=await edit();const c=(await x.db.pool.query('SELECT * FROM requirement_changes')).rows[0];await command('withdraw_specification',{proposal_id:c.proposal_id,expected_version:Number(c.version)});const stop=(await x.db.pool.query('SELECT operation_id FROM requirement_change_effects WHERE change_id=$1',[result.operation_id])).rows[0];await x.finish(stop.operation_id,n.dispatch.attempt_id);await spec.pump();expect((await x.db.pool.query('SELECT specification_id FROM tasks')).rows[0].specification_id).toBe(x.f.spec);expect((await x.db.pool.query('SELECT status FROM requirement_changes')).rows[0].status).toBe('withdrawn');const fresh=await x.node();expect(fresh.dispatch.attempt_id).not.toBe(n.dispatch.attempt_id);});
 
  it('Owner Stop survives publication and requires explicit Continue on fresh Spec',async()=>{await x.start();const n=await x.node();const result=await edit();await x.owner('stop_node',{node_id:x.f.node,node_activation:1,source_id:n.dispatch.node_execution_source!.source_id});const stop=(await x.db.pool.query('SELECT operation_id FROM requirement_change_effects WHERE change_id=$1',[result.operation_id])).rows[0];await x.finish(stop.operation_id,n.dispatch.attempt_id);await spec.pump();await x.execution.pump();expect((await x.db.pool.query('SELECT state FROM tasks')).rows[0].state).toBe('BLOCKED');const node=(await x.db.pool.query('SELECT * FROM nodes')).rows[0];await x.owner('continue_node',{node_id:x.f.node,node_activation:1,source_id:node.execution_source_id,blocker_id:node.blocker_id});const fresh=await x.node();expect(fresh.dispatch.node_activation).toBe(1);expect(fresh.dispatch.node_execution_source!.specification_id).not.toBe(x.f.spec);});
- it('completion during change stays historical then creates a new activation',async()=>{await x.start();const n=await x.node();const completion=await x.agent(n,'complete_node',{summary:'already completing'});await edit();await x.finish(completion.operation_id!,n.dispatch.attempt_id);expect((await x.db.pool.query('SELECT state FROM nodes')).rows[0].state).toBe('RUNNING');await spec.pump();expect((await x.db.pool.query('SELECT activation,state FROM nodes')).rows[0]).toEqual({activation:'2',state:'PENDING'});expect((await x.db.pool.query('SELECT count(*) FROM node_completions')).rows[0].count).toBe('1');});
+ it('completion during change stays historical then creates a new activation', async () => {
+  await x.start(); const n = await x.node();
+  const completion = await x.agent(n, 'complete_node', { summary: 'already completing' });
+  const change = await edit();
+  const settlement = (await x.db.pool.query(`SELECT o.* FROM requirement_change_effects e JOIN operations o ON o.id=e.operation_id
+    WHERE e.change_id=$1 AND o.completion_operation_id=$2`, [change.operation_id, completion.operation_id])).rows[0];
+  expect(settlement.kind).toBe('settle_completion');
+  await expect(x.finish(completion.operation_id!, n.dispatch.attempt_id)).rejects.toMatchObject({ detail: { code: 'unmet_precondition' } });
+  expect((await x.db.pool.query('SELECT process_released FROM attempts WHERE id=$1', [n.dispatch.attempt_id])).rows[0].process_released).toBe(false);
+  expect((await x.db.pool.query('SELECT state FROM operations WHERE id=$1', [completion.operation_id])).rows[0].state).toBe('admitted');
+  await x.service.finishOperation(x.f.runner, x.f.incarnation, {
+   operation_id: settlement.id, attempt_id: n.dispatch.attempt_id, success: true, result: { writer_absent: true },
+   completion_settlement: { completion_operation_id: completion.operation_id!, disposition: 'already_finalized',
+    completion_result: { operation_id: completion.operation_id!, attempt_id: n.dispatch.attempt_id, success: true,
+     result: { writer_absent: true, completion_outcome: 'finalized', workspace_results: [] } } },
+  });
+  expect((await x.db.pool.query('SELECT state FROM nodes')).rows[0].state).toBe('RUNNING');
+  await spec.pump();
+  expect((await x.db.pool.query('SELECT activation,state FROM nodes')).rows[0]).toEqual({ activation: '2', state: 'PENDING' });
+  expect((await x.db.pool.query('SELECT count(*) FROM node_completions')).rows[0].count).toBe('1');
+ });
  it('started planning is settled and replaced, while Owner Stop keeps PLANNING',async()=>{await x.owner('start_task',{specification_id:x.f.spec});await x.planning.pump();const planner=await x.promote();const result=await edit();await x.owner('stop_initial_planning',{planning_intent_id:planner.dispatch.task_planning_source!.intent_id});const effect=(await x.db.pool.query('SELECT operation_id FROM requirement_change_effects WHERE change_id=$1',[result.operation_id])).rows[0];await x.finish(effect.operation_id,planner.dispatch.attempt_id);await spec.pump();expect((await x.db.pool.query('SELECT state FROM tasks')).rows[0].state).toBe('PLANNING');expect((await x.db.pool.query('SELECT count(*) FROM task_planning_outbox')).rows[0].count).toBe('1');});
 });

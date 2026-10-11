@@ -1,11 +1,15 @@
-# Automatic GitHub review preparation
+# GitHub review preparation
 
 ## 1. Scope / Trigger
 
 Delivery prepares the exact current settled REVIEW result when a GitHub resource
 has `remote_preparation=automatic`. Local candidate preparation remains available
-for `after_acceptance`, which requests no remote mutation or write token. This
-lane owns no Runtime Attempt, Task state, Specification slot or accepted batch.
+for `after_acceptance`. Before acceptance that mode admits no push/PR effect or
+publication credential delivery. Backend permission observation may verify the
+exact App profile to prepare a scan and acceptance manifest; its token remains
+private and is not used for publication. After actual acceptance, immutable batch
+links authorize preparation under [Owner delivery](owner-delivery.md). This lane
+owns no Runtime Attempt, Task state, Specification slot or new acceptance.
 Preparation never establishes Accept, merge or Owner confirmation.
 
 Sources: server `remote-preparation{,-access,-commands,-guards,-poll,-reads,-state}.ts`,
@@ -19,8 +23,7 @@ and Web `remote-preparation.tsx`. Read
 
 This slice implements one verified original/published public parent. Additional
 integration-target transport remains deferred. Cross-Runner transfer, permanent
-disk-loss recovery, plain-Git remote delivery and after-acceptance remote effects
-are outside this contract.
+disk-loss recovery and plain-Git remote delivery remain outside this contract.
 
 ## 2. Signatures
 
@@ -36,6 +39,8 @@ POST /v1/runner/remote-preparation/:operation_id/access
 RemotePreparation(db, instanceId, provider).pump()
 RemotePreparation.pending(runnerId, incarnation, supported) -> Frame[]
 RemotePreparation.finish(runnerId, incarnation, result) -> PublicationPushAck?
+freshRemoteSource(tx, item, request, purpose='preparation'|'permission')
+remoteSourceAdmission(tx, item, request, purpose='preparation'|'permission')
 ```
 
 Existing Owner cookie/session authentication protects all reads and commands.
@@ -73,6 +78,15 @@ The resource segment uses the existing `Id` alphabet `[A-Za-z0-9_-]` and length
 `1..128`; it is not restricted to UUIDs. Shared `DeliveryRef` validation preserves
 the Task segment constraint and fixed namespace. Producers derive the exact ref
 from Task/resource identity, and database/Runner guards compare that same ref.
+
+Local candidate and remote item discovery preserve every resource in an aggregate
+completion. All request/proof/history scope remains `(parent operation, resource)`;
+a parent operation alone cannot identify a repository result.
+
+Only `observePublicationPermission` passes `purpose='permission'`, before and after
+grant I/O. That path retains exact source/config/input/physical guards but permits
+deferred-mode permission evidence. Default `preparation` still rejects
+`after_acceptance` until a genuine accepted batch supplies frozen authority.
 
 Before every ordinary mutation, and again after token I/O, require settled REVIEW,
 exact current original result/carry and effective Spec/Plan, finalized local
@@ -186,6 +200,11 @@ operation digest and expected version. Recover an existing request receipt befor
 new-effect staleness checks. Committed receipts name the actual operation ID,
 digest and version. Never manufacture another request after unknown delivery.
 
+Accepted Retry/preparation skips finalized members and preserves each immutable
+batch link. One repository's completion does not authorize a replacement push or
+PR. Cancel preserves all finalized items and closes only undelivered PRs after
+resolving any original possible effect.
+
 A blocked push with `push_started=false` and proven worker absence may admit a new
 operation only through actual Owner Retry and fresh ordinary guards. Started or
 possibly mutated effects retain their original identity and observation path.
@@ -245,7 +264,8 @@ cached row never becomes new authority.
 | Installation spacing before claim | Typed scheduling wait; same pending operation, no token/effect/result |
 | Published credential fact, even waived | Permanent ordinary-effect guard |
 | Cancel with missing access/uncertain predecessor | Visible cleanup attention; terminal Task retained |
-| Deferred mode | Local-only preparation; zero remote mutation/write-token request |
+| Deferred before acceptance | Permission proof/local scan allowed; no push/PR effect or publication credential delivery |
+| Deferred after actual acceptance | Frozen item/link authority; same original reconciliation and cancellation rules |
 
 ## 5. Good / Base / Bad Cases
 
@@ -267,6 +287,9 @@ full-suite checklist for documentation, handoffs or unrelated fixes.
 - Actual PostgreSQL: migration 22→23 and immutable rows, current admission and
   token-I/O races, original uncertain resolution, immediate waived exposure,
   receipt replay, history scope, Cancel/revision quiescence and bounded polling.
+  Multi-repository tests require zero deferred pre-acceptance writes, accepted
+  per-item preparation, no repeat preparation of finalized items and remaining-only
+  Cancel closure.
   For review revocation, cover both unsent and sent pregrant push: zero write grants,
   original result/ACK replay after reconnect, conflicting replay rejection and
   successor dispatch ordering without restoring revoked authority.

@@ -303,11 +303,11 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')(
           attempt_id: n.dispatch.attempt_id,
           success: true,
           result: {
-            writer_absent: true,
-            workspace_id: w.workspace_id,
+            writer_absent: true, completion_outcome: 'finalized' as const,
+            workspace_results: [{ resource_id: w.resource_id, workspace_id: w.workspace_id,
             workspace_metadata: { ...metadata, finalized_commit: commit },
-            git_commit: commit,
-            git_tree: tree,
+            capture: { start_commit: metadata.finalized_commit, node_commit: commit, node_tree: tree },
+            git_commit: commit, git_tree: tree }],
           },
         };
         if (mode === 'retry') {
@@ -324,7 +324,7 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')(
                 ? { writer_absent: true }
                 : {
                     writer_absent: true,
-                    workspace_id: w.workspace_id,
+                    workspace_results: [{ resource_id: w.resource_id, workspace_id: w.workspace_id,
                     workspace_metadata: {
                       ...metadata,
                       checkpoint: {
@@ -335,7 +335,7 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')(
                         completion_operation_id: c.operation_id!,
                         completion_identity_digest: settlement.completion_identity_digest!,
                       },
-                    },
+                    } }],
                   },
             completion_settlement: {
               completion_operation_id: c.operation_id!,

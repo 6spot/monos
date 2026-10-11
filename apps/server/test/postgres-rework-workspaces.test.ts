@@ -36,7 +36,7 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Upstream Rework worksp
       const complete = async (a: Awaited<ReturnType<typeof x.node>>, metadata: WorkspaceMetadata, commit: string) => {
         const done = await x.agent(a, 'complete_node', { summary: 'Completed upstream implementation' });
         await x.service.finishOperation(x.f.runner, x.f.incarnation, { operation_id: done.operation_id!, attempt_id: a.dispatch.attempt_id, success: true,
-          result: { writer_absent: true, workspace_id: w.workspace_id, workspace_metadata: { ...metadata, finalized_commit: commit }, git_commit: commit, git_tree: 'd'.repeat(40) } });
+          result: { writer_absent: true, completion_outcome: 'finalized', workspace_results: [{ resource_id: resource, workspace_id: w.workspace_id, workspace_metadata: { ...metadata, finalized_commit: commit }, capture: { start_commit: metadata.finalized_commit, node_commit: commit, node_tree: 'd'.repeat(40) }, git_commit: commit, git_tree: 'd'.repeat(40) }] } });
         return done;
       };
       await openResult(firstOpen.operation_id!, first.dispatch.attempt_id, original);
@@ -61,7 +61,7 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Upstream Rework worksp
       const historicalCheckpoint = { workspace_id: w.workspace_id, resource_id: resource,
         stop_operation_id: request.operation_id, checkpoint: checkpoint.checkpoint,
         git_ref: `refs/monos/history/${domainId}` };
-      expect(JSON.parse(corrected.dispatch.prompt).node_rework[0].historical_checkpoint).toEqual(historicalCheckpoint);
+      expect(JSON.parse(corrected.dispatch.prompt).node_rework[0].historical_checkpoints).toEqual([historicalCheckpoint]);
       const changes = [{ node_id: x.f.node, from_activation: 1, to_activation: 2 }, { node_id: downstream, from_activation: 1, to_activation: 2 }];
       expect(correctedOperation.workspace).toMatchObject({ basis: { finalized_commit: current.finalized_commit },
         transfer: { purpose: 'rework', kind: 'checkpoint', rework_request_id: domainId, rework_command_request_id: commandId,
@@ -76,7 +76,7 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Upstream Rework worksp
       await openResult(correctedOpen.operation_id!, corrected.dispatch.attempt_id, correctedMetadata);
       await complete(corrected, correctedMetadata, '1'.repeat(40));
       const next = await x.node(); expect(next.dispatch).toMatchObject({ node_id: downstream, node_activation: 2 });
-      expect(JSON.parse(next.dispatch.prompt).node_rework[0].historical_checkpoint).toEqual(historicalCheckpoint);
+      expect(JSON.parse(next.dispatch.prompt).node_rework[0].historical_checkpoints).toEqual([historicalCheckpoint]);
       expect(JSON.parse(requester.dispatch.prompt).node_rework).toEqual([]);
       expect((await x.db.pool.query('SELECT prompt FROM node_execution_outbox WHERE id=$1', [requester.dispatch.node_execution_source!.source_id])).rows[0].prompt).toBe(requester.dispatch.prompt);
       const nextOpen = await x.agent(next, 'open_workspace', { resource_id: resource });

@@ -1,7 +1,8 @@
 # Node execution, Artifacts and recovery
 
 Sources: `apps/server/src/{node-execution,node-execution-state,node-completion,artifacts}.ts`,
-`packages/db/migrations/0018_node_execution.sql` and the shared protocol schema.
+`packages/db/migrations/{0018_node_execution,0031_multi_repository_completion}.sql`
+and the shared protocol schema.
 Task Conversation extends these contracts via [guidance handling](task-conversation.md).
 Multi-Node replacement Plans follow [Replan](task-replan.md). Independent Nodes
 use [isolated allocations](workspaces.md); upstream Agent-requested Rework retains
@@ -31,8 +32,10 @@ Natural-language output and process exit never complete a Node.
 - Owner Stop/Continue/Retry bind Node/activation/source/applicable blocker and
   Task/control CAS. `recover_completion` also requires `operation_id`,
   `completion_identity_digest`, `mode:retry|correct`.
-- System-only `settle_completion` binds original completion ID/digest and exact
-  immutable workspace/lease/Attempt identity. No new environment keys or service.
+- System-only `settle_completion` binds only the original completion ID/digest;
+  backend and Runner resolve the original immutable member set, lease/Attempt
+  identities and aggregate result. Never copy member descriptors into a new
+  settlement identity. No new environment keys or service.
 
 ## 3. Contracts
 
@@ -52,6 +55,9 @@ bounded batch of independent ready Nodes with frozen isolated placement; a
 downstream source observes current Role configuration and completed integration
 evidence. Explicit Owner/guidance/Runtime continuation intents may be retained before
 settlement, but cannot queue or promote before their dependency and physical barriers.
+An unresolved Task completion also blocks source preparation, queue admission/
+promotion and new workspace opens until its aggregate settlement is durable,
+including hard recovery.
 
 `node-upstream-context.ts` includes current completed direct dependencies, exact
 completion/manifest identity, summary/revision and only selected Artifact metadata.
@@ -92,18 +98,25 @@ alter the manifest. `operations.result` is physical evidence;
 `node_completions.result` merges it with manifest `summary`, `artifact_ids` and
 `completion_manifest_digest`. These are deliberately different JSON objects.
 
-Repository-free completion is explicit (`repository_free:true`, manifest digest),
-requires whole-tree absence and forbids fabricated Git/workspace fields. A dirty
-same-activation workspace must be reopened/finalized even by a fresh Attempt.
-Success creates current evidence and derives REVIEW only after ownership settles.
+One manifest and one parent `complete_node` operation cover the entire Attempt
+member set, in stable resource order. Physical success requires `writer_absent:true`,
+`completion_outcome:finalized|conflict` and exact `workspace_results[]` corresponding
+to immutable `workspaces[]`. Repository-free completion has both arrays empty and
+outcome `finalized`; it still requires whole-tree absence and cannot fabricate Git
+fields. A dirty same-activation workspace must be reopened/finalized even by a
+fresh Attempt. Finalized success creates one Node evidence record and derives
+REVIEW only after ownership settles. A conflicting parent preserves every member
+capture, advances no canonical repository pointer and creates no Node evidence;
+it consumes one automatic conflict retry, regardless of member count.
 Recoverable completion remains RUNNING with attention; hard failure blocks and
 retains ownership. `block_node` is a successful semantic handoff with an answerable
 blocker, followed by fenced Stop.
 
 Hard recovery retries the exact immutable operation or admits trusted settlement
-then correction. Never replace original lease `settle_operation_id`. Reconcile
-already-finalized success first; otherwise capture/export a separate checkpoint
-after quiescing old workers. Only recovery capture tolerates readable broken
+then correction. Never replace original leases' `settle_operation_id`. Resolve
+the full original parent membership and reconcile already-finalized success first;
+otherwise capture/export every member's separate checkpoint after quiescing old
+workers. Only recovery capture tolerates readable broken
 ancestry; ordinary Stop/finalize stay strict. Persist both dispositions atomically
 before backend release. Original cancellation cannot independently bypass export;
 after the pair commits, exact original tombstone replay succeeds idempotently.
@@ -161,14 +174,16 @@ relation, quiesce/export and commit a typed atomic pair before releasing ownersh
 `request_rework {target_node_id?,reason}` is a terminal canonical Node outcome.
 Omission requires one direct dependency; an explicit target must be an ancestor.
 Admission records the exact target-plus-descendant activation/source/completion
-snapshot, fences the requester, and retains its original Stop plus Agent receipt
+snapshot, fences the requester, and retains its complete Stop set plus Agent receipt
 atomically. The serial implementation requires other Node writers and effects to
 be settled and rejects competing requirement/Replan/review ownership and affected
 Owner holds before any writes. Activation publication waits for Stop, process,
 operation and lease settlement; existing identities and integrated code survive.
 
-Migration 27 persists `node_rework_requests`, `node_rework_targets`,
-`node_rework_decisions` and `tasks.rework_epoch`. Three automatic requests per epoch
+Migrations 27/31 persist `node_rework_requests`, `node_rework_targets`,
+`node_rework_decisions`, exact `node_rework_request_stops` membership and
+`tasks.rework_epoch`. Each Stop binds its original operation/workspace/lease; later
+Stop rows cannot be substituted. Three automatic requests per epoch
 span fallback, Retry and activation changes. A fourth records `limit_blocked` and
 blocks only its requester. Independent work may proceed. Owner `apply_rework` and
 `continue_without_rework` bind the preserved request/version and live Task control.
@@ -185,15 +200,17 @@ prevents late reactivation. SQL rejects limit-to-settling without an exact Owner
 decision; no generic budget reset exists.
 
 `GET /v1/owner/tasks/:task_id/rework` exposes reason, saved identity/version,
-settlement attention and current Apply/Continue capabilities. A stale target makes
+`stop_operation_ids`, settlement attention and current Apply/Continue capabilities.
+A stale target makes
 Apply unavailable while requester-only Continue may remain valid. UI retains
 these decisions in the existing Task command journal and validates the matching
 outcome before clearing an uncertain request.
 
 Fresh context distinguishes applied correction from continued proposals and
-historical completion evidence. An applied workspace checkpoint records its exact
-Stop, resource, immutable commit/tree and `refs/monos/history/<request>`; it becomes
-readable after `open_workspace`. Historical objects never overwrite current code.
+historical completion evidence. `historical_checkpoints[]` carries each applied
+workspace checkpoint's exact Stop, resource, immutable commit/tree and
+`refs/monos/history/<request>`; each becomes readable after `open_workspace` for
+that resource. Historical objects never overwrite current code.
 Host archives both raw Git common storage and worktree, preserving ignored files
 and separate index content which checkpoint Git trees do not fully represent.
 

@@ -1,0 +1,366 @@
+{
+  "head": "130eec135ca9dc50c9c09cac2f1fb084fc7df68f",
+  "dirty_candidate": true,
+  "source": [
+    {
+      "path": "apps/web/owner-delivery.playwright.config.ts",
+      "sha256": "999dce7b7d22a6d776034c2ce7f450789bb32fe1935563b38d4aad51be39b083"
+    },
+    {
+      "path": "apps/web/src/app/app.tsx",
+      "sha256": "f3415bfaa7593bb8752d1ca3d243d7a0b503e72e3bfaf3e09e5d4c8b8bcee0e7"
+    },
+    {
+      "path": "apps/web/src/components/forms.tsx",
+      "sha256": "47ef7a738b37acfd8e292e5c918683fa5c8d0d1a44b6934e073731c98443f763"
+    },
+    {
+      "path": "apps/web/src/components/page-header.tsx",
+      "sha256": "dad3dcd13be5af829867659a8198ecdf213542f07829c1c67061a941803ef713"
+    },
+    {
+      "path": "apps/web/src/components/ui/button.tsx",
+      "sha256": "45cdd2a87ec353feab3145cb0342205a6314db8c339b0bc5b9f70938694c3c2f"
+    },
+    {
+      "path": "apps/web/src/components/ui/checkbox.tsx",
+      "sha256": "618c349e15065e189e8007d96b0d0eb3caf39e5b8cd875a21d5162ba397c5960"
+    },
+    {
+      "path": "apps/web/src/components/ui/dialog.tsx",
+      "sha256": "f59b3f81018c56cb2c7f77ed38a04be67cdfc12f23f323f283c947527728f2b0"
+    },
+    {
+      "path": "apps/web/src/components/ui/input.tsx",
+      "sha256": "feaffe8d386ab8273eb0da9590f4e69d2e4e8eada17769dbe3d338e8f7594811"
+    },
+    {
+      "path": "apps/web/src/components/ui/label.tsx",
+      "sha256": "94f7b1d79727725b54271d7fe771f46613c54bf302b5570a646f319d6dd2abf0"
+    },
+    {
+      "path": "apps/web/src/components/ui/native-select.tsx",
+      "sha256": "f6fe86d6430edd1b99b81e3660302aaea2f39d9228227e328ce5a4804a2aa550"
+    },
+    {
+      "path": "apps/web/src/components/ui/textarea.tsx",
+      "sha256": "f23ee3caddc6eb8b8c2d515ec3a1b1dc0457687d1199429707d249dc0caf1570"
+    },
+    {
+      "path": "apps/web/src/features/discussion.tsx",
+      "sha256": "da4dc07d827a1664a2f41c9836fff279465b336dc13cd1c88fea9e5b837cb5cb"
+    },
+    {
+      "path": "apps/web/src/features/execution-board.tsx",
+      "sha256": "e83e1fc0e98a4ca349739f70dc64d1df8a70a210ff13ba4f1ac1100a67ea643b"
+    },
+    {
+      "path": "apps/web/src/features/execution.tsx",
+      "sha256": "006a8abcab53f393f4bf3490d2e33b68d036a0ecb51136832aa6e4d348d8f431"
+    },
+    {
+      "path": "apps/web/src/features/github.tsx",
+      "sha256": "414ad8b0004b631fc0d1af09266a4706de292dd9de31fe0077a21b0eee9aff06"
+    },
+    {
+      "path": "apps/web/src/features/node-rework.tsx",
+      "sha256": "cc6ea26f403e018a721b07b8f8960e86ed9d337a8bce862f43a9873291283e30"
+    },
+    {
+      "path": "apps/web/src/features/owner-delivery.tsx",
+      "sha256": "4a7c3a961109d8f47976c7ee687a3a8e7895979ec022a7b46cee714cb284dcef"
+    },
+    {
+      "path": "apps/web/src/features/policy-editor.tsx",
+      "sha256": "8a3d619389e8336339af5da857eebd0ec0c08920d2bc429b4ef5010915eb8a95"
+    },
+    {
+      "path": "apps/web/src/features/projects.tsx",
+      "sha256": "d8edeab9231c69579b736b48196a00bfedde0484c2abbd9454f751f2df1ff0bd"
+    },
+    {
+      "path": "apps/web/src/features/publication-candidate.tsx",
+      "sha256": "5dab4113506ff2c5fd331883d6a677d44c915492979a7cce26747ba255c6dc4d"
+    },
+    {
+      "path": "apps/web/src/features/remote-preparation.tsx",
+      "sha256": "cb0c1260648dc6ec81b2d1536df290379ad5d876cf5dcc90b65715bb780d1284"
+    },
+    {
+      "path": "apps/web/src/features/result-inspector.tsx",
+      "sha256": "7c1191b3cbcf66a04df2b880082a2c0351f9f3149c9c368299e640f56b67da79"
+    },
+    {
+      "path": "apps/web/src/features/review-correction.tsx",
+      "sha256": "35b8d0873cbb6c62318f1a916521b21f9d6ef21eeec45fd6b64b669ce45b94a7"
+    },
+    {
+      "path": "apps/web/src/features/roles.tsx",
+      "sha256": "4e8aa8b46f0267dd979aa5597fa4baa5cc547e1481324831efc8372265e20986"
+    },
+    {
+      "path": "apps/web/src/features/task-controls.tsx",
+      "sha256": "f3605782a42dc272ae0011950de2ecd0525ad426b9b0757097b5a89e9f562a7c"
+    },
+    {
+      "path": "apps/web/src/features/task-conversation.tsx",
+      "sha256": "66031765614841604ad252d9c7f00a5950cfdb14e54ee07954a2871fb40c73c5"
+    },
+    {
+      "path": "apps/web/src/features/task-decisions.tsx",
+      "sha256": "0b8465647fd87637a77af6a2fb46503cbfffcc5ef716276ed2eac5b8580189e7"
+    },
+    {
+      "path": "apps/web/src/features/task-detail.tsx",
+      "sha256": "be97d354a1e1ea965ba46f1f55cec54f70691a23952054be0c36b27fc4b73471"
+    },
+    {
+      "path": "apps/web/src/features/task-execution.tsx",
+      "sha256": "a6bbbc5940c224b2d411d796c07cecceb5813b1515d0baa993d8acbe483e2fcc"
+    },
+    {
+      "path": "apps/web/src/features/task-overview.tsx",
+      "sha256": "e649309aa6db622ba8ad03a2af2cb7e8fe501a16a06b4ea143311afab1bf8884"
+    },
+    {
+      "path": "apps/web/src/features/task-preview.tsx",
+      "sha256": "f45812c435f82d4d60eccf47a07e58882134b185f87bf5584550d9bc676ef9f1"
+    },
+    {
+      "path": "apps/web/src/features/task-shared.tsx",
+      "sha256": "1610848c6185cbd9b6b16159fa0df75e63d71034fd2e0f7906a7d42f244de7cb"
+    },
+    {
+      "path": "apps/web/src/features/task-timeline.tsx",
+      "sha256": "a0219dee15780699bdebc9c33a6439375b1c0c2a859074e1c5ade9eaa8219725"
+    },
+    {
+      "path": "apps/web/src/features/task-ui.css",
+      "sha256": "e86f603175910bd98f398c91137bb1a6e317d6b4b61e0a3bc148e1feda5fd51e"
+    },
+    {
+      "path": "apps/web/src/features/todos.tsx",
+      "sha256": "383edd952e03450d43bdf458f9a6a668147b31d07f113d693f904297117c8b92"
+    },
+    {
+      "path": "apps/web/src/lib/api.test.ts",
+      "sha256": "f29ae5794ab0246cae9c42fb428b430cdbe7c84ca8e37e290a456d1b4491b425"
+    },
+    {
+      "path": "apps/web/src/lib/api.ts",
+      "sha256": "1b720cc71c6f663a1667f780339e7801690a822c3b368d7ec11856a5dc9bc99d"
+    },
+    {
+      "path": "apps/web/src/lib/attempt-logs.test.ts",
+      "sha256": "d87d16de73b007a9afb8c35fc7391d147c7311f96bfff9ecf0996ddb01d15877"
+    },
+    {
+      "path": "apps/web/src/lib/attempt-logs.ts",
+      "sha256": "9709bbabdea90199b251b80af21ab12ad7f1c7860e5dc3a445a3fa9a309170c2"
+    },
+    {
+      "path": "apps/web/src/lib/browser-crypto.test.ts",
+      "sha256": "1eea37b8829c12b55705204705a8ab0f6d823d54b5bc8725e42a8914e317db87"
+    },
+    {
+      "path": "apps/web/src/lib/browser-crypto.ts",
+      "sha256": "faac6f7c62e10335591f4aec02bcf35573ca82a689f34a6340e189a40b777070"
+    },
+    {
+      "path": "apps/web/src/lib/discussion-api.test.ts",
+      "sha256": "be536898f5db8e8fa45d1d9a5b762c41af7281ef6e0a76a084976e3620e3df48"
+    },
+    {
+      "path": "apps/web/src/lib/discussion-api.ts",
+      "sha256": "9c851908e8bb24852ca18711bd2cab09919dc2a8fcdace1ea7b5319d2cc4a38a"
+    },
+    {
+      "path": "apps/web/src/lib/node-rework-api.test.ts",
+      "sha256": "20167a445f664931efc491744b3dbb931597c242069f372f1d69022db91b9dac"
+    },
+    {
+      "path": "apps/web/src/lib/owner-delivery-api.test.ts",
+      "sha256": "a93256b32bd7dcc2c7c1879126e74197c81224dd59af5b9a941abbc78923e558"
+    },
+    {
+      "path": "apps/web/src/lib/owner-delivery-api.ts",
+      "sha256": "b30e7352ddf932aaa907bed13af78cb7068a9743ff1d23d2273999bbf14232fa"
+    },
+    {
+      "path": "apps/web/src/lib/publication-api.test.ts",
+      "sha256": "881ce0e282e56c2949b4166ed6590ff9e0b55ba234eaf9edffa0a757654d079a"
+    },
+    {
+      "path": "apps/web/src/lib/publication-api.ts",
+      "sha256": "5800b024414857151fde51ee99d40d4f4031987bf447421b7b9baa894fc6b615"
+    },
+    {
+      "path": "apps/web/src/lib/remote-preparation-api.test.ts",
+      "sha256": "eed675680ec6069404e804c61191146b5d18fa239c2f61b2e6e275c364d289d6"
+    },
+    {
+      "path": "apps/web/src/lib/remote-preparation-api.ts",
+      "sha256": "1659156728ff137eb5391bea2503c61f3f0108d97d804b006995555193d20fbe"
+    },
+    {
+      "path": "apps/web/src/lib/result-api.test.ts",
+      "sha256": "a3e549dcf186ccdf83e96f159dd89529a663825f6942d402816a970310cd72df"
+    },
+    {
+      "path": "apps/web/src/lib/review-correction-api.test.ts",
+      "sha256": "f88b73678e25524e619b1062b06d2aacff240a9cdeda50c5d23367529bd4990c"
+    },
+    {
+      "path": "apps/web/src/lib/review-correction-api.ts",
+      "sha256": "cf7373379e5b9199c535003197b2970e68eb568b137df01078a731fd8ff18566"
+    },
+    {
+      "path": "apps/web/src/lib/task-api.test.ts",
+      "sha256": "bfb51df1a2017df367074cd973601cbebd5002a1e738abd3316fd9242c822c5b"
+    },
+    {
+      "path": "apps/web/src/lib/task-api.ts",
+      "sha256": "18ea3048f9f56212251201b50a0dfd39e6d41428d58f94251ed421bceed13784"
+    },
+    {
+      "path": "apps/web/src/lib/task-preview-api.test.ts",
+      "sha256": "06540f69ac8b7f632f9b5a1d88cae5940a3a4a82898e1add3969b12efab15e2f"
+    },
+    {
+      "path": "apps/web/src/lib/task-preview-api.ts",
+      "sha256": "232fe219c040fbc05face370f9b4955feb6e1e92546fc42ad026aca9204ba302"
+    },
+    {
+      "path": "apps/web/src/lib/task-storage.test.ts",
+      "sha256": "45212fde670eb23586f3f1fe6a1c6fb2040d97febe41bd17aef283b9be4fc7b8"
+    },
+    {
+      "path": "apps/web/src/lib/task-storage.ts",
+      "sha256": "25babb39cd53e42dc788656abaa947fd0b9fddaa693dfc048b1ad56eaab0a418"
+    },
+    {
+      "path": "apps/web/src/lib/todo-api.test.ts",
+      "sha256": "2c62ebb5ca0a5ee8e483ad2b8433c74cad8db8eafe4ea339dce1061c1c290d50"
+    },
+    {
+      "path": "apps/web/src/lib/todo-api.ts",
+      "sha256": "b7e1057ea55fa9d2caf19825058071630348a1a5d4a5c51ccebcda2ea7921582"
+    },
+    {
+      "path": "apps/web/src/lib/use-command.ts",
+      "sha256": "168128c07e422b76fbc90924f1e77753a4f9c6105a5977d4abaa726112c91cf9"
+    },
+    {
+      "path": "apps/web/src/lib/use-discussion.ts",
+      "sha256": "ea6be9eb644d0b9620ff7ad4ea653832728f1d66891a6d82c4ca2d4c2e6cecc9"
+    },
+    {
+      "path": "apps/web/src/lib/use-task-command.ts",
+      "sha256": "d864e26b336a7560a5b9194bc14a6c001d03fdc707460b7ad6c0de27252cb823"
+    },
+    {
+      "path": "apps/web/src/lib/use-task-previews.ts",
+      "sha256": "e8ff00c3b888a124b414fa22d7fc30abdf8a8d1289cfb1f0f7ff29515182660f"
+    },
+    {
+      "path": "apps/web/src/lib/use-todo-command.ts",
+      "sha256": "8cb637bcb5f9f6361967b6f88d91b2717d3104df8f0f17b1dd5a526f511bfd93"
+    },
+    {
+      "path": "apps/web/src/lib/utils.ts",
+      "sha256": "14300d758170c270c75b057f38fedb3793a5920ea872f0477e29fb131185e8a7"
+    },
+    {
+      "path": "apps/web/src/main.tsx",
+      "sha256": "27f7fed310729a70b858120bb4c026117b3bbe5365a41c84a738a2dc3ace8661"
+    },
+    {
+      "path": "apps/web/src/styles.css",
+      "sha256": "047555a7aac4c05f2bb4be8cd25267a0b9a73aa9b463f5a25059e92a0e6c2a23"
+    },
+    {
+      "path": "apps/web/test/owner-delivery-server.ts",
+      "sha256": "88352fa51beff20a31bbd14e4c48fb77f371552b5a9e86dd2526babe637beb5a"
+    },
+    {
+      "path": "apps/web/test/owner-delivery.e2e.ts",
+      "sha256": "d70c405a31cc8943ed609b94c9354845c98603ee7bd32ab09923aa6d7b9c4cbd"
+    },
+    {
+      "path": "packages/protocol/generated/go/contracts.json",
+      "sha256": "ab7f30d254239598f6a907152ee8ff8aeef9927418d093a6bb1f4da9f095151e"
+    },
+    {
+      "path": "packages/protocol/generated/go/go.mod",
+      "sha256": "2d8da4db743ff11541b4ee0e40e477f2c184404446ba22a7ed265de9b3d602d2"
+    },
+    {
+      "path": "packages/protocol/generated/go/schema.go",
+      "sha256": "8e74d5a0b2b3fbcbafbdfd8dc66575110707bc45b4992a48fee07fc515aaa572"
+    },
+    {
+      "path": "packages/protocol/generated/go/types.go",
+      "sha256": "9f2547ddb967111efc18e5ee7b97c2addf12247b11e0faec76ca95b22b2e945c"
+    },
+    {
+      "path": "packages/protocol/generated/go/workspace_json.go",
+      "sha256": "4017e5525e4b8cbd2d0dd26f56297c4aa83145c7fcde1bea01997f460f27f4ba"
+    },
+    {
+      "path": "packages/protocol/generated/openapi.json",
+      "sha256": "6c47f6c3d6eed54d07b699f18b17f1947b05fe0a02bff7feab82837e36d203f6"
+    },
+    {
+      "path": "packages/protocol/generated/types.ts",
+      "sha256": "fe6c6f8d25df1e24aa49b44e4c7bf1538aef10eb20e543faa0f20e494846b85c"
+    },
+    {
+      "path": "packages/protocol/schemas/v1/contracts.json",
+      "sha256": "ab7f30d254239598f6a907152ee8ff8aeef9927418d093a6bb1f4da9f095151e"
+    },
+    {
+      "path": "packages/protocol/src/index.ts",
+      "sha256": "d2be618d83b319772f898c70678105c3b71e12d49b73dabeb4ac5b5c8ffc473e"
+    },
+    {
+      "path": "packages/protocol/src/validation.ts",
+      "sha256": "1d9e91df7740cd281a1fc695f20f1331a13278637ad8b4f1e6e3d58bf3355b6d"
+    }
+  ],
+  "bundle": [
+    {
+      "path": "index-B6Ck4wXJ.js",
+      "sha256": "c1fea0d12e992ce759bfc343920101f70b58d7fa4b27136cfe77de254a10a64b"
+    },
+    {
+      "path": "index-TKEvhF-s.css",
+      "sha256": "9a7ee1ea709417c88d0cee9a7bf954ccfec714c49e5050b4f2501645a810d85e"
+    }
+  ],
+  "route": "http://127.0.0.1:18556/#task?task_id=40859888-eda6-4a6f-b256-5f1c949e20d3&section=overview",
+  "state": "Actual exact acceptance, preparation and delivery worker; synthetic second provider rejects after first verified merge. First finalization remains durable.",
+  "test": "deferred multi-repository acceptance retains partial success and retries only the remainder",
+  "evidence": "Current built SPA; real isolated PostgreSQL, protected Owner routes through createApp injection, actual prepare/confirm/accept/Retry/Cancel and conversation receipts. Git/process and provider progress are explicitly synthetic. No native Runtime or live provider claim.",
+  "views": [
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 1000,
+        "label": "desktop"
+      },
+      "file": "multi-repository-partial-desktop.png",
+      "sha256": "4473af7e863c769c2f9a390238860d5a0f1f64288efabf836d6810055784901f",
+      "body": "Skip to content\nm\nmonos\n\nWorkspace\n\nTodos\nExecution Board\nProjects\nRoles\nExecution\nGitHub\nO\nOwner\nPersonal workspace\nWorkspace / Task\nPrivate workspace\nExecution board\n/\n← Back to Todos\nExecution task\nReview\n\nMulti-repository delivery\n\nConversation\nOverview\nTimeline\nExecution details\n\nDecision saved.\n\nDismiss notice\n\nDecision saved. Execution or cleanup may still be settling.\n\nDismiss notice\n\nManage the accepted delivery and its exact Cancel in Overview.\n\nSpecification\nBuild exact result\nAdvanced details\nRequirement revision history\nCurrent work\nPerform exact graph work\n\nBuilder\n\nCompleted\n\nLocal results\n\nThe local result is ready for review. No PR, delivery or Owner acceptance is recorded by this state.\n\nCurrent result\nOne complete multi-repository result\ngithub.com/example/multi-0\nLocal commit\ncccccccccccccccccccccccccccccccccccccccc\nWork started from\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nWork result before integration\ncccccccccccccccccccccccccccccccccccccccc\nResult tree\neeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\nTarget branch\nmain\nFixed base\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nInspect changes\nLocal publication candidate\nCandidate and scan history · 2 loaded\nOpen an exact candidate\n\nCurrent candidate evidence · Scan applicable\n\nLocal candidate retained.\n\nRemote preparation is deferred until acceptance. Local checks still run.\n\nLocal preparation creates no PR, publication or accepted delivery.\n\nCandidate head\ndddddddddddddddddddddddddddddddddddddddd\nExact result tree\neeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\nVerified public parents\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nAdvanced details\n\nLocal publication checks complete for this exact candidate. Passing configured rules does not establish that a result is secret-free.\n\nPublication findings\n\n0 of 0 findings loaded. Matching values and sensitive filenames are withheld.\n\ngithub.com/example/multi-1\nLocal commit\ndddddddddddddddddddddddddddddddddddddddd\nWork started from\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nWork result before integration\ndddddddddddddddddddddddddddddddddddddddd\nResult tree\nffffffffffffffffffffffffffffffffffffffff\nTarget branch\nmain\nFixed base\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nInspect changes\nLocal publication candidate\nCandidate and scan history · 2 loaded\nOpen an exact candidate\n\nCurrent candidate evidence · Scan applicable\n\nLocal candidate retained.\n\nRemote preparation is deferred until acceptance. Local checks still run.\n\nLocal preparation creates no PR, publication or accepted delivery.\n\nCandidate head\ndddddddddddddddddddddddddddddddddddddddd\nExact result tree\nffffffffffffffffffffffffffffffffffffffff\nVerified public parents\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nAdvanced details\n\nLocal publication checks complete for this exact candidate. Passing configured rules does not establish that a result is secret-free.\n\nPublication findings\n\n0 of 0 findings loaded. Matching values and sensitive filenames are withheld.\n\nAdvanced details\nRequested changes\n\nThis delivery has finalized. Its shipped result cannot be reopened.\n\nRequest Changes\nAcceptance and delivery\n\nHistorical prepared review · Version e7decee7d993\n\nExact Owner confirmation is recorded. Acceptance is a separate action.\n\nReview exact result\nPrepared reviews\n\nThe accepted result is frozen. Later messages stay outside this batch and do not pause delivery, checks or Retry.\n\nAccepted delivery · Failed\n\nAccepted version · e7decee7d993f9a8f14acd4df9855c33d4d260d2ea76f28cc285243a993e5221\n\nConversation cutoff · 0. Later input is outside this result.\n\nUnexpected head\n\n1 of 2 repository items finalized.\n\nFinalized · 736717f4-0f30-4863-807b-ead04356388a\n\nAccepted head · dddddddddddddddddddddddddddddddddddddddd\n\nOpen PR #1\n\nVerified final commit · 1111111111111111111111111111111111111111 · 10/11/2026, 4:58:35 PM\n\nRequested merge method · Merge. Reconciliation alone does not establish the remote actor or method.\n\nAdvanced details\n\nFailed · d6eda9d7-dd25-40f8-b97e-c831f4853d39\n\nAccepted head · dddddddddddddddddddddddddddddddddddddddd\n\nRequired checks · Passing\n\nUnexpected head\n\nOpen PR #1\n\nRequested merge method · Merge. Reconciliation alone does not establish the remote actor or method.\n\nAdvanced details\nRetry accepted delivery\nCancel accepted delivery\nFrozen accepted result and evidence\nAdvanced details\n\nDelivery uses the frozen batch. Pending or failed replies in Conversation do not change its Retry authority.\n\nAccepted delivery history\nRemote review preparation\n\nBackground preparation and provider observations do not accept delivery or complete the Task.\n\nRemote operation history · 4 loaded\n\nHistorical remote evidence\n\nThe retained scan grants no current publication authority.\n\nRemote preparation is deferred. Local inspection and checks remain available.\n\nReason · Mode deferred\n\nRepository\ngithub.com/example/multi-1\nDelivery branch\nrefs/heads/monos/task/40859888-eda6-4a6f-b256-5f1c949e20d3/d6eda9d7-dd25-40f8-b97e-c831f4853d39\nFixed target\nmain\nCandidate head\ndddddddddddddddddddddddddddddddddddddddd\nExact result tree\nffffffffffffffffffffffffffffffffffffffff\nVerified published head\ndddddddddddddddddddddddddddddddddddddddd\n\nOpen PR #1 · Open\n\nRecorded step · Push · Settled · Next attempt no earlier than 2026-10-11T08:58:34.912Z\n\nAdvanced details\n\nNo provider checks observation is recorded. Missing checks are not passing checks.\n\nHistorical observations grant no ordinary retry authority. Current applicability is checked independently of the selected bytes.\n\nFormal artifacts\n\nArtifact history includes earlier revisions. Current outputs are identified by the exact current completion manifests above."
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844,
+        "label": "mobile"
+      },
+      "file": "multi-repository-partial-mobile.png",
+      "sha256": "c5759a26fbee6f4e9d8261a0b32390df8131d3357504f5821af536717521096c",
+      "body": "Skip to content\nWorkspace / Task\nExecution board\n/\n← Back to Todos\nExecution task\nReview\n\nMulti-repository delivery\n\nConversation\nOverview\nTimeline\nExecution details\n\nDecision saved.\n\nDismiss notice\n\nDecision saved. Execution or cleanup may still be settling.\n\nDismiss notice\n\nManage the accepted delivery and its exact Cancel in Overview.\n\nSpecification\nBuild exact result\nAdvanced details\nRequirement revision history\nCurrent work\nPerform exact graph work\n\nBuilder\n\nCompleted\n\nLocal results\n\nThe local result is ready for review. No PR, delivery or Owner acceptance is recorded by this state.\n\nCurrent result\nOne complete multi-repository result\ngithub.com/example/multi-0\nLocal commit\ncccccccccccccccccccccccccccccccccccccccc\nWork started from\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nWork result before integration\ncccccccccccccccccccccccccccccccccccccccc\nResult tree\neeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\nTarget branch\nmain\nFixed base\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nInspect changes\nLocal publication candidate\nCandidate and scan history · 2 loaded\nOpen an exact candidate\n\nCurrent candidate evidence · Scan applicable\n\nLocal candidate retained.\n\nRemote preparation is deferred until acceptance. Local checks still run.\n\nLocal preparation creates no PR, publication or accepted delivery.\n\nCandidate head\ndddddddddddddddddddddddddddddddddddddddd\nExact result tree\neeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\nVerified public parents\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nAdvanced details\n\nLocal publication checks complete for this exact candidate. Passing configured rules does not establish that a result is secret-free.\n\nPublication findings\n\n0 of 0 findings loaded. Matching values and sensitive filenames are withheld.\n\ngithub.com/example/multi-1\nLocal commit\ndddddddddddddddddddddddddddddddddddddddd\nWork started from\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nWork result before integration\ndddddddddddddddddddddddddddddddddddddddd\nResult tree\nffffffffffffffffffffffffffffffffffffffff\nTarget branch\nmain\nFixed base\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nInspect changes\nLocal publication candidate\nCandidate and scan history · 2 loaded\nOpen an exact candidate\n\nCurrent candidate evidence · Scan applicable\n\nLocal candidate retained.\n\nRemote preparation is deferred until acceptance. Local checks still run.\n\nLocal preparation creates no PR, publication or accepted delivery.\n\nCandidate head\ndddddddddddddddddddddddddddddddddddddddd\nExact result tree\nffffffffffffffffffffffffffffffffffffffff\nVerified public parents\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nAdvanced details\n\nLocal publication checks complete for this exact candidate. Passing configured rules does not establish that a result is secret-free.\n\nPublication findings\n\n0 of 0 findings loaded. Matching values and sensitive filenames are withheld.\n\nAdvanced details\nRequested changes\n\nThis delivery has finalized. Its shipped result cannot be reopened.\n\nRequest Changes\nAcceptance and delivery\n\nHistorical prepared review · Version e7decee7d993\n\nExact Owner confirmation is recorded. Acceptance is a separate action.\n\nReview exact result\nPrepared reviews\n\nThe accepted result is frozen. Later messages stay outside this batch and do not pause delivery, checks or Retry.\n\nAccepted delivery · Failed\n\nAccepted version · e7decee7d993f9a8f14acd4df9855c33d4d260d2ea76f28cc285243a993e5221\n\nConversation cutoff · 0. Later input is outside this result.\n\nUnexpected head\n\n1 of 2 repository items finalized.\n\nFinalized · 736717f4-0f30-4863-807b-ead04356388a\n\nAccepted head · dddddddddddddddddddddddddddddddddddddddd\n\nOpen PR #1\n\nVerified final commit · 1111111111111111111111111111111111111111 · 10/11/2026, 4:58:35 PM\n\nRequested merge method · Merge. Reconciliation alone does not establish the remote actor or method.\n\nAdvanced details\n\nFailed · d6eda9d7-dd25-40f8-b97e-c831f4853d39\n\nAccepted head · dddddddddddddddddddddddddddddddddddddddd\n\nRequired checks · Passing\n\nUnexpected head\n\nOpen PR #1\n\nRequested merge method · Merge. Reconciliation alone does not establish the remote actor or method.\n\nAdvanced details\nRetry accepted delivery\nCancel accepted delivery\nFrozen accepted result and evidence\nAdvanced details\n\nDelivery uses the frozen batch. Pending or failed replies in Conversation do not change its Retry authority.\n\nAccepted delivery history\nRemote review preparation\n\nBackground preparation and provider observations do not accept delivery or complete the Task.\n\nRemote operation history · 4 loaded\n\nHistorical remote evidence\n\nThe retained scan grants no current publication authority.\n\nRemote preparation is deferred. Local inspection and checks remain available.\n\nReason · Mode deferred\n\nRepository\ngithub.com/example/multi-1\nDelivery branch\nrefs/heads/monos/task/40859888-eda6-4a6f-b256-5f1c949e20d3/d6eda9d7-dd25-40f8-b97e-c831f4853d39\nFixed target\nmain\nCandidate head\ndddddddddddddddddddddddddddddddddddddddd\nExact result tree\nffffffffffffffffffffffffffffffffffffffff\nVerified published head\ndddddddddddddddddddddddddddddddddddddddd\n\nOpen PR #1 · Open\n\nRecorded step · Push · Settled · Next attempt no earlier than 2026-10-11T08:58:34.912Z\n\nAdvanced details\n\nNo provider checks observation is recorded. Missing checks are not passing checks.\n\nHistorical observations grant no ordinary retry authority. Current applicability is checked independently of the selected bytes.\n\nFormal artifacts\n\nArtifact history includes earlier revisions. Current outputs are identified by the exact current completion manifests above."
+    }
+  ]
+}

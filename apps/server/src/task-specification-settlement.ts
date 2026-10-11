@@ -36,9 +36,9 @@ export async function admitSpecification(tx:Transaction,task:SpecificationTask,p
   await tx.query("UPDATE outbox SET done=true WHERE attempt_id=$1 AND kind='start'",[a.id]);
   await tx.query("UPDATE attempts SET mutation_allowed=false,state=CASE WHEN state='SUCCEEDED' THEN state ELSE 'CANCELLED' END,end_reason='specification_change',process_absent=CASE WHEN state='QUEUED' THEN true ELSE process_absent END WHERE id=$1",[a.id]);
   await lockAttemptWorkspace(tx,a.id);
-  const original=(await tx.query<CompletionOperation>("SELECT * FROM operations WHERE attempt_id=$1 AND kind='complete_node' AND state NOT IN ('succeeded','cancelled') FOR UPDATE",[a.id])).rows[0];
+  const original=(await tx.query<CompletionOperation>("SELECT *,operation_workspace_inputs(id) AS workspaces FROM operations WHERE attempt_id=$1 AND kind='complete_node' AND state NOT IN ('succeeded','cancelled') FOR UPDATE",[a.id])).rows[0];
   let effect:string|undefined;
-  if(original?.workspace_descriptor)effect=await admitCompletionSettlement(tx,a,original,requestId,'specification_change');
+  if(original?.workspaces)effect=await admitCompletionSettlement(tx,a,original,requestId,'specification_change');
   else if(original)effect=original.id;
   else if(!a.process_released&&a.state!=='QUEUED')effect=(await tx.query<{id:string}>("SELECT id FROM operations WHERE attempt_id=$1 AND kind='stop'",[a.id])).rows[0]?.id??await admitWorkspaceEffect(tx,a,'stop',requestId);
   if(effect)await tx.query('INSERT INTO requirement_change_effects(task_id,change_id,operation_id) VALUES($1,$2,$3)',[task.id,id,effect]);

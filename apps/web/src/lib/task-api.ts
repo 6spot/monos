@@ -199,18 +199,22 @@ export async function recoverTaskIntent(intent: TaskIntent, sessionId: string): 
   return receipt.status === 'unknown' ? submitTaskIntent(intent, sessionId) : receipt;
 }
 
-export async function resultRead(taskId: string, operationId: string, identity: string, mode: ResultReadRequest['mode'], params: Pick<ResultReadRequest, 'cursor'|'path'|'side'>, sessionId: string, signal?: AbortSignal): Promise<ResultReadResponse> {
+export async function resultRead(taskId: string, operationId: string, resourceId: string, identity: string, mode: ResultReadRequest['mode'], params: Pick<ResultReadRequest, 'cursor'|'path'|'side'>, sessionId: string, signal?: AbortSignal): Promise<ResultReadResponse> {
   validate('Id', operationId); validate('Id', sessionId);
-  const query = Object.fromEntries(Object.entries({ ...params, identity_digest: identity }).filter(([,value]) => value !== undefined));
+  const query = Object.fromEntries(Object.entries({ ...params, resource_id: resourceId, identity_digest: identity }).filter(([,value]) => value !== undefined));
   validate(`ResultRead${mode[0]!.toUpperCase()+mode.slice(1)}Query`, query);
   const response = await taskRead<ResultReadResponse>(taskId, `/results/${encodeURIComponent(operationId)}/${mode}`, 'ResultReadResponse', query, sessionId, signal);
   const r = response.request;
   // The wire response schema is shared with Runner replies, where applicability
   // is absent. Owner reads must supply the freshly resolved applicability.
-  if (typeof response.current !== 'boolean' || r.identity.task_id !== taskId || r.identity.operation_id !== operationId || r.identity_digest !== identity || r.mode !== mode || r.path !== params.path || r.side !== params.side || r.cursor !== params.cursor) throw new APIError('invalid_response', 'Result response did not match the selected content.');
-  // Identity is a flat generated scalar projection. Verify its complete digest,
-  // rather than accepting an echoed digest beside unrelated identity fields.
-  const canonical = JSON.stringify(Object.fromEntries(Object.entries(r.identity).sort(([a],[b]) => a < b ? -1 : a > b ? 1 : 0)));
+  if (typeof response.current !== 'boolean' || r.identity.task_id !== taskId || r.identity.operation_id !== operationId || r.identity.resource_id !== resourceId || r.identity_digest !== identity || r.mode !== mode || r.path !== params.path || r.side !== params.side || r.cursor !== params.cursor) throw new APIError('invalid_response', 'Result response did not match the selected content.');
+  // Capture and integration are nested immutable evidence; sort every object.
+  function canonicalValue(value: unknown): string {
+    if (Array.isArray(value)) return `[${value.map(canonicalValue).join(',')}]`;
+    if (value !== null && typeof value === 'object') return `{${Object.entries(value).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0).map(([key, item]) => `${JSON.stringify(key)}:${canonicalValue(item)}`).join(',')}}`;
+    return JSON.stringify(value);
+  }
+  const canonical = canonicalValue(r.identity);
   const hash = await sha256(canonical);
   signal?.throwIfAborted();
   if (hash !== identity) throw new APIError('invalid_response', 'Result response did not match the selected identity.');

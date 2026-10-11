@@ -100,10 +100,44 @@ func validateWorkspaceTransferProof(r workspaceRecord, op protocol.Operation, m 
 	if s == nil || s.PlanID != t.FromPlanID || s.NodeID != t.FromNodeID || s.NodeActivation != t.FromNodeActivation || m.Dispatch.AttemptID != t.FromAttemptID || m.Dispatch.DispatchID != r.Operation.DispatchID {
 		return fmt.Errorf("ownership_unresolved: transfer predecessor source mismatch")
 	}
-	if proof.Operation.OperationID != t.SettleOperationID || proof.Operation.DispatchID != r.Operation.DispatchID || !proof.Settled || !proof.Status.Known || proof.Status.Populated || proof.Status.Error != "" || proof.Status.Result == nil || proof.Operation.AttemptID != t.FromAttemptID || !sameWorkspaceOperation(proof.Operation, r.Operation) {
+	if proof.Operation.OperationID != t.SettleOperationID || proof.Operation.DispatchID != r.Operation.DispatchID || !proof.Settled || !proof.Status.Known || proof.Status.Populated || proof.Status.Error != "" || proof.Status.Result == nil || proof.Operation.AttemptID != t.FromAttemptID {
 		return fmt.Errorf("ownership_unresolved: transfer settlement missing")
 	}
 	result := proof.Status.Result
+	pairResult := result
+	if proof.Operation.Kind == protocol.KindCompleteNode {
+		input, item, err := selectedCompletionEvidence(proof.Operation, *result, t.ResourceID, t.WorkspaceID)
+		if err != nil {
+			return err
+		}
+		if !sameCompletionLease(r.Operation, proof.Operation, *input) {
+			return fmt.Errorf("transfer completion membership changed")
+		}
+		projected := workspaceResultProjection(*item)
+		result = &projected
+	} else if proof.Operation.Kind == protocol.SettleCompletion {
+		if original == nil || proof.Status.CompletionSettlement == nil {
+			return fmt.Errorf("transfer settlement parent missing")
+		}
+		pair := protocol.OperationResult{OperationID: proof.Operation.OperationID, AttemptID: proof.Operation.AttemptID, Success: true, Result: *pairResult, CompletionSettlement: proof.Status.CompletionSettlement}
+		if err := wire.ValidateCompletionPair(proof.Operation, *original, pair); err != nil {
+			return err
+		}
+		found := false
+		for i, input := range original.Workspaces {
+			if input.Workspace.ResourceID == t.ResourceID && input.Workspace.WorkspaceID == t.WorkspaceID && sameCompletionLease(r.Operation, *original, input) {
+				projected := workspaceResultProjection(pairResult.WorkspaceResults[i])
+				result = &projected
+				found = true
+				break
+			}
+		}
+		if !found {
+			return fmt.Errorf("transfer settlement membership changed")
+		}
+	} else if !sameWorkspaceOperation(proof.Operation, r.Operation) {
+		return fmt.Errorf("transfer singular lease changed")
+	}
 	if t.Purpose != nil && *t.Purpose == protocol.PurposeRework && (proof.Operation.Kind != protocol.Stop || t.ReworkCommandRequestID == nil || proof.Operation.RequestID != *t.ReworkCommandRequestID || result.WorkspaceID == nil || *result.WorkspaceID != t.WorkspaceID) {
 		return fmt.Errorf("ownership_unresolved: Rework requester Stop differs")
 	}
@@ -123,7 +157,7 @@ func validateWorkspaceTransferProof(r workspaceRecord, op protocol.Operation, m 
 			if original == nil || proof.Status.CompletionSettlement == nil || proof.Status.CompletionSettlement.Disposition != protocol.DispositionCancelled {
 				return fmt.Errorf("transfer requires cancelled completion settlement")
 			}
-			pair := protocol.OperationResult{OperationID: proof.Operation.OperationID, AttemptID: proof.Operation.AttemptID, Success: true, Result: *result, CompletionSettlement: proof.Status.CompletionSettlement}
+			pair := protocol.OperationResult{OperationID: proof.Operation.OperationID, AttemptID: proof.Operation.AttemptID, Success: true, Result: *pairResult, CompletionSettlement: proof.Status.CompletionSettlement}
 			if err := wire.ValidateCompletionPair(proof.Operation, *original, pair); err != nil {
 				return err
 			}

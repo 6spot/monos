@@ -18,11 +18,11 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Parallel result proven
       for (const [operation, effect] of [[first.operation, firstResult], [second.operation, secondResult]] as const) {
         const item = page.items.find(row => row.manifest.operation_id === operation.operation_id)!;
         expect(item.current).toBe(true);
-        expect(item.git!.integration).toEqual(effect.integration);
-        expect(item.git!.git_commit).toBe(effect.integration!.task_commit);
-        expect(item.git!.integration!.start_commit).toBe('a'.repeat(40));
+        expect(item.git_results[0]!.integration).toEqual(effect.workspace_results[0]!.integration);
+        expect(item.git_results[0]!.git_commit).toBe(effect.workspace_results[0]!.integration!.task_commit);
+        expect(item.git_results[0]!.integration!.start_commit).toBe('a'.repeat(40));
       }
-      expect(page.items.find(row => row.manifest.operation_id === second.operation.operation_id)!.git!.integration!.expected_task_commit).toBe('c'.repeat(40));
+      expect(page.items.find(row => row.manifest.operation_id === second.operation.operation_id)!.git_results[0]!.integration!.expected_task_commit).toBe('c'.repeat(40));
     } finally { await x.close(); }
   });
 });

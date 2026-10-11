@@ -3,7 +3,7 @@ import { ResultReadBroker } from '../src/result-read-broker.ts';
 import { canonicalJSON, digest } from '../../../packages/protocol/src/index.ts';
 import type { Frame, ResultReadRequest } from '../../../packages/protocol/src/index.ts';
 export function brokerRequest(runner = 'runner'): ResultReadRequest {
- const identity={task_id:'task',operation_id:'operation',attempt_id:'attempt',dispatch_id:'dispatch',node_id:'node',node_activation:1,specification_id:'spec',plan_id:'plan',workspace_id:'workspace',resource_id:'repo',runner_id:runner,storage_id:'storage',lease_id:'lease',generation:1,repository_identity:'repo',manifest_digest:'a'.repeat(64),operation_identity_digest:'b'.repeat(64),base_commit:'a'.repeat(40),git_commit:'b'.repeat(40),git_tree:'c'.repeat(40)};
+ const identity={task_id:'task',operation_id:'operation',attempt_id:'attempt',dispatch_id:'dispatch',node_id:'node',node_activation:1,specification_id:'spec',plan_id:'plan',workspace_id:'workspace',resource_id:'repo',runner_id:runner,storage_id:'storage',lease_id:'lease',generation:1,repository_identity:'repo',manifest_digest:'a'.repeat(64),operation_identity_digest:'b'.repeat(64),base_commit:'a'.repeat(40),git_commit:'b'.repeat(40),git_tree:'c'.repeat(40),capture:{start_commit:'a'.repeat(40),node_commit:'b'.repeat(40),node_tree:'c'.repeat(40)}};
  return {identity,identity_digest:digest(canonicalJSON(identity)),mode:'diff',path:'safe.txt'};
 }
 function response(f: Frame, text='exact'):Frame {return {schema_version:1,type:'result_read_result',incarnation:f.incarnation!,correlation_id:f.correlation_id!,result_read_result:{schema_version:1,request:f.result_read!,status:'available',text}};}

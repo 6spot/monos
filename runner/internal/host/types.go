@@ -94,7 +94,7 @@ func RuntimePaths(d protocol.Dispatch) ([]string, error) {
 		if err != nil || id != reservation.WorkspaceID {
 			return nil, fmt.Errorf("invalid workspace reservation")
 		}
-		isolation := d.WorkspaceReservations.Isolation
+		isolation := reservation.Isolation
 		if isolation != nil && !ValidID(isolation.AllocationID) {
 			return nil, fmt.Errorf("invalid workspace allocation reservation")
 		}
@@ -112,26 +112,27 @@ type Request struct {
 	RepositoryAccess    *protocol.GitHubRepositoryAccessResult `json:"repository_access,omitempty"`
 }
 type Status struct {
-	Known                  bool                           `json:"known"`
-	Exists                 bool                           `json:"exists"`
-	Populated              bool                           `json:"populated"`
-	MainExited             bool                           `json:"main_exited,omitempty"`
-	ExitCode               *int64                         `json:"exit_code,omitempty"`
-	CaptureFailed          bool                           `json:"capture_failed,omitempty"`
-	RuntimeFailed          bool                           `json:"runtime_failed,omitempty"`
-	BootID                 string                         `json:"boot_id"`
-	PID                    int                            `json:"pid"`
-	Birth                  string                         `json:"birth"`
-	Cgroup                 string                         `json:"cgroup"`
-	Error                  string                         `json:"error,omitempty"`
-	FailureKind            *protocol.FailureKind          `json:"failure_kind,omitempty"`
-	Result                 *protocol.EffectResult         `json:"result,omitempty"`
-	MaterializationBase    *string                        `json:"materialization_base,omitempty"`
-	Runtimes               []protocol.RuntimeInstallation `json:"runtimes,omitempty"`
-	CancelledByOperationID *string                        `json:"cancelled_by_operation_id,omitempty"`
-	PriorOperationResult   *protocol.OperationResult      `json:"prior_operation_result,omitempty"`
-	CompletionSettlement   *protocol.CompletionSettlement `json:"completion_settlement,omitempty"`
-	NeedsRepositoryAccess  bool                           `json:"needs_repository_access,omitempty"`
+	PreparedIntegration    *protocol.WorkspaceIntegrationResult `json:"prepared_integration,omitempty"`
+	Known                  bool                                 `json:"known"`
+	Exists                 bool                                 `json:"exists"`
+	Populated              bool                                 `json:"populated"`
+	MainExited             bool                                 `json:"main_exited,omitempty"`
+	ExitCode               *int64                               `json:"exit_code,omitempty"`
+	CaptureFailed          bool                                 `json:"capture_failed,omitempty"`
+	RuntimeFailed          bool                                 `json:"runtime_failed,omitempty"`
+	BootID                 string                               `json:"boot_id"`
+	PID                    int                                  `json:"pid"`
+	Birth                  string                               `json:"birth"`
+	Cgroup                 string                               `json:"cgroup"`
+	Error                  string                               `json:"error,omitempty"`
+	FailureKind            *protocol.FailureKind                `json:"failure_kind,omitempty"`
+	Result                 *protocol.EffectResult               `json:"result,omitempty"`
+	MaterializationBase    *string                              `json:"materialization_base,omitempty"`
+	Runtimes               []protocol.RuntimeInstallation       `json:"runtimes,omitempty"`
+	CancelledByOperationID *string                              `json:"cancelled_by_operation_id,omitempty"`
+	PriorOperationResult   *protocol.OperationResult            `json:"prior_operation_result,omitempty"`
+	CompletionSettlement   *protocol.CompletionSettlement       `json:"completion_settlement,omitempty"`
+	NeedsRepositoryAccess  bool                                 `json:"needs_repository_access,omitempty"`
 }
 type Supervisor interface {
 	Call(context.Context, Request) (Status, error)

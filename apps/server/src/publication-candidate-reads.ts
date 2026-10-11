@@ -1,4 +1,4 @@
-import { resolveCanonicalResult } from './task-result-reads.ts';
+import { resolveNodeResult } from './task-result-reads.ts';
 import { transaction } from '../../../packages/db/src/index.ts';
 import type { Database, Transaction } from '../../../packages/db/src/index.ts';
 import { CommandError } from '../../../packages/domain/src/commands.ts';
@@ -50,14 +50,14 @@ export class PublicationCandidateReads {
  constructor(db:Database,instanceId?:string) {this.db=db;this.instanceId=instanceId;}
  async list(token:string,taskId:string,input:unknown):Promise<PublicationCandidatePage> {
   validate('Id',taskId);const q=validate<PublicationCandidateQuery>('PublicationCandidateQuery',input);
-  const binding={kind:'publication_operations',task_id:taskId,source_operation_id:q.source_operation_id ?? null};const after=cursorDecode(binding,q.cursor);
+  const binding={kind:'publication_operations',task_id:taskId,source_operation_id:q.source_operation_id ?? null,resource_id:q.resource_id ?? null};const after=cursorDecode(binding,q.cursor);
   if(typeof after!=='string')throw new CommandError('invalid_input','Invalid publication history position');
   if(after)validate('Id',after);
   return transaction(this.db,async tx=>{
    await authenticateOwner(tx,token);if(!(await tx.query('SELECT id FROM tasks WHERE id=$1 FOR SHARE',[taskId])).rowCount)throw new CommandError('denied_scope','Unknown Task');
-   if(q.source_operation_id)await resolveCanonicalResult(tx,taskId,q.source_operation_id);
-   if(after && !(await tx.query('SELECT id FROM delivery_operations WHERE task_id=$1 AND id=$2 AND ($3::text IS NULL OR source_operation_id=$3)',[taskId,after,q.source_operation_id ?? null])).rowCount)throw new CommandError('denied_scope','Publication cursor position belongs to another selection');
-   const rows=(await tx.query<DeliveryOperation>(`SELECT * FROM delivery_operations WHERE task_id=$1 AND ($2='' OR (created_at,id)<(SELECT created_at,id FROM delivery_operations WHERE id=$2)) AND ($3::text IS NULL OR source_operation_id=$3) ORDER BY created_at DESC,id DESC LIMIT 33`,[taskId,after,q.source_operation_id ?? null])).rows;
+   if(q.source_operation_id)await resolveNodeResult(tx,taskId,q.source_operation_id);
+   if(after && !(await tx.query('SELECT id FROM delivery_operations WHERE task_id=$1 AND id=$2 AND ($3::text IS NULL OR source_operation_id=$3) AND ($4::text IS NULL OR resource_id=$4)',[taskId,after,q.source_operation_id ?? null,q.resource_id ?? null])).rowCount)throw new CommandError('denied_scope','Publication cursor position belongs to another selection');
+   const rows=(await tx.query<DeliveryOperation>(`SELECT * FROM delivery_operations WHERE task_id=$1 AND ($2='' OR (created_at,id)<(SELECT created_at,id FROM delivery_operations WHERE id=$2)) AND ($3::text IS NULL OR source_operation_id=$3) AND ($4::text IS NULL OR resource_id=$4) ORDER BY created_at DESC,id DESC LIMIT 33`,[taskId,after,q.source_operation_id ?? null,q.resource_id ?? null])).rows;
    const items:PublicationRecord[]=[];let bytes=4096;
    for(const op of rows) {
     if(items.length===32)break;const item=await publicationRecord(tx,op,this.instanceId),size=Buffer.byteLength(JSON.stringify(item))+1;

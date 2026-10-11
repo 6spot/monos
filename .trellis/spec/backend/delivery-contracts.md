@@ -13,13 +13,18 @@ Canonical Task Conversation implements source-bound `commit_task_turn` and Owner
 [Task Conversation](task-conversation.md). Canonical Node completion implements
 `complete_node(summary, artifact_ids?, handled_guidance_ids?)`; source-aware local
 pre-delivery Cancel is also implemented. Exact Owner Accept, accepted Retry/Cancel
-and zero/one modified automatic GitHub finality follow [Owner delivery](owner-delivery.md).
+and multi-repository GitHub finality in automatic/after-acceptance mode follow [Owner delivery](owner-delivery.md).
 Dedicated prepare/confirm/Accept receipts are enforced in SQL; confirmation alone
 is not acceptance. Explicit Request Changes/revocation/reconsideration uses the
 [review correction](review-correction.md) contract.
-Multi-repository/plain-Git/deferred-mode final delivery remains outside Stage A.
+Plain-Git final delivery remains outside the implemented GitHub lane.
 
 ## 3. Contracts
+
+Each Node contributes one output and a complete resource-sorted `sources[]` array;
+all modified repository members pass an initial validation barrier before any
+merge. Every actual PUT retains current per-item readiness and authority checks.
+Finalization proceeds in resource-ID order and persists each success separately.
 
 Successful acceptance persists one delivery operation with its receipt, exact Specification/Plan/evidence/result, repository candidates/targets and input cutoff. Admission and message append serialize on Task control.
 
@@ -44,6 +49,8 @@ Local capture hard limits protect reliable storage/processing. Publication limit
 | Later chat while CI/push/merge waits | Save/reply; accepted batch continues |
 | Later chat during partial delivery | Unchanged remainder may continue/Retry |
 | Plain-Git push succeeds | Preparation only until accepted publication is verified |
+| Second repository not ready | No first merge; retain distinct per-item checks |
+| Second merge rejected after first success | Persist first final; Retry only unchanged second member |
 | Uncertain provider result | Reconcile; never duplicate or infer failure |
 | Explicit correction after an item finalized | Reject in-place correction; finish/cancel remainder |
 | Result/head changed | Old acceptance cannot authorize it |

@@ -13,6 +13,7 @@ const same = (a: unknown, b: unknown) => canonicalJSON(a) === canonicalJSON(b);
 // Caller holds Task and item locks. The immutable candidate is already accepted;
 // a new request is deterministic dispatch under that batch, never new acceptance.
 export async function admitAcceptedPreparationForItem(tx: Transaction, item: RemoteItem, retry = false): Promise<void> {
+  if ((await tx.query('SELECT 1 FROM owner_delivery_finalizations f JOIN tasks t ON t.accepted_delivery_operation_id=f.batch_id WHERE t.id=$1 AND f.item_id=$2', [item.task_id, item.item_id])).rowCount) return;
   const local = (await tx.query<{ request: PublicationPushRequest['preparation']; result: PublicationPushRequest['prepared'] }>(
     `SELECT o.request,o.result FROM owner_delivery_batch_items m JOIN owner_delivery_batches b ON b.id=m.batch_id
      JOIN tasks t ON t.accepted_delivery_operation_id=b.id

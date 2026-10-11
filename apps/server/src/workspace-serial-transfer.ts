@@ -25,11 +25,14 @@ export async function serialWorkspaceTransfer(
       l.node_activation AS from_node_activation,l.attempt_id AS from_attempt_id,
       w.resource_id,w.generation,w.storage_id,w.repository_identity,w.provider_metadata,
       w.base_commit,w.target_branch,w.finalized_commit,l.settle_operation_id,
-      op.completion_manifest_digest,op.workspace_descriptor,op.workspace_digest,
-      op.result,c.result AS completion_result
+      op.completion_manifest_digest,item.workspace_descriptor,item.workspace_digest,
+      item.result||jsonb_build_object('writer_absent',op.result->'writer_absent') result,
+      (SELECT completed.value FROM jsonb_array_elements(c.result->'workspace_results') completed WHERE completed.value->>'resource_id'=w.resource_id)
+        ||jsonb_build_object('completion_manifest_digest',c.result->'completion_manifest_digest') completion_result
     FROM task_workspaces w JOIN workspace_leases l ON l.workspace_id=w.id
     JOIN attempts old ON old.id=l.attempt_id
     JOIN operations op ON op.id=l.settle_operation_id AND op.attempt_id=old.id
+    JOIN LATERAL operation_workspace_results(op.id) item ON item.lease_id=l.id
     JOIN completion_manifests m ON m.operation_id=op.id AND m.attempt_id=old.id
     JOIN node_completions c ON c.operation_id=op.id AND c.attempt_id=old.id
     JOIN attempts current ON current.id=$3
@@ -40,7 +43,7 @@ export async function serialWorkspaceTransfer(
       AND l.generation=w.generation AND l.node_id=old.node_id AND l.node_activation=old.node_activation
       AND old.task_id=w.task_id AND old.runner_id=w.runner_id AND old.plan_id=$6
       AND old.process_released AND old.process_absent AND NOT old.mutation_allowed
-      AND op.kind='complete_node' AND op.state='succeeded' AND op.workspace_lease_id=l.id
+      AND op.kind='complete_node' AND op.state='succeeded' AND op.result->>'completion_outcome'='finalized'
       AND m.task_id=w.task_id AND m.node_id=l.node_id AND m.node_activation=l.node_activation
       AND m.plan_id=old.plan_id AND m.specification_id=old.specification_id
       AND m.source_id=old.node_execution_source_id AND m.content_digest=op.completion_manifest_digest
@@ -55,7 +58,7 @@ export async function serialWorkspaceTransfer(
       AND EXISTS(SELECT 1 FROM plan_nodes WHERE plan_id=current.plan_id AND node_id=current.node_id)
       AND NOT EXISTS(SELECT 1 FROM workspace_leases later WHERE later.workspace_id=w.id
         AND (later.created_at,later.id)>(l.created_at,l.id))
-      AND NOT EXISTS(SELECT 1 FROM workspace_leases live WHERE live.task_id=w.task_id AND live.state<>'released')
+      AND NOT EXISTS(SELECT 1 FROM workspace_leases live WHERE live.task_id=w.task_id AND live.attempt_id<>current.id AND live.state<>'released')
       AND NOT EXISTS(SELECT 1 FROM attempts writer WHERE writer.task_id=w.task_id AND writer.kind='node' AND writer.id<>current.id
         AND (writer.mutation_allowed OR NOT writer.process_released))
       AND NOT EXISTS(SELECT 1 FROM operations effect JOIN attempts owner ON owner.id=effect.attempt_id

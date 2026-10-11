@@ -209,7 +209,7 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Upstream Rework execut
     const result = await x.agent(requester, 'request_rework', { reason: 'Correction before cancellation' });
     const request = await unresolved();
     await x.owner('cancel_task', { specification_id: x.f.spec, plan_id: x.f.plan });
-    expect((await x.db.pool.query('SELECT status,stop_operation_id FROM node_rework_requests WHERE id=$1', [request.id])).rows[0]).toEqual({ status: 'cancelled', stop_operation_id: result.operation_id });
+    expect((await x.db.pool.query('SELECT status,(SELECT operation_id FROM node_rework_request_stops WHERE request_id=r.id) stop_operation_id FROM node_rework_requests r WHERE id=$1', [request.id])).rows[0]).toEqual({ status: 'cancelled', stop_operation_id: result.operation_id });
     expect((await x.db.pool.query("SELECT id FROM operations WHERE attempt_id=$1 AND kind='stop'", [requester.dispatch.attempt_id])).rowCount).toBe(1);
     await x.finish(result.operation_id!, requester.dispatch.attempt_id);
     await rework.pump();

@@ -36,16 +36,18 @@ export async function parallelWorkspacesFixture() {
       return { response, operation: await x.service.recoverOperation(x.f.runner, response.operation_id!) };
     }
     async function settleCompletion(turn: ParallelTurn, operation: Operation, outcome: 'integrated' | 'conflict' = 'integrated', commit = 'c'.repeat(40)) {
-      const w = operation.workspace!;
+      const input = operation.workspaces![0]!, w = input.workspace;
       const open = (await x.db.pool.query<{ result: { workspace_metadata: WorkspaceMetadata } }>('SELECT result FROM operations WHERE id=$1', [w.open_operation_id])).rows[0]!;
-      const before = open.result.workspace_metadata, expected = operation.integration?.expected_task_commit;
+      const before = open.result.workspace_metadata, expected = input.integration?.expected_task_commit;
       const integration: WorkspaceIntegrationResult | undefined = w.isolation ? {
         outcome, start_commit: before.isolation!.start_commit, node_commit: commit, node_tree: 'd'.repeat(40), expected_task_commit: expected!,
         task_commit: outcome === 'integrated' ? commit : expected!, task_tree: 'e'.repeat(40),
       } : undefined;
       const metadata: WorkspaceMetadata = { ...before, finalized_commit: outcome === 'integrated' ? commit : before.finalized_commit };
-      const result = { writer_absent: true, workspace_id: w.workspace_id, workspace_metadata: metadata,
-        ...(outcome === 'integrated' ? { git_commit: commit, git_tree: integration?.task_tree ?? 'e'.repeat(40) } : {}), ...(integration ? { integration } : {}) };
+      const result = { writer_absent: true, completion_outcome: outcome === 'integrated' ? 'finalized' as const : 'conflict' as const,
+        workspace_results: [{ resource_id: w.resource_id, workspace_id: w.workspace_id, workspace_metadata: metadata,
+          capture: { start_commit: before.isolation?.start_commit ?? before.finalized_commit, node_commit: commit, node_tree: integration?.node_tree ?? 'e'.repeat(40) },
+          ...(outcome === 'integrated' ? { git_commit: commit, git_tree: integration?.task_tree ?? 'e'.repeat(40) } : {}), ...(integration ? { integration } : {}) }] };
       await x.service.finishOperation(x.f.runner, x.f.incarnation, { operation_id: operation.operation_id, attempt_id: turn.dispatch.attempt_id, success: true, result });
       return result;
     }

@@ -10,7 +10,7 @@ import { assertSpecificationUnfrozen } from './task-specification-state.ts';
 import { assertNoReplan } from './task-replan-state.ts';
 import { reactivateSettledNodes } from './task-records.ts';
 import { planningEvent } from './task-planning-state.ts';
-import { admitWorkspaceEffect } from './workspaces.ts';
+import { admitWorkspaceStops } from './workspaces.ts';
 import { supersedeRuntimeContinuation } from './runtime-continuation-state.ts';
 import { derivedTaskState } from './owner-execution.ts';
 import { hasUnadoptedCheckpointTargets } from './task-replan-workspaces.ts';
@@ -21,7 +21,7 @@ export interface NodeReworkRequest {
   requester_attempt_id: string; agent_request_id: string; target_node_id: string; reason: string;
   budget_epoch: string; automatic_ordinal: number | null;
   status: 'settling' | 'limit_blocked' | 'applied' | 'continued' | 'cancelled';
-  version: string; stop_operation_id: string; blocker_id: string | null;
+  version: string; blocker_id: string | null;
   owner_decision_request_id: string | null; applied_control_version: string | null;
   continued_source_id: string | null; attention: string | null;
 }
@@ -148,11 +148,14 @@ export async function requestNodeRework(
   }
   await tx.query("UPDATE outbox SET done=true WHERE attempt_id=$1 AND kind='start'", [attempt.id]);
   await tx.query("UPDATE attempts SET mutation_allowed=false,state='CANCELLED',end_reason=$2 WHERE id=$1", [attempt.id, limited ? 'rework_limit' : 'rework_requested']);
-  const stop = await admitWorkspaceEffect(tx, attempt, 'stop', command.request_id);
+  const stops = await admitWorkspaceStops(tx, attempt, command.request_id);
+  const stop = stops[0]!;
   await tx.query(`INSERT INTO node_rework_requests(id,task_id,specification_id,plan_id,requester_node_id,requester_activation,requester_source_id,
-    requester_attempt_id,agent_request_id,target_node_id,reason,budget_epoch,automatic_ordinal,status,stop_operation_id,blocker_id)
-    VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)`,
-  [id, task.id, task.specification_id, task.plan_id, source.node_id, source.node_activation, source.id, attempt.id, command.request_id, target, reason, epoch, limited ? null : used + 1, limited ? 'limit_blocked' : 'settling', stop, blocker]);
+    requester_attempt_id,agent_request_id,target_node_id,reason,budget_epoch,automatic_ordinal,status,blocker_id)
+    VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
+  [id, task.id, task.specification_id, task.plan_id, source.node_id, source.node_activation, source.id, attempt.id, command.request_id, target, reason, epoch, limited ? null : used + 1, limited ? 'limit_blocked' : 'settling', blocker]);
+  await tx.query(`INSERT INTO node_rework_request_stops(request_id,operation_id,workspace_id,lease_id)
+    SELECT $1,id,workspace_descriptor->>'workspace_id',workspace_lease_id FROM operations WHERE id=ANY($2::text[])`, [id, stops]);
   for (const row of targets) await tx.query(`INSERT INTO node_rework_targets(request_id,task_id,node_id,from_activation,source_id,completion_operation_id,completion_manifest_digest)
     VALUES($1,$2,$3,$4,$5,$6,$7)`, [id, task.id, row.node_id, row.from_activation, row.source_id, row.completion_operation_id, row.completion_manifest_digest]);
   await tx.query('UPDATE tasks SET control_version=control_version+1 WHERE id=$1', [task.id]);
@@ -160,11 +163,17 @@ export async function requestNodeRework(
   return { result: { rework_outcome: await reworkOutcome(tx, await reworkRequest(tx, task.id, id)) }, operation_id: stop };
 }
 
+export async function reworkStopIds(tx: Transaction, requestId: string): Promise<string[]> {
+  return (await tx.query<{ operation_id: string }>(`SELECT member.operation_id FROM node_rework_request_stops member
+    JOIN operations o ON o.id=member.operation_id WHERE member.request_id=$1 ORDER BY o.resource_id NULLS FIRST,o.id`, [requestId])).rows.map(row => row.operation_id);
+}
 export async function reworkSettled(tx: Transaction, r: NodeReworkRequest): Promise<boolean> {
-  return !!(await tx.query(`SELECT 1 FROM attempts a JOIN operations o ON o.id=$2 AND o.attempt_id=a.id
-    WHERE a.id=$1 AND a.process_absent AND a.process_released AND o.kind='stop' AND o.state='succeeded' AND o.request_id=$3
+  return !!(await tx.query(`SELECT 1 FROM attempts a WHERE a.id=$1 AND a.process_absent AND a.process_released
+    AND EXISTS(SELECT 1 FROM node_rework_request_stops WHERE request_id=$2)
+    AND NOT EXISTS(SELECT 1 FROM node_rework_request_stops member JOIN operations o ON o.id=member.operation_id
+      WHERE member.request_id=$2 AND (o.attempt_id<>a.id OR o.kind<>'stop' OR o.state<>'succeeded' OR o.request_id<>$3))
     AND NOT EXISTS(SELECT 1 FROM operations pending WHERE pending.attempt_id=a.id AND pending.state NOT IN('succeeded','cancelled'))
-    AND NOT EXISTS(SELECT 1 FROM workspace_leases l WHERE l.attempt_id=a.id AND l.state<>'released')`, [r.requester_attempt_id, r.stop_operation_id, r.agent_request_id])).rowCount;
+    AND NOT EXISTS(SELECT 1 FROM workspace_leases l WHERE l.attempt_id=a.id AND l.state<>'released')`, [r.requester_attempt_id, r.id, r.agent_request_id])).rowCount;
 }
 export async function checkReworkBasis(tx: Transaction, task: NodeTask, r: NodeReworkRequest): Promise<NodeReworkTarget[]> {
   if (task.specification_id !== r.specification_id || task.plan_id !== r.plan_id || !['RUNNING', 'BLOCKED'].includes(task.state))
@@ -207,7 +216,7 @@ export async function advanceNodeRework(tx: Transaction, task: NodeTask, r: Node
     if (r.owner_decision_request_id) await tx.query('UPDATE tasks SET rework_epoch=rework_epoch+1 WHERE id=$1', [task.id]);
     await tx.query("UPDATE node_rework_requests SET status='applied',version=version+1,attention=NULL,applied_control_version=$2 WHERE id=$1", [r.id, Number(task.control_version) + 1]);
     await tx.query('UPDATE tasks SET state=$2 WHERE id=$1', [task.id, await derivedTaskState(tx, task.plan_id)]);
-    await planningEvent(tx, task.id, 'node_rework_applied', { rework_request_id: r.id, target_node_id: r.target_node_id, affected_node_ids: ids }, r.requester_attempt_id, r.stop_operation_id);
+    await planningEvent(tx, task.id, 'node_rework_applied', { rework_request_id: r.id, target_node_id: r.target_node_id, affected_node_ids: ids }, r.requester_attempt_id, (await reworkStopIds(tx, r.id))[0]);
   } catch (error) {
     if (!(error instanceof CommandError)) throw error;
     await tx.query('UPDATE node_rework_requests SET attention=$2 WHERE id=$1', [r.id, error.message]);

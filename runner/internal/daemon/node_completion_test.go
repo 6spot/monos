@@ -20,7 +20,7 @@ func nodeFreeFixture(t *testing.T) (protocol.Dispatch, protocol.Operation) {
 	d, op := recoveryFixture(t, "node-free", protocol.KindCompleteNode)
 	d.NodeExecutionSource = &protocol.NodeExecutionSource{SourceID: "source", NodeID: *d.NodeID, NodeActivation: d.NodeActivation, ControlVersion: d.ControlVersion, SpecificationID: "spec", PlanID: "plan", ContextDigest: strings.Repeat("a", 64)}
 	op.ResourceID, op.Workspace, op.WorkspaceDigest = nil, nil, nil
-	op.RepositoryFree = nodeBool(true)
+	op.Workspaces = []protocol.WorkspaceCompletionInput{}
 	op.CompletionManifestDigest = ptr(strings.Repeat("b", 64))
 	return d, op
 }
@@ -38,7 +38,7 @@ func TestNodeRepositoryFreeCompletionReconnectAndExactTerminalReplay(t *testing.
 			if effects.Add(1) == 1 {
 				return host.Status{}, errors.New("temporary absence check failure")
 			}
-			return host.Status{Known: true, Result: &protocol.EffectResult{WriterAbsent: nodeBool(true)}}, nil
+			return host.Status{Known: true, Result: &protocol.EffectResult{WriterAbsent: nodeBool(true), CompletionOutcome: ptr("finalized"), WorkspaceResults: []protocol.WorkspaceEffectResult{}}}, nil
 		}
 		return host.Status{Known: true, BootID: "boot"}, nil
 	})}
@@ -94,7 +94,7 @@ func TestNodeCompletionRejectsForeignSourceAndFabricatedGit(t *testing.T) {
 			}
 			var calls atomic.Int32
 			d := Daemon{DB: db, Control: &control.Client{}, Boot: "boot", Host: functionSupervisor(func(_ context.Context, r host.Request) (host.Status, error) {
-				status := host.Status{Known: true, BootID: "boot", Result: &protocol.EffectResult{WriterAbsent: nodeBool(true)}}
+				status := host.Status{Known: true, BootID: "boot", Result: &protocol.EffectResult{WriterAbsent: nodeBool(true), CompletionOutcome: ptr("finalized"), WorkspaceResults: []protocol.WorkspaceEffectResult{}}}
 				if r.Action == "effect" {
 					calls.Add(1)
 					switch mode {
@@ -147,16 +147,17 @@ func TestCompletionCancellationReplaysWholeRetainedPairWithoutHost(t *testing.T)
 	settle.RequestID = "settle-request"
 	settle.Kind = protocol.SettleCompletion
 	settle.CompletionManifestDigest = nil
+	settle.Workspaces = nil
 	settle.CompletionOperationID = &original.OperationID
 	settle.CompletionIdentityDigest = &digest
 	retainRecovery(t, db, dispatch, original, recoveryFailure(original))
 	if err := db.BeginEffect(settle); err != nil {
 		t.Fatal(err)
 	}
-	w := settle.Workspace
+	w := &original.Workspaces[0].Workspace
 	oid := strings.Repeat("a", 40)
 	metadata := &protocol.WorkspaceMetadata{StorageID: "storage", Generation: w.Generation, LeaseID: w.LeaseID, RepositoryIdentity: w.Resource.RepositoryIdentity, BaseCommit: oid, FinalizedCommit: oid, TargetBranch: "main", TargetCommit: oid, Checkpoint: &protocol.WorkspaceCheckpoint{OperationID: settle.OperationID, HeadCommit: oid, TreeID: oid, CommitID: oid, CompletionOperationID: &original.OperationID, CompletionIdentityDigest: &digest}}
-	pair := protocol.OperationResult{AttemptID: settle.AttemptID, OperationID: settle.OperationID, Success: true, Result: protocol.EffectResult{WriterAbsent: nodeBool(true), WorkspaceID: &w.WorkspaceID, WorkspaceMetadata: metadata}, CompletionSettlement: &protocol.CompletionSettlement{CompletionOperationID: original.OperationID, Disposition: protocol.DispositionCancelled, CompletionResult: protocol.CompletionOperationResult{AttemptID: original.AttemptID, OperationID: original.OperationID, CancelledByOperationID: &settle.OperationID, Result: protocol.EffectResult{WriterAbsent: nodeBool(true)}}}}
+	pair := protocol.OperationResult{AttemptID: settle.AttemptID, OperationID: settle.OperationID, Success: true, Result: protocol.EffectResult{WriterAbsent: nodeBool(true), WorkspaceResults: []protocol.WorkspaceEffectResult{{ResourceID: w.ResourceID, WorkspaceID: w.WorkspaceID, WorkspaceMetadata: *metadata}}}, CompletionSettlement: &protocol.CompletionSettlement{CompletionOperationID: original.OperationID, Disposition: protocol.DispositionCancelled, CompletionResult: protocol.CompletionOperationResult{AttemptID: original.AttemptID, OperationID: original.OperationID, CancelledByOperationID: &settle.OperationID, Result: protocol.EffectResult{WriterAbsent: nodeBool(true)}}}}
 	if err := db.FinishCompletionSettlement(pair); err != nil {
 		t.Fatal(err)
 	}
@@ -186,6 +187,7 @@ func TestOriginalRedeliveryCannotAutomaticallyRetryHardSettlement(t *testing.T) 
 	settle.OperationID = "settlement"
 	settle.Kind = protocol.SettleCompletion
 	settle.CompletionManifestDigest = nil
+	settle.Workspaces = nil
 	settle.CompletionOperationID = &original.OperationID
 	settle.CompletionIdentityDigest = &digest
 	retainRecovery(t, db, dispatch, original, recoveryFailure(original))
@@ -213,5 +215,57 @@ func TestOriginalRedeliveryCannotAutomaticallyRetryHardSettlement(t *testing.T) 
 	_ = d.effect(ctx, settle)
 	if calls.Load() != 1 {
 		t.Fatal("explicit same-ID settlement retry failed to reach Host")
+	}
+}
+
+func completedEffectFixture(op protocol.Operation, base, commit, tree string) protocol.EffectResult {
+	result := protocol.EffectResult{WriterAbsent: nodeBool(true), CompletionOutcome: ptr("finalized"), WorkspaceResults: []protocol.WorkspaceEffectResult{}}
+	for _, input := range op.Workspaces {
+		w := input.Workspace
+		result.WorkspaceResults = append(result.WorkspaceResults, protocol.WorkspaceEffectResult{ResourceID: w.ResourceID, WorkspaceID: w.WorkspaceID, GitCommit: &commit, GitTree: &tree, Capture: &protocol.WorkspaceCaptureResult{StartCommit: base, NodeCommit: commit, NodeTree: tree}, WorkspaceMetadata: protocol.WorkspaceMetadata{StorageID: "storage-old", Generation: w.Generation, LeaseID: w.LeaseID, RepositoryIdentity: w.Resource.RepositoryIdentity, BaseCommit: base, FinalizedCommit: commit, TargetBranch: "main", TargetCommit: base}})
+	}
+	return result
+}
+
+func TestSiblingWorkspaceStopsSettleIndependently(t *testing.T) {
+	db := testDB(t)
+	dispatch, first := recoveryFixture(t, "multiple-stops", protocol.Stop)
+	second := first
+	second.OperationID = "second-stop"
+	second.RequestID = "second-stop-request"
+	w := *first.Workspace
+	w.ResourceID = "resource-z"
+	w.Resource.ResourceID = w.ResourceID
+	w.WorkspaceID, _ = host.TaskWorkspaceID(*dispatch.TaskID, w.ResourceID)
+	w.LeaseID = "second-lease"
+	w.OpenOperationID = "second-open"
+	second.Workspace, second.ResourceID = &w, &w.ResourceID
+	_, digest, _ := wire.Canonical(w)
+	second.WorkspaceDigest = &digest
+	dispatch.WorkspaceReservations.Resources = append(dispatch.WorkspaceReservations.Resources, protocol.WorkspaceReservation{ResourceID: w.ResourceID, WorkspaceID: w.WorkspaceID})
+	retainRecovery(t, db, dispatch, first, nil)
+	if err := db.BeginEffect(second); err != nil {
+		t.Fatal(err)
+	}
+	entered, release, finished := make(chan struct{}), make(chan struct{}), make(chan struct{})
+	d := Daemon{DB: db, Control: &control.Client{}, Boot: "boot", Host: functionSupervisor(func(_ context.Context, r host.Request) (host.Status, error) {
+		if r.Action == "effect" && r.Operation.OperationID == first.OperationID {
+			close(entered)
+			<-release
+		}
+		return host.Status{Known: true, Result: &protocol.EffectResult{WriterAbsent: nodeBool(true)}}, nil
+	})}
+	go func() { _ = d.effect(context.Background(), first); close(finished) }()
+	<-entered
+	_ = d.effect(context.Background(), second)
+	result, err := db.Effect(second.OperationID)
+	close(release)
+	<-finished
+	if err != nil || result == nil || !result.Success {
+		t.Fatal("sibling Stop waited for unrelated unresolved lease", result, err)
+	}
+	result, err = db.Effect(first.OperationID)
+	if err != nil || result == nil || !result.Success {
+		t.Fatal("first Stop lost its own settlement", result, err)
 	}
 }

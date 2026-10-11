@@ -85,7 +85,7 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Planner repository ins
     await expect(inspect(x, a, resource)).rejects.toMatchObject({ detail: { code: 'stale_execution' } });
   });
 
-  it('binds Todo source, permits resource removal after inspection and settles unavailable before Stop', async () => {
+  it('binds Todo source and retains the claim after Stop until unavailable inspection settles', async () => {
     const x = await use(conversationFixture()), resource = await configure(x), todo = randomUUID(), discussion = new Discussion(x.db, x.service.instanceId);
     await new Todos(x.db).command(x.token, { schema_version: 1, request_id: randomUUID(), name: 'capture_todo', payload: { todo_id: todo, original_capture: 'Inspect project', project_id: x.f.project } });
     await discussion.command(x.token, { schema_version: 1, request_id: randomUUID(), todo_id: todo, name: 'submit_discussion_message', payload: { message_id: randomUUID(), content: 'Check repository facts' } });
@@ -97,11 +97,16 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Planner repository ins
     await discussion.command(x.token, { schema_version: 1, request_id: randomUUID(), todo_id: todo, expected_discussion_version: status.discussion_version,
       name: 'stop_discussion_turn', payload: { source_message_id: a.dispatch.source_message_id!, attempt_id: a.dispatch.attempt_id } });
     const stop = (await x.db.pool.query("SELECT id FROM operations WHERE attempt_id=$1 AND kind='stop'", [a.dispatch.attempt_id])).rows[0];
-    await expect(x.finish(stop.id, a.dispatch.attempt_id)).rejects.toMatchObject({ detail: { code: 'unmet_precondition' } });
+    await x.finish(stop.id, a.dispatch.attempt_id);
+    expect((await x.service.recoverOperation(x.f.runner, stop.id)).state).toBe('succeeded');
+    expect((await x.db.pool.query('SELECT process_absent,process_released FROM attempts WHERE id=$1', [a.dispatch.attempt_id])).rows[0])
+      .toEqual({ process_absent: true, process_released: false });
     await x.service.finishOperation(x.f.runner, x.f.incarnation, { operation_id: op.operation_id, attempt_id: op.attempt_id, success: false, failure_kind: 'recoverable', result: { message: 'Interrupted materialization' } });
     expect((await x.service.recoverOperation(x.f.runner, op.operation_id)).state).toBe('recovery');
-    await finish(x, op, observation(op, 'unavailable')); await x.finish(stop.id, a.dispatch.attempt_id);
+    expect((await x.db.pool.query('SELECT process_released FROM attempts WHERE id=$1', [a.dispatch.attempt_id])).rows[0].process_released).toBe(false);
+    await finish(x, op, observation(op, 'unavailable'));
     expect((await x.db.pool.query('SELECT process_released FROM attempts WHERE id=$1', [a.dispatch.attempt_id])).rows[0].process_released).toBe(true);
+    await x.finish(stop.id, a.dispatch.attempt_id);
     expect((await x.db.pool.query('SELECT 1 FROM task_workspaces')).rowCount).toBe(0);
   });
 
@@ -226,7 +231,9 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Planner repository ins
     async function complete(a: Agent, opened: Awaited<ReturnType<typeof open>>, commit: string, tree: string) {
       const result = await x.agent(a, 'complete_node', { summary: 'Exact completed revision' });
       await x.service.finishOperation(x.f.runner, x.f.incarnation, { operation_id: result.operation_id!, attempt_id: a.dispatch.attempt_id, success: true,
-        result: { writer_absent: true, workspace_id: opened.w.workspace_id, workspace_metadata: { ...opened.metadata, finalized_commit: commit }, git_commit: commit, git_tree: tree } });
+        result: { writer_absent: true, completion_outcome: 'finalized', workspace_results: [{ resource_id: opened.w.resource_id,
+          workspace_id: opened.w.workspace_id, workspace_metadata: { ...opened.metadata, finalized_commit: commit },
+          capture: { start_commit: opened.metadata.finalized_commit, node_commit: commit, node_tree: tree }, git_commit: commit, git_tree: tree }] } });
       return result.operation_id!;
     }
     const first = await x.node(), firstOpen = await open(first, 'a'.repeat(40)), firstResult = await complete(first, firstOpen, 'b'.repeat(40), 'c'.repeat(40));

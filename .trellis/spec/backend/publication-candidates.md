@@ -57,7 +57,11 @@ DB triggers. Pending dispatch state is mutable; terminal facts are append-only.
 
 Digests use existing canonical JSON SHA256 in TS and Go. `source_digest` covers
 the entire original `ResultReadIdentity`; original Specification/Plan attribution
-is never rewritten. `effective_basis_digest` separately covers Task, current
+is never rewritten. A completion can contain several repositories: admit one
+candidate operation per resource in the canonical `git_results[]`, each with an
+explicit resource selector, its own capture/workspace/Git identity, and the shared
+parent operation. Resource-free completions admit none. Never collapse candidates
+by parent operation alone. `effective_basis_digest` separately covers Task, current
 Specification/Plan, original completion operation and completion manifest.
 Applicability requires exact canonical result/carry, current effective basis,
 finalized workspace head and current relevant configuration.
@@ -162,8 +166,11 @@ do not clear that separate guard. No remediation setter exists in this slice.
 
 Configuration binds policy/rule/traversal versions and permission fingerprint.
 Workflow add/modify/delete/mode changes require verified workflow write permission.
-Automatic GitHub preparation uses the exact observed App profile; local deferred
-preparation retains unknown permission and does not request write tokens. Existing
+GitHub preparation in both modes can bind the exact observed App profile.
+Deferred preparation may initially retain unknown permission, but acceptance
+requires a real permission observation and a new scan binding that fingerprint.
+Backend permission observation returns evidence only; it delivers no publication
+credential and does not authorize a push/PR before acceptance. Existing
 read tokens grant no write permission. New scans retain explicit workflow_changes;
 legacy omitted metadata remains valid history but grants no new remote admission.
 Own deadline or limit exhaustion produces immutable incomplete evidence. External
@@ -249,7 +256,8 @@ Spec identity with new Task guards; private Agent history becomes public ancestr
   followed by eligible siblings and original-operation resume; direct read share
   lock versus canonical revision writers; multi-rule full-page settlement;
   out-of-order pages/duplicate conflict/reconnect ack; incomplete Retry; exact
-  three-step Owner receipt replay and atomic mixed-hard denial; later genuinely
+  three-step Owner receipt replay and atomic mixed-hard denial; two resources from
+  one parent receive independent candidate operations and scans; later genuinely
   completed clean source retaining prior exposure; no-change with zero items.
 - Actual Git/SQLite: original Basis-absent provenance/pin/cache tamper; exact tree
   and private ancestry exclusion; CAS/crash/replay/fixed dates/optional target;

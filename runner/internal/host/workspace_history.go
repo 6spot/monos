@@ -136,7 +136,7 @@ func seedWorkspaceHistory(cache string, op protocol.Operation) error {
 	}
 	for _, h := range op.Workspace.ReworkHistory {
 		m := reworkMetadata(h)
-		dir, reason := trustedResultExport(protocol.ResultReadIdentity{OperationID: h.SettleOperationID, StorageID: m.StorageID})
+		dir, reason := trustedOperationExport(protocol.ResultReadIdentity{OperationID: h.SettleOperationID, StorageID: m.StorageID}, false)
 		if reason != "" {
 			return fmt.Errorf("storage_unavailable: protected checkpoint export %s", reason)
 		}

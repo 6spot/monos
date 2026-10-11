@@ -73,7 +73,7 @@ func (f *resultGitFixture) exportIndex(t *testing.T) {
 	commit := resultTestGit(t, f.work, nil, "rev-parse", "HEAD")
 	tree := resultTestGit(t, f.work, nil, "rev-parse", "HEAD^{tree}")
 	resultTestGit(t, f.export, nil, "update-ref", "refs/monos/result", commit)
-	f.request = protocol.ResultReadRequest{Mode: protocol.Changes, Identity: protocol.ResultReadIdentity{TaskID: "task", OperationID: "completion", AttemptID: "attempt", DispatchID: "dispatch", NodeID: "node", SpecificationID: "spec", PlanID: "plan", WorkspaceID: "workspace", ResourceID: "repo", RunnerID: "runner", StorageID: "storage", LeaseID: "lease", NodeActivation: 1, Generation: 1, RepositoryIdentity: "github.com/example/repo", ManifestDigest: strings.Repeat("a", 64), OperationIdentityDigest: strings.Repeat("b", 64), BaseCommit: f.base, GitCommit: commit, GitTree: tree}}
+	f.request = protocol.ResultReadRequest{Mode: protocol.Changes, Identity: protocol.ResultReadIdentity{TaskID: "task", OperationID: "completion", AttemptID: "attempt", DispatchID: "dispatch", NodeID: "node", SpecificationID: "spec", PlanID: "plan", WorkspaceID: "workspace", ResourceID: "repo", RunnerID: "runner", StorageID: "storage", LeaseID: "lease", NodeActivation: 1, Generation: 1, RepositoryIdentity: "github.com/example/repo", ManifestDigest: strings.Repeat("a", 64), OperationIdentityDigest: strings.Repeat("b", 64), BaseCommit: f.base, GitCommit: commit, GitTree: tree, Capture: protocol.WorkspaceCaptureResult{StartCommit: f.base, NodeCommit: commit, NodeTree: tree}}}
 	f.request.IdentityDigest = resultTestDigest(t, f.request.Identity)
 }
 func resultTestDigest(t *testing.T, i protocol.ResultReadIdentity) string {
@@ -297,7 +297,7 @@ func TestResultReadScanRecordLimitAndRawOverflowCleanup(t *testing.T) {
 	// finish stages the physical worktree, so export this indexed commit directly.
 	resultTestGit(t, f.work, nil, "clone", "--bare", "--no-local", f.work, f.export)
 	resultTestGit(t, f.export, nil, "update-ref", "refs/monos/result", commit)
-	f.request = protocol.ResultReadRequest{Mode: protocol.Changes, Identity: protocol.ResultReadIdentity{TaskID: "task", OperationID: "completion", AttemptID: "attempt", DispatchID: "dispatch", NodeID: "node", SpecificationID: "spec", PlanID: "plan", WorkspaceID: "workspace", ResourceID: "repo", RunnerID: "runner", StorageID: "storage", LeaseID: "lease", NodeActivation: 1, Generation: 1, RepositoryIdentity: "repo", ManifestDigest: strings.Repeat("a", 64), OperationIdentityDigest: strings.Repeat("b", 64), BaseCommit: f.base, GitCommit: commit, GitTree: tree}}
+	f.request = protocol.ResultReadRequest{Mode: protocol.Changes, Identity: protocol.ResultReadIdentity{TaskID: "task", OperationID: "completion", AttemptID: "attempt", DispatchID: "dispatch", NodeID: "node", SpecificationID: "spec", PlanID: "plan", WorkspaceID: "workspace", ResourceID: "repo", RunnerID: "runner", StorageID: "storage", LeaseID: "lease", NodeActivation: 1, Generation: 1, RepositoryIdentity: "repo", ManifestDigest: strings.Repeat("a", 64), OperationIdentityDigest: strings.Repeat("b", 64), BaseCommit: f.base, GitCommit: commit, GitTree: tree, Capture: protocol.WorkspaceCaptureResult{StartCommit: f.base, NodeCommit: commit, NodeTree: tree}}}
 	f.request.IdentityDigest = resultTestDigest(t, f.request.Identity)
 	if out := readResultObjects(context.Background(), f.export, f.request); out.Status != "scan_limit" || out.Changes != nil || out.TotalChanges != nil {
 		t.Fatal("partial scan falsely complete", out)

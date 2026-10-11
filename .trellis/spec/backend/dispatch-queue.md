@@ -35,11 +35,19 @@ epoch/input watermark, not the global execution control version; it shares the
 may overlap a held Task workspace without acquiring writable access, while shared
 capacity, locality and previous Planner settlement still apply. Lock Runner -> one Task -> Attempt. Filter blocked owners
 before LIMIT and never hold several Task locks while scanning. Independent Nodes
-can run concurrently with frozen isolated allocations. Direct placement reserves
-exclusive Task access from enqueue until settlement, including before first open;
-same-Node prior ownership still blocks its successor. Placement cannot change
+can run concurrently with frozen per-resource isolated allocations. Any direct
+reservation reserves exclusive Task access from enqueue until settlement, including
+before first open. Empty resource reservations require no exclusive workspace
+placement; same-Node prior ownership still blocks its successor. Placement cannot change
 after admission. See [workspace contracts](workspaces.md).
 Selected production Attempts recheck current installation facts before Start. A complete current report of missing/unavailable Runtime cancels pre-start work; an omitted report or disconnected sole Runner leaves it queued. Stale heads are retried in separate transactions, at most 16 per poll, so one transaction never holds several Task locks.
+
+An unresolved `complete_node` parent owns the Task completion boundary from
+admission through recovery. Block new Node source preparation, enqueue, promotion
+and workspace opens until the whole aggregate settles. Promotion excludes these
+candidates before LIMIT and rechecks the boundary under the selected Task lock;
+unrelated Tasks remain eligible. A member's physical success cannot release the
+parent boundary or authorize a successor early.
 
 Set RUNNING, physical reservation, monotonic owner fence, Node RUNNING and the
 single Start outbox row in one transaction. A failure before commit leaves QUEUED;
@@ -83,8 +91,12 @@ terminalizing an Attempt frees capacity before its physical writer disappears.
 `postgres-dispatch.test.ts` verifies queued visibility/identity, concurrent capacity,
 independent SIGKILL before/after promotion commit, restart replay, stale queue basis,
 late/duplicate events, Stop settlement/fence advancement, locality and dependencies.
-Run all real DB suites because fixture admission and existing event/effect handlers
-share the migration. No real model is invoked by this verification.
+Run affected dispatch/admission checks for changed queue behavior, including mixed
+resource placement and completion-boundary contention where applicable. The main
+integration gate covers missing or invalidated shared-migration/fixture evidence;
+do not repeat unchanged suites solely because they use the same database. Follow
+[verification scope](../guides/verification-scope.md). No real model is invoked by
+this verification.
 
 ## 7. Wrong vs Correct
 

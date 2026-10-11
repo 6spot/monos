@@ -9,6 +9,7 @@ import type {
   AttemptWorkspace,
   AttemptWorkspaceStatus,
   EffectResult,
+  WorkspaceEffectResult,
 } from "../../../packages/protocol/src/index.ts";
 import { authenticateOwner } from "./owner-commands.ts";
 
@@ -16,6 +17,7 @@ interface WorkspaceRow
   extends Omit<AttemptWorkspace, "metadata" | "metadata_operation_id"> {
   open_result: unknown;
   settle_result: unknown;
+  settle_kind: string | null;
   recovery_operation_id: string | null;
   recovery_result: unknown;
 }
@@ -52,16 +54,18 @@ export async function attemptWorkspace(
       await tx.query<WorkspaceRow>(
         `SELECT w.id workspace_id,w.resource_id,w.runner_id,l.id lease_id,l.state lease_state,w.repository_identity,
    opened.id open_operation_id,opened.state open_state,opened.result open_result,
-   settled.id settle_operation_id,settled.state settle_state,settled.result settle_result,COALESCE(settled.failure_kind,opened.failure_kind) failure_kind,
-   recovered.id recovery_operation_id,recovered.result recovery_result
+   settled.id settle_operation_id,settled.state settle_state,settled.kind settle_kind,settled_item.result settle_result,COALESCE(settled.failure_kind,opened.failure_kind) failure_kind,
+   recovered.id recovery_operation_id,recovered_item.result recovery_result
    FROM workspace_leases l JOIN task_workspaces w ON w.id=l.workspace_id AND w.task_id=l.task_id
    JOIN operations opened ON opened.id=l.open_operation_id AND opened.attempt_id=l.attempt_id
    LEFT JOIN operations settled ON settled.id=l.settle_operation_id AND settled.attempt_id=l.attempt_id
+   LEFT JOIN LATERAL operation_workspace_results(settled.id) settled_item ON settled_item.lease_id=l.id
    LEFT JOIN operations recovered ON recovered.completion_operation_id=settled.id
      AND recovered.kind='settle_completion' AND recovered.state='succeeded'
-     AND recovered.attempt_id=l.attempt_id AND recovered.workspace_lease_id=l.id
-     AND recovered.workspace_digest=settled.workspace_digest AND recovered.workspace_descriptor=settled.workspace_descriptor
-   WHERE l.task_id=$1 AND l.attempt_id=$2 ORDER BY l.id LIMIT 65`,
+     AND recovered.attempt_id=l.attempt_id
+   LEFT JOIN LATERAL operation_workspace_results(recovered.id) recovered_item ON recovered_item.lease_id=l.id
+     AND recovered_item.workspace_digest=settled_item.workspace_digest AND recovered_item.workspace_descriptor=settled_item.workspace_descriptor
+   WHERE l.task_id=$1 AND l.attempt_id=$2 ORDER BY w.resource_id,l.id LIMIT 65`,
         [taskId, attemptId],
       )
     ).rows;
@@ -77,10 +81,12 @@ export async function attemptWorkspace(
           : null;
       const settled =
         row.settle_state === "succeeded"
-          ? validate<EffectResult>("EffectResult", row.settle_result)
+          ? row.settle_kind === "complete_node"
+            ? validate<WorkspaceEffectResult>("WorkspaceEffectResult", row.settle_result)
+            : validate<EffectResult>("EffectResult", row.settle_result)
           : null;
-      const recovered = row.recovery_operation_id
-        ? validate<EffectResult>("EffectResult", row.recovery_result)
+      const recovered = row.recovery_operation_id && row.recovery_result
+        ? validate<WorkspaceEffectResult>("WorkspaceEffectResult", row.recovery_result)
         : null;
       // Correction leaves the lease pointing at its original completion. The
       // exact successful child owns the private checkpoint, while an already-

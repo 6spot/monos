@@ -104,7 +104,8 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('PostgreSQL process-cra
     const restarted = new BoundaryService(db, { signingKey });
     const current = await restarted.connect(launch.runner_id, 'test-boot'); await restarted.touch(launch.runner_id, current, true);
     const stop = (await restarted.inventory(launch.runner_id)).operations.find((op) => op.kind === 'stop')!;
-    await expect(restarted.finishOperation(launch.runner_id, current, { attempt_id: launch.attempt_id, operation_id: stop.operation_id, success: true, result: { writer_absent: true } })).rejects.toMatchObject({ detail: { code: 'unmet_precondition' } });
+    await restarted.finishOperation(launch.runner_id, current, { attempt_id: launch.attempt_id, operation_id: stop.operation_id, success: true, result: { writer_absent: true } });
+    expect((await db.pool.query('SELECT process_released FROM attempts WHERE id=$1', [launch.attempt_id])).rows[0].process_released).toBe(false);
     expect((await counts(launch)).process_released).toBe(false);
     expect((await restarted.recoverCommand(launch.runner_id, launch.attempt_id, command.request_id)).operation_id).toBe(admitted.operation_id);
     const result = { attempt_id: launch.attempt_id, operation_id: admitted.operation_id!, success: true, result: { workspace_id: 'workspace', path: '/test-only/workspace' } };

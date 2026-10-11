@@ -93,7 +93,7 @@ suite('Durable local publication',()=>{
     const metadata={generation:w.generation,storage_id:'fair-queue-storage-'+i,provider_metadata:{github:{repository_id:'42'}},lease_id:w.lease_id,repository_identity:w.resource.repository_identity,base_commit:'a'.repeat(40),target_branch:'main',target_commit:'a'.repeat(40),finalized_commit:'a'.repeat(40)};
     await x.service.finishOperation(x.f.runner,x.f.incarnation,{operation_id:open.operation_id,attempt_id:node.dispatch.attempt_id,success:true,result:{workspace_id:w.workspace_id,path:'/runner/private/worktree',instruction_files:[],workspace_metadata:metadata}});
     const done=await admit(node,task,'complete_node',{summary:'Exact fair queue result'});
-    await x.service.finishOperation(x.f.runner,x.f.incarnation,{operation_id:done.operation_id!,attempt_id:node.dispatch.attempt_id,success:true,result:{writer_absent:true,workspace_id:w.workspace_id,workspace_metadata:{...metadata,finalized_commit:'b'.repeat(40)},git_commit:'b'.repeat(40),git_tree:'c'.repeat(40)}});
+    await x.service.finishOperation(x.f.runner,x.f.incarnation,{operation_id:done.operation_id!,attempt_id:node.dispatch.attempt_id,success:true,result:{writer_absent:true,completion_outcome:'finalized',workspace_results:[{resource_id:x.resource,workspace_id:w.workspace_id,workspace_metadata:{...metadata,finalized_commit:'b'.repeat(40)},capture:{start_commit:metadata.finalized_commit,node_commit:'b'.repeat(40),node_tree:'c'.repeat(40)},git_commit:'b'.repeat(40),git_tree:'c'.repeat(40)}]}});
    }
    const original=(await x.db.pool.query<{id:string;task_id:string;request:unknown}>('SELECT id,task_id,request FROM delivery_operations ORDER BY created_at,id')).rows;
    expect(original.map(o=>o.task_id)).toEqual(tasks);
@@ -117,7 +117,7 @@ suite('Durable local publication',()=>{
    expect((await x.db.pool.query('SELECT count(*) n FROM delivery_operations')).rows[0]!.n).toBe('4');
   }finally{await x.close();}
  },30000);
- it('upgrades populated version 21 PostgreSQL to version 30 without changing prior checksums or Task revision history',async()=>{
+ it('upgrades populated version 21 PostgreSQL to the current version without changing prior checksums or Task revision history',async()=>{
   const url=new URL(process.env.DATABASE_URL!),admin=database(url.toString()),namespace='publication_upgrade_'+randomUUID().replaceAll('-','');
   await admin.pool.query(`CREATE SCHEMA ${namespace}`);url.searchParams.set('options',`-c search_path=${namespace}`);const db=database(url.toString());
   try {
@@ -128,7 +128,7 @@ suite('Durable local publication',()=>{
    await transaction(db,tx=>initializeTask(tx,{task_id:randomUUID(),specification_id:randomUUID(),specification:'Retained pre-delivery Task'}));
    const versions=(await db.pool.query('SELECT * FROM schema_migrations ORDER BY version')).rows;
    const tasks=(await db.pool.query('SELECT * FROM tasks')).rows,revisions=(await db.pool.query('SELECT * FROM specification_revisions')).rows;
-   await migrate(db);await migrate(db);expect((await db.pool.query('SELECT version FROM schema_migrations ORDER BY version DESC LIMIT 1')).rows[0]!.version).toBe(30);
+   await migrate(db);await migrate(db);expect((await db.pool.query('SELECT version FROM schema_migrations ORDER BY version DESC LIMIT 1')).rows[0]!.version).toBe((await readdir(directory)).filter(name=>/^\d{4}_.*\.sql$/.test(name)).length);
    expect((await db.pool.query('SELECT * FROM schema_migrations ORDER BY version')).rows.slice(0,21)).toEqual(versions);
    expect((await db.pool.query('SELECT * FROM tasks')).rows).toEqual(tasks.map(task => ({ ...task, rework_epoch: '1' })));expect((await db.pool.query('SELECT * FROM specification_revisions')).rows).toEqual(revisions);
    expect((await db.pool.query('SELECT * FROM delivery_operations')).rows).toEqual([]);
@@ -137,7 +137,7 @@ suite('Durable local publication',()=>{
  it('creates no delivery operation for a genuine repository-free completion; both resource modes keep identical local work',async()=>{
   const free=await conversationFixture();try {
    await free.start();const node=await free.node(),done=await free.agent(node,'complete_node',{summary:'Repository-free result'});
-   await free.service.finishOperation(free.f.runner,free.f.incarnation,{operation_id:done.operation_id!,attempt_id:node.dispatch.attempt_id,success:true,result:{writer_absent:true}});
+   await free.service.finishOperation(free.f.runner,free.f.incarnation,{operation_id:done.operation_id!,attempt_id:node.dispatch.attempt_id,success:true,result:{writer_absent:true,completion_outcome:'finalized',workspace_results:[]}});
    await new PublicationPreparation(free.db,free.service.instanceId).pump();expect((await free.db.pool.query('SELECT * FROM delivery_operations')).rows).toEqual([]);expect((await free.db.pool.query('SELECT * FROM delivery_items')).rows).toEqual([]);
   }finally{await free.close();}
   const x=await publicationFixture();try {
@@ -158,9 +158,9 @@ suite('Durable local publication',()=>{
    const first=await x.db.pool.connect();await first.query('BEGIN');await first.query('SELECT id FROM tasks WHERE id=$1 FOR UPDATE',[x.f.task]);
    const second=new PublicationPreparation(x.db,x.service.instanceId).pump();
    await expect.poll(async()=>Number((await x.db.pool.query("SELECT count(*) n FROM pg_stat_activity WHERE application_name='monos-boundary-probe' AND wait_event_type='Lock' AND query LIKE '%tasks%FOR UPDATE%'")).rows[0]!.n)).toBeGreaterThan(0);
-   const id=await ensureLocalCandidate(first,x.f.task);await first.query('COMMIT');first.release();await second;
+   const ids=await ensureLocalCandidate(first,x.f.task);expect(ids).toHaveLength(1);await first.query('COMMIT');first.release();await second;
    expect((await x.db.pool.query('SELECT * FROM delivery_operations')).rows).toHaveLength(2);
-   const current=(await x.db.pool.query('SELECT request FROM delivery_operations WHERE id=$1',[id])).rows[0]!.request;
+   const current=(await x.db.pool.query('SELECT request FROM delivery_operations WHERE id=$1',[ids[0]!])).rows[0]!.request;
    expect(current.construction).toEqual(x.request.construction);
    await expect(transaction(x.db,async tx=>{await tx.query("UPDATE project_resources SET settings=jsonb_set(settings,'{provider_repo_id}','\"43\"') WHERE id=$1",[x.resource]);await ensureLocalCandidate(tx,x.f.task);throw new Error('rollback');})).rejects.toThrow('rollback');
    await new PublicationPreparation(x.db,x.service.instanceId).pump();
@@ -239,7 +239,7 @@ suite('Durable local publication',()=>{
    await x.service.finishOperation(x.f.runner,x.f.incarnation,{operation_id:open.operation_id,attempt_id:node.dispatch.attempt_id,success:true,result:{workspace_id:w.workspace_id,path:'/runner/private/worktree',instruction_files:[],workspace_metadata:metadata}});
    const handled=(await x.db.pool.query('SELECT guidance_id FROM task_guidance_assignments WHERE source_id=$1',[node.dispatch.node_execution_source!.source_id])).rows.map(r=>r.guidance_id);
    const done=await x.agent(node,'complete_node',{summary:'Clean new exact source',handled_guidance_ids:handled});
-   await x.service.finishOperation(x.f.runner,x.f.incarnation,{operation_id:done.operation_id!,attempt_id:node.dispatch.attempt_id,success:true,result:{writer_absent:true,workspace_id:w.workspace_id,workspace_metadata:{...metadata,finalized_commit:'e'.repeat(40)},git_commit:'e'.repeat(40),git_tree:'f'.repeat(40)}});
+   await x.service.finishOperation(x.f.runner,x.f.incarnation,{operation_id:done.operation_id!,attempt_id:node.dispatch.attempt_id,success:true,result:{writer_absent:true,completion_outcome:'finalized',workspace_results:[{resource_id:x.resource,workspace_id:w.workspace_id,workspace_metadata:{...metadata,finalized_commit:'e'.repeat(40)},capture:{start_commit:metadata.finalized_commit,node_commit:'e'.repeat(40),node_tree:'f'.repeat(40)},git_commit:'e'.repeat(40),git_tree:'f'.repeat(40)}]}});
    const later=(await x.db.pool.query('SELECT request FROM delivery_operations WHERE source_operation_id=$1',[done.operation_id])).rows[0]!.request;
    expect(later.construction.candidate_id).not.toBe(x.request.construction.candidate_id);
    expect(later.construction.parents[0].observation_operation_id).toBe(x.descriptor.open_operation_id);

@@ -48,6 +48,26 @@ test('parallel results preserve revision attribution and conflicts remain unfini
   await screenshots(page, info, 'parallel-conflict-recovery');
 });
 
+test('one completion exposes and inspects every repository separately', async ({ page }, info) => {
+  await signIn(page);
+  const f = await scenario(page, 'multi_repository_review');
+  await openTask(page, f, 'overview');
+  const results = await get<TaskResultPage>(page, `/v1/owner/tasks/${f.task}/results`);
+  expect(results.items).toHaveLength(1);
+  expect(results.items[0]!.git_results).toHaveLength(2);
+  for (const git of results.items[0]!.git_results) {
+    const repository = page.getByRole('region', { name: `Repository result: ${git.metadata.repository_identity}`, exact: true });
+    await expect(repository).toBeVisible();
+    await repository.getByRole('button', { name: 'Inspect changes', exact: true }).click();
+    await repository.getByRole('button', { name: 'Modified src/literal.txt', exact: true }).click();
+    await expect(repository.getByLabel('Exact file diff')).toContainText('exact whitespace');
+  }
+  const observed = await post<{ requests: { identity: { resource_id: string; operation_id: string } }[] }>(page, '/__test__/result-peer', { task_id: f.task, action: 'observe' });
+  expect(new Set(observed.requests.map(request => request.identity.resource_id))).toEqual(new Set(results.items[0]!.git_results.map(git => git.resource_id)));
+  expect(observed.requests.every(request => request.identity.operation_id === results.items[0]!.manifest.operation_id)).toBe(true);
+  await screenshots(page, info, 'multi-repository-results');
+});
+
 test('Board canonical columns, normal queueing, local Review and responsive navigation', async ({ page }, info) => {
   await signIn(page);
   const ready = await scenario(page, 'ready', 'A ready independent task');
@@ -69,7 +89,7 @@ test('Board canonical columns, normal queueing, local Review and responsive navi
   await openTask(page, review, 'overview');
   await expect(page.getByRole('button', { name: /Accept|Merge|Prepare PR/ })).toHaveCount(0);
   const results = await get<TaskResultPage>(page, `/v1/owner/tasks/${review.task}/results`);
-  expect(results.items[0]).toMatchObject({ current: true, repository_free: true, git: null });
+  expect(results.items[0]).toMatchObject({ current: true, repository_free: true, git_results: [] });
   await expect(page.getByText('Current result', { exact: true })).toBeVisible();
   await screenshots(page, info, 'task-local-review');
   await page.setViewportSize({ width: 390, height: 844 });

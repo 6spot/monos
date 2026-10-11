@@ -18,16 +18,16 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Parallel completion in
     if (winner.status !== 'fulfilled') throw new Error('No completion was admitted');
     const admitted = winner.value;
     if (admitted.operation.attempt_id !== first.dispatch.attempt_id) [first, second] = [second, first];
-    expect(admitted.operation.integration).toEqual({ expected_task_commit: 'a'.repeat(40) });
+    expect(admitted.operation.workspaces![0]!.integration).toEqual({ expected_task_commit: 'a'.repeat(40) });
     expect((await x.db.pool.query('SELECT mutation_allowed,process_released FROM attempts WHERE id=$1', [second.dispatch.attempt_id])).rows[0])
       .toEqual({ mutation_allowed: true, process_released: false });
     expect((await x.db.pool.query('SELECT count(*) FROM completion_manifests WHERE attempt_id=$1', [second.dispatch.attempt_id])).rows[0].count).toBe('0');
-    await expect(x.db.pool.query('UPDATE operations SET integration=$2 WHERE id=$1', [admitted.operation.operation_id, { expected_task_commit: 'f'.repeat(40) }])).rejects.toMatchObject({ code: '23514' });
+    await expect(x.db.pool.query('UPDATE operation_workspaces SET integration=$2 WHERE operation_id=$1', [admitted.operation.operation_id, { expected_task_commit: 'f'.repeat(40) }])).rejects.toMatchObject({ code: '23514' });
     await x.settleCompletion(first, admitted.operation, 'integrated', 'c'.repeat(40));
     await x.execution.pump();
     expect((await x.db.pool.query('SELECT count(*) FROM attempts WHERE node_id=$1', [join.node_id])).rows[0].count).toBe('0');
     const next = await x.admitCompletion(second);
-    expect(next.operation.integration).toEqual({ expected_task_commit: 'c'.repeat(40) });
+    expect(next.operation.workspaces![0]!.integration).toEqual({ expected_task_commit: 'c'.repeat(40) });
     await x.settleCompletion(second, next.operation, 'integrated', 'f'.repeat(40));
     const joined = await x.node(); expect(joined.dispatch.node_id).toBe(join.node_id);
     const result = await x.open(joined);
@@ -43,7 +43,7 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Parallel completion in
     await x.settleCompletion(first, (await x.admitCompletion(first)).operation, 'integrated', 'c'.repeat(40));
     const failed = await x.admitCompletion(second), version = await x.version();
     const conflict = await x.settleCompletion(second, failed.operation, 'conflict', 'f'.repeat(40));
-    expect(conflict.integration).toMatchObject({ outcome: 'conflict', expected_task_commit: 'c'.repeat(40), task_commit: 'c'.repeat(40), node_commit: 'f'.repeat(40) });
+    expect(conflict.workspace_results[0]!.integration).toMatchObject({ outcome: 'conflict', expected_task_commit: 'c'.repeat(40), task_commit: 'c'.repeat(40), node_commit: 'f'.repeat(40) });
     expect((await x.db.pool.query('SELECT finalized_commit FROM task_workspaces')).rows[0].finalized_commit).toBe('c'.repeat(40));
     expect((await x.db.pool.query('SELECT count(*) FROM node_completions WHERE node_id=$1', [second.dispatch.node_id])).rows[0].count).toBe('0');
     await expect(x.db.pool.query('INSERT INTO node_completions(node_id,activation,attempt_id,operation_id,result) VALUES($1,1,$2,$3,$4)',
@@ -65,8 +65,8 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Parallel completion in
     const before = (await x.db.pool.query('SELECT mutation_allowed,process_released FROM attempts WHERE id=$1', [turn.dispatch.attempt_id])).rows[0];
     const version = await x.version();
     await x.db.pool.query(`CREATE FUNCTION forge_parallel_integration() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN
-      IF NEW.kind='complete_node' THEN NEW.integration := ${mode === 'missing' ? 'NULL' : "jsonb_build_object('expected_task_commit',repeat('f',40))"}; END IF; RETURN NEW; END $$;
-      CREATE TRIGGER a_forge_parallel_integration BEFORE INSERT ON operations FOR EACH ROW EXECUTE FUNCTION forge_parallel_integration()`);
+      NEW.integration := ${mode === 'missing' ? 'NULL' : "jsonb_build_object('expected_task_commit',repeat('f',40))"}; RETURN NEW; END $$;
+      CREATE TRIGGER a_forge_parallel_integration BEFORE INSERT ON operation_workspaces FOR EACH ROW EXECUTE FUNCTION forge_parallel_integration()`);
     await expect(x.admitCompletion(turn)).rejects.toMatchObject({ code: '23514' });
     expect(await x.version()).toBe(version);
     expect((await x.db.pool.query('SELECT mutation_allowed,process_released FROM attempts WHERE id=$1', [turn.dispatch.attempt_id])).rows[0]).toEqual(before);
@@ -119,22 +119,24 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Parallel completion in
     const queued = (await x.db.pool.query('SELECT count(*) FROM node_execution_outbox')).rows[0].count;
     const integration = { outcome: outcome === 'integrated' ? 'integrated' as const : 'conflict' as const,
       start_commit: opened.metadata.isolation!.start_commit, node_commit: 'c'.repeat(40), node_tree: 'd'.repeat(40),
-      expected_task_commit: admitted.operation.integration!.expected_task_commit,
-      task_commit: outcome === 'integrated' ? 'c'.repeat(40) : admitted.operation.integration!.expected_task_commit, task_tree: 'e'.repeat(40) };
+      expected_task_commit: admitted.operation.workspaces![0]!.integration!.expected_task_commit,
+      task_commit: outcome === 'integrated' ? 'c'.repeat(40) : admitted.operation.workspaces![0]!.integration!.expected_task_commit, task_tree: 'e'.repeat(40) };
     const pair = {
       operation_id: settlement.operation_id, attempt_id: turn.dispatch.attempt_id, success: true,
-      result: outcome === 'cancelled' ? { writer_absent: true, workspace_id: opened.workspace.workspace_id,
+      result: outcome === 'cancelled' ? { writer_absent: true, workspace_results: [{ resource_id: x.resource, workspace_id: opened.workspace.workspace_id,
         workspace_metadata: { ...opened.metadata, checkpoint: { operation_id: settlement.operation_id,
           head_commit: opened.metadata.finalized_commit, tree_id: 'd'.repeat(40), commit_id: 'c'.repeat(40),
-          completion_operation_id: admitted.operation.operation_id, completion_identity_digest: settlement.completion_identity_digest! } } } : { writer_absent: true },
+          completion_operation_id: admitted.operation.operation_id, completion_identity_digest: settlement.completion_identity_digest! } } }] } : { writer_absent: true },
       completion_settlement: { completion_operation_id: admitted.operation.operation_id,
         disposition: outcome === 'cancelled' ? 'cancelled' as const : 'already_finalized' as const,
         completion_result: outcome === 'cancelled' ? { operation_id: admitted.operation.operation_id, attempt_id: turn.dispatch.attempt_id,
           success: false, cancelled_by_operation_id: settlement.operation_id, result: { writer_absent: true } } : {
           operation_id: admitted.operation.operation_id, attempt_id: turn.dispatch.attempt_id, success: true,
-          result: { writer_absent: true, workspace_id: opened.workspace.workspace_id, integration,
+          result: { writer_absent: true, completion_outcome: outcome === 'integrated' ? 'finalized' as const : 'conflict' as const,
+            workspace_results: [{ resource_id: x.resource, workspace_id: opened.workspace.workspace_id, integration,
+            capture: { start_commit: opened.metadata.isolation!.start_commit, node_commit: integration.node_commit, node_tree: integration.node_tree },
             workspace_metadata: { ...opened.metadata, finalized_commit: outcome === 'integrated' ? integration.task_commit : opened.metadata.finalized_commit },
-            ...(outcome === 'integrated' ? { git_commit: integration.task_commit, git_tree: integration.task_tree } : {}) } } },
+            ...(outcome === 'integrated' ? { git_commit: integration.task_commit, git_tree: integration.task_tree } : {}) }] } } },
     };
     await x.service.finishOperation(x.f.runner, x.f.incarnation, pair);
     await x.service.finishOperation(x.f.runner, x.f.incarnation, pair);

@@ -45,6 +45,16 @@ func TestSharedCompletionIdentityFixtures(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, c := range cases {
+		raw, err := json.Marshal(c.Operation)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := Validate("Operation", raw); err != nil {
+			t.Fatal(err)
+		}
+		if err := ValidateCompletionInputs(c.Operation); err != nil {
+			t.Fatal(err)
+		}
 		digest, err := OperationIdentity(c.Operation)
 		if err != nil || digest != c.IdentityDigest {
 			t.Fatal("completion identity drift", digest, err)

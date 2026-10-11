@@ -54,14 +54,14 @@ export async function deliveryManifest(manifest: DeliveryAcceptanceManifest, tas
     await hash(basis, output.effective_basis_digest);
     sameSet(completion.artifact_ids, output.artifacts.map(artifact => artifact.artifact_id));
     for (const artifact of output.artifacts) if (artifact.task_id !== task || artifact.node_id !== completion.node_id || artifact.node_activation !== completion.node_activation) mismatch();
-    if (output.source) {
-      const source = output.source;
+    unique(output.sources.map(value => value.source.resource_id));
+    for (const {source, source_digest} of output.sources) {
       if (source.task_id !== task || source.operation_id !== completion.operation_id || source.node_id !== completion.node_id || source.node_activation !== completion.node_activation || source.manifest_digest !== output.completion_manifest_digest || source.attempt_id !== completion.attempt_id || source.specification_id !== completion.specification_id || source.plan_id !== completion.plan_id) mismatch();
-      await hash(source, output.source_digest);
+      await hash(source, source_digest);
     }
   }
-  sameSet([...new Set(manifest.outputs.flatMap(output => output.source ? [output.source.resource_id] : []))], manifest.repositories.map(value => value.resource_id));
-  for (const value of manifest.repositories) if (!manifest.outputs.some(output => output.source_digest === value.source_digest)) mismatch();
+  sameSet([...new Set(manifest.outputs.flatMap(output => output.sources.map(value => value.source.resource_id)))], manifest.repositories.map(value => value.resource_id));
+  for (const value of manifest.repositories) if (!manifest.outputs.some(output => output.sources.some(source => source.source_digest === value.source_digest))) mismatch();
   await Promise.all(manifest.repositories.map(value => repository(value, manifest)));
 }
 

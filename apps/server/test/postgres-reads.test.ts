@@ -48,7 +48,7 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('canonical Owner reads 
     const grant = await f.service.authorize(f.runner, f.incarnation, f.launch.dispatch_id);
     const admitted = await f.service.admit(grant!.credential, submission({ schema_version: 1, scope_id: f.launch.task_id, request_id: randomUUID(), expected_control_version: 1, name: 'complete_node', payload: { summary: 'formally complete' } }));
     expect((await reads.overview(f.session.token, f.launch.task_id)).open_operations).toBe(1);
-    await f.service.finishOperation(f.runner, f.incarnation, { operation_id: admitted.operation_id!, attempt_id: f.launch.attempt_id, success: true, result: { writer_absent: true, git_commit: 'a'.repeat(40), git_tree: 'b'.repeat(40) } });
+    await f.service.finishOperation(f.runner, f.incarnation, { operation_id: admitted.operation_id!, attempt_id: f.launch.attempt_id, success: true, result: { writer_absent: true, completion_outcome: 'finalized', workspace_results: [] } });
     const after = await reads.overview(f.session.token, f.launch.task_id);
     expect(after.state).toBe('REVIEW'); expect(after.nodes.completed).toBe(1); expect(after.held_attempts).toBe(0); expect(after.open_operations).toBe(0);
     expect(await new OwnerReads(db).overview(f.session.token, f.launch.task_id)).toEqual(after);

@@ -30,7 +30,7 @@ func TestReplanSourceAndStopOnlyHostScope(t *testing.T) {
 			t.Fatal("invalid source accepted", d)
 		}
 	}
-	for _, edit := range []func(*protocol.Operation){func(o *protocol.Operation) { o.Kind = protocol.KindOpenWorkspace }, func(o *protocol.Operation) { o.ResourceID = ptr("resource") }, func(o *protocol.Operation) { o.RepositoryFree = ptr(true) }, func(o *protocol.Operation) { o.CompletionManifestDigest = ptr(strings.Repeat("a", 64)) }} {
+	for _, edit := range []func(*protocol.Operation){func(o *protocol.Operation) { o.Kind = protocol.KindOpenWorkspace }, func(o *protocol.Operation) { o.ResourceID = ptr("resource") }, func(o *protocol.Operation) { o.Workspaces = []protocol.WorkspaceCompletionInput{} }, func(o *protocol.Operation) { o.CompletionManifestDigest = ptr(strings.Repeat("a", 64)) }} {
 		o := op
 		edit(&o)
 		if ValidateEffectScope(d, o) == nil {

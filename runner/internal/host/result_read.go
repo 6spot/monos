@@ -90,6 +90,10 @@ func ResultRead(ctx context.Context, r protocol.ResultReadRequest) protocol.Resu
 // Shared disk-only validation. It neither creates storage nor authorizes source
 // identity; callers also verify the retained completion journal and exact refs.
 func trustedResultExport(identity protocol.ResultReadIdentity) (string, string) {
+	return trustedOperationExport(identity, true)
+}
+
+func trustedOperationExport(identity protocol.ResultReadIdentity, aggregate bool) (string, string) {
 	uid := uint32(os.Geteuid())
 	if uid == 0 {
 		return "", "unavailable"
@@ -106,7 +110,14 @@ func trustedResultExport(identity protocol.ResultReadIdentity) (string, string) 
 		return "", "identity_mismatch"
 	}
 	dir := filepath.Join(Root, "results", identity.OperationID)
-	if !ValidID(identity.OperationID) || resultParents(dir, uid) != nil || serviceDirectory(filepath.Dir(dir), true) != nil || serviceDirectory(dir, true) != nil {
+	var pathErr error
+	if aggregate {
+		dir, pathErr = completionResultPath(identity.OperationID, identity.WorkspaceID, false)
+	}
+	if !ValidID(identity.OperationID) {
+		return "", "identity_mismatch"
+	}
+	if pathErr != nil || resultParents(dir, uid) != nil || serviceDirectory(filepath.Dir(dir), true) != nil || serviceDirectory(dir, true) != nil {
 		return "", "unavailable"
 	}
 	// An export must own its objects; no borrowed object store or indirection.
@@ -179,14 +190,9 @@ func readResultObjects(ctx context.Context, dir string, r protocol.ResultReadReq
 		return resultOutcome(r, "identity_mismatch")
 	}
 	i := r.Identity
-	objects := map[string]string{"refs/monos/result": i.GitCommit, i.GitCommit + "^{tree}": i.GitTree, i.BaseCommit + "^{commit}": i.BaseCommit}
-	if integration := i.Integration; integration != nil {
-		if integration.Outcome != protocol.Integrated || integration.TaskCommit != i.GitCommit || integration.TaskTree != i.GitTree {
-			return resultOutcome(r, "identity_mismatch")
-		}
-		objects[integration.StartCommit+"^{commit}"] = integration.StartCommit
-		objects[integration.NodeCommit+"^{tree}"] = integration.NodeTree
-		objects[integration.ExpectedTaskCommit+"^{commit}"] = integration.ExpectedTaskCommit
+	objects, err := resultIdentityObjects(i)
+	if err != nil {
+		return resultOutcome(r, "identity_mismatch")
 	}
 	for expression, want := range objects {
 		raw, e := resultGit(ctx, dir, 256, "rev-parse", "--verify", expression)
@@ -405,4 +411,21 @@ func readResultDiff(ctx context.Context, dir string, r protocol.ResultReadReques
 	text := string(raw)
 	out.Text = &text
 	return out
+}
+
+func resultIdentityObjects(i protocol.ResultReadIdentity) (map[string]string, error) {
+	c := i.Capture
+	if !objectID.MatchString(c.StartCommit) || !objectID.MatchString(c.NodeCommit) || !objectID.MatchString(c.NodeTree) {
+		return nil, fmt.Errorf("missing result capture")
+	}
+	objects := map[string]string{"refs/monos/result": i.GitCommit, i.GitCommit + "^{tree}": i.GitTree, i.BaseCommit + "^{commit}": i.BaseCommit, c.StartCommit + "^{commit}": c.StartCommit, c.NodeCommit + "^{tree}": c.NodeTree}
+	if integration := i.Integration; integration != nil {
+		if integration.Outcome != protocol.Integrated || integration.TaskCommit != i.GitCommit || integration.TaskTree != i.GitTree || integration.StartCommit != c.StartCommit || integration.NodeCommit != c.NodeCommit || integration.NodeTree != c.NodeTree {
+			return nil, fmt.Errorf("result integration differs from capture")
+		}
+		objects[integration.ExpectedTaskCommit+"^{commit}"] = integration.ExpectedTaskCommit
+	} else if c.NodeCommit != i.GitCommit || c.NodeTree != i.GitTree {
+		return nil, fmt.Errorf("direct result differs from capture")
+	}
+	return objects, nil
 }

@@ -23,9 +23,14 @@
       "repository_identity": "repo",
       "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
       "git_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-      "git_tree": "cccccccccccccccccccccccccccccccccccccccc"
+      "git_tree": "cccccccccccccccccccccccccccccccccccccccc",
+      "capture": {
+        "start_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "node_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "node_tree": "cccccccccccccccccccccccccccccccccccccccc"
+      }
     },
-    "source_digest": "ad8c9a50917c50902f77f59f6f1ba35257ef43d2dd0b4784628fc459a0b7005a",
+    "source_digest": "4565082d7e16ca19e2ef217d5885ef0d4398bab455c115697b1103f100a02492",
     "effective_basis": {
       "task_id": "task_id",
       "specification_id": "specification_id",
@@ -38,7 +43,7 @@
       "schema_version": 1,
       "construction_id": "publication-construction",
       "candidate_id": "publication-candidate",
-      "source_digest": "ad8c9a50917c50902f77f59f6f1ba35257ef43d2dd0b4784628fc459a0b7005a",
+      "source_digest": "4565082d7e16ca19e2ef217d5885ef0d4398bab455c115697b1103f100a02492",
       "repository_identity": "repo",
       "target_branch": "main",
       "parents": [
@@ -87,7 +92,7 @@
       "timestamp": "1791028800 +0000",
       "message": "monos Task 11111111-1111-4111-8111-111111111111 result v1"
     },
-    "construction_digest": "ceb1489c3da3cf135a89b467e39549009c3a4ca87bf6777c358b0ab23a426e7f",
+    "construction_digest": "1bdb6d9d5654f5c08e7e77c684631591ad1bfe487e644a27201d0cf266966a44",
     "configuration": {
       "schema_version": 1,
       "policy_version": "local_publication_v1",
@@ -108,31 +113,31 @@
     },
     "configuration_digest": "948f4f0f15021727d1242f42f466042f10b1cf6855bceed2801f7d28ccfdea19"
   },
-  "request_digest": "b1da9e79322a951878e77aba9ea0a28f46cde1eae1861885eac210a0fd052c40",
+  "request_digest": "9a1aa730ee14a52935fa3486321a334f7bdd8c4543041de31cc93f4dfaa30c08",
   "page": {
     "schema_version": 1,
     "result": {
       "schema_version": 1,
       "operation_id": "publication-operation",
-      "request_digest": "b1da9e79322a951878e77aba9ea0a28f46cde1eae1861885eac210a0fd052c40",
+      "request_digest": "9a1aa730ee14a52935fa3486321a334f7bdd8c4543041de31cc93f4dfaa30c08",
       "status": "prepared",
       "candidate": {
         "schema_version": 1,
         "candidate_id": "publication-candidate",
         "construction_id": "publication-construction",
-        "construction_digest": "ceb1489c3da3cf135a89b467e39549009c3a4ca87bf6777c358b0ab23a426e7f",
-        "source_digest": "ad8c9a50917c50902f77f59f6f1ba35257ef43d2dd0b4784628fc459a0b7005a",
+        "construction_digest": "1bdb6d9d5654f5c08e7e77c684631591ad1bfe487e644a27201d0cf266966a44",
+        "source_digest": "4565082d7e16ca19e2ef217d5885ef0d4398bab455c115697b1103f100a02492",
         "head": "dddddddddddddddddddddddddddddddddddddddd",
         "tree": "cccccccccccccccccccccccccccccccccccccccc",
         "parents": [
           "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
         ]
       },
-      "candidate_manifest_digest": "a806a74e4bfe5f55df71583243a527f46bd57f095a4606b6dae36a3d2679782d",
+      "candidate_manifest_digest": "cae3ffffb0d118dcad5cb87cea6a9934672e3ae20fffe7a78ca1f7eb669a3653",
       "scan": {
         "schema_version": 1,
         "scan_id": "publication-scan",
-        "candidate_manifest_digest": "a806a74e4bfe5f55df71583243a527f46bd57f095a4606b6dae36a3d2679782d",
+        "candidate_manifest_digest": "cae3ffffb0d118dcad5cb87cea6a9934672e3ae20fffe7a78ca1f7eb669a3653",
         "configuration_digest": "948f4f0f15021727d1242f42f466042f10b1cf6855bceed2801f7d28ccfdea19",
         "status": "complete",
         "coverage": {
@@ -145,13 +150,13 @@
         "findings_bytes": 2,
         "findings_digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
       },
-      "scan_digest": "21df52608d53d100550e6017e053e259dcbc7ac942cee524eed630abf4834868"
+      "scan_digest": "2d9bed25a0253fcda3c5a9b3b061a8427e295a4deef87c5f60c24ba00f6ded5b"
     },
     "page_index": 0,
     "page_count": 1,
     "findings": [],
     "page_digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
   },
-  "result_digest": "fb7403e59f52d84b180dee43d028e3d029551f04ef9590aa143c627d3c04e70c",
-  "canonical_request": "{\"configuration\":{\"deadline_seconds\":120,\"local_blob_limit\":52428800,\"max_aggregate_bytes\":536870912,\"max_blob_bytes\":134217728,\"max_commits\":256,\"max_evidence_bytes\":8388608,\"max_findings\":4096,\"max_paths\":8192,\"max_versions\":32768,\"permission_fingerprint\":\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\",\"policy_version\":\"local_publication_v1\",\"provider_blob_limit\":104857600,\"rule_version\":\"credential_rules_v1\",\"schema_version\":1,\"traversal_version\":\"all_parents_final_tree_v1\",\"workflow_write\":\"unknown\"},\"configuration_digest\":\"948f4f0f15021727d1242f42f466042f10b1cf6855bceed2801f7d28ccfdea19\",\"construction\":{\"author_email\":\"monos@localhost\",\"author_name\":\"monos\",\"candidate_id\":\"publication-candidate\",\"construction_id\":\"publication-construction\",\"message\":\"monos Task 11111111-1111-4111-8111-111111111111 result v1\",\"parents\":[{\"commit\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"kind\":\"materialization\",\"observation_digest\":\"9a7b7eff1709b7e7e6c08b421825586989745f8336d644bc85734767e7ad71d9\",\"observation_operation_id\":\"original-publication-open\",\"outcome\":{\"path\":\"/private/worktree\",\"workspace_id\":\"workspace_id\",\"workspace_metadata\":{\"base_commit\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"finalized_commit\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"generation\":1,\"lease_id\":\"lease_id\",\"repository_identity\":\"repo\",\"storage_id\":\"storage_id\",\"target_branch\":\"main\",\"target_commit\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"}},\"repository_identity\":\"repo\",\"workspace\":{\"generation\":1,\"lease_id\":\"lease_id\",\"node_activation\":1,\"node_id\":\"node_id\",\"open_operation_id\":\"original-publication-open\",\"project_id\":\"publication-project\",\"resource\":{\"remote_url\":\"https://github.com/example/result.git\",\"repository_identity\":\"repo\",\"resource_id\":\"resource_id\"},\"resource_id\":\"resource_id\",\"runner_id\":\"runner_id\",\"schema_version\":1,\"task_id\":\"task_id\",\"workspace_id\":\"workspace_id\"}}],\"repository_identity\":\"repo\",\"schema_version\":1,\"source_digest\":\"ad8c9a50917c50902f77f59f6f1ba35257ef43d2dd0b4784628fc459a0b7005a\",\"target_branch\":\"main\",\"timestamp\":\"1791028800 +0000\"},\"construction_digest\":\"ceb1489c3da3cf135a89b467e39549009c3a4ca87bf6777c358b0ab23a426e7f\",\"effective_basis\":{\"completion_manifest_digest\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"completion_operation_id\":\"operation_id\",\"plan_id\":\"plan_id\",\"specification_id\":\"specification_id\",\"task_id\":\"task_id\"},\"effective_basis_digest\":\"b280f59926948f41d48284946fe933c70cc1c0423dba2662b6d96a4a39750c95\",\"operation_id\":\"publication-operation\",\"scan_run_id\":\"publication-scan\",\"schema_version\":1,\"source\":{\"attempt_id\":\"attempt_id\",\"base_commit\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"dispatch_id\":\"dispatch_id\",\"generation\":1,\"git_commit\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"git_tree\":\"cccccccccccccccccccccccccccccccccccccccc\",\"lease_id\":\"lease_id\",\"manifest_digest\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"node_activation\":1,\"node_id\":\"node_id\",\"operation_id\":\"operation_id\",\"operation_identity_digest\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"plan_id\":\"plan_id\",\"repository_identity\":\"repo\",\"resource_id\":\"resource_id\",\"runner_id\":\"runner_id\",\"specification_id\":\"specification_id\",\"storage_id\":\"storage_id\",\"task_id\":\"task_id\",\"workspace_id\":\"workspace_id\"},\"source_digest\":\"ad8c9a50917c50902f77f59f6f1ba35257ef43d2dd0b4784628fc459a0b7005a\"}"
+  "result_digest": "a6aab12dc2e7f1558c6b18fed6eb7ee983229d828112c41b4f4222c0fcf37025",
+  "canonical_request": "{\"configuration\":{\"deadline_seconds\":120,\"local_blob_limit\":52428800,\"max_aggregate_bytes\":536870912,\"max_blob_bytes\":134217728,\"max_commits\":256,\"max_evidence_bytes\":8388608,\"max_findings\":4096,\"max_paths\":8192,\"max_versions\":32768,\"permission_fingerprint\":\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\",\"policy_version\":\"local_publication_v1\",\"provider_blob_limit\":104857600,\"rule_version\":\"credential_rules_v1\",\"schema_version\":1,\"traversal_version\":\"all_parents_final_tree_v1\",\"workflow_write\":\"unknown\"},\"configuration_digest\":\"948f4f0f15021727d1242f42f466042f10b1cf6855bceed2801f7d28ccfdea19\",\"construction\":{\"author_email\":\"monos@localhost\",\"author_name\":\"monos\",\"candidate_id\":\"publication-candidate\",\"construction_id\":\"publication-construction\",\"message\":\"monos Task 11111111-1111-4111-8111-111111111111 result v1\",\"parents\":[{\"commit\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"kind\":\"materialization\",\"observation_digest\":\"9a7b7eff1709b7e7e6c08b421825586989745f8336d644bc85734767e7ad71d9\",\"observation_operation_id\":\"original-publication-open\",\"outcome\":{\"path\":\"/private/worktree\",\"workspace_id\":\"workspace_id\",\"workspace_metadata\":{\"base_commit\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"finalized_commit\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"generation\":1,\"lease_id\":\"lease_id\",\"repository_identity\":\"repo\",\"storage_id\":\"storage_id\",\"target_branch\":\"main\",\"target_commit\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"}},\"repository_identity\":\"repo\",\"workspace\":{\"generation\":1,\"lease_id\":\"lease_id\",\"node_activation\":1,\"node_id\":\"node_id\",\"open_operation_id\":\"original-publication-open\",\"project_id\":\"publication-project\",\"resource\":{\"remote_url\":\"https://github.com/example/result.git\",\"repository_identity\":\"repo\",\"resource_id\":\"resource_id\"},\"resource_id\":\"resource_id\",\"runner_id\":\"runner_id\",\"schema_version\":1,\"task_id\":\"task_id\",\"workspace_id\":\"workspace_id\"}}],\"repository_identity\":\"repo\",\"schema_version\":1,\"source_digest\":\"4565082d7e16ca19e2ef217d5885ef0d4398bab455c115697b1103f100a02492\",\"target_branch\":\"main\",\"timestamp\":\"1791028800 +0000\"},\"construction_digest\":\"1bdb6d9d5654f5c08e7e77c684631591ad1bfe487e644a27201d0cf266966a44\",\"effective_basis\":{\"completion_manifest_digest\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"completion_operation_id\":\"operation_id\",\"plan_id\":\"plan_id\",\"specification_id\":\"specification_id\",\"task_id\":\"task_id\"},\"effective_basis_digest\":\"b280f59926948f41d48284946fe933c70cc1c0423dba2662b6d96a4a39750c95\",\"operation_id\":\"publication-operation\",\"scan_run_id\":\"publication-scan\",\"schema_version\":1,\"source\":{\"attempt_id\":\"attempt_id\",\"base_commit\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"capture\":{\"node_commit\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"node_tree\":\"cccccccccccccccccccccccccccccccccccccccc\",\"start_commit\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"},\"dispatch_id\":\"dispatch_id\",\"generation\":1,\"git_commit\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"git_tree\":\"cccccccccccccccccccccccccccccccccccccccc\",\"lease_id\":\"lease_id\",\"manifest_digest\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"node_activation\":1,\"node_id\":\"node_id\",\"operation_id\":\"operation_id\",\"operation_identity_digest\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"plan_id\":\"plan_id\",\"repository_identity\":\"repo\",\"resource_id\":\"resource_id\",\"runner_id\":\"runner_id\",\"specification_id\":\"specification_id\",\"storage_id\":\"storage_id\",\"task_id\":\"task_id\",\"workspace_id\":\"workspace_id\"},\"source_digest\":\"4565082d7e16ca19e2ef217d5885ef0d4398bab455c115697b1103f100a02492\"}"
 }

@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InfiniteData } from '@tanstack/react-query';
-import type { TaskLocalResult, TaskResultPage, ResultReadResponse, ResultReadRequest } from '../../../../packages/protocol/generated/types.ts';
+import type { TaskLocalResult, TaskLocalGitResult, TaskResultPage, ResultReadResponse, ResultReadRequest } from '../../../../packages/protocol/generated/types.ts';
 import { Button } from '../components/ui/button.tsx';
 import { APIError } from '../lib/api.ts';
 import { resultRead } from '../lib/task-api.ts';
@@ -31,28 +31,27 @@ function Outcome({ value, retry }: { value: ResultReadResponse | undefined; retr
   </div>;
 }
 
-export function ResultInspector({ props, result }: { props: TaskViewProps; result: TaskLocalResult }) {
+export function ResultInspector({ props, result, git }: { props: TaskViewProps; result: TaskLocalResult; git: TaskLocalGitResult }) {
   const [open, setOpen] = useState(false), id = useId();
-  if (!result.git) return null;
   return <div className="result-inspector">
     <Button variant="outline" size="sm" aria-expanded={open} aria-controls={id} onClick={() => setOpen(value => !value)}>{open ? 'Close inspection' : 'Inspect changes'}</Button>
-    {open && <Inspection key={`${props.commands.sessionId}:${props.task.task_id}:${result.manifest.operation_id}:${result.git.identity_digest}`} id={id} props={props} result={result} git={result.git} />}
+    {open && <Inspection key={`${props.commands.sessionId}:${props.task.task_id}:${result.manifest.operation_id}:${git.identity_digest}`} id={id} props={props} result={result} git={git} />}
   </div>;
 }
 
-function Inspection({ id, props, result, git }: { id: string; props: TaskViewProps; result: TaskLocalResult; git: NonNullable<TaskLocalResult['git']> }) {
+function Inspection({ id, props, result, git }: { id: string; props: TaskViewProps; result: TaskLocalResult; git: TaskLocalGitResult }) {
   const [path, setPath] = useState<string>(), [mode, setMode] = useState<'diff' | 'file'>('diff'), [side, setSide] = useState<ResultReadRequest['side']>('result');
   const task = props.task.task_id, op = result.manifest.operation_id, session = props.commands.sessionId, client = useQueryClient();
   const key = ['result-content', session, task, op, git.identity_digest];
   const changes = useInfiniteQuery({
     queryKey: [...key, 'changes'], initialPageParam: undefined as string | undefined,
-    queryFn: ({ pageParam, signal }) => resultRead(task, op, git.identity_digest, 'changes', { cursor: pageParam }, session, signal),
+    queryFn: ({ pageParam, signal }) => resultRead(task, op, git.resource_id, git.identity_digest, 'changes', { cursor: pageParam }, session, signal),
     getNextPageParam: page => page.status === 'available' ? page.next_cursor : undefined,
     retry: false, gcTime: 0, staleTime: Infinity, refetchOnWindowFocus: false,
   });
   const content = useQuery({
     queryKey: [...key, mode, path, mode === 'file' ? side : undefined],
-    queryFn: ({ signal }) => resultRead(task, op, git.identity_digest, mode, { path, side: mode === 'file' ? side : undefined }, session, signal),
+    queryFn: ({ signal }) => resultRead(task, op, git.resource_id, git.identity_digest, mode, { path, side: mode === 'file' ? side : undefined }, session, signal),
     enabled: path !== undefined, retry: false, gcTime: 0, staleTime: Infinity, refetchOnWindowFocus: false,
   });
   const onUnauthorized = props.onUnauthorized;
@@ -73,9 +72,9 @@ function Inspection({ id, props, result, git }: { id: string; props: TaskViewPro
     lastApplied.current = fresh.at;
     const current = fresh.value.current;
     client.setQueriesData<InfiniteData<TaskResultPage>>({ queryKey: ['tasks', task, '/results'] }, previous => previous && ({
-      ...previous, pages: previous.pages.map(page => ({ ...page, items: page.items.map(item => item.manifest.operation_id === op && item.git?.identity_digest === git.identity_digest ? { ...item, current } : item) })),
+      ...previous, pages: previous.pages.map(page => ({ ...page, items: page.items.map(item => item.manifest.operation_id === op && item.git_results.some(value => value.resource_id === git.resource_id && value.identity_digest === git.identity_digest) ? { ...item, current } : item) })),
     }));
-  }, [content.data, content.dataUpdatedAt, latestChanges, changes.dataUpdatedAt, client, task, op, git.identity_digest]);
+  }, [content.data, content.dataUpdatedAt, latestChanges, changes.dataUpdatedAt, client, task, op, git.resource_id, git.identity_digest]);
   const files = unique(changes.data?.pages.flatMap(page => page.changes ?? []) ?? [], file => file.path), value = content.data;
   return <section id={id} className="result-inspection-body" aria-label="Local result inspection">
     <p className="task-muted">Fixed base → exact local result · {result.current ? 'Current' : 'Historical'} completion. Renames appear as deletion and addition.</p>

@@ -17,7 +17,7 @@ import {cancelReviewOperations} from './task-review-state.ts';
 
 export async function admitAcceptedPreparation(tx: Transaction, batch: DeliveryBatchRecord, repositories: DeliveryRepository[], retry = false): Promise<void> {
   await assertDeliveryBatchAuthority(tx, batch);
-  for (const repository of repositories.filter(r => r.outcome === 'modified').sort((a, b) => a.resource_id.localeCompare(b.resource_id))) {
+  for (const repository of repositories.filter(r => r.outcome === 'modified').sort((a, b) => a.resource_id<b.resource_id?-1:a.resource_id>b.resource_id?1:0)) {
     const item = (await tx.query<RemoteItem>('SELECT * FROM remote_preparation_items WHERE item_id=$1 AND task_id=$2 FOR UPDATE', [repository.item_id, batch.task_id])).rows[0];
     if (!item) throw new CommandError('unmet_precondition', 'Accepted remote item is unavailable');
     await admitAcceptedPreparationForItem(tx, item, retry);
@@ -40,7 +40,7 @@ export async function cancelAcceptedDelivery(tx: Transaction, batch: DeliveryBat
     if (attempt.process_released && attempt.state !== 'QUEUED') continue;
     await lockAttemptWorkspace(tx, attempt.id);
     const original = (await tx.query<CompletionOperation>("SELECT * FROM operations WHERE attempt_id=$1 AND kind='complete_node' AND state NOT IN ('succeeded','cancelled') FOR UPDATE", [attempt.id])).rows[0];
-    if (original?.workspace_descriptor) await admitCompletionSettlement(tx, attempt, original, requestId, 'cancel_task');
+    if (original) await admitCompletionSettlement(tx, attempt, original, requestId, 'cancel_task');
     else await stopAttempt(tx, attempt, requestId, 'task_cancelled');
     await tx.query('UPDATE attempts SET mutation_allowed=false WHERE id=$1', [attempt.id]);
   }

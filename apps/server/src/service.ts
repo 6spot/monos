@@ -29,7 +29,7 @@ import { DispatchQueue } from './dispatch-queue.ts';
 import { derivedTaskState } from './owner-execution.ts';
 import { handleDiscussionCommand, lockDiscussion } from './discussion-state.ts';
 import type { DiscussionControl, DiscussionContext } from './discussion-state.ts';
-import { admitWorkspaceEffect, admitWorkspaceOpen, explicitLegacyAttempt, lockAttemptWorkspace, settleWorkspaceOperation } from './workspaces.ts';
+import { admitWorkspaceEffect, admitWorkspaceOpen, explicitLegacyAttempt, lockAttemptWorkspace, settleWorkspaceOperation, releaseStoppedAttempt } from './workspaces.ts';
 import type { WorkspaceOperation } from './workspaces.ts';
 import { GitHub } from './github.ts';
 import type { GitHubCredentials } from './github.ts';
@@ -78,7 +78,7 @@ function toDispatch(row: AttemptRow): Dispatch {
   return { ...row.launch, mutation_allowed: row.mutation_allowed, process_released: row.process_released };
 }
 function toOperation(row: OperationRow, attempt: Pick<AttemptRow, 'dispatch_id'>): Operation {
-  return { ...(row.inspection_descriptor ? { inspection: row.inspection_descriptor, inspection_digest: row.inspection_digest! } : {}), ...(row.integration ? { integration: row.integration } : {}), schema_version: row.schema_version, operation_id: row.id, attempt_id: row.attempt_id, dispatch_id: attempt.dispatch_id, request_id: row.request_id, kind: row.kind, ...(row.resource_id ? { resource_id: row.resource_id } : {}), state: row.state, ...(row.repository_free ? {repository_free:true as const}:{}), ...(row.completion_manifest_digest?{completion_manifest_digest:row.completion_manifest_digest}:{}), ...(row.completion_operation_id?{completion_operation_id:row.completion_operation_id,completion_identity_digest:row.completion_identity_digest!}:{}), ...(row.result ? { result: row.result } : {}), ...(row.workspace_descriptor ? { workspace: row.workspace_descriptor, workspace_digest: row.workspace_digest! } : {}), ...(row.cancelled_by_operation_id ? { cancelled_by_operation_id: row.cancelled_by_operation_id } : {}) };
+  return { ...(row.inspection_descriptor ? { inspection: row.inspection_descriptor, inspection_digest: row.inspection_digest! } : {}), schema_version: row.schema_version, operation_id: row.id, attempt_id: row.attempt_id, dispatch_id: attempt.dispatch_id, request_id: row.request_id, kind: row.kind, ...(row.resource_id ? { resource_id: row.resource_id } : {}), state: row.state, ...(row.kind==='complete_node' ? {workspaces:row.workspaces!}:{}), ...(row.completion_manifest_digest?{completion_manifest_digest:row.completion_manifest_digest}:{}), ...(row.completion_operation_id?{completion_operation_id:row.completion_operation_id,completion_identity_digest:row.completion_identity_digest!}:{}), ...(row.result ? { result: row.result } : {}), ...(row.workspace_descriptor ? { workspace: row.workspace_descriptor, workspace_digest: row.workspace_digest! } : {}), ...(row.cancelled_by_operation_id ? { cancelled_by_operation_id: row.cancelled_by_operation_id } : {}) };
 }
 
 async function taskEvent(tx: Transaction, attempt: AttemptRow, kind: string, body: unknown, operationId: string | null = null): Promise<void> {
@@ -119,10 +119,10 @@ async function admitEffect(tx: Transaction, attempt: AttemptRow, kind: Operation
 
 async function receiptResponse(tx: Transaction, receipt: ReceiptRow): Promise<CommandResult> {
   if (!receipt.operation_id || receipt.response.status === 'committed') return receipt.response;
-  const operation = (await tx.query<OperationRow>('SELECT * FROM operations WHERE id=$1', [receipt.operation_id])).rows[0]!;
+  const operation = (await tx.query<OperationRow>('SELECT *,operation_workspace_inputs(id) AS workspaces FROM operations WHERE id=$1', [receipt.operation_id])).rows[0]!;
   if (operation.state === 'cancelled') return { schema_version: 1, request_id: receipt.response.request_id, operation_id: operation.id, status: 'error', error: { code: 'unmet_precondition', message: operation.kind==='complete_node' ? 'Completion was cancelled by its trusted settlement; retained output remains available for correction or cancellation history.' : 'Workspace open was cancelled by Stop; no workspace was granted.' } };
   if (operation.state !== 'succeeded') return receipt.response;
-  if (operation.result?.integration?.outcome === 'conflict') return { schema_version: 1, request_id: receipt.response.request_id, operation_id: operation.id, status: 'error', error: { code: 'unmet_precondition', message: 'Workspace integration conflicted; the private result is retained and this Node activation requires a fresh Attempt.' } };
+  if (operation.result?.completion_outcome === 'conflict') return { schema_version: 1, request_id: receipt.response.request_id, operation_id: operation.id, status: 'error', error: { code: 'unmet_precondition', message: 'Workspace integration conflicted; the private result is retained and this Node activation requires a fresh Attempt.' } };
   return { ...receipt.response, status: 'committed', result: operation.result ?? {} };
 }
 
@@ -162,7 +162,7 @@ export class BoundaryService {
       checkChannel(runner, request.incarnation);
       if (runner.connection_instance !== this.instanceId || attempt.process_released) throw new CommandError('stale_execution', 'Repository operation no longer owns this Runner connection');
       await lockAttemptWorkspace(tx, attempt.id);
-      const operation = (await tx.query<OperationRow>('SELECT * FROM operations WHERE id=$1 FOR UPDATE', [operationId])).rows[0]!;
+      const operation = (await tx.query<OperationRow>('SELECT *,operation_workspace_inputs(id) AS workspaces FROM operations WHERE id=$1 FOR UPDATE', [operationId])).rows[0]!;
       const lease = (await tx.query<{ state: string; workspace_id: string; task_id: string; node_id: string; node_activation: string; generation: string; open_operation_id: string; attempt_id: string; dispatch_id: string }>('SELECT * FROM workspace_leases WHERE id=$1', [operation.workspace_lease_id])).rows[0];
       if (operation.kind !== 'open_workspace' || !['admitted', 'recovery'].includes(operation.state)
         || !operation.workspace_descriptor || operation.workspace_digest !== request.workspace_digest
@@ -198,7 +198,7 @@ export class BoundaryService {
       checkChannel(runner, request.incarnation);
       if (runner.connection_instance !== this.instanceId || attempt.process_released)
         throw new CommandError('stale_execution', 'Inspection no longer owns this Runner connection');
-      const operation = (await tx.query<OperationRow>('SELECT * FROM operations WHERE id=$1 FOR UPDATE', [operationId])).rows[0]!;
+      const operation = (await tx.query<OperationRow>('SELECT *,operation_workspace_inputs(id) AS workspaces FROM operations WHERE id=$1 FOR UPDATE', [operationId])).rows[0]!;
       await assertInspectionAccess(tx, attempt, operation, request.inspection_digest);
       const config = (await tx.query<GitHubCredentials>('SELECT app_id,installation_id,encrypted_key,key_fingerprint FROM github_configuration')).rows[0];
       return { descriptor: operation.inspection_descriptor!, config };
@@ -409,7 +409,7 @@ export class BoundaryService {
     });
   }
   async recoverOperation(runnerId: string, operationId: string): Promise<Operation> {
-    const row = (await this.db.pool.query<OperationRow & { dispatch_id: string }>('SELECT o.*,a.dispatch_id FROM operations o JOIN attempts a ON a.id=o.attempt_id WHERE o.id=$1 AND a.runner_id=$2', [operationId, runnerId])).rows[0];
+    const row = (await this.db.pool.query<OperationRow & { dispatch_id: string }>('SELECT o.*,operation_workspace_inputs(o.id) AS workspaces,a.dispatch_id FROM operations o JOIN attempts a ON a.id=o.attempt_id WHERE o.id=$1 AND a.runner_id=$2', [operationId, runnerId])).rows[0];
     if (!row) throw new CommandError('denied_scope', 'Operation is outside Runner recovery scope');
     return toOperation(row, row);
   }
@@ -433,7 +433,7 @@ export class BoundaryService {
       const unresolved = "SELECT a.*,a.xmin::text AS row_version FROM attempts a WHERE a.runner_id=$1 AND (NOT a.process_released OR EXISTS (SELECT 1 FROM operations o WHERE o.attempt_id=a.id AND o.state NOT IN ('succeeded','cancelled')))";
       const snapshot = (await tx.query<{ snapshot_id: string }>(`WITH unresolved AS (${unresolved}) SELECT md5(COALESCE(string_agg(version,'|' ORDER BY version),'')) AS snapshot_id FROM (SELECT 'd:'||id||':'||row_version AS version FROM unresolved UNION ALL SELECT 'o:'||o.id||':'||o.xmin::text FROM operations o JOIN unresolved a ON a.id=o.attempt_id WHERE o.state NOT IN ('succeeded','cancelled')) versions`, [runnerId])).rows[0]!.snapshot_id;
       if (snapshotId !== undefined && snapshotId !== snapshot) throw new CommandError('version_conflict', 'Inventory changed; restart pagination from the first page');
-      const records = (await tx.query<{ kind: 'dispatch' | 'operation'; id: string; body: AttemptRow | (OperationRow & { dispatch_id: string }) }>(`WITH unresolved AS (${unresolved}), records AS (SELECT 'dispatch' AS kind,a.id,to_jsonb(a) AS body FROM unresolved a UNION ALL SELECT 'operation',o.id,to_jsonb(o)||jsonb_build_object('dispatch_id',a.dispatch_id) FROM operations o JOIN unresolved a ON a.id=o.attempt_id WHERE o.state NOT IN ('succeeded','cancelled')) SELECT * FROM records WHERE (kind,id)>($2,$3) ORDER BY kind,id LIMIT 65`, [runnerId, ...cursor])).rows;
+      const records = (await tx.query<{ kind: 'dispatch' | 'operation'; id: string; body: AttemptRow | (OperationRow & { dispatch_id: string }) }>(`WITH unresolved AS (${unresolved}), records AS (SELECT 'dispatch' AS kind,a.id,to_jsonb(a) AS body FROM unresolved a UNION ALL SELECT 'operation',o.id,to_jsonb(o)||jsonb_build_object('dispatch_id',a.dispatch_id,'workspaces',operation_workspace_inputs(o.id)) FROM operations o JOIN unresolved a ON a.id=o.attempt_id WHERE o.state NOT IN ('succeeded','cancelled')) SELECT * FROM records WHERE (kind,id)>($2,$3) ORDER BY kind,id LIMIT 65`, [runnerId, ...cursor])).rows;
       const page: RunnerInventory = { schema_version: 1, snapshot_id: snapshot, dispatches: [], operations: [] };
       let consumed = 0;
       let last: [string, string] | undefined;
@@ -475,7 +475,7 @@ export class BoundaryService {
           if (!attempt.mutation_allowed || attempt.process_released || attempt.started) { await tx.query('UPDATE outbox SET done=true WHERE id=$1', [row.id]); continue; }
           frames.push({ schema_version: 1, type: 'start', incarnation, dispatch: toDispatch(attempt) });
         } else {
-          const operation = (await tx.query<OperationRow>('SELECT * FROM operations WHERE id=$1', [row.operation_id])).rows[0]!;
+          const operation = (await tx.query<OperationRow>('SELECT *,operation_workspace_inputs(id) AS workspaces FROM operations WHERE id=$1', [row.operation_id])).rows[0]!;
           if (operation.state !== 'admitted') continue;
           frames.push({ schema_version: 1, type: 'effect', incarnation, operation: toOperation(operation, attempt) });
         }
@@ -571,9 +571,9 @@ export class BoundaryService {
       checkChannel(runner, incarnation);
       if (runner.connection_instance !== this.instanceId) throw new CommandError('stale_execution', 'Runner must reconnect to this backend');
       await lockAttemptWorkspace(tx, attempt.id);
-      const operation = (await tx.query<OperationRow>('SELECT * FROM operations WHERE id=$1 AND attempt_id=$2 FOR UPDATE', [message.operation_id, attempt.id])).rows[0];
+      const operation = (await tx.query<OperationRow>('SELECT *,operation_workspace_inputs(id) AS workspaces FROM operations WHERE id=$1 AND attempt_id=$2 FOR UPDATE', [message.operation_id, attempt.id])).rows[0];
       if (!operation) throw new CommandError('denied_scope', 'Operation is outside Attempt scope');
-      if (operation.inspection_descriptor) { await settleRepositoryInspection(tx, attempt, operation, message); return; }
+      if (operation.inspection_descriptor) { await settleRepositoryInspection(tx, attempt, operation, message); await releaseStoppedAttempt(tx, attempt.id); return; }
       if (attempt.todo_id && operation.kind !== 'stop') throw new CommandError('denied_scope', 'Todo cannot settle repository fixture effects');
       if(operation.kind==='settle_completion') {
         await finishCompletionSettlement(tx,attempt,operation,message,configurationVersion);return;
@@ -590,22 +590,27 @@ export class BoundaryService {
       }
       const captureBlocked = message.failure_kind === 'capture_hard_limit' || message.failure_kind === 'invalid_finalization';
       if (captureBlocked && operation.kind !== 'complete_node') throw new CommandError('invalid_input', 'Capture failure classification requires a completion operation');
-      if (await settleWorkspaceOperation(tx, attempt, operation, message)) return;
+      if (await settleWorkspaceOperation(tx, attempt, operation, message)) { await releaseStoppedAttempt(tx, attempt.id); return; }
       if (message.success) {
-        const integrationConflict = operation.kind === 'complete_node' && message.result.integration?.outcome === 'conflict';
+        const integrationConflict = operation.kind === 'complete_node' && message.result.completion_outcome === 'conflict';
         const terminal = operation.kind === 'complete_node' || operation.kind === 'stop';
         if (terminal && message.result.writer_absent !== true) throw new CommandError('unmet_precondition', 'Whole-tree absence is required');
-        if (terminal && (await tx.query("SELECT id FROM operations WHERE attempt_id=$1 AND id<>$2 AND state NOT IN ('succeeded','cancelled')", [attempt.id, operation.id])).rowCount) throw new CommandError('unmet_precondition', 'Other admitted workspace operations must reconcile before releasing ownership');
-        if (operation.kind === 'complete_node' && !operation.repository_free && !integrationConflict && (!message.result.git_commit || !message.result.git_tree)) throw new CommandError('unmet_precondition', 'Exact finalized Git result is required');
+        if (operation.kind === 'complete_node' && (await tx.query("SELECT id FROM operations WHERE attempt_id=$1 AND id<>$2 AND state NOT IN ('succeeded','cancelled')", [attempt.id, operation.id])).rowCount) throw new CommandError('unmet_precondition', 'Other admitted workspace operations must reconcile before releasing ownership');
+        if (operation.kind === 'complete_node' && (await tx.query("SELECT 1 FROM workspace_leases WHERE attempt_id=$1 AND state<>'released'", [attempt.id])).rowCount) throw new CommandError('unmet_precondition', 'Every completion workspace must settle before releasing the Attempt');
         if ((operation.kind === 'open_workspace' || operation.kind === 'inspect_repository') && (!message.result.workspace_id || !message.result.path)) throw new CommandError('unmet_precondition', 'Workspace identity and Runner-local locator are required');
         await tx.query("UPDATE operations SET state='succeeded',result=$2 WHERE id=$1", [operation.id, message.result]);
         await tx.query('UPDATE outbox SET done=true WHERE operation_id=$1', [operation.id]);
-        if (terminal) await tx.query("UPDATE attempts SET mutation_allowed=false,process_absent=true,process_released=true,state=CASE WHEN $2::boolean THEN 'SUCCEEDED' WHEN state='RUNNING' THEN 'CANCELLED' ELSE state END WHERE id=$1", [attempt.id, operation.kind === 'complete_node']);
+        if (operation.kind === 'complete_node') await tx.query("UPDATE attempts SET mutation_allowed=false,process_absent=true,process_released=true,state='SUCCEEDED' WHERE id=$1", [attempt.id]);
+        else if (operation.kind === 'stop') {
+          await tx.query('UPDATE attempts SET mutation_allowed=false,process_absent=true WHERE id=$1', [attempt.id]);
+          await releaseStoppedAttempt(tx, attempt.id);
+        }
         if (integrationConflict) {
           await tx.query("UPDATE attempts SET state='FAILED',end_reason='integration_conflict' WHERE id=$1", [attempt.id]);
           await retryIntegrationConflict(tx, attempt, operation, message, configurationVersion);
         } else if (operation.kind === 'complete_node') await projectCompletion(tx,attempt,operation,message);
         else if(operation.kind==='stop' && attempt.task_id) await refreshTaskState(tx,attempt.task_id);
+        else await releaseStoppedAttempt(tx, attempt.id);
       } else {
         if (message.result.writer_absent === true) await tx.query('UPDATE attempts SET process_absent=true WHERE id=$1', [attempt.id]);
         await tx.query("UPDATE operations SET state='recovery',result=$2,failure_kind=CASE WHEN failure_kind IN ('capture_hard_limit','invalid_finalization') THEN failure_kind ELSE COALESCE($3,failure_kind) END WHERE id=$1", [operation.id, message.result, message.failure_kind ?? null]);

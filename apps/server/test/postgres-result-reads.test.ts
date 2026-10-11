@@ -34,8 +34,8 @@ suite('Exact local result authenticated reads',()=>{
  });
  it('uses correlated authenticated WSS, authenticates again after read, and preserves every canonical record',async()=>{
   const x=await resultReadFixture(),app=createApp(x.service);let socket:WebSocket|undefined;
-  const selected=await selectedTaskResult(x.db,x.token,x.f.task,x.operationId),identity=selected.item.git!.identity_digest;
-  const url=`/v1/owner/tasks/${x.f.task}/results/${x.operationId}/file?${new URLSearchParams({identity_digest:identity,path:'literal :path.txt',side:'result'})}`;
+  const selected=await selectedTaskResult(x.db,x.token,x.f.task,x.operationId,x.resource),identity=selected.git.identity_digest;
+  const url=`/v1/owner/tasks/${x.f.task}/results/${x.operationId}/file?${new URLSearchParams({resource_id:x.resource,identity_digest:identity,path:'literal :path.txt',side:'result'})}`;
   const headers={authorization:`Bearer ${x.token}`};
   const ownerSession=(await x.db.pool.query('SELECT id FROM owner_sessions WHERE token_digest=$1',[digest(x.token)])).rows[0].id;
   try {
@@ -65,8 +65,8 @@ suite('Exact local result authenticated reads',()=>{
    expect((await app.inject({url:url.replace(x.f.task,randomUUID()),headers:freshHeaders})).statusCode).toBe(403);
    const changesUrl=`/v1/owner/tasks/${x.f.task}/results/${x.operationId}/changes`;
    const crossCursor=Buffer.from(JSON.stringify({after:0,identity:'f'.repeat(64),version:1})).toString('base64url');
-   expect((await app.inject({url:`${changesUrl}?${new URLSearchParams({identity_digest:identity,cursor:crossCursor})}`,headers:freshHeaders})).statusCode).toBe(403);
-   expect((await app.inject({url:`${changesUrl}?${new URLSearchParams({identity_digest:identity,cursor:'not-json'})}`,headers:freshHeaders})).statusCode).toBe(409);
+   expect((await app.inject({url:`${changesUrl}?${new URLSearchParams({resource_id:x.resource,identity_digest:identity,cursor:crossCursor})}`,headers:freshHeaders})).statusCode).toBe(403);
+   expect((await app.inject({url:`${changesUrl}?${new URLSearchParams({resource_id:x.resource,identity_digest:identity,cursor:'not-json'})}`,headers:freshHeaders})).statusCode).toBe(409);
    inbound=nextRead();const afterCancel=app.inject({url,headers:freshHeaders});const oldCurrent=await inbound;await x.db.pool.query("UPDATE tasks SET state='CANCELLED' WHERE id=$1",[x.f.task]);send(oldCurrent);expect((await afterCancel).json()).toMatchObject({status:'available',current:false});await x.db.pool.query("UPDATE tasks SET state='REVIEW' WHERE id=$1",[x.f.task]);
    expect(await snapshot()).toEqual(before);
    inbound=nextRead();const disconnected=app.inject({url,headers:freshHeaders});await inbound;socket.terminate();expect((await disconnected).json().status).toBe('offline');
@@ -85,13 +85,13 @@ suite('Exact local result authenticated reads',()=>{
     const handling=(await x.db.pool.query('SELECT guidance_id FROM task_guidance_assignments WHERE source_id=$1',[node.dispatch.node_execution_source!.source_id])).rows.map(r=>r.guidance_id);
     const done=await x.agent(node,'complete_node',{summary:`Result ${index}`,handled_guidance_ids:handling});
     finalized=(index+1).toString(16).padStart(40,'0');
-    await x.service.finishOperation(x.f.runner,x.f.incarnation,{operation_id:done.operation_id!,attempt_id:node.dispatch.attempt_id,success:true,result:{writer_absent:true,workspace_id:w.workspace_id,workspace_metadata:{...metadata,finalized_commit:finalized},git_commit:finalized,git_tree:'c'.repeat(40)}});
+    await x.service.finishOperation(x.f.runner,x.f.incarnation,{operation_id:done.operation_id!,attempt_id:node.dispatch.attempt_id,success:true,result:{writer_absent:true,completion_outcome:'finalized',workspace_results:[{resource_id:x.resource,workspace_id:w.workspace_id,workspace_metadata:{...metadata,finalized_commit:finalized},capture:{start_commit:metadata.finalized_commit,node_commit:finalized,node_tree:'c'.repeat(40)},git_commit:finalized,git_tree:'c'.repeat(40)}]}});
     completed.push(done.operation_id!);
    }
    const first=await taskResults(x.db,x.token,x.f.task);expect(first.items).toHaveLength(32);expect(first.has_more).toBe(true);const next=await taskResults(x.db,x.token,x.f.task,first.cursor);expect(first.items.length+next.items.length).toBe(35);
    const selectedId=completed.slice(0,-1).sort().at(-1)!;expect(first.items.some(i=>i.manifest.operation_id===selectedId)).toBe(false);
-   const selected=await selectedTaskResult(x.db,x.token,x.f.task,selectedId);expect(selected.identity.operation_id).toBe(selectedId);expect(selected.item.current).toBe(false);
-   await x.db.pool.query('UPDATE task_workspaces SET finalized_commit=$2 WHERE id=$1',[x.descriptor.workspace_id,'f'.repeat(40)]);expect(await selectedTaskResult(x.db,x.token,x.f.task,selectedId)).toEqual(selected);
+   const selected=await selectedTaskResult(x.db,x.token,x.f.task,selectedId,x.resource);expect(selected.identity.operation_id).toBe(selectedId);expect(selected.item.current).toBe(false);
+   await expect(x.db.pool.query('UPDATE task_workspaces SET finalized_commit=$2 WHERE id=$1',[x.descriptor.workspace_id,'f'.repeat(40)])).rejects.toMatchObject({code:'23514'});expect(await selectedTaskResult(x.db,x.token,x.f.task,selectedId,x.resource)).toEqual(selected);
   }finally{await x.close();}
  },60000);
 });

@@ -28,7 +28,7 @@ func validateWorkspaceUnit(values map[string]string, r operationRecord) error {
 		expected = "monos-probe"
 	}
 	unit := operationUnit(r.Operation.OperationID)
-	if values["Transient"] != "yes" || values["User"] != expected || values["Group"] != "monos-probe-read" || values["Description"] != "monos workspace operation "+r.Operation.OperationID {
+	if values["Transient"] != "yes" || values["User"] != expected || values["Group"] != "monos-probe-read" || values["Description"] != workspaceUnitDescription(r) {
 		return fmt.Errorf("workspace unit ownership mismatch")
 	}
 	if group := values["ControlGroup"]; group != "" && group != "/system.slice/"+unit {
@@ -38,7 +38,7 @@ func validateWorkspaceUnit(values map[string]string, r operationRecord) error {
 }
 
 func serviceWorkspaceAction(action string) bool {
-	return action == "fetch" || action == "history" || action == "export_node" || action == "integrate"
+	return action == "fetch" || action == "history" || action == "export_node" || action == "integrate" || action == "protect" || action == "prepare" || action == "publish" || action == "export"
 }
 
 // Retained worker identity is checked even after a lost systemd-run response.
@@ -156,11 +156,15 @@ func workspaceAccounts() (uid, gid int, err error) {
 	return
 }
 func prepareWorkspaceWorkerPaths(op protocol.Operation) error {
+	return prepareWorkspaceWriterPaths(op.Workspace)
+}
+
+func prepareWorkspaceWriterPaths(w *protocol.WorkspaceDescriptor) error {
 	uid, gid, err := workspaceAccounts()
 	if err != nil {
 		return err
 	}
-	p := filepath.Join(Root, "launch", "workspaces", workspaceAllocationKey(op.Workspace.WorkspaceID, op.Workspace.Isolation)+".writer.lock")
+	p := filepath.Join(Root, "launch", "workspaces", workspaceAllocationKey(w.WorkspaceID, w.Isolation)+".writer.lock")
 	f, err := os.OpenFile(p, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
 	if err == nil {
 		err = f.Chown(uid, gid)
@@ -215,42 +219,11 @@ func runWorkspaceWorker(ctx context.Context, op protocol.Operation, action strin
 			return empty, fmt.Errorf("open Agent absent; admitted Stop must settle workspace")
 		}
 	}
-	continuingIntegration := action == "integrate" && old.IntegrationStarted
-	if !continuingIntegration {
-		if err = requireUnfencedCompletion(op); err != nil {
-			releaseFileLock(lock)
-			return empty, err
-		}
+	if err = requireUnfencedCompletion(op); err != nil {
+		releaseFileLock(lock)
+		return empty, err
 	}
 	record := operationRecord{Operation: op, BootID: boot, WorkspaceAction: action}
-	if action == "integrate" || action == "export_node" {
-		record.FinalizationResult = old.FinalizationResult
-		if !continuingIntegration {
-			if action == "integrate" && (old.WorkspaceAction != "export_node" || !old.Settled || old.Status.Error != "") {
-				releaseFileLock(lock)
-				return empty, fmt.Errorf("integration requires settled protected Node export")
-			}
-			if old.FinalizationResult == nil && (!old.Settled || old.Status.Error != "") {
-				releaseFileLock(lock)
-				return empty, fmt.Errorf("integration requires settled private finalization")
-			}
-			if record.FinalizationResult == nil {
-				record.FinalizationResult = old.Status.Result
-			}
-		}
-		workspace, e := readWorkspaceAllocation(op.Workspace)
-		if e != nil {
-			releaseFileLock(lock)
-			return empty, e
-		}
-		if e = validateIntegrationCapture(op, workspace.Metadata, record.FinalizationResult); e != nil {
-			releaseFileLock(lock)
-			return empty, e
-		}
-		// This fsynced record is the integration/cancellation ordering barrier.
-		// The same helper lock protects fenceCompletion's durable cancellation.
-		record.IntegrationStarted = action == "integrate"
-	}
 	if err = saveRecord(operationPath(op.OperationID), record); err != nil {
 		releaseFileLock(lock)
 		return empty, err
@@ -429,6 +402,9 @@ func prepareCloneStage(op protocol.Operation) error {
 
 func runWorkspaceEffect(ctx context.Context, op protocol.Operation, access *protocol.GitHubRepositoryAccessResult) (Status, error) {
 	var status Status
+	if op.Kind == protocol.KindCompleteNode || op.Kind == protocol.SettleCompletion {
+		return runCompletionEffect(ctx, op)
+	}
 	if op.Workspace == nil {
 		return status, fmt.Errorf("workspace descriptor required")
 	}
@@ -447,14 +423,8 @@ func runWorkspaceEffect(ctx context.Context, op protocol.Operation, access *prot
 	if err = prepareWorkspaceWorkerPaths(op); err != nil {
 		return status, err
 	}
-	if op.Kind == protocol.SettleCompletion {
-		return settleCompletion(ctx, op, storage)
-	}
 	if op.Kind == protocol.Stop {
 		return stopWorkspace(ctx, op, storage)
-	}
-	if op.Kind == protocol.KindCompleteNode {
-		return completeWorkspace(ctx, op, storage)
 	}
 	if op.Kind != protocol.KindOpenWorkspace {
 		return status, fmt.Errorf("unsupported canonical workspace effect")
@@ -778,66 +748,10 @@ func prepareStopRecovery(r *workspaceRecord, op protocol.Operation) error {
 	return nil
 }
 
-func completeWorkspace(ctx context.Context, op protocol.Operation, storage string) (Status, error) {
-	if tombstone, err := completionTombstone(op); tombstone != nil || err != nil {
-		if tombstone != nil {
-			return *tombstone, err
-		}
-		return Status{}, err
+func workspaceUnitDescription(r operationRecord) string {
+	description := "monos workspace operation " + r.Operation.OperationID
+	if r.Completion != nil && r.Completion.Active != nil {
+		description += " " + r.Completion.Active.IdentityDigest
 	}
-	if err := requireUnfencedCompletion(op); err != nil {
-		return Status{}, err
-	}
-	r, err := readWorkspaceAllocation(op.Workspace)
-	if err != nil {
-		return Status{}, err
-	}
-	if !sameWorkspaceOperation(r.Operation, op) || r.Metadata.StorageID != storage || r.OpenResult == nil {
-		return Status{}, fmt.Errorf("finalization requires initialized matching lease")
-	}
-	old, readErr := readOperation(operationPath(op.OperationID))
-	if readErr == nil && !sameOperation(old.Operation, op) {
-		return Status{}, fmt.Errorf("completion operation identity changed")
-	}
-	if readErr != nil && !os.IsNotExist(readErr) {
-		return Status{}, readErr
-	}
-	if readErr == nil && old.Settled && old.Status.Error == "" && old.Status.Result != nil && (op.Integration == nil && old.Status.Result.GitCommit != nil || op.Integration != nil && old.Status.Result.Integration != nil) {
-		r.Metadata = *old.Status.Result.WorkspaceMetadata
-		r.PrivateCheckpoint = nil
-		r.Released = true
-		if err = saveRecord(workspaceAllocationRecordPath(op.Workspace), r); err != nil {
-			return Status{}, err
-		}
-		return old.Status, nil
-	}
-	if _, err = stop(ctx, op.AttemptID); err != nil {
-		return Status{}, err
-	}
-	var status Status
-	if op.Integration == nil || !old.IntegrationStarted && old.FinalizationResult == nil && !(old.Settled && old.Status.Error == "" && old.Status.Result != nil && old.Status.Result.GitCommit != nil) {
-		status, err = runWorkspaceWorker(ctx, op, "finalize", nil)
-		if err != nil {
-			return status, err
-		}
-	}
-	if op.Integration != nil {
-		if !old.IntegrationStarted && !(old.WorkspaceAction == "export_node" && old.Settled && old.Status.Error == "") {
-			status, err = runWorkspaceWorker(ctx, op, "export_node", nil)
-			if err != nil {
-				return status, err
-			}
-		}
-		status, err = runWorkspaceWorker(ctx, op, "integrate", nil)
-		if err != nil {
-			return status, err
-		}
-	}
-	r.Metadata = *status.Result.WorkspaceMetadata
-	r.PrivateCheckpoint = nil
-	r.Released = true
-	if err = saveRecord(workspaceAllocationRecordPath(op.Workspace), r); err != nil {
-		return status, err
-	}
-	return status, nil
+	return description
 }

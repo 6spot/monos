@@ -131,7 +131,11 @@ func verifyPublicationSource(ctx context.Context, dir string, s protocol.ResultR
 	if e := publicationGitStorage(ctx, dir); e != nil {
 		return e
 	}
-	for expression, want := range map[string]string{"refs/monos/result": s.GitCommit, s.GitCommit + "^{tree}": s.GitTree, s.BaseCommit + "^{commit}": s.BaseCommit} {
+	objects, err := resultIdentityObjects(s)
+	if err != nil {
+		return err
+	}
+	for expression, want := range objects {
 		raw, e := resultGit(ctx, dir, 256, "rev-parse", "--verify", expression)
 		if e != nil || strings.TrimSpace(string(raw)) != want {
 			return errors.New("publication source mismatch")

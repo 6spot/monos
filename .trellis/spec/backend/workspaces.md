@@ -3,15 +3,18 @@
 Sources: [Workspace](../../../docs/04-workspace-and-git.md),
 [protocol](../protocol/commands.md), and the
 [implementation design](../../tasks/archive/2026-09/09-30-a-serial-workspaces/design.md).
-Native public/two-account workspace and unexposed-open cancellation trials passed;
-see the task's verification report for versions, retained failures and limits.
+The current multi-repository contract is recorded in
+[completion and recovery](../../../docs/research/multi-repository-completion-contract.md).
+Historical serial native public/two-account workspace and unexposed-open
+cancellation trials passed; see that task's verification report for versions,
+retained failures and limits. They do not establish multi-repository native acceptance.
 
 ## 1. Scope / Trigger
 
 Canonical Node dispatch, lazy `open_workspace`, direct lease reuse and isolated allocations,
 completion and system Stop reconciliation. [Node execution](node-execution.md)
-adds Task-driven dispatch, Artifacts and hard-completion recovery. Multi-repository
-completion remains a later slice. Planner reads use independent
+adds Task-driven dispatch, Artifacts and hard-completion recovery. One completion
+settles the Attempt's entire admitted repository set. Planner reads use independent
 [repository inspection](repository-inspection.md), never workspace leases.
 
 ## 2. Signatures
@@ -21,9 +24,14 @@ snapshot of resource/workspace IDs. It does not create workspaces or bind resour
 to the Task. Workspace identity is `ws_` plus SHA256 of canonical JSON
 `[task_id, resource_id]`; shared TS/Go/Python fixtures bind this algorithm.
 
-`Operation.workspace` and `workspace_digest` retain an immutable descriptor of
-workspace, resource, lease, Node activation, Runner and fixed basis. Successful
-open preserves top-level `workspace_id`, `path`, `instruction_files`; infrastructure
+Open and Stop use `Operation.workspace` and `workspace_digest` to retain an immutable
+descriptor of workspace, resource, lease, Node activation, Runner and fixed basis.
+`complete_node` instead requires `workspaces[]`, sorted by resource ID, with each
+member's descriptor/digest and optional integration expectation. Its immutable
+`operation_workspaces` rows are the exact member set; zero members is explicit.
+`settle_completion` binds the original parent operation ID/digest and resolves that
+same set without copying descriptors. Successful open preserves top-level
+`workspace_id`, `path`, `instruction_files`; infrastructure
 facts live in `workspace_metadata`. Provider metadata is optional and namespaced;
 core identity is `repository_identity`, not a GitHub ID.
 
@@ -42,7 +50,9 @@ outbox, operation, dispatch, database journal or Agent environment.
 - First open freezes resource defaults and pins the Runner. Two request IDs under
   one lease refer to the same original open operation, with distinct receipts.
   Receipt lookup precedes fresh-state checks. No provider call occurs in the DB
-  transaction. Stage A permits one materialized repository per Task.
+  transaction. Every resource has its own fixed Task workspace and lease. Before
+  committing a new open, bound the resulting Attempt set to 64 members and reserve
+  encoded completion/cancellation payload budgets; reject oversize sets atomically.
 - Initial success fixes storage/generation/repository/base/target. Later opens
   preserve those facts and finalized revision; only the lease's target observation
   changes. Project default edits do not retarget existing workspaces.
@@ -52,7 +62,12 @@ outbox, operation, dispatch, database journal or Agent environment.
   atomically with the matching Node activation's completion.
 - Stop preserves private work through a system-generated checkpoint and does not
   advance finalized revision. A fresh Attempt in the same activation may reuse it;
-  another activation needs explicit disposition from the later settlement slice.
+  another activation needs explicit Rework or Replan disposition.
+- Ordinary Stop atomically admits one operation per unreleased lease (one
+  repository-free Stop when there are none). Each member settles independently;
+  one failed member cannot roll back a sibling's retained checkpoint. Release the
+  Attempt only after verified process absence, every operation terminal and every
+  lease released. The last open or inspection settlement may satisfy that barrier.
 - For open operations, `cancelled` is terminal only for an exact never-materialized open, linked to an
   admitted Stop for its fenced Attempt/lease. Its receipt projects an error, never
   a successful workspace. The matching Stop may release without a checkpoint only
@@ -86,13 +101,15 @@ Ordinary cross-Plan Replan transfer retains exact proposal/publication provenanc
 
 ### Parallel allocations and integration
 
-Migration 30 and `workspace-placement.ts` freeze optional
-`workspace_reservations.isolation: { allocation_id }` before queue admission. A
-dependency-ready batch uses independent allocations; retained isolated work keeps
-later placement isolated. Retained direct private work keeps serial placement until
-adopted/finalized. A queued direct Attempt already excludes other Task writers,
-even before first open. Same-allocation ownership remains exclusive independently
-of Runner capacity. Task identity and `storage_id` remain allocation-independent.
+Migrations 30/31 and `workspace-placement.ts` freeze optional
+`workspace_reservations.resources[].isolation: { allocation_id }` per resource
+before queue admission. A dependency-ready batch uses independent allocations;
+each inherited checkpoint retains its resource's exact allocation. Retained direct
+private work keeps serial placement until adopted/finalized. Any direct reservation
+makes the Attempt Task-exclusive, even while queued before first open. An empty
+resource set does not itself require exclusive workspace placement. Same-allocation
+ownership remains exclusive independently of Runner capacity. Task identity and
+`storage_id` remain allocation-independent.
 
 The first isolated initialization is serialized; subsequent descriptors freeze the
 exact Task revision and `canonical_source` proof. Initial sources retain original
@@ -106,16 +123,28 @@ Later Stop/open metadata describes that allocation, even when another allocation
 advanced the Task. Same-activation checkpoint continuation reuses its allocation;
 Rework and conflict retry allocate fresh storage while retaining old private work.
 
-`complete_node` holds a single Task completion admission boundary and freezes
-`integration.expected_task_commit`. A competing request fails before fencing its
-Attempt or writing its manifest/receipt. No DB lock spans Runner or Git work.
-An `integrated` result atomically advances Task Git and exact Node evidence. A
-`conflict` result is physical success only: no top-level Git completion fields,
-no `node_completions`, unchanged Task revision, and preserved private Node result.
-Release settled ownership and retry the same activation with a fresh allocation
-and exact `conflict_source`. Three conflicts since the last Owner-created source
-exhaust automatic retry into `integration_conflict_limit`; Owner Retry resets the
-effective budget. Replan freezes retry; dismissal resumes it idempotently.
+`complete_node` holds one Task-wide completion admission boundary and freezes each
+isolated member's `integration.expected_task_commit`. Pending completion, including
+hard recovery, blocks new Node source preparation, dispatch and workspace open.
+A competing completion fails before fencing its Attempt or writing its
+manifest/receipt. No DB lock spans Runner or Git work.
+
+Physical success is `{writer_absent:true, completion_outcome, workspace_results}`,
+with `completion_outcome: finalized|conflict` and exactly one ordered result per
+input member. Each result binds its workspace/lease, metadata and immutable capture
+(`start_commit`, `node_commit`, `node_tree`). A finalized parent atomically advances
+all member Task revisions and the one Node completion. If any integration conflicts,
+preserve every member's capture, including clean siblings; advance no canonical
+Task pointer and create no `node_completions`. Aggregate results carry no singular
+top-level Git/workspace fields.
+
+Release settled ownership and retry the same activation with fresh allocations
+and each resource's exact `conflict_source`. Retry must reopen every captured
+resource before completing, including siblings that did not conflict. Count one
+conflict per parent completion, not per resource. Three conflicts since the last
+Owner-created source exhaust automatic retry into `integration_conflict_limit`;
+Owner Retry resets the effective budget. Replan freezes retry; dismissal resumes
+it idempotently.
 
 Cancellation before integration checkpoints private work. After integration begins,
 reconcile the same immutable operation and retain physical code without granting
@@ -128,7 +157,9 @@ See [implementation and verification](../../../docs/research/parallel-workspaces
 | Condition | Result |
 | --- | --- |
 | Unreserved, removed or cross-Project resource | Denied scope |
-| Another materialized repository in Stage A | Explicit unsupported multiple workspaces |
+| Next resource exceeds member or encoded aggregate budget | `workspace_set_budget_exceeded`; no committed new open |
+| Missing, duplicate, reordered or foreign completion member | Reject whole result; retain recovery ownership |
+| Another completion owns the Task boundary | Wait/reject before admitting new work |
 | Wrong descriptor, activation, lease or storage identity | Reject; retain recovery ownership |
 | Missing credentials, denied repository or unavailable ref | Recoverable bounded attention; Stop stays available |
 | Unexposed open cancelled by its admitted Stop | Terminal error receipt; no workspace grant |

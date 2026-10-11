@@ -17,7 +17,7 @@ async function setup(page: Page) {
     rework_request_id: 'saved-rework', status: 'limit_blocked', version: 1, target_node_id: 'upstream', affected_node_ids: ['upstream', response.node], automatic_requests_used: 3, limit: 3,
     requester_node_id: response.node, requester_node_activation: 1,
     reason: 'The upstream parser loses empty fields. Correct its contract and repeat downstream validation before delivery.',
-    stop_operation_id: 'saved-stop', waiting_reason: null, can_apply: true, can_continue: true,
+    stop_operation_ids: ['saved-stop'], waiting_reason: null, can_apply: true, can_continue: true,
   } };
   await page.route(`**/v1/owner/tasks/${response.task}/rework`, route => route.fulfill({ json: status }));
   await page.goto(`/#task?task_id=${response.task}&section=execution`);

@@ -142,8 +142,8 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Task conversation migr
     async function manifest(ids: unknown, version = 2) {
       return transaction(db, async (tx) => {
         const operation = randomUUID();
-        await tx.query(`INSERT INTO operations(id,attempt_id,schema_version,kind,request_id,state,repository_free,completion_manifest_digest)
-          VALUES($1,$2,1,'complete_node',$3,'admitted',true,$4)`, [operation, n.attempt, randomUUID(), 'a'.repeat(64)]);
+        await tx.query(`INSERT INTO operations(id,attempt_id,schema_version,kind,request_id,state,completion_manifest_digest)
+          VALUES($1,$2,1,'complete_node',$3,'admitted',$4)`, [operation, n.attempt, randomUUID(), 'a'.repeat(64)]);
         await tx.query(`INSERT INTO completion_manifests(operation_id,task_id,node_id,node_activation,attempt_id,source_id,specification_id,plan_id,summary,artifact_ids,content_digest,manifest_version,handled_guidance_ids)
           VALUES($1,$2,$3,1,$4,$5,$6,$7,'Done','[]',$8,$9,$10)`, [operation, f.task, n.node, n.attempt, n.source, f.spec, n.plan, 'a'.repeat(64), version, JSON.stringify(ids)]);
       });

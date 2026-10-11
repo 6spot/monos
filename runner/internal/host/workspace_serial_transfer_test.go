@@ -29,7 +29,7 @@ func serialTransferFixture(t *testing.T) (workspaceRecord, protocol.Operation, M
 	proof.Operation.OperationID = "complete"
 	proof.Operation.Kind = protocol.KindCompleteNode
 	proof.Operation.CompletionManifestDigest = tr.CompletionManifestDigest
-	proof.Status.Result = &protocol.EffectResult{WriterAbsent: ptr(true), WorkspaceID: ptr(tr.WorkspaceID), WorkspaceMetadata: &tr.Metadata, GitCommit: ptr(r.Metadata.FinalizedCommit), GitTree: tr.FinalizedTree}
+	aggregateCompletionProof(t, &proof, r.Metadata, r.Metadata.FinalizedCommit, *tr.FinalizedTree)
 	_, hash, _ := wire.Canonical(op.Workspace)
 	op.WorkspaceDigest = &hash
 	return r, op, m, proof
@@ -70,7 +70,7 @@ func TestSerialTransferRequiresReleasedExactSamePlanCompletion(t *testing.T) {
 			p.Status.Result.GitTree = ptr(strings.Repeat("a", 40))
 		},
 		"missing metadata": func(_ *workspaceRecord, _ *protocol.Operation, _ *Manifest, p *operationRecord) {
-			p.Status.Result.WorkspaceMetadata = nil
+			p.Status.Result.WorkspaceResults[0].WorkspaceMetadata.LeaseID = "foreign"
 		},
 		"wrong workspace": func(_ *workspaceRecord, _ *protocol.Operation, _ *Manifest, p *operationRecord) {
 			p.Status.Result.WorkspaceID = ptr("other")
@@ -111,7 +111,7 @@ func TestSerialTransferPreservesFinalizedGitAndExactLeaseReplay(t *testing.T) {
 				op.Workspace.NodeActivation, tr.ToNodeActivation = tr.FromNodeActivation+1, tr.FromNodeActivation+1
 			}
 			result.WriterAbsent, result.WorkspaceID, result.WorkspaceMetadata = ptr(true), ptr(tr.WorkspaceID), &tr.Metadata
-			proof.Status.Result = &result
+			aggregateCompletionProof(t, &proof, r.Metadata, *result.GitCommit, *result.GitTree)
 			_, hash, _ := wire.Canonical(op.Workspace)
 			op.WorkspaceDigest = &hash
 			if err = validateWorkspaceTransferProof(r, op, m, proof, nil); err != nil {

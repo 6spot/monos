@@ -1,4 +1,5 @@
 import { nodeWorkspaceReady } from './workspace-placement.ts';
+import { taskCompletionPending } from './completion-boundary.ts';
 import {assertReviewSource} from './task-review-sources.ts';
 import {reviewDispatchBlocked} from './task-review-state.ts';
 import type {TaskReviewSource} from '../../../packages/protocol/src/index.ts';
@@ -183,19 +184,22 @@ export class DispatchQueue {
         // transaction, avoiding cross-Runner lock inversion while skipping waiters.
         // Direct placement reserves the Task; isolated placements reserve only their owner/allocation.
         const candidates = (await tx.query<Queued>(`SELECT q.* FROM attempts q WHERE q.runner_id=$1 AND q.state='QUEUED'
+          AND (q.kind<>'node' OR NOT EXISTS(SELECT 1 FROM operations completion JOIN attempts owner ON owner.id=completion.attempt_id
+            WHERE owner.task_id=q.task_id AND completion.kind='complete_node' AND completion.state NOT IN ('succeeded','cancelled')))
           AND (q.selection_context IS NULL OR $3::boolean OR EXISTS (SELECT 1 FROM runtime_installations i
             WHERE i.runner_id=q.runner_id AND i.runtime_id=(q.launch->>'runtime_id') AND i.incarnation=$2))
           AND NOT EXISTS (SELECT 1 FROM attempts a WHERE a.id<>q.id
             AND (a.owner_key=q.owner_key OR (a.task_id=q.task_id AND a.kind='node' AND q.kind='node'
-              AND (NOT COALESCE(a.launch->'workspace_reservations' ? 'isolation',false) OR NOT COALESCE(q.launch->'workspace_reservations' ? 'isolation',false))))
+              AND (NOT workspace_reservations_isolated(a.launch->'workspace_reservations') OR NOT workspace_reservations_isolated(q.launch->'workspace_reservations'))))
             AND (NOT a.process_released OR (a.state='QUEUED' AND (a.created_at,a.id)<(q.created_at,q.id)) OR EXISTS (SELECT 1 FROM operations o WHERE o.attempt_id=a.id AND o.state NOT IN ('succeeded','cancelled'))))
           AND (q.task_conversation_source_id IS NOT NULL OR NOT EXISTS (SELECT 1 FROM workspace_leases l WHERE l.task_id=q.task_id AND l.state<>'released'
-            AND (q.kind<>'node' OR NOT COALESCE(q.launch->'workspace_reservations' ? 'isolation',false) OR l.allocation_id IS NULL OR l.node_id=q.node_id)))
+            AND (q.kind<>'node' OR NOT workspace_reservations_isolated(q.launch->'workspace_reservations') OR l.allocation_id IS NULL OR l.node_id=q.node_id)))
           ORDER BY CASE WHEN q.kind='planner' THEN 0 ELSE 1 END,q.created_at,q.id LIMIT 1`, [runnerId, incarnation, Number(runner.runtime_report_incarnation) === incarnation])).rows;
         for (const candidate of candidates) {
           const discussion = candidate.todo_id ? await lockDiscussion(tx, candidate.todo_id) : null;
           const task = candidate.task_id ? (await tx.query<{ state: string; control_version: string; specification_id: string; plan_id: string | null }>('SELECT state,control_version,specification_id,plan_id FROM tasks WHERE id=$1 FOR UPDATE', [candidate.task_id])).rows[0]! : null;
           const row = (await tx.query<Queued>('SELECT * FROM attempts WHERE id=$1 FOR UPDATE', [candidate.id])).rows[0]!;
+          if (row.launch.kind === 'node' && row.task_id && await taskCompletionPending(tx, row.task_id)) return null;
           if (row.state !== 'QUEUED') return retry;
           let current = discussion ? Number(discussion.version) === row.launch.control_version && discussion.source_message_id === row.launch.source_message_id && discussion.desired_attempt_id === row.id : !!task && task.state === 'RUNNING' && (!!row.launch.node_execution_source || Number(task.control_version) === row.launch.control_version) && task.specification_id === row.specification_id && task.plan_id === row.plan_id;
           if(row.launch.task_review_source){try{await assertReviewSource(tx,row.task_id!,row.launch.task_review_source,row.id,row.launch.prompt);current=true;}catch(e){if(!(e instanceof CommandError))throw e;current=false;}}

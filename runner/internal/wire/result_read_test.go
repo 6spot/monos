@@ -11,6 +11,7 @@ import (
 func readWireRequest(t *testing.T, mode string) map[string]any {
 	t.Helper()
 	i := protocol.ResultReadIdentity{TaskID: "task", OperationID: "completion", AttemptID: "attempt", DispatchID: "dispatch", NodeID: "node", SpecificationID: "spec", PlanID: "plan", WorkspaceID: "workspace", ResourceID: "repo", RunnerID: "runner", StorageID: "storage", LeaseID: "lease", NodeActivation: 1, Generation: 1, RepositoryIdentity: "repo", ManifestDigest: strings.Repeat("a", 64), OperationIdentityDigest: strings.Repeat("b", 64), BaseCommit: strings.Repeat("1", 40), GitCommit: strings.Repeat("2", 40), GitTree: strings.Repeat("3", 40)}
+	i.Capture = protocol.WorkspaceCaptureResult{StartCommit: i.BaseCommit, NodeCommit: i.GitCommit, NodeTree: i.GitTree}
 	_, d, e := Canonical(i)
 	if e != nil {
 		t.Fatal(e)
@@ -147,5 +148,51 @@ func TestResultReadWireUnicodeRawAndEncodedByteBounds(t *testing.T) {
 	raw = []byte(strings.Replace(string(raw), "unicodé", `\ud800`, 1))
 	if Validate("ResultReadRequest", raw) == nil {
 		t.Fatal("unpaired surrogate accepted")
+	}
+}
+
+func TestResultReadCaptureAndIntegrationSurviveTypedRoundTrip(t *testing.T) {
+	fixture := readWireRequest(t, "file")
+	i := fixture["identity"].(protocol.ResultReadIdentity)
+	i.Integration = &protocol.WorkspaceIntegrationResult{Outcome: protocol.Integrated, StartCommit: i.Capture.StartCommit, NodeCommit: i.Capture.NodeCommit, NodeTree: i.Capture.NodeTree, ExpectedTaskCommit: strings.Repeat("4", 40), TaskCommit: strings.Repeat("5", 40), TaskTree: strings.Repeat("6", 40)}
+	i.GitCommit, i.GitTree = i.Integration.TaskCommit, i.Integration.TaskTree
+	_, expected, err := Canonical(i)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fixture["identity"], fixture["identity_digest"] = i, expected
+	raw, err := json.Marshal(fixture)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var request protocol.ResultReadRequest
+	if err := Decode("ResultReadRequest", raw, &request); err != nil {
+		t.Fatal(err)
+	}
+	if request.Identity.Capture != i.Capture || request.Identity.Integration == nil || *request.Identity.Integration != *i.Integration {
+		t.Fatal("typed read lost captured or integrated provenance")
+	}
+	_, actual, err := Canonical(request.Identity)
+	if err != nil || actual != expected {
+		t.Fatal("typed read changed its immutable identity", err)
+	}
+	for _, field := range []string{"capture", "integration", "resource"} {
+		t.Run(field, func(t *testing.T) {
+			changed := request.Identity
+			proof := *changed.Integration
+			changed.Integration = &proof
+			switch field {
+			case "capture":
+				changed.Capture.NodeTree = strings.Repeat("7", 40)
+			case "integration":
+				changed.Integration.TaskTree = strings.Repeat("8", 40)
+			case "resource":
+				changed.ResourceID = "other-repository"
+			}
+			_, digest, err := Canonical(changed)
+			if err != nil || digest == expected {
+				t.Fatal("changed nested provenance retained read identity", err)
+			}
+		})
 	}
 }

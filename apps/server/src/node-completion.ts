@@ -35,7 +35,7 @@ export async function projectCompletion(
   operation: OperationRow,
   message: OperationResult
 ): Promise<void> {
-  if (message.result.integration?.outcome === 'conflict') throw new CommandError('denied_scope', 'Integration conflicts cannot produce Node completion evidence');
+  if (message.result.completion_outcome === 'conflict') throw new CommandError('denied_scope', 'Integration conflicts cannot produce Node completion evidence');
   const task = (await tx.query<NodeTask>('SELECT * FROM tasks WHERE id=$1', [attempt.task_id])).rows[0]!;
   // A cancellation closes current evidence while retaining truthful physical settlement.
   if (task.state === 'CANCELLED' && attempt.launch.node_execution_source) {
@@ -124,7 +124,7 @@ export async function finishCompletionSettlement(
   message: OperationResult,
   configurationVersion: number
 ): Promise<void> {
-  if (!attempt.launch.node_execution_source || attempt.mutation_allowed || settlement.workspace_descriptor === null)
+  if (!attempt.launch.node_execution_source || attempt.mutation_allowed || !settlement.completion_operation_id)
     throw new CommandError('denied_scope', 'Settlement requires fenced canonical workspace ownership');
   if (settlement.state === 'succeeded') {
     if (
@@ -136,7 +136,7 @@ export async function finishCompletionSettlement(
     return;
   }
   const original = (
-    await tx.query<OperationRow>('SELECT * FROM operations WHERE id=$1 AND attempt_id=$2 FOR UPDATE', [
+    await tx.query<OperationRow>('SELECT *,operation_workspace_inputs(id) AS workspaces FROM operations WHERE id=$1 AND attempt_id=$2 FOR UPDATE', [
       settlement.completion_operation_id,
       attempt.id,
     ])
@@ -145,8 +145,7 @@ export async function finishCompletionSettlement(
     !original ||
     original.kind !== 'complete_node' ||
     completionIdentity(original, attempt.dispatch_id) !== settlement.completion_identity_digest ||
-    original.workspace_digest !== settlement.workspace_digest ||
-    original.workspace_lease_id !== settlement.workspace_lease_id ||
+    !original.workspaces ||
     !original.completion_manifest_digest
   )
     throw new CommandError('denied_scope', 'Completion settlement target differs');
@@ -182,7 +181,7 @@ export async function finishCompletionSettlement(
     throw new CommandError('unmet_precondition', 'Unrelated effects still own workspace');
   const nested = pair.completion_result;
   if (pair.disposition === 'already_finalized') {
-    if (!nested.success || nested.cancelled_by_operation_id || (nested.result.integration?.outcome !== 'conflict' && (!nested.result.git_commit || !nested.result.git_tree)))
+    if (!nested.success || nested.cancelled_by_operation_id || !['finalized', 'conflict'].includes(nested.result.completion_outcome ?? ''))
       throw new CommandError('denied_scope', 'Already-finalized result requires exact Git success');
     if (original.state === 'succeeded') {
       if (canonicalJSON(original.result) !== canonicalJSON(nested.result))
@@ -194,6 +193,7 @@ export async function finishCompletionSettlement(
       await tx.query("UPDATE operations SET state='succeeded',result=$2 WHERE id=$1", [original.id, nested.result]);
     }
     if (
+      message.result.workspace_results !== undefined ||
       message.result.workspace_metadata ||
       message.result.git_commit ||
       message.result.git_tree ||
@@ -208,7 +208,7 @@ export async function finishCompletionSettlement(
       canonicalJSON(nested.result) !== canonicalJSON({ writer_absent: true })
     )
       throw new CommandError('denied_scope', 'Cancellation requires exact absence tombstone');
-    await settleWorkspaceOperation(tx, attempt, settlement, message);
+    await settleWorkspaceOperation(tx, attempt, { ...settlement, workspaces: original.workspaces }, message);
     await tx.query(
       "UPDATE operations SET state='cancelled',result=$2,cancelled_by_operation_id=$3,failure_kind=NULL WHERE id=$1",
       [original.id, nested.result, settlement.id]
@@ -224,7 +224,7 @@ export async function finishCompletionSettlement(
     "UPDATE attempts SET mutation_allowed=false,process_absent=true,process_released=true,state=$2,end_reason=CASE WHEN $3::boolean THEN 'completion_corrected' ELSE end_reason END WHERE id=$1",
     [attempt.id, pair.disposition === 'already_finalized' ? 'SUCCEEDED' : 'CANCELLED', pair.disposition === 'cancelled']
   );
-  if (pair.disposition === 'already_finalized' && nested.result.integration?.outcome === 'conflict') {
+  if (pair.disposition === 'already_finalized' && nested.result.completion_outcome === 'conflict') {
     await tx.query("UPDATE attempts SET state='FAILED',end_reason='integration_conflict' WHERE id=$1", [attempt.id]);
     await retryIntegrationConflict(tx, attempt, original, nested, configurationVersion);
   } else if (pair.disposition === 'already_finalized') {
@@ -263,7 +263,7 @@ export async function finishCompletionSettlement(
             completion_operation_id: original.id,
             settlement_operation_id: settlement.id,
             failure_kind: original.failure_kind,
-            checkpoint: message.result.workspace_metadata!.checkpoint,
+            checkpoints: message.result.workspace_results!.map(result => ({ resource_id: result.resource_id, checkpoint: result.workspace_metadata.checkpoint })),
           },
         }
       );

@@ -1,7 +1,7 @@
 import { randomUUID } from '../lib/browser-crypto.ts';
 import { useEffect, useRef, useState } from 'react';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import type { PublicationCommand, PublicationFinding, PublicationRecord, TaskLocalResult } from '../../../../packages/protocol/generated/types.ts';
+import type { PublicationCommand, PublicationFinding, PublicationRecord, TaskLocalResult, TaskLocalGitResult } from '../../../../packages/protocol/generated/types.ts';
 import { validate } from '../../../../packages/protocol/src/validation.ts';
 import { Button } from '../components/ui/button.tsx';
 import { Checkbox } from '../components/ui/checkbox.tsx';
@@ -27,19 +27,19 @@ const incompleteText: Record<NonNullable<PublicationRecord['scan']>['reason'] & 
 };
 const eligible = (finding: PublicationFinding) => finding.override_eligible && !['provider_hard_size', 'workflow_permission', 'published_credential'].includes(finding.kind);
 
-export function PublicationCandidates({ props, result }: { props: TaskViewProps; result: TaskLocalResult }) {
+export function PublicationCandidates({ props, result, git }: { props: TaskViewProps; result: TaskLocalResult; git: TaskLocalGitResult }) {
   const task = props.task.task_id, source = result.manifest.operation_id, session = props.commands.sessionId;
   const [selected, setSelected] = useState<{ operation?: string; candidate?: string }>(), [direct, setDirect] = useState(''), [directError, setDirectError] = useState('');
   const query = useInfiniteQuery({
-    queryKey: ['tasks', task, 'publication', session, source], initialPageParam: undefined as string | undefined,
-    queryFn: ({ pageParam, signal }) => publicationCandidates(task, { source_operation_id: source, ...(pageParam ? { cursor: pageParam } : {}) }, session, signal),
+    queryKey: ['tasks', task, 'publication', session, source, git.resource_id], initialPageParam: undefined as string | undefined,
+    queryFn: ({ pageParam, signal }) => publicationCandidates(task, { source_operation_id: source, resource_id: git.resource_id, ...(pageParam ? { cursor: pageParam } : {}) }, session, signal),
     getNextPageParam: page => page.next_cursor, retry: false, refetchInterval: 3000,
   });
   const items = unique(query.data?.pages.flatMap(page => page.items) ?? [], record => record.operation_id);
   useEffect(() => { const preferred = items.find(item => item.scan_applicable) ?? items.find(item => item.current) ?? items[0]; if (!selected && preferred) setSelected({ operation: preferred.operation_id }); }, [selected, items]);
   const detail = useQuery({
-    queryKey: ['tasks', task, 'publication-candidate', session, source, selected?.candidate],
-    queryFn: ({ signal }) => publicationCandidate(task, selected!.candidate!, session, source, signal), enabled: !!selected?.candidate, retry: false, refetchInterval: 3000,
+    queryKey: ['tasks', task, 'publication-candidate', session, source, git.resource_id, selected?.candidate],
+    queryFn: ({ signal }) => publicationCandidate(task, selected!.candidate!, session, source, signal, git.resource_id), enabled: !!selected?.candidate, retry: false, refetchInterval: 3000,
   });
   useEffect(() => { if ([query.error, detail.error].some(error => error instanceof APIError && error.code === 'unauthorized')) props.onUnauthorized(); }, [query.error, detail.error, props.onUnauthorized]);
   const record = selected?.candidate ? detail.data : items.find(item => item.operation_id === selected?.operation);

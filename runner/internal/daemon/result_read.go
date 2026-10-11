@@ -30,13 +30,23 @@ func retainedResultIdentity(db *journal.DB, i protocol.ResultReadIdentity) error
 	if e != nil {
 		return e
 	}
-	w := op.Workspace
 	source := start.Dispatch.NodeExecutionSource
-	if op.Kind != protocol.KindCompleteNode || op.AttemptID != i.AttemptID || op.DispatchID != i.DispatchID || digest != i.OperationIdentityDigest || op.CompletionManifestDigest == nil || *op.CompletionManifestDigest != i.ManifestDigest || w == nil || source == nil || effect == nil || !effect.Success || effect.AttemptID != i.AttemptID || effect.OperationID != i.OperationID {
+	if op.Kind != protocol.KindCompleteNode || op.AttemptID != i.AttemptID || op.DispatchID != i.DispatchID || digest != i.OperationIdentityDigest || op.CompletionManifestDigest == nil || *op.CompletionManifestDigest != i.ManifestDigest || source == nil || effect == nil || !effect.Success || effect.AttemptID != i.AttemptID || effect.OperationID != i.OperationID || effect.Result.CompletionOutcome == nil || *effect.Result.CompletionOutcome != "finalized" {
 		return fmt.Errorf("retained completion mismatch")
 	}
-	_, wd, e := wire.Canonical(w)
-	if e != nil || op.WorkspaceDigest == nil || *op.WorkspaceDigest != wd || w.TaskID != i.TaskID || w.WorkspaceID != i.WorkspaceID || w.Resource.ResourceID != i.ResourceID || w.RunnerID != i.RunnerID || w.NodeID != i.NodeID || w.NodeActivation != i.NodeActivation || w.LeaseID != i.LeaseID || w.Generation != i.Generation || w.Resource.RepositoryIdentity != i.RepositoryIdentity {
+	item, e := wire.SelectWorkspaceResult(op, effect.Result, i.ResourceID)
+	if e != nil {
+		return e
+	}
+	var w *protocol.WorkspaceDescriptor
+	for index := range op.Workspaces {
+		input := &op.Workspaces[index]
+		if input.Workspace.ResourceID == i.ResourceID {
+			w = &input.Workspace
+			break
+		}
+	}
+	if w == nil || w.TaskID != i.TaskID || w.WorkspaceID != i.WorkspaceID || w.Resource.ResourceID != i.ResourceID || w.RunnerID != i.RunnerID || w.NodeID != i.NodeID || w.NodeActivation != i.NodeActivation || w.LeaseID != i.LeaseID || w.Generation != i.Generation || w.Resource.RepositoryIdentity != i.RepositoryIdentity {
 		return fmt.Errorf("retained descriptor mismatch")
 	}
 	d := start.Dispatch
@@ -48,13 +58,12 @@ func retainedResultIdentity(db *journal.DB, i protocol.ResultReadIdentity) error
 	if e != nil || expected != i.WorkspaceID || d.DispatchID != i.DispatchID || d.AttemptID != i.AttemptID || d.RunnerID != i.RunnerID || d.TaskID == nil || *d.TaskID != i.TaskID || source.NodeID != i.NodeID || source.NodeActivation != i.NodeActivation || source.SpecificationID != i.SpecificationID || source.PlanID != i.PlanID {
 		return fmt.Errorf("retained start mismatch")
 	}
-	r := effect.Result
-	m := r.WorkspaceMetadata
-	if m == nil || r.WriterAbsent == nil || !*r.WriterAbsent || r.WorkspaceID == nil || *r.WorkspaceID != i.WorkspaceID || r.GitCommit == nil || *r.GitCommit != i.GitCommit || r.GitTree == nil || *r.GitTree != i.GitTree || m.Generation != i.Generation || m.LeaseID != i.LeaseID || m.StorageID != i.StorageID || m.RepositoryIdentity != i.RepositoryIdentity || m.BaseCommit != i.BaseCommit || m.FinalizedCommit != i.GitCommit || m.Checkpoint != nil {
+	m := item.WorkspaceMetadata
+	if item.WorkspaceID != i.WorkspaceID || item.GitCommit == nil || *item.GitCommit != i.GitCommit || item.GitTree == nil || *item.GitTree != i.GitTree || m.Generation != i.Generation || m.LeaseID != i.LeaseID || m.StorageID != i.StorageID || m.RepositoryIdentity != i.RepositoryIdentity || m.BaseCommit != i.BaseCommit || m.FinalizedCommit != i.GitCommit || m.Checkpoint != nil {
 		return fmt.Errorf("retained physical result mismatch")
 	}
-	if !reflect.DeepEqual(i.Integration, r.Integration) || wire.ValidateWorkspaceIntegration(op, r) != nil {
-		return fmt.Errorf("retained integration provenance mismatch")
+	if !reflect.DeepEqual(i.Integration, item.Integration) || item.Capture == nil || !reflect.DeepEqual(i.Capture, *item.Capture) {
+		return fmt.Errorf("retained capture/integration provenance mismatch")
 	}
 	return nil
 }

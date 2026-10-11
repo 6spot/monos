@@ -18,14 +18,15 @@ export async function workspaceReworkHistory(tx: Transaction, attempt: Workspace
     generation: string; storage_id: string; repository_identity: string; provider_metadata: unknown;
     base_commit: string; target_branch: string; activations: ReworkActivationMap;
   }>(`SELECT r.id,r.agent_request_id,r.plan_id,r.requester_node_id,r.requester_activation,
-      r.requester_attempt_id,r.stop_operation_id,l.id AS lease_id,op.result,op.workspace_descriptor,op.workspace_digest,
+      r.requester_attempt_id,member.operation_id AS stop_operation_id,l.id AS lease_id,op.result,op.workspace_descriptor,op.workspace_digest,
       w.generation,w.storage_id,w.repository_identity,w.provider_metadata,w.base_commit,w.target_branch,
       (SELECT jsonb_agg(jsonb_build_object('node_id',x.node_id,'from_activation',x.from_activation,
         'to_activation',x.from_activation+1) ORDER BY x.node_id) FROM node_rework_targets x WHERE x.request_id=r.id) AS activations
     FROM node_rework_requests r JOIN node_rework_targets target ON target.request_id=r.id
     JOIN tasks t ON t.id=r.task_id JOIN task_workspaces w ON w.task_id=t.id AND w.id=$1
     JOIN attempts old ON old.id=r.requester_attempt_id
-    JOIN operations op ON op.id=r.stop_operation_id AND op.attempt_id=old.id
+    JOIN node_rework_request_stops member ON member.request_id=r.id AND member.workspace_id=w.id
+    JOIN operations op ON op.id=member.operation_id AND op.attempt_id=old.id
     JOIN workspace_leases l ON l.id=op.workspace_lease_id AND l.workspace_id=w.id
     JOIN attempts current ON current.id=$2 JOIN nodes n ON n.id=current.node_id
     WHERE r.task_id=$3 AND r.status='applied' AND r.plan_id=$4 AND r.plan_id=t.plan_id

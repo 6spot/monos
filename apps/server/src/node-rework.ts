@@ -11,7 +11,7 @@ import { prepareNodeSource } from './node-execution-state.ts';
 import { nodeDependenciesReady, serialNodeReady } from './dispatch-queue.ts';
 import type { ExecutionNode, NodeTask } from './node-execution-state.ts';
 import {
-  advanceNodeRework, assertReworkTargetsSettled, checkReworkBasis, reworkOutcome, reworkRequest, reworkSettled, reworkUsage,
+  advanceNodeRework, assertReworkTargetsSettled, checkReworkBasis, reworkOutcome, reworkRequest, reworkSettled, reworkUsage, reworkStopIds,
 } from './node-rework-state.ts';
 import type { NodeReworkRequest } from './node-rework-state.ts';
 
@@ -40,7 +40,7 @@ export class NodeRework {
         requester.blocker_id === request.blocker_id && !requester.guidance_paused;
       return validate('NodeReworkStatus', { schema_version: 1, task_id: taskId, automatic_requests_used: await reworkUsage(tx, taskId), limit: 3,
         current: request ? { ...await reworkOutcome(tx, request), requester_node_id: request.requester_node_id,
-          requester_node_activation: Number(request.requester_activation), reason: request.reason, stop_operation_id: request.stop_operation_id,
+          requester_node_activation: Number(request.requester_activation), reason: request.reason, stop_operation_ids: await reworkStopIds(tx, request.id),
           waiting_reason: waiting, can_apply: eligible, can_continue: canContinue } : null });
     });
   }

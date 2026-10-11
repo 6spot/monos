@@ -66,6 +66,23 @@ func IntegrateWorkspace(ctx context.Context, input WorkspaceIntegrationInput) (W
 // afterStage injects process-loss boundaries in local Git tests without a global
 // hook or an alternate implementation of the physical effect.
 func integrateWorkspace(ctx context.Context, input WorkspaceIntegrationInput, afterStage func(string) error) (WorkspaceIntegrationResult, error) {
+	return workspaceIntegrationPhase(ctx, input, true, true, afterStage)
+}
+
+// PrepareWorkspaceIntegration protects the complete integration result without
+// advancing either canonical ref. A parent completion decides publication only
+// after every repository has reached this boundary.
+func PrepareWorkspaceIntegration(ctx context.Context, input WorkspaceIntegrationInput) (WorkspaceIntegrationResult, error) {
+	return workspaceIntegrationPhase(ctx, input, false, true, nil)
+}
+
+// PublishWorkspaceIntegration revalidates the original prepared intent and
+// reconciles both refs. The caller must own the durable parent publish decision.
+func PublishWorkspaceIntegration(ctx context.Context, input WorkspaceIntegrationInput) (WorkspaceIntegrationResult, error) {
+	return workspaceIntegrationPhase(ctx, input, true, false, nil)
+}
+
+func workspaceIntegrationPhase(ctx context.Context, input WorkspaceIntegrationInput, publish, allowPrepare bool, afterStage func(string) error) (WorkspaceIntegrationResult, error) {
 	var empty WorkspaceIntegrationResult
 	if !ValidID(input.OperationID) || !objectID.MatchString(input.ExpectedTaskCommit) || !objectID.MatchString(input.NodeStartCommit) || !objectID.MatchString(input.NodeCommit) || !objectID.MatchString(input.NodeTree) {
 		return empty, fmt.Errorf("%w: invalid operation or object identity", ErrWorkspaceIntegrationIdentity)
@@ -111,6 +128,9 @@ func integrateWorkspace(ctx context.Context, input WorkspaceIntegrationInput, af
 			return empty, fmt.Errorf("%w: malformed retained intent", ErrWorkspaceIntegrationIdentity)
 		}
 	} else if os.IsNotExist(err) {
+		if !allowPrepare {
+			return empty, fmt.Errorf("%w: publication requires retained preparation", ErrWorkspaceIntegrationIdentity)
+		}
 		prior, err := integrationRef(ctx, input.TaskRepository, operationRef)
 		if err != nil || prior != "" {
 			return empty, fmt.Errorf("%w: operation ref without intent (%v)", ErrWorkspaceIntegrationIdentity, err)
@@ -132,6 +152,9 @@ func integrateWorkspace(ctx context.Context, input WorkspaceIntegrationInput, af
 		}
 	} else {
 		return empty, err
+	}
+	if !allowPrepare && intent.Result == nil {
+		return empty, fmt.Errorf("%w: publication requires prepared outcome", ErrWorkspaceIntegrationIdentity)
 	}
 	if err = stage("intent"); err != nil {
 		return empty, err
@@ -242,6 +265,9 @@ func integrateWorkspace(ctx context.Context, input WorkspaceIntegrationInput, af
 	commit, err := integrationCommit(ctx, intent, result.TaskTree)
 	if err != nil || commit != result.TaskCommit {
 		return empty, fmt.Errorf("%w: retained integration commit changed (%v)", ErrWorkspaceIntegrationIdentity, err)
+	}
+	if !publish {
+		return result, nil
 	}
 	if err = stage("before_refs"); err != nil {
 		return empty, err

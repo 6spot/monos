@@ -8,7 +8,7 @@ import type { TaskIntent } from './task-api.ts';
 
 afterEach(() => vi.unstubAllGlobals());
 const hash = 'a'.repeat(64), oid = 'b'.repeat(40);
-const source: ResultReadIdentity = { task_id: 'task-a', operation_id: 'completion-a', attempt_id: 'attempt-a', dispatch_id: 'dispatch-a', node_id: 'node-a', node_activation: 1, specification_id: 'original-spec', plan_id: 'original-plan', manifest_digest: hash, operation_identity_digest: hash, workspace_id: 'workspace-a', resource_id: 'resource-a', runner_id: 'runner-a', storage_id: 'storage-a', generation: 1, lease_id: 'lease-a', repository_identity: 'github.com/example/repo', base_commit: oid, git_commit: 'c'.repeat(40), git_tree: 'd'.repeat(40) };
+const source: ResultReadIdentity = { task_id: 'task-a', operation_id: 'completion-a', attempt_id: 'attempt-a', dispatch_id: 'dispatch-a', node_id: 'node-a', node_activation: 1, specification_id: 'original-spec', plan_id: 'original-plan', manifest_digest: hash, operation_identity_digest: hash, workspace_id: 'workspace-a', resource_id: 'resource-a', runner_id: 'runner-a', storage_id: 'storage-a', generation: 1, lease_id: 'lease-a', repository_identity: 'github.com/example/repo', capture: { start_commit: oid, node_commit: 'c'.repeat(40), node_tree: 'd'.repeat(40) }, base_commit: oid, git_commit: 'c'.repeat(40), git_tree: 'd'.repeat(40) };
 async function evidence(): Promise<PublicationRecord> {
   const source_digest = await publicationDigest(source);
   const effective_basis = { task_id: source.task_id, specification_id: 'effective-spec', plan_id: 'effective-plan', completion_operation_id: source.operation_id, completion_manifest_digest: source.manifest_digest };

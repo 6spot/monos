@@ -1084,8 +1084,16 @@
         "inspection": {
           "$ref": "#/definitions/InspectionResult"
         },
-        "integration": {
-          "$ref": "#/definitions/WorkspaceIntegrationResult"
+        "workspace_results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/WorkspaceEffectResult"
+          },
+          "minItems": 0,
+          "maxItems": 64
+        },
+        "completion_outcome": {
+          "$ref": "#/definitions/CompletionOutcome"
         }
       },
       "allOf": [
@@ -1130,93 +1138,266 @@
               "content_digest": false,
               "requirement_operation_id": false,
               "replan_outcome": false,
-              "rework_outcome": false
+              "rework_outcome": false,
+              "workspace_results": false,
+              "completion_outcome": false
             }
           }
         },
         {
           "if": {
             "type": "object",
-            "required": [
-              "integration"
-            ],
             "properties": {
-              "integration": {}
-            }
+              "workspace_results": {}
+            },
+            "required": [
+              "workspace_results"
+            ]
           },
           "then": {
             "type": "object",
             "properties": {
+              "workspace_id": false,
+              "workspace_metadata": false,
+              "path": false,
+              "instruction_files": false,
+              "git_commit": false,
+              "git_tree": false,
               "writer_absent": {
                 "const": true
-              },
-              "workspace_metadata": {
-                "type": "object",
-                "properties": {
-                  "isolation": {
-                    "$ref": "#/definitions/WorkspaceIsolationMetadata"
-                  }
-                },
-                "required": [
-                  "isolation"
-                ]
               }
             },
             "required": [
-              "writer_absent",
-              "workspace_id",
-              "workspace_metadata"
+              "writer_absent"
             ]
           }
         },
         {
           "if": {
             "type": "object",
-            "required": [
-              "integration"
-            ],
             "properties": {
-              "integration": {
-                "type": "object",
-                "properties": {
-                  "outcome": {
-                    "const": "integrated"
-                  }
-                }
-              }
-            }
-          },
-          "then": {
-            "type": "object",
-            "properties": {},
+              "completion_outcome": {}
+            },
             "required": [
-              "git_commit",
-              "git_tree"
+              "completion_outcome"
             ]
-          }
-        },
-        {
-          "if": {
-            "type": "object",
-            "required": [
-              "integration"
-            ],
-            "properties": {
-              "integration": {
-                "type": "object",
-                "properties": {
-                  "outcome": {
-                    "const": "conflict"
-                  }
-                }
-              }
-            }
           },
           "then": {
             "type": "object",
             "properties": {
+              "workspace_results": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/WorkspaceEffectResult"
+                },
+                "minItems": 0,
+                "maxItems": 64
+              },
+              "writer_absent": {
+                "const": true
+              },
+              "workspace_id": false,
+              "workspace_metadata": false,
+              "path": false,
+              "instruction_files": false,
               "git_commit": false,
               "git_tree": false
+            },
+            "required": [
+              "workspace_results",
+              "writer_absent"
+            ]
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "completion_outcome": {
+                "const": "finalized"
+              }
+            },
+            "required": [
+              "completion_outcome"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "workspace_results": {
+                "type": "array",
+                "items": {
+                  "allOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "capture": {
+                          "$ref": "#/definitions/WorkspaceCaptureResult"
+                        },
+                        "git_commit": {
+                          "$ref": "#/definitions/GitOID"
+                        },
+                        "git_tree": {
+                          "$ref": "#/definitions/GitOID"
+                        },
+                        "workspace_metadata": {
+                          "type": "object",
+                          "properties": {
+                            "checkpoint": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "capture",
+                        "git_commit",
+                        "git_tree"
+                      ]
+                    },
+                    {
+                      "if": {
+                        "type": "object",
+                        "properties": {
+                          "workspace_metadata": {
+                            "type": "object",
+                            "properties": {
+                              "isolation": {}
+                            },
+                            "required": [
+                              "isolation"
+                            ]
+                          }
+                        }
+                      },
+                      "then": {
+                        "type": "object",
+                        "properties": {
+                          "integration": {
+                            "type": "object",
+                            "properties": {
+                              "outcome": {
+                                "const": "integrated"
+                              }
+                            }
+                          }
+                        },
+                        "required": [
+                          "integration"
+                        ]
+                      },
+                      "else": {
+                        "type": "object",
+                        "properties": {
+                          "integration": false
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "completion_outcome": {
+                "const": "conflict"
+              }
+            },
+            "required": [
+              "completion_outcome"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "workspace_results": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "capture": {
+                      "$ref": "#/definitions/WorkspaceCaptureResult"
+                    },
+                    "workspace_metadata": {
+                      "type": "object",
+                      "properties": {
+                        "checkpoint": false
+                      }
+                    },
+                    "git_commit": false,
+                    "git_tree": false,
+                    "integration": {
+                      "type": "object",
+                      "properties": {
+                        "outcome": {
+                          "const": "conflict"
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "capture"
+                  ]
+                },
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "integration": {
+                      "type": "object",
+                      "properties": {
+                        "outcome": {
+                          "const": "conflict"
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "integration"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "not": {
+              "type": "object",
+              "properties": {
+                "completion_outcome": {}
+              },
+              "required": [
+                "completion_outcome"
+              ]
+            }
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "workspace_results": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "workspace_metadata": {
+                      "type": "object",
+                      "properties": {
+                        "checkpoint": {}
+                      },
+                      "required": [
+                        "checkpoint"
+                      ]
+                    },
+                    "capture": false,
+                    "git_commit": false,
+                    "git_tree": false,
+                    "integration": false
+                  }
+                }
+              }
             }
           }
         }
@@ -1755,10 +1936,6 @@
         "cancelled_by_operation_id": {
           "$ref": "#/definitions/Id"
         },
-        "repository_free": {
-          "type": "boolean",
-          "const": true
-        },
         "completion_manifest_digest": {
           "$ref": "#/definitions/SHA256"
         },
@@ -1774,186 +1951,113 @@
         "inspection_digest": {
           "$ref": "#/definitions/SHA256"
         },
-        "integration": {
-          "$ref": "#/definitions/WorkspaceIntegration"
+        "workspaces": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/WorkspaceCompletionInput"
+          },
+          "minItems": 0,
+          "maxItems": 64
         }
       },
       "allOf": [
         {
           "if": {
+            "type": "object",
             "properties": {
               "kind": {
                 "enum": [
                   "open_workspace",
-                  "inspect_repository",
-                  "settle_completion"
+                  "inspect_repository"
                 ]
               }
-            },
-            "type": "object"
+            }
           },
           "then": {
-            "required": [
-              "resource_id"
-            ],
+            "type": "object",
             "properties": {
               "resource_id": {
                 "$ref": "#/definitions/Id"
               }
             },
-            "type": "object"
+            "required": [
+              "resource_id"
+            ]
           }
         },
         {
           "if": {
-            "required": [
-              "workspace"
-            ],
+            "type": "object",
             "properties": {
               "workspace": {}
             },
-            "type": "object"
+            "required": [
+              "workspace"
+            ]
           },
           "then": {
-            "properties": {
-              "kind": {
-                "enum": [
-                  "open_workspace",
-                  "complete_node",
-                  "stop",
-                  "settle_completion"
-                ]
-              }
-            },
-            "type": "object"
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "state": {
-                "const": "cancelled"
-              }
-            },
-            "type": "object"
-          },
-          "then": {
-            "required": [
-              "cancelled_by_operation_id",
-              "workspace",
-              "result"
-            ],
-            "properties": {
-              "cancelled_by_operation_id": {
-                "$ref": "#/definitions/Id"
-              },
-              "workspace": {
-                "$ref": "#/definitions/WorkspaceDescriptor"
-              },
-              "kind": {
-                "enum": [
-                  "open_workspace",
-                  "complete_node"
-                ]
-              },
-              "result": {
-                "type": "object",
-                "required": [
-                  "writer_absent"
-                ],
-                "properties": {
-                  "writer_absent": {
-                    "const": true
-                  },
-                  "workspace_id": false,
-                  "workspace_metadata": false,
-                  "path": false,
-                  "instruction_files": false
-                }
-              }
-            },
-            "type": "object"
-          },
-          "else": {
-            "properties": {
-              "cancelled_by_operation_id": false
-            },
-            "type": "object"
-          }
-        },
-        {
-          "if": {
-            "required": [
-              "repository_free"
-            ],
             "type": "object",
             "properties": {
-              "repository_free": {}
+              "kind": {
+                "enum": [
+                  "open_workspace",
+                  "stop"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "const": "complete_node"
+              }
             }
           },
           "then": {
+            "type": "object",
             "properties": {
-              "kind": {
-                "const": "complete_node"
-              },
               "workspace": false,
               "workspace_digest": false,
-              "resource_id": false
-            },
-            "type": "object"
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "kind": {
-                "const": "complete_node"
+              "resource_id": false,
+              "workspaces": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/WorkspaceCompletionInput"
+                },
+                "minItems": 0,
+                "maxItems": 64
               }
             },
-            "not": {
-              "required": [
-                "resource_id"
-              ],
-              "type": "object",
-              "properties": {
-                "resource_id": {}
-              }
-            },
-            "type": "object"
-          },
-          "then": {
             "required": [
-              "repository_free"
-            ],
+              "workspaces"
+            ]
+          },
+          "else": {
+            "type": "object",
             "properties": {
-              "repository_free": {
-                "type": "boolean",
-                "const": true
-              }
-            },
-            "type": "object"
+              "workspaces": false,
+              "completion_manifest_digest": false
+            }
           }
         },
         {
           "if": {
+            "type": "object",
             "properties": {
               "kind": {
                 "const": "settle_completion"
               }
-            },
-            "type": "object"
+            }
           },
           "then": {
-            "required": [
-              "workspace",
-              "completion_operation_id",
-              "completion_identity_digest"
-            ],
+            "type": "object",
             "properties": {
-              "repository_free": false,
-              "workspace": {
-                "$ref": "#/definitions/WorkspaceDescriptor"
-              },
+              "workspace": false,
+              "workspace_digest": false,
+              "resource_id": false,
               "completion_operation_id": {
                 "$ref": "#/definitions/Id"
               },
@@ -1961,33 +2065,17 @@
                 "$ref": "#/definitions/SHA256"
               }
             },
-            "type": "object"
+            "required": [
+              "completion_operation_id",
+              "completion_identity_digest"
+            ]
           },
           "else": {
+            "type": "object",
             "properties": {
               "completion_operation_id": false,
               "completion_identity_digest": false
-            },
-            "type": "object"
-          }
-        },
-        {
-          "if": {
-            "required": [
-              "completion_manifest_digest"
-            ],
-            "properties": {
-              "completion_manifest_digest": {}
-            },
-            "type": "object"
-          },
-          "then": {
-            "properties": {
-              "kind": {
-                "const": "complete_node"
-              }
-            },
-            "type": "object"
+            }
           }
         },
         {
@@ -2008,7 +2096,7 @@
               },
               "workspace": false,
               "workspace_digest": false,
-              "repository_free": false,
+              "workspaces": false,
               "completion_manifest_digest": false,
               "completion_operation_id": false,
               "completion_identity_digest": false
@@ -2018,31 +2106,74 @@
         {
           "if": {
             "type": "object",
-            "required": [
-              "integration"
-            ],
             "properties": {
-              "integration": {}
+              "state": {
+                "const": "cancelled"
+              }
             }
           },
           "then": {
             "type": "object",
             "properties": {
               "kind": {
-                "const": "complete_node"
-              },
-              "workspace": {
-                "type": "object",
-                "properties": {
-                  "isolation": {
-                    "$ref": "#/definitions/WorkspaceIsolation"
-                  }
-                },
-                "required": [
-                  "isolation"
+                "enum": [
+                  "open_workspace",
+                  "complete_node"
                 ]
               },
-              "repository_free": false
+              "cancelled_by_operation_id": {
+                "$ref": "#/definitions/Id"
+              },
+              "result": {
+                "type": "object",
+                "properties": {
+                  "writer_absent": {
+                    "const": true
+                  },
+                  "workspace_id": false,
+                  "workspace_metadata": false,
+                  "path": false,
+                  "instruction_files": false,
+                  "git_commit": false,
+                  "git_tree": false,
+                  "workspace_results": false,
+                  "completion_outcome": false
+                },
+                "required": [
+                  "writer_absent"
+                ]
+              }
+            },
+            "required": [
+              "cancelled_by_operation_id",
+              "result"
+            ]
+          },
+          "else": {
+            "type": "object",
+            "properties": {
+              "cancelled_by_operation_id": false
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "const": "open_workspace"
+              },
+              "state": {
+                "const": "cancelled"
+              }
+            }
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "workspace": {
+                "$ref": "#/definitions/WorkspaceDescriptor"
+              }
             },
             "required": [
               "workspace"
@@ -2052,34 +2183,46 @@
         {
           "if": {
             "type": "object",
-            "required": [
-              "workspace"
-            ],
             "properties": {
               "kind": {
                 "const": "complete_node"
               },
-              "workspace": {
-                "type": "object",
-                "required": [
-                  "isolation"
-                ],
-                "properties": {
-                  "isolation": {}
-                }
+              "state": {
+                "const": "succeeded"
               }
             }
           },
           "then": {
             "type": "object",
-            "required": [
-              "integration"
-            ],
             "properties": {
-              "integration": {
-                "$ref": "#/definitions/WorkspaceIntegration"
+              "result": {
+                "type": "object",
+                "properties": {
+                  "completion_outcome": {
+                    "$ref": "#/definitions/CompletionOutcome"
+                  },
+                  "workspace_results": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/definitions/WorkspaceEffectResult"
+                    },
+                    "minItems": 0,
+                    "maxItems": 64
+                  },
+                  "writer_absent": {
+                    "const": true
+                  }
+                },
+                "required": [
+                  "completion_outcome",
+                  "workspace_results",
+                  "writer_absent"
+                ]
               }
-            }
+            },
+            "required": [
+              "result"
+            ]
           }
         }
       ],
@@ -2284,7 +2427,10 @@
                   "planning_outcome": false,
                   "artifact": false,
                   "artifact_id": false,
-                  "blocker_id": false
+                  "blocker_id": false,
+                  "workspace_results": false,
+                  "completion_outcome": false,
+                  "integration": false
                 }
               }
             },
@@ -2335,6 +2481,33 @@
                 "const": true
               },
               "failure_kind": false
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "result": {
+                "type": "object",
+                "properties": {
+                  "completion_outcome": {}
+                },
+                "required": [
+                  "completion_outcome"
+                ]
+              }
+            },
+            "required": [
+              "result"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "const": true
+              }
             }
           }
         }
@@ -6710,6 +6883,9 @@
         },
         "workspace_id": {
           "$ref": "#/definitions/Id"
+        },
+        "isolation": {
+          "$ref": "#/definitions/WorkspaceIsolation"
         }
       }
     },
@@ -6735,9 +6911,6 @@
           "items": {
             "$ref": "#/definitions/WorkspaceReservation"
           }
-        },
-        "isolation": {
-          "$ref": "#/definitions/WorkspaceIsolation"
         }
       }
     },
@@ -6923,6 +7096,9 @@
                         "const": "integrated"
                       }
                     }
+                  },
+                  "completion_outcome": {
+                    "const": "finalized"
                   }
                 }
               }
@@ -6961,6 +7137,12 @@
                   "kind": {
                     "const": "complete_node"
                   },
+                  "completion_outcome": {
+                    "const": "conflict"
+                  },
+                  "capture": {
+                    "$ref": "#/definitions/WorkspaceCaptureResult"
+                  },
                   "integration": {
                     "type": "object",
                     "properties": {
@@ -6971,7 +7153,8 @@
                   }
                 },
                 "required": [
-                  "integration"
+                  "completion_outcome",
+                  "capture"
                 ]
               }
             },
@@ -7293,7 +7476,7 @@
       "type": "string",
       "minLength": 1,
       "maxLength": 65536,
-      "pattern": "[^ \\t\\n\\r\\f\\v   -     　﻿]",
+      "pattern": "[^ \\t\\n\\r\\f\\v\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff]",
       "allOf": [
         {
           "pattern": "^[^\\x00]*$"
@@ -7333,7 +7516,7 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 4096,
-            "pattern": "[^ \\t\\n\\r\\f\\v   -     　﻿]",
+            "pattern": "[^ \\t\\n\\r\\f\\v\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff]",
             "allOf": [
               {
                 "pattern": "^[^\\x00]*$"
@@ -7348,7 +7531,7 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 4096,
-            "pattern": "[^ \\t\\n\\r\\f\\v   -     　﻿]",
+            "pattern": "[^ \\t\\n\\r\\f\\v\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff]",
             "allOf": [
               {
                 "pattern": "^[^\\x00]*$"
@@ -7927,7 +8110,27 @@
           },
           "then": {
             "properties": {
-              "failure_kind": false
+              "failure_kind": false,
+              "result": {
+                "type": "object",
+                "properties": {
+                  "completion_outcome": {
+                    "$ref": "#/definitions/CompletionOutcome"
+                  },
+                  "workspace_results": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/definitions/WorkspaceEffectResult"
+                    },
+                    "minItems": 0,
+                    "maxItems": 64
+                  }
+                },
+                "required": [
+                  "completion_outcome",
+                  "workspace_results"
+                ]
+              }
             },
             "type": "object"
           }
@@ -7973,11 +8176,41 @@
                   "planning_outcome": false,
                   "artifact": false,
                   "artifact_id": false,
-                  "blocker_id": false
+                  "blocker_id": false,
+                  "workspace_results": false,
+                  "completion_outcome": false,
+                  "integration": false
                 }
               }
             },
             "type": "object"
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "result": {
+                "type": "object",
+                "properties": {
+                  "completion_outcome": {}
+                },
+                "required": [
+                  "completion_outcome"
+                ]
+              }
+            },
+            "required": [
+              "result"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "const": true
+              }
+            }
           }
         }
       ]
@@ -8044,54 +8277,26 @@
                   "cancelled_by_operation_id": false,
                   "result": {
                     "type": "object",
-                    "required": [
-                      "writer_absent"
-                    ],
                     "properties": {
                       "writer_absent": {
                         "const": true
                       },
-                      "git_commit": {
-                        "$ref": "#/definitions/GitOID"
+                      "completion_outcome": {
+                        "$ref": "#/definitions/CompletionOutcome"
                       },
-                      "git_tree": {
-                        "$ref": "#/definitions/GitOID"
+                      "workspace_results": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/definitions/WorkspaceEffectResult"
+                        },
+                        "minItems": 0,
+                        "maxItems": 64
                       }
                     },
-                    "anyOf": [
-                      {
-                        "type": "object",
-                        "required": [
-                          "git_commit",
-                          "git_tree"
-                        ],
-                        "properties": {
-                          "git_commit": {
-                            "$ref": "#/definitions/GitOID"
-                          },
-                          "git_tree": {
-                            "$ref": "#/definitions/GitOID"
-                          }
-                        }
-                      },
-                      {
-                        "type": "object",
-                        "required": [
-                          "integration"
-                        ],
-                        "properties": {
-                          "integration": {
-                            "type": "object",
-                            "properties": {
-                              "outcome": {
-                                "const": "conflict"
-                              }
-                            }
-                          },
-                          "git_commit": false,
-                          "git_tree": false
-                        }
-                      }
+                    "required": [
+                      "writer_absent",
+                      "completion_outcome",
+                      "workspace_results"
                     ]
                   }
                 },
@@ -8213,8 +8418,8 @@
         "completion_identity_digest": {
           "$ref": "#/definitions/SHA256"
         },
-        "integration": {
-          "$ref": "#/definitions/WorkspaceIntegrationResult"
+        "completion_outcome": {
+          "$ref": "#/definitions/CompletionOutcome"
         }
       },
       "required": [
@@ -12320,6 +12525,9 @@
         },
         "integration": {
           "$ref": "#/definitions/WorkspaceIntegrationResult"
+        },
+        "capture": {
+          "$ref": "#/definitions/WorkspaceCaptureResult"
         }
       },
       "required": [
@@ -12329,7 +12537,8 @@
         "git_commit",
         "git_tree",
         "metadata",
-        "identity_digest"
+        "identity_digest",
+        "capture"
       ],
       "allOf": [
         {
@@ -12384,20 +12593,18 @@
         "repository_free": {
           "type": "boolean"
         },
-        "git": {
-          "anyOf": [
-            {
-              "$ref": "#/definitions/TaskLocalGitResult"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
         "admitted_at": {
           "type": "string",
           "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d\\.\\d{3}Z$",
           "maxLength": 24
+        },
+        "git_results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TaskLocalGitResult"
+          },
+          "minItems": 0,
+          "maxItems": 64
         }
       },
       "required": [
@@ -12406,12 +12613,13 @@
         "current_specification_id",
         "current_plan_id",
         "repository_free",
-        "git",
+        "git_results",
         "admitted_at"
       ],
       "allOf": [
         {
           "if": {
+            "type": "object",
             "properties": {
               "repository_free": {
                 "const": true
@@ -12419,16 +12627,20 @@
             }
           },
           "then": {
+            "type": "object",
             "properties": {
-              "git": {
-                "type": "null"
+              "git_results": {
+                "type": "array",
+                "maxItems": 0
               }
             }
           },
           "else": {
+            "type": "object",
             "properties": {
-              "git": {
-                "$ref": "#/definitions/TaskLocalGitResult"
+              "git_results": {
+                "type": "array",
+                "minItems": 1
               }
             }
           }
@@ -12726,6 +12938,9 @@
         },
         "integration": {
           "$ref": "#/definitions/WorkspaceIntegrationResult"
+        },
+        "capture": {
+          "$ref": "#/definitions/WorkspaceCaptureResult"
         }
       },
       "required": [
@@ -12748,7 +12963,8 @@
         "repository_identity",
         "base_commit",
         "git_commit",
-        "git_tree"
+        "git_tree",
+        "capture"
       ],
       "allOf": [
         {
@@ -12809,7 +13025,7 @@
         },
         {
           "if": {
-            "pattern": "[\r\n  ]$"
+            "pattern": "[\r\n\u2028\u2029]$"
           },
           "then": {},
           "else": {
@@ -12957,10 +13173,14 @@
         },
         "cursor": {
           "$ref": "#/definitions/TaskListCursor"
+        },
+        "resource_id": {
+          "$ref": "#/definitions/Id"
         }
       },
       "required": [
-        "identity_digest"
+        "identity_digest",
+        "resource_id"
       ]
     },
     "ResultReadFileQuery": {
@@ -12979,12 +13199,16 @@
             "base",
             "result"
           ]
+        },
+        "resource_id": {
+          "$ref": "#/definitions/Id"
         }
       },
       "required": [
         "identity_digest",
         "path",
-        "side"
+        "side",
+        "resource_id"
       ]
     },
     "ResultReadDiffQuery": {
@@ -12996,11 +13220,15 @@
         },
         "path": {
           "$ref": "#/definitions/ResultPath"
+        },
+        "resource_id": {
+          "$ref": "#/definitions/Id"
         }
       },
       "required": [
         "identity_digest",
-        "path"
+        "path",
+        "resource_id"
       ]
     },
     "ResultObject": {
@@ -14584,6 +14812,9 @@
         },
         "cursor": {
           "$ref": "#/definitions/TaskListCursor"
+        },
+        "resource_id": {
+          "$ref": "#/definitions/Id"
         }
       },
       "required": []
@@ -17075,11 +17306,13 @@
         "repository_free": {
           "type": "boolean"
         },
-        "source": {
-          "$ref": "#/definitions/ResultReadIdentity"
-        },
-        "source_digest": {
-          "$ref": "#/definitions/SHA256"
+        "sources": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/definitions/DeliveryOutputSource"
+          }
         }
       },
       "required": [
@@ -17090,7 +17323,8 @@
         "effective_basis",
         "effective_basis_digest",
         "artifacts",
-        "repository_free"
+        "repository_free",
+        "sources"
       ],
       "allOf": [
         {
@@ -17100,41 +17334,25 @@
               "repository_free": {
                 "const": true
               }
-            },
-            "required": [
-              "repository_free"
-            ]
-          },
-          "then": {
-            "type": "object",
-            "properties": {
-              "source": false,
-              "source_digest": false
             }
-          }
-        },
-        {
-          "if": {
-            "type": "object",
-            "properties": {
-              "repository_free": {
-                "const": false
-              }
-            },
-            "required": [
-              "repository_free"
-            ]
           },
           "then": {
             "type": "object",
             "properties": {
-              "source": {},
-              "source_digest": {}
-            },
-            "required": [
-              "source",
-              "source_digest"
-            ]
+              "sources": {
+                "type": "array",
+                "maxItems": 0
+              }
+            }
+          },
+          "else": {
+            "type": "object",
+            "properties": {
+              "sources": {
+                "type": "array",
+                "minItems": 1
+              }
+            }
           }
         }
       ]
@@ -20365,9 +20583,6 @@
         "reason": {
           "$ref": "#/definitions/PlanningText"
         },
-        "stop_operation_id": {
-          "$ref": "#/definitions/Id"
-        },
         "waiting_reason": {
           "anyOf": [
             {
@@ -20384,6 +20599,15 @@
         },
         "can_continue": {
           "type": "boolean"
+        },
+        "stop_operation_ids": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/Id"
+          }
         }
       },
       "required": [
@@ -20397,7 +20621,7 @@
         "requester_node_id",
         "requester_node_activation",
         "reason",
-        "stop_operation_id",
+        "stop_operation_ids",
         "waiting_reason",
         "can_apply",
         "can_continue"
@@ -21319,6 +21543,12 @@
         },
         "recovery_operation_id": {
           "$ref": "#/definitions/Id"
+        },
+        "capture": {
+          "$ref": "#/definitions/WorkspaceCaptureResult"
+        },
+        "completion_outcome": {
+          "$ref": "#/definitions/CompletionOutcome"
         }
       },
       "allOf": [
@@ -21371,7 +21601,210 @@
               "integration": false
             }
           }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "const": "complete_node"
+              }
+            }
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "capture": {
+                "$ref": "#/definitions/WorkspaceCaptureResult"
+              },
+              "completion_outcome": {
+                "$ref": "#/definitions/CompletionOutcome"
+              },
+              "recovery_operation_id": false
+            },
+            "required": [
+              "capture",
+              "completion_outcome"
+            ]
+          },
+          "else": {
+            "type": "object",
+            "properties": {
+              "capture": false,
+              "completion_outcome": false,
+              "integration": false
+            }
+          }
         }
+      ]
+    },
+    "CompletionOutcome": {
+      "type": "string",
+      "pattern": "^(?:finalized|conflict)$"
+    },
+    "WorkspaceCaptureResult": {
+      "type": "object",
+      "properties": {
+        "start_commit": {
+          "$ref": "#/definitions/GitOID"
+        },
+        "node_commit": {
+          "$ref": "#/definitions/GitOID"
+        },
+        "node_tree": {
+          "$ref": "#/definitions/GitOID"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "start_commit",
+        "node_commit",
+        "node_tree"
+      ]
+    },
+    "WorkspaceCompletionInput": {
+      "type": "object",
+      "properties": {
+        "workspace": {
+          "$ref": "#/definitions/WorkspaceDescriptor"
+        },
+        "workspace_digest": {
+          "$ref": "#/definitions/SHA256"
+        },
+        "integration": {
+          "$ref": "#/definitions/WorkspaceIntegration"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "workspace",
+        "workspace_digest"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "workspace": {
+                "type": "object",
+                "properties": {
+                  "isolation": {}
+                },
+                "required": [
+                  "isolation"
+                ]
+              }
+            }
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "integration": {
+                "$ref": "#/definitions/WorkspaceIntegration"
+              }
+            },
+            "required": [
+              "integration"
+            ]
+          },
+          "else": {
+            "type": "object",
+            "properties": {
+              "integration": false
+            }
+          }
+        }
+      ]
+    },
+    "WorkspaceEffectResult": {
+      "type": "object",
+      "properties": {
+        "resource_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "workspace_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "workspace_metadata": {
+          "$ref": "#/definitions/WorkspaceMetadata"
+        },
+        "capture": {
+          "$ref": "#/definitions/WorkspaceCaptureResult"
+        },
+        "git_commit": {
+          "$ref": "#/definitions/GitOID"
+        },
+        "git_tree": {
+          "$ref": "#/definitions/GitOID"
+        },
+        "integration": {
+          "$ref": "#/definitions/WorkspaceIntegrationResult"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "resource_id",
+        "workspace_id",
+        "workspace_metadata"
+      ],
+      "dependencies": {
+        "git_commit": [
+          "git_tree",
+          "capture"
+        ],
+        "git_tree": [
+          "git_commit",
+          "capture"
+        ]
+      },
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "integration": {}
+            },
+            "required": [
+              "integration"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "workspace_metadata": {
+                "type": "object",
+                "properties": {
+                  "isolation": {}
+                },
+                "required": [
+                  "isolation"
+                ]
+              },
+              "capture": {
+                "$ref": "#/definitions/WorkspaceCaptureResult"
+              }
+            },
+            "required": [
+              "capture"
+            ]
+          }
+        }
+      ]
+    },
+    "DeliveryOutputSource": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "$ref": "#/definitions/ResultReadIdentity"
+        },
+        "source_digest": {
+          "$ref": "#/definitions/SHA256"
+        }
+      },
+      "required": [
+        "source",
+        "source_digest"
       ]
     }
   }

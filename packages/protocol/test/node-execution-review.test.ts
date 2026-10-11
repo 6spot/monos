@@ -7,7 +7,7 @@ const cancelledCompletion = {
 };
 const finalizedCompletion = {
   operation_id: 'completion', attempt_id: 'attempt', success: true,
-  result: { writer_absent: true, git_commit: 'a'.repeat(40), git_tree: 'b'.repeat(40) },
+  result: { writer_absent: true, completion_outcome: 'finalized', workspace_results: [] },
 };
 
 describe('completion settlement wire authority', () => {
@@ -66,14 +66,15 @@ describe('completion settlement wire authority', () => {
     })).toThrow();
   });
 
-  it('requires explicit repository-free completion without resource or workspace', () => {
+  it('requires an explicit empty collection for repository-free completion', () => {
     const operation = {
       schema_version: 1, operation_id: 'completion', attempt_id: 'attempt',
       dispatch_id: 'dispatch', request_id: 'request', kind: 'complete_node',
       state: 'admitted',
     };
     expect(() => validate('Operation', operation)).toThrow();
-    expect(() => validate('Operation', { ...operation, repository_free: true })).not.toThrow();
-    expect(() => validate('Operation', { ...operation, repository_free: true, resource_id: 'resource' })).toThrow();
+    expect(() => validate('Operation', { ...operation, workspaces: [] })).not.toThrow();
+    expect(() => validate('Operation', { ...operation, workspaces: [], resource_id: 'resource' })).toThrow();
+    expect(() => validate('Operation', { ...operation, workspaces: [], repository_free: true })).toThrow();
   });
 });

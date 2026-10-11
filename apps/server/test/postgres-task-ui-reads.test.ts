@@ -364,7 +364,7 @@ suite("Execution UI canonical reads", () => {
       expect(before.items[0]).toMatchObject({
         current: true,
         repository_free: true,
-        git: null,
+        git_results: [],
         manifest: {
           operation_id: done.operation_id,
           specification_id: x.f.spec,
@@ -446,7 +446,19 @@ suite("Execution UI canonical reads", () => {
           archived: false,
         },
       });
-      await x.start();
+      const nextNode = randomUUID();
+      await x.owner("start_task", { specification_id: x.f.spec });
+      await x.planning.pump();
+      const planner = await x.promote();
+      const plan = await x.agent(planner, "publish_execution_plan", {
+        planning_intent_id: planner.dispatch.task_planning_source!.intent_id,
+        plan_id: x.f.plan,
+        nodes: [
+          { node_id: x.f.node, role_id: x.f.role, goal: "First result", dependencies: [] },
+          { node_id: nextNode, role_id: x.f.role, goal: "Later result", dependencies: [x.f.node] },
+        ],
+      });
+      await x.finish(plan.operation_id!, planner.dispatch.attempt_id);
       const node = await x.node(),
         opened = await x.agent(node, "open_workspace", {
           resource_id: resource,
@@ -525,23 +537,29 @@ suite("Execution UI canonical reads", () => {
         success: true,
         result: {
           writer_absent: true,
-          workspace_id: w.workspace_id,
-          workspace_metadata: { ...metadata, finalized_commit: "c".repeat(40) },
-          git_commit: "c".repeat(40),
-          git_tree: "d".repeat(40),
+          completion_outcome: "finalized",
+          workspace_results: [{
+            resource_id: resource,
+            workspace_id: w.workspace_id,
+            workspace_metadata: { ...metadata, finalized_commit: "c".repeat(40) },
+            capture: { start_commit: metadata.finalized_commit, node_commit: "c".repeat(40), node_tree: "d".repeat(40) },
+            git_commit: "c".repeat(40),
+            git_tree: "d".repeat(40),
+          }],
         },
       });
       const result = (await taskResults(x.db, x.token, x.f.task)).items[0]!;
       expect(result).toMatchObject({
         current: true,
         repository_free: false,
-        git: {
+        git_results: [{
           workspace_id: w.workspace_id,
           resource_id: resource,
           runner_id: x.f.runner,
           git_commit: "c".repeat(40),
           git_tree: "d".repeat(40),
-        },
+          capture: { start_commit: "a".repeat(40), node_commit: "c".repeat(40), node_tree: "d".repeat(40) },
+        }],
       });
       expect(JSON.stringify(result)).not.toContain("/runner/private");
       const finalized = await attemptWorkspace(
@@ -555,12 +573,34 @@ suite("Execution UI canonical reads", () => {
         metadata_operation_id: done.operation_id,
         metadata: { finalized_commit: "c".repeat(40) },
       });
-      // A synthetic later mutable workspace observation must never relabel the
-      // historical Attempt's immutable operation snapshot as its own result.
-      await x.db.pool.query(
-        "UPDATE task_workspaces SET finalized_commit=$2 WHERE id=$1",
-        [w.workspace_id, "e".repeat(40)],
-      );
+      // Advance the canonical head through a real successor completion. The
+      // earlier Attempt must keep its exact original result and lease snapshot.
+      const successor = await x.node();
+      const reopened = await x.agent(successor, "open_workspace", { resource_id: resource });
+      const nextOpen = await x.service.recoverOperation(x.f.runner, reopened.operation_id!);
+      const nextWorkspace = nextOpen.workspace!;
+      const nextMetadata = { ...metadata, lease_id: nextWorkspace.lease_id, finalized_commit: "c".repeat(40) };
+      await x.service.finishOperation(x.f.runner, x.f.incarnation, {
+        operation_id: nextOpen.operation_id,
+        attempt_id: successor.dispatch.attempt_id,
+        success: true,
+        result: { workspace_id: nextWorkspace.workspace_id, path: "/runner/private/worktree", instruction_files: [], workspace_metadata: nextMetadata },
+      });
+      const nextDone = await x.agent(successor, "complete_node", { summary: "Later finalized files" });
+      await x.service.finishOperation(x.f.runner, x.f.incarnation, {
+        operation_id: nextDone.operation_id!,
+        attempt_id: successor.dispatch.attempt_id,
+        success: true,
+        result: { writer_absent: true, completion_outcome: "finalized", workspace_results: [{
+          resource_id: resource,
+          workspace_id: nextWorkspace.workspace_id,
+          workspace_metadata: { ...nextMetadata, finalized_commit: "e".repeat(40) },
+          capture: { start_commit: "c".repeat(40), node_commit: "e".repeat(40), node_tree: "f".repeat(40) },
+          git_commit: "e".repeat(40),
+          git_tree: "f".repeat(40),
+        }] },
+      });
+      expect((await x.db.pool.query("SELECT finalized_commit FROM task_workspaces WHERE id=$1", [w.workspace_id])).rows[0].finalized_commit).toBe("e".repeat(40));
       expect(
         await attemptWorkspace(
           x.db,
@@ -569,7 +609,7 @@ suite("Execution UI canonical reads", () => {
           node.dispatch.attempt_id,
         ),
       ).toEqual(finalized);
-      expect((await taskResults(x.db, x.token, x.f.task)).items[0]).toEqual(
+      expect((await taskResults(x.db, x.token, x.f.task)).items.find(item => item.manifest.operation_id === done.operation_id)).toEqual(
         result,
       );
       const other = randomUUID();

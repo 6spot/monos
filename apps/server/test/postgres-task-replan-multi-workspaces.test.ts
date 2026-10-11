@@ -42,11 +42,15 @@ async function workspaceFixture(kind: 'checkpoint' | 'completed') {
       : { ...opened.metadata, finalized_commit: 'c'.repeat(40) };
     const completion = kind === 'completed' ? await x.service.recoverOperation(x.f.runner, stop.operation_id!) : undefined;
     await x.service.finishOperation(x.f.runner, x.f.incarnation, { operation_id: stop.operation_id!, attempt_id: turn.dispatch.attempt_id,
-      success: true, result: { writer_absent: true, workspace_id: opened.workspace.workspace_id, workspace_metadata: settled,
-        ...(kind === 'completed' ? { git_commit: 'c'.repeat(40), git_tree: 'b'.repeat(40),
-          ...(completion?.integration ? { integration: { outcome: 'integrated' as const,
-            start_commit: opened.metadata.isolation!.start_commit, expected_task_commit: completion.integration.expected_task_commit,
-            node_commit: 'c'.repeat(40), node_tree: 'b'.repeat(40), task_commit: 'c'.repeat(40), task_tree: 'b'.repeat(40) } } : {}) } : {}) } });
+      success: true, result: kind === 'checkpoint'
+        ? { writer_absent: true, workspace_id: opened.workspace.workspace_id, workspace_metadata: settled }
+        : { writer_absent: true, completion_outcome: 'finalized', workspace_results: [{ resource_id: resource,
+          workspace_id: opened.workspace.workspace_id, workspace_metadata: settled,
+          capture: { start_commit: opened.metadata.isolation?.start_commit ?? opened.metadata.finalized_commit, node_commit: 'c'.repeat(40), node_tree: 'b'.repeat(40) },
+          git_commit: 'c'.repeat(40), git_tree: 'b'.repeat(40),
+          ...(completion!.workspaces![0]!.integration ? { integration: { outcome: 'integrated' as const,
+            start_commit: opened.metadata.isolation!.start_commit, expected_task_commit: completion!.workspaces![0]!.integration!.expected_task_commit,
+            node_commit: 'c'.repeat(40), node_tree: 'b'.repeat(40), task_commit: 'c'.repeat(40), task_tree: 'b'.repeat(40) } } : {}) }] } });
     if (kind === 'completed') await x.request();
     return { ...x, resource, original, sibling, old: opened.workspace, settled, settlementId: stop.operation_id! };
   } catch (error) { await x.close(); throw error; }
@@ -61,7 +65,7 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Multi-Node Replan work
       await x.publish(p);
       expect((await x.db.pool.query('SELECT count(*) FROM replan_workspace_transfers')).rows[0].count).toBe('0');
       const unrelated = await x.node(); expect(unrelated.dispatch.node_id).toBe(free.node_id);
-      expect(unrelated.dispatch.workspace_reservations!.isolation!.allocation_id).not.toBe(p.payload.impact.workspaces[0]!.input.metadata.isolation!.allocation_id);
+      expect(unrelated.dispatch.workspace_reservations!.resources[0]!.isolation!.allocation_id).not.toBe(p.payload.impact.workspaces[0]!.input.metadata.isolation!.allocation_id);
       await x.complete(unrelated, 'Repository-free prerequisite');
       const target = await x.node(); expect(target.dispatch.node_id).toBe(adopter.node_id);
       await expect(x.agent(target, 'complete_node', { summary: 'Discard inherited checkpoint' })).rejects.toMatchObject({ detail: { code: 'unmet_precondition' } });
@@ -106,9 +110,10 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Multi-Node Replan work
       const done = await x.agent(oldIdentity, 'complete_node', { summary: 'Separate canonical allocation preserves the assigned private checkpoint' });
       const completion = await x.service.recoverOperation(x.f.runner, done.operation_id!);
       await x.service.finishOperation(x.f.runner, x.f.incarnation, { operation_id: done.operation_id!, attempt_id: oldIdentity.dispatch.attempt_id, success: true,
-        result: { writer_absent: true, workspace_id: separate.workspace.workspace_id, workspace_metadata: { ...separate.metadata, finalized_commit: 'd'.repeat(40) },
+        result: { writer_absent: true, completion_outcome: 'finalized', workspace_results: [{ resource_id: x.resource, workspace_id: separate.workspace.workspace_id,
+          capture: { start_commit: separate.metadata.isolation!.start_commit, node_commit: 'd'.repeat(40), node_tree: 'e'.repeat(40) }, workspace_metadata: { ...separate.metadata, finalized_commit: 'd'.repeat(40) },
           git_commit: 'd'.repeat(40), git_tree: 'e'.repeat(40), integration: { outcome: 'integrated', start_commit: separate.metadata.isolation!.start_commit,
-            expected_task_commit: completion.integration!.expected_task_commit, node_commit: 'd'.repeat(40), node_tree: 'e'.repeat(40), task_commit: 'd'.repeat(40), task_tree: 'e'.repeat(40) } } });
+            expected_task_commit: completion.workspaces![0]!.integration!.expected_task_commit, node_commit: 'd'.repeat(40), node_tree: 'e'.repeat(40), task_commit: 'd'.repeat(40), task_tree: 'e'.repeat(40) } }] } });
       const target = await x.node(); expect(target.dispatch.node_id).toBe(replacement.node_id);
       const { workspace } = await openedWorkspace(x, target, x.resource);
       expect(workspace.transfer).toMatchObject({ from_node_id: x.original.node_id, to_node_id: replacement.node_id, kind: 'checkpoint' });

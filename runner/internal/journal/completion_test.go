@@ -18,7 +18,16 @@ func completionPair(t *testing.T) (protocol.Operation, protocol.Operation, proto
 	hash := strings.Repeat("a", 64)
 	oid := strings.Repeat("a", 40)
 	w := &protocol.WorkspaceDescriptor{SchemaVersion: 1, TaskID: "task", NodeID: "node", NodeActivation: 1, WorkspaceID: "workspace", ResourceID: "resource", ProjectID: "project", RunnerID: "runner", Generation: 1, LeaseID: "lease", OpenOperationID: "open", Resource: protocol.WorkspaceResource{ResourceID: "resource", RepositoryIdentity: "github.com/owner/repo", RemoteURL: "https://github.com/owner/repo.git"}}
-	original := protocol.Operation{SchemaVersion: 1, OperationID: "original", AttemptID: "attempt", DispatchID: "dispatch", RequestID: "complete-request", Kind: protocol.KindCompleteNode, State: protocol.PurpleRecovery, ResourceID: testString("resource"), Workspace: w, WorkspaceDigest: &hash, CompletionManifestDigest: &hash}
+	_, descriptorDigest, _ := wire.Canonical(w)
+	original := protocol.Operation{SchemaVersion: 1, OperationID: "original", AttemptID: "attempt", DispatchID: "dispatch", RequestID: "complete-request", Kind: protocol.KindCompleteNode, State: protocol.PurpleRecovery, Workspaces: []protocol.WorkspaceCompletionInput{{Workspace: *w, WorkspaceDigest: descriptorDigest}}, CompletionManifestDigest: &hash}
+	second := *w
+	second.ResourceID = "resource-b"
+	second.Resource.ResourceID = second.ResourceID
+	second.WorkspaceID = "workspace-b"
+	second.LeaseID = "lease-b"
+	second.OpenOperationID = "open-b"
+	_, secondDigest, _ := wire.Canonical(second)
+	original.Workspaces = append(original.Workspaces, protocol.WorkspaceCompletionInput{Workspace: second, WorkspaceDigest: secondDigest})
 	digest, err := wire.OperationIdentity(original)
 	if err != nil {
 		t.Fatal(err)
@@ -28,12 +37,16 @@ func completionPair(t *testing.T) (protocol.Operation, protocol.Operation, proto
 	settle.OperationID = "settlement"
 	settle.RequestID = "settle-request"
 	settle.CompletionManifestDigest = nil
+	settle.Workspaces = nil
 	settle.CompletionOperationID = &original.OperationID
 	settle.CompletionIdentityDigest = &digest
 	cp := &protocol.WorkspaceCheckpoint{OperationID: settle.OperationID, CommitID: oid, TreeID: oid, HeadCommit: oid, CompletionOperationID: &original.OperationID, CompletionIdentityDigest: &digest}
 	metadata := &protocol.WorkspaceMetadata{StorageID: "storage", Generation: 1, LeaseID: w.LeaseID, RepositoryIdentity: w.Resource.RepositoryIdentity, BaseCommit: oid, FinalizedCommit: oid, TargetBranch: "main", TargetCommit: oid, Checkpoint: cp}
 	absent := true
-	result := protocol.OperationResult{OperationID: settle.OperationID, AttemptID: settle.AttemptID, Success: true, Result: protocol.EffectResult{WorkspaceID: &w.WorkspaceID, WorkspaceMetadata: metadata, WriterAbsent: &absent}, CompletionSettlement: &protocol.CompletionSettlement{CompletionOperationID: original.OperationID, Disposition: protocol.DispositionCancelled, CompletionResult: protocol.CompletionOperationResult{AttemptID: original.AttemptID, OperationID: original.OperationID, CancelledByOperationID: &settle.OperationID, Result: protocol.EffectResult{WriterAbsent: &absent}}}}
+	result := protocol.OperationResult{OperationID: settle.OperationID, AttemptID: settle.AttemptID, Success: true, Result: protocol.EffectResult{WorkspaceResults: []protocol.WorkspaceEffectResult{{ResourceID: w.ResourceID, WorkspaceID: w.WorkspaceID, WorkspaceMetadata: *metadata}}, WriterAbsent: &absent}, CompletionSettlement: &protocol.CompletionSettlement{CompletionOperationID: original.OperationID, Disposition: protocol.DispositionCancelled, CompletionResult: protocol.CompletionOperationResult{AttemptID: original.AttemptID, OperationID: original.OperationID, CancelledByOperationID: &settle.OperationID, Result: protocol.EffectResult{WriterAbsent: &absent}}}}
+	secondMetadata := *metadata
+	secondMetadata.LeaseID = second.LeaseID
+	result.Result.WorkspaceResults = append(result.Result.WorkspaceResults, protocol.WorkspaceEffectResult{ResourceID: second.ResourceID, WorkspaceID: second.WorkspaceID, WorkspaceMetadata: secondMetadata})
 	return original, settle, result
 }
 
@@ -116,7 +129,7 @@ func TestCompletionPairRejectsAlteredNestedResultAndPreservesOriginalSuccess(t *
 			var prior *protocol.OperationResult
 			if mode == "prior-success" {
 				oid := strings.Repeat("a", 40)
-				r := protocol.OperationResult{AttemptID: original.AttemptID, OperationID: original.OperationID, Success: true, Result: protocol.EffectResult{GitCommit: &oid, GitTree: &oid}}
+				r := protocol.OperationResult{AttemptID: original.AttemptID, OperationID: original.OperationID, Success: true, Result: journalFinalizedFixture(pair.Result, oid)}
 				prior = &r
 				if err := db.FinishEffect(r); err != nil {
 					t.Fatal(err)
@@ -126,13 +139,13 @@ func TestCompletionPairRejectsAlteredNestedResultAndPreservesOriginalSuccess(t *
 			case "wrong-target":
 				pair.CompletionSettlement.CompletionOperationID = "other"
 			case "wrong-lease":
-				settle.Workspace.LeaseID = "other"
+				settle.CompletionIdentityDigest = testString(strings.Repeat("f", 64))
 				raw, _ := json.Marshal(settle)
 				if _, err := db.db.Exec("UPDATE effects SET body=? WHERE id=?", raw, settle.OperationID); err != nil {
 					t.Fatal(err)
 				}
 			case "wrong-checkpoint":
-				pair.Result.WorkspaceMetadata.Checkpoint.CompletionIdentityDigest = testString(strings.Repeat("b", 64))
+				pair.Result.WorkspaceResults[0].WorkspaceMetadata.Checkpoint.CompletionIdentityDigest = testString(strings.Repeat("b", 64))
 			case "wrong-nested-attempt":
 				pair.CompletionSettlement.CompletionResult.AttemptID = "other"
 			}
@@ -155,11 +168,7 @@ func TestCompletionAlreadyFinalizedPairPreservesExactOriginalSuccess(t *testing.
 			t.Fatal(err)
 		}
 	}
-	metadata := pair.Result.WorkspaceMetadata
-	metadata.Checkpoint = nil
-	gitResult := pair.Result
-	gitResult.GitCommit = &metadata.FinalizedCommit
-	gitResult.GitTree = testString(strings.Repeat("b", 40))
+	gitResult := journalFinalizedFixture(pair.Result, strings.Repeat("b", 40))
 	absent := true
 	pair.Result = protocol.EffectResult{WriterAbsent: &absent}
 	pair.CompletionSettlement.Disposition = protocol.AlreadyFinalized
@@ -178,4 +187,18 @@ func TestCompletionAlreadyFinalizedPairPreservesExactOriginalSuccess(t *testing.
 	if !reflect.DeepEqual(got, &exact) {
 		t.Fatal("settlement replaced exact original success")
 	}
+}
+
+func journalFinalizedFixture(checkpoints protocol.EffectResult, tree string) protocol.EffectResult {
+	items := append([]protocol.WorkspaceEffectResult(nil), checkpoints.WorkspaceResults...)
+	for i := range items {
+		m := items[i].WorkspaceMetadata
+		m.Checkpoint = nil
+		items[i].WorkspaceMetadata = m
+		items[i].GitCommit = &m.FinalizedCommit
+		items[i].GitTree = &tree
+		items[i].Capture = &protocol.WorkspaceCaptureResult{StartCommit: m.BaseCommit, NodeCommit: m.FinalizedCommit, NodeTree: tree}
+	}
+	absent := true
+	return protocol.EffectResult{WriterAbsent: &absent, CompletionOutcome: testString("finalized"), WorkspaceResults: items}
 }

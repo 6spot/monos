@@ -90,7 +90,7 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Owner Stop and recover
     expect((await db.pool.query('SELECT state FROM nodes WHERE id=$1', [otherNode])).rows[0].state).toBe('PENDING');
   });
 
-  it('retains the process claim until an earlier workspace effect settles before Stop', async () => {
+  it('settles Stop independently while retaining the process claim for an earlier workspace effect', async () => {
     const f = await node();
     const token = issueAttemptCredential({ attempt_id: f.launch.attempt_id, dispatch_id: f.launch.dispatch_id,
       fencing_generation: 1, expires: Date.now() + 60000 }, signingKey);
@@ -99,12 +99,13 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Owner Stop and recover
     const stopped = await owner.confirm(f.session.token, f.stop);
     const stoppedResult = { operation_id: stopped.operation_id!, attempt_id: f.launch.attempt_id,
       success: true, result: { writer_absent: true } };
-    await expect(f.service.finishOperation(f.runner, f.incarnation, stoppedResult)).rejects.toMatchObject(error('unmet_precondition'));
-    expect((await db.pool.query('SELECT process_released FROM attempts WHERE id=$1', [f.launch.attempt_id])).rows[0].process_released).toBe(false);
+    await f.service.finishOperation(f.runner, f.incarnation, stoppedResult);
+    expect(await owner.operation(f.session.token, f.launch.task_id, stopped.operation_id!)).toMatchObject({ state: 'succeeded', process_absent: true, process_released: false });
+    await expect(owner.confirm(f.session.token, { ...f.stop, request_id: randomUUID(), expected_control_version: 2, name: 'continue_node' })).rejects.toMatchObject(error('unmet_precondition'));
     await f.service.finishOperation(f.runner, f.incarnation, { operation_id: workspace.operation_id!,
       attempt_id: f.launch.attempt_id, success: true, result: { workspace_id: randomUUID(), path: '/tmp/owner-stop-test' } });
-    await f.service.finishOperation(f.runner, f.incarnation, stoppedResult);
     expect((await db.pool.query('SELECT process_released FROM attempts WHERE id=$1', [f.launch.attempt_id])).rows[0].process_released).toBe(true);
+    await f.service.finishOperation(f.runner, f.incarnation, stoppedResult);
   });
 
   it('cancels a queued Node without a Stop operation and allows Continue only after the exact receipt', async () => {
@@ -136,7 +137,7 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Owner Stop and recover
     expect(stop).toMatchObject({ status: 'admitted', operation_id: completed.operation_id });
     expect((await db.pool.query("SELECT count(*) FROM operations WHERE attempt_id=$1 AND kind='stop'", [f.launch.attempt_id])).rows[0].count).toBe('0');
     await f.service.finishOperation(f.runner, f.incarnation, { operation_id: completed.operation_id!, attempt_id: f.launch.attempt_id, success: true,
-      result: { writer_absent: true, git_commit: 'a'.repeat(40), git_tree: 'b'.repeat(40) } });
+      result: { writer_absent: true, completion_outcome: 'finalized', workspace_results: [] } });
     expect((await db.pool.query('SELECT state FROM nodes WHERE id=$1', [f.launch.node_id])).rows[0].state).toBe('COMPLETED');
     expect((await db.pool.query('SELECT state FROM tasks WHERE id=$1', [f.launch.task_id])).rows[0].state).toBe('REVIEW');
   });

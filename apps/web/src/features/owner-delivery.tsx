@@ -14,7 +14,7 @@ const reasonText: Record<string, string> = {
   no_plan: 'The current Plan has not been published.',
   accepted: 'This result has already been accepted. Delivery follows its frozen batch.',
   terminal: 'This Task is terminal. Its accepted history remains available.',
-  unsupported_mode: 'Automatic acceptance currently supports zero or one modified GitHub repository with automatic preparation.',
+  unsupported_mode: 'A repository in this result uses an unsupported delivery provider or mode.',
   input_pending: 'Resolve the earlier input or decision in Conversation before accepting.',
   work_unsettled: 'Current work or physical workspace effects still need to settle.',
   permission_unknown: 'Verified repository permissions are missing or unavailable.',
@@ -140,7 +140,7 @@ function ProposalReview({ summary, enabled, ...props }: TaskViewProps & { summar
           {proposal.confirmation_id && <p role="status">Exact Owner confirmation recorded.</p>}
           <div className="task-actions">
             {!proposal.confirmation_id && <Button className="max-sm:min-h-11" disabled={!fresh || busy} onClick={() => { void confirm(); }}>Confirm exact result</Button>}
-            {proposal.confirmation_id && <Button className="max-sm:min-h-11" disabled={!fresh || busy} onClick={() => { void accept(); }}>{modified ? 'Accept & Merge' : 'Accept result'}</Button>}
+            {proposal.confirmation_id && <Button className="max-sm:min-h-11" disabled={!fresh || busy} onClick={() => { void accept(); }}>{modified ? 'Accept delivery' : 'Accept result'}</Button>}
           </div>
           <p className="text-sm text-muted-foreground">{modified ? 'Acceptance admits this frozen batch. Required checks and remote finalization may still be waiting.' : 'There are no modified repositories to publish. Exact acceptance can complete this result without provider calls.'}</p>
         </>}
@@ -226,7 +226,7 @@ function BatchProgress({ data }: { data: DeliveryBatch }) {
   return <div>{!data.items.length ? <p>No modified repository items. This exact result needs no remote publication or provider calls.</p> : <>
     <p>{data.batch.finalized_items} of {data.batch.modified_items} repository items finalized.</p>
     {data.items.map(item => <section className="border-b border-border py-3" key={item.item_id}>
-      <p><strong>{human(item.status)}</strong> · {item.resource_id}</p>
+      <p className="break-all"><strong>{human(item.status)}</strong> · {data.manifest.repositories.find(repository => repository.resource_id === item.resource_id)?.repository_identity ?? item.resource_id}</p>
       <p className="break-all">Accepted head · <code>{item.accepted_head}</code></p>
       {item.status !== 'finalized' && <p>Required checks · {human(item.checks)}{item.checks === 'unknown' ? '. Missing or unsupported readiness is not permission to merge.' : ''}</p>}
       {item.reason && <p className="task-notice">{explain(item.reason)}</p>}

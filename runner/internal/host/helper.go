@@ -708,7 +708,7 @@ func Handle(ctx context.Context, r Request) (Status, error) {
 		}
 	}
 	defer syscall.Flock(int(lock.Fd()), syscall.LOCK_UN)
-	if r.Action == "effect" && r.Operation.Workspace != nil {
+	if r.Action == "effect" && (r.Operation.Workspace != nil || r.Operation.Workspaces != nil || r.Operation.Kind == protocol.SettleCompletion) {
 		m, e := readManifest(r.AttemptID)
 		if e != nil {
 			return Status{}, e
@@ -731,7 +731,7 @@ func Handle(ctx context.Context, r Request) (Status, error) {
 				return stopped, e
 			}
 			if stopErr != nil {
-				return stopped, errors.Join(stopErr, settleLeaseWorkers(ctx, *r.Operation))
+				return stopped, errors.Join(stopErr, settleCompletionWorkers(ctx, *r.Operation))
 			}
 			result, err := runWorkspaceEffect(ctx, *r.Operation, nil)
 			return withRuntimeExit(result, stopped), err
@@ -850,9 +850,6 @@ func Handle(ctx context.Context, r Request) (Status, error) {
 		}
 		if e = checkOperationWriters(ctx, r.AttemptID, boot); e != nil {
 			return Status{}, e
-		}
-		if op.RepositoryFree != nil && *op.RepositoryFree {
-			return completeWithoutRepository(ctx, m.Dispatch, *op)
 		}
 		if op.Kind == protocol.KindCompleteNode {
 			if _, err = stop(ctx, r.AttemptID); err != nil {

@@ -217,7 +217,7 @@ func TestCompletedTransferUsesFinalizedEvidence(t *testing.T) {
 	proof.Operation.OperationID = "complete"
 	proof.Operation.Kind = protocol.KindCompleteNode
 	proof.Operation.CompletionManifestDigest = tr.CompletionManifestDigest
-	proof.Status.Result = &protocol.EffectResult{GitCommit: ptr(r.Metadata.FinalizedCommit), GitTree: tr.FinalizedTree}
+	aggregateCompletionProof(t, &proof, r.Metadata, r.Metadata.FinalizedCommit, *tr.FinalizedTree)
 	if err := validateWorkspaceTransferProof(r, op, m, proof, nil); err != nil {
 		t.Fatal(err)
 	}
@@ -257,7 +257,7 @@ func TestCompletedTransferPreservesActualFinalizedTree(t *testing.T) {
 	proof.Operation.OperationID = "complete"
 	proof.Operation.Kind = protocol.KindCompleteNode
 	proof.Operation.CompletionManifestDigest = tr.CompletionManifestDigest
-	proof.Status.Result = &result
+	aggregateCompletionProof(t, &proof, r.Metadata, *result.GitCommit, *result.GitTree)
 	if err = validateWorkspaceTransferProof(r, op, m, proof, nil); err != nil {
 		t.Fatal(err)
 	}
@@ -282,16 +282,19 @@ func TestTransferFromCorrectedCompletionRequiresExactCancelledPair(t *testing.T)
 		original.Kind = protocol.KindCompleteNode
 		original.OperationID = "interrupted-complete"
 		original.CompletionManifestDigest = ptr(strings.Repeat("f", 64))
+		original.Workspaces = []protocol.WorkspaceCompletionInput{{Workspace: *original.Workspace, WorkspaceDigest: *original.WorkspaceDigest}}
+		original.Workspace, original.WorkspaceDigest, original.ResourceID = nil, nil, nil
 		digest, err := wire.OperationIdentity(original)
 		if err != nil {
 			t.Fatal(err)
 		}
 		proof.Operation.Kind = protocol.SettleCompletion
+		proof.Operation.Workspace, proof.Operation.WorkspaceDigest, proof.Operation.ResourceID = nil, nil, nil
 		proof.Operation.CompletionOperationID = &original.OperationID
 		proof.Operation.CompletionIdentityDigest = &digest
 		r.PrivateCheckpoint.CompletionOperationID = &original.OperationID
 		r.PrivateCheckpoint.CompletionIdentityDigest = &digest
-		proof.Status.Result.WorkspaceID = &op.Workspace.WorkspaceID
+		proof.Status.Result = &protocol.EffectResult{WriterAbsent: ptr(true), WorkspaceResults: []protocol.WorkspaceEffectResult{{ResourceID: op.Workspace.ResourceID, WorkspaceID: op.Workspace.WorkspaceID, WorkspaceMetadata: *proof.Status.Result.WorkspaceMetadata}}}
 		proof.Status.CompletionSettlement = &protocol.CompletionSettlement{CompletionOperationID: original.OperationID, Disposition: protocol.DispositionCancelled, CompletionResult: protocol.CompletionOperationResult{AttemptID: original.AttemptID, OperationID: original.OperationID, CancelledByOperationID: &proof.Operation.OperationID, Result: protocol.EffectResult{WriterAbsent: ptr(true)}}}
 		return r, op, m, proof, original
 	}

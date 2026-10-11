@@ -149,7 +149,7 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('PostgreSQL Task record
     const grant = await service.authorize(runner, incarnation, launch.dispatch_id);
     const command = submission({ schema_version: 1, request_id: randomUUID(), scope_id: launch.task_id, expected_control_version: 1, name: 'complete_node', payload: { summary: 'done' } });
     const accepted = await service.admit(grant!.credential, command);
-    const result = { writer_absent: true, git_tree: 'b'.repeat(40), git_commit: 'a'.repeat(40) };
+    const result = { writer_absent: true, completion_outcome: 'finalized' as const, workspace_results: [] };
     const finish = { operation_id: accepted.operation_id!, attempt_id: launch.attempt_id, success: true, result };
     const originalPlan = (await db.pool.query('SELECT plan_id FROM tasks WHERE id=$1', [launch.task_id])).rows[0].plan_id;
     const changedPlan = randomUUID();
@@ -170,7 +170,7 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('PostgreSQL Task record
     expect((await db.pool.query('SELECT count(*) FROM node_completions WHERE node_id=$1', [launch.node_id])).rows[0].count).toBe('1');
   });
 
-  it('upgrades populated probe records without fabricating historical launch metadata', async () => {
+  it('rejects legacy singular completion migration atomically without fabricating collection evidence', async () => {
     const name = `upgrade_${randomUUID().replaceAll('-', '')}`;
     await admin.pool.query(`CREATE SCHEMA ${name}`);
     const url = new URL(process.env.DATABASE_URL!); url.searchParams.set('options', `-c search_path=${name}`);
@@ -190,10 +190,27 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('PostgreSQL Task record
         await tx.query("INSERT INTO attempts(id,runner_id,task_id,node_id,owner_key,dispatch_id,kind,fencing_generation,node_activation,launch,process_released) VALUES('a','r','t','n','node:n','d','node',1,1,'{}',true)");
         await tx.query("INSERT INTO operations(id,attempt_id,schema_version,kind,request_id,state,resource_id,result) VALUES('o','a',1,'complete_node','request','succeeded','repo','{}')");
       });
-      await migrate(old); await migrate(old);
-      expect((await old.pool.query("SELECT basis_source FROM node_activations WHERE node_id='n'")).rows[0].basis_source).toBe('legacy_current');
-      expect((await old.pool.query("SELECT content_digest FROM specification_revisions WHERE id='s'")).rows[0].content_digest).toBeNull();
-      expect((await old.pool.query('SELECT attempt_id,operation_id FROM node_completions')).rows).toEqual([{ attempt_id: 'a', operation_id: 'o' }]);
+      const original = {
+        migrations: (await old.pool.query('SELECT * FROM schema_migrations ORDER BY version')).rows,
+        tasks: (await old.pool.query('SELECT * FROM tasks')).rows,
+        specifications: (await old.pool.query('SELECT * FROM specification_revisions')).rows,
+        plans: (await old.pool.query('SELECT * FROM plan_revisions')).rows,
+        attempts: (await old.pool.query('SELECT * FROM attempts')).rows,
+        operations: (await old.pool.query('SELECT * FROM operations')).rows,
+      };
+      // Historical scalar completion compatibility is deliberately unsupported.
+      // Migration must reject missing collection provenance, never invent it or
+      // partially apply earlier migrations before encountering the legacy row.
+      for (let attempt = 0; attempt < 2; attempt++) {
+        await expect(migrate(old)).rejects.toMatchObject({ code: '23514', constraint: 'operation_completion_collection_shape' });
+        expect((await old.pool.query('SELECT * FROM schema_migrations ORDER BY version')).rows).toEqual(original.migrations);
+        expect((await old.pool.query('SELECT * FROM tasks')).rows).toEqual(original.tasks);
+        expect((await old.pool.query('SELECT * FROM specification_revisions')).rows).toEqual(original.specifications);
+        expect((await old.pool.query('SELECT * FROM plan_revisions')).rows).toEqual(original.plans);
+        expect((await old.pool.query('SELECT * FROM attempts')).rows).toEqual(original.attempts);
+        expect((await old.pool.query('SELECT * FROM operations')).rows).toEqual(original.operations);
+        expect((await old.pool.query("SELECT to_regclass('node_activations') AS relation")).rows[0].relation).toBeNull();
+      }
     } finally { await old.pool.end(); await admin.pool.query(`DROP SCHEMA ${name} CASCADE`); }
   });
 });

@@ -16,6 +16,12 @@ describe('shared remote preparation boundary',()=>{
  it('pins immutable request and reused manifest while binding a new scan',()=>{
   expect(canonicalJSON(fixture.push)).toBe(fixture.canonical_request);
   expect(digest(canonicalJSON(fixture.push))).toBe(fixture.request_digest);
+  expect(digest(canonicalJSON(fixture.push.preparation.source))).toBe(fixture.push.preparation.source_digest);
+  expect(fixture.push.prepared.request_digest).toBe(digest(canonicalJSON(fixture.push.preparation)));
+  expect(fixture.push.preparation_result_digest).toBe(digest(canonicalJSON(fixture.push.prepared)));
+  expect(fixture.mapped.request_digest).toBe(digest(canonicalJSON(fixture.mapping_request)));
+  expect(fixture.mapping_request.published_digest).toBe(digest(canonicalJSON(fixture.mapping_request.published)));
+  expect(fixture.mapped.mapping_digest).toBe(digest(canonicalJSON(fixture.mapped.mapping)));
   expect(fixture.mapped.candidate).toEqual(fixture.push.prepared.candidate);
   expect(fixture.mapped.mapping?.source_digest).toBe(fixture.mapping_request.source_digest);
   expect(fixture.mapped.mapping?.reused_head).toBe(fixture.push.prepared.candidate?.head);

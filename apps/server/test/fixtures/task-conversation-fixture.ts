@@ -145,13 +145,17 @@ export async function conversationFixture(options:{runnerCredential?:string}={})
         payload,
       }),
     );
-  const finish = async (operationId: string, attemptId: string) =>
-    service.finishOperation(f.runner, f.incarnation, {
+  const finish = async (operationId: string, attemptId: string) => {
+    const operation = await service.recoverOperation(f.runner, operationId);
+    return service.finishOperation(f.runner, f.incarnation, {
       operation_id: operationId,
       attempt_id: attemptId,
       success: true,
-      result: { writer_absent: true },
+      result: operation.kind === 'complete_node'
+        ? { writer_absent: true, completion_outcome: 'finalized', workspace_results: [] }
+        : { writer_absent: true },
     });
+  };
   const turn = async () => {
     await conversation.pump();
     return promote();

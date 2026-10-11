@@ -48,8 +48,10 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Serial completed works
           tree_id: 'd'.repeat(40), commit_id: 'c'.repeat(40) } };
       const settle = () => x.service.finishOperation(x.f.runner, x.f.incarnation, {
         operation_id: completion.operation_id!, attempt_id: first.dispatch.attempt_id, success: true,
-        result: { writer_absent: true, workspace_id: w.workspace_id, workspace_metadata: finalized,
-          ...(mode === 'completed' ? { git_commit: finalized.finalized_commit, git_tree: 'd'.repeat(40) } : {}) },
+        result: mode === 'completed' ? { writer_absent: true, completion_outcome: 'finalized', workspace_results: [{ resource_id: resource,
+          workspace_id: w.workspace_id, workspace_metadata: finalized, capture: { start_commit: metadata.finalized_commit,
+            node_commit: finalized.finalized_commit, node_tree: 'd'.repeat(40) }, git_commit: finalized.finalized_commit, git_tree: 'd'.repeat(40) }] }
+          : { writer_absent: true, workspace_id: w.workspace_id, workspace_metadata: finalized },
       });
       return { ...x, resource, downstream, first, w, completion, finalized, settle };
     } catch (error) { await x.close(); throw error; }
