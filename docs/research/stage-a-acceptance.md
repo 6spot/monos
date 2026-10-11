@@ -2,7 +2,7 @@
 
 - Query: What remains after native delivery acceptance, without repeating accepted trials?
 - Scope: evidence reconciliation and retained read-only terminal browser views; no new model generation or provider mutation
-- Date: 2026-10-09
+- Date: 2026-10-11
 - Status: **Integrated acceptance remains open.** The native delivery leaf is complete; this report does not declare Stage A or V1 complete.
 
 ## Findings
@@ -42,6 +42,22 @@ policy switch nor free-model delivery. Its paid-model execution is not relabelle
 as free-model acceptance. The new reply does not close the observation gaps by itself. The subsequent
 [focused gap checks][gap-checks] supply A25, C02, C03 and E01 at their explicit
 PostgreSQL/process/fake-Runner boundaries; A06 and A30 remain partial.
+
+### Deferred native follow-up, 2026-10-11
+
+The Owner directed development to proceed with local verification and defer the
+remaining costly native trials. A06/A30 stay open; this changes work order, not
+their acceptance result. No further host deployment or model run was performed
+in this continuation.
+
+The subsequent native A30 reply (`9e13ea32-74dd-40a8-b0ab-08115f2987d4`,
+2026-10-10T00:50:08.946Z) incorrectly directed the completed Task to another
+planning source for a Specification revision. Commit `3ceb80f` adds the explicit
+return-to-Todo and independent-Task instructions. The interrupted installation
+failed at the physical observer before image build/service switch; its completed
+installation and corrected native reply have not been established. The prepared
+A06 browser harness has not run and needs stronger selected-process, rendered
+Attempt and nonempty cursor-continuation assertions before it can supply evidence.
 
 ### Main matrix: capture, execution and recovery
 

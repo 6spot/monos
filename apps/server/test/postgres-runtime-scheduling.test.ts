@@ -89,6 +89,95 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('production Runtime tar
     expect((await queue.promoteNext(r.id, r.service.instanceId, r.incarnation))?.model).toBe(selected);
   });
 
+  it('uses the first supported policy fallback once and replays its exact selection', async () => {
+    const r = await runner();
+    const selected = { runtime_id: 'opencode', model_id: 'volcengine/deepseek-v4-flash-ga-260731', runner_id: r.id };
+    await db.pool.query('UPDATE execution_policies SET policies=$1', [{ global: {
+      default_target: { runtime_id: 'not-installed' },
+      fallback_targets: [{ runtime_id: 'opencode', model_id: 'unsupported/model' }, selected, policy(r.id).default_target],
+    } }]);
+    const value = await request();
+    const result = await submit(r.service, value);
+    expect(result).toMatchObject({ status: 'queued', source: 'global', target: selected, runner_id: r.id });
+    const attempts = (await db.pool.query('SELECT id,selection_context,launch FROM attempts WHERE task_id=$1', [value.task_id])).rows;
+    expect(attempts).toHaveLength(1);
+    expect(attempts[0]).toMatchObject({ id: value.attempt_id, selection_context: { target: selected }, launch: { model: selected.model_id } });
+    await db.pool.query('UPDATE execution_policies SET policies=$1', [{ global: policy(r.id) }]);
+    expect(await submit(r.service, value)).toEqual(result);
+    expect((await db.pool.query('SELECT count(*) FROM attempts WHERE task_id=$1', [value.task_id])).rows[0].count).toBe('1');
+  });
+
+  it('keeps fallback inside the chosen Planner or Role policy and never applies it to an explicit target', async () => {
+    const r = await runner(); const role = randomUUID();
+    const unavailable: ExecutionPolicy = { default_target: { runtime_id: 'not-installed' }, fallback_targets: [{ runtime_id: 'opencode', model_id: 'unsupported/model' }] };
+    await db.pool.query('UPDATE execution_policies SET policies=$1', [{ global: policy(r.id), planner: unavailable }]);
+    await db.pool.query('INSERT INTO roles(id,name,description,instructions,archived,execution_policy) VALUES($1,$2,$3,$4,false,$5)', [role, 'fallback role', '', '', unavailable]);
+    for (const kind of ['planner', 'node'] as const) {
+      const value = { ...await request(kind), ...(kind === 'node' ? { role_id: role } : {}) };
+      expect(await submit(r.service, value)).toMatchObject({ status: 'unavailable', source: kind === 'node' ? 'role' : 'planner', reason: 'unsupported_model', target: unavailable.fallback_targets[0] });
+      expect((await db.pool.query('SELECT id FROM attempts WHERE task_id=$1', [value.task_id])).rowCount).toBe(0);
+    }
+    const value = await request();
+    expect(await submit(r.service, { ...value, explicit_target: { runtime_id: 'not-installed' } })).toMatchObject({ status: 'unavailable', source: 'explicit', reason: 'unsupported_runtime' });
+    expect((await db.pool.query('SELECT id FROM attempts WHERE task_id=$1', [value.task_id])).rowCount).toBe(0);
+  });
+
+  it('skips a current unavailable installation but waits for missing, offline or stale Runner facts', async () => {
+    const first = await runner(); const second = await runner();
+    const incarnation = await first.service.connect(second.id, 'same-backend');
+    await first.service.touch(second.id, incarnation, true, [installation]);
+    const configured = { default_target: policy(first.id).default_target, fallback_targets: [policy(second.id).default_target] };
+    await db.pool.query('UPDATE execution_policies SET policies=$1', [{ global: configured }]);
+    await first.service.touch(first.id, first.incarnation, true, [{ ...installation, availability: 'not_found' }]);
+    expect(await submit(first.service, await request())).toMatchObject({ status: 'queued', runner_id: second.id, target: configured.fallback_targets[0] });
+    await first.service.disconnect(first.id, first.incarnation);
+    const offline = await request();
+    expect(await submit(first.service, offline)).toMatchObject({ status: 'unavailable', reason: 'runner_offline', target: configured.default_target });
+    const next = await first.service.connect(first.id, 'reconnected');
+    await first.service.touch(first.id, next, true);
+    const stale = await request();
+    expect(await submit(first.service, stale)).toMatchObject({ status: 'unavailable', reason: 'installation_stale', target: configured.default_target });
+    await db.pool.query('UPDATE execution_policies SET policies=$1', [{ global: { ...configured, default_target: policy(randomUUID()).default_target } }]);
+    const missing = await request();
+    expect(await submit(first.service, missing)).toMatchObject({ status: 'unavailable', reason: 'runner_missing' });
+    expect((await db.pool.query('SELECT id FROM attempts WHERE id=ANY($1::text[])', [[offline.attempt_id, stale.attempt_id, missing.attempt_id]])).rowCount).toBe(0);
+  });
+
+  it('does not bypass Auto ambiguity, capacity waiting or an established Task Runner with fallback', async () => {
+    const first = await runner(1); const second = await runner();
+    const incarnation = await first.service.connect(second.id, 'same-backend');
+    await first.service.touch(second.id, incarnation, true, [installation]);
+    await db.pool.query('UPDATE execution_policies SET policies=$1', [{ global: { ...policy(), fallback_targets: [policy(first.id).default_target] } }]);
+    expect(await submit(first.service, await request())).toMatchObject({ status: 'unavailable', reason: 'ambiguous_auto_placement' });
+    await db.pool.query('UPDATE execution_policies SET policies=$1', [{ global: { ...policy(first.id), fallback_targets: [policy(second.id).default_target] } }]);
+    const running = await request(); await submit(first.service, running);
+    expect((await queue.promoteNext(first.id, first.service.instanceId, first.incarnation))?.attempt_id).toBe(running.attempt_id);
+    const waiting = await request();
+    expect(await submit(first.service, waiting)).toMatchObject({ status: 'queued', runner_id: first.id });
+    expect(await queue.promoteNext(first.id, first.service.instanceId, first.incarnation)).toBeNull();
+    expect((await db.pool.query('SELECT state,runner_id FROM attempts WHERE id=$1', [waiting.attempt_id])).rows[0]).toEqual({ state: 'QUEUED', runner_id: first.id });
+    await first.service.touch(first.id, first.incarnation, true, [{ ...installation, availability: 'unavailable' }]);
+    const successor = { ...running, attempt_id: randomUUID() };
+    await expect(submit(first.service, successor)).rejects.toMatchObject({ detail: { code: 'unmet_precondition' } });
+    expect((await db.pool.query('SELECT id FROM attempts WHERE id=$1', [successor.attempt_id])).rowCount).toBe(0);
+    expect((await db.pool.query('SELECT id FROM outbox WHERE runner_id=$1', [second.id])).rowCount).toBe(0);
+  });
+
+  it('does not treat mixed unknown Auto observations as a confirmed unavailable target', async () => {
+    const first = await runner(); const second = await runner();
+    await first.service.touch(first.id, first.incarnation, true, [{ ...installation, availability: 'unavailable' }]);
+    const incarnation = await first.service.connect(second.id, 'unreported-reconnect');
+    await first.service.touch(second.id, incarnation, true);
+    await db.pool.query('UPDATE execution_policies SET policies=$1', [{ global: { ...policy(), fallback_targets: [{ runtime_id: 'not-installed' }] } }]);
+    const value = await request();
+    const result = await submit(first.service, value);
+    expect(result.status).toBe('unavailable');
+    if (result.status !== 'unavailable') throw new Error('Auto unexpectedly selected a target');
+    expect(['runner_offline', 'installation_stale']).toContain(result.reason);
+    expect(result.target).toEqual(policy().default_target);
+    expect((await db.pool.query('SELECT id FROM attempts WHERE id=$1', [value.attempt_id])).rowCount).toBe(0);
+  });
+
   it('returns factual incompatibility and keeps hard pins, stale reports and disconnected queues', async () => {
     const r = await runner(); await db.pool.query('UPDATE execution_policies SET policies=$1', [{ global: policy(r.id) }]);
     const value = await request();
@@ -178,8 +267,16 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('production Runtime tar
     }
   }, 20000);
 
-  it('lets an in-flight Runner heartbeat finish before Auto locks its stable candidate set', async () => {
-    const r = await runner(); await db.pool.query('UPDATE execution_policies SET policies=$1', [{ global: policy() }]);
+  it.each([false, true])('lets an in-flight heartbeat finish before Auto locks its candidate set (fallback Auto: %s)', async (fallbackAuto) => {
+    const r = await runner();
+    let configured = policy();
+    if (fallbackAuto) {
+      const unavailable = await runner();
+      const incarnation = await r.service.connect(unavailable.id, 'same-backend');
+      await r.service.touch(unavailable.id, incarnation, true, [{ ...installation, availability: 'unavailable' }]);
+      configured = { ...policy(unavailable.id), fallback_targets: [policy().default_target] };
+    }
+    await db.pool.query('UPDATE execution_policies SET policies=$1', [{ global: configured }]);
     const value = await request(); const updated = { ...installation, version: '1.18.31' };
     const barrier = await db.pool.connect();
     let heartbeat: Promise<void> | undefined; let admission: ReturnType<typeof submit> | undefined;

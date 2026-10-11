@@ -32,6 +32,19 @@ function issue(fact: RunnerFact): SelectionReason | null {
   return null;
 }
 
+function targetIssue(target: ExecutionTarget): SelectionReason | null {
+  // An absent model cannot be interpreted as an approved model implicitly.
+  if (target.runtime_id !== 'opencode') return 'unsupported_runtime';
+  if (target.model_id !== freeModel && target.model_id !== deepSeekModel) return 'unsupported_model';
+  if (target.thinking_level !== undefined) return 'unsupported_thinking';
+  return null;
+}
+
+function allowsFallback(reason: SelectionReason): boolean {
+  return reason === 'unsupported_runtime' || reason === 'unsupported_model' || reason === 'unsupported_thinking' ||
+    reason === 'installation_unavailable' || reason === 'model_control_unavailable';
+}
+
 /**
  * Product-facing Runtime admission. The owning command supplies immutable
  * context and authorization, calls this inside its transaction before taking
@@ -69,53 +82,70 @@ export class RuntimeScheduling {
     const source: Source = request.explicit_target ? 'explicit' :
       request.kind === 'planner' && policies.planner ? 'planner' :
         request.kind === 'node' && rolePolicy ? 'role' : 'global';
-    const target = request.explicit_target ?? (source === 'planner' ? policies.planner : source === 'role' ? rolePolicy : policies.global)?.default_target;
-    if (!target) return { status: 'unavailable', reason: 'policy_missing', source };
-    // The current adapter supports explicit runtime/model pairs. An
-    // absent model cannot be interpreted as the approved model implicitly.
-    if (target.runtime_id !== 'opencode') return { status: 'unavailable', reason: 'unsupported_runtime', source, target };
-    if (target.model_id !== freeModel && target.model_id !== deepSeekModel) return { status: 'unavailable', reason: 'unsupported_model', source, target };
-    if (target.thinking_level !== undefined) return { status: 'unavailable', reason: 'unsupported_thinking', source, target };
+    const policy = source === 'planner' ? policies.planner : source === 'role' ? rolePolicy : policies.global;
+    const targets = request.explicit_target ? [request.explicit_target] : policy ? [policy.default_target, ...policy.fallback_targets] : [];
+    const candidates = targets.map((target) => ({ target, reason: targetIssue(target) }));
+    const compatible = candidates.filter((candidate) => candidate.reason === null);
 
-    // Auto must see one stable Runner set through queue admission. EXCLUSIVE
+    // Lock the entire candidate scope before any Runner row lock. Auto must
+    // see one stable Runner set through queue admission. EXCLUSIVE
     // waits for the ROW SHARE table lock taken by connect/touch's FOR UPDATE.
     // SHARE ROW EXCLUSIVE would permit their row lock, then block their UPDATE
-    // while Auto waits for that row, forming a deadlock. Pinned targets only
-    // need their row lock.
-    if (!target.runner_id) await tx.query('LOCK TABLE runners IN EXCLUSIVE MODE');
+    // while Auto waits for that row, forming a deadlock. Pinned-only policies
+    // acquire all candidate rows in one order, even if policy order differs.
+    if (compatible.some(({ target }) => !target.runner_id)) await tx.query('LOCK TABLE runners IN EXCLUSIVE MODE');
+    else if (compatible.length) {
+      const runnerIds = [...new Set(compatible.map(({ target }) => target.runner_id!))].sort();
+      await tx.query('SELECT id FROM runners WHERE id=ANY($1::text[]) ORDER BY id FOR UPDATE', [runnerIds]);
+    }
 
-    const facts = (await tx.query<RunnerFact>(`SELECT r.id,r.incarnation,r.runtime_report_incarnation,
-      (r.connected AND r.ready AND r.connection_instance=$2 AND r.last_seen>clock_timestamp()-interval '15 seconds') AS online,
-      i.incarnation AS installation_incarnation,i.observation
-      FROM runners r LEFT JOIN runtime_installations i ON i.runner_id=r.id AND i.runtime_id=$1
-      WHERE ($3::text IS NULL OR r.id=$3) ORDER BY r.id`, [target.runtime_id, this.backendInstance, target.runner_id ?? null])).rows;
-    if (!facts.length) return { status: 'unavailable', reason: target.runner_id || request.node_execution_source ? 'runner_missing' : 'installation_unavailable', source, target };
-    const eligible = facts.filter((fact) => issue(fact) === null);
-    if (!target.runner_id && eligible.length > 1) return { status: 'unavailable', reason: 'ambiguous_auto_placement', source, target };
-    const chosen = eligible[0];
-    if (!chosen) return { status: 'unavailable', reason: issue(facts[0]!)!, source, target };
-
-    // Recheck after taking the same Runner row lock used by connection reports
-    // and queue promotion. The configuration share lock still protects policy.
-    const locked = (await tx.query<RunnerFact>(`SELECT r.id,r.incarnation,r.runtime_report_incarnation,
-      (r.connected AND r.ready AND r.connection_instance=$2 AND r.last_seen>clock_timestamp()-interval '15 seconds') AS online,
-      i.incarnation AS installation_incarnation,i.observation
-      FROM runners r LEFT JOIN runtime_installations i ON i.runner_id=r.id AND i.runtime_id=$1
-      WHERE r.id=$3 FOR UPDATE OF r`, [target.runtime_id, this.backendInstance, chosen.id])).rows[0]!;
-    const changed = issue(locked);
-    if (changed) return { status: 'unavailable', reason: changed, source, target };
+    let unavailable: Extract<SchedulingResult, { status: 'unavailable' }> = { status: 'unavailable', reason: 'policy_missing', source };
+    let selected: { target: ExecutionTarget; runner: RunnerFact } | undefined;
+    for (const candidate of candidates) {
+      const result = candidate.reason ? { reason: candidate.reason } : await this.selectRunner(tx, candidate.target, !!request.node_execution_source);
+      if ('reason' in result) {
+        unavailable = { status: 'unavailable', reason: result.reason, source, target: candidate.target };
+        if (!allowsFallback(result.reason)) break;
+      } else {
+        selected = { target: candidate.target, runner: result.runner };
+        break;
+      }
+    }
+    if (!selected) return unavailable;
+    const { target, runner } = selected;
     const selection_context: NonNullable<QueueInput['selection_context']> = {
       source, configuration_version: configurationVersion, target,
-      ...(locked.observation!.version ? { observed_version: locked.observation!.version } : {}), request_digest: requestDigest,
+      ...(runner.observation!.version ? { observed_version: runner.observation!.version } : {}), request_digest: requestDigest,
     };
+    // Capacity and Task locality remain queue concerns. Enqueue only the final
+    // choice; a locality error must roll back, never advance policy while
+    // holding the Task lock acquired by enqueue.
     const dispatch_id = await this.queue.enqueue(tx, {
       attempt_id: request.attempt_id, task_id: request.task_id, node_id: request.node_id,
       todo_id: request.todo_id, discussion_context: request.discussion_context, task_review_source:request.task_review_source, task_replan_source: request.task_replan_source, task_planning_source: request.task_planning_source, task_conversation_source: request.task_conversation_source, node_execution_source: request.node_execution_source,
       kind: request.kind, expected: request.expected, resource_id: request.resource_id,
       ...(request.legacy_probe ? { legacy_probe: true as const } : {}),
       prompt: request.prompt, source_watermark: request.source_watermark,
-      runner_id: chosen.id, runtime_id: 'opencode', model: target.model_id, selection_context,
+      runner_id: runner.id, runtime_id: 'opencode', model: target.model_id as QueueInput['model'], selection_context,
     });
-    return { status: 'queued', dispatch_id, runner_id: chosen.id, source, target };
+    return { status: 'queued', dispatch_id, runner_id: runner.id, source, target };
+  }
+
+  private async selectRunner(tx: Transaction, target: ExecutionTarget, nodeExecution: boolean): Promise<{ runner: RunnerFact } | { reason: SelectionReason }> {
+    // The candidate scope is already locked, including every pinned row or
+    // the whole Auto set, before reading connection and installation facts.
+    const facts = (await tx.query<RunnerFact>(`SELECT r.id,r.incarnation,r.runtime_report_incarnation,
+      (r.connected AND r.ready AND r.connection_instance=$2 AND r.last_seen>clock_timestamp()-interval '15 seconds') AS online,
+      i.incarnation AS installation_incarnation,i.observation
+      FROM runners r LEFT JOIN runtime_installations i ON i.runner_id=r.id AND i.runtime_id=$1
+      WHERE ($3::text IS NULL OR r.id=$3) ORDER BY r.id`, [target.runtime_id, this.backendInstance, target.runner_id ?? null])).rows;
+    if (!facts.length) return { reason: target.runner_id || nodeExecution ? 'runner_missing' : 'installation_unavailable' };
+    const eligible = facts.filter((fact) => issue(fact) === null);
+    if (!target.runner_id && eligible.length > 1) return { reason: 'ambiguous_auto_placement' };
+    if (eligible[0]) return { runner: eligible[0] };
+    // One unavailable installation cannot establish objective Auto failure
+    // while another Runner is offline or has not supplied current facts.
+    const reasons = facts.map(issue);
+    return { reason: reasons.find((reason) => reason !== null && !allowsFallback(reason)) ?? reasons[0]! };
   }
 }

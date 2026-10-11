@@ -2,7 +2,7 @@
 
 ## 1. Scope / Trigger
 
-Use `RuntimeScheduling` when an authenticated product control command has prepared immutable Planner or Node context and must choose a Stage A Runtime target before queuing an Attempt. It resolves policy and installation facts; `DispatchQueue` owns the actual queue and promotion. Todo/Task semantic control remains with the caller, and Runner never selects product policy.
+Use `RuntimeScheduling` when an authenticated product control command has prepared immutable Planner or Node context and must choose a Runtime target before queuing an Attempt. It resolves policy and installation facts; `DispatchQueue` owns the actual queue and promotion. Todo/Task semantic control remains with the caller, and Runner never selects product policy. Initial-admission ordered fallback is supported; post-launch failure fallback and a second CLI Adapter remain later Stage B work.
 
 ## 2. Signatures
 
@@ -13,7 +13,36 @@ Use `RuntimeScheduling` when an authenticated product control command has prepar
 
 ## 3. Contracts
 
-Selection priority is explicit target → Planner or Role policy → Global policy. Stage A uses the default target; ordered fallback is a later Stage B capability. A hard `runner_id` pin never moves. Auto chooses one eligible Runner; if more than one is eligible, it returns `ambiguous_auto_placement`. This decision is serialized with connection/registry changes by taking `LOCK TABLE runners IN EXCLUSIVE MODE` before the Auto scan or any Runner row lock. Pinned selection takes only its Runner row lock. EXCLUSIVE conflicts with the ROW SHARE table lock acquired by `connect`/`touch` through `SELECT FOR UPDATE`, letting an already-started heartbeat finish before Auto selects. SHARE ROW EXCLUSIVE is insufficient: it permits that ROW SHARE lock, then blocks the heartbeat's UPDATE while Auto waits for the heartbeat's Runner row, creating a deadlock. Plain SELECT reads remain compatible with EXCLUSIVE; hold it only through the short admission transaction.
+Selection priority is explicit target → Planner or Role policy → Global policy.
+For the chosen policy, examine `default_target` followed by `fallback_targets` in
+their configured order. An explicit target is a single choice with no implicit
+fallback. Do not fall through to Global after exhausting a Planner/Role policy.
+Skip only `unsupported_runtime`, `unsupported_model`, `unsupported_thinking`,
+`installation_unavailable` and `model_control_unavailable`. Missing/offline Runner,
+stale installation and ambiguous Auto observations stop selection. If Auto has no
+eligible Runner, any offline/stale observation takes precedence over confirmed
+unavailability; a mixed set cannot establish Runtime failure. Exhaustion returns
+the last examined target and its reason. Skipped candidates create no Attempts;
+only the first usable candidate is enqueued. Capacity is not target failure: a
+busy compatible target remains selected and waits in the ordinary queue.
+
+A hard `runner_id` pin never moves. Auto chooses one eligible Runner; if more than
+one is eligible, it returns `ambiguous_auto_placement`. Before evaluating compatible
+candidates, take `LOCK TABLE runners IN EXCLUSIVE MODE` if any candidate is Auto;
+otherwise lock all compatible pinned Runner rows together in ID order. Acquire
+these locks before any candidate-specific Runner or Task lock. This prevents a
+pinned-to-Auto lock upgrade and opposite fallback lists acquiring rows in reverse
+order. EXCLUSIVE conflicts with the ROW SHARE table lock acquired by `connect`/`touch`
+through `SELECT FOR UPDATE`, letting an already-started heartbeat finish before
+Auto selects. SHARE ROW EXCLUSIVE is insufficient: it permits that ROW SHARE
+lock, then blocks the heartbeat's UPDATE while Auto waits for the heartbeat's
+Runner row, creating a deadlock. Plain SELECT reads remain compatible with
+EXCLUSIVE; hold it only through the short admission transaction.
+
+Queue admission still checks Task locality and all exact source/basis guards.
+An admission error rolls back the selection; never catch it to try another Runner
+after the queue has acquired a Task lock. Existing queued targets and immutable
+replays do not switch when policy or registry facts later change.
 
 The current adapter accepts explicitly selected `opencode/longcat-2.5-preview-free` or `volcengine/deepseek-v4-flash-ga-260731` and does not support thinking level. A missing/different model, other Runtime, or thinking setting is reported as unsupported. Dispatch preserves the selected model; it is never silently replaced with LongCat. Selection requires a current ready Runner installation observation; CLI version discovery alone does not prove model login or quota. The free model requires verified zero pricing; the explicitly authorized DeepSeek model may incur provider charges. DeepSeek startup uses the native OpenCode v2 activation barrier and records actual provider/model errors; a cold catalog snapshot is not a readiness barrier.
 
@@ -26,26 +55,42 @@ Planner and Node Attempts share the configured Runner slots; the existing enroll
 | Condition | Result |
 | --- | --- |
 | No applicable policy / missing Role | `unavailable: policy_missing` / `role_missing` |
-| Unsupported Runtime, model or thinking | `unavailable: unsupported_*`; no Start |
+| Unsupported Runtime, model or thinking | Skip to the next configured policy target; explicit target or exhausted list returns `unavailable: unsupported_*`; no skipped Attempt/Start |
 | Pinned Runner missing/offline | `unavailable: runner_missing` / `runner_offline` |
-| Stale/absent/unavailable installation or model control | Factual `unavailable` reason |
+| Stale installation or mixed unknown Auto observations | Stop with the waiting reason; no fallback |
+| Current complete unavailable installation or unavailable model control | Try the next configured policy target; exhaustion retains its reason |
 | More than one eligible Auto Runner | `unavailable: ambiguous_auto_placement` |
 | Same Attempt ID and caller input | Original target and dispatch ID |
 | Same Attempt ID, changed input | `payload_conflict` |
+| Chosen fallback violates existing Task locality | Queue admission rejects and rolls back; no cross-Runner continuation |
 | Queued target loses Runtime after a complete current report | `CANCELLED`, `runtime_missing_before_start` or `runtime_unavailable_before_start`; no Start |
 | Full capacity or sole Runner disconnect | Remain `QUEUED`; no fallback or Task `BLOCKED` inference |
 | Obsolete Task/Plan/Node basis | `CANCELLED`, `stale_queue_basis`; owning module reconsiders |
 
 ## 5. Good / Base / Bad Cases
 
-Good: two slots serve any mix of Planner/Node work; the next free slot goes to the oldest eligible Planner, with one durable Start. Base: a queued Attempt survives backend restart and a temporary Runner disconnect with its original target. Bad: Auto selects Runner A while Runner B becomes eligible in the same admission, or repeated stale Planner heads delay an eligible Node across many polls.
+Good: an unsupported default and unsupported first fallback select the next exact
+supported target, with one Attempt and stable replay. Base: a queued Attempt
+survives backend restart and a temporary Runner disconnect with its original
+target. Bad: treat a busy target or unknown Runner report as Runtime failure, or
+silently use Global after a Role policy is exhausted. Two slots still serve any
+mix of Planner/Node work; the next free slot goes to the oldest eligible Planner.
 
 ## 6. Tests Required
 
 `postgres-runtime-scheduling.test.ts` checks precedence, exact replay, unsupported settings, hard pins, complete versus omitted installation reports, pre-start cancellation, Auto serialization and two-slot priority. Its heartbeat regression pauses a real `touch` at installation replacement after its Runner row lock, observes Auto waiting in a distinct PostgreSQL backend, then releases the barrier and requires both transactions to commit using the new installation observation. This catches the ROW SHARE/UPDATE upgrade cycle; a timing delay alone does not establish contention. `postgres-dispatch.test.ts` verifies competing promoters, physical reservations, start replay, locality and crash recovery. Run `pnpm test:db` with a real isolated PostgreSQL instance after changes to selection, queue or migration; regular `pnpm test` skips DB suites. Run lint, typecheck, protocol drift and build for the affected backend/transport path. Real CLI/model and host restart behavior belong to the later integration acceptance task.
 
+Ordered-selection regressions cover the first eligible fallback, exhausted
+Planner/Role policies, explicit-target refusal, current unavailable versus
+offline/stale/missing facts, mixed unknown Auto reports, capacity waiting and Task
+locality rejection. Exercise the heartbeat lock barrier with both direct Auto and
+a pinned default followed by Auto. No native Runtime or post-launch fallback
+claim follows from these PostgreSQL tests.
+
 ## 7. Wrong vs Correct
 
-Wrong: let a configured target silently become the probe model, choose Auto from an unlocked registry snapshot, or clear stale queue heads one Runner poll at a time.
+Wrong: let a configured target silently become the probe model, choose Auto from an unlocked registry snapshot, or skip to another target because capacity is full.
 
-Correct: report unsupported settings, serialize Auto placement, preserve exact selected context, and retry stale-head cleanup in separate bounded transactions before dispatching eligible work.
+Correct: inspect the configured target list in order, retain waiting facts,
+serialize its Runner locks, preserve exact selected context, and retry stale-head
+cleanup in separate bounded transactions before dispatching eligible work.
