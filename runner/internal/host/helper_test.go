@@ -4,10 +4,52 @@ import (
 	protocol "monos.local/protocol"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"syscall"
 	"testing"
 )
+
+func TestRuntimePathsGrantOnlyPreparedExecutionRoots(t *testing.T) {
+	base := []string{Path("attempt", "scratch"), Path("attempt", "data"), Path("attempt", "cache"), Path("attempt", "state"), Path("attempt", "tmp"), Path("attempt", "config")}
+	workspace, err := TaskWorkspaceID("task", "repo")
+	if err != nil {
+		t.Fatal(err)
+	}
+	d := protocol.Dispatch{AttemptID: "attempt", TaskID: ptr("task"), Kind: protocol.Node, WorkspaceReservations: &protocol.WorkspaceReservations{ProjectID: "project", Resources: []protocol.WorkspaceReservation{{ResourceID: "repo", WorkspaceID: workspace}}}}
+	paths, err := RuntimePaths(d)
+	want := append(append([]string{}, base...), TaskWorkspacePath(workspace, "worktree"), TaskWorkspacePath(workspace, "common"))
+	if err != nil || !reflect.DeepEqual(paths, want) {
+		t.Fatalf("canonical Node path grant changed: %v, %v", paths, err)
+	}
+	d.Kind = "planner"
+	for _, reservations := range []*protocol.WorkspaceReservations{d.WorkspaceReservations, nil} {
+		d.WorkspaceReservations = reservations
+		paths, err = RuntimePaths(d)
+		if err != nil || !reflect.DeepEqual(paths, base) {
+			t.Fatalf("Planner gained repository paths: %v, %v", paths, err)
+		}
+	}
+	d.Kind = protocol.Node
+	paths, err = RuntimePaths(d)
+	want = []string{Path("attempt", "scratch"), Path("attempt", "workspace"), Path("attempt", "common"), Path("attempt", "data"), Path("attempt", "cache"), Path("attempt", "state"), Path("attempt", "tmp"), Path("attempt", "config")}
+	if err != nil || !reflect.DeepEqual(paths, want) {
+		t.Fatalf("legacy Node path grant changed: %v, %v", paths, err)
+	}
+	d.WorkspaceReservations = &protocol.WorkspaceReservations{ProjectID: "project", Resources: []protocol.WorkspaceReservation{{ResourceID: "repo", WorkspaceID: "../private"}}}
+	if _, err = RuntimePaths(d); err == nil {
+		t.Fatal("unbound workspace identity granted")
+	}
+	d.WorkspaceReservations.Resources[0].WorkspaceID = workspace
+	d.TaskID = nil
+	if _, err = RuntimePaths(d); err == nil {
+		t.Fatal("workspace grant without Task")
+	}
+	d.AttemptID = "../private"
+	if _, err = RuntimePaths(d); err == nil {
+		t.Fatal("unsafe Attempt path granted")
+	}
+}
 
 func TestHelperRejectsUnboundedOrUntrustedInput(t *testing.T) {
 	for _, raw := range []string{`{"action":"status","attempt_id":"../escape"}`, `{"action":"shell","attempt_id":"a"}`, `{"action":"status","attempt_id":"a","command":"/bin/sh"}`, `{"action":"status","attempt_id":"a"} {}`, strings.Repeat("a", 1048577)} {
@@ -138,17 +180,59 @@ func TestDispatchIdentityMustMatchHelperRequest(t *testing.T) {
 
 func TestHelperLaunchRequiresExplicitApprovedModel(t *testing.T) {
 	d := protocol.Dispatch{AttemptID: "a", DispatchID: "d", RunnerID: "runner", TaskID: ptr("task"), ResourceID: ptr("repo"), Kind: protocol.Node, RuntimeID: protocol.Opencode, MutationAllowed: true, Prompt: "probe"}
-	for _, model := range []protocol.Model{FreeModel, DeepSeekModel} {
+	for _, model := range []string{FreeModel, DeepSeekModel} {
 		d.Model = model
 		if err := ValidateRequest(Request{Action: "start", AttemptID: "a", Dispatch: &d}); err != nil {
 			t.Fatalf("approved model rejected: %s: %v", model, err)
 		}
 	}
-	for _, model := range []protocol.Model{"", "opencode/mimo-v2.6-flash-free", "volcengine/other", DeepSeekModel + "-other"} {
+	for _, model := range []string{"", "opencode/mimo-v2.6-flash-free", "volcengine/other", DeepSeekModel + "-other"} {
 		d.Model = model
 		if err := ValidateRequest(Request{Action: "start", AttemptID: "a", Dispatch: &d}); err == nil {
 			t.Fatalf("unapproved model launch accepted: %q", model)
 		}
+	}
+}
+
+func TestHelperCodexTargetValidation(t *testing.T) {
+	d := protocol.Dispatch{AttemptID: "a", DispatchID: "d", RunnerID: "runner", TaskID: ptr("task"), ResourceID: ptr("repo"), Kind: protocol.Node, RuntimeID: protocol.Codex, Model: "gpt-5.4", MutationAllowed: true, Prompt: "probe"}
+	for _, thinking := range []protocol.ThinkingLevel{protocol.ThinkingLevelNone, protocol.Minimal, protocol.Low, protocol.Medium, protocol.High, protocol.Xhigh} {
+		d.ThinkingLevel = &thinking
+		if !ApprovedTarget(d) {
+			t.Fatalf("supported thinking rejected: %s", thinking)
+		}
+		if err := ValidateRequest(Request{Action: "start", AttemptID: "a", Dispatch: &d}); err != nil {
+			t.Fatalf("supported Codex launch rejected: %v", err)
+		}
+	}
+	d.ThinkingLevel = nil
+	for _, model := range []string{"gpt-5.4", "provider/model.v2", strings.Repeat("a", 160)} {
+		d.Model = model
+		if err := ValidateRequest(Request{Action: "start", AttemptID: "a", Dispatch: &d}); err != nil {
+			t.Fatalf("bounded explicit Codex model rejected: %q: %v", model, err)
+		}
+	}
+	for _, model := range []string{"", "--help", "model with spaces", "model\nnext", "模型", strings.Repeat("a", 161)} {
+		d.Model = model
+		if ApprovedTarget(d) || ValidateRequest(Request{Action: "start", AttemptID: "a", Dispatch: &d}) == nil {
+			t.Fatalf("invalid Codex model accepted: %q", model)
+		}
+	}
+	d.Model = "gpt-5.4"
+	invalid := protocol.ThinkingLevel("ultra")
+	d.ThinkingLevel = &invalid
+	if ApprovedTarget(d) || ValidateRequest(Request{Action: "start", AttemptID: "a", Dispatch: &d}) == nil {
+		t.Fatal("unsupported thinking accepted")
+	}
+	d.RuntimeID, d.Model = protocol.Opencode, FreeModel
+	high := protocol.High
+	d.ThinkingLevel = &high
+	if ApprovedTarget(d) || ValidateRequest(Request{Action: "start", AttemptID: "a", Dispatch: &d}) == nil {
+		t.Fatal("OpenCode gained unsupported thinking")
+	}
+	d.RuntimeID, d.ThinkingLevel = protocol.RuntimeID("unknown"), nil
+	if ApprovedTarget(d) {
+		t.Fatal("unknown runtime accepted")
 	}
 }
 

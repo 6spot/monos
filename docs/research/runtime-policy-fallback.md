@@ -47,7 +47,8 @@ deployed service, Runtime model or remote provider was used.
 
 ## Remaining scope
 
-Second CLI integration, structured objective Runtime failure reports, and
+The [Codex second CLI](codex-runtime-adapter.md) now has a separate implementation
+and local verification record. Structured objective Runtime failure reports and
 post-launch fallback after physical Stop/workspace settlement remain subsequent
 work. Current queued pre-start loss still follows its existing cancellation and
 Owner recovery path. [A06/A30 native acceptance](stage-a-acceptance.md) remains

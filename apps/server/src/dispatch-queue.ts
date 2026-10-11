@@ -29,7 +29,7 @@ export interface QueueInput {
   task_conversation_source?: TaskConversationSource;
   node_execution_source?: NodeExecutionSource;
   legacy_probe?: true; // Internal fixture admission only; never copied to wire data.
-  runtime_id: Dispatch['runtime_id']; model: Dispatch['model']; prompt: string; source_watermark: number;
+  runtime_id: Dispatch['runtime_id']; model: Dispatch['model']; thinking_level?: Dispatch['thinking_level']; prompt: string; source_watermark: number;
   selection_context?: {
     source: 'explicit' | 'planner' | 'role' | 'global'; configuration_version: number;
     target: { runtime_id: string; runner_id?: string; model_id?: string; thinking_level?: string };
@@ -101,6 +101,7 @@ export class DispatchQueue {
         project_id: task.project_id!, configuration_version: configurationVersion,
         resources: input.kind === 'planner' ? [] : (await tx.query<{ id: string }>('SELECT id FROM project_resources WHERE project_id=$1 AND active ORDER BY id', [task.project_id])).rows.map((row) => ({ resource_id: row.id, workspace_id: workspaceId(input.task_id!, row.id) })),
       } }), runtime_id: input.runtime_id, model: input.model,
+      ...(input.thinking_level !== undefined ? { thinking_level: input.thinking_level } : {}),
       prompt: input.prompt, source_watermark: input.source_watermark, log_mode: 'ordered_v1',
       ...(input.task_conversation_source ? {task_conversation_source:input.task_conversation_source} : {}),
       ...(input.task_review_source?{task_review_source:input.task_review_source}:{}),
@@ -135,6 +136,7 @@ export class DispatchQueue {
       kind: 'planner', fencing_generation: 1, node_activation: 0, control_version: Number(control.version), source_message_id: context.source_message_id,
       project_context_version: context.project_context_version, project_context_digest: context.project_context_digest,
       runtime_id: input.runtime_id, model: input.model, prompt: input.prompt, source_watermark: input.source_watermark,
+      ...(input.thinking_level !== undefined ? { thinking_level: input.thinking_level } : {}),
       log_mode: 'ordered_v1', mutation_allowed: false, process_released: true };
     validate('Dispatch', launch);
     await tx.query(`INSERT INTO attempts(id,runner_id,todo_id,owner_key,dispatch_id,kind,fencing_generation,node_activation,launch,
@@ -205,7 +207,7 @@ export class DispatchQueue {
           }
           if (!current) { await tx.query("UPDATE attempts SET state='CANCELLED',process_absent=true,end_reason='stale_queue_basis' WHERE id=$1", [row.id]); return retry; }
           if (row.selection_context) {
-            const observed = (await tx.query<{ incarnation: string; observation: { availability: string; supports_model: boolean } }>('SELECT incarnation,observation FROM runtime_installations WHERE runner_id=$1 AND runtime_id=$2', [runnerId, row.launch.runtime_id])).rows[0];
+            const observed = (await tx.query<{ incarnation: string; observation: { availability: string; supports_model: boolean; supports_thinking: boolean } }>('SELECT incarnation,observation FROM runtime_installations WHERE runner_id=$1 AND runtime_id=$2', [runnerId, row.launch.runtime_id])).rows[0];
             // An omitted discovery report after reconnect is not evidence that the
             // installation vanished. Wait until the current incarnation reports.
             if (!observed || Number(observed.incarnation) !== incarnation) {
@@ -213,7 +215,8 @@ export class DispatchQueue {
               await tx.query("UPDATE attempts SET state='CANCELLED',process_absent=true,end_reason='runtime_missing_before_start' WHERE id=$1", [row.id]);
               return retry;
             }
-            if (observed.observation.availability !== 'detected' || !observed.observation.supports_model) {
+            if (observed.observation.availability !== 'detected' || !observed.observation.supports_model ||
+                (row.launch.thinking_level !== undefined && !observed.observation.supports_thinking)) {
               await tx.query("UPDATE attempts SET state='CANCELLED',process_absent=true,end_reason='runtime_unavailable_before_start' WHERE id=$1", [row.id]);
               return retry;
             }

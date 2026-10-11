@@ -1151,16 +1151,15 @@
         "runtime_id": {
           "type": "string",
           "enum": [
-            "opencode"
+            "opencode",
+            "codex"
           ]
         },
         "model": {
           "type": "string",
-          "enum": [
-            "opencode/mimo-v2.6-flash-free",
-            "opencode/longcat-2.5-preview-free",
-            "volcengine/deepseek-v4-flash-ga-260731"
-          ]
+          "minLength": 1,
+          "maxLength": 160,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._/-]{0,159}$"
         },
         "prompt": {
           "type": "string",
@@ -1211,6 +1210,17 @@
         },
         "task_review_source": {
           "$ref": "#/definitions/TaskReviewSource"
+        },
+        "thinking_level": {
+          "type": "string",
+          "enum": [
+            "none",
+            "minimal",
+            "low",
+            "medium",
+            "high",
+            "xhigh"
+          ]
         }
       },
       "allOf": [
@@ -1487,6 +1497,30 @@
               "task_id": {
                 "$ref": "#/definitions/Id"
               }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "runtime_id": {
+                "const": "opencode"
+              }
+            },
+            "required": [
+              "runtime_id"
+            ]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "enum": [
+                  "opencode/mimo-v2.6-flash-free",
+                  "opencode/longcat-2.5-preview-free",
+                  "volcengine/deepseek-v4-flash-ga-260731"
+                ]
+              },
+              "thinking_level": false
             }
           }
         }

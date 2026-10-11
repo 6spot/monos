@@ -2,7 +2,7 @@
 
 ## 1. Scope / Trigger
 
-Use `RuntimeScheduling` when an authenticated product control command has prepared immutable Planner or Node context and must choose a Runtime target before queuing an Attempt. It resolves policy and installation facts; `DispatchQueue` owns the actual queue and promotion. Todo/Task semantic control remains with the caller, and Runner never selects product policy. Initial-admission ordered fallback is supported; post-launch failure fallback and a second CLI Adapter remain later Stage B work.
+Use `RuntimeScheduling` when an authenticated product control command has prepared immutable Planner or Node context and must choose a Runtime target before queuing an Attempt. It resolves policy and installation facts; `DispatchQueue` owns the actual queue and promotion. Todo/Task semantic control remains with the caller, and Runner never selects product policy. OpenCode and Codex support initial-admission ordered fallback; post-launch failure fallback remains later Stage B work.
 
 ## 2. Signatures
 
@@ -18,7 +18,7 @@ For the chosen policy, examine `default_target` followed by `fallback_targets` i
 their configured order. An explicit target is a single choice with no implicit
 fallback. Do not fall through to Global after exhausting a Planner/Role policy.
 Skip only `unsupported_runtime`, `unsupported_model`, `unsupported_thinking`,
-`installation_unavailable` and `model_control_unavailable`. Missing/offline Runner,
+`installation_unavailable`, `model_control_unavailable` and `thinking_control_unavailable`. Missing/offline Runner,
 stale installation and ambiguous Auto observations stop selection. If Auto has no
 eligible Runner, any offline/stale observation takes precedence over confirmed
 unavailability; a mixed set cannot establish Runtime failure. Exhaustion returns
@@ -44,7 +44,7 @@ An admission error rolls back the selection; never catch it to try another Runne
 after the queue has acquired a Task lock. Existing queued targets and immutable
 replays do not switch when policy or registry facts later change.
 
-The current adapter accepts explicitly selected `opencode/longcat-2.5-preview-free` or `volcengine/deepseek-v4-flash-ga-260731` and does not support thinking level. A missing/different model, other Runtime, or thinking setting is reported as unsupported. Dispatch preserves the selected model; it is never silently replaced with LongCat. Selection requires a current ready Runner installation observation; CLI version discovery alone does not prove model login or quota. The free model requires verified zero pricing; the explicitly authorized DeepSeek model may incur provider charges. DeepSeek startup uses the native OpenCode v2 activation barrier and records actual provider/model errors; a cold catalog snapshot is not a readiness barrier.
+OpenCode accepts explicitly selected `opencode/longcat-2.5-preview-free` or `volcengine/deepseek-v4-flash-ga-260731` and does not support thinking level. Codex requires an explicit model identifier matching `^[A-Za-z0-9][A-Za-z0-9._/-]{0,159}$`; optional thinking is `none`, `minimal`, `low`, `medium`, `high` or `xhigh`. Dispatch preserves exact runtime/model/thinking in Task and Todo paths, including replay and Start. Installation facts must support model selection and, if selected, thinking control; promotion rechecks these capabilities. CLI discovery establishes no model availability, login, reasoning support for a particular model or quota guarantee. Native rejection remains a factual execution failure. The free OpenCode model requires verified zero pricing; the explicitly authorized DeepSeek model may incur provider charges. DeepSeek startup uses the native OpenCode v2 activation barrier; a cold catalog snapshot is not a readiness barrier. See [Codex profile](../../../docs/research/codex-runtime-adapter.md).
 
 An Attempt ID is serialized by a transaction advisory lock. Replay of identical caller input returns its original target and dispatch ID even if policy later changes; changed input gives `payload_conflict`. `selection_context` records source, configuration version, exact target, observed CLI version when available, and caller-input digest. Admission, receipt and queued Attempt must commit together. The caller handles an unavailable result without creating a fake process or new Task state.
 

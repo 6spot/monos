@@ -7,11 +7,13 @@ import type { DispatchQueue, QueueInput } from './dispatch-queue.ts';
 
 const freeModel = 'opencode/longcat-2.5-preview-free';
 const deepSeekModel = 'volcengine/deepseek-v4-flash-ga-260731';
+const codexModel = /^[A-Za-z0-9][A-Za-z0-9._/-]{0,159}$/;
+const codexThinking = new Set(['none', 'minimal', 'low', 'medium', 'high', 'xhigh']);
 type Source = 'explicit' | 'planner' | 'role' | 'global';
 export type SelectionReason = 'policy_missing' | 'role_missing' | 'unsupported_runtime' | 'unsupported_model' |
   'unsupported_thinking' | 'runner_missing' | 'runner_offline' | 'installation_stale' |
-  'installation_unavailable' | 'model_control_unavailable' | 'ambiguous_auto_placement';
-export type SchedulingRequest = Omit<QueueInput, 'runner_id' | 'runtime_id' | 'model' | 'selection_context'> & {
+  'installation_unavailable' | 'model_control_unavailable' | 'thinking_control_unavailable' | 'ambiguous_auto_placement';
+export type SchedulingRequest = Omit<QueueInput, 'runner_id' | 'runtime_id' | 'model' | 'thinking_level' | 'selection_context'> & {
   role_id?: string; explicit_target?: ExecutionTarget;
 };
 export type SchedulingResult =
@@ -23,17 +25,23 @@ interface RunnerFact {
   installation_incarnation: string | null; observation: RuntimeInstallation | null;
 }
 
-function issue(fact: RunnerFact): SelectionReason | null {
+function issue(fact: RunnerFact, target: ExecutionTarget): SelectionReason | null {
   if (!fact.online) return 'runner_offline';
   if (!fact.observation || Number(fact.installation_incarnation) !== Number(fact.incarnation))
     return Number(fact.runtime_report_incarnation) === Number(fact.incarnation) ? 'installation_unavailable' : 'installation_stale';
   if (fact.observation.availability !== 'detected') return 'installation_unavailable';
   if (!fact.observation.supports_model) return 'model_control_unavailable';
+  if (target.thinking_level !== undefined && !fact.observation.supports_thinking) return 'thinking_control_unavailable';
   return null;
 }
 
 function targetIssue(target: ExecutionTarget): SelectionReason | null {
   // An absent model cannot be interpreted as an approved model implicitly.
+  if (target.runtime_id === 'codex') {
+    if (!target.model_id || !codexModel.test(target.model_id)) return 'unsupported_model';
+    if (target.thinking_level !== undefined && !codexThinking.has(target.thinking_level)) return 'unsupported_thinking';
+    return null;
+  }
   if (target.runtime_id !== 'opencode') return 'unsupported_runtime';
   if (target.model_id !== freeModel && target.model_id !== deepSeekModel) return 'unsupported_model';
   if (target.thinking_level !== undefined) return 'unsupported_thinking';
@@ -42,7 +50,7 @@ function targetIssue(target: ExecutionTarget): SelectionReason | null {
 
 function allowsFallback(reason: SelectionReason): boolean {
   return reason === 'unsupported_runtime' || reason === 'unsupported_model' || reason === 'unsupported_thinking' ||
-    reason === 'installation_unavailable' || reason === 'model_control_unavailable';
+    reason === 'installation_unavailable' || reason === 'model_control_unavailable' || reason === 'thinking_control_unavailable';
 }
 
 /**
@@ -126,7 +134,8 @@ export class RuntimeScheduling {
       kind: request.kind, expected: request.expected, resource_id: request.resource_id,
       ...(request.legacy_probe ? { legacy_probe: true as const } : {}),
       prompt: request.prompt, source_watermark: request.source_watermark,
-      runner_id: runner.id, runtime_id: 'opencode', model: target.model_id as QueueInput['model'], selection_context,
+      runner_id: runner.id, runtime_id: target.runtime_id as QueueInput['runtime_id'], model: target.model_id!,
+      ...(target.thinking_level !== undefined ? { thinking_level: target.thinking_level as QueueInput['thinking_level'] } : {}), selection_context,
     });
     return { status: 'queued', dispatch_id, runner_id: runner.id, source, target };
   }
@@ -140,12 +149,12 @@ export class RuntimeScheduling {
       FROM runners r LEFT JOIN runtime_installations i ON i.runner_id=r.id AND i.runtime_id=$1
       WHERE ($3::text IS NULL OR r.id=$3) ORDER BY r.id`, [target.runtime_id, this.backendInstance, target.runner_id ?? null])).rows;
     if (!facts.length) return { reason: target.runner_id || nodeExecution ? 'runner_missing' : 'installation_unavailable' };
-    const eligible = facts.filter((fact) => issue(fact) === null);
+    const eligible = facts.filter((fact) => issue(fact, target) === null);
     if (!target.runner_id && eligible.length > 1) return { reason: 'ambiguous_auto_placement' };
     if (eligible[0]) return { runner: eligible[0] };
     // One unavailable installation cannot establish objective Auto failure
     // while another Runner is offline or has not supplied current facts.
-    const reasons = facts.map(issue);
+    const reasons = facts.map((fact) => issue(fact, target));
     return { reason: reasons.find((reason) => reason !== null && !allowsFallback(reason)) ?? reasons[0]! };
   }
 }

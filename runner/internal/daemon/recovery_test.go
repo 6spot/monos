@@ -29,7 +29,7 @@ func recoveryFixture(t *testing.T, suffix string, kind protocol.OperationKind) (
 	if err != nil {
 		t.Fatal(err)
 	}
-	dispatch := protocol.Dispatch{AttemptID: "attempt-" + suffix, DispatchID: "dispatch-" + suffix, RunnerID: "runner", TaskID: &task, Kind: protocol.Node, NodeID: ptr("node-" + suffix), NodeActivation: 1, RuntimeID: protocol.Opencode, Model: protocol.OpencodeLongcat25PreviewFree, Prompt: "test", WorkspaceReservations: &protocol.WorkspaceReservations{ProjectID: "project", ConfigurationVersion: 1, Resources: []protocol.WorkspaceReservation{{ResourceID: resource, WorkspaceID: id}}}}
+	dispatch := protocol.Dispatch{AttemptID: "attempt-" + suffix, DispatchID: "dispatch-" + suffix, RunnerID: "runner", TaskID: &task, Kind: protocol.Node, NodeID: ptr("node-" + suffix), NodeActivation: 1, RuntimeID: protocol.Opencode, Model: "opencode/longcat-2.5-preview-free", Prompt: "test", WorkspaceReservations: &protocol.WorkspaceReservations{ProjectID: "project", ConfigurationVersion: 1, Resources: []protocol.WorkspaceReservation{{ResourceID: resource, WorkspaceID: id}}}}
 	w := protocol.WorkspaceDescriptor{SchemaVersion: 1, WorkspaceID: id, TaskID: task, ResourceID: resource, ProjectID: "project", RunnerID: "runner", NodeID: *dispatch.NodeID, NodeActivation: 1, LeaseID: "lease-" + suffix, Generation: 1, OpenOperationID: "open-" + suffix, Resource: protocol.WorkspaceResource{ResourceID: resource, RepositoryIdentity: "github.com/example/repository", RemoteURL: "https://github.com/example/repository.git"}}
 	_, digest, err := wire.Canonical(w)
 	if err != nil {

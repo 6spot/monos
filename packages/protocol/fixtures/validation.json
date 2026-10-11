@@ -9349,5 +9349,166 @@
         "reply_only": false
       }
     }
+  },
+  {
+    "name": "explicit Codex model and thinking dispatch",
+    "schema": "Dispatch",
+    "valid": true,
+    "value": {
+      "dispatch_id": "dispatch-a",
+      "attempt_id": "attempt-a",
+      "runner_id": "runner-a",
+      "task_id": "task-a",
+      "kind": "planner",
+      "fencing_generation": 1,
+      "node_activation": 0,
+      "control_version": 0,
+      "resource_id": "fixture-repo",
+      "runtime_id": "codex",
+      "model": "gpt-5.4",
+      "prompt": "fixture only",
+      "source_watermark": 1,
+      "mutation_allowed": true,
+      "process_released": false,
+      "thinking_level": "high"
+    }
+  },
+  {
+    "name": "Codex dispatch rejects unknown runtime",
+    "schema": "Dispatch",
+    "valid": false,
+    "value": {
+      "dispatch_id": "dispatch-a",
+      "attempt_id": "attempt-a",
+      "runner_id": "runner-a",
+      "task_id": "task-a",
+      "kind": "planner",
+      "fencing_generation": 1,
+      "node_activation": 0,
+      "control_version": 0,
+      "resource_id": "fixture-repo",
+      "runtime_id": "unregistered",
+      "model": "gpt-5.4",
+      "prompt": "fixture only",
+      "source_watermark": 1,
+      "mutation_allowed": true,
+      "process_released": false,
+      "thinking_level": "high"
+    }
+  },
+  {
+    "name": "Codex dispatch rejects empty model",
+    "schema": "Dispatch",
+    "valid": false,
+    "value": {
+      "dispatch_id": "dispatch-a",
+      "attempt_id": "attempt-a",
+      "runner_id": "runner-a",
+      "task_id": "task-a",
+      "kind": "planner",
+      "fencing_generation": 1,
+      "node_activation": 0,
+      "control_version": 0,
+      "resource_id": "fixture-repo",
+      "runtime_id": "codex",
+      "model": "",
+      "prompt": "fixture only",
+      "source_watermark": 1,
+      "mutation_allowed": true,
+      "process_released": false,
+      "thinking_level": "high"
+    }
+  },
+  {
+    "name": "Codex dispatch rejects model with control input",
+    "schema": "Dispatch",
+    "valid": false,
+    "value": {
+      "dispatch_id": "dispatch-a",
+      "attempt_id": "attempt-a",
+      "runner_id": "runner-a",
+      "task_id": "task-a",
+      "kind": "planner",
+      "fencing_generation": 1,
+      "node_activation": 0,
+      "control_version": 0,
+      "resource_id": "fixture-repo",
+      "runtime_id": "codex",
+      "model": "model\n--config",
+      "prompt": "fixture only",
+      "source_watermark": 1,
+      "mutation_allowed": true,
+      "process_released": false,
+      "thinking_level": "high"
+    }
+  },
+  {
+    "name": "Codex dispatch rejects model too long",
+    "schema": "Dispatch",
+    "valid": false,
+    "value": {
+      "dispatch_id": "dispatch-a",
+      "attempt_id": "attempt-a",
+      "runner_id": "runner-a",
+      "task_id": "task-a",
+      "kind": "planner",
+      "fencing_generation": 1,
+      "node_activation": 0,
+      "control_version": 0,
+      "resource_id": "fixture-repo",
+      "runtime_id": "codex",
+      "model": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "prompt": "fixture only",
+      "source_watermark": 1,
+      "mutation_allowed": true,
+      "process_released": false,
+      "thinking_level": "high"
+    }
+  },
+  {
+    "name": "Codex dispatch rejects unknown thinking",
+    "schema": "Dispatch",
+    "valid": false,
+    "value": {
+      "dispatch_id": "dispatch-a",
+      "attempt_id": "attempt-a",
+      "runner_id": "runner-a",
+      "task_id": "task-a",
+      "kind": "planner",
+      "fencing_generation": 1,
+      "node_activation": 0,
+      "control_version": 0,
+      "resource_id": "fixture-repo",
+      "runtime_id": "codex",
+      "model": "gpt-5.4",
+      "prompt": "fixture only",
+      "source_watermark": 1,
+      "mutation_allowed": true,
+      "process_released": false,
+      "thinking_level": "maximum"
+    }
+  },
+  {
+    "name": "Codex dispatch rejects null thinking",
+    "schema": "Dispatch",
+    "valid": false,
+    "value": {
+      "dispatch_id": "dispatch-a",
+      "attempt_id": "attempt-a",
+      "runner_id": "runner-a",
+      "task_id": "task-a",
+      "kind": "planner",
+      "fencing_generation": 1,
+      "node_activation": 0,
+      "control_version": 0,
+      "resource_id": "fixture-repo",
+      "runtime_id": "codex",
+      "model": "gpt-5.4",
+      "prompt": "fixture only",
+      "source_watermark": 1,
+      "mutation_allowed": true,
+      "process_released": false,
+      "thinking_level": null
+    }
   }
 ]

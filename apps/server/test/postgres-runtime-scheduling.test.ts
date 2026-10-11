@@ -11,9 +11,13 @@ import { RuntimeScheduling } from '../src/runtime-scheduling.ts';
 import type { SchedulingRequest } from '../src/runtime-scheduling.ts';
 import { BoundaryService } from '../src/service.ts';
 import { initializeTask } from '../src/task-records.ts';
+import { issueOwnerSession } from '../src/owner-commands.ts';
+import { Todos } from '../src/todos.ts';
+import { Discussion } from '../src/discussion.ts';
 
 const model = 'opencode/longcat-2.5-preview-free';
 const installation: RuntimeInstallation = { runtime_id: 'opencode', executable: '/opt/owner/bin/opencode', version: '1.18.30', availability: 'detected', supports_model: true, supports_thinking: false, model_ids: [] };
+const codexInstallation: RuntimeInstallation = { runtime_id: 'codex', executable: '/usr/local/bin/codex', version: '0.162.1', availability: 'detected', supports_model: true, supports_thinking: true, model_ids: [] };
 const policy = (runner_id?: string): ExecutionPolicy => ({ default_target: { runtime_id: 'opencode', model_id: model, ...(runner_id ? { runner_id } : {}) }, fallback_targets: [] });
 const signingKey = 'synthetic-runtime-scheduling-signing-key';
 
@@ -105,6 +109,62 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('production Runtime tar
     await db.pool.query('UPDATE execution_policies SET policies=$1', [{ global: policy(r.id) }]);
     expect(await submit(r.service, value)).toEqual(result);
     expect((await db.pool.query('SELECT count(*) FROM attempts WHERE task_id=$1', [value.task_id])).rows[0].count).toBe('1');
+  });
+
+  it('preserves the selected Codex model and thinking through Task dispatch, replay and Start', async () => {
+    const r = await runner(); await r.service.touch(r.id, r.incarnation, true, [installation, codexInstallation]);
+    const selected = { runtime_id: 'codex', model_id: 'gpt-5.4', thinking_level: 'high', runner_id: r.id };
+    await db.pool.query('UPDATE execution_policies SET policies=$1', [{ global: { default_target: selected, fallback_targets: [policy(r.id).default_target] } }]);
+    const value = await request(); const result = await submit(r.service, value);
+    expect(result).toMatchObject({ status: 'queued', target: selected });
+    const stored = (await db.pool.query('SELECT selection_context,launch FROM attempts WHERE id=$1', [value.attempt_id])).rows[0];
+    expect(stored.selection_context).toMatchObject({ target: selected, observed_version: '0.162.1' });
+    expect(stored.launch).toMatchObject({ runtime_id: 'codex', model: 'gpt-5.4', thinking_level: 'high' });
+    await db.pool.query('UPDATE execution_policies SET policies=$1', [{ global: policy(r.id) }]);
+    expect(await submit(r.service, value)).toEqual(result);
+    expect(await queue.promoteNext(r.id, r.service.instanceId, r.incarnation)).toMatchObject({ attempt_id: value.attempt_id, runtime_id: 'codex', model: 'gpt-5.4', thinking_level: 'high' });
+  });
+
+  it('keeps explicit Codex configuration failures factual and selects only configured fallbacks', async () => {
+    const r = await runner(); await r.service.touch(r.id, r.incarnation, true, [installation, { ...codexInstallation, supports_thinking: false }]);
+    const selected = { runtime_id: 'codex', model_id: 'gpt-5.4', thinking_level: 'high', runner_id: r.id };
+    await db.pool.query('UPDATE execution_policies SET policies=$1', [{ global: { default_target: selected, fallback_targets: [policy(r.id).default_target] } }]);
+    expect(await submit(r.service, await request())).toMatchObject({ status: 'queued', target: policy(r.id).default_target });
+    const explicit = await request();
+    expect(await submit(r.service, { ...explicit, explicit_target: selected })).toMatchObject({ status: 'unavailable', reason: 'thinking_control_unavailable' });
+    expect((await db.pool.query('SELECT id FROM attempts WHERE id=$1', [explicit.attempt_id])).rowCount).toBe(0);
+    for (const model_id of ['x'.repeat(161), 'gpt-5.4\n--config']) {
+      expect(await submit(r.service, { ...await request(), explicit_target: { ...selected, model_id } })).toMatchObject({ status: 'unavailable', reason: 'unsupported_model' });
+    }
+    expect(await submit(r.service, { ...await request(), explicit_target: { runtime_id: 'codex', runner_id: r.id } })).toMatchObject({ status: 'unavailable', reason: 'unsupported_model' });
+    expect(await submit(r.service, { ...await request(), explicit_target: { ...selected, thinking_level: 'automatic' } })).toMatchObject({ status: 'unavailable', reason: 'unsupported_thinking' });
+    const withoutThinking = await request();
+    expect(await submit(r.service, { ...withoutThinking, explicit_target: { runtime_id: 'codex', model_id: selected.model_id, runner_id: r.id } })).toMatchObject({ status: 'queued' });
+    expect((await db.pool.query('SELECT launch FROM attempts WHERE id=$1', [withoutThinking.attempt_id])).rows[0].launch).not.toHaveProperty('thinking_level');
+  });
+
+  it('does not start a selected Codex Attempt after thinking control disappears', async () => {
+    const r = await runner(); await r.service.touch(r.id, r.incarnation, true, [codexInstallation]);
+    const value = await request();
+    expect(await submit(r.service, { ...value, explicit_target: { runtime_id: 'codex', model_id: 'gpt-5.4', thinking_level: 'high', runner_id: r.id } })).toMatchObject({ status: 'queued' });
+    await r.service.touch(r.id, r.incarnation, true, [{ ...codexInstallation, supports_thinking: false }]);
+    expect(await queue.promoteNext(r.id, r.service.instanceId, r.incarnation)).toBeNull();
+    expect((await db.pool.query('SELECT state,end_reason FROM attempts WHERE id=$1', [value.attempt_id])).rows[0]).toEqual({ state: 'CANCELLED', end_reason: 'runtime_unavailable_before_start' });
+    expect((await db.pool.query('SELECT id FROM outbox WHERE attempt_id=$1', [value.attempt_id])).rowCount).toBe(0);
+  });
+
+  it('carries Codex model and thinking through the canonical Todo Discussion source', async () => {
+    const r = await runner(); await r.service.touch(r.id, r.incarnation, true, [codexInstallation]);
+    await db.pool.query('UPDATE execution_policies SET policies=$1', [{ planner: { default_target: { runtime_id: 'codex', model_id: 'gpt-5.4', thinking_level: 'medium', runner_id: r.id }, fallback_targets: [] } }]);
+    const token = (await issueOwnerSession(db)).token; const todo_id = randomUUID(); const message_id = randomUUID();
+    await new Todos(db).command(token, { schema_version: 1, request_id: randomUUID(), name: 'capture_todo', payload: { todo_id, original_capture: 'Discuss with selected runtime' } });
+    const discussion = new Discussion(db, r.service.instanceId);
+    await discussion.command(token, { schema_version: 1, request_id: randomUUID(), todo_id, name: 'submit_discussion_message', payload: { message_id, content: 'Clarify this topic' } });
+    await discussion.pump();
+    const launch = await queue.promoteNext(r.id, r.service.instanceId, r.incarnation);
+    expect(launch).toMatchObject({ todo_id, source_message_id: message_id, runtime_id: 'codex', model: 'gpt-5.4', thinking_level: 'medium' });
+    expect(launch).not.toHaveProperty('task_id');
+    expect((await db.pool.query('SELECT id FROM attempts WHERE todo_id=$1', [todo_id])).rowCount).toBe(1);
   });
 
   it('keeps fallback inside the chosen Planner or Role policy and never applies it to an explicit target', async () => {

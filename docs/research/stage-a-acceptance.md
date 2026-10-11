@@ -224,7 +224,9 @@ browser session or native trial was rerun for that check.
    future support requires an objective adapter signal and scoped validation.
 
 No new product implementation is justified solely by stale parent checkboxes.
-Second CLI/fallback, multi-Node/parallel worktrees, multi-repository/plain-Git
+Stage B's [Codex second CLI](codex-runtime-adapter.md) has local implementation
+evidence; its native acceptance and post-launch fallback remain open.
+Multi-Node/parallel worktrees, multi-repository/plain-Git
 delivery and the complete [V1 release gate](../09-first-executable-slice.md#v1-single-host-release-gate)
 remain separate scope. Historical controlled reboot is not automatic boot readiness.
 

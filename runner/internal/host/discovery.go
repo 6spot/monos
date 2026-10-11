@@ -19,9 +19,44 @@ import (
 
 var versionPattern = regexp.MustCompile(`^[0-9]+\.[0-9]+\.[0-9]+(?:[-+][A-Za-z0-9.-]+)?$`)
 
-func runtimeVersion(output string) (string, bool) {
-	version := strings.TrimPrefix(strings.TrimSpace(output), "opencode v")
+func runtimeVersion(runtimeID, output string) (string, bool) {
+	version := strings.TrimSpace(output)
+	switch runtimeID {
+	case "opencode":
+		version = strings.TrimPrefix(version, "opencode v")
+	case "codex":
+		var ok bool
+		version, ok = strings.CutPrefix(version, "codex-cli ")
+		if !ok {
+			return "", false
+		}
+	default:
+		return "", false
+	}
 	return version, len(version) <= 128 && versionPattern.MatchString(version)
+}
+
+func supportedCodexVersion(version string) bool {
+	core, _, _ := strings.Cut(version, "+")
+	parts := strings.Split(core, ".")
+	if len(parts) != 3 {
+		return false
+	}
+	minimum := [3]uint64{0, 162, 1}
+	var actual [3]uint64
+	for i, part := range parts {
+		value, err := strconv.ParseUint(part, 10, 32)
+		if err != nil {
+			return false
+		}
+		actual[i] = value
+	}
+	for i := range actual {
+		if actual[i] != minimum[i] {
+			return actual[i] > minimum[i]
+		}
+	}
+	return true
 }
 
 type discoveryOutput struct {
@@ -39,10 +74,22 @@ func (w *discoveryOutput) Write(p []byte) (int, error) {
 
 // This fixed version-only command is independent of Attempts. It never receives
 // service credentials or a caller-selected executable, identity, flag or cwd.
-func discoveryCommand(ctx context.Context, uid, gid uint32) *exec.Cmd {
-	cmd := exec.CommandContext(ctx, Runtime, "--version")
+func discoveryCommand(ctx context.Context, runtimeID string, uid, gid uint32) (*exec.Cmd, error) {
+	var executable string
+	switch runtimeID {
+	case "opencode":
+		executable = Runtime
+	case "codex":
+		executable = CodexRuntime
+	default:
+		return nil, fmt.Errorf("unsupported discovery runtime")
+	}
+	cmd := exec.CommandContext(ctx, executable, "--version")
 	cmd.Dir = "/home/me"
-	cmd.Env = []string{"HOME=/home/me", "USER=me", "LOGNAME=me", "PATH=/home/linuxbrew/.linuxbrew/bin:/usr/bin:/bin", "LANG=C.UTF-8", "OPENCODE_DISABLE_AUTOUPDATE=1", "OPENCODE_DISABLE_LSP_DOWNLOAD=1"}
+	cmd.Env = []string{"HOME=/home/me", "USER=me", "LOGNAME=me", "PATH=/usr/local/bin:/home/linuxbrew/.linuxbrew/bin:/usr/bin:/bin", "LANG=C.UTF-8"}
+	if runtimeID == "opencode" {
+		cmd.Env = append(cmd.Env, "OPENCODE_DISABLE_AUTOUPDATE=1", "OPENCODE_DISABLE_LSP_DOWNLOAD=1")
+	}
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true, Credential: &syscall.Credential{Uid: uid, Gid: gid, Groups: []uint32{gid}}}
 	cmd.Cancel = func() error {
 		if cmd.Process == nil {
@@ -55,7 +102,7 @@ func discoveryCommand(ctx context.Context, uid, gid uint32) *exec.Cmd {
 		return err
 	}
 	cmd.WaitDelay = time.Second
-	return cmd
+	return cmd, nil
 }
 
 func runDiscoveryCommand(cmd *exec.Cmd) error {
@@ -85,21 +132,36 @@ func discover(ctx context.Context) (Status, error) {
 	if err != nil {
 		return Status{}, fmt.Errorf("execution group unavailable")
 	}
-	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
-	defer cancel()
-	row := protocol.RuntimeInstallation{RuntimeID: "opencode", Executable: Runtime, Availability: "unavailable", SupportsModel: true, SupportsThinking: false, ModelIDS: []string{}}
-	cmd := discoveryCommand(ctx, uint32(uid), uint32(gid))
+	rows := UnavailableRuntimes()
+	for i, row := range rows {
+		// Each installation receives its own bounded probe; an unavailable CLI
+		// cannot consume the other CLI's discovery deadline or suppress its fact.
+		probeCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+		cmd, commandErr := discoveryCommand(probeCtx, row.RuntimeID, uint32(uid), uint32(gid))
+		if commandErr != nil {
+			cancel()
+			return Status{}, commandErr
+		}
+		rows[i] = inspectRuntime(row, cmd)
+		cancel()
+	}
+	return Status{Runtimes: rows}, nil
+}
+
+func inspectRuntime(row protocol.RuntimeInstallation, cmd *exec.Cmd) protocol.RuntimeInstallation {
 	var output discoveryOutput
 	cmd.Stdout = &output
 	// Discard stderr: CLI diagnostics can expose provider configuration.
-	err = runDiscoveryCommand(cmd)
+	err := runDiscoveryCommand(cmd)
 	if errors.Is(err, os.ErrNotExist) {
 		row.Availability = "not_found"
 	}
-	version, valid := runtimeVersion(output.String())
+	version, valid := runtimeVersion(row.RuntimeID, output.String())
 	if err == nil && !output.exceeded && valid {
-		row.Availability = "detected"
 		row.Version = &version
+		if row.RuntimeID != "codex" || supportedCodexVersion(version) {
+			row.Availability = "detected"
+		}
 	}
-	return Status{Runtimes: []protocol.RuntimeInstallation{row}}, nil
+	return row
 }

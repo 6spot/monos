@@ -169,9 +169,9 @@ invent graph changes. Backend settlement uses existing Stop/completion effects.
 ## Installation discovery
 
 The constrained helper additionally accepts `{action:"discover",attempt_id:""}`
-with no dispatch/operation. `discovery.go` executes fixed OpenCode `--version` as
+with no dispatch/operation. `discovery.go` executes fixed OpenCode and Codex `--version` as
 `me` (non-root UID/GID), explicit home/PATH and no inherited service environment.
-Output is limited to 4096 bytes and a parsed semver (plain or the exact `opencode v` prefix emitted by v2); deadline is 10 seconds with
+Each installation has an independent 4096-byte output bound and 10-second deadline. OpenCode accepts plain semver or the exact `opencode v` prefix; Codex requires `codex-cli ` and a stable version at least 0.162.1. Older/unsupported Codex reports remain unavailable. Probes use
 process-group cancellation and a 1-second pipe wait. After any started command
 returns, settle its owned process group even on success; the existing settlement
 adds at most 3 seconds. Report `detected` only when that group is absent. This
@@ -184,6 +184,11 @@ facts in optional `ready.runtimes`. Missing older-client reports retain history;
 they cannot mark it current for a new incarnation. A detected version establishes
 neither coding-CLI login nor real tool/Stop acceptance. See the backend
 [infrastructure contract](../backend/infrastructure-configuration.md).
+
+Codex uses the fixed `/usr/local/bin/codex` installation, fresh noninteractive
+`exec`, stdin context and exact model/thinking. Both Adapters share durable output
+capture and the supervised Attempt lifecycle. See the supported settings and
+local-versus-native verification limits in the [Codex profile](../../../docs/research/codex-runtime-adapter.md).
 
 Wrong: treat missing cgroup as sufficient absence or acknowledge a failed query.
 Correct: validate the retained exit and kernel facts through the shared status

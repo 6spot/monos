@@ -100,7 +100,7 @@ func assertPlannerPermissions(t *testing.T, config string) {
 }
 
 func TestSelectedModelAppliesToPrimaryAndAuxiliaryAgents(t *testing.T) {
-	for _, model := range []protocol.Model{host.FreeModel, host.DeepSeekModel} {
+	for _, model := range []string{host.FreeModel, host.DeepSeekModel} {
 		t.Run(string(model), func(t *testing.T) {
 			d := protocol.Dispatch{Kind: protocol.Node, AttemptID: "a", Model: model}
 			cfg, err := Config(d)
@@ -231,7 +231,7 @@ func TestOwnerAuthorizedDeepSeekRunsNativelyWithoutCatalogOrFallback(t *testing.
 }
 
 func TestUnapprovedModelNeverReachesCatalogOrRun(t *testing.T) {
-	for _, model := range []protocol.Model{"", "opencode/mimo-v2.6-flash-free", "volcengine/other", host.DeepSeekModel + "-other"} {
+	for _, model := range []string{"", "opencode/mimo-v2.6-flash-free", "volcengine/other", host.DeepSeekModel + "-other"} {
 		d := protocol.Dispatch{RuntimeID: protocol.Opencode, Kind: protocol.Node, AttemptID: "invalid", Model: model}
 		if _, err := Config(d); err == nil {
 			t.Fatal("unapproved model configured", model)

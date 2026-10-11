@@ -20,10 +20,41 @@ const Helper = "/usr/local/libexec/monos-probe-launch"
 const Worker = "/usr/local/libexec/monos-probe-exec"
 const CLI = "/usr/local/bin/monos"
 const Runtime = "/home/linuxbrew/.linuxbrew/bin/opencode"
+const CodexRuntime = "/usr/local/bin/codex"
 const FreeModel = "opencode/longcat-2.5-preview-free"
 const DeepSeekModel = "volcengine/deepseek-v4-flash-ga-260731"
 
 func ApprovedModel(model string) bool { return model == FreeModel || model == DeepSeekModel }
+
+var modelPattern = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._/-]{0,159}$`)
+
+func ApprovedTarget(d protocol.Dispatch) bool {
+	switch d.RuntimeID {
+	case "opencode":
+		return ApprovedModel(string(d.Model)) && d.ThinkingLevel == nil
+	case "codex":
+		if !modelPattern.MatchString(string(d.Model)) {
+			return false
+		}
+		if d.ThinkingLevel == nil {
+			return true
+		}
+		switch string(*d.ThinkingLevel) {
+		case "none", "minimal", "low", "medium", "high", "xhigh":
+			return true
+		}
+	}
+	return false
+}
+
+// These fixed installation identities also describe discovery failures. A
+// failed helper must not turn an installed CLI into an omitted registry fact.
+func UnavailableRuntimes() []protocol.RuntimeInstallation {
+	return []protocol.RuntimeInstallation{
+		{RuntimeID: "opencode", Executable: Runtime, Availability: "unavailable", SupportsModel: true, SupportsThinking: false, ModelIDS: []string{}},
+		{RuntimeID: "codex", Executable: CodexRuntime, Availability: "unavailable", SupportsModel: true, SupportsThinking: true, ModelIDS: []string{}},
+	}
+}
 
 // Reserved worker exit status for a checked stdout/stderr write or sync failure.
 const CaptureFailureExitCode = 74
@@ -34,6 +65,36 @@ func ValidID(id string) bool       { return idPattern.MatchString(id) }
 func Unit(id string) string        { return "monos-probe-a-" + id + ".service" }
 func AttemptRoot(id string) string { return filepath.Join(Root, "execution", id) }
 func Path(id, name string) string  { return filepath.Join(AttemptRoot(id), name) }
+
+// RuntimePaths lists prepared execution-owned directories for native CLI path
+// grants. Runtime state is Attempt-local; only Node work receives repository
+// writes. Root/service-owned manifests, caches and workspace parents stay out.
+func RuntimePaths(d protocol.Dispatch) ([]string, error) {
+	if !ValidID(d.AttemptID) || (d.Kind != protocol.Node && d.Kind != "planner") {
+		return nil, fmt.Errorf("invalid runtime path scope")
+	}
+	paths := []string{}
+	for _, name := range executionDirectories(d) {
+		if d.Kind != protocol.Node && (name == "workspace" || name == "common") {
+			continue
+		}
+		paths = append(paths, Path(d.AttemptID, name))
+	}
+	if d.Kind != protocol.Node || d.WorkspaceReservations == nil {
+		return paths, nil
+	}
+	if d.TaskID == nil {
+		return nil, fmt.Errorf("workspace reservation requires Task")
+	}
+	for _, reservation := range d.WorkspaceReservations.Resources {
+		id, err := TaskWorkspaceID(*d.TaskID, reservation.ResourceID)
+		if err != nil || id != reservation.WorkspaceID {
+			return nil, fmt.Errorf("invalid workspace reservation")
+		}
+		paths = append(paths, TaskWorkspacePath(id, "worktree"), TaskWorkspacePath(id, "common"))
+	}
+	return paths, nil
+}
 
 type Request struct {
 	Action              string                                 `json:"action"`

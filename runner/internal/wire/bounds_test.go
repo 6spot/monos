@@ -8,7 +8,7 @@ import (
 )
 
 func TestUnicodeDispatchReservesEncodedFrameOverhead(t *testing.T) {
-	d := protocol.Dispatch{AttemptID: "a", DispatchID: "d", RunnerID: "r", TaskID: ptr("t"), Kind: protocol.Node, ResourceID: ptr("repo"), RuntimeID: protocol.Opencode, Model: protocol.OpencodeMIMOV26FlashFree}
+	d := protocol.Dispatch{AttemptID: "a", DispatchID: "d", RunnerID: "r", TaskID: ptr("t"), Kind: protocol.Node, ResourceID: ptr("repo"), RuntimeID: protocol.Opencode, Model: "opencode/mimo-v2.6-flash-free"}
 	base, err := json.Marshal(d)
 	if err != nil {
 		t.Fatal(err)

@@ -462,7 +462,7 @@ export interface Dispatch {
     fencing_generation:        number;
     kind:                      DispatchKind;
     log_mode?:                 LogModeElement;
-    model:                     Model;
+    model:                     string;
     mutation_allowed:          boolean;
     node_activation:           number;
     node_execution_source?:    NodeExecutionSource;
@@ -481,6 +481,7 @@ export interface Dispatch {
     task_planning_source?:     TaskPlanningSource;
     task_replan_source?:       TaskReplanSource;
     task_review_source?:       TaskReviewSource;
+    thinking_level?:           ThinkingLevel;
     todo_id?:                  string;
     workspace_reservations?:   WorkspaceReservations;
 }
@@ -488,8 +489,6 @@ export interface Dispatch {
 export type DispatchKind = "node" | "planner";
 
 export type LogModeElement = "ordered_v1";
-
-export type Model = "opencode/mimo-v2.6-flash-free" | "opencode/longcat-2.5-preview-free" | "volcengine/deepseek-v4-flash-ga-260731";
 
 export interface NodeExecutionSource {
     context_digest:   string;
@@ -501,7 +500,7 @@ export interface NodeExecutionSource {
     specification_id: string;
 }
 
-export type RuntimeID = "opencode";
+export type RuntimeID = "opencode" | "codex";
 
 export interface TaskConversationSource {
     context_digest:       string;
@@ -543,6 +542,8 @@ export interface TaskReviewSource {
 }
 
 export type TaskReviewSourcePurpose = "route_feedback" | "reconsider_input";
+
+export type ThinkingLevel = "none" | "minimal" | "low" | "medium" | "high" | "xhigh";
 
 export interface WorkspaceReservations {
     configuration_version: number;

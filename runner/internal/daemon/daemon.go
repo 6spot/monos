@@ -43,7 +43,7 @@ type Daemon struct {
 func (d *Daemon) InstalledRuntimes(ctx context.Context) []protocol.RuntimeInstallation {
 	status, err := d.Host.Call(ctx, host.Request{Action: "discover"})
 	if err != nil {
-		return []protocol.RuntimeInstallation{{RuntimeID: "opencode", Executable: host.Runtime, Availability: "unavailable", SupportsModel: true, SupportsThinking: false, ModelIDS: []string{}}}
+		return host.UnavailableRuntimes()
 	}
 	return status.Runtimes
 }

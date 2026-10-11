@@ -20,6 +20,7 @@ const waitingReasons: Record<string, string> = {
   installation_stale: 'Waiting for the execution machine to report its coding tools. Check its connection if this request stays queued.',
   installation_unavailable: 'The selected coding tool is unavailable. Check its installation or choose another in Execution settings.',
   model_control_unavailable: 'The coding tool cannot select the configured model. Update the tool or choose a supported tool in Execution settings.',
+  thinking_control_unavailable: 'The coding tool cannot select the configured reasoning level. Update the tool or remove that setting in Execution settings.',
   unsupported_runtime: 'The configured coding tool is not supported. Choose a supported tool in Execution settings.',
   unsupported_model: 'The configured model is not supported. Choose a supported model in Execution settings.',
   unsupported_thinking: 'The configured reasoning setting is not supported. Remove it in Execution settings.',

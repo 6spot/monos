@@ -432,7 +432,7 @@ type Dispatch struct {
 	FencingGeneration      int64                   `json:"fencing_generation"`
 	Kind                   DispatchKind            `json:"kind"`
 	LogMode                *LogModeElement         `json:"log_mode,omitempty"`
-	Model                  Model                   `json:"model"`
+	Model                  string                  `json:"model"`
 	MutationAllowed        bool                    `json:"mutation_allowed"`
 	NodeActivation         int64                   `json:"node_activation"`
 	NodeExecutionSource    *NodeExecutionSource    `json:"node_execution_source,omitempty"`
@@ -451,6 +451,7 @@ type Dispatch struct {
 	TaskPlanningSource     *TaskPlanningSource     `json:"task_planning_source,omitempty"`
 	TaskReplanSource       *TaskReplanSource       `json:"task_replan_source,omitempty"`
 	TaskReviewSource       *TaskReviewSource       `json:"task_review_source,omitempty"`
+	ThinkingLevel          *ThinkingLevel          `json:"thinking_level,omitempty"`
 	TodoID                 *string                 `json:"todo_id,omitempty"`
 	WorkspaceReservations  *WorkspaceReservations  `json:"workspace_reservations,omitempty"`
 }
@@ -3359,17 +3360,10 @@ const (
 	PurpleOrderedV1 LogModeElement = "ordered_v1"
 )
 
-type Model string
-
-const (
-	OpencodeLongcat25PreviewFree      Model = "opencode/longcat-2.5-preview-free"
-	OpencodeMIMOV26FlashFree          Model = "opencode/mimo-v2.6-flash-free"
-	VolcengineDeepseekV4FlashGa260731 Model = "volcengine/deepseek-v4-flash-ga-260731"
-)
-
 type RuntimeID string
 
 const (
+	Codex    RuntimeID = "codex"
 	Opencode RuntimeID = "opencode"
 )
 
@@ -3378,6 +3372,17 @@ type TaskReviewSourcePurpose string
 const (
 	ReconsiderInput TaskReviewSourcePurpose = "reconsider_input"
 	RouteFeedback   TaskReviewSourcePurpose = "route_feedback"
+)
+
+type ThinkingLevel string
+
+const (
+	High              ThinkingLevel = "high"
+	Low               ThinkingLevel = "low"
+	Medium            ThinkingLevel = "medium"
+	Minimal           ThinkingLevel = "minimal"
+	ThinkingLevelNone ThinkingLevel = "none"
+	Xhigh             ThinkingLevel = "xhigh"
 )
 
 type RuntimeEventKind string
@@ -4442,11 +4447,11 @@ type Reconciliation string
 
 const (
 	ExternallyMerged        Reconciliation = "externally_merged"
-	None                    Reconciliation = "none"
 	NotNeeded               Reconciliation = "not_needed"
 	PendingClose            Reconciliation = "pending_close"
 	ReconciliationAttention Reconciliation = "attention"
 	ReconciliationClosed    Reconciliation = "closed"
+	ReconciliationNone      Reconciliation = "none"
 	WaitingOriginalMerge    Reconciliation = "waiting_original_merge"
 	WaitingPreparation      Reconciliation = "waiting_preparation"
 )

@@ -13,7 +13,7 @@ const snapshotA = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 const snapshotB = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
 
 func inventoryDispatch() protocol.Dispatch {
-	return protocol.Dispatch{AttemptID: "a", DispatchID: "d", RunnerID: "runner", TaskID: ptr("t"), Kind: protocol.Node, ResourceID: ptr("repo"), RuntimeID: protocol.Opencode, Model: protocol.OpencodeMIMOV26FlashFree, Prompt: "hello", MutationAllowed: true}
+	return protocol.Dispatch{AttemptID: "a", DispatchID: "d", RunnerID: "runner", TaskID: ptr("t"), Kind: protocol.Node, ResourceID: ptr("repo"), RuntimeID: protocol.Opencode, Model: "opencode/mimo-v2.6-flash-free", Prompt: "hello", MutationAllowed: true}
 }
 func inventoryClient(t *testing.T, handler http.HandlerFunc) *Client {
 	t.Helper()
