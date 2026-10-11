@@ -2,6 +2,59 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://monos.invalid/protocol/v1",
   "definitions": {
+    "RunnerEnrollmentIssue": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": { "type": "integer", "const": 1 },
+        "capacity": { "type": "integer", "minimum": 1, "maximum": 32 },
+        "ttl_seconds": { "type": "integer", "minimum": 60, "maximum": 3600 }
+      },
+      "required": ["schema_version", "capacity", "ttl_seconds"]
+    },
+    "RunnerEnrollmentGrant": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": { "type": "integer", "const": 1 },
+        "enrollment_id": { "$ref": "#/definitions/Id" },
+        "enrollment_token": { "type": "string", "minLength": 43, "maxLength": 43, "pattern": "^[A-Za-z0-9_-]{43}$" },
+        "expires_at": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}Z$", "maxLength": 24 },
+        "capacity": { "type": "integer", "minimum": 1, "maximum": 32 }
+      },
+      "required": ["schema_version", "enrollment_id", "enrollment_token", "expires_at", "capacity"]
+    },
+    "RunnerEnrollmentRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": { "type": "integer", "const": 1 },
+        "request_id": { "$ref": "#/definitions/Id" },
+        "enrollment_token": { "type": "string", "minLength": 43, "maxLength": 43, "pattern": "^[A-Za-z0-9_-]{43}$" },
+        "credential": { "type": "string", "minLength": 43, "maxLength": 43, "pattern": "^[A-Za-z0-9_-]{43}$" }
+      },
+      "required": ["schema_version", "request_id", "enrollment_token", "credential"]
+    },
+    "RunnerEnrollmentResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": { "type": "integer", "const": 1 },
+        "request_id": { "$ref": "#/definitions/Id" },
+        "runner_id": { "$ref": "#/definitions/Id" }
+      },
+      "required": ["schema_version", "request_id", "runner_id"]
+    },
+    "RunnerCredential": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": { "type": "integer", "const": 1 },
+        "runner_id": { "$ref": "#/definitions/Id" },
+        "credential": { "type": "string", "minLength": 43, "maxLength": 43, "pattern": "^[A-Za-z0-9_-]{43}$" }
+      },
+      "required": ["schema_version", "runner_id", "credential"]
+    },
     "Id": {
       "type": "string",
       "minLength": 1,

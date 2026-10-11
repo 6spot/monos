@@ -24,6 +24,10 @@ sh infra/runner/bootstrap.sh /tmp/monos-probe-binaries
 
 Main-session host preparation must provision these files privately:
 
+For a fresh production Runner, use the [one-use enrollment recipe](enrollment.md)
+to generate and store its identity. The explicit ID/raw-token example below is
+the current boundary-probe provisioning form.
+
 - `/etc/monos-probe/runner-token`: Runner credential matching the backend;
   mode `0640`, owner `root`, group `monos-probe-read` is **not sufficient**,
   because `me` belongs to that read group. Use owner `monos-probe`, mode `0600`.

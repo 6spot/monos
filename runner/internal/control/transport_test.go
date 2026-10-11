@@ -89,8 +89,12 @@ func TestTransportRejectsNonOriginEndpoints(t *testing.T) {
 }
 
 func TestConfiguredRunnerRejectsUnreadableOrInvalidCA(t *testing.T) {
+	dir, err := filepath.EvalSymlinks(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
 	for _, ca := range []string{"", "not a certificate"} {
-		path := filepath.Join(t.TempDir(), "ca.pem")
+		path := filepath.Join(dir, "ca.pem")
 		if err := os.WriteFile(path, []byte(ca), 0600); err != nil {
 			t.Fatal(err)
 		}
@@ -100,7 +104,7 @@ func TestConfiguredRunnerRejectsUnreadableOrInvalidCA(t *testing.T) {
 			}
 		}
 	}
-	if _, err := New(Config{Endpoint: "https://backend", CAFile: filepath.Join(t.TempDir(), "missing")}); !os.IsNotExist(err) {
+	if _, err := New(Config{Endpoint: "https://backend", CAFile: filepath.Join(dir, "missing")}); !os.IsNotExist(err) {
 		t.Fatalf("unreadable explicit CA did not fail: %v", err)
 	}
 }

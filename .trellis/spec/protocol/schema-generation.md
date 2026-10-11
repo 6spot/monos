@@ -90,6 +90,15 @@ plain members forbid PR/check/merge fields. Final progress distinguishes
 these differences in TS and Go. Retained authority, credential scope, current
 connection and actual absence still require trusted consumer checks.
 
+Runner enrollment uses separate strict issue/grant/request/response contracts and
+a private `RunnerCredential` file contract, each bounded to 4 KiB. Safe redemption
+responses contain only schema version, request ID and Runner ID; raw tokens belong
+only in the private grant/request/credential boundaries. Shared
+[enrollment fixtures](../../../packages/protocol/fixtures/runner-enrollment.json)
+reject caller-selected Runner identity/capacity and secret fields in responses.
+Database consumers still enforce expiry, one-use authority and exact replay;
+Runner consumers enforce random generation, file permissions and durable install.
+
 | Condition | Result |
 | --- | --- |
 | Unsupported schema version | Reject before dispatch/admission |

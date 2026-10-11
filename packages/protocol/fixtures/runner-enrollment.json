@@ -1,0 +1,257 @@
+{
+  "issue": {
+    "schema_version": 1,
+    "capacity": 2,
+    "ttl_seconds": 900
+  },
+  "grant": {
+    "schema_version": 1,
+    "enrollment_id": "enroll-1",
+    "enrollment_token": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "expires_at": "2026-10-11T12:00:00.000Z",
+    "capacity": 2
+  },
+  "request": {
+    "schema_version": 1,
+    "request_id": "request-1",
+    "enrollment_token": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "credential": "ccccccccccccccccccccccccccccccccccccccccccc"
+  },
+  "response": {
+    "schema_version": 1,
+    "request_id": "request-1",
+    "runner_id": "runner-1"
+  },
+  "identity": {
+    "schema_version": 1,
+    "runner_id": "runner-1",
+    "credential": "ccccccccccccccccccccccccccccccccccccccccccc"
+  },
+  "cases": [
+    {
+      "name": "RunnerEnrollmentIssue valid",
+      "schema": "RunnerEnrollmentIssue",
+      "valid": true,
+      "value": {
+        "schema_version": 1,
+        "capacity": 2,
+        "ttl_seconds": 900
+      }
+    },
+    {
+      "name": "RunnerEnrollmentGrant valid",
+      "schema": "RunnerEnrollmentGrant",
+      "valid": true,
+      "value": {
+        "schema_version": 1,
+        "enrollment_id": "enroll-1",
+        "enrollment_token": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "expires_at": "2026-10-11T12:00:00.000Z",
+        "capacity": 2
+      }
+    },
+    {
+      "name": "RunnerEnrollmentRequest valid",
+      "schema": "RunnerEnrollmentRequest",
+      "valid": true,
+      "value": {
+        "schema_version": 1,
+        "request_id": "request-1",
+        "enrollment_token": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "credential": "ccccccccccccccccccccccccccccccccccccccccccc"
+      }
+    },
+    {
+      "name": "RunnerEnrollmentResponse valid",
+      "schema": "RunnerEnrollmentResponse",
+      "valid": true,
+      "value": {
+        "schema_version": 1,
+        "request_id": "request-1",
+        "runner_id": "runner-1"
+      }
+    },
+    {
+      "name": "RunnerCredential valid",
+      "schema": "RunnerCredential",
+      "valid": true,
+      "value": {
+        "schema_version": 1,
+        "runner_id": "runner-1",
+        "credential": "ccccccccccccccccccccccccccccccccccccccccccc"
+      }
+    },
+    {
+      "name": "unsupported version",
+      "schema": "RunnerEnrollmentRequest",
+      "valid": false,
+      "value": {
+        "schema_version": 2,
+        "request_id": "request-1",
+        "enrollment_token": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "credential": "ccccccccccccccccccccccccccccccccccccccccccc"
+      }
+    },
+    {
+      "name": "missing credential",
+      "schema": "RunnerEnrollmentRequest",
+      "valid": false,
+      "value": {
+        "schema_version": 1,
+        "request_id": "request-1",
+        "enrollment_token": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+      }
+    },
+    {
+      "name": "caller-supplied Runner identity",
+      "schema": "RunnerEnrollmentRequest",
+      "valid": false,
+      "value": {
+        "schema_version": 1,
+        "request_id": "request-1",
+        "enrollment_token": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "credential": "ccccccccccccccccccccccccccccccccccccccccccc",
+        "runner_id": "existing-runner"
+      }
+    },
+    {
+      "name": "caller-supplied capacity",
+      "schema": "RunnerEnrollmentRequest",
+      "valid": false,
+      "value": {
+        "schema_version": 1,
+        "request_id": "request-1",
+        "enrollment_token": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "credential": "ccccccccccccccccccccccccccccccccccccccccccc",
+        "capacity": 32
+      }
+    },
+    {
+      "name": "unsafe secret characters",
+      "schema": "RunnerEnrollmentRequest",
+      "valid": false,
+      "value": {
+        "schema_version": 1,
+        "request_id": "request-1",
+        "enrollment_token": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "credential": "cccccccccccccccccccccccccccccccccccccccccc\n"
+      }
+    },
+    {
+      "name": "short enrollment secret",
+      "schema": "RunnerEnrollmentRequest",
+      "valid": false,
+      "value": {
+        "schema_version": 1,
+        "request_id": "request-1",
+        "enrollment_token": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "credential": "ccccccccccccccccccccccccccccccccccccccccccc"
+      }
+    },
+    {
+      "name": "capacity zero",
+      "schema": "RunnerEnrollmentIssue",
+      "valid": false,
+      "value": {
+        "schema_version": 1,
+        "capacity": 0,
+        "ttl_seconds": 900
+      }
+    },
+    {
+      "name": "capacity overflow",
+      "schema": "RunnerEnrollmentIssue",
+      "valid": false,
+      "value": {
+        "schema_version": 1,
+        "capacity": 33,
+        "ttl_seconds": 900
+      }
+    },
+    {
+      "name": "fractional TTL",
+      "schema": "RunnerEnrollmentIssue",
+      "valid": false,
+      "value": {
+        "schema_version": 1,
+        "capacity": 2,
+        "ttl_seconds": 90.1
+      }
+    },
+    {
+      "name": "excess TTL",
+      "schema": "RunnerEnrollmentIssue",
+      "valid": false,
+      "value": {
+        "schema_version": 1,
+        "capacity": 2,
+        "ttl_seconds": 3601
+      }
+    },
+    {
+      "name": "short TTL",
+      "schema": "RunnerEnrollmentIssue",
+      "valid": false,
+      "value": {
+        "schema_version": 1,
+        "capacity": 2,
+        "ttl_seconds": 59
+      }
+    },
+    {
+      "name": "grant leaks long-lived secret",
+      "schema": "RunnerEnrollmentGrant",
+      "valid": false,
+      "value": {
+        "schema_version": 1,
+        "enrollment_id": "enroll-1",
+        "enrollment_token": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "expires_at": "2026-10-11T12:00:00.000Z",
+        "capacity": 2,
+        "credential": "ccccccccccccccccccccccccccccccccccccccccccc"
+      }
+    },
+    {
+      "name": "response leaks enrollment token",
+      "schema": "RunnerEnrollmentResponse",
+      "valid": false,
+      "value": {
+        "schema_version": 1,
+        "request_id": "request-1",
+        "runner_id": "runner-1",
+        "enrollment_token": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+      }
+    },
+    {
+      "name": "response leaks credential",
+      "schema": "RunnerEnrollmentResponse",
+      "valid": false,
+      "value": {
+        "schema_version": 1,
+        "request_id": "request-1",
+        "runner_id": "runner-1",
+        "credential": "ccccccccccccccccccccccccccccccccccccccccccc"
+      }
+    },
+    {
+      "name": "identity leaks enrollment token",
+      "schema": "RunnerCredential",
+      "valid": false,
+      "value": {
+        "schema_version": 1,
+        "runner_id": "runner-1",
+        "credential": "ccccccccccccccccccccccccccccccccccccccccccc",
+        "enrollment_token": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+      }
+    },
+    {
+      "name": "identity missing Runner",
+      "schema": "RunnerCredential",
+      "valid": false,
+      "value": {
+        "schema_version": 1,
+        "credential": "ccccccccccccccccccccccccccccccccccccccccccc"
+      }
+    }
+  ]
+}

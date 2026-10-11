@@ -34,6 +34,9 @@ func reviewContract(name string) bool {
 }
 
 func Validate(name string, raw []byte) error {
+	if (strings.HasPrefix(name, "RunnerEnrollment") || name == "RunnerCredential") && len(raw) > 4096 {
+		return fmt.Errorf("Runner enrollment exceeds limit")
+	}
 	if name == "PublicationPushRequest" && len(raw) > PublicationPushLimit {
 		return fmt.Errorf("publication push exceeds reserved framing limit")
 	}

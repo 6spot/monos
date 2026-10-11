@@ -118,3 +118,22 @@ renewal and replay, missing/foreign receipt rejection, clear/removal denial and
 anonymous independence from global GitHub configuration. These are local database
 and crypto checks, not evidence of native Runner permissions or real Git service
 authentication and write access.
+
+## Local Runner enrollment
+
+[runner-enrollment.ts](../../../apps/server/src/runner-enrollment.ts) owns one-use
+grants and exact redemption; [migration 35](../../../packages/db/migrations/0035_runner_enrollment.sql)
+stores hashes and immutable consumed request bindings. The local administrative
+entrypoint issues capacity 1–32, lifetime 60–3600 seconds and a random 32-byte
+token. It intentionally prints the grant only to its administrator. Never expose
+an unauthenticated minting route or copy the grant into ordinary logs.
+
+`POST /v1/runner/enroll` is a bounded capability-authenticated exchange, with no
+Owner cookie or pre-existing Runner credential requirement. Lock the token row,
+retain exact consumed replay before checking unused expiry, and consume with the
+database clock after lock acquisition. Create a new offline Runner and receipt
+in one transaction; request IDs/credentials cannot substitute another identity or
+capacity. Store no raw secrets in PostgreSQL. Exact replay returns only the old
+request/Runner IDs and never restores a later changed credential or releases
+execution ownership. See [enrollment design](../../../docs/research/runner-enrollment.md)
+and [installation recipe](../../../infra/runner/enrollment.md).

@@ -29,6 +29,39 @@ type DeliveryRef = string;
 
 type CompletionOutcome = string;
 
+export interface RunnerEnrollmentIssue {
+    capacity:       number;
+    schema_version: number;
+    ttl_seconds:    number;
+}
+
+export interface RunnerEnrollmentGrant {
+    capacity:         number;
+    enrollment_id:    string;
+    enrollment_token: string;
+    expires_at:       string;
+    schema_version:   number;
+}
+
+export interface RunnerEnrollmentRequest {
+    credential:       string;
+    enrollment_token: string;
+    request_id:       string;
+    schema_version:   number;
+}
+
+export interface RunnerEnrollmentResponse {
+    request_id:     string;
+    runner_id:      string;
+    schema_version: number;
+}
+
+export interface RunnerCredential {
+    credential:     string;
+    runner_id:      string;
+    schema_version: number;
+}
+
 export interface CommandEnvelope {
     expected_control_version: number;
     name:                     CommandEnvelopeName;

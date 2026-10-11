@@ -33,6 +33,39 @@ type ReworkActivationMap []NodeReworkActivation
 
 type CompletionOutcome string
 
+type RunnerEnrollmentIssue struct {
+	Capacity      int64 `json:"capacity"`
+	SchemaVersion int64 `json:"schema_version"`
+	TTLSeconds    int64 `json:"ttl_seconds"`
+}
+
+type RunnerEnrollmentGrant struct {
+	Capacity        int64  `json:"capacity"`
+	EnrollmentID    string `json:"enrollment_id"`
+	EnrollmentToken string `json:"enrollment_token"`
+	ExpiresAt       string `json:"expires_at"`
+	SchemaVersion   int64  `json:"schema_version"`
+}
+
+type RunnerEnrollmentRequest struct {
+	Credential      string `json:"credential"`
+	EnrollmentToken string `json:"enrollment_token"`
+	RequestID       string `json:"request_id"`
+	SchemaVersion   int64  `json:"schema_version"`
+}
+
+type RunnerEnrollmentResponse struct {
+	RequestID     string `json:"request_id"`
+	RunnerID      string `json:"runner_id"`
+	SchemaVersion int64  `json:"schema_version"`
+}
+
+type RunnerCredential struct {
+	Credential    string `json:"credential"`
+	RunnerID      string `json:"runner_id"`
+	SchemaVersion int64  `json:"schema_version"`
+}
+
 type CommandEnvelope struct {
 	ExpectedControlVersion int64               `json:"expected_control_version"`
 	Name                   CommandEnvelopeName `json:"name"`

@@ -19,6 +19,7 @@ import (
 
 	"github.com/coder/websocket"
 	protocol "monos.local/protocol"
+	"monos.local/runner/internal/enrollment/storage"
 	"monos.local/runner/internal/wire"
 )
 
@@ -48,6 +49,24 @@ func (e *HTTPError) Error() string { return fmt.Sprintf("Runner read denied: HTT
 
 var errSnapshotChanged = errors.New("inventory snapshot changed")
 
+// ReadConfig permits root-managed settings but rejects writable or aliased files.
+func ReadConfig(path string) (Config, []byte, error) {
+	var config Config
+	raw, err := storage.Read(path, 16384, false)
+	if err != nil {
+		return config, nil, fmt.Errorf("Runner configuration unavailable or unsafe")
+	}
+	if _, _, err = wire.CanonicalRaw(raw); err != nil {
+		return config, nil, fmt.Errorf("invalid Runner configuration")
+	}
+	decoder := json.NewDecoder(bytes.NewReader(raw))
+	decoder.DisallowUnknownFields()
+	if err = decoder.Decode(&config); err != nil {
+		return config, nil, fmt.Errorf("invalid Runner configuration")
+	}
+	return config, raw, nil
+}
+
 func New(c Config) (*Client, error) {
 	if _, err := backendOrigin(c.Endpoint); err != nil {
 		return nil, err
@@ -55,7 +74,11 @@ func New(c Config) (*Client, error) {
 	var ca []byte
 	var err error
 	if c.CAFile != "" {
-		ca, err = os.ReadFile(c.CAFile)
+		if c.RunnerID == "" {
+			ca, err = storage.Read(c.CAFile, 1024*1024, false)
+		} else {
+			ca, err = os.ReadFile(c.CAFile)
+		}
 		if err != nil {
 			return nil, err
 		}
@@ -63,6 +86,18 @@ func New(c Config) (*Client, error) {
 	client, err := NewHTTPClient(c.Endpoint, ca)
 	if err != nil {
 		return nil, err
+	}
+	if c.RunnerID == "" {
+		raw, err := storage.Read(c.TokenFile, 4096, true)
+		if err != nil {
+			return nil, fmt.Errorf("Runner identity unavailable or unsafe")
+		}
+		var identity protocol.RunnerCredential
+		if err = wire.Decode("RunnerCredential", raw, &identity); err != nil {
+			return nil, fmt.Errorf("invalid Runner identity")
+		}
+		c.RunnerID = identity.RunnerID
+		return &Client{Config: c, HTTP: client, token: identity.Credential, pending: map[string]chan protocol.Frame{}}, nil
 	}
 	token, err := os.ReadFile(c.TokenFile)
 	if err != nil {

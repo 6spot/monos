@@ -44,6 +44,7 @@ import { TaskPreviews } from './task-previews.ts';
 import { GitHub } from './github.ts';
 import fastifyStatic from '@fastify/static';
 import { join } from 'node:path';
+import { redeemRunnerEnrollment } from './runner-enrollment.ts';
 
 function bearer(request: { headers: { authorization?: string } }): string {
   const match = /^Bearer ([^\s]+)$/.exec(request.headers.authorization ?? '');
@@ -89,7 +90,8 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
     if (code === 'rate_limited') void reply.header('Retry-After', error instanceof RemoteProviderWaiting ? String(error.retry_after_seconds) : '60');
     void reply.code(code === 'unauthorized' ? 401 : code === 'denied_scope' ? 403 : code === 'rate_limited' ? 429 : code === 'internal_error' ? 500 : 409).send(result);
   });
-  app.addHook('onRequest', async (request, reply) => { if (request.url.startsWith('/v1/owner/')) {void reply.header('Cache-Control', 'no-store');if(request.url.includes('/remote-preparation')||request.url.includes('/delivery')||request.url.includes('/review'))void reply.header('X-Content-Type-Options','nosniff');} });
+  app.addHook('onRequest', async (request, reply) => { if (request.url.startsWith('/v1/owner/') || request.url.split('?')[0] === '/v1/runner/enroll') {void reply.header('Cache-Control', 'no-store');if(request.url.includes('/remote-preparation')||request.url.includes('/delivery')||request.url.includes('/review')||request.url.split('?')[0] === '/v1/runner/enroll')void reply.header('X-Content-Type-Options','nosniff');} });
+  app.post('/v1/runner/enroll', { bodyLimit: 4096 }, async request => redeemRunnerEnrollment(service.db, request.body));
   app.get('/health', async () => { await service.db.pool.query('SELECT 1'); return { schema_version: 1, database: 'ready', probe: true }; });
   const resultReads = new ResultReadBroker();
   const refReads = options.refReads ?? new PublicationRefReadBroker();

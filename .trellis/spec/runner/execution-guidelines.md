@@ -245,6 +245,19 @@ invent graph changes. Backend settlement uses existing Stop/completion effects.
 
 ## Installation discovery
 
+Runner enrollment precedes discovery on a fresh host. The
+[enrollment command](../../../infra/runner/enrollment.md) persists its exact
+request and randomly generated credential in a separate service-private file
+before HTTP; never use the general execution journal for enrollment secrets.
+Configuration with an empty `runner_id` resolves the strict `RunnerCredential`
+at `token_file` before opening the journal. Ordinary restart retains this ID.
+Fresh enrollment rejects existing identity/journal/WAL/SHM state. Exact pending
+recovery uses the same configuration/CA binding and one no-replace, fsynced
+identity-file publication; it never clears execution ownership or replaces an
+existing identity. Private regular-file ownership and safe ancestor checks apply
+to pending, lock, staging and final identity paths. An interrupted hardlink
+publication may recover only its exact pending-owned staging inode/content.
+
 The constrained helper additionally accepts `{action:"discover",attempt_id:""}`
 with no dispatch/operation. `discovery.go` executes fixed OpenCode and Codex `--version` as
 `me` (non-root UID/GID), explicit home/PATH and no inherited service environment.
