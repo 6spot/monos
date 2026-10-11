@@ -38,13 +38,13 @@ Feasibility gates → Stage A product loop → Stage B capabilities → single-h
 - [Stage B: Remaining V1 execution capabilities](../09-28-stage-b-v1-capabilities/prd.md)
   - [Second Runtime and ordered fallback](../09-28-b-runtime-fallback/prd.md)
     - Decompose after upstream evidence; this package is not an implementation leaf.
-  - [Serial Nodes and Rework invalidation](../09-28-b-serial-graphs/prd.md)
+  - [Serial Nodes and Rework invalidation](../archive/2026-10/09-28-b-serial-graphs/prd.md)
     - Decompose after upstream evidence; this package is not an implementation leaf.
-  - [Planner inspection and multi-Node Replan](../09-28-b-planner-replan/prd.md)
+  - [Planner inspection and multi-Node Replan](../archive/2026-10/09-28-b-planner-replan/prd.md)
     - Decompose after upstream evidence; this package is not an implementation leaf.
-  - [Parallel Nodes and worktree integration](../09-28-b-parallel-workspaces/prd.md)
+  - [Parallel Nodes and worktree integration](../archive/2026-10/09-28-b-parallel-workspaces/prd.md)
     - Decompose after upstream evidence; this package is not an implementation leaf.
-  - [Multiple repositories and delivery modes](../09-28-b-delivery-modes/prd.md)
+  - [Multiple repositories and delivery modes](../archive/2026-10/09-28-b-delivery-modes/prd.md)
     - Decompose after upstream evidence; this package is not an implementation leaf.
 - [V1: Single-host release](../09-28-stage-v1-release/prd.md)
   - [Installation, settings and operations](../09-28-v1-install-operations/prd.md)

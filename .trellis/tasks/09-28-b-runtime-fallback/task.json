@@ -3,7 +3,7 @@
   "name": "b-runtime-fallback",
   "title": "Second Runtime and ordered fallback",
   "description": "Continue the same Node/workspace using a second supported installed CLI and ordered fallback.",
-  "status": "planning",
+  "status": "in_progress",
   "dev_type": null,
   "scope": null,
   "package": null,
@@ -12,18 +12,20 @@
   "assignee": "me",
   "createdAt": "2026-09-28",
   "completedAt": null,
-  "branch": null,
+  "branch": "feat/stage-a-boundary-probe",
   "base_branch": "main",
   "worktree_path": null,
-  "commit": null,
+  "commit": "499cf78",
   "pr_url": null,
   "subtasks": [],
   "children": [],
   "parent": "09-28-stage-b-v1-capabilities",
   "relatedFiles": [],
-  "notes": "",
+  "notes": "OpenCode/Codex adapters, ordered selection/continuation and same-workspace reconciliation are implemented in 0bbbfec, 874647a and 4cdfbd6. Actual supported two-CLI installation acceptance remains deferred. The Owner authorized feature-first development, commits/push and completed archives; no native acceptance is claimed. See docs/research/v1-functional-completion.md.",
   "meta": {
     "roadmap_level": "work-package",
-    "planning_maturity": "backlog"
+    "planning_maturity": "implemented",
+    "functional_status": "complete",
+    "native_acceptance": "deferred"
   }
 }

@@ -66,6 +66,6 @@ Use focused checks for changed authority, persistence and process boundaries, th
 one integrated build/type/lint/protocol gate. Retain earlier passing evidence for
 unchanged behavior. Native CLI/provider, two-account permissions, host reboot and
 full release-matrix acceptance are deferred at the Owner's request. The four
-completed Stage B functional packages can be archived; Stage A integration,
+completed Stage B functional packages were archived under `.trellis/tasks/archive/2026-10/`; Stage A integration,
 actual two-CLI fallback acceptance, installation host acceptance and the V1 release
 parents remain open with their native evidence requirements.

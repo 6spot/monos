@@ -3,7 +3,7 @@
   "name": "v1-install-operations",
   "title": "Installation, settings and operations",
   "description": "Complete first-run bootstrap, settings, durable result access and single-host operations.",
-  "status": "planning",
+  "status": "in_progress",
   "dev_type": null,
   "scope": null,
   "package": null,
@@ -12,18 +12,20 @@
   "assignee": "me",
   "createdAt": "2026-09-28",
   "completedAt": null,
-  "branch": null,
+  "branch": "feat/stage-a-boundary-probe",
   "base_branch": "main",
   "worktree_path": null,
-  "commit": null,
+  "commit": "499cf78",
   "pr_url": null,
   "subtasks": [],
   "children": [],
   "parent": "09-28-stage-v1-release",
   "relatedFiles": [],
-  "notes": "",
+  "notes": "First-install commands, settings/recovery UI, enrollment/rotation, resource guards and retention are implemented through 499cf78. Real Docker/systemd/account/reboot and final installed visual acceptance remain deferred. The Owner authorized feature-first development, commits/push and completed archives; no native acceptance is claimed. See docs/research/v1-functional-completion.md.",
   "meta": {
     "roadmap_level": "work-package",
-    "planning_maturity": "backlog"
+    "planning_maturity": "implemented",
+    "functional_status": "complete",
+    "native_acceptance": "deferred"
   }
 }

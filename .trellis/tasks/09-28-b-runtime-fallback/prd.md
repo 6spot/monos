@@ -4,15 +4,18 @@
 
 Continue the same Node/workspace using a second supported installed CLI and ordered fallback.
 
-## Planning status
+## Current status
 
-Roadmap level: **work-package**. Status: **planning / backlog**, not implementation-ready. The Owner approved the three-level roadmap structure on 2026-09-28. This PRD records scope and acceptance, not approval to start implementation.
+Functional development is complete through `499cf78` (2026-10-11). OpenCode/Codex adapters, ordered selection/continuation and same-workspace reconciliation are implemented in 0bbbfec, 874647a and 4cdfbd6. Actual supported two-CLI installation acceptance remains deferred.
+
+The task stays open for that acceptance. Local passing checks and prior evidence
+are recorded in the [functional completion record](../../../docs/research/v1-functional-completion.md).
 
 ## Background and scope
 
 Continue the same Node/workspace using a second supported installed CLI and ordered fallback.
 
-Architecture modules remain authoritative. The existing boundary probe implements Stage A step 0 only; its local/host evidence does not establish the full Stage A or V1 gate. Reuse its code and tests after reviewing actual results instead of recreating the probe.
+Architecture modules remain authoritative. Functional code is implemented and pushed; the remaining gates concern actual installed host/CLI/provider/reboot acceptance deferred by the Owner.
 
 ## Dependencies and order
 
@@ -22,7 +25,7 @@ These are completion/evidence gates, not automatic scheduler dependencies. Paren
 
 ## Child tasks
 
-Child decomposition is deferred until upstream evidence is available. Before implementation, split this package into independently verifiable behavior slices; do not start the entire package as one implementation task.
+Implementation and focused verification are recorded in the functional completion record. No new implementation task or session journal was created.
 
 ## Acceptance criteria
 
@@ -33,9 +36,11 @@ Child decomposition is deferred until upstream evidence is available. Before imp
 
 No team abstractions, generic workflow engine, cross-Runner migration/failover, permanent disk-loss recovery, mandatory live steering or native session resume. Do not alter the accepted architecture to bypass a failed feasibility gate. This task does not own unrelated roadmap packages or bootstrap-guidelines.
 
-## Before implementation
+## Remaining acceptance
 
-Review upstream evidence and the current source, refine leaf boundaries and observable failure cases, and resolve any Owner-owned acceptance choices. For each complex implementation leaf, complete design.md, implement.md and curated implement/check contexts, present the final planning summary, and obtain its approval before task.py start. Stage and work-package records coordinate acceptance and are not bulk implementation targets.
+Resume the concrete installed-environment checks when the Owner returns to native
+acceptance. Preserve existing fixtures, receipts and ownership; do not repeat
+unchanged broad suites or treat a deferred native check as missing feature code.
 
 ## Source contracts
 

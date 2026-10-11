@@ -1,0 +1,37 @@
+{
+  "id": "b-delivery-modes",
+  "name": "b-delivery-modes",
+  "title": "Multiple repositories and delivery modes",
+  "description": "Support multiple repository items, plain-Git and after-acceptance delivery without pretending atomic publication.",
+  "status": "completed",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P2",
+  "creator": "me",
+  "assignee": "me",
+  "createdAt": "2026-09-28",
+  "completedAt": "2026-10-11",
+  "branch": "feat/stage-a-boundary-probe",
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": "499cf78",
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "09-28-stage-b-v1-capabilities",
+  "relatedFiles": [
+    "docs/research/v1-functional-completion.md",
+    "apps/server/test/postgres-multi-repository-delivery.test.ts",
+    "apps/server/test/postgres-plain-git-delivery.test.ts",
+    "apps/server/test/postgres-plain-git-delivery-sql.test.ts",
+    "apps/server/test/postgres-multi-repository-result-reads.test.ts"
+  ],
+  "notes": "Functionally complete and pushed; implementation commits bac64fa, d8f1530, 499cf78. Archived by explicit Owner request on 2026-10-11. Native host/CLI/provider/reboot acceptance remains deferred in the open parent/release tasks; no release gate or main-branch merge claimed.",
+  "meta": {
+    "roadmap_level": "work-package",
+    "planning_maturity": "implemented",
+    "functional_status": "complete",
+    "native_acceptance": "deferred"
+  }
+}

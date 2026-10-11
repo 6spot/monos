@@ -1,0 +1,37 @@
+{
+  "id": "b-planner-replan",
+  "name": "b-planner-replan",
+  "title": "Planner inspection and multi-Node Replan",
+  "description": "Extend planning with read-only repository inspection and atomic multi-Node graph publication.",
+  "status": "completed",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P2",
+  "creator": "me",
+  "assignee": "me",
+  "createdAt": "2026-09-28",
+  "completedAt": "2026-10-11",
+  "branch": "feat/stage-a-boundary-probe",
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": "499cf78",
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "09-28-stage-b-v1-capabilities",
+  "relatedFiles": [
+    "docs/research/v1-functional-completion.md",
+    "apps/server/test/postgres-repository-inspection.test.ts",
+    "apps/server/test/postgres-task-replan-multi-node.test.ts",
+    "apps/server/test/postgres-task-replan-multi-workspaces.test.ts",
+    "apps/server/test/postgres-multi-node-specification.test.ts"
+  ],
+  "notes": "Functionally complete and pushed; implementation commits 1e3e727, 71e0222, 499cf78. Archived by explicit Owner request on 2026-10-11. Native host/CLI/provider/reboot acceptance remains deferred in the open parent/release tasks; no release gate or main-branch merge claimed.",
+  "meta": {
+    "roadmap_level": "work-package",
+    "planning_maturity": "implemented",
+    "functional_status": "complete",
+    "native_acceptance": "deferred"
+  }
+}

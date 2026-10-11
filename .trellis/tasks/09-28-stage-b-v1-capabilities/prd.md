@@ -4,15 +4,18 @@
 
 Extend the accepted single-Node loop to the remaining V1 execution and delivery capabilities.
 
-## Planning status
+## Current status
 
-Roadmap level: **stage**. Status: **planning / backlog**, not implementation-ready. The Owner approved the three-level roadmap structure on 2026-09-28. This PRD records scope and acceptance, not approval to start implementation.
+Functional development is complete through `499cf78` (2026-10-11). All Stage B functional capabilities are implemented. Four functional packages are archived; the actual installed two-CLI fallback gate and upstream Stage A/native release acceptance remain open.
+
+The task stays open for that acceptance. Local passing checks and prior evidence
+are recorded in the [functional completion record](../../../docs/research/v1-functional-completion.md).
 
 ## Background and scope
 
 Extend the accepted single-Node loop to the remaining V1 execution and delivery capabilities.
 
-Architecture modules remain authoritative. The existing boundary probe implements Stage A step 0 only; its local/host evidence does not establish the full Stage A or V1 gate. Reuse its code and tests after reviewing actual results instead of recreating the probe.
+Architecture modules remain authoritative. Functional code is implemented and pushed; the remaining gates concern actual installed host/CLI/provider/reboot acceptance deferred by the Owner.
 
 ## Dependencies and order
 
@@ -23,10 +26,10 @@ These are completion/evidence gates, not automatic scheduler dependencies. Paren
 ## Child tasks
 
 - [Second Runtime and ordered fallback](../09-28-b-runtime-fallback/prd.md)
-- [Serial Nodes and Rework invalidation](../09-28-b-serial-graphs/prd.md)
-- [Planner inspection and multi-Node Replan](../09-28-b-planner-replan/prd.md)
-- [Parallel Nodes and worktree integration](../09-28-b-parallel-workspaces/prd.md)
-- [Multiple repositories and delivery modes](../09-28-b-delivery-modes/prd.md)
+- [Serial Nodes and Rework invalidation](../archive/2026-10/09-28-b-serial-graphs/prd.md)
+- [Planner inspection and multi-Node Replan](../archive/2026-10/09-28-b-planner-replan/prd.md)
+- [Parallel Nodes and worktree integration](../archive/2026-10/09-28-b-parallel-workspaces/prd.md)
+- [Multiple repositories and delivery modes](../archive/2026-10/09-28-b-delivery-modes/prd.md)
 
 ## Acceptance criteria
 
@@ -37,9 +40,11 @@ These are completion/evidence gates, not automatic scheduler dependencies. Paren
 
 No team abstractions, generic workflow engine, cross-Runner migration/failover, permanent disk-loss recovery, mandatory live steering or native session resume. Do not alter the accepted architecture to bypass a failed feasibility gate. This task does not own unrelated roadmap packages or bootstrap-guidelines.
 
-## Before implementation
+## Remaining acceptance
 
-Review upstream evidence and the current source, refine leaf boundaries and observable failure cases, and resolve any Owner-owned acceptance choices. For each complex implementation leaf, complete design.md, implement.md and curated implement/check contexts, present the final planning summary, and obtain its approval before task.py start. Stage and work-package records coordinate acceptance and are not bulk implementation targets.
+Resume the concrete installed-environment checks when the Owner returns to native
+acceptance. Preserve existing fixtures, receipts and ownership; do not repeat
+unchanged broad suites or treat a deferred native check as missing feature code.
 
 ## Source contracts
 

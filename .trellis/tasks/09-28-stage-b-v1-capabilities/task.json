@@ -3,7 +3,7 @@
   "name": "stage-b-v1-capabilities",
   "title": "Stage B: Remaining V1 execution capabilities",
   "description": "Extend the accepted single-Node loop to the remaining V1 execution and delivery capabilities.",
-  "status": "planning",
+  "status": "in_progress",
   "dev_type": null,
   "scope": null,
   "package": null,
@@ -12,10 +12,10 @@
   "assignee": "me",
   "createdAt": "2026-09-28",
   "completedAt": null,
-  "branch": null,
+  "branch": "feat/stage-a-boundary-probe",
   "base_branch": "main",
   "worktree_path": null,
-  "commit": null,
+  "commit": "499cf78",
   "pr_url": null,
   "subtasks": [],
   "children": [
@@ -27,9 +27,11 @@
   ],
   "parent": null,
   "relatedFiles": [],
-  "notes": "",
+  "notes": "All Stage B functional capabilities are implemented. Four functional packages are archived; the actual installed two-CLI fallback gate and upstream Stage A/native release acceptance remain open. The Owner authorized feature-first development, commits/push and completed archives; no native acceptance is claimed. See docs/research/v1-functional-completion.md.",
   "meta": {
     "roadmap_level": "stage",
-    "planning_maturity": "backlog"
+    "planning_maturity": "implemented",
+    "functional_status": "complete",
+    "native_acceptance": "deferred"
   }
 }

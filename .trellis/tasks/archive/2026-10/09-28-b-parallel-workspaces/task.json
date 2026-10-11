@@ -1,0 +1,37 @@
+{
+  "id": "b-parallel-workspaces",
+  "name": "b-parallel-workspaces",
+  "title": "Parallel Nodes and worktree integration",
+  "description": "Execute concurrent Nodes on isolated worktrees with serialized recoverable integration.",
+  "status": "completed",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P2",
+  "creator": "me",
+  "assignee": "me",
+  "createdAt": "2026-09-28",
+  "completedAt": "2026-10-11",
+  "branch": "feat/stage-a-boundary-probe",
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": "499cf78",
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "09-28-stage-b-v1-capabilities",
+  "relatedFiles": [
+    "docs/research/v1-functional-completion.md",
+    "apps/server/test/postgres-parallel-workspaces.test.ts",
+    "apps/server/test/postgres-parallel-integration.test.ts",
+    "apps/server/test/postgres-parallel-replan.test.ts",
+    "runner/internal/host/workspace_integration_test.go"
+  ],
+  "notes": "Functionally complete and pushed; implementation commits 130eec1, 499cf78. Archived by explicit Owner request on 2026-10-11. Native host/CLI/provider/reboot acceptance remains deferred in the open parent/release tasks; no release gate or main-branch merge claimed.",
+  "meta": {
+    "roadmap_level": "work-package",
+    "planning_maturity": "implemented",
+    "functional_status": "complete",
+    "native_acceptance": "deferred"
+  }
+}
