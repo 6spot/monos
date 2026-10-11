@@ -2,7 +2,7 @@ import { createCipheriv, createDecipheriv, createHash, createPrivateKey, createP
 import type { Transaction } from '../../../packages/db/src/index.ts';
 import { CommandError } from '../../../packages/domain/src/commands.ts';
 import { validate } from '../../../packages/protocol/src/index.ts';
-import type { GitHubConfigurationInput, GitHubRepositoryPage, GitHubRepositoryAccessResult, WorkspaceResource } from '../../../packages/protocol/src/index.ts';
+import type { GitHubConfigurationInput, GitHubRepositoryPage, RepositoryAccessResult, WorkspaceResource } from '../../../packages/protocol/src/index.ts';
 import { repositoryIdentity, validateGitRef } from '../../../packages/domain/src/repositories.ts';
 
 // Persisted v1 ciphertext depends on these exact salt bytes. They are a storage
@@ -107,11 +107,11 @@ export class GitHub {
     return {token:raw.token,expires_at:raw.expires_at,repository_id:repositoryId,permissions};
   }
 
-  async repositoryAccess(resource: WorkspaceResource, config?: GitHubCredentials): Promise<Pick<GitHubRepositoryAccessResult, 'remote_url' | 'provider_metadata' | 'default_branch' | 'authentication'>> {
+  async repositoryAccess(resource: WorkspaceResource, config?: GitHubCredentials): Promise<Pick<RepositoryAccessResult, 'remote_url' | 'provider_metadata' | 'default_branch' | 'authentication'>> {
     const identity = repositoryIdentity(resource.remote_url);
     if (!identity.startsWith('github.com/') || identity !== resource.repository_identity) throw new CommandError('unmet_precondition', 'unsupported_remote: Stage A workspace access requires a GitHub HTTPS repository or its verified SSH alias');
     const configuredId = resource.provider_metadata?.github?.repository_id;
-    let authentication: GitHubRepositoryAccessResult['authentication'] = { kind: 'anonymous' };
+    let authentication: RepositoryAccessResult['authentication'] = { kind: 'anonymous' };
     if (config) {
       if (!configuredId || !/^[1-9][0-9]{0,15}$/.test(configuredId) || !Number.isSafeInteger(Number(configuredId))) throw new CommandError('unmet_precondition', 'credentials_missing: choose this repository through the configured GitHub picker');
       const token = await this.request(`/app/installations/${config.installation_id}/access_tokens`, this.jwt(config), {

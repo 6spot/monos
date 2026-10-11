@@ -5,8 +5,10 @@ Current stage: [pre-use development](../../../docs/12-product-naming-and-upgrade
 Status: the Go Runner under `runner` passed combined production Runtime integration
 acceptance on 2026-09-29; recipes are in `infra/runner`. It also implements canonical
 Single-Node workspace and repository-free completion, managed Artifact commands
-and trusted hard-completion settlement. Task scheduling/context construction is
-backend-owned; multi-Node orchestration and delivery remain later work. The Runtime
+and trusted hard-completion settlement. Task scheduling/context construction is backend-owned. Serial/parallel multi-Node
+workspaces, aggregate multi-repository completion, GitHub delivery and ordinary
+HTTPS Git branch delivery are implemented; their local regression evidence does
+not extend the earlier native acceptance claim. The Runtime
 integration report records two-slot queueing, ordered logs, scoped commands, missing
 outcomes, Stop and service/host recovery. Startup after that reboot trial was manual.
 

@@ -10,7 +10,8 @@ import { transaction } from '../../../packages/db/src/index.ts';
 import { initializeTask } from '../../server/src/task-records.ts';
 
 // Test-only loopback process. Genuine fixture schema, real protected Owner commands;
-// progress controls below change only synthetic mutable scheduling projections.
+// Git scenarios drive actual workers against synthetic GitHub and ref peers.
+// The legacy progress control below changes only its synthetic scheduling projection.
 if (!process.env.MONOS_TEST_WEB_DATABASE_URL) throw new Error('Isolated browser database is required');
 process.env.DATABASE_URL = process.env.MONOS_TEST_WEB_DATABASE_URL;
 type Fixture = Awaited<ReturnType<typeof ownerDeliveryFixture>> | Awaited<ReturnType<typeof multiRepositoryDeliveryFixture>>;
@@ -38,8 +39,8 @@ const server = createServer((request, response) => { void (async () => {
     const body = payload.length ? JSON.parse(payload.toString('utf8')) as Record<string, unknown> : {};
     if (request.url === '/__test__/owner-delivery-scenario') {
       await dispose();
-      if (!['repository_free','modified','no_change','multi_deferred'].includes(String(body.mode))) throw new Error('Unknown synthetic mode');
-      const fixture = body.mode === 'multi_deferred' ? await multiRepositoryDeliveryFixture('after_acceptance') : await ownerDeliveryFixture(body.mode as 'repository_free'|'modified'|'no_change', ownerDeliveryHooks);
+      if (!['repository_free','modified','no_change','multi_deferred','plain','mixed_deferred'].includes(String(body.mode))) throw new Error('Unknown synthetic mode');
+      const fixture = body.mode === 'plain' ? await multiRepositoryDeliveryFixture('automatic',[0,1]) : body.mode === 'mixed_deferred' ? await multiRepositoryDeliveryFixture('after_acceptance',[1]) : body.mode === 'multi_deferred' ? await multiRepositoryDeliveryFixture('after_acceptance') : await ownerDeliveryFixture(body.mode as 'repository_free'|'modified'|'no_change', ownerDeliveryHooks);
       const schema = new URL(fixture.databaseUrl).searchParams.get('options')?.match(/search_path=(conversation_[a-z0-9]+)/)?.[1];
       if (!schema) { await fixture.close(); throw new Error('Exact fixture schema is missing'); }
       ownedScopes.push(schema);
@@ -68,6 +69,24 @@ const server = createServer((request, response) => { void (async () => {
       }
       response.writeHead(200, { 'Content-Type': 'application/json' }); response.end('{"synthetic_provider":true}'); return;
     }
+    if (request.url === '/__test__/owner-delivery-git-progress') {
+      const x=current.fixture;
+      if(!('refRequests' in x))throw new Error('Git delivery fixture is required');
+      const batch=(await x.db.pool.query<{id:string}>('SELECT id FROM owner_delivery_batches WHERE task_id=$1',[x.f.task])).rows[0];
+      if(body.action==='prepare')await x.prepareRemote();
+      else if(body.action==='certify'&&batch)await x.barrier(batch.id);
+      else if(body.action==='partial'&&batch){
+        await x.prepareRemote();await x.barrier(batch.id);await x.pump();
+        x.readState.head='f'.repeat(40);await x.pump();
+      } else if((body.action==='finalize'||body.action==='resume')&&batch){
+        if(body.action==='resume')x.readState.head=undefined;
+        for(let turn=0;turn<16;turn++){
+          await x.pump();const row=(await x.db.pool.query('SELECT status FROM owner_delivery_batches WHERE id=$1',[batch.id])).rows[0];
+          if(['completed','failed','attention'].includes(row.status))break;
+        }
+      } else throw new Error('Unknown Git delivery action');
+      response.writeHead(200,{'Content-Type':'application/json'});response.end('{"synthetic_ref_peer":true,"synthetic_provider":true}');return;
+    }
     if (request.url === '/__test__/owner-delivery-progress') {
       if (!['waiting','failed','reconciling'].includes(String(body.status))) throw new Error('Unknown synthetic progress');
       await current.fixture.db.pool.query('UPDATE owner_delivery_batches SET status=$2,attention_reason=$3,version=version+1 WHERE task_id=$1 AND status NOT IN (\'completed\',\'cancelled\')',[current.fixture.f.task,body.status,body.status==='failed'?'synthetic_provider_unavailable':body.status==='reconciling'?'synthetic_unknown_effect':'synthetic_checks_pending']);
@@ -78,7 +97,11 @@ const server = createServer((request, response) => { void (async () => {
       const batch = (await x.db.pool.query('SELECT id,content_digest,input_cutoff,status FROM owner_delivery_batches WHERE task_id=$1',[x.f.task])).rows;
       const input = (await x.db.pool.query('SELECT m.sequence,i.accepted_delivery_operation_id FROM task_inputs i JOIN task_messages m ON m.id=i.message_id WHERE i.task_id=$1 ORDER BY m.sequence',[x.f.task])).rows;
       const receipts = (await x.db.pool.query('SELECT request_id,envelope,response FROM owner_delivery_command_receipts WHERE task_id=$1 ORDER BY request_id',[x.f.task])).rows;
-      response.writeHead(200, { 'Content-Type': 'application/json' }); response.end(JSON.stringify({ batch,input,receipts,provider_calls:'calls' in x ? x.calls.length : 0 })); return;
+      const task=(await x.db.pool.query('SELECT state FROM tasks WHERE id=$1',[x.f.task])).rows[0];
+      const finalizations=(await x.db.pool.query('SELECT batch_id,item_id,kind,final_commit,digest FROM owner_delivery_finalizations WHERE batch_id IN(SELECT id FROM owner_delivery_batches WHERE task_id=$1) ORDER BY item_id',[x.f.task])).rows;
+      const certificates=(await x.db.pool.query('SELECT item_id FROM owner_delivery_item_validations WHERE batch_id IN(SELECT id FROM owner_delivery_batches WHERE task_id=$1)',[x.f.task])).rows;
+      const remote_operations=(await x.db.pool.query('SELECT id,kind FROM remote_preparation_operations WHERE task_id=$1 ORDER BY id',[x.f.task])).rows;
+      response.writeHead(200, { 'Content-Type': 'application/json' }); response.end(JSON.stringify({ batch,input,receipts,task_state:task.state,finalizations,certificates,remote_operations,provider_calls:'calls' in x ? x.calls.length : 0,provider_mutations:'calls' in x?x.calls.filter(c=>c.method!=='GET'):[],ref_reads:'refRequests' in x?x.refRequests.map(r=>({request_id:r.request_id,operation_id:r.push.operation_id,resource_id:r.push.resource_id})):[] })); return;
     }
     response.writeHead(404); response.end(); return;
   }

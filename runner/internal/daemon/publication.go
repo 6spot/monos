@@ -111,7 +111,9 @@ func (d *Daemon) publicationPrepare(ctx context.Context, frame protocol.Frame) {
 				if host.RetainPublicationPermission(r, permission) != nil {
 					return
 				}
-			} else if r.Configuration.WorkflowWrite != "unknown" {
+				// Anonymous local scans have no write grant to refresh. A frozen
+				// proof or workflow grant remains mandatory when the request has one.
+			} else if r.PermissionProof != nil || r.Configuration.WorkflowWrite != "unknown" && r.Configuration.WorkflowWrite != "not_applicable" {
 				return
 			}
 			deadline, cancel := context.WithTimeout(ctx, time.Duration(r.Configuration.DeadlineSeconds)*time.Second)

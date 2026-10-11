@@ -157,7 +157,7 @@ do not clear that separate guard. No remediation setter exists in this slice.
 | Bound | Frozen production value |
 | --- | --- |
 | Local blob policy | 50 MiB |
-| Provider hard blob limit | Greater than 100 MiB |
+| GitHub hard blob limit | Greater than 100 MiB; plain Git has no provider-specific limit |
 | Processed blob / unique aggregate | 128 MiB / 512 MiB |
 | Commits / paths / versions | 256 / 8192 / 32768 |
 | Findings / sanitized evidence | 4096 / 8 MiB |
@@ -165,7 +165,9 @@ do not clear that separate guard. No remediation setter exists in this slice.
 | Findings per page / physical deadline | 64 / 120 seconds |
 
 Configuration binds policy/rule/traversal versions and permission fingerprint.
-Workflow add/modify/delete/mode changes require verified workflow write permission.
+GitHub workflow add/modify/delete/mode changes require verified workflow write permission.
+Plain Git uses `workflow_write:not_applicable` and `provider_blob_limit:null`; backend
+rejects fabricated workflow/provider-hard-size findings for that configuration.
 GitHub preparation in both modes can bind the exact observed App profile.
 Deferred preparation may initially retain unknown permission, but acceptance
 requires a real permission observation and a new scan binding that fingerprint.

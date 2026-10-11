@@ -28,6 +28,10 @@ func TestRemotePreparationAccessHTTPBoundScopeAndIncarnation(t *testing.T) {
 	if json.Unmarshal(raw, &f) != nil {
 		t.Fatal("shared remote fixture unavailable")
 	}
+	accessRaw, _, _ := wire.Canonical(f.Access)
+	if e := wire.Validate("PublicationAccessResult", accessRaw); e != nil {
+		t.Fatal("shared access fixture invalid", e)
+	}
 	for _, kind := range []string{"valid", "scope", "attempt", "cache", "oversize", "incarnation"} {
 		t.Run(kind, func(t *testing.T) {
 			var client *Client

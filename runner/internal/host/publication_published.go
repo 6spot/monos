@@ -12,7 +12,7 @@ import (
 )
 
 func verifyPublicationProofOriginal(r protocol.PublicationPushRequest, result protocol.PublicationPushResult, p protocol.PublicationPublishedProof) error {
-	if verifyPublicationRemoteResult(r, result) != nil || p.OperationID != r.OperationID || p.RequestDigest != publicationDigest(r) || p.ResultDigest != publicationDigest(result) || p.ItemID != r.ItemID || p.RepositoryID != r.RepositoryID || p.DeliveryRef != r.DeliveryRef || !publicationProofScope(p, r.Preparation.Source) || publicationDigest(p.Candidate) != publicationDigest(r.Prepared.Candidate) || p.CandidateManifestDigest != *r.Prepared.CandidateManifestDigest {
+	if verifyPublicationRemoteResult(r, result) != nil || p.OperationID != r.OperationID || p.RequestDigest != publicationDigest(r) || p.ResultDigest != publicationDigest(result) || p.ItemID != r.ItemID || !wire.SameRepositoryProvider(&p.ProviderMetadata, &r.ProviderMetadata) || p.DeliveryRef != r.DeliveryRef || !publicationProofScope(p, r.Preparation.Source) || publicationDigest(p.Candidate) != publicationDigest(r.Prepared.Candidate) || p.CandidateManifestDigest != *r.Prepared.CandidateManifestDigest {
 		return errors.New("publication published proof mismatch")
 	}
 	if result.Status == "published" {

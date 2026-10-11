@@ -10,7 +10,7 @@ import type { TaskViewProps } from './task-shared.tsx';
 
 const status: Record<RemotePreparationRecord['status'], string> = {
   local_only: 'Remote preparation is deferred. Local inspection and checks remain available.',
-  preparing: 'Preparing the remote review branch and pull request.',
+  preparing: 'Preparing the remote delivery branch.',
   paused_input: 'Remote preparation is paused for unresolved Task input or change.',
   offline: 'The owning Runner is offline. Retained remote work is not replaced.',
   unsupported: 'The owning Runner does not support remote preparation.',
@@ -71,12 +71,12 @@ function RemoteRecord({ props, record, latest, fresh }: { props: TaskViewProps; 
   return <article className="remote-record" aria-label="Selected remote operation">
     <p><strong>{current ? 'Current remote evidence' : fresh ? 'Historical remote evidence' : 'Checking current remote applicability…'}</strong></p>
     <p className="task-muted">{current && record.scan_applicable && latest.scan_applicable ? 'The exact local scan remains applicable.' : 'The retained scan grants no current publication authority.'}</p>
-    <p role="status">{status[record.status]}</p>
+    <p role="status">{record.delivery_kind === 'git_branch' && record.status === 'prepared' ? 'The delivery branch is published. Owner acceptance and final verification are separate.' : status[record.status]}</p>
     {record.reason && <p className="task-notice">Reason · {human(record.reason)}{record.reason === 'input_pending' && ' · Resolve the actual input, proposal, issue or guidance in Task Conversation.'}</p>}
     <dl><Datum label="Repository">{record.repository_identity}</Datum><Datum label="Delivery branch"><code>{record.delivery_ref}</code></Datum><Datum label="Fixed target">{record.target_branch}</Datum><Datum label="Candidate head"><code>{record.candidate.head}</code></Datum><Datum label="Exact result tree"><code>{record.candidate.tree}</code></Datum>
       {record.published && <Datum label="Verified published head"><code>{record.published.candidate.head}</code></Datum>}
     </dl>
-    {record.mapping && <p className="task-notice">Same-tree result mapping · the current result reuses the unchanged published head and PR. Its old candidate manifest and original source remain immutable; the current mapping and scan grant no new acceptance authority.</p>}
+    {record.mapping && <p className="task-notice">Same-tree result mapping · the current result reuses the unchanged published head. Its old candidate manifest and original source remain immutable; the current mapping and scan grant no new acceptance authority.</p>}
     {record.review && <p><a href={record.review.url} target="_blank" rel="noreferrer">Open PR #{record.review.pr_number}</a> · {human(record.review.state)}{record.review.state === 'merged' && ' · Provider state does not establish Owner acceptance.'}</p>}
     {record.known_public_exposure_count > 0 && <p className="task-notice">Known published credential exposure · {record.known_public_exposure_count} retained facts require remediation. Deletion, clean scans and eligible overrides cannot clear this guard.</p>}
     {record.cooldown_until && <p className="task-notice">Provider cooldown until {record.cooldown_until}. Retry cannot bypass this limit.</p>}
@@ -88,7 +88,7 @@ function RemoteRecord({ props, record, latest, fresh }: { props: TaskViewProps; 
       {record.mapping_digest && <Datum label="Exact mapping">{record.mapping_digest}</Datum>}{record.published_digest && <Datum label="Published proof">{record.published_digest}</Datum>}
       {operation && <><Datum label="Operation">{operation.operation_id}</Datum><Datum label="Request digest">{operation.request_digest}</Datum><Datum label="Operation version">{operation.version}</Datum><Datum label="Physical worker absence">{operation.worker_absent ? 'Recorded absent' : 'Not established'}</Datum></>}
     </dl></DetailIDs>
-    {record.checks ? <Checks key={record.checks.observation_id} props={props} record={record} latest={latest} current={current} /> : <p className="task-muted">No provider checks observation is recorded. Missing checks are not passing checks.</p>}
+    {record.delivery_kind === 'git_branch' ? <p className="task-muted">Delivery branch publication is preparation. Final delivery requires exact Owner acceptance and a fresh branch verification; merge into the target branch manually.</p> : record.checks ? <Checks key={record.checks.observation_id} props={props} record={record} latest={latest} current={current} /> : <p className="task-muted">No provider checks observation is recorded. Missing checks are not passing checks.</p>}
     {operation && (record.retry_allowed || record.cleanup_allowed || record.read_retry_allowed || ordinary || cleanup || readRecovery) && <Button variant="outline" disabled={!ordinary && !cleanup && !readRecovery || entry?.busy || !!entry?.pending || !!props.commands.storageError} onClick={() => { void props.commands.execute(props.task.task_id, scope, { family: 'remote-preparation', command: { schema_version: 1, task_id: props.task.task_id, request_id: randomUUID(), name: 'retry_remote_preparation', payload: { operation_id: operation.operation_id, operation_digest: operation.request_digest, expected_version: operation.version } } }); }}>{cleanup ? 'Retry cancellation cleanup' : !ordinary && admittedEffect ? 'Reconcile original remote effect' : 'Retry remote preparation'}</Button>}
     {!current && !cleanup && <p className="task-muted">Historical observations grant no ordinary retry authority. Current applicability is checked independently of the selected bytes.</p>}
   </article>;

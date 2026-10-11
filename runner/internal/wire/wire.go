@@ -21,6 +21,9 @@ import (
 const Limit = 1048576
 const ItemLimit = Limit - 4096
 
+// Reserve room for a fresh ref read to echo the push with an observation.
+const PublicationPushLimit = 480 * 1024
+
 var once sync.Once
 var compiler *jsonschema.Compiler
 var compileErr error
@@ -31,8 +34,11 @@ func reviewContract(name string) bool {
 }
 
 func Validate(name string, raw []byte) error {
-	if (name == "PublicationAccessRequest" || name == "PublicationAccessResult" || name == "PublicationPermissionRequest" || name == "PublicationPermissionResult") && len(raw) > 16*1024 {
-		return fmt.Errorf("publication access exceeds limit")
+	if name == "PublicationPushRequest" && len(raw) > PublicationPushLimit {
+		return fmt.Errorf("publication push exceeds reserved framing limit")
+	}
+	if (name == "RepositoryAccessResult" || name == "InspectionRepositoryAccessResult" || name == "PublicationAccessRequest" || name == "PublicationAccessResult" || name == "PublicationPermissionRequest" || name == "PublicationPermissionResult") && len(raw) > 16*1024 {
+		return fmt.Errorf("service access exceeds limit")
 	}
 	if (reviewContract(name) || name == "ResultReadResponse" || strings.HasPrefix(name, "Publication") || strings.HasPrefix(name, "PublishedResult") || strings.HasPrefix(name, "RemotePreparation")) && len(raw) > 512*1024 {
 		return fmt.Errorf("result response exceeds limit")
@@ -78,6 +84,17 @@ func Validate(name string, raw []byte) error {
 	if err := schema.Validate(v); err != nil {
 		return err
 	}
+	if name == "PublicationPushRequest" {
+		// Incoming JSON may leave HTML and line-separator characters unescaped.
+		// The typed response re-encodes them, so reserve for that representation.
+		echo, err := json.Marshal(v)
+		if err != nil {
+			return err
+		}
+		if len(echo) > PublicationPushLimit {
+			return fmt.Errorf("publication push exceeds reserved framing limit")
+		}
+	}
 	if reviewContract(name) || strings.HasPrefix(name, "Result") || strings.HasPrefix(name, "Publication") || strings.HasPrefix(name, "PublishedResult") || strings.HasPrefix(name, "RemotePreparation") || name == "Frame" && (resultFrame(v) || publicationFrame(v)) {
 		if name == "Frame" && publicationFrame(v) && len(raw) > 512*1024 {
 			return fmt.Errorf("publication frame exceeds limit")
@@ -95,6 +112,31 @@ func Validate(name string, raw []byte) error {
 				}
 			}
 		}
+	}
+	// Schema validation cannot enforce the nested encoded-byte reservation.
+	var nestedSchema, nestedKey string
+	switch name {
+	case "PublicationRefReadRequest":
+		nestedSchema, nestedKey = "PublicationPushRequest", "push"
+	case "PublicationRefReadResponse":
+		nestedSchema, nestedKey = "PublicationRefReadRequest", "request"
+	case "Frame":
+		m := v.(map[string]any)
+		switch m["type"] {
+		case "publication_push":
+			nestedSchema, nestedKey = "PublicationPushRequest", "publication_push"
+		case "publication_ref_read":
+			nestedSchema, nestedKey = "PublicationRefReadRequest", "publication_ref_read"
+		case "publication_ref_read_result":
+			nestedSchema, nestedKey = "PublicationRefReadResponse", "publication_ref_read_result"
+		}
+	}
+	if nestedKey != "" {
+		var fields map[string]json.RawMessage
+		if err := json.Unmarshal(raw, &fields); err != nil {
+			return err
+		}
+		return Validate(nestedSchema, fields[nestedKey])
 	}
 	return nil
 }
@@ -255,7 +297,11 @@ func Envelope(raw []byte) (protocol.CommandEnvelope, error) {
 
 func publicationFrame(v any) bool {
 	m, ok := v.(map[string]any)
-	return ok && (m["type"] == "publication_prepare" || m["type"] == "publication_result" || m["type"] == "publication_ack" || m["type"] == "publication_push" || m["type"] == "publication_push_result" || m["type"] == "publication_push_ack")
+	if !ok {
+		return false
+	}
+	typeName, ok := m["type"].(string)
+	return ok && strings.HasPrefix(typeName, "publication_")
 }
 
 func resultFrame(v any) bool {

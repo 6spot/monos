@@ -2034,7 +2034,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GitHubRepositoryAccessResult"
+                  "$ref": "#/components/schemas/RepositoryAccessResult"
                 }
               }
             }
@@ -7415,7 +7415,9 @@
               "publication_ack",
               "publication_push",
               "publication_push_result",
-              "publication_push_ack"
+              "publication_push_ack",
+              "publication_ref_read",
+              "publication_ref_read_result"
             ]
           },
           "runner_id": {
@@ -7545,6 +7547,21 @@
           },
           "publication_push_ack": {
             "$ref": "#/components/schemas/PublicationPushAck"
+          },
+          "publication_ref_read": {
+            "$ref": "#/components/schemas/PublicationRefReadRequest"
+          },
+          "publication_ref_read_result": {
+            "$ref": "#/components/schemas/PublicationRefReadResponse"
+          },
+          "publication_ref_read_modes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "const": "git_ref_v1"
+            },
+            "maxItems": 1,
+            "uniqueItems": true
           }
         },
         "allOf": [
@@ -7623,7 +7640,8 @@
                 "log_modes": {},
                 "result_read_modes": {},
                 "publication_modes": {},
-                "remote_preparation_modes": {}
+                "remote_preparation_modes": {},
+                "publication_ref_read_modes": {}
               },
               "additionalProperties": false,
               "type": "object"
@@ -8134,6 +8152,68 @@
                 "type",
                 "incarnation",
                 "publication_push_ack"
+              ]
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "publication_ref_read"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "schema_version": {},
+                "type": {},
+                "incarnation": {},
+                "correlation_id": {},
+                "publication_ref_read": {}
+              },
+              "required": [
+                "schema_version",
+                "type",
+                "incarnation",
+                "correlation_id",
+                "publication_ref_read"
+              ]
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "publication_ref_read_result"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "schema_version": {},
+                "type": {},
+                "incarnation": {},
+                "correlation_id": {},
+                "publication_ref_read_result": {}
+              },
+              "required": [
+                "schema_version",
+                "type",
+                "incarnation",
+                "correlation_id",
+                "publication_ref_read_result"
               ]
             }
           }
@@ -8866,7 +8946,9 @@
               "save_role",
               "save_policies",
               "save_github",
-              "save_planner_guidance"
+              "save_planner_guidance",
+              "save_git_https_credential",
+              "clear_git_https_credential"
             ]
           },
           "payload": {
@@ -8885,6 +8967,12 @@
               },
               {
                 "$ref": "#/components/schemas/PlannerGuidance"
+              },
+              {
+                "$ref": "#/components/schemas/GitHTTPSCredentialInput"
+              },
+              {
+                "$ref": "#/components/schemas/GitHTTPSCredentialClear"
               }
             ]
           }
@@ -8994,6 +9082,50 @@
               },
               "type": "object"
             }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "const": "save_git_https_credential"
+                }
+              },
+              "required": [
+                "name"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "payload": {
+                  "$ref": "#/components/schemas/GitHTTPSCredentialInput"
+                }
+              },
+              "required": []
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "const": "clear_git_https_credential"
+                }
+              },
+              "required": [
+                "name"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "payload": {
+                  "$ref": "#/components/schemas/GitHTTPSCredentialClear"
+                }
+              },
+              "required": []
+            }
           }
         ]
       },
@@ -9027,8 +9159,33 @@
           },
           "entity_id": {
             "$ref": "#/components/schemas/Id"
+          },
+          "credential_change": {
+            "$ref": "#/components/schemas/GitHTTPSCredentialChange"
           }
-        }
+        },
+        "allOf": [
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "const": "unknown"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "credential_change": false
+              },
+              "required": []
+            }
+          }
+        ]
       },
       "ConfigurationSnapshot": {
         "type": "object",
@@ -9038,7 +9195,8 @@
           "control_version",
           "projects",
           "roles",
-          "policies"
+          "policies",
+          "git_https_credentials"
         ],
         "properties": {
           "schema_version": {
@@ -9074,6 +9232,13 @@
             "type": "string",
             "maxLength": 65536,
             "pattern": "^[^\\x00]*$"
+          },
+          "git_https_credentials": {
+            "type": "array",
+            "maxItems": 131072,
+            "items": {
+              "$ref": "#/components/schemas/GitHTTPSCredentialStatus"
+            }
           }
         }
       },
@@ -12203,110 +12368,103 @@
             "type": "string",
             "enum": [
               "anonymous",
-              "github_installation"
+              "github_installation",
+              "https_basic"
             ]
           },
           "token": {
             "type": "string",
             "minLength": 1,
-            "maxLength": 4096
+            "maxLength": 4096,
+            "pattern": "^[^\\r\\n\\x00]+$"
           },
           "expires_at": {
             "type": "string",
             "minLength": 1,
             "maxLength": 64
+          },
+          "username": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "pattern": "^[^:\\r\\n\\x00]+$"
           }
         },
         "allOf": [
           {
             "if": {
+              "type": "object",
               "properties": {
                 "kind": {
                   "const": "anonymous"
                 }
               },
-              "type": "object"
+              "required": [
+                "kind"
+              ]
             },
             "then": {
+              "type": "object",
               "properties": {
+                "username": false,
                 "token": false,
                 "expires_at": false
               },
-              "type": "object"
-            },
-            "else": {
+              "required": []
+            }
+          },
+          {
+            "if": {
+              "type": "object",
               "properties": {
+                "kind": {
+                  "const": "github_installation"
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "username": false,
                 "token": {},
                 "expires_at": {}
               },
               "required": [
                 "token",
                 "expires_at"
-              ],
-              "type": "object"
+              ]
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "https_basic"
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "username": {},
+                "token": {},
+                "expires_at": {}
+              },
+              "required": [
+                "username",
+                "token",
+                "expires_at"
+              ]
             }
           }
         ]
-      },
-      "GitHubRepositoryAccessResult": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "schema_version",
-          "operation_id",
-          "workspace_digest",
-          "remote_url",
-          "provider_metadata",
-          "default_branch",
-          "authentication"
-        ],
-        "properties": {
-          "schema_version": {
-            "type": "integer",
-            "const": 1
-          },
-          "operation_id": {
-            "$ref": "#/components/schemas/Id"
-          },
-          "workspace_digest": {
-            "$ref": "#/components/schemas/SHA256"
-          },
-          "remote_url": {
-            "type": "string",
-            "maxLength": 2048,
-            "pattern": "^https://github[.]com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+[.]git$"
-          },
-          "provider_metadata": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "github"
-            ],
-            "properties": {
-              "github": {
-                "type": "object",
-                "additionalProperties": false,
-                "required": [
-                  "repository_id"
-                ],
-                "properties": {
-                  "repository_id": {
-                    "type": "string",
-                    "pattern": "^[1-9][0-9]{0,15}$"
-                  }
-                }
-              }
-            }
-          },
-          "default_branch": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 1024
-          },
-          "authentication": {
-            "$ref": "#/components/schemas/RepositoryAuthentication"
-          }
-        }
       },
       "WorkspaceUnavailableReason": {
         "type": "string",
@@ -18772,8 +18930,15 @@
             "maximum": 52428800
           },
           "provider_blob_limit": {
-            "type": "integer",
-            "const": 104857600
+            "anyOf": [
+              {
+                "type": "integer",
+                "const": 104857600
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "max_commits": {
             "type": "integer",
@@ -18820,7 +18985,8 @@
             "enum": [
               "unknown",
               "denied",
-              "allowed"
+              "allowed",
+              "not_applicable"
             ]
           },
           "permission_fingerprint": {
@@ -18844,6 +19010,51 @@
           "deadline_seconds",
           "workflow_write",
           "permission_fingerprint"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "workflow_write": {
+                  "const": "not_applicable"
+                }
+              },
+              "required": [
+                "workflow_write"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "provider_blob_limit": {
+                  "type": "null"
+                }
+              },
+              "required": []
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "provider_blob_limit": {
+                  "type": "null"
+                }
+              },
+              "required": [
+                "provider_blob_limit"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "workflow_write": {
+                  "const": "not_applicable"
+                }
+              }
+            }
+          }
         ]
       },
       "PublicationPrepareRequest": {
@@ -20104,6 +20315,28 @@
             "type": "string",
             "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(?:\\.\\d{1,3})?Z$",
             "maxLength": 24
+          },
+          "kind": {
+            "type": "string",
+            "pattern": "^(?:github_installation|git_https_configuration)$"
+          },
+          "remote_url": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048,
+            "pattern": "^https://[^\\s/@?#]+/[^\\s?#]+$"
+          },
+          "username": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "pattern": "^[^:\\r\\n\\x00]+$"
+          },
+          "configuration_request_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "scope_digest": {
+            "$ref": "#/components/schemas/SHA256"
           }
         },
         "required": [
@@ -20111,15 +20344,80 @@
           "observation_id",
           "resource_id",
           "repository_identity",
-          "repository_id",
-          "app_id",
-          "installation_id",
-          "key_fingerprint",
           "configuration_fingerprint",
           "permission_fingerprint",
-          "permissions",
           "observed_at",
-          "expires_at"
+          "expires_at",
+          "kind"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "github_installation"
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "repository_id": {},
+                "app_id": {},
+                "installation_id": {},
+                "key_fingerprint": {},
+                "permissions": {},
+                "remote_url": false,
+                "username": false,
+                "configuration_request_id": false,
+                "scope_digest": false
+              },
+              "required": [
+                "repository_id",
+                "app_id",
+                "installation_id",
+                "key_fingerprint",
+                "permissions"
+              ]
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "git_https_configuration"
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "remote_url": {},
+                "username": {},
+                "configuration_request_id": {},
+                "scope_digest": {},
+                "repository_id": false,
+                "app_id": false,
+                "installation_id": false,
+                "key_fingerprint": false,
+                "permissions": false
+              },
+              "required": [
+                "remote_url",
+                "username",
+                "configuration_request_id",
+                "scope_digest"
+              ]
+            }
+          }
         ]
       },
       "PublicationPermissionRequest": {
@@ -20208,10 +20506,6 @@
             "minLength": 1,
             "maxLength": 2048
           },
-          "repository_id": {
-            "type": "string",
-            "pattern": "^[1-9][0-9]{0,15}$"
-          },
           "delivery_ref": {
             "$ref": "#/components/schemas/DeliveryRef"
           },
@@ -20263,6 +20557,9 @@
             "type": "string",
             "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(?:\\.\\d{1,3})?Z$",
             "maxLength": 24
+          },
+          "provider_metadata": {
+            "$ref": "#/components/schemas/RepositoryProviderMetadata"
           }
         },
         "required": [
@@ -20275,7 +20572,7 @@
           "runner_id",
           "storage_id",
           "repository_identity",
-          "repository_id",
+          "provider_metadata",
           "delivery_ref",
           "status",
           "observed_at"
@@ -20389,10 +20686,6 @@
             "minLength": 1,
             "maxLength": 2048
           },
-          "repository_id": {
-            "type": "string",
-            "pattern": "^[1-9][0-9]{0,15}$"
-          },
           "delivery_ref": {
             "$ref": "#/components/schemas/DeliveryRef"
           },
@@ -20407,6 +20700,9 @@
           },
           "observation_digest": {
             "$ref": "#/components/schemas/SHA256"
+          },
+          "provider_metadata": {
+            "$ref": "#/components/schemas/RepositoryProviderMetadata"
           }
         },
         "required": [
@@ -20420,7 +20716,7 @@
           "runner_id",
           "storage_id",
           "repository_identity",
-          "repository_id",
+          "provider_metadata",
           "delivery_ref",
           "candidate",
           "candidate_manifest_digest",
@@ -20591,14 +20887,11 @@
             "minLength": 1,
             "maxLength": 2048
           },
-          "repository_id": {
-            "type": "string",
-            "pattern": "^[1-9][0-9]{0,15}$"
-          },
           "remote_url": {
             "type": "string",
-            "pattern": "^https://github[.]com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+[.]git$",
-            "maxLength": 2048
+            "minLength": 1,
+            "maxLength": 2048,
+            "pattern": "^https://[^\\s/@?#]+/[^\\s?#]+$"
           },
           "delivery_ref": {
             "$ref": "#/components/schemas/DeliveryRef"
@@ -20661,6 +20954,9 @@
           },
           "prior_published_digest": {
             "$ref": "#/components/schemas/SHA256"
+          },
+          "provider_metadata": {
+            "$ref": "#/components/schemas/RepositoryProviderMetadata"
           }
         },
         "required": [
@@ -20672,7 +20968,7 @@
           "runner_id",
           "storage_id",
           "repository_identity",
-          "repository_id",
+          "provider_metadata",
           "remote_url",
           "delivery_ref",
           "target_branch",
@@ -20963,12 +21259,9 @@
           },
           "remote_url": {
             "type": "string",
-            "pattern": "^https://github[.]com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+[.]git$",
-            "maxLength": 2048
-          },
-          "repository_id": {
-            "type": "string",
-            "pattern": "^[1-9][0-9]{0,15}$"
+            "minLength": 1,
+            "maxLength": 2048,
+            "pattern": "^https://[^\\s/@?#]+/[^\\s?#]+$"
           },
           "delivery_ref": {
             "$ref": "#/components/schemas/DeliveryRef"
@@ -20987,25 +21280,16 @@
             ]
           },
           "authentication": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/RepositoryAuthentication"
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "kind": {
-                    "const": "github_installation"
-                  }
-                }
-              }
-            ]
+            "$ref": "#/components/schemas/RepositoryAuthentication"
           },
           "permission_proof": {
             "$ref": "#/components/schemas/PublicationPermissionProof"
           },
           "permission_proof_digest": {
             "$ref": "#/components/schemas/SHA256"
+          },
+          "provider_metadata": {
+            "$ref": "#/components/schemas/RepositoryProviderMetadata"
           }
         },
         "required": [
@@ -21016,7 +21300,7 @@
           "purpose",
           "attempt_id",
           "remote_url",
-          "repository_id",
+          "provider_metadata",
           "delivery_ref",
           "candidate_head",
           "expected_head",
@@ -21041,7 +21325,19 @@
                 "claim_id": {},
                 "claim_expires_at": {},
                 "permission_proof": {},
-                "permission_proof_digest": {}
+                "permission_proof_digest": {},
+                "authentication": {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "github_installation",
+                        "https_basic"
+                      ]
+                    }
+                  }
+                }
               },
               "required": [
                 "claim_id",
@@ -21509,10 +21805,6 @@
             "minLength": 1,
             "maxLength": 2048
           },
-          "repository_id": {
-            "type": "string",
-            "pattern": "^[1-9][0-9]{0,15}$"
-          },
           "delivery_ref": {
             "$ref": "#/components/schemas/DeliveryRef"
           },
@@ -21642,6 +21934,13 @@
             "type": "string",
             "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(?:\\.\\d{1,3})?Z$",
             "maxLength": 24
+          },
+          "provider_metadata": {
+            "$ref": "#/components/schemas/RepositoryProviderMetadata"
+          },
+          "delivery_kind": {
+            "type": "string",
+            "pattern": "^(?:github_pr|git_branch)$"
           }
         },
         "required": [
@@ -21651,7 +21950,7 @@
           "resource_id",
           "runner_id",
           "repository_identity",
-          "repository_id",
+          "provider_metadata",
           "delivery_ref",
           "target_branch",
           "source",
@@ -21668,7 +21967,8 @@
           "retry_allowed",
           "cleanup_allowed",
           "read_retry_allowed",
-          "known_public_exposure_count"
+          "known_public_exposure_count",
+          "delivery_kind"
         ],
         "dependencies": {
           "mapping": [
@@ -21683,7 +21983,81 @@
           "published_digest": [
             "published"
           ]
-        }
+        },
+        "allOf": [
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "delivery_kind": {
+                  "const": "git_branch"
+                }
+              },
+              "required": [
+                "delivery_kind"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "review": false,
+                "checks": false,
+                "cooldown_until": false
+              }
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "delivery_kind": {
+                  "const": "git_branch"
+                }
+              },
+              "required": [
+                "delivery_kind"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "provider_metadata": {
+                  "type": "object",
+                  "properties": {
+                    "github": false
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "delivery_kind": {
+                  "const": "github_pr"
+                }
+              },
+              "required": [
+                "delivery_kind"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "provider_metadata": {
+                  "type": "object",
+                  "properties": {
+                    "github": {}
+                  },
+                  "required": [
+                    "github"
+                  ]
+                }
+              }
+            }
+          }
+        ]
       },
       "RemotePreparationQuery": {
         "type": "object",
@@ -22347,6 +22721,10 @@
           },
           "provider_content_digest": {
             "$ref": "#/components/schemas/SHA256"
+          },
+          "delivery_kind": {
+            "type": "string",
+            "pattern": "^(?:github_pr|git_branch)$"
           }
         },
         "required": [
@@ -22413,7 +22791,8 @@
                     "status",
                     "reason"
                   ]
-                }
+                },
+                "delivery_kind": false
               }
             }
           },
@@ -22473,11 +22852,110 @@
                 "waivers",
                 "target_branch",
                 "delivery_ref",
-                "marker",
                 "remote_preparation",
+                "delivery_kind"
+              ]
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "delivery_kind": {
+                  "const": "github_pr"
+                }
+              },
+              "required": [
+                "delivery_kind"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "marker": {},
+                "provider_content": {},
+                "provider_content_digest": {}
+              },
+              "required": [
+                "marker",
                 "provider_content",
                 "provider_content_digest"
               ]
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "delivery_kind": {
+                  "const": "git_branch"
+                }
+              },
+              "required": [
+                "delivery_kind"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "marker": false,
+                "provider_content": false,
+                "provider_content_digest": false,
+                "review": false,
+                "merge_method": false
+              },
+              "required": []
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "delivery_kind": {
+                  "const": "git_branch"
+                }
+              },
+              "required": [
+                "delivery_kind"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "provider_metadata": {
+                  "type": "object",
+                  "properties": {
+                    "github": false
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "delivery_kind": {
+                  "const": "github_pr"
+                }
+              },
+              "required": [
+                "delivery_kind"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "provider_metadata": {
+                  "type": "object",
+                  "properties": {
+                    "github": {}
+                  },
+                  "required": [
+                    "github"
+                  ]
+                }
+              }
             }
           }
         ],
@@ -23228,7 +23706,8 @@
               "unknown",
               "pending",
               "passing",
-              "failing"
+              "failing",
+              "not_applicable"
             ]
           },
           "final_commit": {
@@ -23256,6 +23735,14 @@
               "not_needed",
               "attention"
             ]
+          },
+          "delivery_kind": {
+            "type": "string",
+            "pattern": "^(?:github_pr|git_branch)$"
+          },
+          "finality_kind": {
+            "type": "string",
+            "pattern": "^(?:github_merge|git_branch)$"
           }
         },
         "required": [
@@ -23263,7 +23750,8 @@
           "resource_id",
           "status",
           "accepted_head",
-          "checks"
+          "checks",
+          "delivery_kind"
         ],
         "dependencies": {
           "operation_id": [
@@ -23304,12 +23792,79 @@
               "type": "object",
               "properties": {
                 "final_commit": {},
-                "finalized_at": {}
+                "finalized_at": {},
+                "finality_kind": {}
               },
               "required": [
                 "final_commit",
-                "finalized_at"
+                "finalized_at",
+                "finality_kind"
               ]
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "delivery_kind": {
+                  "const": "git_branch"
+                }
+              },
+              "required": [
+                "delivery_kind"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "checks": {
+                  "const": "not_applicable"
+                },
+                "review": false,
+                "merge_method": false,
+                "observed_base": false,
+                "test_merge_head": false,
+                "status": {
+                  "not": {
+                    "type": "string",
+                    "enum": [
+                      "merging",
+                      "waiting_checks"
+                    ]
+                  }
+                },
+                "finality_kind": {
+                  "const": "git_branch"
+                }
+              },
+              "required": []
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "delivery_kind": {
+                  "const": "github_pr"
+                }
+              },
+              "required": [
+                "delivery_kind"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "checks": {
+                  "not": {
+                    "const": "not_applicable"
+                  }
+                },
+                "finality_kind": {
+                  "const": "github_merge"
+                }
+              },
+              "required": []
             }
           }
         ]
@@ -26145,30 +26700,12 @@
           },
           "remote_url": {
             "type": "string",
+            "minLength": 1,
             "maxLength": 2048,
-            "pattern": "^https://github[.]com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+[.]git$"
+            "pattern": "^https://[^\\s/@?#]+/[^\\s?#]+$"
           },
           "provider_metadata": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "github"
-            ],
-            "properties": {
-              "github": {
-                "type": "object",
-                "additionalProperties": false,
-                "required": [
-                  "repository_id"
-                ],
-                "properties": {
-                  "repository_id": {
-                    "type": "string",
-                    "pattern": "^[1-9][0-9]{0,15}$"
-                  }
-                }
-              }
-            }
+            "$ref": "#/components/schemas/RepositoryProviderMetadata"
           },
           "default_branch": {
             "type": "string",
@@ -26670,6 +27207,250 @@
         "required": [
           "source",
           "source_digest"
+        ]
+      },
+      "GitHTTPSCredentialInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "resource_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "username": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "pattern": "^[^:\\r\\n\\x00]+$"
+          },
+          "token": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "pattern": "^[^\\r\\n\\x00]+$"
+          }
+        },
+        "required": [
+          "resource_id",
+          "username",
+          "token"
+        ]
+      },
+      "GitHTTPSCredentialClear": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "resource_id": {
+            "$ref": "#/components/schemas/Id"
+          }
+        },
+        "required": [
+          "resource_id"
+        ]
+      },
+      "GitHTTPSCredentialStatus": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "resource_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "username": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "pattern": "^[^:\\r\\n\\x00]+$"
+          },
+          "generation": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "scope_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          }
+        },
+        "required": [
+          "resource_id",
+          "username",
+          "generation",
+          "scope_digest"
+        ]
+      },
+      "GitHTTPSCredentialChange": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "saved",
+              "cleared"
+            ]
+          },
+          "resource_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "username": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "pattern": "^[^:\\r\\n\\x00]+$"
+          },
+          "generation": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "scope_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          }
+        },
+        "required": [
+          "action",
+          "resource_id"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "const": "saved"
+                }
+              },
+              "required": [
+                "action"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "username": {},
+                "generation": {},
+                "scope_digest": {}
+              },
+              "required": [
+                "username",
+                "generation",
+                "scope_digest"
+              ]
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "const": "cleared"
+                }
+              },
+              "required": [
+                "action"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "username": false,
+                "generation": false,
+                "scope_digest": false
+              },
+              "required": []
+            }
+          }
+        ]
+      },
+      "RepositoryAccessResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "schema_version",
+          "operation_id",
+          "workspace_digest",
+          "remote_url",
+          "provider_metadata",
+          "default_branch",
+          "authentication"
+        ],
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "operation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "workspace_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "remote_url": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048,
+            "pattern": "^https://[^\\s/@?#]+/[^\\s?#]+$"
+          },
+          "provider_metadata": {
+            "$ref": "#/components/schemas/RepositoryProviderMetadata"
+          },
+          "default_branch": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1024
+          },
+          "authentication": {
+            "$ref": "#/components/schemas/RepositoryAuthentication"
+          }
+        }
+      },
+      "PublicationRefReadRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "request_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "push": {
+            "$ref": "#/components/schemas/PublicationPushRequest"
+          },
+          "push_request_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          }
+        },
+        "required": [
+          "schema_version",
+          "request_id",
+          "push",
+          "push_request_digest"
+        ]
+      },
+      "PublicationRefReadResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "request": {
+            "$ref": "#/components/schemas/PublicationRefReadRequest"
+          },
+          "worker_absent": {
+            "type": "boolean",
+            "const": true
+          },
+          "observation": {
+            "$ref": "#/components/schemas/PublicationRefObservation"
+          },
+          "observation_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          }
+        },
+        "required": [
+          "schema_version",
+          "request",
+          "worker_absent",
+          "observation",
+          "observation_digest"
         ]
       }
     },

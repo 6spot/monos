@@ -2,14 +2,13 @@ package host
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	protocol "monos.local/protocol"
+	"monos.local/runner/internal/wire"
 )
 
 func (s *inspectionSession) origin(ctx context.Context) (string, string, string, error) {
@@ -131,6 +130,9 @@ func (s *inspectionSession) fetch(ctx context.Context, access InspectionAccess) 
 		}
 	}
 	remote := func(args ...string) (string, error) {
+		if _, _, e := repositoryCredentials(a.RemoteURL, a.Authentication, 0); e != nil {
+			return "", inspectionFailed("access_denied")
+		}
 		if s.remoteGit != nil {
 			return s.remoteGit(ctx, repo, env, args...)
 		}
@@ -163,28 +165,11 @@ func (s *inspectionSession) fetch(ctx context.Context, access InspectionAccess) 
 }
 
 func inspectionAccessEnvironment(op protocol.Operation, a protocol.InspectionRepositoryAccessResult) ([]string, error) {
-	r := op.Inspection.Resource
-	expected := "https://" + r.RepositoryIdentity + ".git"
-	if op.InspectionDigest == nil || a.OperationID != op.OperationID || a.InspectionDigest != *op.InspectionDigest || !strings.HasPrefix(expected, "https://github.com/") || !strings.EqualFold(a.RemoteURL, expected) {
+	if op.Inspection == nil || op.InspectionDigest == nil || a.OperationID != op.OperationID || a.InspectionDigest != *op.InspectionDigest || wire.ValidateRepositoryEndpoint(op.Inspection.Resource, a.RemoteURL, a.ProviderMetadata) != nil {
 		return nil, inspectionFailed("repository_mismatch")
 	}
-	if r.ProviderMetadata != nil && r.ProviderMetadata.Github != nil && r.ProviderMetadata.Github.RepositoryID != a.ProviderMetadata.Github.RepositoryID {
-		return nil, inspectionFailed("repository_mismatch")
-	}
-	env := []string{}
-	switch string(a.Authentication.Kind) {
-	case "anonymous":
-	case "github_installation":
-		if !strings.HasPrefix(strings.ToLower(a.RemoteURL), "https://github.com/") || a.Authentication.Token == nil || a.Authentication.ExpiresAt == nil {
-			return nil, inspectionFailed("access_denied")
-		}
-		expiry, err := time.Parse(time.RFC3339, *a.Authentication.ExpiresAt)
-		if err != nil || !expiry.After(time.Now()) {
-			return nil, inspectionFailed("access_denied")
-		}
-		header := "AUTHORIZATION: basic " + base64.StdEncoding.EncodeToString([]byte("x-access-token:"+*a.Authentication.Token))
-		env = append(env, "GIT_CONFIG_COUNT=1", "GIT_CONFIG_KEY_0=http.https://github.com/.extraHeader", "GIT_CONFIG_VALUE_0="+header)
-	default:
+	env, err := repositoryAccessEnvironment(a.RemoteURL, a.Authentication)
+	if err != nil {
 		return nil, inspectionFailed("access_denied")
 	}
 	return env, nil

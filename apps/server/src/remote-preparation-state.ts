@@ -9,7 +9,7 @@ import {RemoteProviderError} from './github-remote.ts';
 import {publicationDigest as hash,credentialPath} from './publication-policy.ts';
 
 export interface RemoteItem {
- item_id:string;task_id:string;resource_id:string;runner_id:string;storage_id:string;repository_identity:string;repository_id:string;remote_url:string;delivery_ref:string;target_branch:string;marker:string;
+ item_id:string;task_id:string;resource_id:string;runner_id:string;storage_id:string;repository_identity:string;repository_id:string|null;remote_url:string;delivery_ref:string;target_branch:string;marker:string|null;delivery_kind:'github_pr'|'git_branch';
  pr_id:string|null;pr_number:string|null;last_published_proof:PublicationPublishedProof|null;last_published_digest:string|null;cancel_requested:boolean;cleanup_state:string;next_poll_at:Date;poll_progress:Record<string,unknown>|null;
 }
 export interface RemoteOperation extends Omit<RemotePreparationOperation,'operation_id'|'version'> {
@@ -44,6 +44,7 @@ export async function requestRemoteCancel(tx:Transaction,taskId:string):Promise<
  await tx.query("UPDATE delivery_operations SET dispatch_active=false WHERE task_id=$1 AND state='pending'",[taskId]);
 }
 export async function remoteScope(tx:Transaction,item:Pick<RemoteItem,'resource_id'|'repository_identity'|'repository_id'|'remote_url'>,workflowChanges=false):Promise<GitHubRemoteScope> {
+ if(!item.repository_id)throw new CommandError('denied_scope','GitHub scope requires a GitHub repository');
  const config=(await tx.query<GitHubCredentials>('SELECT app_id,installation_id,encrypted_key,key_fingerprint FROM github_configuration')).rows[0];
  return {resource_id:item.resource_id,repository_identity:item.repository_identity,repository_id:item.repository_id,remote_url:item.remote_url,workflow_changes:workflowChanges,...(config?{config}:{})};
 }
@@ -52,19 +53,21 @@ export async function appendRemoteObservation(tx:Transaction,item:RemoteItem,ope
  await tx.query('INSERT INTO remote_preparation_observations(id,item_id,task_id,operation_id,kind,observation,digest) VALUES($1,$2,$3,$4,$5,$6,$7)',[id,item.item_id,item.task_id,operationId,kind,observation,digest]);return digest;
 }
 export function verifyPushObservation(request:PublicationPushRequest,observation:PublicationRefObservation):void {
- for(const key of ['operation_id','item_id','task_id','resource_id','runner_id','storage_id','repository_identity','repository_id','delivery_ref'] as const)if(request[key]!==observation[key])throw new CommandError('payload_conflict','Remote observation scope differs');
+ for(const key of ['operation_id','item_id','task_id','resource_id','runner_id','storage_id','repository_identity','delivery_ref'] as const)if(request[key]!==observation[key])throw new CommandError('payload_conflict','Remote observation scope differs');
+ if(!same(request.provider_metadata,observation.provider_metadata))throw new CommandError('payload_conflict','Remote observation provider differs');
  if(!Number.isFinite(Date.parse(observation.observed_at)))throw new CommandError('payload_conflict','Remote observation time differs');
 }
 export async function publishProof(tx:Transaction,item:RemoteItem,op:RemoteOperation,observation:PublicationRefObservation):Promise<PublicationPublishedProof> {
  const request=validate<PublicationPushRequest>('PublicationPushRequest',op.request),result=validate<PublicationPushResult>('PublicationPushResult',op.result);
  if(op.kind!=='push'||op.state!=='settled'||hash(request)!==op.request_digest||hash(result)!==op.result_digest||!result.worker_absent||!['published','reconciliation_required'].includes(result.status)||result.request_digest!==op.request_digest||result.operation_id!==op.id||request.operation_id!==op.id||request.item_id!==item.item_id||hash(request.prepared)!==request.preparation_result_digest||hash(request.prepared.candidate)!==request.prepared.candidate_manifest_digest||result.item_id!==item.item_id||result.delivery_ref!==item.delivery_ref||result.candidate_head!==request.prepared.candidate?.head||result.candidate_manifest_digest!==request.prepared.candidate_manifest_digest||hash(result.observation)!==result.observation_digest)throw new CommandError('payload_conflict','Retained published operation differs');
- for(const key of ['task_id','resource_id','runner_id','storage_id','repository_identity','repository_id','delivery_ref'] as const)if(request[key]!==item[key])throw new CommandError('payload_conflict','Published item scope differs');
+ for(const key of ['task_id','resource_id','runner_id','storage_id','repository_identity','delivery_ref'] as const)if(request[key]!==item[key])throw new CommandError('payload_conflict','Published item scope differs');
+ if(!same(request.provider_metadata,remoteProviderMetadata(item)))throw new CommandError('payload_conflict','Published provider differs');
  verifyPushObservation(request,result.observation);
  verifyPushObservation(request,observation);
  if(observation.status!=='present'||observation.head!==request.prepared.candidate!.head)throw new CommandError('unmet_precondition','Remote candidate head is not confirmed');
  const prior=(await tx.query<{observation:PublicationPublishedProof}>("SELECT observation FROM remote_preparation_observations WHERE operation_id=$1 AND kind='published' ORDER BY created_at,id LIMIT 1",[op.id])).rows[0];
  if(prior)return prior.observation;
- const proof=validate<PublicationPublishedProof>('PublicationPublishedProof',{schema_version:1,operation_id:op.id,request_digest:op.request_digest,result_digest:op.result_digest,item_id:item.item_id,task_id:item.task_id,resource_id:item.resource_id,runner_id:item.runner_id,storage_id:item.storage_id,repository_identity:item.repository_identity,repository_id:item.repository_id,delivery_ref:item.delivery_ref,candidate:request.prepared.candidate,candidate_manifest_digest:request.prepared.candidate_manifest_digest,observation,observation_digest:hash(observation)});
+ const proof=validate<PublicationPublishedProof>('PublicationPublishedProof',{schema_version:1,operation_id:op.id,request_digest:op.request_digest,result_digest:op.result_digest,item_id:item.item_id,task_id:item.task_id,resource_id:item.resource_id,runner_id:item.runner_id,storage_id:item.storage_id,repository_identity:item.repository_identity,provider_metadata:remoteProviderMetadata(item),delivery_ref:item.delivery_ref,candidate:request.prepared.candidate,candidate_manifest_digest:request.prepared.candidate_manifest_digest,observation,observation_digest:hash(observation)});
  await appendRemoteObservation(tx,item,op.id,'ref',observation,observation.observation_id);
  const proofDigest=await appendRemoteObservation(tx,item,op.id,'published',proof);
  // The public fact is recorded before the next ordinary provider effect can be
@@ -90,3 +93,7 @@ export async function actualOverrideProofs(tx:Transaction,taskId:string,scanId:s
  return (await tx.query<PublicationOverrideProof>(`SELECT r.id receipt_id,r.confirmation_id,r.selection,r.selection_digest FROM publication_override_receipts r JOIN authorization_receipts a ON a.id=r.confirmation_id JOIN task_command_proposals p ON p.id=a.proposal_id JOIN publication_command_receipts c ON c.task_id=r.task_id AND c.request_id=r.request_id WHERE r.task_id=$1 AND r.scan_id=$2 AND a.consumed_by=r.request_id AND p.action='override_publication_findings' AND p.task_id=r.task_id AND p.content_digest=r.selection_digest AND p.content=r.selection AND c.envelope->>'name'='override_publication_findings' AND c.envelope->'payload'->>'confirmation_id'=r.confirmation_id AND ((c.envelope->'payload')-'confirmation_id'::text)=r.selection AND c.response->>'receipt_id'=r.id AND c.response->>'status'='committed' ORDER BY r.id`,[taskId,scanId])).rows.map(row=>{if(hash(row.selection)!==row.selection_digest)throw new CommandError('payload_conflict','Override receipt content differs');return validate('PublicationOverrideProof',row);});
 }
 export const same=(a:unknown,b:unknown)=>canonicalJSON(a)===canonicalJSON(b);
+
+export function remoteProviderMetadata(item:Pick<RemoteItem,'repository_id'|'delivery_kind'>) {
+ return item.delivery_kind==='github_pr'?{github:{repository_id:item.repository_id!}}:{};
+}

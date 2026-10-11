@@ -11,7 +11,7 @@ export interface GitHubRemoteScope {resource_id:string;repository_identity:strin
 export interface GitHubRemoteGrant {token:string;expires_at:string;repository_id:string;permissions:Record<string,'read'|'write'>}
 export type AcquireGitHubRemoteGrant=(scope:GitHubRemoteScope,profile:GitHubRemoteProfile)=>Promise<GitHubRemoteGrant>;
 export type RemoteReviewIntent=Pick<RemotePreparationProviderRequest,'item_id'|'delivery_ref'|'target_branch'|'kind'|'review'|'content'>;
-export type RemoteRefIntent=Pick<PublicationPushRequest,'operation_id'|'item_id'|'task_id'|'resource_id'|'runner_id'|'storage_id'|'repository_identity'|'repository_id'|'delivery_ref'>;
+export type RemoteRefIntent=Pick<PublicationPushRequest,'operation_id'|'item_id'|'task_id'|'resource_id'|'runner_id'|'storage_id'|'repository_identity'|'provider_metadata'|'delivery_ref'>;
 export interface ProviderBudget {remaining:number}
 export class RemoteProviderError extends Error {
  readonly reason:'credentials_missing'|'access_denied'|'rate_limited'|'provider_unavailable'|'invalid_provider_response'|'ambiguous_pr'|'unexpected_head'|'pr_missing';readonly cooldown_ms:number;
@@ -64,7 +64,7 @@ export class GitHubRemote {
  }
  async observeRef(scope:GitHubRemoteScope,request:RemoteRefIntent,grant:GitHubRemoteGrant,budget?:ProviderBudget):Promise<PublicationRefObservation> {
   const reply=await this.request(scope,this.prefix(scope)+'/git/ref/'+request.delivery_ref.slice(5).split('/').map(encodeURIComponent).join('/'),grant,budget);
-  const facts={schema_version:1,observation_id:randomUUID(),operation_id:request.operation_id,item_id:request.item_id,task_id:request.task_id,resource_id:request.resource_id,runner_id:request.runner_id,storage_id:request.storage_id,repository_identity:request.repository_identity,repository_id:request.repository_id,delivery_ref:request.delivery_ref,observed_at:new Date().toISOString()};
+  const facts={schema_version:1,observation_id:randomUUID(),operation_id:request.operation_id,item_id:request.item_id,task_id:request.task_id,resource_id:request.resource_id,runner_id:request.runner_id,storage_id:request.storage_id,repository_identity:request.repository_identity,provider_metadata:request.provider_metadata,delivery_ref:request.delivery_ref,observed_at:new Date().toISOString()};
   if(reply.status===404)return validate('PublicationRefObservation',{...facts,status:'absent'});
   const raw=reply.data as {ref?:unknown;object?:{type?:unknown;sha?:unknown}};
   if(raw?.ref!==request.delivery_ref||raw.object?.type!=='commit'||!oid(raw.object.sha))invalid();

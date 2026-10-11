@@ -80,7 +80,7 @@ func TestRemotePreparationGitHubKernelFixture(t *testing.T) {
 	token := strings.TrimSuffix(string(tokenRaw), "\n")
 	tokenRaw = nil
 	expires := time.Now().Add(5 * time.Minute).UTC().Format("2006-01-02T15:04:05.000Z")
-	access := protocol.PublicationAccessResult{Authentication: protocol.Authentication{Kind: "github_installation", Token: &token, ExpiresAt: &expires}, RemoteURL: "https://github.com/" + publicationKernelRepository + ".git", DeliveryRef: "refs/heads/monos/task/" + input.TaskID + "/" + input.ResourceID}
+	access := protocol.PublicationAccessResult{Authentication: protocol.RepositoryAuthentication{Kind: "github_installation", Token: &token, ExpiresAt: &expires}, RemoteURL: "https://github.com/" + publicationKernelRepository + ".git", DeliveryRef: "refs/heads/monos/task/" + input.TaskID + "/" + input.ResourceID}
 	if !validPublicationAuthentication(access) {
 		t.Fatal("ephemeral grant rejected")
 	}

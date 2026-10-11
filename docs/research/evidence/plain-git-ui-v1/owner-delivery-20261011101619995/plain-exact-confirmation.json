@@ -1,0 +1,990 @@
+{
+  "head": "bac64fae705d565a6116e46dd28b173c6e8899fc",
+  "dirty_candidate": true,
+  "source": [
+    {
+      "path": "apps/server/src/admin.ts",
+      "sha256": "5347006f87df79417ae45f6001121eb5cad993cb8cb863254a23c1df34339c6e"
+    },
+    {
+      "path": "apps/server/src/app.ts",
+      "sha256": "52b7ba30d62625729fa21a8061a22f7e927d9900349d0457de6289be38115270"
+    },
+    {
+      "path": "apps/server/src/artifacts.ts",
+      "sha256": "6c61c693e6a05ea907926ffce29a449b0fbfa89e510bee0c021df2a846a9fd97"
+    },
+    {
+      "path": "apps/server/src/auth.ts",
+      "sha256": "36096691863bc853e166b048728e5019b3c8ec064f8d037f9a7faedd54038f5d"
+    },
+    {
+      "path": "apps/server/src/completion-boundary.ts",
+      "sha256": "8cb0ed5e5e96fc85f03ec76b5d390f00026db048bac99ddccc5a85c598e26df8"
+    },
+    {
+      "path": "apps/server/src/configuration-guards.ts",
+      "sha256": "3256981287b8b548e03e5c86f1bf72f15c32b2312312962a6f482c0ab788567b"
+    },
+    {
+      "path": "apps/server/src/configuration.ts",
+      "sha256": "f1d52b93235a616ee4394ab8fa66bdefbabef1440167c8274fc512c26730c85a"
+    },
+    {
+      "path": "apps/server/src/discussion-state.ts",
+      "sha256": "71b518e74d0b10079f28939b79cd619cbf9a878a1ba9e04683b36afc037d5cb4"
+    },
+    {
+      "path": "apps/server/src/discussion.ts",
+      "sha256": "954924b01749677e53c37746b0994cf24cd72028b5e7b950f07b0f8991fcd765"
+    },
+    {
+      "path": "apps/server/src/dispatch-queue.ts",
+      "sha256": "fb5a5dc706a0fd3a2ff3ad401d6acc14b978fab273e38ad4ba472a834603a79c"
+    },
+    {
+      "path": "apps/server/src/fixtures.ts",
+      "sha256": "0dd87b9f8c9d8a8659b12b070f128f979649c0792ec0ee17ae7fef7213cfc2f6"
+    },
+    {
+      "path": "apps/server/src/git-https-credentials.ts",
+      "sha256": "1925d0eac90c7eb51bab271edcc910c30f9ec2138fb4666fce55ba032f10c8e6"
+    },
+    {
+      "path": "apps/server/src/github-finalization.ts",
+      "sha256": "95cc97a7be85238864cec3b28847a31a332964f4f15276599a97ea064b805938"
+    },
+    {
+      "path": "apps/server/src/github-remote.ts",
+      "sha256": "812fd6e0afc4f90f02066422f14c1d400e52496cef918422a47985402df00710"
+    },
+    {
+      "path": "apps/server/src/github.ts",
+      "sha256": "b40f32c4f0d5d20c462edcf621df95ce02d298ee2e28185bf39cffc409954e08"
+    },
+    {
+      "path": "apps/server/src/main.ts",
+      "sha256": "d8c365f5ebebfcfb1ea1e9ea98588c5f64272dbc3d94bffc2446271aa370f039"
+    },
+    {
+      "path": "apps/server/src/node-completion.ts",
+      "sha256": "1e883bea8651860b1e215a36d5ccca6dfaa9db951bbf678953d682b43a4a2ab9"
+    },
+    {
+      "path": "apps/server/src/node-execution-state.ts",
+      "sha256": "c721e569c5a649eb1a73f13d4f17469e594cc57a7a7dd85c1a763fced1d80933"
+    },
+    {
+      "path": "apps/server/src/node-execution.ts",
+      "sha256": "d6c751d6d06408d552d7ffc8070dd88997c96b1be076503f3a8a4bf19fa25c2d"
+    },
+    {
+      "path": "apps/server/src/node-integration.ts",
+      "sha256": "fac61b16ada8f63878e6d8499e7238be3f859cb87e3f7cb9ca9c6c0ffc82523a"
+    },
+    {
+      "path": "apps/server/src/node-rework-state.ts",
+      "sha256": "e417d2970a7ab7d2a676ec9cbb683e5f89cad6423527e0c71934b5df298cf5f4"
+    },
+    {
+      "path": "apps/server/src/node-rework.ts",
+      "sha256": "09c08498c552a0ca9475fac35206592b122e9bddca70d4051fd82c9b30087762"
+    },
+    {
+      "path": "apps/server/src/node-upstream-context.ts",
+      "sha256": "5310c668aa2ef107fbff826cb3fb01350fef36acebf27275707419532c11a3b6"
+    },
+    {
+      "path": "apps/server/src/owner-access.ts",
+      "sha256": "591dd60d5d6a5950ad926e5d97236bc6450d6524a9dc2871d9d6230d1fb75943"
+    },
+    {
+      "path": "apps/server/src/owner-admin.ts",
+      "sha256": "21d5953a1805a347dd0b4e60c9d4f1bb89d99867a8d6dac6f31db939888b59cb"
+    },
+    {
+      "path": "apps/server/src/owner-commands.ts",
+      "sha256": "51de02588da33c6cf0a88433f125d8984cf97d5c068889595ca3f4ccaa0c3875"
+    },
+    {
+      "path": "apps/server/src/owner-delivery-commands.ts",
+      "sha256": "0b08dccae2c3e80eaff2a97b9fdf3a00c950c9668878d2aa2d2404bc95f73ae1"
+    },
+    {
+      "path": "apps/server/src/owner-delivery-control.ts",
+      "sha256": "c655284aa708a7053ae1d70935a2fa969fbc8e63ca97ac2a6ca1e8acaee0417b"
+    },
+    {
+      "path": "apps/server/src/owner-delivery-guards.ts",
+      "sha256": "9df60b850a25c2f7102bd3f719a530c9f527933cdd37dc5ab9b209b217932539"
+    },
+    {
+      "path": "apps/server/src/owner-delivery-preparation.ts",
+      "sha256": "7661bc7736e541ac43bd7cadad1ea9cd05f2d27657153f0b67cb355d292eb5ce"
+    },
+    {
+      "path": "apps/server/src/owner-delivery-reads.ts",
+      "sha256": "95783de9f701088370e778e6f5bb6964a7960b34f37ec3edd9be5752f673cc3e"
+    },
+    {
+      "path": "apps/server/src/owner-delivery-state.ts",
+      "sha256": "56f9c19e6aeb24676bba65bcb1b896b23dfbb73e4dadfb8b4f79d0acb92a5c99"
+    },
+    {
+      "path": "apps/server/src/owner-delivery-worker.ts",
+      "sha256": "cdcf736946b7d666e48ca30437fa6cd15eba2e2588518e40d10f8a7355656705"
+    },
+    {
+      "path": "apps/server/src/owner-execution.ts",
+      "sha256": "059cc25943bc3f64f2a4be6db9de353eb0b24a8e515ec7802d7c0d28db7aa973"
+    },
+    {
+      "path": "apps/server/src/owner-reads.ts",
+      "sha256": "01589268ae2e898e271e37f29bea7f52a1e51849f69e0d957d5a590e1fceecb5"
+    },
+    {
+      "path": "apps/server/src/owner-review-control.ts",
+      "sha256": "622ee12beccd2eb16fdf292ffb87e362b91d493c440368a749e85226121df0b8"
+    },
+    {
+      "path": "apps/server/src/publication-candidate-reads.ts",
+      "sha256": "e515810cffef64de8663ef73c837cb7b83908ebd4c08cdc3e8f628b8d63a8ed3"
+    },
+    {
+      "path": "apps/server/src/publication-candidates.ts",
+      "sha256": "9e52a63b64dc787e53e72ebf0a8f528cef3d14c89a40a1349d98d20a7a3a4c2d"
+    },
+    {
+      "path": "apps/server/src/publication-commands.ts",
+      "sha256": "485dd28898ca996835bf8a48cb7710c77c4d08f4815fd478f6c46e0d4242e7f3"
+    },
+    {
+      "path": "apps/server/src/publication-policy.ts",
+      "sha256": "df313cf832eb8bb557974ffdbd27f5608e4ca21222e064f68918c96c87c9480c"
+    },
+    {
+      "path": "apps/server/src/publication-ref-read-broker.ts",
+      "sha256": "8b7e6bd331f45d3e1eb46c2993299e8ec463e420c8c8ce3c63305fa33a3ce29a"
+    },
+    {
+      "path": "apps/server/src/remote-preparation-access.ts",
+      "sha256": "d0f366986c0bf8266da9e3273ab366863d0bc354dffcd782dd949c1aa8af88a6"
+    },
+    {
+      "path": "apps/server/src/remote-preparation-commands.ts",
+      "sha256": "cf4f7abd1e39e4494d4132dbdefe56f6a1d008238905c746ae54bc1cfa08d713"
+    },
+    {
+      "path": "apps/server/src/remote-preparation-guards.ts",
+      "sha256": "2e56ba67bbf2047396fb9c792597aedf2c60362b587691c280014aa351428a88"
+    },
+    {
+      "path": "apps/server/src/remote-preparation-poll.ts",
+      "sha256": "09a35527b8afe0de5a6a7510364aad13eccab03c896721e6eb8f30d8498d6061"
+    },
+    {
+      "path": "apps/server/src/remote-preparation-reads.ts",
+      "sha256": "00d01e33bcb17e2c1fbdc9b2a3677355c1a2e110c536b09b692e6c9a057b7b8a"
+    },
+    {
+      "path": "apps/server/src/remote-preparation-ref-read.ts",
+      "sha256": "598f06c6df34de1c035455c1cafa011483de9309166907b49d4e8131ffc64dd5"
+    },
+    {
+      "path": "apps/server/src/remote-preparation-state.ts",
+      "sha256": "7e22d9a8e349137ba619efc5ec44c760974d6a92baeb21cf28c3fbbcf0195c6b"
+    },
+    {
+      "path": "apps/server/src/remote-preparation.ts",
+      "sha256": "0e4544672d1212b1b5d1fb8a18edb927a898d74029c7b943370dc1266f095395"
+    },
+    {
+      "path": "apps/server/src/repository-inspection-instructions.ts",
+      "sha256": "3a3b653fcf4b5535464da1e7c7bc6e2e982e62d02b319a4ab1140e0ff407006d"
+    },
+    {
+      "path": "apps/server/src/repository-inspection.ts",
+      "sha256": "4028ea479ec484154c1179f6704d09b57b45ae42ee8805e492a894ad559952c3"
+    },
+    {
+      "path": "apps/server/src/result-content-reads.ts",
+      "sha256": "3773ac29837550bd68246ccc44ba9d53a534c7c8e17fb2e174f8d46b05f5387f"
+    },
+    {
+      "path": "apps/server/src/result-read-broker.ts",
+      "sha256": "6b983363f9a59d54295e72c189b98f56be3b04141f4876ebe8be7dd04f147a68"
+    },
+    {
+      "path": "apps/server/src/runtime-continuation-current.ts",
+      "sha256": "ea6ec4a17afda568fa3c8690d76eed94b7a09580c4422ee3531da626714c1f75"
+    },
+    {
+      "path": "apps/server/src/runtime-continuation-state.ts",
+      "sha256": "c41b3c7107508fe9f728554101add9ce3d4a1876bfd64ec9fb2ae478310b5dc3"
+    },
+    {
+      "path": "apps/server/src/runtime-continuation.ts",
+      "sha256": "c01d8b94551e83c5bcc9db9131261cf3dbe65e62a30e510e1b1d89da1723e33d"
+    },
+    {
+      "path": "apps/server/src/runtime-scheduling.ts",
+      "sha256": "1c8df3944bdd719839cec747abce3782208a887a66a671228789d6e5fd7f7a58"
+    },
+    {
+      "path": "apps/server/src/service.ts",
+      "sha256": "d0c6fbe777c4a319801e448c5d1d8d2fca875de347351784e2e7da2a60135025"
+    },
+    {
+      "path": "apps/server/src/task-board-reads.ts",
+      "sha256": "ce460f85efbbd66c5e6ea2bae02b0e772ab7249170ec752bb2c558afc97d3078"
+    },
+    {
+      "path": "apps/server/src/task-conversation-reads.ts",
+      "sha256": "cb492f0319286476c76addf9a1e0bf7454aab7806634b17ff3b7dad23043985d"
+    },
+    {
+      "path": "apps/server/src/task-conversation-state.ts",
+      "sha256": "189bb5ce467dfe1988f3675d976757b2df6a8689d3d8cad847977d7220b44ea4"
+    },
+    {
+      "path": "apps/server/src/task-conversation.ts",
+      "sha256": "3e452f7d1c4abd0f25a8d211de9ef25d68bf23f131d476fc3ae898153879155e"
+    },
+    {
+      "path": "apps/server/src/task-guidance.ts",
+      "sha256": "0a590e482719c541b418ac9ec2060f88ce5b70b3149692614fffab7160cd14f7"
+    },
+    {
+      "path": "apps/server/src/task-planning-state.ts",
+      "sha256": "753128c5278620b603292336974c578cd4a68f915f92858ca3ae3a70853995d1"
+    },
+    {
+      "path": "apps/server/src/task-planning.ts",
+      "sha256": "bda06da18e0632fb5d0ebcb01fda3f9c38064713c9697525dee4c495981bceac"
+    },
+    {
+      "path": "apps/server/src/task-previews.ts",
+      "sha256": "b76a687e92e6e2fe86770ff596dc2920c8104688a4beec1b7e34ac05d5e6cc07"
+    },
+    {
+      "path": "apps/server/src/task-records.ts",
+      "sha256": "45db80b06048e3613b0c7fd54fe0b8091ba84b5bba6cd730fc0b8741a9a8c832"
+    },
+    {
+      "path": "apps/server/src/task-replan-holds.ts",
+      "sha256": "da0d34976f709004157ebb4afc834b6d8b86ba14b04170af835dd8ff436d3d10"
+    },
+    {
+      "path": "apps/server/src/task-replan-impact.ts",
+      "sha256": "15f9851ee013d8db90193e50723ba30e75122cbb32925b14e2cbe41217654a38"
+    },
+    {
+      "path": "apps/server/src/task-replan-publication.ts",
+      "sha256": "ca12d806823c201a93fda0053ce93db60c15ff925b9f5140cd68ebd82983076e"
+    },
+    {
+      "path": "apps/server/src/task-replan-reads.ts",
+      "sha256": "739b4cfd34dbf96be5298e6740362bff25880d98b2fca60a4681a3f9143aa369"
+    },
+    {
+      "path": "apps/server/src/task-replan-state.ts",
+      "sha256": "14dae0c70b4ac0fa5eba56d0bbfef9e8cf9cbd4e510d55f35da8ca3da0869cee"
+    },
+    {
+      "path": "apps/server/src/task-replan-workspaces.ts",
+      "sha256": "a0307498e88e9a1b69a6ced5e5822ff29606d6a2c9c0f78db8deaf67eb4068f3"
+    },
+    {
+      "path": "apps/server/src/task-replan.ts",
+      "sha256": "3bb04388908169a60e14d61aab3fd5957303f41125397d0ea7238cf1426bb130"
+    },
+    {
+      "path": "apps/server/src/task-result-reads.ts",
+      "sha256": "8feb614fe6132b356ac449e57ad72301ec32e8aab339e30f5ce139f0b7b30fbd"
+    },
+    {
+      "path": "apps/server/src/task-review-basis.ts",
+      "sha256": "f732f6faa4d1d5b4faf06b959acd90ea78d589720ae2be982018849380572f09"
+    },
+    {
+      "path": "apps/server/src/task-review-commands.ts",
+      "sha256": "1598678ebe0956a048541bf6e66d665f48cd2a5f702d5f2694e09c8836f4b67a"
+    },
+    {
+      "path": "apps/server/src/task-review-coordinator.ts",
+      "sha256": "7b4a93e8c4680064ec8abdec9272d3d127b7093ee7ca951caa21f8e03b1cff59"
+    },
+    {
+      "path": "apps/server/src/task-review-reads.ts",
+      "sha256": "4599215182293c03f2eb787568e4f37e5ac0b1508b63656063a9092d71cfaacd"
+    },
+    {
+      "path": "apps/server/src/task-review-sources.ts",
+      "sha256": "f4991c5513a1d557825f29aa5393e6ca9acce213bf3f0de01c6e47f806f91c42"
+    },
+    {
+      "path": "apps/server/src/task-review-state.ts",
+      "sha256": "ff88013f3a53d06971855bc566c03eb087f929db92e415ba6e09898aa113cb45"
+    },
+    {
+      "path": "apps/server/src/task-specification-reads.ts",
+      "sha256": "bfe7ce5547ec43a9dd807f56cb73c2ebe9a158e819685c4bf5a60b7ef794e611"
+    },
+    {
+      "path": "apps/server/src/task-specification-settlement.ts",
+      "sha256": "91b08e2a97b98e481455d7b4f18a735a63e12cad397ee02854e311ef342427a5"
+    },
+    {
+      "path": "apps/server/src/task-specification-state.ts",
+      "sha256": "b964a6b612e6bb15e5b5c8454a93b3f7c1d656d4a1fba4ec58f478727056b889"
+    },
+    {
+      "path": "apps/server/src/task-specification.ts",
+      "sha256": "945d6f5ee0facafcdac9a35ddc726e13c28d85d6e8d77e6353ea919710ca7d46"
+    },
+    {
+      "path": "apps/server/src/task-workspace-reads.ts",
+      "sha256": "63f16cc7c6d770586b699166d5eb4d016cf89f0527968c0f98de28791974385e"
+    },
+    {
+      "path": "apps/server/src/todo-attempt-reads.ts",
+      "sha256": "5f4983f8be7e578910a60a312960083bd82909e752e18b26f5bf33e8c975962f"
+    },
+    {
+      "path": "apps/server/src/todos.ts",
+      "sha256": "768bc1daae2e5d874117710bb2a115ef62be1df98de93b711db56d23da5a5505"
+    },
+    {
+      "path": "apps/server/src/transport-config.ts",
+      "sha256": "3547c8135626cd2b2e9aac8b46ec245b84715ff52bbd1193ae3b18589b748e20"
+    },
+    {
+      "path": "apps/server/src/workspace-placement.ts",
+      "sha256": "b111fe91c874e501f7e19e079006472961be9cc536bd1e238c4b5e617222251b"
+    },
+    {
+      "path": "apps/server/src/workspace-rework-transfer.ts",
+      "sha256": "c6fdfdbeb67a78799a57c18733fd9854badee9e5a26f1a1f080e38fd2002e36f"
+    },
+    {
+      "path": "apps/server/src/workspace-serial-transfer.ts",
+      "sha256": "ff33605572d310067fc6195296d68e887fed544d7012114527d107d912b8ab4d"
+    },
+    {
+      "path": "apps/server/src/workspace-sources.ts",
+      "sha256": "47cd3d096fb328bf0a3c1d142b5f90382f91556dcf21644d80037e0dfdef6d12"
+    },
+    {
+      "path": "apps/server/src/workspaces.ts",
+      "sha256": "ccf79228abe0cbc8a89dbf77d94157b6eac11fb01bd51fd0e1a9b0d1ec786197"
+    },
+    {
+      "path": "apps/server/test/fixtures/admission-worker.ts",
+      "sha256": "a6f42c841895c96df6bc04e21921f65dc7534005eb16b335942cace1ba471dca"
+    },
+    {
+      "path": "apps/server/test/fixtures/claim-worker.ts",
+      "sha256": "34c4b58db3f7a1bb1507ade4766ecfde26b7772d77d764c774e1cfc5d367ec17"
+    },
+    {
+      "path": "apps/server/test/fixtures/execution-ui-fixture.ts",
+      "sha256": "bc7900f32b74ced51114564fc9f889bcf6a6ba0416f581552c794932aaca8c11"
+    },
+    {
+      "path": "apps/server/test/fixtures/github-v1-credentials.json",
+      "sha256": "6ee9857014fbe3491714c8ea98f00bec5a677866f9a0c1ee8142edec8b094ea3"
+    },
+    {
+      "path": "apps/server/test/fixtures/multi-repository-delivery-fixture.ts",
+      "sha256": "bd62b7ac81dedfe51cd27885e51bb18bf705edf9700c746ca40b7f38a24df9d2"
+    },
+    {
+      "path": "apps/server/test/fixtures/multi-repository-workspaces-fixture.ts",
+      "sha256": "5ce502721dd2dcc29073d2d9a81215086ad82ca33cc5d57e122d67c096fd7d09"
+    },
+    {
+      "path": "apps/server/test/fixtures/node-command-worker.ts",
+      "sha256": "367ade2d91a45e429dc774a5a27c0009da187bcbe77feba1f1b349cbe5921deb"
+    },
+    {
+      "path": "apps/server/test/fixtures/node-execution-worker.ts",
+      "sha256": "b263c781314fc5184ae51d7c32de0dd57b9ed5deabebb708468c5d2d3858a5fe"
+    },
+    {
+      "path": "apps/server/test/fixtures/owner-delivery-authority-fixture.ts",
+      "sha256": "ced1aab0ec1aa5eb1ac0f01d77eada2c01494dfbe19fe9ee23f2c8a31f30274b"
+    },
+    {
+      "path": "apps/server/test/fixtures/owner-delivery-fixture.ts",
+      "sha256": "413fb535f9090d1232ef4e79cd8843374bb284c02f360d9659c3455dc4db9b20"
+    },
+    {
+      "path": "apps/server/test/fixtures/owner-delivery-transaction-child.ts",
+      "sha256": "6d9890bb80b2e496f2e6854be4da9f48f92651bc1a77ee755eef69bb678ee5d9"
+    },
+    {
+      "path": "apps/server/test/fixtures/parallel-workspaces-fixture.ts",
+      "sha256": "d10a3166d31862010f5fb27eb32d0a3fc8c9fbf0451512a728ddc0f38265e2bc"
+    },
+    {
+      "path": "apps/server/test/fixtures/process-worker.ts",
+      "sha256": "ed159e5dbb64e31dd1a42804e8d8457cbbdb85e3d7365151c6a1f9af75f5daae"
+    },
+    {
+      "path": "apps/server/test/fixtures/promotion-worker.ts",
+      "sha256": "774124279543e0b11e52f67023b1dbdbcea4c9bd4a15dc09ff2312ebf7c904af"
+    },
+    {
+      "path": "apps/server/test/fixtures/publication-fixture.ts",
+      "sha256": "23adfe42e3e786a8ab545954db9fc650a92a22dc6ab656f5bd873c7052895db3"
+    },
+    {
+      "path": "apps/server/test/fixtures/result-read-fixture.ts",
+      "sha256": "facd03b975833be8b013da8547285b78bf26fe4324617ecd07c2bdbe0b2a16bd"
+    },
+    {
+      "path": "apps/server/test/fixtures/review-correction-fixture.ts",
+      "sha256": "66a02219ff1c75a997b403173d8b141ac6eecf60ae28d483cbc7ab3e424bbdc2"
+    },
+    {
+      "path": "apps/server/test/fixtures/review-delivery-worker-fixture.ts",
+      "sha256": "b24811ecde71b5c13549bcbe35a74b11126a7317af5a6ac6ae8df873e80bc814"
+    },
+    {
+      "path": "apps/server/test/fixtures/rooted-runner.ts",
+      "sha256": "e4d82278ee05b342dc827c739247791dd69cbe60bc8e91251ca34e258a0369a3"
+    },
+    {
+      "path": "apps/server/test/fixtures/task-conversation-fixture.ts",
+      "sha256": "6e3033142c927976e94fdbb669249f1279bae4dffca7a8bac4f1fd7cb951c09e"
+    },
+    {
+      "path": "apps/server/test/fixtures/task-conversation-worker.ts",
+      "sha256": "62337845e7c5176e795c49ae1327d20232fe77223f8c3a4fd6954e2827151f7c"
+    },
+    {
+      "path": "apps/server/test/fixtures/task-creation-worker.ts",
+      "sha256": "f9bd07bb48d7d9f7760ce243c2583cd255b9c2d783bbf47a48e00bfd4df0a885"
+    },
+    {
+      "path": "apps/server/test/fixtures/task-preview-fixture.ts",
+      "sha256": "2e567be79d0eaf34dbb8edefdd070b7de7da8841c5af7afb6994e09744cb2f9d"
+    },
+    {
+      "path": "apps/server/test/fixtures/task-replan-fixture.ts",
+      "sha256": "60a03743e1822e50933d20a9b0fd509fa50506e68bc4b1cf3c58ae54e432aa61"
+    },
+    {
+      "path": "apps/server/test/fixtures/task-replan-multi-fixture.ts",
+      "sha256": "3e609959ab8f16ac85e508ffec09a8807f0fb63e5a6ed4af70409a2c5dc5e126"
+    },
+    {
+      "path": "apps/server/test/fixtures/task-specification-worker.ts",
+      "sha256": "3d5fd181a7049ff995e19609fbb454945af8a33a7389a140427dbb12d2f22fc6"
+    },
+    {
+      "path": "apps/server/test/fixtures/web-server.ts",
+      "sha256": "240ec21bc956d652304d261e9f3bfe4abed2391168545ff590264e0a855dee61"
+    },
+    {
+      "path": "apps/web/owner-delivery.playwright.config.ts",
+      "sha256": "999dce7b7d22a6d776034c2ce7f450789bb32fe1935563b38d4aad51be39b083"
+    },
+    {
+      "path": "apps/web/src/app/app.tsx",
+      "sha256": "f3415bfaa7593bb8752d1ca3d243d7a0b503e72e3bfaf3e09e5d4c8b8bcee0e7"
+    },
+    {
+      "path": "apps/web/src/components/forms.tsx",
+      "sha256": "47ef7a738b37acfd8e292e5c918683fa5c8d0d1a44b6934e073731c98443f763"
+    },
+    {
+      "path": "apps/web/src/components/page-header.tsx",
+      "sha256": "dad3dcd13be5af829867659a8198ecdf213542f07829c1c67061a941803ef713"
+    },
+    {
+      "path": "apps/web/src/components/ui/button.tsx",
+      "sha256": "45cdd2a87ec353feab3145cb0342205a6314db8c339b0bc5b9f70938694c3c2f"
+    },
+    {
+      "path": "apps/web/src/components/ui/checkbox.tsx",
+      "sha256": "618c349e15065e189e8007d96b0d0eb3caf39e5b8cd875a21d5162ba397c5960"
+    },
+    {
+      "path": "apps/web/src/components/ui/dialog.tsx",
+      "sha256": "f59b3f81018c56cb2c7f77ed38a04be67cdfc12f23f323f283c947527728f2b0"
+    },
+    {
+      "path": "apps/web/src/components/ui/input.tsx",
+      "sha256": "feaffe8d386ab8273eb0da9590f4e69d2e4e8eada17769dbe3d338e8f7594811"
+    },
+    {
+      "path": "apps/web/src/components/ui/label.tsx",
+      "sha256": "94f7b1d79727725b54271d7fe771f46613c54bf302b5570a646f319d6dd2abf0"
+    },
+    {
+      "path": "apps/web/src/components/ui/native-select.tsx",
+      "sha256": "f6fe86d6430edd1b99b81e3660302aaea2f39d9228227e328ce5a4804a2aa550"
+    },
+    {
+      "path": "apps/web/src/components/ui/textarea.tsx",
+      "sha256": "f23ee3caddc6eb8b8c2d515ec3a1b1dc0457687d1199429707d249dc0caf1570"
+    },
+    {
+      "path": "apps/web/src/features/discussion.tsx",
+      "sha256": "da4dc07d827a1664a2f41c9836fff279465b336dc13cd1c88fea9e5b837cb5cb"
+    },
+    {
+      "path": "apps/web/src/features/execution-board.tsx",
+      "sha256": "e83e1fc0e98a4ca349739f70dc64d1df8a70a210ff13ba4f1ac1100a67ea643b"
+    },
+    {
+      "path": "apps/web/src/features/execution.tsx",
+      "sha256": "006a8abcab53f393f4bf3490d2e33b68d036a0ecb51136832aa6e4d348d8f431"
+    },
+    {
+      "path": "apps/web/src/features/git-https-credential.tsx",
+      "sha256": "2367fdf3085026cc492b1b4e01569a4025a4df63b3570ba9e68bd092432c38cf"
+    },
+    {
+      "path": "apps/web/src/features/github.tsx",
+      "sha256": "414ad8b0004b631fc0d1af09266a4706de292dd9de31fe0077a21b0eee9aff06"
+    },
+    {
+      "path": "apps/web/src/features/node-rework.tsx",
+      "sha256": "cc6ea26f403e018a721b07b8f8960e86ed9d337a8bce862f43a9873291283e30"
+    },
+    {
+      "path": "apps/web/src/features/owner-delivery.tsx",
+      "sha256": "4ba8bc9fc23a1c739d666cc372e8adb15bedf0411681368e94ff29a7430ffed1"
+    },
+    {
+      "path": "apps/web/src/features/policy-editor.tsx",
+      "sha256": "8a3d619389e8336339af5da857eebd0ec0c08920d2bc429b4ef5010915eb8a95"
+    },
+    {
+      "path": "apps/web/src/features/projects.tsx",
+      "sha256": "dd709e69c9055930c6353b41bc30060213e557764bd63a2d7744b91c8156bc4f"
+    },
+    {
+      "path": "apps/web/src/features/publication-candidate.tsx",
+      "sha256": "5dab4113506ff2c5fd331883d6a677d44c915492979a7cce26747ba255c6dc4d"
+    },
+    {
+      "path": "apps/web/src/features/remote-preparation.tsx",
+      "sha256": "4dcc2d2a67e108b168963b751635abec14deeac05da31e4a29de146362b0e0f8"
+    },
+    {
+      "path": "apps/web/src/features/result-inspector.tsx",
+      "sha256": "7c1191b3cbcf66a04df2b880082a2c0351f9f3149c9c368299e640f56b67da79"
+    },
+    {
+      "path": "apps/web/src/features/review-correction.tsx",
+      "sha256": "35b8d0873cbb6c62318f1a916521b21f9d6ef21eeec45fd6b64b669ce45b94a7"
+    },
+    {
+      "path": "apps/web/src/features/roles.tsx",
+      "sha256": "4e8aa8b46f0267dd979aa5597fa4baa5cc547e1481324831efc8372265e20986"
+    },
+    {
+      "path": "apps/web/src/features/task-controls.tsx",
+      "sha256": "f3605782a42dc272ae0011950de2ecd0525ad426b9b0757097b5a89e9f562a7c"
+    },
+    {
+      "path": "apps/web/src/features/task-conversation.tsx",
+      "sha256": "66031765614841604ad252d9c7f00a5950cfdb14e54ee07954a2871fb40c73c5"
+    },
+    {
+      "path": "apps/web/src/features/task-decisions.tsx",
+      "sha256": "0b8465647fd87637a77af6a2fb46503cbfffcc5ef716276ed2eac5b8580189e7"
+    },
+    {
+      "path": "apps/web/src/features/task-detail.tsx",
+      "sha256": "be97d354a1e1ea965ba46f1f55cec54f70691a23952054be0c36b27fc4b73471"
+    },
+    {
+      "path": "apps/web/src/features/task-execution.tsx",
+      "sha256": "a6bbbc5940c224b2d411d796c07cecceb5813b1515d0baa993d8acbe483e2fcc"
+    },
+    {
+      "path": "apps/web/src/features/task-overview.tsx",
+      "sha256": "e649309aa6db622ba8ad03a2af2cb7e8fe501a16a06b4ea143311afab1bf8884"
+    },
+    {
+      "path": "apps/web/src/features/task-preview.tsx",
+      "sha256": "f45812c435f82d4d60eccf47a07e58882134b185f87bf5584550d9bc676ef9f1"
+    },
+    {
+      "path": "apps/web/src/features/task-shared.tsx",
+      "sha256": "1610848c6185cbd9b6b16159fa0df75e63d71034fd2e0f7906a7d42f244de7cb"
+    },
+    {
+      "path": "apps/web/src/features/task-timeline.tsx",
+      "sha256": "a0219dee15780699bdebc9c33a6439375b1c0c2a859074e1c5ade9eaa8219725"
+    },
+    {
+      "path": "apps/web/src/features/task-ui.css",
+      "sha256": "e86f603175910bd98f398c91137bb1a6e317d6b4b61e0a3bc148e1feda5fd51e"
+    },
+    {
+      "path": "apps/web/src/features/todos.tsx",
+      "sha256": "383edd952e03450d43bdf458f9a6a668147b31d07f113d693f904297117c8b92"
+    },
+    {
+      "path": "apps/web/src/lib/api.test.ts",
+      "sha256": "f29ae5794ab0246cae9c42fb428b430cdbe7c84ca8e37e290a456d1b4491b425"
+    },
+    {
+      "path": "apps/web/src/lib/api.ts",
+      "sha256": "1b720cc71c6f663a1667f780339e7801690a822c3b368d7ec11856a5dc9bc99d"
+    },
+    {
+      "path": "apps/web/src/lib/attempt-logs.test.ts",
+      "sha256": "d87d16de73b007a9afb8c35fc7391d147c7311f96bfff9ecf0996ddb01d15877"
+    },
+    {
+      "path": "apps/web/src/lib/attempt-logs.ts",
+      "sha256": "9709bbabdea90199b251b80af21ab12ad7f1c7860e5dc3a445a3fa9a309170c2"
+    },
+    {
+      "path": "apps/web/src/lib/browser-crypto.test.ts",
+      "sha256": "1eea37b8829c12b55705204705a8ab0f6d823d54b5bc8725e42a8914e317db87"
+    },
+    {
+      "path": "apps/web/src/lib/browser-crypto.ts",
+      "sha256": "faac6f7c62e10335591f4aec02bcf35573ca82a689f34a6340e189a40b777070"
+    },
+    {
+      "path": "apps/web/src/lib/discussion-api.test.ts",
+      "sha256": "be536898f5db8e8fa45d1d9a5b762c41af7281ef6e0a76a084976e3620e3df48"
+    },
+    {
+      "path": "apps/web/src/lib/discussion-api.ts",
+      "sha256": "9c851908e8bb24852ca18711bd2cab09919dc2a8fcdace1ea7b5319d2cc4a38a"
+    },
+    {
+      "path": "apps/web/src/lib/node-rework-api.test.ts",
+      "sha256": "20167a445f664931efc491744b3dbb931597c242069f372f1d69022db91b9dac"
+    },
+    {
+      "path": "apps/web/src/lib/owner-delivery-api.test.ts",
+      "sha256": "cfb9119bafbabf8f441ad5d04b05b0e2f1a9c768fce4b2974c172c13dac095cd"
+    },
+    {
+      "path": "apps/web/src/lib/owner-delivery-api.ts",
+      "sha256": "c48dd5eef20ec02561d786a81ed601704a208ce87416b7b4b252f13ec86b2cbf"
+    },
+    {
+      "path": "apps/web/src/lib/publication-api.test.ts",
+      "sha256": "881ce0e282e56c2949b4166ed6590ff9e0b55ba234eaf9edffa0a757654d079a"
+    },
+    {
+      "path": "apps/web/src/lib/publication-api.ts",
+      "sha256": "2b2410afd64514fc9595019416be99d030292ba368967c02b45cca989d8873ab"
+    },
+    {
+      "path": "apps/web/src/lib/remote-preparation-api.test.ts",
+      "sha256": "29587e5fea58293d6bffb7746300484f80c7216ed4db3e02a335d857a59fd723"
+    },
+    {
+      "path": "apps/web/src/lib/remote-preparation-api.ts",
+      "sha256": "0b0748caa6b469ded086f0882e256c8f489444fa3c12d13012339c4c414102ca"
+    },
+    {
+      "path": "apps/web/src/lib/result-api.test.ts",
+      "sha256": "a3e549dcf186ccdf83e96f159dd89529a663825f6942d402816a970310cd72df"
+    },
+    {
+      "path": "apps/web/src/lib/review-correction-api.test.ts",
+      "sha256": "f88b73678e25524e619b1062b06d2aacff240a9cdeda50c5d23367529bd4990c"
+    },
+    {
+      "path": "apps/web/src/lib/review-correction-api.ts",
+      "sha256": "cf7373379e5b9199c535003197b2970e68eb568b137df01078a731fd8ff18566"
+    },
+    {
+      "path": "apps/web/src/lib/task-api.test.ts",
+      "sha256": "bfb51df1a2017df367074cd973601cbebd5002a1e738abd3316fd9242c822c5b"
+    },
+    {
+      "path": "apps/web/src/lib/task-api.ts",
+      "sha256": "18ea3048f9f56212251201b50a0dfd39e6d41428d58f94251ed421bceed13784"
+    },
+    {
+      "path": "apps/web/src/lib/task-preview-api.test.ts",
+      "sha256": "06540f69ac8b7f632f9b5a1d88cae5940a3a4a82898e1add3969b12efab15e2f"
+    },
+    {
+      "path": "apps/web/src/lib/task-preview-api.ts",
+      "sha256": "232fe219c040fbc05face370f9b4955feb6e1e92546fc42ad026aca9204ba302"
+    },
+    {
+      "path": "apps/web/src/lib/task-storage.test.ts",
+      "sha256": "45212fde670eb23586f3f1fe6a1c6fb2040d97febe41bd17aef283b9be4fc7b8"
+    },
+    {
+      "path": "apps/web/src/lib/task-storage.ts",
+      "sha256": "25babb39cd53e42dc788656abaa947fd0b9fddaa693dfc048b1ad56eaab0a418"
+    },
+    {
+      "path": "apps/web/src/lib/todo-api.test.ts",
+      "sha256": "2c62ebb5ca0a5ee8e483ad2b8433c74cad8db8eafe4ea339dce1061c1c290d50"
+    },
+    {
+      "path": "apps/web/src/lib/todo-api.ts",
+      "sha256": "b7e1057ea55fa9d2caf19825058071630348a1a5d4a5c51ccebcda2ea7921582"
+    },
+    {
+      "path": "apps/web/src/lib/use-command.ts",
+      "sha256": "168128c07e422b76fbc90924f1e77753a4f9c6105a5977d4abaa726112c91cf9"
+    },
+    {
+      "path": "apps/web/src/lib/use-discussion.ts",
+      "sha256": "ea6be9eb644d0b9620ff7ad4ea653832728f1d66891a6d82c4ca2d4c2e6cecc9"
+    },
+    {
+      "path": "apps/web/src/lib/use-task-command.ts",
+      "sha256": "d864e26b336a7560a5b9194bc14a6c001d03fdc707460b7ad6c0de27252cb823"
+    },
+    {
+      "path": "apps/web/src/lib/use-task-previews.ts",
+      "sha256": "e8ff00c3b888a124b414fa22d7fc30abdf8a8d1289cfb1f0f7ff29515182660f"
+    },
+    {
+      "path": "apps/web/src/lib/use-todo-command.ts",
+      "sha256": "8cb637bcb5f9f6361967b6f88d91b2717d3104df8f0f17b1dd5a526f511bfd93"
+    },
+    {
+      "path": "apps/web/src/lib/utils.ts",
+      "sha256": "14300d758170c270c75b057f38fedb3793a5920ea872f0477e29fb131185e8a7"
+    },
+    {
+      "path": "apps/web/src/main.tsx",
+      "sha256": "27f7fed310729a70b858120bb4c026117b3bbe5365a41c84a738a2dc3ace8661"
+    },
+    {
+      "path": "apps/web/src/styles.css",
+      "sha256": "047555a7aac4c05f2bb4be8cd25267a0b9a73aa9b463f5a25059e92a0e6c2a23"
+    },
+    {
+      "path": "apps/web/test/owner-delivery-server.ts",
+      "sha256": "e602a76213c1a75bcc3b79d01fa38a612265e36fba11be9f9d958e0bf2375ba8"
+    },
+    {
+      "path": "apps/web/test/owner-delivery.e2e.ts",
+      "sha256": "1370a3f6a29f67bcfd1d242139ce985470b019dc7812d1bd5082630659974ae0"
+    },
+    {
+      "path": "packages/db/migrations/0001_boundary_probe.sql",
+      "sha256": "963b94c8e275cfa18b59d8f22ba692318408c874341272dd84064dc338118094"
+    },
+    {
+      "path": "packages/db/migrations/0002_connection_instance.sql",
+      "sha256": "48bdf550c6696344df5880ab720b89a4b4410c96ae67339bc520454311d979dc"
+    },
+    {
+      "path": "packages/db/migrations/0003_capture_failure.sql",
+      "sha256": "42c96433c75dcdfc98e4695d2f8f73a572185d982cbd3bdbac6d499c9b35db81"
+    },
+    {
+      "path": "packages/db/migrations/0004_owner_commands.sql",
+      "sha256": "625b9d8ce2bb95f363be71bfa03bc9d770468bb66cc4dc455ab05dc22f498050"
+    },
+    {
+      "path": "packages/db/migrations/0005_task_records.sql",
+      "sha256": "b455ef5c4997ed03528e8056c2865bbf268f33e9ffcac0bbd89a1d91dbcdf84b"
+    },
+    {
+      "path": "packages/db/migrations/0006_dispatch_queue.sql",
+      "sha256": "43bf609c9994ea81db61e279050025c4c5ce77e30e05c1661682b8ca7868baee"
+    },
+    {
+      "path": "packages/db/migrations/0007_owner_access.sql",
+      "sha256": "84c761eb51b7563f17405e6932bf552231da2759428e88c922e70429d5472f02"
+    },
+    {
+      "path": "packages/db/migrations/0008_project_configuration.sql",
+      "sha256": "6980995cb33c59af1b305cf798181e5eef41c5269c5cddf8e7f598dba62f4c85"
+    },
+    {
+      "path": "packages/db/migrations/0009_runtime_provider_configuration.sql",
+      "sha256": "8ebea11b5e3f7e248f4607a4320db2ca1edbe0147b4011ee7326e31bba685f20"
+    },
+    {
+      "path": "packages/db/migrations/0010_runtime_selection.sql",
+      "sha256": "649ebe04a7afaad67a81d4af8f83cb4b3d9023bd7f6787bf7c13dd517ab030ad"
+    },
+    {
+      "path": "packages/db/migrations/0011_attempt_logs.sql",
+      "sha256": "79113cb3bb96e25c0e685bd4e6031db46bc1b6e6c927564a346fd5bb76f5898d"
+    },
+    {
+      "path": "packages/db/migrations/0012_owner_recovery.sql",
+      "sha256": "8cde381b9a5b08b6ac3f2db3649f42466d0e5747f6b6cdfe1f9b78f513cce168"
+    },
+    {
+      "path": "packages/db/migrations/0013_todos.sql",
+      "sha256": "d385623498818ab7fedfd1640b5d4642b7c1a9c7ea5f06ecbf07cb2913a73e4c"
+    },
+    {
+      "path": "packages/db/migrations/0014_todo_discussion.sql",
+      "sha256": "84f1d58bfc5d154094adf01c37ca7ad6fd385e90d461810352e0925b21aa39aa"
+    },
+    {
+      "path": "packages/db/migrations/0015_task_creation.sql",
+      "sha256": "225ce4c3d172e97dd1ecc4cdb551ebf1260b3f5f02c543bbd6f0bdcc85bba7cb"
+    },
+    {
+      "path": "packages/db/migrations/0016_serial_workspaces.sql",
+      "sha256": "6b38bcbb0c2f9561fa7cfca375fcb51c02556db919bc0e4bc281d607a7268d09"
+    },
+    {
+      "path": "packages/db/migrations/0017_task_initial_planning.sql",
+      "sha256": "f480a0358b5bb7a4cc9d867da3b1383ab539c00ec5e679219103cd4befc96dfe"
+    },
+    {
+      "path": "packages/db/migrations/0018_node_execution.sql",
+      "sha256": "dbcc9192b11a77c653193fcf99ac2e0e426fdb6c6b521ccae405ad8825c0f115"
+    },
+    {
+      "path": "packages/db/migrations/0019_task_conversation.sql",
+      "sha256": "908abd571dcee5a480d47d0473e0a0caac5967ed1c5b997e662444e3a4294925"
+    },
+    {
+      "path": "packages/db/migrations/0020_task_specification.sql",
+      "sha256": "dcc0df95b445462b5388fb450a8cfca18e13ac8f06ede6e778fc4460653205d7"
+    },
+    {
+      "path": "packages/db/migrations/0021_task_replan.sql",
+      "sha256": "6cb142abed9a0994caae1714bbccdb2c090441d6e7c5c3865c3de10c9424a2ee"
+    },
+    {
+      "path": "packages/db/migrations/0022_publication_candidates.sql",
+      "sha256": "4780de7e97350e76f13d778cf3a16095120f77535e370bbfcd2009e1526a2dc9"
+    },
+    {
+      "path": "packages/db/migrations/0023_remote_preparation.sql",
+      "sha256": "44b852add8dc5fed6dce9a510116f94f7e33c0b1d6db647fb7c7488b6aba8d3b"
+    },
+    {
+      "path": "packages/db/migrations/0024_owner_delivery.sql",
+      "sha256": "bfa3d209866e5caca63abcf9abb4a35d20d39f879ddd2740b52efa3f5749bc7e"
+    },
+    {
+      "path": "packages/db/migrations/0025_review_correction.sql",
+      "sha256": "b3bca7c345ac49f39795ca4f4e5f99abf6fecf094833ccb88c7befcd84266f18"
+    },
+    {
+      "path": "packages/db/migrations/0026_runtime_continuations.sql",
+      "sha256": "42f289965da921bce81dbb89fa2d5830c70adae65f65b1c6702583be10e1d2b5"
+    },
+    {
+      "path": "packages/db/migrations/0027_node_rework.sql",
+      "sha256": "c720c01895ff901e284b140a8a9d64de2d986ddafa446b8fe0842e6cf9f17505"
+    },
+    {
+      "path": "packages/db/migrations/0028_repository_inspection.sql",
+      "sha256": "20f9adcefd9e51b3db749df96a73acc9f9928c7341646d62dee1bf2cc0ce950a"
+    },
+    {
+      "path": "packages/db/migrations/0029_multi_node_replan.sql",
+      "sha256": "e73052ef1ce263a1c5e7bda33c4975d378ba70ac04e4e2a15d326961ccc4bc0a"
+    },
+    {
+      "path": "packages/db/migrations/0030_parallel_workspaces.sql",
+      "sha256": "6112be757e7d4918f6303dcf93fc43902a1a94acf2ba79bfa68b9fb6a0f54100"
+    },
+    {
+      "path": "packages/db/migrations/0031_multi_repository_completion.sql",
+      "sha256": "0531eda6fc96806cb97996b1c61df0b76bc0c44462b968d338afb9d962fd07ba"
+    },
+    {
+      "path": "packages/db/migrations/0032_multi_repository_delivery.sql",
+      "sha256": "ebdb1e513f97af5f3f5982234f8283a976aa514c457c6136656592c378c8136f"
+    },
+    {
+      "path": "packages/db/migrations/0033_git_https_credentials.sql",
+      "sha256": "63f9c4be924ba1460a21ae0ea6384878bffe66bd2601064f83ae34cdd6f696b4"
+    },
+    {
+      "path": "packages/db/migrations/0034_plain_git_delivery.sql",
+      "sha256": "1456d629dd1a3ea3143a370da67a1a682246b08593fd3225273dccafdb4a1abf"
+    },
+    {
+      "path": "packages/protocol/generated/go/contracts.json",
+      "sha256": "f4c16720504ea63d1a7e27ff000f8e300aacc7a9703ea86b67b325f26e4a04ec"
+    },
+    {
+      "path": "packages/protocol/generated/go/go.mod",
+      "sha256": "2d8da4db743ff11541b4ee0e40e477f2c184404446ba22a7ed265de9b3d602d2"
+    },
+    {
+      "path": "packages/protocol/generated/go/schema.go",
+      "sha256": "8e74d5a0b2b3fbcbafbdfd8dc66575110707bc45b4992a48fee07fc515aaa572"
+    },
+    {
+      "path": "packages/protocol/generated/go/types.go",
+      "sha256": "d788fa0cf83f655ea572aa878af40966f06f2fb3a2275a7c6af4243b51a974b5"
+    },
+    {
+      "path": "packages/protocol/generated/go/workspace_json.go",
+      "sha256": "4017e5525e4b8cbd2d0dd26f56297c4aa83145c7fcde1bea01997f460f27f4ba"
+    },
+    {
+      "path": "packages/protocol/generated/openapi.json",
+      "sha256": "854c055c14c3e6697be27ff01157f267218980bbc2d9e9c3a51b1fcb4be7d656"
+    },
+    {
+      "path": "packages/protocol/generated/types.ts",
+      "sha256": "a32b378e2e87972cbfd20448ce8c49ab5c3357bb457ffe47f3dc918ba68e8074"
+    },
+    {
+      "path": "packages/protocol/schemas/v1/contracts.json",
+      "sha256": "f4c16720504ea63d1a7e27ff000f8e300aacc7a9703ea86b67b325f26e4a04ec"
+    },
+    {
+      "path": "packages/protocol/src/index.ts",
+      "sha256": "d2be618d83b319772f898c70678105c3b71e12d49b73dabeb4ac5b5c8ffc473e"
+    },
+    {
+      "path": "packages/protocol/src/validation.ts",
+      "sha256": "1d9e91df7740cd281a1fc695f20f1331a13278637ad8b4f1e6e3d58bf3355b6d"
+    }
+  ],
+  "bundle": [
+    {
+      "path": "index-BEPJm1Dn.js",
+      "sha256": "7f7d198eea289f8ec949f7e0434bce20f4216114d6959b75c8d1128cf3eb93bf"
+    },
+    {
+      "path": "index-CMIFyHCY.css",
+      "sha256": "e041149ef44df49615b413aa67438ef07d65b71de2ce95318ba46381c1bf9ad6"
+    }
+  ],
+  "route": "http://127.0.0.1:18556/#task?task_id=121c5c39-e86a-48d9-823f-b18dbf8b942e&section=overview",
+  "state": "Automatic branch preparation remains REVIEW with zero finality. Actual exact Owner confirmation binds both plain Git candidates; no acceptance yet.",
+  "test": "plain automatic publication stays in review until exact acceptance and distinct fresh branch verification",
+  "evidence": "Current built SPA; real isolated PostgreSQL, protected Owner routes through createApp injection, actual prepare/confirm/accept/Retry/Cancel and conversation receipts. Git/process, GitHub responses and fresh Runner ref peer responses are explicitly synthetic; workers, certificates and finalization receipts use real backend code. No native Runtime or live provider claim.",
+  "views": [
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 1000,
+        "label": "desktop"
+      },
+      "file": "plain-exact-confirmation-desktop.png",
+      "sha256": "88fc41525cb2ac7ea1c3f5baf9481fc65dd65db47c03563498afb72fd8491548",
+      "body": "Skip to content\nm\nmonos\n\nWorkspace\n\nTodos\nExecution Board\nProjects\nRoles\nExecution\nGitHub\nO\nOwner\nPersonal workspace\nWorkspace / Task\nPrivate workspace\nExecution board\n/\n← Back to Todos\nExecution task\nReview\n\nMulti-repository delivery\n\nConversation\nOverview\nTimeline\nExecution details\n\nDecision saved.\n\nDismiss notice\n\nDecision saved.\n\nDismiss notice\nCancel task\nSpecification\nBuild exact result\nAdvanced details\nRequirement revision history\nCurrent work\nPerform exact graph work\n\nBuilder\n\nCompleted\n\nLocal results\n\nThe local result is ready for review. No PR, delivery or Owner acceptance is recorded by this state.\n\nCurrent result\nOne complete multi-repository result\ngit.example.test:8443/Exact/Repo-0\nLocal commit\ncccccccccccccccccccccccccccccccccccccccc\nWork started from\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nWork result before integration\ncccccccccccccccccccccccccccccccccccccccc\nResult tree\neeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\nTarget branch\nmain\nFixed base\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nInspect changes\nLocal publication candidate\nCandidate and scan history · 2 loaded\nOpen an exact candidate\n\nCurrent candidate evidence · Scan applicable\n\nLocal candidate retained.\n\nLocal preparation creates no PR, publication or accepted delivery.\n\nCandidate head\ndddddddddddddddddddddddddddddddddddddddd\nExact result tree\neeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\nVerified public parents\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nAdvanced details\n\nLocal publication checks complete for this exact candidate. Passing configured rules does not establish that a result is secret-free.\n\nPublication findings\n\n0 of 0 findings loaded. Matching values and sensitive filenames are withheld.\n\nReview selected policy override\ngit.example.test:8443/Exact/Repo-1\nLocal commit\ndddddddddddddddddddddddddddddddddddddddd\nWork started from\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nWork result before integration\ndddddddddddddddddddddddddddddddddddddddd\nResult tree\nffffffffffffffffffffffffffffffffffffffff\nTarget branch\nmain\nFixed base\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nInspect changes\nLocal publication candidate\nCandidate and scan history · 2 loaded\nOpen an exact candidate\n\nCurrent candidate evidence · Scan applicable\n\nLocal candidate retained.\n\nLocal preparation creates no PR, publication or accepted delivery.\n\nCandidate head\ndddddddddddddddddddddddddddddddddddddddd\nExact result tree\nffffffffffffffffffffffffffffffffffffffff\nVerified public parents\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nAdvanced details\n\nLocal publication checks complete for this exact candidate. Passing configured rules does not establish that a result is secret-free.\n\nPublication findings\n\n0 of 0 findings loaded. Matching values and sensitive filenames are withheld.\n\nReview selected policy override\nAdvanced details\nRequested changes\nRequest Changes\nAcceptance and delivery\n\nReview the complete result before accepting. Acceptance freezes this version and the conversation cutoff.\n\nPrepare new review\n\nExact prepared review · Version d7f7040062d5\n\nExact Owner confirmation is recorded. Acceptance is a separate action.\n\nReview exact result\nPrepared reviews\nRemote review preparation\n\nBackground preparation and provider observations do not accept delivery or complete the Task.\n\nRemote operation history · 2 loaded\n\nCurrent remote evidence\n\nThe exact local scan remains applicable.\n\nThe delivery branch is published. Owner acceptance and final verification are separate.\n\nRepository\ngit.example.test:8443/Exact/Repo-1\nDelivery branch\nrefs/heads/monos/task/121c5c39-e86a-48d9-823f-b18dbf8b942e/65e1671c-cfb5-44f4-99c2-b53dd597d85a\nFixed target\nmain\nCandidate head\ndddddddddddddddddddddddddddddddddddddddd\nExact result tree\nffffffffffffffffffffffffffffffffffffffff\nVerified published head\ndddddddddddddddddddddddddddddddddddddddd\n\nRecorded step · Push · Settled · Next attempt no earlier than 2026-10-11T10:16:21.194Z\n\nAdvanced details\n\nDelivery branch publication is preparation. Final delivery requires exact Owner acceptance and a fresh branch verification; merge into the target branch manually.\n\nFormal artifacts\n\nArtifact history includes earlier revisions. Current outputs are identified by the exact current completion manifests above.\n\nReview exact delivery result\n\nConfirm this concrete version, then explicitly accept it. Later conversation cannot change the approved result.\n\nResult version · d7f7040062d5926d72121fe4adc1c070527a60c5082831cfa84817448ff68a32\n\n1 completed output · 2 modified repositories.\n\nCompleted outputs and evidence\nOne complete multi-repository result\nAdvanced details\ngit.example.test:8443/Exact/Repo-0\nPublic head\ndddddddddddddddddddddddddddddddddddddddd\nExact tree\neeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\nFixed target\nmain\nPublic parents\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nDelivery branch\nrefs/heads/monos/task/121c5c39-e86a-48d9-823f-b18dbf8b942e/48296047-532d-4348-a1ec-7a419b861c89\n\nAccepted branch publication; merge into the target branch manually.\n\nComplete publication scan · 0 retained findings · 0 exact Owner override receipts.\n\nAdvanced details\ngit.example.test:8443/Exact/Repo-1\nPublic head\ndddddddddddddddddddddddddddddddddddddddd\nExact tree\nffffffffffffffffffffffffffffffffffffffff\nFixed target\nmain\nPublic parents\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nDelivery branch\nrefs/heads/monos/task/121c5c39-e86a-48d9-823f-b18dbf8b942e/65e1671c-cfb5-44f4-99c2-b53dd597d85a\n\nAccepted branch publication; merge into the target branch manually.\n\nComplete publication scan · 0 retained findings · 0 exact Owner override receipts.\n\nAdvanced details\nAdvanced details\n\nProposal expires 10/11/2026, 7:16:21 PM.\n\nExact Owner confirmation recorded.\n\nAccept delivery\n\nAcceptance admits this frozen batch. Fresh verification of the published branches is still required."
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844,
+        "label": "mobile"
+      },
+      "file": "plain-exact-confirmation-mobile.png",
+      "sha256": "66e07e62048dd68e83ba9e9fd5356a7f978413e765cb41fb191aee9c89fd8748",
+      "body": "Skip to content\nWorkspace / Task\nExecution board\n/\n← Back to Todos\nExecution task\nReview\n\nMulti-repository delivery\n\nConversation\nOverview\nTimeline\nExecution details\n\nDecision saved.\n\nDismiss notice\n\nDecision saved.\n\nDismiss notice\nCancel task\nSpecification\nBuild exact result\nAdvanced details\nRequirement revision history\nCurrent work\nPerform exact graph work\n\nBuilder\n\nCompleted\n\nLocal results\n\nThe local result is ready for review. No PR, delivery or Owner acceptance is recorded by this state.\n\nCurrent result\nOne complete multi-repository result\ngit.example.test:8443/Exact/Repo-0\nLocal commit\ncccccccccccccccccccccccccccccccccccccccc\nWork started from\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nWork result before integration\ncccccccccccccccccccccccccccccccccccccccc\nResult tree\neeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\nTarget branch\nmain\nFixed base\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nInspect changes\nLocal publication candidate\nCandidate and scan history · 2 loaded\nOpen an exact candidate\n\nCurrent candidate evidence · Scan applicable\n\nLocal candidate retained.\n\nLocal preparation creates no PR, publication or accepted delivery.\n\nCandidate head\ndddddddddddddddddddddddddddddddddddddddd\nExact result tree\neeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\nVerified public parents\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nAdvanced details\n\nLocal publication checks complete for this exact candidate. Passing configured rules does not establish that a result is secret-free.\n\nPublication findings\n\n0 of 0 findings loaded. Matching values and sensitive filenames are withheld.\n\nReview selected policy override\ngit.example.test:8443/Exact/Repo-1\nLocal commit\ndddddddddddddddddddddddddddddddddddddddd\nWork started from\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nWork result before integration\ndddddddddddddddddddddddddddddddddddddddd\nResult tree\nffffffffffffffffffffffffffffffffffffffff\nTarget branch\nmain\nFixed base\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nInspect changes\nLocal publication candidate\nCandidate and scan history · 2 loaded\nOpen an exact candidate\n\nCurrent candidate evidence · Scan applicable\n\nLocal candidate retained.\n\nLocal preparation creates no PR, publication or accepted delivery.\n\nCandidate head\ndddddddddddddddddddddddddddddddddddddddd\nExact result tree\nffffffffffffffffffffffffffffffffffffffff\nVerified public parents\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nAdvanced details\n\nLocal publication checks complete for this exact candidate. Passing configured rules does not establish that a result is secret-free.\n\nPublication findings\n\n0 of 0 findings loaded. Matching values and sensitive filenames are withheld.\n\nReview selected policy override\nAdvanced details\nRequested changes\nRequest Changes\nAcceptance and delivery\n\nReview the complete result before accepting. Acceptance freezes this version and the conversation cutoff.\n\nPrepare new review\n\nExact prepared review · Version d7f7040062d5\n\nExact Owner confirmation is recorded. Acceptance is a separate action.\n\nReview exact result\nPrepared reviews\nRemote review preparation\n\nBackground preparation and provider observations do not accept delivery or complete the Task.\n\nRemote operation history · 2 loaded\n\nCurrent remote evidence\n\nThe exact local scan remains applicable.\n\nThe delivery branch is published. Owner acceptance and final verification are separate.\n\nRepository\ngit.example.test:8443/Exact/Repo-1\nDelivery branch\nrefs/heads/monos/task/121c5c39-e86a-48d9-823f-b18dbf8b942e/65e1671c-cfb5-44f4-99c2-b53dd597d85a\nFixed target\nmain\nCandidate head\ndddddddddddddddddddddddddddddddddddddddd\nExact result tree\nffffffffffffffffffffffffffffffffffffffff\nVerified published head\ndddddddddddddddddddddddddddddddddddddddd\n\nRecorded step · Push · Settled · Next attempt no earlier than 2026-10-11T10:16:21.194Z\n\nAdvanced details\n\nDelivery branch publication is preparation. Final delivery requires exact Owner acceptance and a fresh branch verification; merge into the target branch manually.\n\nFormal artifacts\n\nArtifact history includes earlier revisions. Current outputs are identified by the exact current completion manifests above.\n\nReview exact delivery result\n\nConfirm this concrete version, then explicitly accept it. Later conversation cannot change the approved result.\n\nResult version · d7f7040062d5926d72121fe4adc1c070527a60c5082831cfa84817448ff68a32\n\n1 completed output · 2 modified repositories.\n\nCompleted outputs and evidence\nOne complete multi-repository result\nAdvanced details\ngit.example.test:8443/Exact/Repo-0\nPublic head\ndddddddddddddddddddddddddddddddddddddddd\nExact tree\neeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\nFixed target\nmain\nPublic parents\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nDelivery branch\nrefs/heads/monos/task/121c5c39-e86a-48d9-823f-b18dbf8b942e/48296047-532d-4348-a1ec-7a419b861c89\n\nAccepted branch publication; merge into the target branch manually.\n\nComplete publication scan · 0 retained findings · 0 exact Owner override receipts.\n\nAdvanced details\ngit.example.test:8443/Exact/Repo-1\nPublic head\ndddddddddddddddddddddddddddddddddddddddd\nExact tree\nffffffffffffffffffffffffffffffffffffffff\nFixed target\nmain\nPublic parents\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nDelivery branch\nrefs/heads/monos/task/121c5c39-e86a-48d9-823f-b18dbf8b942e/65e1671c-cfb5-44f4-99c2-b53dd597d85a\n\nAccepted branch publication; merge into the target branch manually.\n\nComplete publication scan · 0 retained findings · 0 exact Owner override receipts.\n\nAdvanced details\nAdvanced details\n\nProposal expires 10/11/2026, 7:16:21 PM.\n\nExact Owner confirmation recorded.\n\nAccept delivery\n\nAcceptance admits this frozen batch. Fresh verification of the published branches is still required."
+    }
+  ]
+}

@@ -55,6 +55,21 @@ func TestRemotePreparationSharedFixtures(t *testing.T) {
 	if err = Decode("PublicationPushRequest", fixture["push"], &push); err != nil {
 		t.Fatal(err)
 	}
+	for _, pair := range []struct {
+		value  any
+		digest string
+	}{
+		{push.Preparation, push.Prepared.RequestDigest},
+		{push.Prepared, push.PreparationResultDigest},
+		{push.PermissionProof, push.PermissionProofDigest},
+		{push.Prepared.Candidate, *push.Prepared.CandidateManifestDigest},
+		{push.Prepared.Scan, *push.Prepared.ScanDigest},
+	} {
+		_, got, e := Canonical(pair.value)
+		if e != nil || got != pair.digest {
+			t.Fatal("nested push digest graph changed", e)
+		}
+	}
 	roundTrip, err := json.Marshal(push)
 	if err != nil {
 		t.Fatal(err)
@@ -83,21 +98,19 @@ func TestRemotePreparationSharedFixtures(t *testing.T) {
 
 func TestRemotePreparationEncodedBounds(t *testing.T) {
 	fixture := remoteFixture(t)
-	var frame map[string]json.RawMessage
-	_ = json.Unmarshal(fixture["frame"], &frame)
-	// Standalone request remains below the application limit; its actual wrapper
-	// crosses the boundary. Whitespace is encoded bytes too.
+	// The push reserves room for the echo. Framing whitespace still counts
+	// toward the complete frame's independent 512 KiB limit.
 	var compact []byte
 	compact = append(compact, fixture["push"]...)
-	compact = append(compact[:len(compact)-1], []byte(strings.Repeat(" ", 512*1024-len(compact)-1))...)
+	compact = append(compact[:len(compact)-1], []byte(strings.Repeat(" ", PublicationPushLimit-len(compact)-1))...)
 	compact = append(compact, '}')
 	if err := Validate("PublicationPushRequest", compact); err != nil {
 		t.Fatal(err)
 	}
-	frame["publication_push"] = compact
 	raw := []byte(`{"schema_version":1,"type":"publication_push","incarnation":1,"publication_push":`)
 	raw = append(raw, compact...)
 	raw = append(raw, '}')
+	raw = append(raw, []byte(strings.Repeat(" ", 512*1024+1-len(raw)))...)
 	if err := Validate("Frame", raw); err == nil {
 		t.Fatal("whole wrapper limit missing")
 	}

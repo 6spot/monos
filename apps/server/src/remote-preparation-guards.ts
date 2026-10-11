@@ -3,7 +3,7 @@ import {CommandError} from '../../../packages/domain/src/commands.ts';
 import type {PublicationPrepareRequest,PublicationResult,PublicationOverrideProof,PublicationFinding,PublicationRefObservation} from '../../../packages/protocol/src/index.ts';
 import {effectiveResult,localAdmissionAllowed} from './publication-candidates.ts';
 import type {DeliveryOperation} from './publication-candidates.ts';
-import {publicationConfiguration,publicationDigest as hash} from './publication-policy.ts';
+import {publicationConfiguration,publicationPermissionCurrent,publicationDigest as hash} from './publication-policy.ts';
 import {knownPublicExposureCount} from './publication-candidate-reads.ts';
 import {taskInputGuards} from './task-guidance.ts';
 import {actualOverrideProofs} from './remote-preparation-state.ts';
@@ -13,9 +13,9 @@ export class RemoteAdmissionError extends CommandError {
  readonly reason:NonNullable<PublicationRefObservation['reason']>;
  constructor(reason:NonNullable<PublicationRefObservation['reason']>) {super('unmet_precondition',reason);this.reason=reason;}
 }
-export async function freshRemoteSource(tx:Transaction,item:Pick<RemoteItem,'task_id'|'resource_id'|'repository_identity'|'repository_id'>,request:PublicationPrepareRequest,purpose:'preparation'|'permission'='preparation'):Promise<void> {
- const settings=(await tx.query<{repository_identity:string;settings:{remote_preparation?:string;provider_repo_id?:string}}>('SELECT repository_identity,settings FROM project_resources WHERE id=$1',[item.resource_id])).rows[0];
- if(!settings||settings.repository_identity!==item.repository_identity||settings.settings.provider_repo_id!==item.repository_id)throw new RemoteAdmissionError('configuration_changed');
+export async function freshRemoteSource(tx:Transaction,item:Pick<RemoteItem,'task_id'|'resource_id'|'repository_identity'|'repository_id'>&Partial<Pick<RemoteItem,'remote_url'>>,request:PublicationPrepareRequest,purpose:'preparation'|'permission'='preparation'):Promise<void> {
+ const settings=(await tx.query<{repository_identity:string;remote_url:string;settings:{remote_preparation?:string;provider_repo_id?:string}}>('SELECT repository_identity,remote_url,settings FROM project_resources WHERE id=$1',[item.resource_id])).rows[0];
+ if(!settings||settings.repository_identity!==item.repository_identity||(settings.settings.provider_repo_id??null)!==item.repository_id||item.remote_url!==undefined&&settings.remote_url!==item.remote_url)throw new RemoteAdmissionError('configuration_changed');
  if(purpose==='preparation'&&(settings.settings.remote_preparation??'automatic')!=='automatic')throw new RemoteAdmissionError('mode_deferred');
  if(!await localAdmissionAllowed(tx,item.task_id))throw new RemoteAdmissionError('source_changed');
  if((await taskInputGuards(tx,item.task_id)).length)throw new RemoteAdmissionError('input_pending');
@@ -32,6 +32,7 @@ export async function ordinaryRemoteAdmission(tx:Transaction,item:RemoteItem,req
  if(result.scan?.status!=='complete'||typeof result.scan.workflow_changes!=='boolean')throw new RemoteAdmissionError('scan_incomplete');
  if(await knownPublicExposureCount(tx,item.task_id,item.resource_id,item.repository_identity))throw new RemoteAdmissionError('known_public_exposure');
  if((await tx.query(`SELECT 1 FROM remote_preparation_operations o WHERE o.item_id=$1 AND o.id IS DISTINCT FROM $2 AND (o.effect_owned OR o.kind='push' AND o.state='settled' AND o.result->>'status'='reconciliation_required' AND NOT EXISTS(SELECT 1 FROM remote_preparation_observations p WHERE p.operation_id=o.id AND p.kind='published')) LIMIT 1`,[item.item_id,excludeOperation??null])).rowCount)throw new RemoteAdmissionError('possible_publication');
+ if(!request.permission_proof||!await publicationPermissionCurrent(tx,item.resource_id,request.permission_proof,result.scan.workflow_changes))throw new RemoteAdmissionError('configuration_changed');
  const receipts=await actualOverrideProofs(tx,item.task_id,result.scan.scan_id),eligible=receipts.filter(r=>r.selection.candidate_id===result.candidate!.candidate_id&&r.selection.candidate_manifest_digest===result.candidate_manifest_digest&&r.selection.effective_basis_digest===request.effective_basis_digest&&r.selection.scan_digest===result.scan_digest&&r.selection.mapping_digest===result.mapping_digest);
  const covered=new Set(eligible.flatMap(r=>r.selection.finding_ids));
  const findings=(await tx.query<{finding:PublicationFinding}>('SELECT finding FROM publication_findings WHERE scan_id=$1',[result.scan.scan_id])).rows;

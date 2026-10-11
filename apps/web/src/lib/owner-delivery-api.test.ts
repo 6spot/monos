@@ -29,7 +29,7 @@ async function batch(modified = false): Promise<DeliveryBatch> {
   const p = await proposal(modified), repository = p.manifest.repositories[0];
   return {schema_version:1,task_id:task,proposal_id:p.proposal.proposal_id,confirmation_id:'confirmation-a',admission_request_id:'admission-a',manifest:p.manifest,
     batch:{operation_id:'batch-a',content_digest:p.proposal.content_digest,version:7,status:modified?'failed':'completed',input_cutoff:4,accepted_at:'2026-10-05T10:00:00.000Z',modified_items:modified?1:0,finalized_items:0,retry_allowed:modified,cancel_allowed:modified},
-    items:repository?[{item_id:repository.item_id ?? '',resource_id:repository.resource_id,status:'failed',accepted_head:repository.candidate?.head ?? '',checks:'unknown'}]:[]};
+    items:repository?[{item_id:repository.item_id ?? '',resource_id:repository.resource_id,delivery_kind:'github_pr',status:'failed',accepted_head:repository.candidate?.head ?? '',checks:'unknown'}]:[]};
 }
 
 it('revoked history retains its exact manifest and real revocation while granting no delivery capability', async () => {

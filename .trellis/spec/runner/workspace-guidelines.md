@@ -359,3 +359,33 @@ Wrong: import Rework history before cancelling a fresh allocation whose open nev
 wrote its root record, or clear a Git transaction lock on the assumption that its
 owner died. Correct: cancel only proven unexposed allocation state without a worker;
 reconcile admitted integration from durable intent and preserve unresolved locks.
+
+
+## Ordinary HTTPS Git
+
+The [shared endpoint validator](../../../runner/internal/wire/repository.go) and
+backend domain adapter agree on literal HTTPS paths/ports, canonical ASCII/IP
+hosts, no userinfo/query/fragment/encoded path and no transport rewriting. The
+service cache and Planner inspection consume exact operation-bound access, preserve
+empty generic provider metadata and pin the configured target. A missing credential
+allows anonymous read; a configured credential failure cannot downgrade to anonymous.
+
+[Repository authentication](../../../runner/internal/host/repository_auth.go) and
+[publication credentials](../../../runner/internal/host/publication_credentials.go)
+keep Basic material out of argv, repository config, persisted journal and Agent
+environment. Disable inherited credential helpers/proxies and redirects, retain TLS
+verification, and bound network output. Askpass uses service-only pipes and exact
+username/token scope. Static-token `expires_at` limits local use, not upstream life.
+
+Generic candidate preparation reuses the same tree/ancestry scanner. An anonymous
+plain request with no permission proof can scan locally even when credential
+observation fails (`workflow_write:not_applicable`). A request already bound to a
+proof still requires the matching refresh. Permission absence never grants push.
+
+[Fresh ref reads](../../../runner/internal/host/publication_ref_read.go) require
+the exact retained original push intent/result, settled worker absence and candidate
+lineage; use only bounded `ls-remote` in the existing remote lane. Do not mutate the
+original journal/result, fetch objects, repair a workspace or synthesize another
+push. Correlation/cancellation/capacity are enforced by control and daemon routing.
+Tests use real local Git and a controlled TLS endpoint; native Linux/CLI and live
+provider acceptance remain separate and deferred.

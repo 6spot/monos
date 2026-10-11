@@ -19,7 +19,7 @@ const intent: RemoteReviewIntent = {item_id: item, delivery_ref: `refs/heads/mon
   target_branch: 'main', kind: 'create_pr', content: {title: 'Synthetic review', body: `Synthetic completion\n<!-- monos-delivery-item:${item} -->`}};
 const refIntent: RemoteRefIntent = {operation_id: 'synthetic-push', item_id: item, task_id: task, resource_id: resource,
   runner_id: 'synthetic-runner', storage_id: 'synthetic-storage', repository_identity: scope.repository_identity,
-  repository_id: scope.repository_id, delivery_ref: intent.delivery_ref};
+  provider_metadata: { github: { repository_id: scope.repository_id } }, delivery_ref: intent.delivery_ref};
 const expires = () => new Date(Date.now() + 3600_000).toISOString();
 const grant = (profile: GitHubRemoteProfile = 'poll', s = scope): GitHubRemoteGrant => ({token: 'synthetic-memory-only-token',
   expires_at: expires(), repository_id: s.repository_id, permissions: remoteProfile(s, profile)});

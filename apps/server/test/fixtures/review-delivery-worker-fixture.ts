@@ -60,7 +60,7 @@ export async function reviewDeliveryWorkerFixture(mapped=false) {
   await due();await remote.pump();await due();
   const push=(await remote.pending(x.f.runner,x.f.incarnation,true))[0]!.publication_push!;
   state.head=push.prepared.candidate!.head;
-  const observation={schema_version:1,observation_id:randomUUID(),operation_id:push.operation_id,item_id:push.item_id,task_id:push.task_id,resource_id:push.resource_id,runner_id:push.runner_id,storage_id:push.storage_id,repository_identity:push.repository_identity,repository_id:push.repository_id,delivery_ref:push.delivery_ref,status:'present',head:state.head,observed_at:new Date().toISOString()};
+  const observation={schema_version:1,observation_id:randomUUID(),operation_id:push.operation_id,item_id:push.item_id,task_id:push.task_id,resource_id:push.resource_id,runner_id:push.runner_id,storage_id:push.storage_id,repository_identity:push.repository_identity,provider_metadata:push.provider_metadata,delivery_ref:push.delivery_ref,status:'present',head:state.head,observed_at:new Date().toISOString()};
   const result=validate<PublicationPushResult>('PublicationPushResult',{schema_version:1,operation_id:push.operation_id,request_digest:hash(push),item_id:push.item_id,delivery_ref:push.delivery_ref,candidate_head:state.head,candidate_manifest_digest:push.prepared.candidate_manifest_digest,push_started:false,worker_absent:true,status:'published',observation,observation_digest:hash(observation)});
   await remote.finish(x.f.runner,x.f.incarnation,result);await due();await remote.pump();
   if(mapped) {

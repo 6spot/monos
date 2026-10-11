@@ -77,13 +77,7 @@ func (c *Client) InspectionRepositoryAccess(ctx context.Context, op protocol.Ope
 	if access.OperationID != op.OperationID || access.InspectionDigest != digest {
 		return protocol.InspectionRepositoryAccessResult{}, fmt.Errorf("inspection access operation mismatch")
 	}
-	// Project resources retain their original URL, including verified SSH
-	// aliases. The provider returns HTTPS with its canonical repository casing.
-	remote := "https://" + i.Resource.RepositoryIdentity + ".git"
-	if !strings.HasPrefix(remote, "https://github.com/") || !strings.EqualFold(access.RemoteURL, remote) {
-		return protocol.InspectionRepositoryAccessResult{}, fmt.Errorf("inspection access repository mismatch")
-	}
-	if p := i.Resource.ProviderMetadata; p != nil && p.Github != nil && p.Github.RepositoryID != access.ProviderMetadata.Github.RepositoryID {
+	if wire.ValidateRepositoryEndpoint(i.Resource, access.RemoteURL, access.ProviderMetadata) != nil {
 		return protocol.InspectionRepositoryAccessResult{}, fmt.Errorf("inspection access repository mismatch")
 	}
 	c.mu.Lock()

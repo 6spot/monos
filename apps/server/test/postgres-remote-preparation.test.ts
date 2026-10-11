@@ -62,7 +62,7 @@ async function remoteFixture(credentialFinding=false,legacyCurrent=false,workflo
   await due();await remote.pump();if(legacyCurrent||workflowChanges){await finishLocal();await due();await remote.pump();}await due();
   const push=(await remote.pending(x.f.runner,x.f.incarnation,true))[0]!.publication_push!;
   const result=(status:PublicationPushResult['status'],started:boolean,head=push.prepared.candidate!.head):PublicationPushResult=>{
-   const observation={schema_version:1,observation_id:randomUUID(),operation_id:push.operation_id,item_id:push.item_id,task_id:push.task_id,resource_id:push.resource_id,runner_id:push.runner_id,storage_id:push.storage_id,repository_identity:push.repository_identity,repository_id:push.repository_id,delivery_ref:push.delivery_ref,status:'present',head,observed_at:new Date().toISOString()};
+   const observation={schema_version:1,observation_id:randomUUID(),operation_id:push.operation_id,item_id:push.item_id,task_id:push.task_id,resource_id:push.resource_id,runner_id:push.runner_id,storage_id:push.storage_id,repository_identity:push.repository_identity,provider_metadata:push.provider_metadata,delivery_ref:push.delivery_ref,status:'present',head,observed_at:new Date().toISOString()};
    return validate('PublicationPushResult',{schema_version:1,operation_id:push.operation_id,request_digest:hash(push),item_id:push.item_id,delivery_ref:push.delivery_ref,candidate_head:push.prepared.candidate!.head,candidate_manifest_digest:push.prepared.candidate_manifest_digest,push_started:started,worker_absent:true,status,...(status!=='published'?{reason:status==='blocked'?'access_denied':'possible_publication'}:{}),observation,observation_digest:hash(observation)});
   };
   const claim=async()=>{await due();return access.access(credential,push.operation_id,{schema_version:1,incarnation:x.f.incarnation,request_digest:hash(push),purpose:'push',attempt_id:randomUUID()});};
@@ -134,7 +134,7 @@ suite('remote preparation durable boundary',()=>{
  it('bootstraps minimally then refreshes workflow scope from the explicit complete scan without a finding',async()=>{
   const x=await remoteFixture(false,false,true);try {
    expect(x.profiles.filter(p=>p.profile==='permission')).toEqual([{profile:'permission',workflows:false},{profile:'permission',workflows:true}]);
-   expect(x.push.workflow_changes).toBe(true);expect(x.push.prepared.scan!.workflow_changes).toBe(true);expect(x.push.prepared.scan!.findings_count).toBe(0);expect(x.push.permission_proof.permissions.workflows).toBe('write');
+   expect(x.push.workflow_changes).toBe(true);expect(x.push.prepared.scan!.workflow_changes).toBe(true);expect(x.push.prepared.scan!.findings_count).toBe(0);expect(x.push.permission_proof.permissions!.workflows).toBe('write');
    const locals=(await x.db.pool.query('SELECT request,result FROM delivery_operations ORDER BY created_at,id')).rows;expect(locals.at(-2)!.request.construction).toEqual(locals.at(-1)!.request.construction);expect(locals.at(-1)!.request.configuration.workflow_write).toBe('allowed');
   }finally{await x.close();}
  });
@@ -198,7 +198,7 @@ suite('remote preparation durable boundary',()=>{
    await expect(x.commands.command(x.token,{...command,request_id:randomUUID()})).rejects.toThrow('eligible');
   }finally{await x.close();}
  });
- it('upgrades real version 22 to version 32 without rewriting historical checksums',async()=>{
+ it('upgrades real version 22 to version 34 without rewriting historical checksums',async()=>{
   const url=new URL(process.env.MONOS_TEST_DATABASE_URL??process.env.DATABASE_URL!);
   const admin=database(url.toString()),namespace='remote_upgrade_'+randomUUID().replaceAll('-','');
   await admin.pool.query(`CREATE SCHEMA ${namespace}`);
@@ -219,7 +219,7 @@ suite('remote preparation durable boundary',()=>{
    const historical=(await db.pool.query('SELECT * FROM schema_migrations ORDER BY version')).rows;
    await migrate(db);await migrate(db);
    expect((await db.pool.query('SELECT * FROM schema_migrations WHERE version<=22 ORDER BY version')).rows).toEqual(historical);
-   expect((await db.pool.query('SELECT max(version) version FROM schema_migrations')).rows[0]!.version).toBe(32);
+   expect((await db.pool.query('SELECT max(version) version FROM schema_migrations')).rows[0]!.version).toBe(34);
    const names23=['publication_permission_observations','remote_preparation_items','remote_preparation_operations','remote_preparation_observations','published_result_mappings','remote_published_exposures','remote_preparation_command_receipts','github_remote_cooldowns'];
    for(const name of names23)expect((await db.pool.query(`SELECT * FROM ${name}`)).rows).toEqual([]);
    expect((await db.pool.query("SELECT column_default FROM information_schema.columns WHERE table_schema=$1 AND table_name='runners' AND column_name='remote_preparation_supported'",[namespace])).rows[0]!.column_default).toBe('false');

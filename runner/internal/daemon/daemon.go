@@ -227,6 +227,8 @@ func (d *Daemon) Frame(ctx context.Context, frame protocol.Frame) {
 	switch frame.Type {
 	case protocol.Type("publication_prepare"):
 		d.publicationPrepare(ctx, frame)
+	case protocol.Type("publication_ref_read"):
+		d.publicationRefRead(ctx, frame)
 	case protocol.Type("publication_push"):
 		d.publicationPush(ctx, frame)
 	case protocol.Type("publication_push_ack"):
@@ -421,7 +423,7 @@ func (d *Daemon) effect(ctx context.Context, op protocol.Operation) error {
 			status, err = d.Host.Call(ctx, host.Request{Action: "effect", AttemptID: op.AttemptID, Operation: &op, CompletionOperation: original})
 		}
 		if err == nil && status.NeedsRepositoryAccess {
-			var access protocol.GitHubRepositoryAccessResult
+			var access protocol.RepositoryAccessResult
 			access, err = d.Control.RepositoryAccess(ctx, op)
 			if err == nil {
 				status, err = d.Host.Call(ctx, host.Request{Action: "effect", AttemptID: op.AttemptID, Operation: &op, RepositoryAccess: &access})

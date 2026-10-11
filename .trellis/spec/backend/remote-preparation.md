@@ -1,8 +1,8 @@
-# GitHub review preparation
+# Git publication and GitHub review preparation
 
 ## 1. Scope / Trigger
 
-Delivery prepares the exact current settled REVIEW result when a GitHub resource
+Delivery prepares the exact current settled REVIEW result when a Git resource
 has `remote_preparation=automatic`. Local candidate preparation remains available
 for `after_acceptance`. Before acceptance that mode admits no push/PR effect or
 publication credential delivery. Backend permission observation may verify the
@@ -23,7 +23,7 @@ and Web `remote-preparation.tsx`. Read
 
 This slice implements one verified original/published public parent. Additional
 integration-target transport remains deferred. Cross-Runner transfer, permanent
-disk-loss recovery and plain-Git remote delivery remain outside this contract.
+disk-loss recovery remain outside this contract.
 
 ## 2. Signatures
 
@@ -36,7 +36,7 @@ GET  /v1/owner/tasks/:task_id/remote-preparation/commands/:request_id
 POST /v1/runner/publication-operations/:operation_id/permission
 POST /v1/runner/remote-preparation/:operation_id/access
 
-RemotePreparation(db, instanceId, provider).pump()
+RemotePreparation(db, instanceId, provider, refReads).pump()
 RemotePreparation.pending(runnerId, incarnation, supported) -> Frame[]
 RemotePreparation.finish(runnerId, incarnation, result) -> PublicationPushAck?
 freshRemoteSource(tx, item, request, purpose='preparation'|'permission')
@@ -65,6 +65,30 @@ observations, mappings, exposures and receipts. One active mutation owner per
 item is necessary; settled uncertain pushes also require item-level fencing.
 
 ## 3. Contracts
+
+### Ordinary HTTPS Git
+
+`delivery_kind` is `github_pr` or `git_branch`, derived from the validated saved
+remote URL. Plain items retain the exact HTTPS URL, normalized identity, resource,
+Runner/storage, target branch and stable delivery ref; GitHub repository ID and
+PR marker remain null. Push, access, ref and publication proof messages carry
+`provider_metadata` (`{}` for plain Git). PR requests remain GitHub-specific.
+No plain operation reaches the GitHub adapter or its installation cooldown.
+
+`git_https_configuration` permission proof is configuration authorization, not an
+observation of remote write permission. It binds the exact resource/URL/username,
+stable scope digest and genuine immutable credential save receipt. Material renewal
+for the same scope preserves accepted authority; changing username, clearing the
+credential or changing scope blocks writes. Generic scans use no provider hard blob
+limit and `workflow_write:not_applicable`; local scans still run without credentials.
+
+Fresh ref reads use the bounded `PublicationRefReadBroker` and
+`publication_ref_read` / `publication_ref_read_result` WSS frames. Every invocation
+gets a fresh correlation and request ID, echoes the complete original retained push,
+and binds current socket/incarnation plus backend issue/receive times. Backend
+`readPublicationRef` persists the typed envelope in an immutable ref observation;
+only an original settled worker-absent push can acquire a published proof. Reads
+can reconcile after Cancel without admitting a new push. Backend never runs Git.
 
 ### Exact scope and new-effect admission
 

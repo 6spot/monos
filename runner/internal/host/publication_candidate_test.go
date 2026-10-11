@@ -43,7 +43,7 @@ func publicationTestRequest(t *testing.T, f *resultGitFixture) protocol.Publicat
 	s.TaskID = "11111111-1111-4111-8111-111111111111"
 	c := protocol.PublicationConstruction{SchemaVersion: 1, ConstructionID: "construction", CandidateID: "candidate", SourceDigest: publicationTestDigest(t, s), RepositoryIdentity: s.RepositoryIdentity, TargetBranch: "main", AuthorName: "monos", AuthorEmail: "monos@localhost", Timestamp: "1790999999 +0000", Message: "monos Task " + s.TaskID + " result v1", Parents: []protocol.PublicationParent{{Kind: "materialization", Commit: f.base}}}
 	l := publicationDefaultLimits
-	config := protocol.PublicationScanConfiguration{SchemaVersion: 1, PolicyVersion: "local_publication_v1", RuleVersion: "credential_rules_v1", TraversalVersion: "all_parents_final_tree_v1", LocalBlobLimit: l.PolicyBytes, ProviderBlobLimit: l.ProviderBytes, MaxCommits: int64(l.Commits), MaxPaths: int64(l.Paths), MaxVersions: int64(l.Occurrences), MaxBlobBytes: l.BlobBytes, MaxAggregateBytes: l.AggregateBytes, MaxFindings: int64(l.Findings), MaxEvidenceBytes: int64(l.EvidenceBytes), DeadlineSeconds: 120, WorkflowWrite: "unknown", PermissionFingerprint: strings.Repeat("e", 64)}
+	config := protocol.PublicationScanConfiguration{SchemaVersion: 1, PolicyVersion: "local_publication_v1", RuleVersion: "credential_rules_v1", TraversalVersion: "all_parents_final_tree_v1", LocalBlobLimit: l.PolicyBytes, ProviderBlobLimit: publicationPointer(l.ProviderBytes), MaxCommits: int64(l.Commits), MaxPaths: int64(l.Paths), MaxVersions: int64(l.Occurrences), MaxBlobBytes: l.BlobBytes, MaxAggregateBytes: l.AggregateBytes, MaxFindings: int64(l.Findings), MaxEvidenceBytes: int64(l.EvidenceBytes), DeadlineSeconds: 120, WorkflowWrite: "unknown", PermissionFingerprint: strings.Repeat("e", 64)}
 	b := protocol.PublicationEffectiveBasis{TaskID: s.TaskID, SpecificationID: s.SpecificationID, PlanID: s.PlanID, CompletionOperationID: s.OperationID, CompletionManifestDigest: s.ManifestDigest}
 	return protocol.PublicationPrepareRequest{SchemaVersion: 1, OperationID: "prepare", ScanRunID: "scan", Source: s, SourceDigest: c.SourceDigest, Construction: c, ConstructionDigest: publicationTestDigest(t, c), Configuration: config, ConfigurationDigest: publicationTestDigest(t, config), EffectiveBasis: b, EffectiveBasisDigest: publicationTestDigest(t, b)}
 }
@@ -312,7 +312,7 @@ func publicationPinFixture(t *testing.T) (protocol.PublicationParent, protocol.R
 	root := publicationTestRoot(t)
 	cache := filepath.Join(root, "cache.git")
 	resultTestGit(t, f.export, nil, "clone", "--bare", "--no-local", f.export, cache)
-	w := protocol.WorkspaceDescriptor{SchemaVersion: 1, WorkspaceID: r.Source.WorkspaceID, TaskID: r.Source.TaskID, ResourceID: r.Source.ResourceID, RunnerID: r.Source.RunnerID, ProjectID: "project", NodeID: r.Source.NodeID, NodeActivation: 1, Generation: r.Source.Generation, LeaseID: "original-lease", OpenOperationID: "original-open", Resource: protocol.WorkspaceResource{ResourceID: r.Source.ResourceID, RepositoryIdentity: r.Source.RepositoryIdentity, RemoteURL: "https://github.com/example/repository.git", ProviderMetadata: &protocol.RepositoryProviderMetadata{Github: &protocol.RepositoryProviderMetadataGithub{RepositoryID: "123"}}}}
+	w := protocol.WorkspaceDescriptor{SchemaVersion: 1, WorkspaceID: r.Source.WorkspaceID, TaskID: r.Source.TaskID, ResourceID: r.Source.ResourceID, RunnerID: r.Source.RunnerID, ProjectID: "project", NodeID: r.Source.NodeID, NodeActivation: 1, Generation: r.Source.Generation, LeaseID: "original-lease", OpenOperationID: "original-open", Resource: protocol.WorkspaceResource{ResourceID: r.Source.ResourceID, RepositoryIdentity: r.Source.RepositoryIdentity, RemoteURL: "https://" + r.Source.RepositoryIdentity + ".git", ProviderMetadata: &protocol.RepositoryProviderMetadata{Github: &protocol.GithubClass{RepositoryID: "123"}}}}
 	m := protocol.WorkspaceMetadata{BaseCommit: f.base, FinalizedCommit: f.base, TargetCommit: f.base, TargetBranch: "main", Generation: w.Generation, LeaseID: w.LeaseID, RepositoryIdentity: r.Source.RepositoryIdentity, StorageID: r.Source.StorageID, ProviderMetadata: w.Resource.ProviderMetadata}
 	p := protocol.PublicationParent{Kind: "materialization", Commit: f.base, RepositoryIdentity: r.Source.RepositoryIdentity, ObservationOperationID: publicationPointer(w.OpenOperationID), Workspace: &w, Outcome: &protocol.EffectResult{WorkspaceID: &w.WorkspaceID, WorkspaceMetadata: &m}}
 	p.ObservationDigest = publicationPointer(publicationTestDigest(t, map[string]any{"operation_id": p.ObservationOperationID, "workspace": w, "outcome": p.Outcome}))
@@ -322,7 +322,7 @@ func publicationPinFixture(t *testing.T) (protocol.PublicationParent, protocol.R
 	_, wd, _ := wire.Canonical(w)
 	pinMetadata := m
 	pinMetadata.StorageID = ""
-	pin := map[string]any{"digest": wd, "base_ref": "refs/heads/main", "target_branch": "main", "github_repository_id": "123", "complete": true, "metadata": pinMetadata}
+	pin := map[string]any{"digest": wd, "base_ref": "refs/heads/main", "target_branch": "main", "provider_metadata": *w.Resource.ProviderMetadata, "remote_url": w.Resource.RemoteURL, "complete": true, "metadata": pinMetadata}
 	raw, _ := json.Marshal(pin)
 	if e := os.WriteFile(path, raw, 0644); e != nil {
 		t.Fatal(e)
@@ -342,7 +342,7 @@ func TestPublicationPinOriginalCompletedCacheProofAndTamper(t *testing.T) {
 			case "digest":
 				pin["digest"] = strings.Repeat("f", 64)
 			case "repository":
-				pin["github_repository_id"] = "foreign"
+				pin["provider_metadata"] = protocol.RepositoryProviderMetadata{Github: &protocol.GithubClass{RepositoryID: "456"}}
 			case "incomplete":
 				pin["complete"] = false
 			case "cache-ref":

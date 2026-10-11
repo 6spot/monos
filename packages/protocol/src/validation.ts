@@ -7,6 +7,8 @@ export const MAX_FRAME_BYTES = 1024 * 1024;
 export const MAX_ITEM_BYTES = MAX_FRAME_BYTES - 4096;
 // Complete acceptance evidence is rejected when it cannot fit; it is never clipped.
 export const MAX_DELIVERY_BYTES = 512 * 1024;
+// A fresh ref read echoes the push plus its observation and correlation fields.
+export const MAX_PUBLICATION_PUSH_BYTES = 480 * 1024;
 export const schema = contracts;
 const ajv = new Ajv({ strict: true, allErrors: false });
 ajv.addSchema(schema);
@@ -27,12 +29,30 @@ export function validate<T>(name: string, value: unknown): T {
     if (new TextEncoder().encode(JSON.stringify(value)).length > MAX_DELIVERY_BYTES) throw new ProtocolValidationError(`${name} exceeds the encoded wire byte limit`);
     resultBytes(value);
   }
-  const limit = ['GitHubRepositoryAccessResult','PublicationAccessRequest','PublicationAccessResult','PublicationPermissionRequest','PublicationPermissionResult'].includes(name) ? 16 * 1024 : name === 'ResultReadResponse' || name.startsWith('Publication') || name.startsWith('PublishedResult') || name.startsWith('RemotePreparation') ? 512 * 1024 : ['Frame', 'RunnerInventory'].includes(name) ? MAX_FRAME_BYTES : ['Dispatch', 'Operation', 'OperationResult'].includes(name) ? MAX_ITEM_BYTES : undefined;
-  if (limit !== undefined && new TextEncoder().encode(JSON.stringify(value)).length > limit) throw new ProtocolValidationError(`${name} exceeds the encoded wire byte limit`);
-  if (name.startsWith('Publication') || name.startsWith('PublishedResult') || name.startsWith('RemotePreparation') || name.startsWith('Result') || name === 'Frame' && value && typeof value === 'object' && 'type' in value && ['result_read','result_read_result','publication_prepare','publication_result','publication_ack','publication_push','publication_push_result','publication_push_ack'].includes(String(value.type))) {
+  const limit = name === 'PublicationPushRequest' ? MAX_PUBLICATION_PUSH_BYTES : ['RepositoryAccessResult','InspectionRepositoryAccessResult','PublicationAccessRequest','PublicationAccessResult','PublicationPermissionRequest','PublicationPermissionResult'].includes(name) ? 16 * 1024 : name === 'ResultReadResponse' || name.startsWith('Publication') || name.startsWith('PublishedResult') || name.startsWith('RemotePreparation') ? 512 * 1024 : ['Frame', 'RunnerInventory'].includes(name) ? MAX_FRAME_BYTES : ['Dispatch', 'Operation', 'OperationResult'].includes(name) ? MAX_ITEM_BYTES : undefined;
+  if (limit !== undefined) {
+    let encoded = JSON.stringify(value);
+    // Go's JSON encoder escapes these characters when echoing a typed push.
+    // Reserve against that larger representation before backend admission.
+    if (name === 'PublicationPushRequest') encoded = encoded.replace(/[<>&\u2028\u2029]/gu, character => `\\u${character.charCodeAt(0).toString(16).padStart(4, '0')}`);
+    if (new TextEncoder().encode(encoded).length > limit) throw new ProtocolValidationError(`${name} exceeds the encoded wire byte limit`);
+  }
+  // Schema validation above limits the frame union; every publication frame
+  // must carry the same nested byte rules, including fresh ref-read echoes.
+  const publicationFrame = name === 'Frame' && value && typeof value === 'object' && 'type' in value && String(value.type).startsWith('publication_');
+  if (name.startsWith('Publication') || name.startsWith('PublishedResult') || name.startsWith('RemotePreparation') || name.startsWith('Result') || publicationFrame || name === 'Frame' && value && typeof value === 'object' && 'type' in value && ['result_read','result_read_result'].includes(String(value.type))) {
     resultBytes(value);
-    if(name === 'Frame' && value && typeof value === 'object' && 'type' in value && String(value.type).startsWith('publication_') && new TextEncoder().encode(JSON.stringify(value)).length>512*1024)throw new ProtocolValidationError('Publication frame exceeds encoded byte bounds');
+    if(publicationFrame && new TextEncoder().encode(JSON.stringify(value)).length>512*1024)throw new ProtocolValidationError('Publication frame exceeds encoded byte bounds');
     if (name === 'Frame' && value && typeof value === 'object' && 'result_read_result' in value) validate('ResultReadResponse',value.result_read_result);
+  }
+  // AJV follows nested schemas, but transport byte limits must also follow them.
+  const nested = value as Record<string, unknown>;
+  if (name === 'PublicationRefReadRequest') validate('PublicationPushRequest', nested.push);
+  if (name === 'PublicationRefReadResponse') validate('PublicationRefReadRequest', nested.request);
+  if (publicationFrame) {
+    if ('publication_push' in nested) validate('PublicationPushRequest', nested.publication_push);
+    if ('publication_ref_read' in nested) validate('PublicationRefReadRequest', nested.publication_ref_read);
+    if ('publication_ref_read_result' in nested) validate('PublicationRefReadResponse', nested.publication_ref_read_result);
   }
   return value as T;
 }

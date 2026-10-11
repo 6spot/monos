@@ -178,7 +178,7 @@ func prepareWorkspaceWriterPaths(w *protocol.WorkspaceDescriptor) error {
 	return trustedFile(p, uint32(uid))
 }
 
-func runWorkspaceWorker(ctx context.Context, op protocol.Operation, action string, access *protocol.GitHubRepositoryAccessResult) (Status, error) {
+func runWorkspaceWorker(ctx context.Context, op protocol.Operation, action string, access *protocol.RepositoryAccessResult) (Status, error) {
 	var empty Status
 	boot, err := BootID()
 	if err != nil {
@@ -400,7 +400,7 @@ func prepareCloneStage(op protocol.Operation) error {
 	return trustedDir(p, uint32(uid))
 }
 
-func runWorkspaceEffect(ctx context.Context, op protocol.Operation, access *protocol.GitHubRepositoryAccessResult) (Status, error) {
+func runWorkspaceEffect(ctx context.Context, op protocol.Operation, access *protocol.RepositoryAccessResult) (Status, error) {
 	var status Status
 	if op.Kind == protocol.KindCompleteNode || op.Kind == protocol.SettleCompletion {
 		return runCompletionEffect(ctx, op)

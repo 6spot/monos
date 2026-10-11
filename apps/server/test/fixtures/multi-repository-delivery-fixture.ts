@@ -2,6 +2,8 @@ import { generateKeyPairSync, randomUUID } from 'node:crypto';
 import assert from 'node:assert/strict';
 import { multiRepositoryWorkspacesFixture } from './multi-repository-workspaces-fixture.ts';
 import { publicationPages } from './publication-fixture.ts';
+import { GitHTTPSCredentials } from '../../src/git-https-credentials.ts';
+import { PublicationRefReadBroker } from '../../src/publication-ref-read-broker.ts';
 import { Configuration } from '../../src/configuration.ts';
 import { GitHub } from '../../src/github.ts';
 import { GitHubRemote, remoteProfile } from '../../src/github-remote.ts';
@@ -14,20 +16,22 @@ import { OwnerDeliveryCommands } from '../../src/owner-delivery-commands.ts';
 import { OwnerDeliveryReads } from '../../src/owner-delivery-reads.ts';
 import { ownerDeliveryHooks } from '../../src/owner-delivery-control.ts';
 import { publicationDigest as hash } from '../../src/publication-policy.ts';
-import { validate } from '../../../../packages/protocol/src/index.ts';
-import type { OwnerDeliveryCommand, PublicationPushResult } from '../../../../packages/protocol/src/index.ts';
+import { validate,digest } from '../../../../packages/protocol/src/index.ts';
+import type { OwnerDeliveryCommand, PublicationPushResult,PublicationRefReadRequest } from '../../../../packages/protocol/src/index.ts';
 
-export async function multiRepositoryDeliveryFixture(mode: 'automatic' | 'after_acceptance' = 'automatic') {
-  const x = await multiRepositoryWorkspacesFixture();
+export async function multiRepositoryDeliveryFixture(mode: 'automatic' | 'after_acceptance' = 'automatic', plain: number[] = []) {
+  const x = await multiRepositoryWorkspacesFixture(plain);
   try {
-    const github = new GitHub(x.service.options.signingKey), configuration = new Configuration(x.db, github);
-    const save = async (name: 'save_github' | 'save_project', payload: object) => configuration.save(x.token, {
+    const runnerCredential=randomUUID();await x.db.pool.query('UPDATE runners SET credential_hash=$2 WHERE id=$1',[x.f.runner,digest(runnerCredential)]);
+    const github = new GitHub(x.service.options.signingKey), configuration = new Configuration(x.db, github,new GitHTTPSCredentials(x.service.options.signingKey));
+    const save = async (name: 'save_github' | 'save_project' | 'save_git_https_credential', payload: object) => configuration.save(x.token, {
       schema_version: 1, request_id: randomUUID(), expected_control_version: (await configuration.read(x.token)).control_version, name, payload,
     });
     await save('save_github', { app_id: '7', installation_id: '8', private_key: generateKeyPairSync('rsa', { modulusLength: 2048 }).privateKey.export({ type: 'pkcs8', format: 'pem' }).toString() });
     await save('save_project', { id: x.f.project, name: 'Multi-repository delivery', context: 'One accepted result across two repositories',
-      resources: x.resources.map((id, index) => ({ id, provider: 'github', provider_repo_id: String(index + 41), remote_url: `https://github.com/example/multi-${index}.git`, remote_preparation: mode, default_branch: 'main' })), role_ids: [x.f.role], archived: false });
-    const states = x.resources.map((resource, index) => ({ resource, repository: String(index + 41), head: '', pr: null as Record<string, unknown> | null,
+      resources: x.resources.map((id, index) => ({ id, ...(plain.includes(index)?{remote_url:`https://git.example.test:8443/Exact/Repo-${index}.git`}:{provider:'github',provider_repo_id:String(index+41),remote_url:`https://github.com/example/multi-${index}.git`}), remote_preparation: mode, default_branch: 'main' })), role_ids: [x.f.role], archived: false });
+    for(const index of plain)await save('save_git_https_credential',{resource_id:x.resources[index],username:'git-user',token:'synthetic-plain-git-token'});
+    const states = x.resources.map((resource, index) => ({ resource, plain:plain.includes(index), repository: String(index + 41), head: '', pr: null as Record<string, unknown> | null,
       reject: false, drop: false, ready: true, finalHead: (index ? '2' : '1').repeat(40) }));
     const calls: { method: string; path: string; resource: string }[] = [], grants: string[] = [];
     const provider = new GitHubRemote(github, {
@@ -67,7 +71,18 @@ export async function multiRepositoryDeliveryFixture(mode: 'automatic' | 'after_
         throw new Error('Unexpected fixture provider path ' + url.pathname);
       },
     });
-    const remote = new RemotePreparation(x.db, x.service.instanceId, provider), preparation = new PublicationPreparation(x.db, x.service.instanceId);
+    const refReads=new PublicationRefReadBroker(),socket={},refRequests:PublicationRefReadRequest[]=[];
+    const readState={head:undefined as string|undefined,available:true,hold:undefined as Promise<void>|undefined,entered:undefined as (()=>void)|undefined};
+    refReads.register(x.f.runner,x.f.incarnation,socket,true,frame=>{
+      const request=frame.publication_ref_read!;refRequests.push(request);
+      void (async()=>{
+        readState.entered?.();if(readState.hold)await readState.hold;
+        const push=request.push,state=states.find(s=>s.resource===push.resource_id)!;
+        const observation={schema_version:1,observation_id:randomUUID(),operation_id:push.operation_id,item_id:push.item_id,task_id:push.task_id,resource_id:push.resource_id,runner_id:push.runner_id,storage_id:push.storage_id,repository_identity:push.repository_identity,provider_metadata:push.provider_metadata,delivery_ref:push.delivery_ref,...(readState.available?{status:'present',head:readState.head??state.head}:{status:'unavailable',reason:'provider_unavailable'}),observed_at:new Date().toISOString()};
+        refReads.response(x.f.runner,socket,validate('Frame',{schema_version:1,type:'publication_ref_read_result',incarnation:x.f.incarnation,correlation_id:frame.correlation_id,publication_ref_read_result:{schema_version:1,request,worker_absent:true,observation,observation_digest:hash(observation)}}));
+      })();return true;
+    });
+    const remote = new RemotePreparation(x.db, x.service.instanceId, provider,refReads), preparation = new PublicationPreparation(x.db, x.service.instanceId);
     const due = async () => {
       await x.service.touch(x.f.runner, x.f.incarnation, true);
       await x.db.pool.query("UPDATE github_remote_cooldowns SET next_request_at=clock_timestamp()-interval '1 second'");
@@ -105,15 +120,15 @@ export async function multiRepositoryDeliveryFixture(mode: 'automatic' | 'after_
         for (const frame of await remote.pending(x.f.runner, x.f.incarnation, true)) {
           const push = frame.publication_push; if (!push) continue;
           const state = states.find(s => s.resource === push.resource_id)!; state.head = push.prepared.candidate!.head;
-          const observation = { schema_version: 1, observation_id: randomUUID(), operation_id: push.operation_id, item_id: push.item_id, task_id: push.task_id, resource_id: push.resource_id, runner_id: push.runner_id, storage_id: push.storage_id, repository_identity: push.repository_identity, repository_id: push.repository_id, delivery_ref: push.delivery_ref, status: 'present', head: state.head, observed_at: new Date().toISOString() };
+          const observation = { schema_version: 1, observation_id: randomUUID(), operation_id: push.operation_id, item_id: push.item_id, task_id: push.task_id, resource_id: push.resource_id, runner_id: push.runner_id, storage_id: push.storage_id, repository_identity: push.repository_identity, provider_metadata: push.provider_metadata, delivery_ref: push.delivery_ref, status: 'present', head: state.head, observed_at: new Date().toISOString() };
           const result = validate<PublicationPushResult>('PublicationPushResult', { schema_version: 1, operation_id: push.operation_id, request_digest: hash(push), item_id: push.item_id, delivery_ref: push.delivery_ref, candidate_head: state.head, candidate_manifest_digest: push.prepared.candidate_manifest_digest, push_started: false, worker_absent: true, status: 'published', observation, observation_digest: hash(observation) });
           await remote.finish(x.f.runner, x.f.incarnation, result);
         }
-        if (states.every(s => s.pr)) return;
+        if (states.every(s => s.plain?s.head:s.pr)) return;
       }
       throw new Error('Remote preparation did not finish: ' + JSON.stringify((await x.db.pool.query('SELECT kind,state,reason FROM remote_preparation_operations')).rows));
     };
-    const worker = new OwnerDeliveryWorker(x.db, x.service.instanceId, new GitHubFinalization(provider));
+    const worker = new OwnerDeliveryWorker(x.db, x.service.instanceId, new GitHubFinalization(provider),refReads);
     const pump = async (selected = worker) => { await due(); const start = calls.length + grants.length; await selected.pump(); assert.ok(calls.length + grants.length - start <= 8); };
     const barrier = async (batchId: string) => {
       for (let i = 0; i < 16; i++) {
@@ -125,6 +140,6 @@ export async function multiRepositoryDeliveryFixture(mode: 'automatic' | 'after_
       const batch = (await reads.batch(x.token, x.f.task, batchId)).batch;
       return command(name, { operation_id: batchId, content_digest: batch.content_digest, expected_version: batch.version });
     };
-    return { ...x, mode, states, calls, grants, remote, preparation, provider, worker, due, reads, accept, prepareRemote, pump, barrier, control, completion };
+    return { ...x, runnerCredential,mode, states, calls, grants, remote, preparation, provider, worker, due, reads, accept, prepareRemote, pump, barrier, control, completion,configuration,save,refReads,refRequests,readState,close:async()=>{refReads.shutdown();await x.close();} };
   } catch (error) { await x.close(); throw error; }
 }

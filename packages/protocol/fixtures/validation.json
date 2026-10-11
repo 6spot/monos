@@ -1774,7 +1774,7 @@
   },
   {
     "name": "verified anonymous repository access",
-    "schema": "GitHubRepositoryAccessResult",
+    "schema": "RepositoryAccessResult",
     "valid": true,
     "value": {
       "schema_version": 1,
@@ -1794,7 +1794,7 @@
   },
   {
     "name": "ephemeral scoped repository access",
-    "schema": "GitHubRepositoryAccessResult",
+    "schema": "RepositoryAccessResult",
     "valid": true,
     "value": {
       "schema_version": 1,
@@ -1816,7 +1816,7 @@
   },
   {
     "name": "anonymous access rejects token",
-    "schema": "GitHubRepositoryAccessResult",
+    "schema": "RepositoryAccessResult",
     "valid": false,
     "value": {
       "schema_version": 1,
@@ -6770,15 +6770,16 @@
               },
               "observed_at": "2026-10-04T12:00:00.000Z",
               "expires_at": "2026-10-04T13:00:00.000Z",
-              "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+              "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b",
+              "kind": "github_installation"
             },
-            "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6"
+            "permission_proof_digest": "945497759cad3c5a073f1877486fcfb7a88a7b283d2844970937ea1f8e6423b6"
           },
-          "preparation_request_digest": "4122d704118258227d19bec8ae84cb79a480361c96cc4514dc07501b3dd75979",
+          "preparation_request_digest": "13206e5845c2dec570bd918d6cb434d1fefdb4d6694b3c2e96dc198cf30cb1ae",
           "preparation_result": {
             "schema_version": 1,
             "operation_id": "publication-operation",
-            "request_digest": "4122d704118258227d19bec8ae84cb79a480361c96cc4514dc07501b3dd75979",
+            "request_digest": "13206e5845c2dec570bd918d6cb434d1fefdb4d6694b3c2e96dc198cf30cb1ae",
             "status": "prepared",
             "candidate": {
               "schema_version": 1,
@@ -6812,7 +6813,7 @@
             },
             "scan_digest": "24924737deb9b51d1673ebb15ab6a958a185a21068f3f6c198f4cff692e78ab6"
           },
-          "preparation_result_digest": "5ee8e753eba3fc4b340383e379cd139a07b6bc8f226e45047f6247cbb8bf571e",
+          "preparation_result_digest": "fece69546c30bdac28cd7bfad2a63a1368a25d7ffef5baf75ac1bae29bad0ffc",
           "item_id": "30000000-0000-4000-8000-000000000001",
           "candidate": {
             "schema_version": 1,
@@ -6862,9 +6863,10 @@
             },
             "observed_at": "2026-10-04T12:00:00.000Z",
             "expires_at": "2026-10-04T13:00:00.000Z",
-            "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+            "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b",
+            "kind": "github_installation"
           },
-          "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6",
+          "permission_proof_digest": "945497759cad3c5a073f1877486fcfb7a88a7b283d2844970937ea1f8e6423b6",
           "waivers": [],
           "target_branch": "main",
           "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
@@ -6874,7 +6876,8 @@
             "title": "Exact review",
             "body": "Safe Task summary"
           },
-          "provider_content_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          "provider_content_digest": "58a5a4b94d47c39ed839c237f1a251b9c34e46b15bb264649f93748397fb1e63",
+          "delivery_kind": "github_pr"
         }
       ]
     }
@@ -7058,7 +7061,8 @@
           },
           "observed_at": "2026-10-04T12:00:00.000Z",
           "expires_at": "2026-10-04T13:00:00.000Z",
-          "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+          "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b",
+          "kind": "github_installation"
         },
         "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6"
       },
@@ -7143,7 +7147,8 @@
         "title": "Exact review",
         "body": "Safe Task summary"
       },
-      "provider_content_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      "provider_content_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "delivery_kind": "github_pr"
     }
   },
   {
@@ -7325,7 +7330,8 @@
           },
           "observed_at": "2026-10-04T12:00:00.000Z",
           "expires_at": "2026-10-04T13:00:00.000Z",
-          "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+          "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b",
+          "kind": "github_installation"
         },
         "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6"
       },
@@ -7418,7 +7424,8 @@
         },
         "observed_at": "2026-10-04T12:00:00.000Z",
         "expires_at": "2026-10-04T13:00:00.000Z",
-        "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+        "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b",
+        "kind": "github_installation"
       },
       "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6",
       "waivers": [],
@@ -7430,7 +7437,8 @@
         "title": "Exact review",
         "body": "Safe Task summary"
       },
-      "provider_content_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      "provider_content_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "delivery_kind": "github_pr"
     }
   },
   {
@@ -7612,7 +7620,8 @@
           },
           "observed_at": "2026-10-04T12:00:00.000Z",
           "expires_at": "2026-10-04T13:00:00.000Z",
-          "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+          "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b",
+          "kind": "github_installation"
         },
         "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6"
       },
@@ -7704,7 +7713,8 @@
         },
         "observed_at": "2026-10-04T12:00:00.000Z",
         "expires_at": "2026-10-04T13:00:00.000Z",
-        "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+        "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b",
+        "kind": "github_installation"
       },
       "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6",
       "waivers": [
@@ -7718,7 +7728,8 @@
         "title": "Exact review",
         "body": "Safe Task summary"
       },
-      "provider_content_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      "provider_content_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "delivery_kind": "github_pr"
     }
   },
   {
@@ -7899,17 +7910,18 @@
           },
           "observed_at": "2026-10-04T12:00:00.000Z",
           "expires_at": "2026-10-04T13:00:00.000Z",
-          "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+          "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b",
+          "kind": "github_installation"
         },
-        "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6"
+        "permission_proof_digest": "945497759cad3c5a073f1877486fcfb7a88a7b283d2844970937ea1f8e6423b6"
       },
-      "preparation_request_digest": "4122d704118258227d19bec8ae84cb79a480361c96cc4514dc07501b3dd75979",
-      "preparation_result_digest": "5ee8e753eba3fc4b340383e379cd139a07b6bc8f226e45047f6247cbb8bf571e",
+      "preparation_request_digest": "13206e5845c2dec570bd918d6cb434d1fefdb4d6694b3c2e96dc198cf30cb1ae",
+      "preparation_result_digest": "1bda5bb4a78fd365d3323cfaa2271b50185c37032885071c2693a085133b3fb5",
       "outcome": "no_change",
       "preparation_result": {
         "schema_version": 1,
         "operation_id": "publication-operation",
-        "request_digest": "4122d704118258227d19bec8ae84cb79a480361c96cc4514dc07501b3dd75979",
+        "request_digest": "13206e5845c2dec570bd918d6cb434d1fefdb4d6694b3c2e96dc198cf30cb1ae",
         "status": "not_applicable",
         "reason": "no_change"
       }
@@ -8093,7 +8105,8 @@
           },
           "observed_at": "2026-10-04T12:00:00.000Z",
           "expires_at": "2026-10-04T13:00:00.000Z",
-          "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+          "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b",
+          "kind": "github_installation"
         },
         "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6"
       },
@@ -8300,15 +8313,16 @@
           },
           "observed_at": "2026-10-04T12:00:00.000Z",
           "expires_at": "2026-10-04T13:00:00.000Z",
-          "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+          "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b",
+          "kind": "github_installation"
         },
-        "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6"
+        "permission_proof_digest": "945497759cad3c5a073f1877486fcfb7a88a7b283d2844970937ea1f8e6423b6"
       },
-      "preparation_request_digest": "4122d704118258227d19bec8ae84cb79a480361c96cc4514dc07501b3dd75979",
+      "preparation_request_digest": "13206e5845c2dec570bd918d6cb434d1fefdb4d6694b3c2e96dc198cf30cb1ae",
       "preparation_result": {
         "schema_version": 1,
         "operation_id": "30000000-0000-4000-8000-000000000005",
-        "request_digest": "c45788294a669b9d4fa42c2d399416293be6ad756036db6d3b6151c976a51692",
+        "request_digest": "13206e5845c2dec570bd918d6cb434d1fefdb4d6694b3c2e96dc198cf30cb1ae",
         "status": "mapped",
         "candidate": {
           "schema_version": 1,
@@ -8345,7 +8359,7 @@
           "schema_version": 1,
           "mapping_id": "30000000-0000-4000-8000-000000000005",
           "operation_id": "30000000-0000-4000-8000-000000000005",
-          "request_digest": "c45788294a669b9d4fa42c2d399416293be6ad756036db6d3b6151c976a51692",
+          "request_digest": "13206e5845c2dec570bd918d6cb434d1fefdb4d6694b3c2e96dc198cf30cb1ae",
           "item_id": "30000000-0000-4000-8000-000000000001",
           "source": {
             "task_id": "30000000-0000-4000-8000-000000000090",
@@ -8386,15 +8400,14 @@
           "published": {
             "schema_version": 1,
             "operation_id": "30000000-0000-4000-8000-000000000003",
-            "request_digest": "57fce81c9a49bc82b551810060aed5414741e8031f5de5bb7f7927ff26e4e777",
-            "result_digest": "8f4a4f285d53ee2847e717464d4680d56a883d64ca54d8a0302fa52190463f74",
+            "request_digest": "71fffc21a43e893d9f5b7d5d60dd50c459b5a5e5048fd4c48977aa822806c252",
+            "result_digest": "f8e51ada073e72d2fc6d68299ea8e328c9c83f5c4f471a12ced71f8071f1d799",
             "item_id": "30000000-0000-4000-8000-000000000001",
             "task_id": "30000000-0000-4000-8000-000000000090",
             "resource_id": "30000000-0000-4000-8000-000000000091",
             "runner_id": "runner_id",
             "storage_id": "storage_id",
             "repository_identity": "github.com/example/result",
-            "repository_id": "42",
             "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
             "candidate": {
               "schema_version": 1,
@@ -8419,23 +8432,32 @@
               "runner_id": "runner_id",
               "storage_id": "storage_id",
               "repository_identity": "github.com/example/result",
-              "repository_id": "42",
               "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
               "status": "present",
               "head": "dddddddddddddddddddddddddddddddddddddddd",
-              "observed_at": "2026-10-04T12:00:00.000Z"
+              "observed_at": "2026-10-04T12:00:00.000Z",
+              "provider_metadata": {
+                "github": {
+                  "repository_id": "42"
+                }
+              }
             },
-            "observation_digest": "3e8dac4e9b4faa2dc3078b4f76592d88ad750d2e0d9050ec4ea6135cbbd41a49"
+            "observation_digest": "c8bf32602936c0a5f4ef3c22bfe08c5394fc82ecc76afc8900c857884fc8f961",
+            "provider_metadata": {
+              "github": {
+                "repository_id": "42"
+              }
+            }
           },
-          "published_digest": "b334ec11b59394fa8476bebd2cd01f2f49e7bf9353c0b353d42441e1727255a7",
+          "published_digest": "45f0a34c7273cad8ff80487591364170183b27921d25f7d92da9aa25785fa95b",
           "candidate_manifest_digest": "c5e090c6e5571bb2441113f043098b1d69428111df7adf9ae8efd8740ad5d913",
           "reused_head": "dddddddddddddddddddddddddddddddddddddddd",
           "result_tree": "cccccccccccccccccccccccccccccccccccccccc",
           "configuration_digest": "bf0396b43c70aafee730b1b02486e309c649714f629c4bc3054211c439f9ae51"
         },
-        "mapping_digest": "582df52b1af1753d17a5a77b23f9b3d7f68aae4d47cb51214d47c0bebe067e0e"
+        "mapping_digest": "ce977b8cf33d0f5f55f3b998eef878845549fc8763803512e46e00b8f19e962b"
       },
-      "preparation_result_digest": "5ee8e753eba3fc4b340383e379cd139a07b6bc8f226e45047f6247cbb8bf571e",
+      "preparation_result_digest": "1def84125f1ac6a34024c5def94ec1d432dff68e230bfff336ddace25b75e53d",
       "item_id": "30000000-0000-4000-8000-000000000001",
       "candidate": {
         "schema_version": 1,
@@ -8485,9 +8507,10 @@
         },
         "observed_at": "2026-10-04T12:00:00.000Z",
         "expires_at": "2026-10-04T13:00:00.000Z",
-        "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+        "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b",
+        "kind": "github_installation"
       },
-      "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6",
+      "permission_proof_digest": "945497759cad3c5a073f1877486fcfb7a88a7b283d2844970937ea1f8e6423b6",
       "waivers": [],
       "target_branch": "main",
       "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
@@ -8497,12 +8520,12 @@
         "title": "Exact review",
         "body": "Safe Task summary"
       },
-      "provider_content_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "provider_content_digest": "58a5a4b94d47c39ed839c237f1a251b9c34e46b15bb264649f93748397fb1e63",
       "mapping": {
         "schema_version": 1,
         "mapping_id": "30000000-0000-4000-8000-000000000005",
         "operation_id": "30000000-0000-4000-8000-000000000005",
-        "request_digest": "c45788294a669b9d4fa42c2d399416293be6ad756036db6d3b6151c976a51692",
+        "request_digest": "13206e5845c2dec570bd918d6cb434d1fefdb4d6694b3c2e96dc198cf30cb1ae",
         "item_id": "30000000-0000-4000-8000-000000000001",
         "source": {
           "task_id": "30000000-0000-4000-8000-000000000090",
@@ -8543,15 +8566,14 @@
         "published": {
           "schema_version": 1,
           "operation_id": "30000000-0000-4000-8000-000000000003",
-          "request_digest": "57fce81c9a49bc82b551810060aed5414741e8031f5de5bb7f7927ff26e4e777",
-          "result_digest": "8f4a4f285d53ee2847e717464d4680d56a883d64ca54d8a0302fa52190463f74",
+          "request_digest": "71fffc21a43e893d9f5b7d5d60dd50c459b5a5e5048fd4c48977aa822806c252",
+          "result_digest": "f8e51ada073e72d2fc6d68299ea8e328c9c83f5c4f471a12ced71f8071f1d799",
           "item_id": "30000000-0000-4000-8000-000000000001",
           "task_id": "30000000-0000-4000-8000-000000000090",
           "resource_id": "30000000-0000-4000-8000-000000000091",
           "runner_id": "runner_id",
           "storage_id": "storage_id",
           "repository_identity": "github.com/example/result",
-          "repository_id": "42",
           "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
           "candidate": {
             "schema_version": 1,
@@ -8576,21 +8598,31 @@
             "runner_id": "runner_id",
             "storage_id": "storage_id",
             "repository_identity": "github.com/example/result",
-            "repository_id": "42",
             "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
             "status": "present",
             "head": "dddddddddddddddddddddddddddddddddddddddd",
-            "observed_at": "2026-10-04T12:00:00.000Z"
+            "observed_at": "2026-10-04T12:00:00.000Z",
+            "provider_metadata": {
+              "github": {
+                "repository_id": "42"
+              }
+            }
           },
-          "observation_digest": "3e8dac4e9b4faa2dc3078b4f76592d88ad750d2e0d9050ec4ea6135cbbd41a49"
+          "observation_digest": "c8bf32602936c0a5f4ef3c22bfe08c5394fc82ecc76afc8900c857884fc8f961",
+          "provider_metadata": {
+            "github": {
+              "repository_id": "42"
+            }
+          }
         },
-        "published_digest": "b334ec11b59394fa8476bebd2cd01f2f49e7bf9353c0b353d42441e1727255a7",
+        "published_digest": "45f0a34c7273cad8ff80487591364170183b27921d25f7d92da9aa25785fa95b",
         "candidate_manifest_digest": "c5e090c6e5571bb2441113f043098b1d69428111df7adf9ae8efd8740ad5d913",
         "reused_head": "dddddddddddddddddddddddddddddddddddddddd",
         "result_tree": "cccccccccccccccccccccccccccccccccccccccc",
         "configuration_digest": "bf0396b43c70aafee730b1b02486e309c649714f629c4bc3054211c439f9ae51"
       },
-      "mapping_digest": "582df52b1af1753d17a5a77b23f9b3d7f68aae4d47cb51214d47c0bebe067e0e"
+      "mapping_digest": "ce977b8cf33d0f5f55f3b998eef878845549fc8763803512e46e00b8f19e962b",
+      "delivery_kind": "github_pr"
     }
   },
   {
@@ -8863,7 +8895,8 @@
           },
           "observed_at": "2026-10-04T12:00:00.000Z",
           "expires_at": "2026-10-04T13:00:00.000Z",
-          "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+          "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b",
+          "kind": "github_installation"
         },
         "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6"
       },
@@ -8954,7 +8987,8 @@
         },
         "observed_at": "2026-10-04T12:00:00.000Z",
         "expires_at": "2026-10-04T13:00:00.000Z",
-        "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+        "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b",
+        "kind": "github_installation"
       },
       "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6",
       "waivers": [],
@@ -8966,7 +9000,8 @@
         "title": "Exact review",
         "body": "Safe Task summary"
       },
-      "provider_content_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      "provider_content_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "delivery_kind": "github_pr"
     }
   },
   {

@@ -22,7 +22,7 @@ func publicationDaemonDigest(t *testing.T, v any) string {
 	}
 	return d
 }
-func publicationDaemonFixture(t *testing.T, retainOpen bool) (*journal.DB, protocol.PublicationPrepareRequest) {
+func publicationDaemonFixture(t *testing.T, retainOpen bool, plain ...bool) (*journal.DB, protocol.PublicationPrepareRequest) {
 	t.Helper()
 	db := testDB(t)
 	dispatch, completion := recoveryFixture(t, "publication", protocol.KindCompleteNode)
@@ -37,7 +37,12 @@ func publicationDaemonFixture(t *testing.T, retainOpen bool) (*journal.DB, proto
 	w.WorkspaceID = id
 	w.OpenOperationID = "later-open"
 	dispatch.WorkspaceReservations.Resources[0].WorkspaceID = id
-	w.Resource.ProviderMetadata = &protocol.RepositoryProviderMetadata{Github: &protocol.RepositoryProviderMetadataGithub{RepositoryID: "123"}}
+	w.Resource.ProviderMetadata = &protocol.RepositoryProviderMetadata{Github: &protocol.GithubClass{RepositoryID: "123"}}
+	if len(plain) > 0 && plain[0] {
+		w.Resource.RepositoryIdentity = "git.example.test/Exact/Repo"
+		w.Resource.RemoteURL = "https://git.example.test/Exact/Repo.git"
+		w.Resource.ProviderMetadata = &protocol.RepositoryProviderMetadata{}
+	}
 	dispatch.NodeExecutionSource = &protocol.NodeExecutionSource{SourceID: "source", NodeID: *dispatch.NodeID, NodeActivation: 1, SpecificationID: "original-spec", PlanID: "original-plan", ContextDigest: strings.Repeat("a", 64)}
 	dispatch.ProcessReleased = true
 	dispatch.MutationAllowed = false
@@ -68,7 +73,11 @@ func publicationDaemonFixture(t *testing.T, retainOpen bool) (*journal.DB, proto
 	parent.ObservationDigest = ptr(publicationDaemonDigest(t, map[string]any{"operation_id": parent.ObservationOperationID, "workspace": parent.Workspace, "outcome": parent.Outcome}))
 	sd := publicationDaemonDigest(t, source)
 	construction := protocol.PublicationConstruction{SchemaVersion: 1, CandidateID: "candidate", ConstructionID: "construction", SourceDigest: sd, RepositoryIdentity: source.RepositoryIdentity, TargetBranch: "main", Parents: []protocol.PublicationParent{parent}, AuthorName: "monos", AuthorEmail: "monos@localhost", Timestamp: "1790999999 +0000", Message: "monos Task " + task + " result v1"}
-	config := protocol.PublicationScanConfiguration{SchemaVersion: 1, PolicyVersion: "local_publication_v1", RuleVersion: "credential_rules_v1", TraversalVersion: "all_parents_final_tree_v1", LocalBlobLimit: 50 << 20, ProviderBlobLimit: 100 << 20, MaxCommits: 256, MaxPaths: 8192, MaxVersions: 32768, MaxBlobBytes: 128 << 20, MaxAggregateBytes: 512 << 20, MaxFindings: 4096, MaxEvidenceBytes: 8 << 20, DeadlineSeconds: 120, WorkflowWrite: "unknown", PermissionFingerprint: strings.Repeat("e", 64)}
+	providerLimit := int64(100 << 20)
+	config := protocol.PublicationScanConfiguration{SchemaVersion: 1, PolicyVersion: "local_publication_v1", RuleVersion: "credential_rules_v1", TraversalVersion: "all_parents_final_tree_v1", LocalBlobLimit: 50 << 20, ProviderBlobLimit: &providerLimit, MaxCommits: 256, MaxPaths: 8192, MaxVersions: 32768, MaxBlobBytes: 128 << 20, MaxAggregateBytes: 512 << 20, MaxFindings: 4096, MaxEvidenceBytes: 8 << 20, DeadlineSeconds: 120, WorkflowWrite: "unknown", PermissionFingerprint: strings.Repeat("e", 64)}
+	if len(plain) > 0 && plain[0] {
+		config.WorkflowWrite, config.ProviderBlobLimit = "not_applicable", nil
+	}
 	basis := protocol.PublicationEffectiveBasis{TaskID: task, SpecificationID: "effective-carried-spec", PlanID: "effective-carried-plan", CompletionOperationID: source.OperationID, CompletionManifestDigest: source.ManifestDigest}
 	return db, protocol.PublicationPrepareRequest{SchemaVersion: 1, OperationID: "publication-op", ScanRunID: "scan", Source: source, SourceDigest: sd, Construction: construction, ConstructionDigest: publicationDaemonDigest(t, construction), Configuration: config, ConfigurationDigest: publicationDaemonDigest(t, config), EffectiveBasis: basis, EffectiveBasisDigest: publicationDaemonDigest(t, basis)}
 }

@@ -1,3 +1,6 @@
+import {PublicationRefReadBroker} from './publication-ref-read-broker.ts';
+import {readPublicationRef} from './remote-preparation-ref-read.ts';
+import {repositoryAdapter} from '../../../packages/domain/src/repositories.ts';
 import {randomUUID} from 'node:crypto';
 import {transaction} from '../../../packages/db/src/index.ts';
 import type {Database,Transaction} from '../../../packages/db/src/index.ts';
@@ -10,7 +13,7 @@ import type {GitHubRemote,RemoteReviewSnapshot,GitHubRemoteScope} from './github
 import {ordinaryRemoteAdmission,currentLocalPreparation,RemoteAdmissionError} from './remote-preparation-guards.ts';
 import {remoteAdmissionForOperation} from './owner-delivery-guards.ts';
 import {admitAcceptedPreparationForItem,replaceRevokedPreparation} from './owner-delivery-preparation.ts';
-import {remoteScope,appendRemoteObservation,publishProof,verifyPushObservation,reserveRemoteProvider,releaseRemoteProvider,RemoteProviderWaiting} from './remote-preparation-state.ts';
+import {remoteProviderMetadata,remoteScope,appendRemoteObservation,publishProof,verifyPushObservation,reserveRemoteProvider,releaseRemoteProvider,RemoteProviderWaiting} from './remote-preparation-state.ts';
 import type {RemoteItem,RemoteOperation} from './remote-preparation-state.ts';
 import {observePublicationPermission} from './remote-preparation-access.ts';
 import {publicationDigest as hash,credentialPath,publicationConfiguration} from './publication-policy.ts';
@@ -25,7 +28,7 @@ export async function insertRemoteOperation(tx:Transaction,item:RemoteItem,reque
 }
 const reason=(error:unknown):PublicationRefObservationReason=>error instanceof RemoteAdmissionError||error instanceof RemoteProviderError?error.reason:'provider_unavailable';
 export function remoteReview(item:RemoteItem):RemotePreparationReview|undefined {
- if(!item.pr_id||!item.pr_number)return;
+ if(item.delivery_kind!=='github_pr'||!item.repository_id||!item.marker||!item.pr_id||!item.pr_number)return;
  return {repository_id:item.repository_id,pr_id:item.pr_id,pr_number:Number(item.pr_number),url:`https://github.com/${item.repository_identity.slice(11)}/pull/${item.pr_number}`,head_ref:item.delivery_ref.slice(11),base_ref:item.target_branch,marker:item.marker,state:'open'};
 }
 export async function remoteContent(tx:Transaction,item:RemoteItem,local:DeliveryOperation) {
@@ -40,8 +43,8 @@ async function localRequest(tx:Transaction,item:RemoteItem,kind:RemotePreparatio
  return validate('RemotePreparationProviderRequest',{schema_version:1,operation_id:randomUUID(),item_id:item.item_id,task_id:item.task_id,resource_id:item.resource_id,runner_id:item.runner_id,storage_id:item.storage_id,repository_identity:item.repository_identity,repository_id:item.repository_id,remote_url:item.remote_url,delivery_ref:item.delivery_ref,target_branch:item.target_branch,preparation:local.request,prepared:local.result,preparation_result_digest:local.result_digest,override_receipts:receipts,kind,...(remoteReview(item)?{review:remoteReview(item)}:{}),...(kind!=='close_pr'?{content:await remoteContent(tx,item,local)}:{})});
 }
 export class RemotePreparation {
- readonly db:Database;readonly instanceId:string;readonly provider:GitHubRemote;
- constructor(db:Database,instanceId:string,provider:GitHubRemote){this.db=db;this.instanceId=instanceId;this.provider=provider;}
+ readonly db:Database;readonly instanceId:string;readonly provider:GitHubRemote;readonly refReads:PublicationRefReadBroker;
+ constructor(db:Database,instanceId:string,provider:GitHubRemote,refReads=new PublicationRefReadBroker()){this.db=db;this.instanceId=instanceId;this.provider=provider;this.refReads=refReads;}
  async pump():Promise<void> {
   // Discover canonical settled local candidates. This persists identity only;
   // all new effect admissions below recheck Task and configuration under lock.
@@ -51,10 +54,11 @@ export class RemotePreparation {
     const item=await transaction(this.db,async tx=>{
      await lockConfiguration(tx);await tx.query('SELECT id FROM tasks WHERE id=$1 FOR UPDATE',[local.task_id]);
      const resource=(await tx.query<{repository_identity:string;remote_url:string;settings:{provider_repo_id?:string}}>('SELECT * FROM project_resources WHERE id=$1',[local.resource_id])).rows[0];
-     if(!local.item_id||!resource?.settings.provider_repo_id||!/^github\.com\//.test(resource.repository_identity))return;
-     const repository_id=resource.settings.provider_repo_id;
-     this.provider.prefix({resource_id:local.resource_id,repository_identity:resource.repository_identity,repository_id,remote_url:resource.remote_url,workflow_changes:false});
-     await tx.query('INSERT INTO remote_preparation_items(item_id,task_id,resource_id,runner_id,storage_id,repository_identity,repository_id,remote_url,delivery_ref,target_branch,marker) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) ON CONFLICT(item_id) DO NOTHING',[local.item_id,local.task_id,local.resource_id,local.runner_id,local.request.source.storage_id,resource.repository_identity,repository_id,resource.remote_url,`refs/heads/monos/task/${local.task_id}/${local.resource_id}`,local.request.construction.target_branch,`<!-- monos-delivery-item:${local.item_id} -->`]);
+     if(!local.item_id||!resource)return;
+     const delivery_kind=repositoryAdapter(resource.remote_url)==='github'?'github_pr':'git_branch',repository_id=delivery_kind==='github_pr'?resource.settings.provider_repo_id??null:null;
+     if(delivery_kind==='github_pr'&&!repository_id)return;
+     if(repository_id)this.provider.prefix({resource_id:local.resource_id,repository_identity:resource.repository_identity,repository_id,remote_url:resource.remote_url,workflow_changes:false});
+     await tx.query('INSERT INTO remote_preparation_items(item_id,task_id,resource_id,runner_id,storage_id,repository_identity,repository_id,remote_url,delivery_ref,target_branch,marker,delivery_kind) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) ON CONFLICT(item_id) DO NOTHING',[local.item_id,local.task_id,local.resource_id,local.runner_id,local.request.source.storage_id,resource.repository_identity,repository_id,resource.remote_url,`refs/heads/monos/task/${local.task_id}/${local.resource_id}`,local.request.construction.target_branch,delivery_kind==='github_pr'?`<!-- monos-delivery-item:${local.item_id} -->`:null,delivery_kind]);
      const item=(await tx.query<RemoteItem>('SELECT * FROM remote_preparation_items WHERE item_id=$1',[local.item_id])).rows[0]!;
      if(item.repository_id!==repository_id||item.repository_identity!==resource.repository_identity)throw new RemoteAdmissionError('configuration_changed');return item;
     });
@@ -94,8 +98,9 @@ export class RemotePreparation {
    if(local.result.status!=='prepared'||!local.request.permission_proof)throw new RemoteAdmissionError('permission_unknown');
    const previous=(await tx.query<RemoteOperation>("SELECT * FROM remote_preparation_operations WHERE item_id=$1 AND kind='push' ORDER BY created_at DESC,id DESC LIMIT 1",[itemId])).rows[0];
    if(previous&&previous.request.preparation.operation_id===local.id&&!await replaceRevokedPreparation(tx,previous))return; // blocked needs an actual Owner Retry; revoked correction needs a fresh operation
-   await insertRemoteOperation(tx,item,validate('PublicationPushRequest',{schema_version:1,operation_id:randomUUID(),item_id:item.item_id,task_id:item.task_id,resource_id:item.resource_id,runner_id:item.runner_id,storage_id:item.storage_id,repository_identity:item.repository_identity,repository_id:item.repository_id,remote_url:item.remote_url,delivery_ref:item.delivery_ref,target_branch:item.target_branch,preparation:local.request,prepared:local.result,preparation_result_digest:local.result_digest,override_receipts:receipts,permission_proof:local.request.permission_proof,permission_proof_digest:hash(local.request.permission_proof),workflow_changes:local.result.scan!.workflow_changes,expected_head:item.last_published_proof?.candidate.head??null,...(item.last_published_proof?{prior_published:item.last_published_proof,prior_published_digest:item.last_published_digest}:{})}));return;
+   await insertRemoteOperation(tx,item,validate('PublicationPushRequest',{schema_version:1,operation_id:randomUUID(),item_id:item.item_id,task_id:item.task_id,resource_id:item.resource_id,runner_id:item.runner_id,storage_id:item.storage_id,repository_identity:item.repository_identity,provider_metadata:remoteProviderMetadata(item),remote_url:item.remote_url,delivery_ref:item.delivery_ref,target_branch:item.target_branch,preparation:local.request,prepared:local.result,preparation_result_digest:local.result_digest,override_receipts:receipts,permission_proof:local.request.permission_proof,permission_proof_digest:hash(local.request.permission_proof),workflow_changes:local.result.scan!.workflow_changes,expected_head:item.last_published_proof?.candidate.head??null,...(item.last_published_proof?{prior_published:item.last_published_proof,prior_published_digest:item.last_published_digest}:{})}));return;
   }
+  if(item.delivery_kind==='git_branch')return;
   const content=await remoteContent(tx,item,local);
   const previous=(await tx.query<RemoteOperation>("SELECT * FROM remote_preparation_operations WHERE item_id=$1 AND kind IN('create_pr','update_pr') ORDER BY created_at DESC,id DESC LIMIT 1",[itemId])).rows[0];
   if(previous&&('content' in previous.request)&&hash(previous.request.content)===hash(content)&&previous.request.preparation.operation_id===local.id&&previous.result&&'content_digest' in previous.result&&previous.result.content_digest===hash(content)&&!previous.reason)return;
@@ -119,7 +124,7 @@ export class RemotePreparation {
      }
      if((await tx.query(`SELECT 1 FROM remote_preparation_operations old WHERE old.item_id=$1 AND old.kind='push' AND old.state='revoked' AND old.sent_incarnation IS NOT NULL
        AND NOT EXISTS(SELECT 1 FROM remote_preparation_observations p WHERE p.operation_id=old.id AND p.kind='ref' AND p.observation ? 'revoked_push_result') LIMIT 1`,[item.item_id])).rowCount)continue;
-     if(!op.may_have_mutated){const scope=await remoteScope(tx,item);if(scope.config&&(await tx.query('SELECT 1 FROM github_remote_cooldowns WHERE installation_id=$1 AND next_request_at>clock_timestamp()',[scope.config.installation_id])).rowCount)continue;await remoteAdmissionForOperation(tx,item,op.request.preparation,op.request.prepared,op.id);if(item.cancel_requested)continue;}
+     if(!op.may_have_mutated){const scope=item.delivery_kind==='github_pr'?await remoteScope(tx,item):undefined;if(scope?.config&&(await tx.query('SELECT 1 FROM github_remote_cooldowns WHERE installation_id=$1 AND next_request_at>clock_timestamp()',[scope.config.installation_id])).rowCount)continue;await remoteAdmissionForOperation(tx,item,op.request.preparation,op.request.prepared,op.id);if(item.cancel_requested)continue;}
      await tx.query('UPDATE remote_preparation_operations SET last_sent_at=clock_timestamp(),sent_incarnation=$2 WHERE id=$1',[op.id,incarnation]);frames.push(validate('Frame',{schema_version:1,type:'publication_push',incarnation,publication_push:op.request}));if(frames.length===2)break;
     }catch(error){if(!(error instanceof CommandError))throw error;}
    }return frames;
@@ -152,13 +157,15 @@ export class RemotePreparation {
   });
  }
  private async turn(itemId:string):Promise<void> {
-  const initial=await transaction(this.db,async tx=>{const item=(await tx.query<RemoteItem>('SELECT * FROM remote_preparation_items WHERE item_id=$1',[itemId])).rows[0]!;await tx.query('SELECT id FROM tasks WHERE id=$1 FOR SHARE',[item.task_id]);await tx.query("UPDATE remote_preparation_items SET next_poll_at=clock_timestamp()+interval '15 seconds' WHERE item_id=$1",[itemId]);return {item,scope:await remoteScope(tx,item)};});
+  const initial=await transaction(this.db,async tx=>{const item=(await tx.query<RemoteItem>('SELECT * FROM remote_preparation_items WHERE item_id=$1',[itemId])).rows[0]!;await tx.query('SELECT id FROM tasks WHERE id=$1 FOR SHARE',[item.task_id]);await tx.query("UPDATE remote_preparation_items SET next_poll_at=clock_timestamp()+interval '15 seconds' WHERE item_id=$1",[itemId]);return {item,scope:item.delivery_kind==='github_pr'?await remoteScope(tx,item):undefined};});
   let reservation:Date|undefined;let failure:unknown;
   try {
    const op=(await this.db.pool.query<RemoteOperation>(`SELECT * FROM remote_preparation_operations o WHERE item_id=$1 AND ((active AND state NOT IN('settled','revoked')) OR kind='push' AND state='settled' AND result->>'status'='reconciliation_required' AND NOT EXISTS(SELECT 1 FROM remote_preparation_observations p WHERE p.operation_id=o.id AND p.kind='published')) ORDER BY created_at,id LIMIT 1`,[itemId])).rows[0];
    if(op?.kind==='push'&&op.state!=='settled'||op&&op.state==='failed'&&!op.may_have_mutated)return;
+   if(initial.item.delivery_kind==='git_branch'){if(op?.kind==='push'&&op.state==='settled')await readPublicationRef(this.db,this.instanceId,this.refReads,itemId,op.id);else if(initial.item.cancel_requested)await transaction(this.db,tx=>this.admit(tx,itemId));return;}
+   if(!initial.scope)throw new RemoteAdmissionError('identity_mismatch');
    if(!op&&(!initial.item.pr_id||initial.item.cancel_requested)){if(initial.item.cancel_requested)await transaction(this.db,tx=>this.admit(tx,itemId));return;}
-   reservation=await transaction(this.db,tx=>reserveRemoteProvider(tx,initial.scope));const budget={remaining:8};
+   reservation=await transaction(this.db,tx=>reserveRemoteProvider(tx,initial.scope!));const budget={remaining:8};
    if(op?.kind==='push') {
     if(op.state!=='settled')return;
     const request=validate<PublicationPushRequest>('PublicationPushRequest',op.request),grant=await this.provider.grant(initial.scope,'observe',budget),observation=await this.provider.observeRef(initial.scope,request,grant,budget);
@@ -174,7 +181,7 @@ export class RemotePreparation {
    if(!(error instanceof RemoteAdmissionError))await transaction(this.db,async tx=>{await tx.query('SELECT id FROM tasks WHERE id=$1 FOR SHARE',[initial.item.task_id]);const item=(await tx.query<RemoteItem>('SELECT * FROM remote_preparation_items WHERE item_id=$1 FOR UPDATE',[itemId])).rows[0]!;await appendRemoteObservation(tx,item,null,'checks',{attention:reason(error),failed_at:new Date().toISOString()});});
    await this.db.pool.query("UPDATE remote_preparation_items SET cleanup_state=CASE WHEN cancel_requested THEN 'attention' ELSE cleanup_state END,next_poll_at=clock_timestamp()+$2*interval '1 millisecond' WHERE item_id=$1",[itemId,error instanceof RemoteProviderError&&error.cooldown_ms?error.cooldown_ms:Math.floor(15_000+Math.random()*5000)]);
    await this.db.pool.query("UPDATE remote_preparation_operations SET reason=$2,version=version+1 WHERE item_id=$1 AND active AND state NOT IN('settled','revoked') AND reason IS DISTINCT FROM $2",[itemId,reason(error)]);
-  }finally{await transaction(this.db,tx=>releaseRemoteProvider(tx,initial.scope,reservation,failure));}
+  }finally{if(initial.scope)await transaction(this.db,tx=>releaseRemoteProvider(tx,initial.scope!,reservation,failure));}
  }
  private async providerOperation(item:RemoteItem,scope:GitHubRemoteScope,op:RemoteOperation,budget:{remaining:number}):Promise<void> {
   const request=validate<RemotePreparationProviderRequest>('RemotePreparationProviderRequest',op.request);

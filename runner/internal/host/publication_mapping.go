@@ -16,7 +16,7 @@ func preparePublicationMappingAt(ctx context.Context, r protocol.PublicationPrep
 		return PublicationFailure(r, "reconciliation_required", "unverified_parent"), nil
 	}
 	config := r.Configuration
-	limits := publicationLimits{int(config.MaxCommits), int(config.MaxPaths), int(config.MaxVersions), int(config.MaxFindings), int(config.MaxEvidenceBytes), config.MaxBlobBytes, config.MaxAggregateBytes, config.LocalBlobLimit, config.ProviderBlobLimit}
+	limits := publicationLimits{int(config.MaxCommits), int(config.MaxPaths), int(config.MaxVersions), int(config.MaxFindings), int(config.MaxEvidenceBytes), config.MaxBlobBytes, config.MaxAggregateBytes, config.LocalBlobLimit, publicationProviderLimit(config.ProviderBlobLimit)}
 	scan := scanPublication(ctx, dir, p.Candidate.Head, []string{p.Candidate.Head}, string(config.WorkflowWrite), limits)
 	if errors.Is(ctx.Err(), context.DeadlineExceeded) {
 		scan.Complete = false

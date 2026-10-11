@@ -201,7 +201,7 @@ func (c *Client) Send(ctx context.Context, frame protocol.Frame) error {
 	if err != nil {
 		return err
 	}
-	if (frame.PublicationPrepare != nil || frame.PublicationResult != nil || frame.PublicationACK != nil || frame.PublicationPush != nil || frame.PublicationPushResult != nil || frame.PublicationPushACK != nil) && len(raw) > 512*1024 {
+	if (frame.PublicationPrepare != nil || frame.PublicationResult != nil || frame.PublicationACK != nil || frame.PublicationPush != nil || frame.PublicationPushResult != nil || frame.PublicationPushACK != nil || frame.PublicationRefRead != nil || frame.PublicationRefReadResult != nil) && len(raw) > 512*1024 {
 		return fmt.Errorf("publication frame exceeds limit")
 	}
 	if err = wire.Validate("Frame", raw); err != nil {
@@ -304,6 +304,7 @@ func (c *Client) Run(ctx context.Context, boot string, h Handler) error {
 		ready.Runtimes = reporter.InstalledRuntimes(ctx)
 		ready.ResultReadModes = []protocol.ResultReadMode{protocol.GitObjectsV1}
 		ready.PublicationModes = []protocol.PublicationMode{protocol.LocalCandidateV1}
+		ready.PublicationRefReadModes = []protocol.PublicationRefReadMode{protocol.GitRefV1}
 		ready.RemotePreparationModes = []protocol.RemotePreparationMode{"github_review_v1"}
 	}
 	if err = c.Send(ctx, ready); err != nil {

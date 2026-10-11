@@ -15,12 +15,12 @@ async function checked(record: RemotePreparationRecord, task: string, item?: str
   if (!!record.published !== !!record.published_digest) mismatch();
   if (record.published) {
     await publicationProof(record.published, record.published_digest!, record);
-    if (record.published.item_id !== record.item_id || record.published.repository_id !== record.repository_id || record.published.delivery_ref !== record.delivery_ref) mismatch();
+    if (record.published.item_id !== record.item_id || record.published.provider_metadata.github?.repository_id !== record.provider_metadata.github?.repository_id || record.published.delivery_ref !== record.delivery_ref) mismatch();
   }
-  if (record.mapping && (record.mapping.item_id !== record.item_id || record.mapping.published.repository_id !== record.repository_id || record.mapping.published.delivery_ref !== record.delivery_ref)) mismatch();
+  if (record.mapping && (record.mapping.item_id !== record.item_id || record.mapping.published.provider_metadata.github?.repository_id !== record.provider_metadata.github?.repository_id || record.mapping.published.delivery_ref !== record.delivery_ref)) mismatch();
   if (record.review) {
     const url = new URL(record.review.url);
-    if (url.origin !== 'https://github.com' || url.username || url.password || url.search || url.hash || url.pathname !== `/${record.repository_identity.replace(/^github\.com\//, '')}/pull/${record.review.pr_number}` || record.review.repository_id !== record.repository_id || record.review.marker !== `<!-- monos-delivery-item:${record.item_id} -->` || record.review.head_ref !== record.delivery_ref.replace(/^refs\/heads\//, '') || record.review.base_ref !== record.target_branch) mismatch();
+    if (url.origin !== 'https://github.com' || url.username || url.password || url.search || url.hash || url.pathname !== `/${record.repository_identity.replace(/^github\.com\//, '')}/pull/${record.review.pr_number}` || record.review.repository_id !== record.provider_metadata.github?.repository_id || record.review.marker !== `<!-- monos-delivery-item:${record.item_id} -->` || record.review.head_ref !== record.delivery_ref.replace(/^refs\/heads\//, '') || record.review.base_ref !== record.target_branch) mismatch();
   }
   if (record.scan_applicable && !record.current || record.retry_allowed && (!record.current || !record.operation) || (record.cleanup_allowed || record.read_retry_allowed) && !record.operation) mismatch();
   if (record.checks?.current && (!record.current || !record.checks.complete || record.checks.stale || record.checks.head !== record.candidate.head)) mismatch();

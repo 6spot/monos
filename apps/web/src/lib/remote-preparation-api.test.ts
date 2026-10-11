@@ -15,7 +15,7 @@ afterEach(() => vi.unstubAllGlobals());
 
 function record(): RemotePreparationRecord {
   return validate<RemotePreparationRecord>('RemotePreparationRecord', {
-    schema_version: 1, task_id: push.task_id, item_id: push.item_id, resource_id: push.resource_id, runner_id: push.runner_id, repository_id: push.repository_id, repository_identity: push.repository_identity, delivery_ref: push.delivery_ref, target_branch: push.target_branch,
+    schema_version: 1, task_id: push.task_id, item_id: push.item_id, resource_id: push.resource_id, runner_id: push.runner_id, provider_metadata: push.provider_metadata, delivery_kind: 'github_pr', repository_identity: push.repository_identity, delivery_ref: push.delivery_ref, target_branch: push.target_branch,
     source: push.preparation.source, source_digest: push.preparation.source_digest, effective_basis: push.preparation.effective_basis, effective_basis_digest: push.preparation.effective_basis_digest, candidate: push.prepared.candidate, candidate_manifest_digest: push.prepared.candidate_manifest_digest, scan_digest: push.prepared.scan_digest,
     published: fixture.published, published_digest: 'a'.repeat(64),
     remote_preparation: 'automatic', status: 'prepared', current: true, scan_applicable: true, retry_allowed: true, cleanup_allowed: false, read_retry_allowed: true, known_public_exposure_count: 0,

@@ -1,0 +1,46 @@
+{
+  "scope": "Plain HTTPS Git and mixed GitHub/plain accepted delivery",
+  "browser_checks": {
+    "command": "pnpm exec playwright test -c owner-delivery.playwright.config.ts -g \"plain automatic|mixed deferred\"",
+    "cwd": "apps/web",
+    "result": "2 passed",
+    "prior_preserved_suite": "6 passed before the two visual findings were corrected; affected two scenarios rerun on the final build"
+  },
+  "visual_review": {
+    "reference": ".trellis/spec/frontend/visual-design.md (self-contained reference, no local Multica inspection)",
+    "viewports": [
+      "1440x1000",
+      "390x844"
+    ],
+    "inspected_files": [
+      "mixed-completed-desktop.png",
+      "mixed-completed-mobile.png",
+      "mixed-partial-desktop.png",
+      "mixed-partial-mobile.png",
+      "plain-completed-desktop.png",
+      "plain-completed-mobile.png",
+      "plain-exact-confirmation-desktop.png",
+      "plain-exact-confirmation-mobile.png"
+    ],
+    "result": "All eight final captures inspected. Neutral shared shell and restrained separators retained. Plain confirmation names the delivery branch and manual target merge, with fresh verification language. Plain finality has no PR or required checks. Mixed partial and completed views preserve the first GitHub final and identify the plain result separately. Mobile acceptance/Retry controls remain reachable, long refs wrap, and no page-wide horizontal overflow or synthetic credentials appear.",
+    "fixed_findings": [
+      "Pure plain confirmation had incorrectly mentioned required checks.",
+      "Completed remote history had incorrectly projected Cancel requested."
+    ]
+  },
+  "cleanup": {
+    "owned_scopes": [
+      "conversation_80a4b0bd869a4f51bdd92a9254f4cdd2",
+      "conversation_e1d8d873b48c4f7f919b0dda28c5d713"
+    ],
+    "closed_scopes": [
+      "conversation_80a4b0bd869a4f51bdd92a9254f4cdd2",
+      "conversation_e1d8d873b48c4f7f919b0dda28c5d713"
+    ],
+    "remaining_scopes_verified_in_pg_namespace": []
+  },
+  "limitations": [
+    "Git operations, GitHub replies and the Runner ref peer are synthetic; actual backend commands, workers, PostgreSQL certificates and finalization records are exercised.",
+    "No native Runtime, live provider or deployment acceptance claimed."
+  ]
+}

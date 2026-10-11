@@ -4,15 +4,16 @@
 
 `owner-delivery-{commands,state,reads,guards,preparation,control,worker}.ts`,
 `github-finalization.ts`, migrations `0024_owner_delivery.sql` /
-`0032_multi_repository_delivery.sql` and protected Web
+`0032_multi_repository_delivery.sql` / `0034_plain_git_delivery.sql` and protected Web
 implement exact acceptance and finality. Read [delivery contracts](delivery-contracts.md),
 [remote preparation](remote-preparation.md), [candidates](publication-candidates.md)
 and [result identities](result-content-reads.md).
 
-Acceptance supports up to 64 repositories, including multiple modified GitHub
+Acceptance supports up to 64 repositories, including mixed modified GitHub and ordinary HTTPS Git
 repositories in `automatic` or `after_acceptance` mode. Repository-free and actual
 no-change results complete locally. Mapped results remain modified even when
-publication creates no new commit. Plain-Git final delivery remains unsupported. Explicit Request Changes, receipt-backed
+publication creates no new commit. Plain Git finality confirms the accepted delivery
+branch without merging the target branch. Explicit Request Changes, receipt-backed
 revocation and input reconsideration follow [review correction](review-correction.md). No new Task states, Runtime work or Agent acceptance.
 
 ## 2. Signatures
@@ -26,7 +27,7 @@ GET  /v1/owner/tasks/:task_id/delivery/commands/:request_id
 
 OwnerDeliveryCommands(db, hooks).command(token, envelope)
 OwnerDeliveryReads(db).task(token, task_id, query)
-OwnerDeliveryWorker(db, instance_id, GitHubFinalization).pump()
+OwnerDeliveryWorker(db, instance_id, GitHubFinalization, refReads).pump()
 ```
 
 Strict envelope: `schema_version:1,task_id,request_id,name,payload`, optional
@@ -142,6 +143,33 @@ allowed method in that order. Persist concrete method, complete original request
 claim and possible effect before expected-head PUT. Shared Task/item locking and
 SQL ownership exclude preparation/close/merge collisions. No DB transaction spans
 provider I/O. Tokens never enter persistence/Agent environment/logs.
+
+### Mixed branch and PR delivery
+
+Every modified member declares `delivery_kind:github_pr|git_branch`. Plain manifests
+exclude marker, PR content/review and merge method; plain progress always reports
+`checks:not_applicable`. Publication before acceptance is preparation and keeps the
+Task in REVIEW. Every item must have an immutable validation certificate before the
+first finalization. The same worker selects unresolved recovery first, then missing
+certificates, then unfinished resources in stable resource-ID order.
+
+Plain certificates bind the exact accepted member, current scan/configuration and
+waivers, genuine published proof and fresh correlated Runner ref read of the
+original push (including an older push for a mapped candidate). Finalization makes
+a distinct fresh read and rechecks all frozen local members in the short Task-locked
+transaction. A matching ref without original worker-absence settlement cannot
+certify publication. Every finalization requires all certificates and lower-ID finals.
+
+Plain finalizations use `kind:git_branch`, null merge operation ID, and a same-batch,
+same-item FK to an immutable `kind:final` Owner observation containing the final fact.
+The final fact has `schema_version,kind,batch_id,item_id,observation_id,accepted_head,
+final_commit,evidence`; nested evidence is the same complete certificate shape.
+Its ref request ID must differ from the readiness certificate. The evidence embeds
+the fresh ref read and published proof. Final commit equals the
+accepted head. No synthetic merge row exists. GitHub finality remains `github_merge`.
+Public progress exposes `finality_kind` for both. If Cancel wins the Task lock, a
+plain read may remain history but cannot create accepted finality. Cancel retains
+plain branches; only applicable remaining GitHub PRs receive close operations.
 
 ### Recovery, Cancel and finality
 

@@ -204,7 +204,7 @@ func publicationGitEnvironment() []string {
 func scanPublication(ctx context.Context, dir, head string, parents []string, permission string, limits publicationLimits) publicationCoverage {
 	out := publicationCoverage{Findings: []publicationFinding{}, Commits: []string{}}
 	fail := func(reason string) publicationCoverage { out.Reason = reason; return out }
-	if limits.Commits < 1 || limits.Paths < 1 || limits.Occurrences < 1 || limits.Findings < 1 || limits.EvidenceBytes < 2 || limits.BlobBytes < 1 || limits.AggregateBytes < 1 || limits.PolicyBytes < 1 || limits.ProviderBytes < 1 {
+	if limits.Commits < 1 || limits.Paths < 1 || limits.Occurrences < 1 || limits.Findings < 1 || limits.EvidenceBytes < 2 || limits.BlobBytes < 1 || limits.AggregateBytes < 1 || limits.PolicyBytes < 1 || limits.ProviderBytes < 0 {
 		return fail("invalid_configuration")
 	}
 	args := []string{"rev-list", "--topo-order", head, "--not"}
@@ -283,7 +283,7 @@ func scanPublication(ctx context.Context, dir, head string, parents []string, pe
 			if !final && strings.HasPrefix(v.Path, ".github/workflows/") {
 				out.WorkflowChanges = true
 			}
-			if !final && strings.HasPrefix(v.Path, ".github/workflows/") && permission != "allowed" {
+			if !final && strings.HasPrefix(v.Path, ".github/workflows/") && permission != "allowed" && permission != "not_applicable" {
 				if !add(v, "workflow_permission", publicationBlob{}, 0, false) {
 					return "finding_limit"
 				}
@@ -300,7 +300,7 @@ func scanPublication(ctx context.Context, dir, head string, parents []string, pe
 				if e != nil {
 					return "missing_object"
 				}
-				if size > limits.ProviderBytes && size > limits.BlobBytes {
+				if limits.ProviderBytes > 0 && size > limits.ProviderBytes && size > limits.BlobBytes {
 					if !add(v, "provider_blob_size", publicationBlob{Size: size}, limits.ProviderBytes, false) {
 						return "finding_limit"
 					}
@@ -318,7 +318,7 @@ func scanPublication(ctx context.Context, dir, head string, parents []string, pe
 				out.UniqueBytes += size
 				cache[v.Blob] = b
 			}
-			if b.Size > limits.ProviderBytes {
+			if limits.ProviderBytes > 0 && b.Size > limits.ProviderBytes {
 				if !add(v, "provider_blob_size", b, limits.ProviderBytes, false) {
 					return "finding_limit"
 				}
@@ -412,4 +412,12 @@ func publicationSensitivePath(path string) bool {
 		}
 	}
 	return false
+}
+
+// A nil provider ceiling is unknown; local traversal and policy limits still apply.
+func publicationProviderLimit(value *int64) int64 {
+	if value == nil {
+		return 0
+	}
+	return *value
 }

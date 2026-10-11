@@ -2,7 +2,6 @@ package host
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -66,34 +65,40 @@ func workspaceGit(dir, cache, common string, extra []string, args ...string) (st
 
 // fetchWorkspace runs only as the service identity. Neither returned metadata nor
 // its durable pin record contains the access response, token, or raw Git errors.
-func fetchWorkspace(cache, stagePath string, op protocol.Operation, access protocol.GitHubRepositoryAccessResult) (protocol.WorkspaceMetadata, error) {
-	return fetchWorkspaceUsing(cache, stagePath, op, access, workspaceGit)
+func fetchWorkspace(cache, stagePath string, op protocol.Operation, access protocol.RepositoryAccessResult) (protocol.WorkspaceMetadata, error) {
+	return fetchWorkspaceUsing(cache, stagePath, op, access, workspaceFetchGit)
 }
 
-func fetchWorkspaceUsing(cache, stagePath string, op protocol.Operation, access protocol.GitHubRepositoryAccessResult, run func(string, string, string, []string, ...string) (string, error)) (protocol.WorkspaceMetadata, error) {
+// Network fetch runs inside the retained systemd workspace worker. Keep that
+// worker's existing timeout/absence boundary and bound untrusted remote output.
+func workspaceFetchGit(dir, cache, common string, env []string, args ...string) (string, error) {
+	if len(env) == 0 {
+		return workspaceGit(dir, cache, common, env, args...)
+	}
+	return gitScopedOutputLimit(dir, []string{cache, common}, env, 16<<10, args...)
+}
+
+func fetchWorkspaceUsing(cache, stagePath string, op protocol.Operation, access protocol.RepositoryAccessResult, run func(string, string, string, []string, ...string) (string, error)) (protocol.WorkspaceMetadata, error) {
 	w := op.Workspace
 	var metadata protocol.WorkspaceMetadata
 	if w == nil || op.WorkspaceDigest == nil || access.OperationID != op.OperationID || access.WorkspaceDigest != *op.WorkspaceDigest {
 		return metadata, fmt.Errorf("repository access ownership mismatch")
 	}
-	identity := "https://" + w.Resource.RepositoryIdentity + ".git"
-	if !strings.HasPrefix(identity, "https://github.com/") || !strings.EqualFold(access.RemoteURL, identity) {
-		return metadata, fmt.Errorf("unsupported_remote: verified GitHub HTTPS required")
-	}
-	if w.Resource.ProviderMetadata != nil && w.Resource.ProviderMetadata.Github != nil && w.Resource.ProviderMetadata.Github.RepositoryID != access.ProviderMetadata.Github.RepositoryID {
-		return metadata, fmt.Errorf("repository_denied: provider identity mismatch")
+	if wire.ValidateRepositoryEndpoint(w.Resource, access.RemoteURL, access.ProviderMetadata) != nil {
+		return metadata, fmt.Errorf("repository_denied: endpoint identity mismatch")
 	}
 	var retained struct {
-		Digest             string                     `json:"digest"`
-		BaseRef            string                     `json:"base_ref"`
-		TargetBranch       string                     `json:"target_branch"`
-		GithubRepositoryID string                     `json:"github_repository_id"`
-		Complete           bool                       `json:"complete"`
-		Metadata           protocol.WorkspaceMetadata `json:"metadata"`
+		Digest           string                              `json:"digest"`
+		BaseRef          string                              `json:"base_ref"`
+		TargetBranch     string                              `json:"target_branch"`
+		ProviderMetadata protocol.RepositoryProviderMetadata `json:"provider_metadata"`
+		RemoteURL        string                              `json:"remote_url"`
+		Complete         bool                                `json:"complete"`
+		Metadata         protocol.WorkspaceMetadata          `json:"metadata"`
 	}
 	loaded := false
 	if raw, err := os.ReadFile(stagePath); err == nil {
-		if json.Unmarshal(raw, &retained) != nil || retained.Digest != *op.WorkspaceDigest || retained.BaseRef == "" || retained.TargetBranch == "" || retained.GithubRepositoryID != access.ProviderMetadata.Github.RepositoryID {
+		if json.Unmarshal(raw, &retained) != nil || retained.Digest != *op.WorkspaceDigest || retained.BaseRef == "" || retained.TargetBranch == "" || retained.RemoteURL != access.RemoteURL || !wire.SameRepositoryProvider(&retained.ProviderMetadata, &access.ProviderMetadata) {
 			return metadata, fmt.Errorf("cache pin identity mismatch")
 		}
 		if retained.Complete {
@@ -142,29 +147,22 @@ func fetchWorkspaceUsing(cache, stagePath string, op protocol.Operation, access 
 		retained.Digest = *op.WorkspaceDigest
 		retained.BaseRef = baseRef
 		retained.TargetBranch = branch
-		retained.GithubRepositoryID = access.ProviderMetadata.Github.RepositoryID
+		retained.ProviderMetadata = access.ProviderMetadata
+		retained.RemoteURL = access.RemoteURL
 		// Pin the first default-branch/ref intent before either network fetch.
 		// Provider metadata observed by a retry cannot silently select a target.
 		if err := saveRecord(stagePath, retained); err != nil {
 			return metadata, err
 		}
 	}
-	env := []string{"HOME=/nonexistent", "GIT_CONFIG_COUNT=3", "GIT_CONFIG_KEY_0=credential.helper", "GIT_CONFIG_VALUE_0=", "GIT_CONFIG_KEY_1=http.followRedirects", "GIT_CONFIG_VALUE_1=false", "GIT_CONFIG_KEY_2=protocol.allow", "GIT_CONFIG_VALUE_2=never"}
-	if string(access.Authentication.Kind) == "github_installation" {
-		if access.Authentication.Token == nil || access.Authentication.ExpiresAt == nil {
-			return metadata, fmt.Errorf("credentials_missing: missing installation token")
-		}
-		exp, err := time.Parse(time.RFC3339, *access.Authentication.ExpiresAt)
-		if err != nil || !exp.After(time.Now()) {
-			return metadata, fmt.Errorf("credentials_missing: expired installation token")
-		}
-		env[1] = "GIT_CONFIG_COUNT=4"
-		header := "AUTHORIZATION: basic " + base64.StdEncoding.EncodeToString([]byte("x-access-token:"+*access.Authentication.Token))
-		env = append(env, "GIT_CONFIG_KEY_3=http.https://github.com/.extraHeader", "GIT_CONFIG_VALUE_3="+header)
-	} else if string(access.Authentication.Kind) != "anonymous" {
-		return metadata, fmt.Errorf("credentials_missing: unsupported authentication")
+	env, err := repositoryAccessEnvironment(access.RemoteURL, access.Authentication)
+	if err != nil {
+		return metadata, fmt.Errorf("credentials_missing: repository access unavailable")
 	}
 	remoteGit := func(args ...string) (string, error) {
+		if _, _, e := repositoryCredentials(access.RemoteURL, access.Authentication, 0); e != nil {
+			return "", fmt.Errorf("credentials_missing: repository access expired")
+		}
 		args = append([]string{"-c", "protocol.https.allow=always", "-c", "http.sslVerify=true", "-c", "http.lowSpeedLimit=1", "-c", "http.lowSpeedTime=20"}, args...)
 		out, err := run(cache, cache, cache, env, args...)
 		if err != nil {
@@ -214,7 +212,7 @@ func fetchWorkspaceUsing(cache, stagePath string, op protocol.Operation, access 
 	if err != nil {
 		return metadata, err
 	}
-	metadata = protocol.WorkspaceMetadata{BaseCommit: base, FinalizedCommit: base, Generation: w.Generation, LeaseID: w.LeaseID, RepositoryIdentity: w.Resource.RepositoryIdentity, TargetBranch: branch, TargetCommit: target, ProviderMetadata: &protocol.RepositoryProviderMetadata{Github: &protocol.RepositoryProviderMetadataGithub{RepositoryID: access.ProviderMetadata.Github.RepositoryID}}}
+	metadata = protocol.WorkspaceMetadata{BaseCommit: base, FinalizedCommit: base, Generation: w.Generation, LeaseID: w.LeaseID, RepositoryIdentity: w.Resource.RepositoryIdentity, TargetBranch: branch, TargetCommit: target, ProviderMetadata: &access.ProviderMetadata}
 	if w.Basis != nil {
 		if base != w.Basis.BaseCommit {
 			return metadata, fmt.Errorf("ref_unavailable: fixed base changed")
@@ -547,7 +545,7 @@ func WorkspaceWorker(operation string, input io.Reader) (Status, error) {
 			return Status{Known: true, Result: &result}, err
 		}
 	case "fetch":
-		var access protocol.GitHubRepositoryAccessResult
+		var access protocol.RepositoryAccessResult
 		raw, err := io.ReadAll(io.LimitReader(input, 16385))
 		if err != nil || len(raw) > 16384 {
 			return Status{Known: true, Result: &result}, fmt.Errorf("invalid repository access input")

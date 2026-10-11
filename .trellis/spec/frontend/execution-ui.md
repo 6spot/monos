@@ -145,3 +145,20 @@ Affected API/journal tests plus genuine protected-route/PG browser scenarios ver
 exact Request Changes, exits, receipt recovery and session fences. Inspect current
 built representative desktop/mobile states; mocks alone do not establish backend
 authority, physical absence or provider effects.
+
+
+## Plain Git and mixed accepted delivery
+
+Keep one Node manifest with repository-specific inspectors and publication evidence.
+Exact acceptance displays `git_branch` delivery refs and manual target merge wording;
+GitHub members keep PR/check/merge information. Progress shows each repository name
+and separately verified finality. A plain final row is an accepted published branch,
+not a target merge or passing provider checks. Partial success survives remaining
+item Retry/Cancel. Completed remote history must not show an invented cancellation.
+
+Projects show HTTPS credentials only for a saved plain resource, separate from
+Project resource drafts. Keep token drafts and uncertain original requests in
+component memory; never query cache, sessionStorage/localStorage, URLs or safe
+configuration status. Clear the fields after save/clear/logout. Same-user token
+rotation retains stable scope while changing generation. Do not show merge-method
+controls for plain Git. User-facing default target is explicit for that adapter.

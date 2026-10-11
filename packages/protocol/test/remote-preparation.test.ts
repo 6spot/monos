@@ -13,6 +13,18 @@ describe('shared remote preparation boundary',()=>{
   const checked=()=>validate(c.schema,c.value);
   if(c.valid)expect(checked).not.toThrow();else expect(checked).toThrow();
  });
+ it('keeps every paired digest exact throughout valid nested fixtures',()=>{
+  const pairs=[['source','source_digest'],['effective_basis','effective_basis_digest'],['construction','construction_digest'],['configuration','configuration_digest'],['permission_proof','permission_proof_digest'],['published','published_digest'],['published_proof','published_proof_digest'],['candidate','candidate_manifest_digest'],['scan','scan_digest'],['mapping','mapping_digest'],['observation','observation_digest']];
+  const visit=(value:unknown,path:string)=>{
+   if(Array.isArray(value)){value.forEach((item,index)=>visit(item,`${path}[${index}]`));return;}
+   if(!value||typeof value!=='object')return;
+   const record=value as Record<string,unknown>;
+   for(const [key,field]of pairs)if(record[key!]!==undefined&&record[field!]!==undefined)expect(record[field!],`${path}.${field}`).toBe(digest(canonicalJSON(record[key!])));
+   if(record.preparation&&record.prepared){const prepared=record.prepared as Record<string,unknown>;expect(prepared.request_digest,`${path}.prepared.request_digest`).toBe(digest(canonicalJSON(record.preparation)));expect(record.preparation_result_digest).toBe(digest(canonicalJSON(prepared)));}
+   for(const [key,item]of Object.entries(record))visit(item,`${path}.${key}`);
+  };
+  for(const c of fixture.cases.filter(c=>c.valid))visit(c.value,c.name);
+ });
  it('pins immutable request and reused manifest while binding a new scan',()=>{
   expect(canonicalJSON(fixture.push)).toBe(fixture.canonical_request);
   expect(digest(canonicalJSON(fixture.push))).toBe(fixture.request_digest);

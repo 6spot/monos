@@ -65,6 +65,31 @@ plural `sources[]`, and Rework exposes exact `stop_operation_ids[]`. Shared TS/G
 fixtures validate shapes; retained identity, complete membership, source and lease
 checks remain mandatory in trusted consumers and SQL.
 
+HTTPS Git access uses `RepositoryAccessResult`, exact resource-bound endpoint and
+provider metadata. `RepositoryAuthentication` is anonymous, a GitHub installation
+grant, or `https_basic` with bounded username/token and a short local-use deadline.
+Credential configuration responses expose only safe scope/generation status and
+immutable receipt attribution; no secret appears in snapshots or delivery proofs.
+`PublicationPermissionProof.kind` separates actual GitHub grants from recorded
+HTTPS configuration. Plain scans have `provider_blob_limit:null` and
+`workflow_write:not_applicable`; these values do not establish remote permission.
+
+Provider-neutral push/access/ref/published records use `provider_metadata`, with
+no fabricated GitHub numeric ID. Fresh `PublicationRefReadRequest/Response` frames
+bind their correlation/incarnation, complete original push and digest, exact
+observation and worker absence. They cannot reuse an old push result as a new
+observation. Push requests reserve 32 KiB inside the 512 KiB publication frame
+budget, leaving space for a full fresh-ref echo and bounded observation. Enforce
+the 480 KiB push limit both directly and inside push/ref-read frames, accounting
+for Go JSON escape expansion as well as nested encoded paths and Unicode;
+repository/inspection access responses retain
+a 16 KiB service-only limit. Modified delivery members discriminate `github_pr` and `git_branch`;
+plain members forbid PR/check/merge fields. Final progress distinguishes
+`github_merge` and `git_branch`, with plain `checks:not_applicable`. Shared
+[plain Git fixtures](../../../packages/protocol/fixtures/plain-git.json) preserve
+these differences in TS and Go. Retained authority, credential scope, current
+connection and actual absence still require trusted consumer checks.
+
 | Condition | Result |
 | --- | --- |
 | Unsupported schema version | Reject before dispatch/admission |

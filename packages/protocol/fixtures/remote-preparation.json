@@ -8,7 +8,6 @@
     "runner_id": "runner_id",
     "storage_id": "storage_id",
     "repository_identity": "github.com/example/result",
-    "repository_id": "42",
     "remote_url": "https://github.com/example/result.git",
     "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
     "target_branch": "main",
@@ -142,14 +141,15 @@
         },
         "observed_at": "2026-10-04T12:00:00.000Z",
         "expires_at": "2026-10-04T13:00:00.000Z",
-        "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+        "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b",
+        "kind": "github_installation"
       },
-      "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6"
+      "permission_proof_digest": "945497759cad3c5a073f1877486fcfb7a88a7b283d2844970937ea1f8e6423b6"
     },
     "prepared": {
       "schema_version": 1,
       "operation_id": "publication-operation",
-      "request_digest": "4122d704118258227d19bec8ae84cb79a480361c96cc4514dc07501b3dd75979",
+      "request_digest": "13206e5845c2dec570bd918d6cb434d1fefdb4d6694b3c2e96dc198cf30cb1ae",
       "status": "prepared",
       "candidate": {
         "schema_version": 1,
@@ -183,7 +183,7 @@
       },
       "scan_digest": "24924737deb9b51d1673ebb15ab6a958a185a21068f3f6c198f4cff692e78ab6"
     },
-    "preparation_result_digest": "5ee8e753eba3fc4b340383e379cd139a07b6bc8f226e45047f6247cbb8bf571e",
+    "preparation_result_digest": "fece69546c30bdac28cd7bfad2a63a1368a25d7ffef5baf75ac1bae29bad0ffc",
     "override_receipts": [],
     "permission_proof": {
       "schema_version": 1,
@@ -202,16 +202,22 @@
       },
       "observed_at": "2026-10-04T12:00:00.000Z",
       "expires_at": "2026-10-04T13:00:00.000Z",
-      "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+      "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b",
+      "kind": "github_installation"
     },
-    "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6",
+    "permission_proof_digest": "945497759cad3c5a073f1877486fcfb7a88a7b283d2844970937ea1f8e6423b6",
     "workflow_changes": true,
-    "expected_head": null
+    "expected_head": null,
+    "provider_metadata": {
+      "github": {
+        "repository_id": "42"
+      }
+    }
   },
   "push_result": {
     "schema_version": 1,
     "operation_id": "30000000-0000-4000-8000-000000000003",
-    "request_digest": "877c851886ffb0792ff8a7c7a15d0dcf0845ce2678412fca4b2dfb4d2ec27f8b",
+    "request_digest": "71fffc21a43e893d9f5b7d5d60dd50c459b5a5e5048fd4c48977aa822806c252",
     "item_id": "30000000-0000-4000-8000-000000000001",
     "candidate_manifest_digest": "c5e090c6e5571bb2441113f043098b1d69428111df7adf9ae8efd8740ad5d913",
     "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
@@ -229,26 +235,29 @@
       "runner_id": "runner_id",
       "storage_id": "storage_id",
       "repository_identity": "github.com/example/result",
-      "repository_id": "42",
       "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
       "status": "present",
       "head": "dddddddddddddddddddddddddddddddddddddddd",
-      "observed_at": "2026-10-04T12:00:00.000Z"
+      "observed_at": "2026-10-04T12:00:00.000Z",
+      "provider_metadata": {
+        "github": {
+          "repository_id": "42"
+        }
+      }
     },
-    "observation_digest": "3e8dac4e9b4faa2dc3078b4f76592d88ad750d2e0d9050ec4ea6135cbbd41a49"
+    "observation_digest": "c8bf32602936c0a5f4ef3c22bfe08c5394fc82ecc76afc8900c857884fc8f961"
   },
   "published": {
     "schema_version": 1,
     "operation_id": "30000000-0000-4000-8000-000000000003",
-    "request_digest": "877c851886ffb0792ff8a7c7a15d0dcf0845ce2678412fca4b2dfb4d2ec27f8b",
-    "result_digest": "c3189ab8288d208f2794a38c53208abbf3924dc0815cab0c3b8e06266efc6214",
+    "request_digest": "71fffc21a43e893d9f5b7d5d60dd50c459b5a5e5048fd4c48977aa822806c252",
+    "result_digest": "f8e51ada073e72d2fc6d68299ea8e328c9c83f5c4f471a12ced71f8071f1d799",
     "item_id": "30000000-0000-4000-8000-000000000001",
     "task_id": "30000000-0000-4000-8000-000000000090",
     "resource_id": "30000000-0000-4000-8000-000000000091",
     "runner_id": "runner_id",
     "storage_id": "storage_id",
     "repository_identity": "github.com/example/result",
-    "repository_id": "42",
     "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
     "candidate": {
       "schema_version": 1,
@@ -273,13 +282,22 @@
       "runner_id": "runner_id",
       "storage_id": "storage_id",
       "repository_identity": "github.com/example/result",
-      "repository_id": "42",
       "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
       "status": "present",
       "head": "dddddddddddddddddddddddddddddddddddddddd",
-      "observed_at": "2026-10-04T12:00:00.000Z"
+      "observed_at": "2026-10-04T12:00:00.000Z",
+      "provider_metadata": {
+        "github": {
+          "repository_id": "42"
+        }
+      }
     },
-    "observation_digest": "3e8dac4e9b4faa2dc3078b4f76592d88ad750d2e0d9050ec4ea6135cbbd41a49"
+    "observation_digest": "c8bf32602936c0a5f4ef3c22bfe08c5394fc82ecc76afc8900c857884fc8f961",
+    "provider_metadata": {
+      "github": {
+        "repository_id": "42"
+      }
+    }
   },
   "mapping_request": {
     "schema_version": 1,
@@ -336,15 +354,14 @@
           "published_proof": {
             "schema_version": 1,
             "operation_id": "30000000-0000-4000-8000-000000000003",
-            "request_digest": "877c851886ffb0792ff8a7c7a15d0dcf0845ce2678412fca4b2dfb4d2ec27f8b",
-            "result_digest": "c3189ab8288d208f2794a38c53208abbf3924dc0815cab0c3b8e06266efc6214",
+            "request_digest": "71fffc21a43e893d9f5b7d5d60dd50c459b5a5e5048fd4c48977aa822806c252",
+            "result_digest": "f8e51ada073e72d2fc6d68299ea8e328c9c83f5c4f471a12ced71f8071f1d799",
             "item_id": "30000000-0000-4000-8000-000000000001",
             "task_id": "30000000-0000-4000-8000-000000000090",
             "resource_id": "30000000-0000-4000-8000-000000000091",
             "runner_id": "runner_id",
             "storage_id": "storage_id",
             "repository_identity": "github.com/example/result",
-            "repository_id": "42",
             "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
             "candidate": {
               "schema_version": 1,
@@ -369,15 +386,24 @@
               "runner_id": "runner_id",
               "storage_id": "storage_id",
               "repository_identity": "github.com/example/result",
-              "repository_id": "42",
               "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
               "status": "present",
               "head": "dddddddddddddddddddddddddddddddddddddddd",
-              "observed_at": "2026-10-04T12:00:00.000Z"
+              "observed_at": "2026-10-04T12:00:00.000Z",
+              "provider_metadata": {
+                "github": {
+                  "repository_id": "42"
+                }
+              }
             },
-            "observation_digest": "3e8dac4e9b4faa2dc3078b4f76592d88ad750d2e0d9050ec4ea6135cbbd41a49"
+            "observation_digest": "c8bf32602936c0a5f4ef3c22bfe08c5394fc82ecc76afc8900c857884fc8f961",
+            "provider_metadata": {
+              "github": {
+                "repository_id": "42"
+              }
+            }
           },
-          "published_proof_digest": "a259e71aef657c7cd68ef3d0f23514db3ed7e5a7e727b8e617671fd3bd01f17a"
+          "published_proof_digest": "45f0a34c7273cad8ff80487591364170183b27921d25f7d92da9aa25785fa95b"
         }
       ],
       "author_name": "monos",
@@ -385,7 +411,7 @@
       "timestamp": "1791028800 +0000",
       "message": "monos Task 30000000-0000-4000-8000-000000000090 result v1"
     },
-    "construction_digest": "6ed3e94f5692c3aa3816968180f982d98a7bce1388cfa63b18d216c600575916",
+    "construction_digest": "77fab1ed6245156ca3af37e24907f3014528551bebe263c076d7a3268c9652bc",
     "configuration": {
       "schema_version": 1,
       "policy_version": "local_publication_v1",
@@ -422,21 +448,21 @@
       },
       "observed_at": "2026-10-04T12:00:00.000Z",
       "expires_at": "2026-10-04T13:00:00.000Z",
-      "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+      "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b",
+      "kind": "github_installation"
     },
-    "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6",
+    "permission_proof_digest": "945497759cad3c5a073f1877486fcfb7a88a7b283d2844970937ea1f8e6423b6",
     "published": {
       "schema_version": 1,
       "operation_id": "30000000-0000-4000-8000-000000000003",
-      "request_digest": "877c851886ffb0792ff8a7c7a15d0dcf0845ce2678412fca4b2dfb4d2ec27f8b",
-      "result_digest": "c3189ab8288d208f2794a38c53208abbf3924dc0815cab0c3b8e06266efc6214",
+      "request_digest": "71fffc21a43e893d9f5b7d5d60dd50c459b5a5e5048fd4c48977aa822806c252",
+      "result_digest": "f8e51ada073e72d2fc6d68299ea8e328c9c83f5c4f471a12ced71f8071f1d799",
       "item_id": "30000000-0000-4000-8000-000000000001",
       "task_id": "30000000-0000-4000-8000-000000000090",
       "resource_id": "30000000-0000-4000-8000-000000000091",
       "runner_id": "runner_id",
       "storage_id": "storage_id",
       "repository_identity": "github.com/example/result",
-      "repository_id": "42",
       "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
       "candidate": {
         "schema_version": 1,
@@ -461,20 +487,29 @@
         "runner_id": "runner_id",
         "storage_id": "storage_id",
         "repository_identity": "github.com/example/result",
-        "repository_id": "42",
         "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
         "status": "present",
         "head": "dddddddddddddddddddddddddddddddddddddddd",
-        "observed_at": "2026-10-04T12:00:00.000Z"
+        "observed_at": "2026-10-04T12:00:00.000Z",
+        "provider_metadata": {
+          "github": {
+            "repository_id": "42"
+          }
+        }
       },
-      "observation_digest": "3e8dac4e9b4faa2dc3078b4f76592d88ad750d2e0d9050ec4ea6135cbbd41a49"
+      "observation_digest": "c8bf32602936c0a5f4ef3c22bfe08c5394fc82ecc76afc8900c857884fc8f961",
+      "provider_metadata": {
+        "github": {
+          "repository_id": "42"
+        }
+      }
     },
-    "published_digest": "a259e71aef657c7cd68ef3d0f23514db3ed7e5a7e727b8e617671fd3bd01f17a"
+    "published_digest": "45f0a34c7273cad8ff80487591364170183b27921d25f7d92da9aa25785fa95b"
   },
   "mapped": {
     "schema_version": 1,
     "operation_id": "30000000-0000-4000-8000-000000000005",
-    "request_digest": "2b2885f631485eda627f9bffbb8a54161d911c0c17e2d4831e9e3854051a1fde",
+    "request_digest": "aaadb64ff28965eba62a4d974b71db569820398cf2d46e41a381709e217354cd",
     "status": "mapped",
     "candidate": {
       "schema_version": 1,
@@ -511,7 +546,7 @@
       "schema_version": 1,
       "mapping_id": "30000000-0000-4000-8000-000000000005",
       "operation_id": "30000000-0000-4000-8000-000000000005",
-      "request_digest": "2b2885f631485eda627f9bffbb8a54161d911c0c17e2d4831e9e3854051a1fde",
+      "request_digest": "aaadb64ff28965eba62a4d974b71db569820398cf2d46e41a381709e217354cd",
       "item_id": "30000000-0000-4000-8000-000000000001",
       "source": {
         "task_id": "30000000-0000-4000-8000-000000000090",
@@ -552,15 +587,14 @@
       "published": {
         "schema_version": 1,
         "operation_id": "30000000-0000-4000-8000-000000000003",
-        "request_digest": "877c851886ffb0792ff8a7c7a15d0dcf0845ce2678412fca4b2dfb4d2ec27f8b",
-        "result_digest": "c3189ab8288d208f2794a38c53208abbf3924dc0815cab0c3b8e06266efc6214",
+        "request_digest": "71fffc21a43e893d9f5b7d5d60dd50c459b5a5e5048fd4c48977aa822806c252",
+        "result_digest": "f8e51ada073e72d2fc6d68299ea8e328c9c83f5c4f471a12ced71f8071f1d799",
         "item_id": "30000000-0000-4000-8000-000000000001",
         "task_id": "30000000-0000-4000-8000-000000000090",
         "resource_id": "30000000-0000-4000-8000-000000000091",
         "runner_id": "runner_id",
         "storage_id": "storage_id",
         "repository_identity": "github.com/example/result",
-        "repository_id": "42",
         "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
         "candidate": {
           "schema_version": 1,
@@ -585,21 +619,30 @@
           "runner_id": "runner_id",
           "storage_id": "storage_id",
           "repository_identity": "github.com/example/result",
-          "repository_id": "42",
           "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
           "status": "present",
           "head": "dddddddddddddddddddddddddddddddddddddddd",
-          "observed_at": "2026-10-04T12:00:00.000Z"
+          "observed_at": "2026-10-04T12:00:00.000Z",
+          "provider_metadata": {
+            "github": {
+              "repository_id": "42"
+            }
+          }
         },
-        "observation_digest": "3e8dac4e9b4faa2dc3078b4f76592d88ad750d2e0d9050ec4ea6135cbbd41a49"
+        "observation_digest": "c8bf32602936c0a5f4ef3c22bfe08c5394fc82ecc76afc8900c857884fc8f961",
+        "provider_metadata": {
+          "github": {
+            "repository_id": "42"
+          }
+        }
       },
-      "published_digest": "a259e71aef657c7cd68ef3d0f23514db3ed7e5a7e727b8e617671fd3bd01f17a",
+      "published_digest": "45f0a34c7273cad8ff80487591364170183b27921d25f7d92da9aa25785fa95b",
       "candidate_manifest_digest": "c5e090c6e5571bb2441113f043098b1d69428111df7adf9ae8efd8740ad5d913",
       "reused_head": "dddddddddddddddddddddddddddddddddddddddd",
       "result_tree": "cccccccccccccccccccccccccccccccccccccccc",
       "configuration_digest": "bf0396b43c70aafee730b1b02486e309c649714f629c4bc3054211c439f9ae51"
     },
-    "mapping_digest": "b622153069725b8623af0bb30b832d3df7894506785132c8e8f660a0cf150f69"
+    "mapping_digest": "d2433205652ef5674b5ef3343773e0394f61054eb843cf8d813c1bd914091d7c"
   },
   "permission": {
     "schema_version": 1,
@@ -618,19 +661,19 @@
     },
     "observed_at": "2026-10-04T12:00:00.000Z",
     "expires_at": "2026-10-04T13:00:00.000Z",
-    "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+    "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b",
+    "kind": "github_installation"
   },
   "access": {
     "schema_version": 1,
     "operation_id": "30000000-0000-4000-8000-000000000003",
-    "request_digest": "877c851886ffb0792ff8a7c7a15d0dcf0845ce2678412fca4b2dfb4d2ec27f8b",
+    "request_digest": "71fffc21a43e893d9f5b7d5d60dd50c459b5a5e5048fd4c48977aa822806c252",
     "item_id": "30000000-0000-4000-8000-000000000001",
     "purpose": "push",
     "attempt_id": "30000000-0000-4000-8000-000000000010",
     "claim_id": "30000000-0000-4000-8000-000000000011",
     "claim_expires_at": "2026-10-04T13:00:00.000Z",
     "remote_url": "https://github.com/example/result.git",
-    "repository_id": "42",
     "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
     "candidate_head": "dddddddddddddddddddddddddddddddddddddddd",
     "expected_head": null,
@@ -656,9 +699,15 @@
       },
       "observed_at": "2026-10-04T12:00:00.000Z",
       "expires_at": "2026-10-04T13:00:00.000Z",
-      "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+      "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b",
+      "kind": "github_installation"
     },
-    "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6"
+    "permission_proof_digest": "945497759cad3c5a073f1877486fcfb7a88a7b283d2844970937ea1f8e6423b6",
+    "provider_metadata": {
+      "github": {
+        "repository_id": "42"
+      }
+    }
   },
   "frame": {
     "schema_version": 1,
@@ -673,7 +722,6 @@
       "runner_id": "runner_id",
       "storage_id": "storage_id",
       "repository_identity": "github.com/example/result",
-      "repository_id": "42",
       "remote_url": "https://github.com/example/result.git",
       "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
       "target_branch": "main",
@@ -807,14 +855,15 @@
           },
           "observed_at": "2026-10-04T12:00:00.000Z",
           "expires_at": "2026-10-04T13:00:00.000Z",
-          "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+          "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b",
+          "kind": "github_installation"
         },
-        "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6"
+        "permission_proof_digest": "945497759cad3c5a073f1877486fcfb7a88a7b283d2844970937ea1f8e6423b6"
       },
       "prepared": {
         "schema_version": 1,
         "operation_id": "publication-operation",
-        "request_digest": "4122d704118258227d19bec8ae84cb79a480361c96cc4514dc07501b3dd75979",
+        "request_digest": "13206e5845c2dec570bd918d6cb434d1fefdb4d6694b3c2e96dc198cf30cb1ae",
         "status": "prepared",
         "candidate": {
           "schema_version": 1,
@@ -848,7 +897,7 @@
         },
         "scan_digest": "24924737deb9b51d1673ebb15ab6a958a185a21068f3f6c198f4cff692e78ab6"
       },
-      "preparation_result_digest": "5ee8e753eba3fc4b340383e379cd139a07b6bc8f226e45047f6247cbb8bf571e",
+      "preparation_result_digest": "fece69546c30bdac28cd7bfad2a63a1368a25d7ffef5baf75ac1bae29bad0ffc",
       "override_receipts": [],
       "permission_proof": {
         "schema_version": 1,
@@ -867,11 +916,17 @@
         },
         "observed_at": "2026-10-04T12:00:00.000Z",
         "expires_at": "2026-10-04T13:00:00.000Z",
-        "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+        "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b",
+        "kind": "github_installation"
       },
-      "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6",
+      "permission_proof_digest": "945497759cad3c5a073f1877486fcfb7a88a7b283d2844970937ea1f8e6423b6",
       "workflow_changes": true,
-      "expected_head": null
+      "expected_head": null,
+      "provider_metadata": {
+        "github": {
+          "repository_id": "42"
+        }
+      }
     }
   },
   "provider": {
@@ -1017,14 +1072,15 @@
         },
         "observed_at": "2026-10-04T12:00:00.000Z",
         "expires_at": "2026-10-04T13:00:00.000Z",
-        "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+        "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b",
+        "kind": "github_installation"
       },
-      "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6"
+      "permission_proof_digest": "945497759cad3c5a073f1877486fcfb7a88a7b283d2844970937ea1f8e6423b6"
     },
     "prepared": {
       "schema_version": 1,
       "operation_id": "publication-operation",
-      "request_digest": "4122d704118258227d19bec8ae84cb79a480361c96cc4514dc07501b3dd75979",
+      "request_digest": "13206e5845c2dec570bd918d6cb434d1fefdb4d6694b3c2e96dc198cf30cb1ae",
       "status": "prepared",
       "candidate": {
         "schema_version": 1,
@@ -1058,7 +1114,7 @@
       },
       "scan_digest": "24924737deb9b51d1673ebb15ab6a958a185a21068f3f6c198f4cff692e78ab6"
     },
-    "preparation_result_digest": "5ee8e753eba3fc4b340383e379cd139a07b6bc8f226e45047f6247cbb8bf571e",
+    "preparation_result_digest": "fece69546c30bdac28cd7bfad2a63a1368a25d7ffef5baf75ac1bae29bad0ffc",
     "override_receipts": [],
     "kind": "create_pr",
     "content": {
@@ -1078,8 +1134,8 @@
     "mergeability": "unknown",
     "required_checks": "unknown"
   },
-  "canonical_request": "{\"delivery_ref\":\"refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091\",\"expected_head\":null,\"item_id\":\"30000000-0000-4000-8000-000000000001\",\"operation_id\":\"30000000-0000-4000-8000-000000000003\",\"override_receipts\":[],\"permission_proof\":{\"app_id\":\"1\",\"configuration_fingerprint\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"expires_at\":\"2026-10-04T13:00:00.000Z\",\"installation_id\":\"2\",\"key_fingerprint\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"observation_id\":\"30000000-0000-4000-8000-000000000002\",\"observed_at\":\"2026-10-04T12:00:00.000Z\",\"permission_fingerprint\":\"944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b\",\"permissions\":{\"contents\":\"write\",\"metadata\":\"read\",\"workflows\":\"write\"},\"repository_id\":\"42\",\"repository_identity\":\"github.com/example/result\",\"resource_id\":\"30000000-0000-4000-8000-000000000091\",\"schema_version\":1},\"permission_proof_digest\":\"d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6\",\"preparation\":{\"configuration\":{\"deadline_seconds\":120,\"local_blob_limit\":52428800,\"max_aggregate_bytes\":536870912,\"max_blob_bytes\":134217728,\"max_commits\":256,\"max_evidence_bytes\":8388608,\"max_findings\":4096,\"max_paths\":8192,\"max_versions\":32768,\"permission_fingerprint\":\"944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b\",\"policy_version\":\"local_publication_v1\",\"provider_blob_limit\":104857600,\"rule_version\":\"credential_rules_v1\",\"schema_version\":1,\"traversal_version\":\"all_parents_final_tree_v1\",\"workflow_write\":\"allowed\"},\"configuration_digest\":\"bf0396b43c70aafee730b1b02486e309c649714f629c4bc3054211c439f9ae51\",\"construction\":{\"author_email\":\"monos@localhost\",\"author_name\":\"monos\",\"candidate_id\":\"publication-candidate\",\"construction_id\":\"publication-construction\",\"message\":\"monos Task 30000000-0000-4000-8000-000000000090 result v1\",\"parents\":[{\"commit\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"kind\":\"materialization\",\"observation_digest\":\"a3f44ab13354df0b799ee9263c1f78a6d20d43f46ac4c93b4cd980f21af36083\",\"observation_operation_id\":\"original-publication-open\",\"outcome\":{\"path\":\"/private/worktree\",\"workspace_id\":\"workspace_id\",\"workspace_metadata\":{\"base_commit\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"finalized_commit\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"generation\":1,\"lease_id\":\"lease_id\",\"repository_identity\":\"github.com/example/result\",\"storage_id\":\"storage_id\",\"target_branch\":\"main\",\"target_commit\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"}},\"repository_identity\":\"github.com/example/result\",\"workspace\":{\"generation\":1,\"lease_id\":\"lease_id\",\"node_activation\":1,\"node_id\":\"node_id\",\"open_operation_id\":\"original-publication-open\",\"project_id\":\"publication-project\",\"resource\":{\"remote_url\":\"https://github.com/example/result.git\",\"repository_identity\":\"github.com/example/result\",\"resource_id\":\"30000000-0000-4000-8000-000000000091\"},\"resource_id\":\"30000000-0000-4000-8000-000000000091\",\"runner_id\":\"runner_id\",\"schema_version\":1,\"task_id\":\"30000000-0000-4000-8000-000000000090\",\"workspace_id\":\"workspace_id\"}}],\"repository_identity\":\"github.com/example/result\",\"schema_version\":1,\"source_digest\":\"30e1c9bc5ab50c7e4a27e7d6ca8f89248310ddc3ecd9a171c201ea989417d43c\",\"target_branch\":\"main\",\"timestamp\":\"1791028800 +0000\"},\"construction_digest\":\"50fc92130c6c88c809256e5d498263eab6cf00ff22e5570e5062fb98d9578d3a\",\"effective_basis\":{\"completion_manifest_digest\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"completion_operation_id\":\"operation_id\",\"plan_id\":\"plan_id\",\"specification_id\":\"specification_id\",\"task_id\":\"30000000-0000-4000-8000-000000000090\"},\"effective_basis_digest\":\"c84973abafaacbe8b295a3772ad208781eaa7448ae7f18e1623ee99efd0da5ba\",\"operation_id\":\"publication-operation\",\"permission_proof\":{\"app_id\":\"1\",\"configuration_fingerprint\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"expires_at\":\"2026-10-04T13:00:00.000Z\",\"installation_id\":\"2\",\"key_fingerprint\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"observation_id\":\"30000000-0000-4000-8000-000000000002\",\"observed_at\":\"2026-10-04T12:00:00.000Z\",\"permission_fingerprint\":\"944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b\",\"permissions\":{\"contents\":\"write\",\"metadata\":\"read\",\"workflows\":\"write\"},\"repository_id\":\"42\",\"repository_identity\":\"github.com/example/result\",\"resource_id\":\"30000000-0000-4000-8000-000000000091\",\"schema_version\":1},\"permission_proof_digest\":\"d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6\",\"scan_run_id\":\"publication-scan\",\"schema_version\":1,\"source\":{\"attempt_id\":\"attempt_id\",\"base_commit\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"capture\":{\"node_commit\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"node_tree\":\"cccccccccccccccccccccccccccccccccccccccc\",\"start_commit\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"},\"dispatch_id\":\"dispatch_id\",\"generation\":1,\"git_commit\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"git_tree\":\"cccccccccccccccccccccccccccccccccccccccc\",\"lease_id\":\"lease_id\",\"manifest_digest\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"node_activation\":1,\"node_id\":\"node_id\",\"operation_id\":\"operation_id\",\"operation_identity_digest\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"plan_id\":\"plan_id\",\"repository_identity\":\"github.com/example/result\",\"resource_id\":\"30000000-0000-4000-8000-000000000091\",\"runner_id\":\"runner_id\",\"specification_id\":\"specification_id\",\"storage_id\":\"storage_id\",\"task_id\":\"30000000-0000-4000-8000-000000000090\",\"workspace_id\":\"workspace_id\"},\"source_digest\":\"30e1c9bc5ab50c7e4a27e7d6ca8f89248310ddc3ecd9a171c201ea989417d43c\"},\"preparation_result_digest\":\"5ee8e753eba3fc4b340383e379cd139a07b6bc8f226e45047f6247cbb8bf571e\",\"prepared\":{\"candidate\":{\"candidate_id\":\"publication-candidate\",\"construction_digest\":\"50fc92130c6c88c809256e5d498263eab6cf00ff22e5570e5062fb98d9578d3a\",\"construction_id\":\"publication-construction\",\"head\":\"dddddddddddddddddddddddddddddddddddddddd\",\"parents\":[\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"],\"schema_version\":1,\"source_digest\":\"30e1c9bc5ab50c7e4a27e7d6ca8f89248310ddc3ecd9a171c201ea989417d43c\",\"tree\":\"cccccccccccccccccccccccccccccccccccccccc\"},\"candidate_manifest_digest\":\"c5e090c6e5571bb2441113f043098b1d69428111df7adf9ae8efd8740ad5d913\",\"operation_id\":\"publication-operation\",\"request_digest\":\"4122d704118258227d19bec8ae84cb79a480361c96cc4514dc07501b3dd75979\",\"scan\":{\"candidate_manifest_digest\":\"c5e090c6e5571bb2441113f043098b1d69428111df7adf9ae8efd8740ad5d913\",\"configuration_digest\":\"bf0396b43c70aafee730b1b02486e309c649714f629c4bc3054211c439f9ae51\",\"coverage\":{\"commits\":1,\"paths\":0,\"unique_blob_bytes\":0,\"versions\":0},\"findings_bytes\":2,\"findings_count\":0,\"findings_digest\":\"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945\",\"scan_id\":\"publication-scan\",\"schema_version\":1,\"status\":\"complete\",\"workflow_changes\":true},\"scan_digest\":\"24924737deb9b51d1673ebb15ab6a958a185a21068f3f6c198f4cff692e78ab6\",\"schema_version\":1,\"status\":\"prepared\"},\"remote_url\":\"https://github.com/example/result.git\",\"repository_id\":\"42\",\"repository_identity\":\"github.com/example/result\",\"resource_id\":\"30000000-0000-4000-8000-000000000091\",\"runner_id\":\"runner_id\",\"schema_version\":1,\"storage_id\":\"storage_id\",\"target_branch\":\"main\",\"task_id\":\"30000000-0000-4000-8000-000000000090\",\"workflow_changes\":true}",
-  "request_digest": "877c851886ffb0792ff8a7c7a15d0dcf0845ce2678412fca4b2dfb4d2ec27f8b",
+  "canonical_request": "{\"delivery_ref\":\"refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091\",\"expected_head\":null,\"item_id\":\"30000000-0000-4000-8000-000000000001\",\"operation_id\":\"30000000-0000-4000-8000-000000000003\",\"override_receipts\":[],\"permission_proof\":{\"app_id\":\"1\",\"configuration_fingerprint\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"expires_at\":\"2026-10-04T13:00:00.000Z\",\"installation_id\":\"2\",\"key_fingerprint\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"kind\":\"github_installation\",\"observation_id\":\"30000000-0000-4000-8000-000000000002\",\"observed_at\":\"2026-10-04T12:00:00.000Z\",\"permission_fingerprint\":\"944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b\",\"permissions\":{\"contents\":\"write\",\"metadata\":\"read\",\"workflows\":\"write\"},\"repository_id\":\"42\",\"repository_identity\":\"github.com/example/result\",\"resource_id\":\"30000000-0000-4000-8000-000000000091\",\"schema_version\":1},\"permission_proof_digest\":\"945497759cad3c5a073f1877486fcfb7a88a7b283d2844970937ea1f8e6423b6\",\"preparation\":{\"configuration\":{\"deadline_seconds\":120,\"local_blob_limit\":52428800,\"max_aggregate_bytes\":536870912,\"max_blob_bytes\":134217728,\"max_commits\":256,\"max_evidence_bytes\":8388608,\"max_findings\":4096,\"max_paths\":8192,\"max_versions\":32768,\"permission_fingerprint\":\"944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b\",\"policy_version\":\"local_publication_v1\",\"provider_blob_limit\":104857600,\"rule_version\":\"credential_rules_v1\",\"schema_version\":1,\"traversal_version\":\"all_parents_final_tree_v1\",\"workflow_write\":\"allowed\"},\"configuration_digest\":\"bf0396b43c70aafee730b1b02486e309c649714f629c4bc3054211c439f9ae51\",\"construction\":{\"author_email\":\"monos@localhost\",\"author_name\":\"monos\",\"candidate_id\":\"publication-candidate\",\"construction_id\":\"publication-construction\",\"message\":\"monos Task 30000000-0000-4000-8000-000000000090 result v1\",\"parents\":[{\"commit\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"kind\":\"materialization\",\"observation_digest\":\"a3f44ab13354df0b799ee9263c1f78a6d20d43f46ac4c93b4cd980f21af36083\",\"observation_operation_id\":\"original-publication-open\",\"outcome\":{\"path\":\"/private/worktree\",\"workspace_id\":\"workspace_id\",\"workspace_metadata\":{\"base_commit\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"finalized_commit\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"generation\":1,\"lease_id\":\"lease_id\",\"repository_identity\":\"github.com/example/result\",\"storage_id\":\"storage_id\",\"target_branch\":\"main\",\"target_commit\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"}},\"repository_identity\":\"github.com/example/result\",\"workspace\":{\"generation\":1,\"lease_id\":\"lease_id\",\"node_activation\":1,\"node_id\":\"node_id\",\"open_operation_id\":\"original-publication-open\",\"project_id\":\"publication-project\",\"resource\":{\"remote_url\":\"https://github.com/example/result.git\",\"repository_identity\":\"github.com/example/result\",\"resource_id\":\"30000000-0000-4000-8000-000000000091\"},\"resource_id\":\"30000000-0000-4000-8000-000000000091\",\"runner_id\":\"runner_id\",\"schema_version\":1,\"task_id\":\"30000000-0000-4000-8000-000000000090\",\"workspace_id\":\"workspace_id\"}}],\"repository_identity\":\"github.com/example/result\",\"schema_version\":1,\"source_digest\":\"30e1c9bc5ab50c7e4a27e7d6ca8f89248310ddc3ecd9a171c201ea989417d43c\",\"target_branch\":\"main\",\"timestamp\":\"1791028800 +0000\"},\"construction_digest\":\"50fc92130c6c88c809256e5d498263eab6cf00ff22e5570e5062fb98d9578d3a\",\"effective_basis\":{\"completion_manifest_digest\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"completion_operation_id\":\"operation_id\",\"plan_id\":\"plan_id\",\"specification_id\":\"specification_id\",\"task_id\":\"30000000-0000-4000-8000-000000000090\"},\"effective_basis_digest\":\"c84973abafaacbe8b295a3772ad208781eaa7448ae7f18e1623ee99efd0da5ba\",\"operation_id\":\"publication-operation\",\"permission_proof\":{\"app_id\":\"1\",\"configuration_fingerprint\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"expires_at\":\"2026-10-04T13:00:00.000Z\",\"installation_id\":\"2\",\"key_fingerprint\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"kind\":\"github_installation\",\"observation_id\":\"30000000-0000-4000-8000-000000000002\",\"observed_at\":\"2026-10-04T12:00:00.000Z\",\"permission_fingerprint\":\"944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b\",\"permissions\":{\"contents\":\"write\",\"metadata\":\"read\",\"workflows\":\"write\"},\"repository_id\":\"42\",\"repository_identity\":\"github.com/example/result\",\"resource_id\":\"30000000-0000-4000-8000-000000000091\",\"schema_version\":1},\"permission_proof_digest\":\"945497759cad3c5a073f1877486fcfb7a88a7b283d2844970937ea1f8e6423b6\",\"scan_run_id\":\"publication-scan\",\"schema_version\":1,\"source\":{\"attempt_id\":\"attempt_id\",\"base_commit\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"capture\":{\"node_commit\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"node_tree\":\"cccccccccccccccccccccccccccccccccccccccc\",\"start_commit\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"},\"dispatch_id\":\"dispatch_id\",\"generation\":1,\"git_commit\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"git_tree\":\"cccccccccccccccccccccccccccccccccccccccc\",\"lease_id\":\"lease_id\",\"manifest_digest\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"node_activation\":1,\"node_id\":\"node_id\",\"operation_id\":\"operation_id\",\"operation_identity_digest\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"plan_id\":\"plan_id\",\"repository_identity\":\"github.com/example/result\",\"resource_id\":\"30000000-0000-4000-8000-000000000091\",\"runner_id\":\"runner_id\",\"specification_id\":\"specification_id\",\"storage_id\":\"storage_id\",\"task_id\":\"30000000-0000-4000-8000-000000000090\",\"workspace_id\":\"workspace_id\"},\"source_digest\":\"30e1c9bc5ab50c7e4a27e7d6ca8f89248310ddc3ecd9a171c201ea989417d43c\"},\"preparation_result_digest\":\"fece69546c30bdac28cd7bfad2a63a1368a25d7ffef5baf75ac1bae29bad0ffc\",\"prepared\":{\"candidate\":{\"candidate_id\":\"publication-candidate\",\"construction_digest\":\"50fc92130c6c88c809256e5d498263eab6cf00ff22e5570e5062fb98d9578d3a\",\"construction_id\":\"publication-construction\",\"head\":\"dddddddddddddddddddddddddddddddddddddddd\",\"parents\":[\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"],\"schema_version\":1,\"source_digest\":\"30e1c9bc5ab50c7e4a27e7d6ca8f89248310ddc3ecd9a171c201ea989417d43c\",\"tree\":\"cccccccccccccccccccccccccccccccccccccccc\"},\"candidate_manifest_digest\":\"c5e090c6e5571bb2441113f043098b1d69428111df7adf9ae8efd8740ad5d913\",\"operation_id\":\"publication-operation\",\"request_digest\":\"13206e5845c2dec570bd918d6cb434d1fefdb4d6694b3c2e96dc198cf30cb1ae\",\"scan\":{\"candidate_manifest_digest\":\"c5e090c6e5571bb2441113f043098b1d69428111df7adf9ae8efd8740ad5d913\",\"configuration_digest\":\"bf0396b43c70aafee730b1b02486e309c649714f629c4bc3054211c439f9ae51\",\"coverage\":{\"commits\":1,\"paths\":0,\"unique_blob_bytes\":0,\"versions\":0},\"findings_bytes\":2,\"findings_count\":0,\"findings_digest\":\"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945\",\"scan_id\":\"publication-scan\",\"schema_version\":1,\"status\":\"complete\",\"workflow_changes\":true},\"scan_digest\":\"24924737deb9b51d1673ebb15ab6a958a185a21068f3f6c198f4cff692e78ab6\",\"schema_version\":1,\"status\":\"prepared\"},\"provider_metadata\":{\"github\":{\"repository_id\":\"42\"}},\"remote_url\":\"https://github.com/example/result.git\",\"repository_identity\":\"github.com/example/result\",\"resource_id\":\"30000000-0000-4000-8000-000000000091\",\"runner_id\":\"runner_id\",\"schema_version\":1,\"storage_id\":\"storage_id\",\"target_branch\":\"main\",\"task_id\":\"30000000-0000-4000-8000-000000000090\",\"workflow_changes\":true}",
+  "request_digest": "71fffc21a43e893d9f5b7d5d60dd50c459b5a5e5048fd4c48977aa822806c252",
   "cases": [
     {
       "schema": "PublicationPushRequest",
@@ -1094,7 +1150,6 @@
         "runner_id": "runner_id",
         "storage_id": "storage_id",
         "repository_identity": "github.com/example/result",
-        "repository_id": "42",
         "remote_url": "https://github.com/example/result.git",
         "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
         "target_branch": "main",
@@ -1228,14 +1283,15 @@
             },
             "observed_at": "2026-10-04T12:00:00.000Z",
             "expires_at": "2026-10-04T13:00:00.000Z",
-            "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+            "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b",
+            "kind": "github_installation"
           },
-          "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6"
+          "permission_proof_digest": "945497759cad3c5a073f1877486fcfb7a88a7b283d2844970937ea1f8e6423b6"
         },
         "prepared": {
           "schema_version": 1,
           "operation_id": "publication-operation",
-          "request_digest": "4122d704118258227d19bec8ae84cb79a480361c96cc4514dc07501b3dd75979",
+          "request_digest": "13206e5845c2dec570bd918d6cb434d1fefdb4d6694b3c2e96dc198cf30cb1ae",
           "status": "prepared",
           "candidate": {
             "schema_version": 1,
@@ -1269,7 +1325,7 @@
           },
           "scan_digest": "24924737deb9b51d1673ebb15ab6a958a185a21068f3f6c198f4cff692e78ab6"
         },
-        "preparation_result_digest": "5ee8e753eba3fc4b340383e379cd139a07b6bc8f226e45047f6247cbb8bf571e",
+        "preparation_result_digest": "fece69546c30bdac28cd7bfad2a63a1368a25d7ffef5baf75ac1bae29bad0ffc",
         "override_receipts": [],
         "permission_proof": {
           "schema_version": 1,
@@ -1288,11 +1344,17 @@
           },
           "observed_at": "2026-10-04T12:00:00.000Z",
           "expires_at": "2026-10-04T13:00:00.000Z",
-          "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+          "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b",
+          "kind": "github_installation"
         },
-        "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6",
+        "permission_proof_digest": "945497759cad3c5a073f1877486fcfb7a88a7b283d2844970937ea1f8e6423b6",
         "workflow_changes": true,
-        "expected_head": null
+        "expected_head": null,
+        "provider_metadata": {
+          "github": {
+            "repository_id": "42"
+          }
+        }
       }
     },
     {
@@ -1302,7 +1364,7 @@
       "value": {
         "schema_version": 1,
         "operation_id": "30000000-0000-4000-8000-000000000003",
-        "request_digest": "877c851886ffb0792ff8a7c7a15d0dcf0845ce2678412fca4b2dfb4d2ec27f8b",
+        "request_digest": "71fffc21a43e893d9f5b7d5d60dd50c459b5a5e5048fd4c48977aa822806c252",
         "item_id": "30000000-0000-4000-8000-000000000001",
         "candidate_manifest_digest": "c5e090c6e5571bb2441113f043098b1d69428111df7adf9ae8efd8740ad5d913",
         "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
@@ -1320,13 +1382,17 @@
           "runner_id": "runner_id",
           "storage_id": "storage_id",
           "repository_identity": "github.com/example/result",
-          "repository_id": "42",
           "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
           "status": "present",
           "head": "dddddddddddddddddddddddddddddddddddddddd",
-          "observed_at": "2026-10-04T12:00:00.000Z"
+          "observed_at": "2026-10-04T12:00:00.000Z",
+          "provider_metadata": {
+            "github": {
+              "repository_id": "42"
+            }
+          }
         },
-        "observation_digest": "3e8dac4e9b4faa2dc3078b4f76592d88ad750d2e0d9050ec4ea6135cbbd41a49"
+        "observation_digest": "c8bf32602936c0a5f4ef3c22bfe08c5394fc82ecc76afc8900c857884fc8f961"
       }
     },
     {
@@ -1336,15 +1402,14 @@
       "value": {
         "schema_version": 1,
         "operation_id": "30000000-0000-4000-8000-000000000003",
-        "request_digest": "877c851886ffb0792ff8a7c7a15d0dcf0845ce2678412fca4b2dfb4d2ec27f8b",
-        "result_digest": "c3189ab8288d208f2794a38c53208abbf3924dc0815cab0c3b8e06266efc6214",
+        "request_digest": "71fffc21a43e893d9f5b7d5d60dd50c459b5a5e5048fd4c48977aa822806c252",
+        "result_digest": "f8e51ada073e72d2fc6d68299ea8e328c9c83f5c4f471a12ced71f8071f1d799",
         "item_id": "30000000-0000-4000-8000-000000000001",
         "task_id": "30000000-0000-4000-8000-000000000090",
         "resource_id": "30000000-0000-4000-8000-000000000091",
         "runner_id": "runner_id",
         "storage_id": "storage_id",
         "repository_identity": "github.com/example/result",
-        "repository_id": "42",
         "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
         "candidate": {
           "schema_version": 1,
@@ -1369,13 +1434,22 @@
           "runner_id": "runner_id",
           "storage_id": "storage_id",
           "repository_identity": "github.com/example/result",
-          "repository_id": "42",
           "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
           "status": "present",
           "head": "dddddddddddddddddddddddddddddddddddddddd",
-          "observed_at": "2026-10-04T12:00:00.000Z"
+          "observed_at": "2026-10-04T12:00:00.000Z",
+          "provider_metadata": {
+            "github": {
+              "repository_id": "42"
+            }
+          }
         },
-        "observation_digest": "3e8dac4e9b4faa2dc3078b4f76592d88ad750d2e0d9050ec4ea6135cbbd41a49"
+        "observation_digest": "c8bf32602936c0a5f4ef3c22bfe08c5394fc82ecc76afc8900c857884fc8f961",
+        "provider_metadata": {
+          "github": {
+            "repository_id": "42"
+          }
+        }
       }
     },
     {
@@ -1437,15 +1511,14 @@
               "published_proof": {
                 "schema_version": 1,
                 "operation_id": "30000000-0000-4000-8000-000000000003",
-                "request_digest": "877c851886ffb0792ff8a7c7a15d0dcf0845ce2678412fca4b2dfb4d2ec27f8b",
-                "result_digest": "c3189ab8288d208f2794a38c53208abbf3924dc0815cab0c3b8e06266efc6214",
+                "request_digest": "71fffc21a43e893d9f5b7d5d60dd50c459b5a5e5048fd4c48977aa822806c252",
+                "result_digest": "f8e51ada073e72d2fc6d68299ea8e328c9c83f5c4f471a12ced71f8071f1d799",
                 "item_id": "30000000-0000-4000-8000-000000000001",
                 "task_id": "30000000-0000-4000-8000-000000000090",
                 "resource_id": "30000000-0000-4000-8000-000000000091",
                 "runner_id": "runner_id",
                 "storage_id": "storage_id",
                 "repository_identity": "github.com/example/result",
-                "repository_id": "42",
                 "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
                 "candidate": {
                   "schema_version": 1,
@@ -1470,15 +1543,24 @@
                   "runner_id": "runner_id",
                   "storage_id": "storage_id",
                   "repository_identity": "github.com/example/result",
-                  "repository_id": "42",
                   "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
                   "status": "present",
                   "head": "dddddddddddddddddddddddddddddddddddddddd",
-                  "observed_at": "2026-10-04T12:00:00.000Z"
+                  "observed_at": "2026-10-04T12:00:00.000Z",
+                  "provider_metadata": {
+                    "github": {
+                      "repository_id": "42"
+                    }
+                  }
                 },
-                "observation_digest": "3e8dac4e9b4faa2dc3078b4f76592d88ad750d2e0d9050ec4ea6135cbbd41a49"
+                "observation_digest": "c8bf32602936c0a5f4ef3c22bfe08c5394fc82ecc76afc8900c857884fc8f961",
+                "provider_metadata": {
+                  "github": {
+                    "repository_id": "42"
+                  }
+                }
               },
-              "published_proof_digest": "a259e71aef657c7cd68ef3d0f23514db3ed7e5a7e727b8e617671fd3bd01f17a"
+              "published_proof_digest": "45f0a34c7273cad8ff80487591364170183b27921d25f7d92da9aa25785fa95b"
             }
           ],
           "author_name": "monos",
@@ -1486,7 +1568,7 @@
           "timestamp": "1791028800 +0000",
           "message": "monos Task 30000000-0000-4000-8000-000000000090 result v1"
         },
-        "construction_digest": "6ed3e94f5692c3aa3816968180f982d98a7bce1388cfa63b18d216c600575916",
+        "construction_digest": "77fab1ed6245156ca3af37e24907f3014528551bebe263c076d7a3268c9652bc",
         "configuration": {
           "schema_version": 1,
           "policy_version": "local_publication_v1",
@@ -1523,21 +1605,21 @@
           },
           "observed_at": "2026-10-04T12:00:00.000Z",
           "expires_at": "2026-10-04T13:00:00.000Z",
-          "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+          "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b",
+          "kind": "github_installation"
         },
-        "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6",
+        "permission_proof_digest": "945497759cad3c5a073f1877486fcfb7a88a7b283d2844970937ea1f8e6423b6",
         "published": {
           "schema_version": 1,
           "operation_id": "30000000-0000-4000-8000-000000000003",
-          "request_digest": "877c851886ffb0792ff8a7c7a15d0dcf0845ce2678412fca4b2dfb4d2ec27f8b",
-          "result_digest": "c3189ab8288d208f2794a38c53208abbf3924dc0815cab0c3b8e06266efc6214",
+          "request_digest": "71fffc21a43e893d9f5b7d5d60dd50c459b5a5e5048fd4c48977aa822806c252",
+          "result_digest": "f8e51ada073e72d2fc6d68299ea8e328c9c83f5c4f471a12ced71f8071f1d799",
           "item_id": "30000000-0000-4000-8000-000000000001",
           "task_id": "30000000-0000-4000-8000-000000000090",
           "resource_id": "30000000-0000-4000-8000-000000000091",
           "runner_id": "runner_id",
           "storage_id": "storage_id",
           "repository_identity": "github.com/example/result",
-          "repository_id": "42",
           "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
           "candidate": {
             "schema_version": 1,
@@ -1562,15 +1644,24 @@
             "runner_id": "runner_id",
             "storage_id": "storage_id",
             "repository_identity": "github.com/example/result",
-            "repository_id": "42",
             "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
             "status": "present",
             "head": "dddddddddddddddddddddddddddddddddddddddd",
-            "observed_at": "2026-10-04T12:00:00.000Z"
+            "observed_at": "2026-10-04T12:00:00.000Z",
+            "provider_metadata": {
+              "github": {
+                "repository_id": "42"
+              }
+            }
           },
-          "observation_digest": "3e8dac4e9b4faa2dc3078b4f76592d88ad750d2e0d9050ec4ea6135cbbd41a49"
+          "observation_digest": "c8bf32602936c0a5f4ef3c22bfe08c5394fc82ecc76afc8900c857884fc8f961",
+          "provider_metadata": {
+            "github": {
+              "repository_id": "42"
+            }
+          }
         },
-        "published_digest": "a259e71aef657c7cd68ef3d0f23514db3ed7e5a7e727b8e617671fd3bd01f17a"
+        "published_digest": "45f0a34c7273cad8ff80487591364170183b27921d25f7d92da9aa25785fa95b"
       }
     },
     {
@@ -1580,7 +1671,7 @@
       "value": {
         "schema_version": 1,
         "operation_id": "30000000-0000-4000-8000-000000000005",
-        "request_digest": "2b2885f631485eda627f9bffbb8a54161d911c0c17e2d4831e9e3854051a1fde",
+        "request_digest": "aaadb64ff28965eba62a4d974b71db569820398cf2d46e41a381709e217354cd",
         "status": "mapped",
         "candidate": {
           "schema_version": 1,
@@ -1617,7 +1708,7 @@
           "schema_version": 1,
           "mapping_id": "30000000-0000-4000-8000-000000000005",
           "operation_id": "30000000-0000-4000-8000-000000000005",
-          "request_digest": "2b2885f631485eda627f9bffbb8a54161d911c0c17e2d4831e9e3854051a1fde",
+          "request_digest": "aaadb64ff28965eba62a4d974b71db569820398cf2d46e41a381709e217354cd",
           "item_id": "30000000-0000-4000-8000-000000000001",
           "source": {
             "task_id": "30000000-0000-4000-8000-000000000090",
@@ -1658,15 +1749,14 @@
           "published": {
             "schema_version": 1,
             "operation_id": "30000000-0000-4000-8000-000000000003",
-            "request_digest": "877c851886ffb0792ff8a7c7a15d0dcf0845ce2678412fca4b2dfb4d2ec27f8b",
-            "result_digest": "c3189ab8288d208f2794a38c53208abbf3924dc0815cab0c3b8e06266efc6214",
+            "request_digest": "71fffc21a43e893d9f5b7d5d60dd50c459b5a5e5048fd4c48977aa822806c252",
+            "result_digest": "f8e51ada073e72d2fc6d68299ea8e328c9c83f5c4f471a12ced71f8071f1d799",
             "item_id": "30000000-0000-4000-8000-000000000001",
             "task_id": "30000000-0000-4000-8000-000000000090",
             "resource_id": "30000000-0000-4000-8000-000000000091",
             "runner_id": "runner_id",
             "storage_id": "storage_id",
             "repository_identity": "github.com/example/result",
-            "repository_id": "42",
             "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
             "candidate": {
               "schema_version": 1,
@@ -1691,21 +1781,30 @@
               "runner_id": "runner_id",
               "storage_id": "storage_id",
               "repository_identity": "github.com/example/result",
-              "repository_id": "42",
               "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
               "status": "present",
               "head": "dddddddddddddddddddddddddddddddddddddddd",
-              "observed_at": "2026-10-04T12:00:00.000Z"
+              "observed_at": "2026-10-04T12:00:00.000Z",
+              "provider_metadata": {
+                "github": {
+                  "repository_id": "42"
+                }
+              }
             },
-            "observation_digest": "3e8dac4e9b4faa2dc3078b4f76592d88ad750d2e0d9050ec4ea6135cbbd41a49"
+            "observation_digest": "c8bf32602936c0a5f4ef3c22bfe08c5394fc82ecc76afc8900c857884fc8f961",
+            "provider_metadata": {
+              "github": {
+                "repository_id": "42"
+              }
+            }
           },
-          "published_digest": "a259e71aef657c7cd68ef3d0f23514db3ed7e5a7e727b8e617671fd3bd01f17a",
+          "published_digest": "45f0a34c7273cad8ff80487591364170183b27921d25f7d92da9aa25785fa95b",
           "candidate_manifest_digest": "c5e090c6e5571bb2441113f043098b1d69428111df7adf9ae8efd8740ad5d913",
           "reused_head": "dddddddddddddddddddddddddddddddddddddddd",
           "result_tree": "cccccccccccccccccccccccccccccccccccccccc",
           "configuration_digest": "bf0396b43c70aafee730b1b02486e309c649714f629c4bc3054211c439f9ae51"
         },
-        "mapping_digest": "b622153069725b8623af0bb30b832d3df7894506785132c8e8f660a0cf150f69"
+        "mapping_digest": "d2433205652ef5674b5ef3343773e0394f61054eb843cf8d813c1bd914091d7c"
       }
     },
     {
@@ -1729,7 +1828,8 @@
         },
         "observed_at": "2026-10-04T12:00:00.000Z",
         "expires_at": "2026-10-04T13:00:00.000Z",
-        "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+        "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b",
+        "kind": "github_installation"
       }
     },
     {
@@ -1739,14 +1839,13 @@
       "value": {
         "schema_version": 1,
         "operation_id": "30000000-0000-4000-8000-000000000003",
-        "request_digest": "877c851886ffb0792ff8a7c7a15d0dcf0845ce2678412fca4b2dfb4d2ec27f8b",
+        "request_digest": "71fffc21a43e893d9f5b7d5d60dd50c459b5a5e5048fd4c48977aa822806c252",
         "item_id": "30000000-0000-4000-8000-000000000001",
         "purpose": "push",
         "attempt_id": "30000000-0000-4000-8000-000000000010",
         "claim_id": "30000000-0000-4000-8000-000000000011",
         "claim_expires_at": "2026-10-04T13:00:00.000Z",
         "remote_url": "https://github.com/example/result.git",
-        "repository_id": "42",
         "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
         "candidate_head": "dddddddddddddddddddddddddddddddddddddddd",
         "expected_head": null,
@@ -1772,9 +1871,15 @@
           },
           "observed_at": "2026-10-04T12:00:00.000Z",
           "expires_at": "2026-10-04T13:00:00.000Z",
-          "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+          "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b",
+          "kind": "github_installation"
         },
-        "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6"
+        "permission_proof_digest": "945497759cad3c5a073f1877486fcfb7a88a7b283d2844970937ea1f8e6423b6",
+        "provider_metadata": {
+          "github": {
+            "repository_id": "42"
+          }
+        }
       }
     },
     {
@@ -1794,7 +1899,6 @@
           "runner_id": "runner_id",
           "storage_id": "storage_id",
           "repository_identity": "github.com/example/result",
-          "repository_id": "42",
           "remote_url": "https://github.com/example/result.git",
           "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
           "target_branch": "main",
@@ -1928,14 +2032,15 @@
               },
               "observed_at": "2026-10-04T12:00:00.000Z",
               "expires_at": "2026-10-04T13:00:00.000Z",
-              "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+              "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b",
+              "kind": "github_installation"
             },
-            "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6"
+            "permission_proof_digest": "945497759cad3c5a073f1877486fcfb7a88a7b283d2844970937ea1f8e6423b6"
           },
           "prepared": {
             "schema_version": 1,
             "operation_id": "publication-operation",
-            "request_digest": "4122d704118258227d19bec8ae84cb79a480361c96cc4514dc07501b3dd75979",
+            "request_digest": "13206e5845c2dec570bd918d6cb434d1fefdb4d6694b3c2e96dc198cf30cb1ae",
             "status": "prepared",
             "candidate": {
               "schema_version": 1,
@@ -1969,7 +2074,7 @@
             },
             "scan_digest": "24924737deb9b51d1673ebb15ab6a958a185a21068f3f6c198f4cff692e78ab6"
           },
-          "preparation_result_digest": "5ee8e753eba3fc4b340383e379cd139a07b6bc8f226e45047f6247cbb8bf571e",
+          "preparation_result_digest": "fece69546c30bdac28cd7bfad2a63a1368a25d7ffef5baf75ac1bae29bad0ffc",
           "override_receipts": [],
           "permission_proof": {
             "schema_version": 1,
@@ -1988,11 +2093,17 @@
             },
             "observed_at": "2026-10-04T12:00:00.000Z",
             "expires_at": "2026-10-04T13:00:00.000Z",
-            "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+            "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b",
+            "kind": "github_installation"
           },
-          "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6",
+          "permission_proof_digest": "945497759cad3c5a073f1877486fcfb7a88a7b283d2844970937ea1f8e6423b6",
           "workflow_changes": true,
-          "expected_head": null
+          "expected_head": null,
+          "provider_metadata": {
+            "github": {
+              "repository_id": "42"
+            }
+          }
         }
       }
     },
@@ -2022,7 +2133,6 @@
         "runner_id": "runner_id",
         "storage_id": "storage_id",
         "repository_identity": "github.com/example/result",
-        "repository_id": "42",
         "remote_url": "https://github.com/example/result.git",
         "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
         "target_branch": "main",
@@ -2156,14 +2266,15 @@
             },
             "observed_at": "2026-10-04T12:00:00.000Z",
             "expires_at": "2026-10-04T13:00:00.000Z",
-            "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+            "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b",
+            "kind": "github_installation"
           },
-          "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6"
+          "permission_proof_digest": "945497759cad3c5a073f1877486fcfb7a88a7b283d2844970937ea1f8e6423b6"
         },
         "prepared": {
           "schema_version": 1,
           "operation_id": "publication-operation",
-          "request_digest": "4122d704118258227d19bec8ae84cb79a480361c96cc4514dc07501b3dd75979",
+          "request_digest": "13206e5845c2dec570bd918d6cb434d1fefdb4d6694b3c2e96dc198cf30cb1ae",
           "status": "prepared",
           "candidate": {
             "schema_version": 1,
@@ -2197,7 +2308,7 @@
           },
           "scan_digest": "24924737deb9b51d1673ebb15ab6a958a185a21068f3f6c198f4cff692e78ab6"
         },
-        "preparation_result_digest": "5ee8e753eba3fc4b340383e379cd139a07b6bc8f226e45047f6247cbb8bf571e",
+        "preparation_result_digest": "fece69546c30bdac28cd7bfad2a63a1368a25d7ffef5baf75ac1bae29bad0ffc",
         "override_receipts": [],
         "permission_proof": {
           "schema_version": 1,
@@ -2216,10 +2327,16 @@
           },
           "observed_at": "2026-10-04T12:00:00.000Z",
           "expires_at": "2026-10-04T13:00:00.000Z",
-          "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+          "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b",
+          "kind": "github_installation"
         },
-        "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6",
-        "workflow_changes": true
+        "permission_proof_digest": "945497759cad3c5a073f1877486fcfb7a88a7b283d2844970937ea1f8e6423b6",
+        "workflow_changes": true,
+        "provider_metadata": {
+          "github": {
+            "repository_id": "42"
+          }
+        }
       }
     },
     {
@@ -2235,7 +2352,6 @@
         "runner_id": "runner_id",
         "storage_id": "storage_id",
         "repository_identity": "github.com/example/result",
-        "repository_id": "42",
         "remote_url": "https://github.com/example/result.git",
         "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
         "target_branch": "main",
@@ -2243,7 +2359,7 @@
         "prepared": {
           "schema_version": 1,
           "operation_id": "publication-operation",
-          "request_digest": "4122d704118258227d19bec8ae84cb79a480361c96cc4514dc07501b3dd75979",
+          "request_digest": "13206e5845c2dec570bd918d6cb434d1fefdb4d6694b3c2e96dc198cf30cb1ae",
           "status": "prepared",
           "candidate": {
             "schema_version": 1,
@@ -2277,7 +2393,7 @@
           },
           "scan_digest": "24924737deb9b51d1673ebb15ab6a958a185a21068f3f6c198f4cff692e78ab6"
         },
-        "preparation_result_digest": "5ee8e753eba3fc4b340383e379cd139a07b6bc8f226e45047f6247cbb8bf571e",
+        "preparation_result_digest": "fece69546c30bdac28cd7bfad2a63a1368a25d7ffef5baf75ac1bae29bad0ffc",
         "override_receipts": [],
         "permission_proof": {
           "schema_version": 1,
@@ -2296,11 +2412,17 @@
           },
           "observed_at": "2026-10-04T12:00:00.000Z",
           "expires_at": "2026-10-04T13:00:00.000Z",
-          "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+          "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b",
+          "kind": "github_installation"
         },
-        "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6",
+        "permission_proof_digest": "945497759cad3c5a073f1877486fcfb7a88a7b283d2844970937ea1f8e6423b6",
         "workflow_changes": true,
-        "expected_head": null
+        "expected_head": null,
+        "provider_metadata": {
+          "github": {
+            "repository_id": "42"
+          }
+        }
       }
     },
     {
@@ -2316,7 +2438,6 @@
         "runner_id": "runner_id",
         "storage_id": "storage_id",
         "repository_identity": "github.com/example/result",
-        "repository_id": "42",
         "remote_url": "https://github.com/example/result.git",
         "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
         "target_branch": "main",
@@ -2450,14 +2571,15 @@
             },
             "observed_at": "2026-10-04T12:00:00.000Z",
             "expires_at": "2026-10-04T13:00:00.000Z",
-            "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+            "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b",
+            "kind": "github_installation"
           },
-          "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6"
+          "permission_proof_digest": "945497759cad3c5a073f1877486fcfb7a88a7b283d2844970937ea1f8e6423b6"
         },
         "prepared": {
           "schema_version": 1,
           "operation_id": "publication-operation",
-          "request_digest": "4122d704118258227d19bec8ae84cb79a480361c96cc4514dc07501b3dd75979",
+          "request_digest": "13206e5845c2dec570bd918d6cb434d1fefdb4d6694b3c2e96dc198cf30cb1ae",
           "status": "prepared",
           "candidate": {
             "schema_version": 1,
@@ -2491,7 +2613,7 @@
           },
           "scan_digest": "24924737deb9b51d1673ebb15ab6a958a185a21068f3f6c198f4cff692e78ab6"
         },
-        "preparation_result_digest": "5ee8e753eba3fc4b340383e379cd139a07b6bc8f226e45047f6247cbb8bf571e",
+        "preparation_result_digest": "fece69546c30bdac28cd7bfad2a63a1368a25d7ffef5baf75ac1bae29bad0ffc",
         "override_receipts": [],
         "permission_proof": {
           "schema_version": 1,
@@ -2510,12 +2632,18 @@
           },
           "observed_at": "2026-10-04T12:00:00.000Z",
           "expires_at": "2026-10-04T13:00:00.000Z",
-          "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+          "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b",
+          "kind": "github_installation"
         },
-        "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6",
+        "permission_proof_digest": "945497759cad3c5a073f1877486fcfb7a88a7b283d2844970937ea1f8e6423b6",
         "workflow_changes": true,
         "expected_head": null,
-        "token": "synthetic"
+        "token": "synthetic",
+        "provider_metadata": {
+          "github": {
+            "repository_id": "42"
+          }
+        }
       }
     },
     {
@@ -2531,7 +2659,6 @@
         "runner_id": "runner_id",
         "storage_id": "storage_id",
         "repository_identity": "github.com/example/result",
-        "repository_id": "42",
         "remote_url": "https://github.com/example/result.git",
         "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
         "target_branch": "main",
@@ -2665,14 +2792,15 @@
             },
             "observed_at": "2026-10-04T12:00:00.000Z",
             "expires_at": "2026-10-04T13:00:00.000Z",
-            "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+            "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b",
+            "kind": "github_installation"
           },
-          "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6"
+          "permission_proof_digest": "945497759cad3c5a073f1877486fcfb7a88a7b283d2844970937ea1f8e6423b6"
         },
         "prepared": {
           "schema_version": 1,
           "operation_id": "30000000-0000-4000-8000-000000000005",
-          "request_digest": "2b2885f631485eda627f9bffbb8a54161d911c0c17e2d4831e9e3854051a1fde",
+          "request_digest": "aaadb64ff28965eba62a4d974b71db569820398cf2d46e41a381709e217354cd",
           "status": "mapped",
           "candidate": {
             "schema_version": 1,
@@ -2709,7 +2837,7 @@
             "schema_version": 1,
             "mapping_id": "30000000-0000-4000-8000-000000000005",
             "operation_id": "30000000-0000-4000-8000-000000000005",
-            "request_digest": "2b2885f631485eda627f9bffbb8a54161d911c0c17e2d4831e9e3854051a1fde",
+            "request_digest": "aaadb64ff28965eba62a4d974b71db569820398cf2d46e41a381709e217354cd",
             "item_id": "30000000-0000-4000-8000-000000000001",
             "source": {
               "task_id": "30000000-0000-4000-8000-000000000090",
@@ -2750,15 +2878,14 @@
             "published": {
               "schema_version": 1,
               "operation_id": "30000000-0000-4000-8000-000000000003",
-              "request_digest": "877c851886ffb0792ff8a7c7a15d0dcf0845ce2678412fca4b2dfb4d2ec27f8b",
-              "result_digest": "c3189ab8288d208f2794a38c53208abbf3924dc0815cab0c3b8e06266efc6214",
+              "request_digest": "71fffc21a43e893d9f5b7d5d60dd50c459b5a5e5048fd4c48977aa822806c252",
+              "result_digest": "f8e51ada073e72d2fc6d68299ea8e328c9c83f5c4f471a12ced71f8071f1d799",
               "item_id": "30000000-0000-4000-8000-000000000001",
               "task_id": "30000000-0000-4000-8000-000000000090",
               "resource_id": "30000000-0000-4000-8000-000000000091",
               "runner_id": "runner_id",
               "storage_id": "storage_id",
               "repository_identity": "github.com/example/result",
-              "repository_id": "42",
               "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
               "candidate": {
                 "schema_version": 1,
@@ -2783,23 +2910,32 @@
                 "runner_id": "runner_id",
                 "storage_id": "storage_id",
                 "repository_identity": "github.com/example/result",
-                "repository_id": "42",
                 "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
                 "status": "present",
                 "head": "dddddddddddddddddddddddddddddddddddddddd",
-                "observed_at": "2026-10-04T12:00:00.000Z"
+                "observed_at": "2026-10-04T12:00:00.000Z",
+                "provider_metadata": {
+                  "github": {
+                    "repository_id": "42"
+                  }
+                }
               },
-              "observation_digest": "3e8dac4e9b4faa2dc3078b4f76592d88ad750d2e0d9050ec4ea6135cbbd41a49"
+              "observation_digest": "c8bf32602936c0a5f4ef3c22bfe08c5394fc82ecc76afc8900c857884fc8f961",
+              "provider_metadata": {
+                "github": {
+                  "repository_id": "42"
+                }
+              }
             },
-            "published_digest": "a259e71aef657c7cd68ef3d0f23514db3ed7e5a7e727b8e617671fd3bd01f17a",
+            "published_digest": "45f0a34c7273cad8ff80487591364170183b27921d25f7d92da9aa25785fa95b",
             "candidate_manifest_digest": "c5e090c6e5571bb2441113f043098b1d69428111df7adf9ae8efd8740ad5d913",
             "reused_head": "dddddddddddddddddddddddddddddddddddddddd",
             "result_tree": "cccccccccccccccccccccccccccccccccccccccc",
             "configuration_digest": "bf0396b43c70aafee730b1b02486e309c649714f629c4bc3054211c439f9ae51"
           },
-          "mapping_digest": "b622153069725b8623af0bb30b832d3df7894506785132c8e8f660a0cf150f69"
+          "mapping_digest": "d2433205652ef5674b5ef3343773e0394f61054eb843cf8d813c1bd914091d7c"
         },
-        "preparation_result_digest": "5ee8e753eba3fc4b340383e379cd139a07b6bc8f226e45047f6247cbb8bf571e",
+        "preparation_result_digest": "fece69546c30bdac28cd7bfad2a63a1368a25d7ffef5baf75ac1bae29bad0ffc",
         "override_receipts": [],
         "permission_proof": {
           "schema_version": 1,
@@ -2818,11 +2954,17 @@
           },
           "observed_at": "2026-10-04T12:00:00.000Z",
           "expires_at": "2026-10-04T13:00:00.000Z",
-          "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+          "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b",
+          "kind": "github_installation"
         },
-        "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6",
+        "permission_proof_digest": "945497759cad3c5a073f1877486fcfb7a88a7b283d2844970937ea1f8e6423b6",
         "workflow_changes": true,
-        "expected_head": null
+        "expected_head": null,
+        "provider_metadata": {
+          "github": {
+            "repository_id": "42"
+          }
+        }
       }
     },
     {
@@ -2880,15 +3022,14 @@
         "published_proof": {
           "schema_version": 1,
           "operation_id": "30000000-0000-4000-8000-000000000003",
-          "request_digest": "877c851886ffb0792ff8a7c7a15d0dcf0845ce2678412fca4b2dfb4d2ec27f8b",
-          "result_digest": "c3189ab8288d208f2794a38c53208abbf3924dc0815cab0c3b8e06266efc6214",
+          "request_digest": "71fffc21a43e893d9f5b7d5d60dd50c459b5a5e5048fd4c48977aa822806c252",
+          "result_digest": "f8e51ada073e72d2fc6d68299ea8e328c9c83f5c4f471a12ced71f8071f1d799",
           "item_id": "30000000-0000-4000-8000-000000000001",
           "task_id": "30000000-0000-4000-8000-000000000090",
           "resource_id": "30000000-0000-4000-8000-000000000091",
           "runner_id": "runner_id",
           "storage_id": "storage_id",
           "repository_identity": "github.com/example/result",
-          "repository_id": "42",
           "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
           "candidate": {
             "schema_version": 1,
@@ -2913,15 +3054,24 @@
             "runner_id": "runner_id",
             "storage_id": "storage_id",
             "repository_identity": "github.com/example/result",
-            "repository_id": "42",
             "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
             "status": "present",
             "head": "dddddddddddddddddddddddddddddddddddddddd",
-            "observed_at": "2026-10-04T12:00:00.000Z"
+            "observed_at": "2026-10-04T12:00:00.000Z",
+            "provider_metadata": {
+              "github": {
+                "repository_id": "42"
+              }
+            }
           },
-          "observation_digest": "3e8dac4e9b4faa2dc3078b4f76592d88ad750d2e0d9050ec4ea6135cbbd41a49"
+          "observation_digest": "c8bf32602936c0a5f4ef3c22bfe08c5394fc82ecc76afc8900c857884fc8f961",
+          "provider_metadata": {
+            "github": {
+              "repository_id": "42"
+            }
+          }
         },
-        "published_proof_digest": "a259e71aef657c7cd68ef3d0f23514db3ed7e5a7e727b8e617671fd3bd01f17a",
+        "published_proof_digest": "45f0a34c7273cad8ff80487591364170183b27921d25f7d92da9aa25785fa95b",
         "workspace": {
           "schema_version": 1,
           "workspace_id": "workspace_id",
@@ -3001,15 +3151,14 @@
               "published_proof": {
                 "schema_version": 1,
                 "operation_id": "30000000-0000-4000-8000-000000000003",
-                "request_digest": "877c851886ffb0792ff8a7c7a15d0dcf0845ce2678412fca4b2dfb4d2ec27f8b",
-                "result_digest": "c3189ab8288d208f2794a38c53208abbf3924dc0815cab0c3b8e06266efc6214",
+                "request_digest": "71fffc21a43e893d9f5b7d5d60dd50c459b5a5e5048fd4c48977aa822806c252",
+                "result_digest": "f8e51ada073e72d2fc6d68299ea8e328c9c83f5c4f471a12ced71f8071f1d799",
                 "item_id": "30000000-0000-4000-8000-000000000001",
                 "task_id": "30000000-0000-4000-8000-000000000090",
                 "resource_id": "30000000-0000-4000-8000-000000000091",
                 "runner_id": "runner_id",
                 "storage_id": "storage_id",
                 "repository_identity": "github.com/example/result",
-                "repository_id": "42",
                 "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
                 "candidate": {
                   "schema_version": 1,
@@ -3034,15 +3183,24 @@
                   "runner_id": "runner_id",
                   "storage_id": "storage_id",
                   "repository_identity": "github.com/example/result",
-                  "repository_id": "42",
                   "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
                   "status": "present",
                   "head": "dddddddddddddddddddddddddddddddddddddddd",
-                  "observed_at": "2026-10-04T12:00:00.000Z"
+                  "observed_at": "2026-10-04T12:00:00.000Z",
+                  "provider_metadata": {
+                    "github": {
+                      "repository_id": "42"
+                    }
+                  }
                 },
-                "observation_digest": "3e8dac4e9b4faa2dc3078b4f76592d88ad750d2e0d9050ec4ea6135cbbd41a49"
+                "observation_digest": "c8bf32602936c0a5f4ef3c22bfe08c5394fc82ecc76afc8900c857884fc8f961",
+                "provider_metadata": {
+                  "github": {
+                    "repository_id": "42"
+                  }
+                }
               },
-              "published_proof_digest": "a259e71aef657c7cd68ef3d0f23514db3ed7e5a7e727b8e617671fd3bd01f17a"
+              "published_proof_digest": "45f0a34c7273cad8ff80487591364170183b27921d25f7d92da9aa25785fa95b"
             }
           ],
           "author_name": "monos",
@@ -3050,7 +3208,7 @@
           "timestamp": "1791028800 +0000",
           "message": "monos Task 30000000-0000-4000-8000-000000000090 result v1"
         },
-        "construction_digest": "6ed3e94f5692c3aa3816968180f982d98a7bce1388cfa63b18d216c600575916",
+        "construction_digest": "77fab1ed6245156ca3af37e24907f3014528551bebe263c076d7a3268c9652bc",
         "configuration": {
           "schema_version": 1,
           "policy_version": "local_publication_v1",
@@ -3070,19 +3228,18 @@
           "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
         },
         "configuration_digest": "bf0396b43c70aafee730b1b02486e309c649714f629c4bc3054211c439f9ae51",
-        "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6",
+        "permission_proof_digest": "945497759cad3c5a073f1877486fcfb7a88a7b283d2844970937ea1f8e6423b6",
         "published": {
           "schema_version": 1,
           "operation_id": "30000000-0000-4000-8000-000000000003",
-          "request_digest": "877c851886ffb0792ff8a7c7a15d0dcf0845ce2678412fca4b2dfb4d2ec27f8b",
-          "result_digest": "c3189ab8288d208f2794a38c53208abbf3924dc0815cab0c3b8e06266efc6214",
+          "request_digest": "71fffc21a43e893d9f5b7d5d60dd50c459b5a5e5048fd4c48977aa822806c252",
+          "result_digest": "f8e51ada073e72d2fc6d68299ea8e328c9c83f5c4f471a12ced71f8071f1d799",
           "item_id": "30000000-0000-4000-8000-000000000001",
           "task_id": "30000000-0000-4000-8000-000000000090",
           "resource_id": "30000000-0000-4000-8000-000000000091",
           "runner_id": "runner_id",
           "storage_id": "storage_id",
           "repository_identity": "github.com/example/result",
-          "repository_id": "42",
           "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
           "candidate": {
             "schema_version": 1,
@@ -3107,15 +3264,24 @@
             "runner_id": "runner_id",
             "storage_id": "storage_id",
             "repository_identity": "github.com/example/result",
-            "repository_id": "42",
             "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
             "status": "present",
             "head": "dddddddddddddddddddddddddddddddddddddddd",
-            "observed_at": "2026-10-04T12:00:00.000Z"
+            "observed_at": "2026-10-04T12:00:00.000Z",
+            "provider_metadata": {
+              "github": {
+                "repository_id": "42"
+              }
+            }
           },
-          "observation_digest": "3e8dac4e9b4faa2dc3078b4f76592d88ad750d2e0d9050ec4ea6135cbbd41a49"
+          "observation_digest": "c8bf32602936c0a5f4ef3c22bfe08c5394fc82ecc76afc8900c857884fc8f961",
+          "provider_metadata": {
+            "github": {
+              "repository_id": "42"
+            }
+          }
         },
-        "published_digest": "a259e71aef657c7cd68ef3d0f23514db3ed7e5a7e727b8e617671fd3bd01f17a"
+        "published_digest": "45f0a34c7273cad8ff80487591364170183b27921d25f7d92da9aa25785fa95b"
       }
     },
     {
@@ -3125,7 +3291,7 @@
       "value": {
         "schema_version": 1,
         "operation_id": "30000000-0000-4000-8000-000000000005",
-        "request_digest": "2b2885f631485eda627f9bffbb8a54161d911c0c17e2d4831e9e3854051a1fde",
+        "request_digest": "aaadb64ff28965eba62a4d974b71db569820398cf2d46e41a381709e217354cd",
         "status": "mapped",
         "candidate": {
           "schema_version": 1,
@@ -3145,7 +3311,7 @@
           "schema_version": 1,
           "mapping_id": "30000000-0000-4000-8000-000000000005",
           "operation_id": "30000000-0000-4000-8000-000000000005",
-          "request_digest": "2b2885f631485eda627f9bffbb8a54161d911c0c17e2d4831e9e3854051a1fde",
+          "request_digest": "aaadb64ff28965eba62a4d974b71db569820398cf2d46e41a381709e217354cd",
           "item_id": "30000000-0000-4000-8000-000000000001",
           "source": {
             "task_id": "30000000-0000-4000-8000-000000000090",
@@ -3186,15 +3352,14 @@
           "published": {
             "schema_version": 1,
             "operation_id": "30000000-0000-4000-8000-000000000003",
-            "request_digest": "877c851886ffb0792ff8a7c7a15d0dcf0845ce2678412fca4b2dfb4d2ec27f8b",
-            "result_digest": "c3189ab8288d208f2794a38c53208abbf3924dc0815cab0c3b8e06266efc6214",
+            "request_digest": "71fffc21a43e893d9f5b7d5d60dd50c459b5a5e5048fd4c48977aa822806c252",
+            "result_digest": "f8e51ada073e72d2fc6d68299ea8e328c9c83f5c4f471a12ced71f8071f1d799",
             "item_id": "30000000-0000-4000-8000-000000000001",
             "task_id": "30000000-0000-4000-8000-000000000090",
             "resource_id": "30000000-0000-4000-8000-000000000091",
             "runner_id": "runner_id",
             "storage_id": "storage_id",
             "repository_identity": "github.com/example/result",
-            "repository_id": "42",
             "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
             "candidate": {
               "schema_version": 1,
@@ -3219,21 +3384,30 @@
               "runner_id": "runner_id",
               "storage_id": "storage_id",
               "repository_identity": "github.com/example/result",
-              "repository_id": "42",
               "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
               "status": "present",
               "head": "dddddddddddddddddddddddddddddddddddddddd",
-              "observed_at": "2026-10-04T12:00:00.000Z"
+              "observed_at": "2026-10-04T12:00:00.000Z",
+              "provider_metadata": {
+                "github": {
+                  "repository_id": "42"
+                }
+              }
             },
-            "observation_digest": "3e8dac4e9b4faa2dc3078b4f76592d88ad750d2e0d9050ec4ea6135cbbd41a49"
+            "observation_digest": "c8bf32602936c0a5f4ef3c22bfe08c5394fc82ecc76afc8900c857884fc8f961",
+            "provider_metadata": {
+              "github": {
+                "repository_id": "42"
+              }
+            }
           },
-          "published_digest": "a259e71aef657c7cd68ef3d0f23514db3ed7e5a7e727b8e617671fd3bd01f17a",
+          "published_digest": "45f0a34c7273cad8ff80487591364170183b27921d25f7d92da9aa25785fa95b",
           "candidate_manifest_digest": "c5e090c6e5571bb2441113f043098b1d69428111df7adf9ae8efd8740ad5d913",
           "reused_head": "dddddddddddddddddddddddddddddddddddddddd",
           "result_tree": "cccccccccccccccccccccccccccccccccccccccc",
           "configuration_digest": "bf0396b43c70aafee730b1b02486e309c649714f629c4bc3054211c439f9ae51"
         },
-        "mapping_digest": "b622153069725b8623af0bb30b832d3df7894506785132c8e8f660a0cf150f69"
+        "mapping_digest": "d2433205652ef5674b5ef3343773e0394f61054eb843cf8d813c1bd914091d7c"
       }
     },
     {
@@ -3243,7 +3417,7 @@
       "value": {
         "schema_version": 1,
         "operation_id": "30000000-0000-4000-8000-000000000005",
-        "request_digest": "2b2885f631485eda627f9bffbb8a54161d911c0c17e2d4831e9e3854051a1fde",
+        "request_digest": "aaadb64ff28965eba62a4d974b71db569820398cf2d46e41a381709e217354cd",
         "status": "prepared",
         "candidate": {
           "schema_version": 1,
@@ -3280,7 +3454,7 @@
           "schema_version": 1,
           "mapping_id": "30000000-0000-4000-8000-000000000005",
           "operation_id": "30000000-0000-4000-8000-000000000005",
-          "request_digest": "2b2885f631485eda627f9bffbb8a54161d911c0c17e2d4831e9e3854051a1fde",
+          "request_digest": "aaadb64ff28965eba62a4d974b71db569820398cf2d46e41a381709e217354cd",
           "item_id": "30000000-0000-4000-8000-000000000001",
           "source": {
             "task_id": "30000000-0000-4000-8000-000000000090",
@@ -3321,15 +3495,14 @@
           "published": {
             "schema_version": 1,
             "operation_id": "30000000-0000-4000-8000-000000000003",
-            "request_digest": "877c851886ffb0792ff8a7c7a15d0dcf0845ce2678412fca4b2dfb4d2ec27f8b",
-            "result_digest": "c3189ab8288d208f2794a38c53208abbf3924dc0815cab0c3b8e06266efc6214",
+            "request_digest": "71fffc21a43e893d9f5b7d5d60dd50c459b5a5e5048fd4c48977aa822806c252",
+            "result_digest": "f8e51ada073e72d2fc6d68299ea8e328c9c83f5c4f471a12ced71f8071f1d799",
             "item_id": "30000000-0000-4000-8000-000000000001",
             "task_id": "30000000-0000-4000-8000-000000000090",
             "resource_id": "30000000-0000-4000-8000-000000000091",
             "runner_id": "runner_id",
             "storage_id": "storage_id",
             "repository_identity": "github.com/example/result",
-            "repository_id": "42",
             "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
             "candidate": {
               "schema_version": 1,
@@ -3354,21 +3527,30 @@
               "runner_id": "runner_id",
               "storage_id": "storage_id",
               "repository_identity": "github.com/example/result",
-              "repository_id": "42",
               "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
               "status": "present",
               "head": "dddddddddddddddddddddddddddddddddddddddd",
-              "observed_at": "2026-10-04T12:00:00.000Z"
+              "observed_at": "2026-10-04T12:00:00.000Z",
+              "provider_metadata": {
+                "github": {
+                  "repository_id": "42"
+                }
+              }
             },
-            "observation_digest": "3e8dac4e9b4faa2dc3078b4f76592d88ad750d2e0d9050ec4ea6135cbbd41a49"
+            "observation_digest": "c8bf32602936c0a5f4ef3c22bfe08c5394fc82ecc76afc8900c857884fc8f961",
+            "provider_metadata": {
+              "github": {
+                "repository_id": "42"
+              }
+            }
           },
-          "published_digest": "a259e71aef657c7cd68ef3d0f23514db3ed7e5a7e727b8e617671fd3bd01f17a",
+          "published_digest": "45f0a34c7273cad8ff80487591364170183b27921d25f7d92da9aa25785fa95b",
           "candidate_manifest_digest": "c5e090c6e5571bb2441113f043098b1d69428111df7adf9ae8efd8740ad5d913",
           "reused_head": "dddddddddddddddddddddddddddddddddddddddd",
           "result_tree": "cccccccccccccccccccccccccccccccccccccccc",
           "configuration_digest": "bf0396b43c70aafee730b1b02486e309c649714f629c4bc3054211c439f9ae51"
         },
-        "mapping_digest": "b622153069725b8623af0bb30b832d3df7894506785132c8e8f660a0cf150f69"
+        "mapping_digest": "d2433205652ef5674b5ef3343773e0394f61054eb843cf8d813c1bd914091d7c"
       }
     },
     {
@@ -3378,7 +3560,7 @@
       "value": {
         "schema_version": 1,
         "operation_id": "30000000-0000-4000-8000-000000000003",
-        "request_digest": "877c851886ffb0792ff8a7c7a15d0dcf0845ce2678412fca4b2dfb4d2ec27f8b",
+        "request_digest": "71fffc21a43e893d9f5b7d5d60dd50c459b5a5e5048fd4c48977aa822806c252",
         "item_id": "30000000-0000-4000-8000-000000000001",
         "candidate_manifest_digest": "c5e090c6e5571bb2441113f043098b1d69428111df7adf9ae8efd8740ad5d913",
         "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
@@ -3396,13 +3578,17 @@
           "runner_id": "runner_id",
           "storage_id": "storage_id",
           "repository_identity": "github.com/example/result",
-          "repository_id": "42",
           "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
           "status": "present",
           "head": "dddddddddddddddddddddddddddddddddddddddd",
-          "observed_at": "2026-10-04T12:00:00.000Z"
+          "observed_at": "2026-10-04T12:00:00.000Z",
+          "provider_metadata": {
+            "github": {
+              "repository_id": "42"
+            }
+          }
         },
-        "observation_digest": "3e8dac4e9b4faa2dc3078b4f76592d88ad750d2e0d9050ec4ea6135cbbd41a49",
+        "observation_digest": "c8bf32602936c0a5f4ef3c22bfe08c5394fc82ecc76afc8900c857884fc8f961",
         "reason": "possible_publication"
       }
     },
@@ -3420,11 +3606,15 @@
         "runner_id": "runner_id",
         "storage_id": "storage_id",
         "repository_identity": "github.com/example/result",
-        "repository_id": "42",
         "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
         "status": "absent",
         "head": "dddddddddddddddddddddddddddddddddddddddd",
-        "observed_at": "2026-10-04T12:00:00.000Z"
+        "observed_at": "2026-10-04T12:00:00.000Z",
+        "provider_metadata": {
+          "github": {
+            "repository_id": "42"
+          }
+        }
       }
     },
     {
@@ -3441,10 +3631,14 @@
         "runner_id": "runner_id",
         "storage_id": "storage_id",
         "repository_identity": "github.com/example/result",
-        "repository_id": "42",
         "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
         "status": "unavailable",
-        "observed_at": "2026-10-04T12:00:00.000Z"
+        "observed_at": "2026-10-04T12:00:00.000Z",
+        "provider_metadata": {
+          "github": {
+            "repository_id": "42"
+          }
+        }
       }
     },
     {
@@ -3454,14 +3648,13 @@
       "value": {
         "schema_version": 1,
         "operation_id": "30000000-0000-4000-8000-000000000003",
-        "request_digest": "877c851886ffb0792ff8a7c7a15d0dcf0845ce2678412fca4b2dfb4d2ec27f8b",
+        "request_digest": "71fffc21a43e893d9f5b7d5d60dd50c459b5a5e5048fd4c48977aa822806c252",
         "item_id": "30000000-0000-4000-8000-000000000001",
         "purpose": "observe",
         "attempt_id": "30000000-0000-4000-8000-000000000010",
         "claim_id": "30000000-0000-4000-8000-000000000011",
         "claim_expires_at": "2026-10-04T13:00:00.000Z",
         "remote_url": "https://github.com/example/result.git",
-        "repository_id": "42",
         "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
         "candidate_head": "dddddddddddddddddddddddddddddddddddddddd",
         "expected_head": null,
@@ -3487,9 +3680,15 @@
           },
           "observed_at": "2026-10-04T12:00:00.000Z",
           "expires_at": "2026-10-04T13:00:00.000Z",
-          "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+          "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b",
+          "kind": "github_installation"
         },
-        "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6"
+        "permission_proof_digest": "945497759cad3c5a073f1877486fcfb7a88a7b283d2844970937ea1f8e6423b6",
+        "provider_metadata": {
+          "github": {
+            "repository_id": "42"
+          }
+        }
       }
     },
     {
@@ -3499,14 +3698,13 @@
       "value": {
         "schema_version": 1,
         "operation_id": "30000000-0000-4000-8000-000000000003",
-        "request_digest": "877c851886ffb0792ff8a7c7a15d0dcf0845ce2678412fca4b2dfb4d2ec27f8b",
+        "request_digest": "71fffc21a43e893d9f5b7d5d60dd50c459b5a5e5048fd4c48977aa822806c252",
         "item_id": "30000000-0000-4000-8000-000000000001",
         "purpose": "push",
         "attempt_id": "30000000-0000-4000-8000-000000000010",
         "claim_id": "30000000-0000-4000-8000-000000000011",
         "claim_expires_at": "2026-10-04T13:00:00.000Z",
         "remote_url": "https://github.com/example/result.git",
-        "repository_id": "42",
         "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
         "candidate_head": "dddddddddddddddddddddddddddddddddddddddd",
         "expected_head": null,
@@ -3530,9 +3728,15 @@
           },
           "observed_at": "2026-10-04T12:00:00.000Z",
           "expires_at": "2026-10-04T13:00:00.000Z",
-          "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+          "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b",
+          "kind": "github_installation"
         },
-        "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6"
+        "permission_proof_digest": "945497759cad3c5a073f1877486fcfb7a88a7b283d2844970937ea1f8e6423b6",
+        "provider_metadata": {
+          "github": {
+            "repository_id": "42"
+          }
+        }
       }
     },
     {
@@ -3555,7 +3759,8 @@
         },
         "observed_at": "2026-10-04T12:00:00.000Z",
         "expires_at": "2026-10-04T13:00:00.000Z",
-        "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+        "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b",
+        "kind": "github_installation"
       }
     },
     {
@@ -3597,7 +3802,6 @@
           "runner_id": "runner_id",
           "storage_id": "storage_id",
           "repository_identity": "github.com/example/result",
-          "repository_id": "42",
           "remote_url": "https://github.com/example/result.git",
           "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
           "target_branch": "main",
@@ -3731,14 +3935,15 @@
               },
               "observed_at": "2026-10-04T12:00:00.000Z",
               "expires_at": "2026-10-04T13:00:00.000Z",
-              "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+              "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b",
+              "kind": "github_installation"
             },
-            "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6"
+            "permission_proof_digest": "945497759cad3c5a073f1877486fcfb7a88a7b283d2844970937ea1f8e6423b6"
           },
           "prepared": {
             "schema_version": 1,
             "operation_id": "publication-operation",
-            "request_digest": "4122d704118258227d19bec8ae84cb79a480361c96cc4514dc07501b3dd75979",
+            "request_digest": "13206e5845c2dec570bd918d6cb434d1fefdb4d6694b3c2e96dc198cf30cb1ae",
             "status": "prepared",
             "candidate": {
               "schema_version": 1,
@@ -3772,7 +3977,7 @@
             },
             "scan_digest": "24924737deb9b51d1673ebb15ab6a958a185a21068f3f6c198f4cff692e78ab6"
           },
-          "preparation_result_digest": "5ee8e753eba3fc4b340383e379cd139a07b6bc8f226e45047f6247cbb8bf571e",
+          "preparation_result_digest": "fece69546c30bdac28cd7bfad2a63a1368a25d7ffef5baf75ac1bae29bad0ffc",
           "override_receipts": [],
           "permission_proof": {
             "schema_version": 1,
@@ -3791,11 +3996,17 @@
             },
             "observed_at": "2026-10-04T12:00:00.000Z",
             "expires_at": "2026-10-04T13:00:00.000Z",
-            "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+            "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b",
+            "kind": "github_installation"
           },
-          "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6",
+          "permission_proof_digest": "945497759cad3c5a073f1877486fcfb7a88a7b283d2844970937ea1f8e6423b6",
           "workflow_changes": true,
-          "expected_head": null
+          "expected_head": null,
+          "provider_metadata": {
+            "github": {
+              "repository_id": "42"
+            }
+          }
         },
         "dispatch": {
           "schema_version": 1,
@@ -4060,14 +4271,15 @@
             },
             "observed_at": "2026-10-04T12:00:00.000Z",
             "expires_at": "2026-10-04T13:00:00.000Z",
-            "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+            "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b",
+            "kind": "github_installation"
           },
-          "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6"
+          "permission_proof_digest": "945497759cad3c5a073f1877486fcfb7a88a7b283d2844970937ea1f8e6423b6"
         },
         "prepared": {
           "schema_version": 1,
           "operation_id": "publication-operation",
-          "request_digest": "4122d704118258227d19bec8ae84cb79a480361c96cc4514dc07501b3dd75979",
+          "request_digest": "13206e5845c2dec570bd918d6cb434d1fefdb4d6694b3c2e96dc198cf30cb1ae",
           "status": "prepared",
           "candidate": {
             "schema_version": 1,
@@ -4101,7 +4313,7 @@
           },
           "scan_digest": "24924737deb9b51d1673ebb15ab6a958a185a21068f3f6c198f4cff692e78ab6"
         },
-        "preparation_result_digest": "5ee8e753eba3fc4b340383e379cd139a07b6bc8f226e45047f6247cbb8bf571e",
+        "preparation_result_digest": "fece69546c30bdac28cd7bfad2a63a1368a25d7ffef5baf75ac1bae29bad0ffc",
         "override_receipts": [],
         "kind": "create_pr",
         "content": {
@@ -4129,11 +4341,11 @@
         "target_branch": "main",
         "preparation": {
           "schema_version": 1,
-          "operation_id": "publication-operation",
-          "scan_run_id": "publication-scan",
+          "operation_id": "30000000-0000-4000-8000-000000000005",
+          "scan_run_id": "30000000-0000-4000-8000-000000000006",
           "source": {
             "task_id": "30000000-0000-4000-8000-000000000090",
-            "operation_id": "operation_id",
+            "operation_id": "30000000-0000-4000-8000-000000000007",
             "attempt_id": "attempt_id",
             "dispatch_id": "dispatch_id",
             "node_id": "node_id",
@@ -4150,69 +4362,88 @@
             "node_activation": 1,
             "repository_identity": "github.com/example/result",
             "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-            "git_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "git_commit": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
             "git_tree": "cccccccccccccccccccccccccccccccccccccccc",
             "capture": {
               "start_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-              "node_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "node_commit": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
               "node_tree": "cccccccccccccccccccccccccccccccccccccccc"
             }
           },
-          "source_digest": "30e1c9bc5ab50c7e4a27e7d6ca8f89248310ddc3ecd9a171c201ea989417d43c",
+          "source_digest": "8798ff009e5188a228d5871cd1438c4fed29f959020239ab259c54976e5f6487",
           "effective_basis": {
             "task_id": "30000000-0000-4000-8000-000000000090",
             "specification_id": "specification_id",
             "plan_id": "plan_id",
-            "completion_operation_id": "operation_id",
+            "completion_operation_id": "30000000-0000-4000-8000-000000000007",
             "completion_manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
           },
-          "effective_basis_digest": "c84973abafaacbe8b295a3772ad208781eaa7448ae7f18e1623ee99efd0da5ba",
+          "effective_basis_digest": "ba0295ee9356fc0a6fb9d6dce8a00e97986f8fd405ae8f99c3f5c16dad8219e3",
           "construction": {
             "schema_version": 1,
-            "construction_id": "publication-construction",
-            "candidate_id": "publication-candidate",
-            "source_digest": "30e1c9bc5ab50c7e4a27e7d6ca8f89248310ddc3ecd9a171c201ea989417d43c",
+            "construction_id": "30000000-0000-4000-8000-000000000008",
+            "candidate_id": "30000000-0000-4000-8000-000000000009",
+            "source_digest": "8798ff009e5188a228d5871cd1438c4fed29f959020239ab259c54976e5f6487",
             "repository_identity": "github.com/example/result",
             "target_branch": "main",
             "parents": [
               {
-                "kind": "materialization",
-                "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "kind": "published",
+                "commit": "dddddddddddddddddddddddddddddddddddddddd",
                 "repository_identity": "github.com/example/result",
-                "observation_operation_id": "original-publication-open",
-                "workspace": {
+                "published_proof": {
                   "schema_version": 1,
-                  "workspace_id": "workspace_id",
+                  "operation_id": "30000000-0000-4000-8000-000000000003",
+                  "request_digest": "71fffc21a43e893d9f5b7d5d60dd50c459b5a5e5048fd4c48977aa822806c252",
+                  "result_digest": "f8e51ada073e72d2fc6d68299ea8e328c9c83f5c4f471a12ced71f8071f1d799",
+                  "item_id": "30000000-0000-4000-8000-000000000001",
                   "task_id": "30000000-0000-4000-8000-000000000090",
-                  "project_id": "publication-project",
                   "resource_id": "30000000-0000-4000-8000-000000000091",
                   "runner_id": "runner_id",
-                  "generation": 1,
-                  "lease_id": "lease_id",
-                  "node_id": "node_id",
-                  "node_activation": 1,
-                  "open_operation_id": "original-publication-open",
-                  "resource": {
+                  "storage_id": "storage_id",
+                  "repository_identity": "github.com/example/result",
+                  "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
+                  "candidate": {
+                    "schema_version": 1,
+                    "candidate_id": "publication-candidate",
+                    "construction_id": "publication-construction",
+                    "construction_digest": "50fc92130c6c88c809256e5d498263eab6cf00ff22e5570e5062fb98d9578d3a",
+                    "source_digest": "30e1c9bc5ab50c7e4a27e7d6ca8f89248310ddc3ecd9a171c201ea989417d43c",
+                    "head": "dddddddddddddddddddddddddddddddddddddddd",
+                    "tree": "cccccccccccccccccccccccccccccccccccccccc",
+                    "parents": [
+                      "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                    ]
+                  },
+                  "candidate_manifest_digest": "c5e090c6e5571bb2441113f043098b1d69428111df7adf9ae8efd8740ad5d913",
+                  "observation": {
+                    "schema_version": 1,
+                    "observation_id": "30000000-0000-4000-8000-000000000004",
+                    "operation_id": "30000000-0000-4000-8000-000000000003",
+                    "item_id": "30000000-0000-4000-8000-000000000001",
+                    "task_id": "30000000-0000-4000-8000-000000000090",
                     "resource_id": "30000000-0000-4000-8000-000000000091",
-                    "remote_url": "https://github.com/example/result.git",
-                    "repository_identity": "github.com/example/result"
-                  }
-                },
-                "outcome": {
-                  "workspace_id": "workspace_id",
-                  "path": "/private/worktree",
-                  "workspace_metadata": {
-                    "generation": 1,
+                    "runner_id": "runner_id",
                     "storage_id": "storage_id",
-                    "lease_id": "lease_id",
                     "repository_identity": "github.com/example/result",
-                    "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-                    "target_branch": "main",
-                    "target_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-                    "finalized_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                    "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
+                    "status": "present",
+                    "head": "dddddddddddddddddddddddddddddddddddddddd",
+                    "observed_at": "2026-10-04T12:00:00.000Z",
+                    "provider_metadata": {
+                      "github": {
+                        "repository_id": "42"
+                      }
+                    }
+                  },
+                  "observation_digest": "c8bf32602936c0a5f4ef3c22bfe08c5394fc82ecc76afc8900c857884fc8f961",
+                  "provider_metadata": {
+                    "github": {
+                      "repository_id": "42"
+                    }
                   }
                 },
-                "observation_digest": "a3f44ab13354df0b799ee9263c1f78a6d20d43f46ac4c93b4cd980f21af36083"
+                "published_proof_digest": "45f0a34c7273cad8ff80487591364170183b27921d25f7d92da9aa25785fa95b"
               }
             ],
             "author_name": "monos",
@@ -4220,7 +4451,7 @@
             "timestamp": "1791028800 +0000",
             "message": "monos Task 30000000-0000-4000-8000-000000000090 result v1"
           },
-          "construction_digest": "50fc92130c6c88c809256e5d498263eab6cf00ff22e5570e5062fb98d9578d3a",
+          "construction_digest": "77fab1ed6245156ca3af37e24907f3014528551bebe263c076d7a3268c9652bc",
           "configuration": {
             "schema_version": 1,
             "policy_version": "local_publication_v1",
@@ -4257,14 +4488,68 @@
             },
             "observed_at": "2026-10-04T12:00:00.000Z",
             "expires_at": "2026-10-04T13:00:00.000Z",
-            "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+            "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b",
+            "kind": "github_installation"
           },
-          "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6"
+          "permission_proof_digest": "945497759cad3c5a073f1877486fcfb7a88a7b283d2844970937ea1f8e6423b6",
+          "published": {
+            "schema_version": 1,
+            "operation_id": "30000000-0000-4000-8000-000000000003",
+            "request_digest": "71fffc21a43e893d9f5b7d5d60dd50c459b5a5e5048fd4c48977aa822806c252",
+            "result_digest": "f8e51ada073e72d2fc6d68299ea8e328c9c83f5c4f471a12ced71f8071f1d799",
+            "item_id": "30000000-0000-4000-8000-000000000001",
+            "task_id": "30000000-0000-4000-8000-000000000090",
+            "resource_id": "30000000-0000-4000-8000-000000000091",
+            "runner_id": "runner_id",
+            "storage_id": "storage_id",
+            "repository_identity": "github.com/example/result",
+            "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
+            "candidate": {
+              "schema_version": 1,
+              "candidate_id": "publication-candidate",
+              "construction_id": "publication-construction",
+              "construction_digest": "50fc92130c6c88c809256e5d498263eab6cf00ff22e5570e5062fb98d9578d3a",
+              "source_digest": "30e1c9bc5ab50c7e4a27e7d6ca8f89248310ddc3ecd9a171c201ea989417d43c",
+              "head": "dddddddddddddddddddddddddddddddddddddddd",
+              "tree": "cccccccccccccccccccccccccccccccccccccccc",
+              "parents": [
+                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              ]
+            },
+            "candidate_manifest_digest": "c5e090c6e5571bb2441113f043098b1d69428111df7adf9ae8efd8740ad5d913",
+            "observation": {
+              "schema_version": 1,
+              "observation_id": "30000000-0000-4000-8000-000000000004",
+              "operation_id": "30000000-0000-4000-8000-000000000003",
+              "item_id": "30000000-0000-4000-8000-000000000001",
+              "task_id": "30000000-0000-4000-8000-000000000090",
+              "resource_id": "30000000-0000-4000-8000-000000000091",
+              "runner_id": "runner_id",
+              "storage_id": "storage_id",
+              "repository_identity": "github.com/example/result",
+              "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
+              "status": "present",
+              "head": "dddddddddddddddddddddddddddddddddddddddd",
+              "observed_at": "2026-10-04T12:00:00.000Z",
+              "provider_metadata": {
+                "github": {
+                  "repository_id": "42"
+                }
+              }
+            },
+            "observation_digest": "c8bf32602936c0a5f4ef3c22bfe08c5394fc82ecc76afc8900c857884fc8f961",
+            "provider_metadata": {
+              "github": {
+                "repository_id": "42"
+              }
+            }
+          },
+          "published_digest": "45f0a34c7273cad8ff80487591364170183b27921d25f7d92da9aa25785fa95b"
         },
         "prepared": {
           "schema_version": 1,
           "operation_id": "30000000-0000-4000-8000-000000000005",
-          "request_digest": "2b2885f631485eda627f9bffbb8a54161d911c0c17e2d4831e9e3854051a1fde",
+          "request_digest": "aaadb64ff28965eba62a4d974b71db569820398cf2d46e41a381709e217354cd",
           "status": "mapped",
           "candidate": {
             "schema_version": 1,
@@ -4301,7 +4586,7 @@
             "schema_version": 1,
             "mapping_id": "30000000-0000-4000-8000-000000000005",
             "operation_id": "30000000-0000-4000-8000-000000000005",
-            "request_digest": "2b2885f631485eda627f9bffbb8a54161d911c0c17e2d4831e9e3854051a1fde",
+            "request_digest": "aaadb64ff28965eba62a4d974b71db569820398cf2d46e41a381709e217354cd",
             "item_id": "30000000-0000-4000-8000-000000000001",
             "source": {
               "task_id": "30000000-0000-4000-8000-000000000090",
@@ -4342,15 +4627,14 @@
             "published": {
               "schema_version": 1,
               "operation_id": "30000000-0000-4000-8000-000000000003",
-              "request_digest": "877c851886ffb0792ff8a7c7a15d0dcf0845ce2678412fca4b2dfb4d2ec27f8b",
-              "result_digest": "c3189ab8288d208f2794a38c53208abbf3924dc0815cab0c3b8e06266efc6214",
+              "request_digest": "71fffc21a43e893d9f5b7d5d60dd50c459b5a5e5048fd4c48977aa822806c252",
+              "result_digest": "f8e51ada073e72d2fc6d68299ea8e328c9c83f5c4f471a12ced71f8071f1d799",
               "item_id": "30000000-0000-4000-8000-000000000001",
               "task_id": "30000000-0000-4000-8000-000000000090",
               "resource_id": "30000000-0000-4000-8000-000000000091",
               "runner_id": "runner_id",
               "storage_id": "storage_id",
               "repository_identity": "github.com/example/result",
-              "repository_id": "42",
               "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
               "candidate": {
                 "schema_version": 1,
@@ -4375,23 +4659,32 @@
                 "runner_id": "runner_id",
                 "storage_id": "storage_id",
                 "repository_identity": "github.com/example/result",
-                "repository_id": "42",
                 "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
                 "status": "present",
                 "head": "dddddddddddddddddddddddddddddddddddddddd",
-                "observed_at": "2026-10-04T12:00:00.000Z"
+                "observed_at": "2026-10-04T12:00:00.000Z",
+                "provider_metadata": {
+                  "github": {
+                    "repository_id": "42"
+                  }
+                }
               },
-              "observation_digest": "3e8dac4e9b4faa2dc3078b4f76592d88ad750d2e0d9050ec4ea6135cbbd41a49"
+              "observation_digest": "c8bf32602936c0a5f4ef3c22bfe08c5394fc82ecc76afc8900c857884fc8f961",
+              "provider_metadata": {
+                "github": {
+                  "repository_id": "42"
+                }
+              }
             },
-            "published_digest": "a259e71aef657c7cd68ef3d0f23514db3ed7e5a7e727b8e617671fd3bd01f17a",
+            "published_digest": "45f0a34c7273cad8ff80487591364170183b27921d25f7d92da9aa25785fa95b",
             "candidate_manifest_digest": "c5e090c6e5571bb2441113f043098b1d69428111df7adf9ae8efd8740ad5d913",
             "reused_head": "dddddddddddddddddddddddddddddddddddddddd",
             "result_tree": "cccccccccccccccccccccccccccccccccccccccc",
             "configuration_digest": "bf0396b43c70aafee730b1b02486e309c649714f629c4bc3054211c439f9ae51"
           },
-          "mapping_digest": "b622153069725b8623af0bb30b832d3df7894506785132c8e8f660a0cf150f69"
+          "mapping_digest": "d2433205652ef5674b5ef3343773e0394f61054eb843cf8d813c1bd914091d7c"
         },
-        "preparation_result_digest": "5ee8e753eba3fc4b340383e379cd139a07b6bc8f226e45047f6247cbb8bf571e",
+        "preparation_result_digest": "1c89cbc9ade0ed3127fe4823208e281c2193f4cf73de113840b81e3dfee1a626",
         "override_receipts": [],
         "kind": "update_pr",
         "content": {
@@ -4557,14 +4850,15 @@
             },
             "observed_at": "2026-10-04T12:00:00.000Z",
             "expires_at": "2026-10-04T13:00:00.000Z",
-            "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+            "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b",
+            "kind": "github_installation"
           },
-          "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6"
+          "permission_proof_digest": "945497759cad3c5a073f1877486fcfb7a88a7b283d2844970937ea1f8e6423b6"
         },
         "prepared": {
           "schema_version": 1,
           "operation_id": "publication-operation",
-          "request_digest": "4122d704118258227d19bec8ae84cb79a480361c96cc4514dc07501b3dd75979",
+          "request_digest": "13206e5845c2dec570bd918d6cb434d1fefdb4d6694b3c2e96dc198cf30cb1ae",
           "status": "prepared",
           "candidate": {
             "schema_version": 1,
@@ -4598,7 +4892,7 @@
           },
           "scan_digest": "24924737deb9b51d1673ebb15ab6a958a185a21068f3f6c198f4cff692e78ab6"
         },
-        "preparation_result_digest": "5ee8e753eba3fc4b340383e379cd139a07b6bc8f226e45047f6247cbb8bf571e",
+        "preparation_result_digest": "fece69546c30bdac28cd7bfad2a63a1368a25d7ffef5baf75ac1bae29bad0ffc",
         "override_receipts": [],
         "kind": "close_pr",
         "review": {
@@ -4760,14 +5054,15 @@
             },
             "observed_at": "2026-10-04T12:00:00.000Z",
             "expires_at": "2026-10-04T13:00:00.000Z",
-            "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+            "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b",
+            "kind": "github_installation"
           },
-          "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6"
+          "permission_proof_digest": "945497759cad3c5a073f1877486fcfb7a88a7b283d2844970937ea1f8e6423b6"
         },
         "prepared": {
           "schema_version": 1,
           "operation_id": "publication-operation",
-          "request_digest": "4122d704118258227d19bec8ae84cb79a480361c96cc4514dc07501b3dd75979",
+          "request_digest": "13206e5845c2dec570bd918d6cb434d1fefdb4d6694b3c2e96dc198cf30cb1ae",
           "status": "prepared",
           "candidate": {
             "schema_version": 1,
@@ -4801,7 +5096,7 @@
           },
           "scan_digest": "24924737deb9b51d1673ebb15ab6a958a185a21068f3f6c198f4cff692e78ab6"
         },
-        "preparation_result_digest": "5ee8e753eba3fc4b340383e379cd139a07b6bc8f226e45047f6247cbb8bf571e",
+        "preparation_result_digest": "fece69546c30bdac28cd7bfad2a63a1368a25d7ffef5baf75ac1bae29bad0ffc",
         "override_receipts": [],
         "kind": "create_pr",
         "content": {
@@ -4967,14 +5262,15 @@
             },
             "observed_at": "2026-10-04T12:00:00.000Z",
             "expires_at": "2026-10-04T13:00:00.000Z",
-            "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+            "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b",
+            "kind": "github_installation"
           },
-          "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6"
+          "permission_proof_digest": "945497759cad3c5a073f1877486fcfb7a88a7b283d2844970937ea1f8e6423b6"
         },
         "prepared": {
           "schema_version": 1,
           "operation_id": "publication-operation",
-          "request_digest": "4122d704118258227d19bec8ae84cb79a480361c96cc4514dc07501b3dd75979",
+          "request_digest": "13206e5845c2dec570bd918d6cb434d1fefdb4d6694b3c2e96dc198cf30cb1ae",
           "status": "prepared",
           "candidate": {
             "schema_version": 1,
@@ -5008,7 +5304,7 @@
           },
           "scan_digest": "24924737deb9b51d1673ebb15ab6a958a185a21068f3f6c198f4cff692e78ab6"
         },
-        "preparation_result_digest": "5ee8e753eba3fc4b340383e379cd139a07b6bc8f226e45047f6247cbb8bf571e",
+        "preparation_result_digest": "fece69546c30bdac28cd7bfad2a63a1368a25d7ffef5baf75ac1bae29bad0ffc",
         "override_receipts": [],
         "kind": "update_pr",
         "content": {
@@ -5164,14 +5460,15 @@
             },
             "observed_at": "2026-10-04T12:00:00.000Z",
             "expires_at": "2026-10-04T13:00:00.000Z",
-            "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+            "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b",
+            "kind": "github_installation"
           },
-          "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6"
+          "permission_proof_digest": "945497759cad3c5a073f1877486fcfb7a88a7b283d2844970937ea1f8e6423b6"
         },
         "prepared": {
           "schema_version": 1,
           "operation_id": "publication-operation",
-          "request_digest": "4122d704118258227d19bec8ae84cb79a480361c96cc4514dc07501b3dd75979",
+          "request_digest": "13206e5845c2dec570bd918d6cb434d1fefdb4d6694b3c2e96dc198cf30cb1ae",
           "status": "prepared",
           "candidate": {
             "schema_version": 1,
@@ -5205,7 +5502,7 @@
           },
           "scan_digest": "24924737deb9b51d1673ebb15ab6a958a185a21068f3f6c198f4cff692e78ab6"
         },
-        "preparation_result_digest": "5ee8e753eba3fc4b340383e379cd139a07b6bc8f226e45047f6247cbb8bf571e",
+        "preparation_result_digest": "fece69546c30bdac28cd7bfad2a63a1368a25d7ffef5baf75ac1bae29bad0ffc",
         "override_receipts": [],
         "kind": "close_pr",
         "content": {
@@ -5371,18 +5668,19 @@
             },
             "observed_at": "2026-10-04T12:00:00.000Z",
             "expires_at": "2026-10-04T13:00:00.000Z",
-            "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+            "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b",
+            "kind": "github_installation"
           },
-          "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6"
+          "permission_proof_digest": "945497759cad3c5a073f1877486fcfb7a88a7b283d2844970937ea1f8e6423b6"
         },
         "prepared": {
           "schema_version": 1,
           "operation_id": "publication-operation",
-          "request_digest": "4122d704118258227d19bec8ae84cb79a480361c96cc4514dc07501b3dd75979",
+          "request_digest": "13206e5845c2dec570bd918d6cb434d1fefdb4d6694b3c2e96dc198cf30cb1ae",
           "status": "unavailable",
           "reason": "retained_unavailable"
         },
-        "preparation_result_digest": "5ee8e753eba3fc4b340383e379cd139a07b6bc8f226e45047f6247cbb8bf571e",
+        "preparation_result_digest": "fece69546c30bdac28cd7bfad2a63a1368a25d7ffef5baf75ac1bae29bad0ffc",
         "override_receipts": [],
         "kind": "create_pr",
         "content": {
@@ -5449,7 +5747,7 @@
       "value": {
         "schema_version": 1,
         "operation_id": "30000000-0000-4000-8000-000000000003",
-        "request_digest": "877c851886ffb0792ff8a7c7a15d0dcf0845ce2678412fca4b2dfb4d2ec27f8b",
+        "request_digest": "71fffc21a43e893d9f5b7d5d60dd50c459b5a5e5048fd4c48977aa822806c252",
         "item_id": "30000000-0000-4000-8000-000000000001",
         "candidate_manifest_digest": "c5e090c6e5571bb2441113f043098b1d69428111df7adf9ae8efd8740ad5d913",
         "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
@@ -5467,12 +5765,16 @@
           "runner_id": "runner_id",
           "storage_id": "storage_id",
           "repository_identity": "github.com/example/result",
-          "repository_id": "42",
           "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
           "status": "absent",
-          "observed_at": "2026-10-04T12:00:00.000Z"
+          "observed_at": "2026-10-04T12:00:00.000Z",
+          "provider_metadata": {
+            "github": {
+              "repository_id": "42"
+            }
+          }
         },
-        "observation_digest": "3e8dac4e9b4faa2dc3078b4f76592d88ad750d2e0d9050ec4ea6135cbbd41a49"
+        "observation_digest": "c8bf32602936c0a5f4ef3c22bfe08c5394fc82ecc76afc8900c857884fc8f961"
       }
     },
     {
@@ -5482,14 +5784,13 @@
       "value": {
         "schema_version": 1,
         "operation_id": "30000000-0000-4000-8000-000000000003",
-        "request_digest": "877c851886ffb0792ff8a7c7a15d0dcf0845ce2678412fca4b2dfb4d2ec27f8b",
+        "request_digest": "71fffc21a43e893d9f5b7d5d60dd50c459b5a5e5048fd4c48977aa822806c252",
         "item_id": "30000000-0000-4000-8000-000000000001",
         "purpose": "push",
         "attempt_id": "30000000-0000-4000-8000-000000000010",
         "claim_id": "30000000-0000-4000-8000-000000000011",
         "claim_expires_at": "2026-10-04T13:00:00.000Z",
         "remote_url": "https://github.com/example/result.git",
-        "repository_id": "42",
         "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
         "candidate_head": "dddddddddddddddddddddddddddddddddddddddd",
         "authentication": {
@@ -5514,9 +5815,15 @@
           },
           "observed_at": "2026-10-04T12:00:00.000Z",
           "expires_at": "2026-10-04T13:00:00.000Z",
-          "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+          "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b",
+          "kind": "github_installation"
         },
-        "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6"
+        "permission_proof_digest": "945497759cad3c5a073f1877486fcfb7a88a7b283d2844970937ea1f8e6423b6",
+        "provider_metadata": {
+          "github": {
+            "repository_id": "42"
+          }
+        }
       }
     },
     {
@@ -5532,7 +5839,6 @@
         "runner_id": "runner_id",
         "storage_id": "storage_id",
         "repository_identity": "github.com/example/result",
-        "repository_id": "42",
         "remote_url": "https://github.com/example/result.git",
         "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
         "target_branch": "main",
@@ -5666,14 +5972,15 @@
             },
             "observed_at": "2026-10-04T12:00:00.000Z",
             "expires_at": "2026-10-04T13:00:00.000Z",
-            "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+            "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b",
+            "kind": "github_installation"
           },
-          "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6"
+          "permission_proof_digest": "945497759cad3c5a073f1877486fcfb7a88a7b283d2844970937ea1f8e6423b6"
         },
         "prepared": {
           "schema_version": 1,
           "operation_id": "publication-operation",
-          "request_digest": "4122d704118258227d19bec8ae84cb79a480361c96cc4514dc07501b3dd75979",
+          "request_digest": "13206e5845c2dec570bd918d6cb434d1fefdb4d6694b3c2e96dc198cf30cb1ae",
           "status": "prepared",
           "candidate": {
             "schema_version": 1,
@@ -5707,12 +6014,17 @@
           },
           "scan_digest": "24924737deb9b51d1673ebb15ab6a958a185a21068f3f6c198f4cff692e78ab6"
         },
-        "preparation_result_digest": "5ee8e753eba3fc4b340383e379cd139a07b6bc8f226e45047f6247cbb8bf571e",
+        "preparation_result_digest": "fece69546c30bdac28cd7bfad2a63a1368a25d7ffef5baf75ac1bae29bad0ffc",
         "override_receipts": [],
         "permission_proof": null,
-        "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6",
+        "permission_proof_digest": "945497759cad3c5a073f1877486fcfb7a88a7b283d2844970937ea1f8e6423b6",
         "workflow_changes": true,
-        "expected_head": null
+        "expected_head": null,
+        "provider_metadata": {
+          "github": {
+            "repository_id": "42"
+          }
+        }
       }
     },
     {
@@ -5728,7 +6040,6 @@
         "runner_id": "runner_id",
         "storage_id": "storage_id",
         "repository_identity": "github.com/example/result",
-        "repository_id": "42",
         "remote_url": "https://github.com/example/result.git",
         "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/30000000-0000-4000-8000-000000000091",
         "target_branch": "bad\ud800",
@@ -5862,14 +6173,15 @@
             },
             "observed_at": "2026-10-04T12:00:00.000Z",
             "expires_at": "2026-10-04T13:00:00.000Z",
-            "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+            "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b",
+            "kind": "github_installation"
           },
-          "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6"
+          "permission_proof_digest": "945497759cad3c5a073f1877486fcfb7a88a7b283d2844970937ea1f8e6423b6"
         },
         "prepared": {
           "schema_version": 1,
           "operation_id": "publication-operation",
-          "request_digest": "4122d704118258227d19bec8ae84cb79a480361c96cc4514dc07501b3dd75979",
+          "request_digest": "13206e5845c2dec570bd918d6cb434d1fefdb4d6694b3c2e96dc198cf30cb1ae",
           "status": "prepared",
           "candidate": {
             "schema_version": 1,
@@ -5903,7 +6215,7 @@
           },
           "scan_digest": "24924737deb9b51d1673ebb15ab6a958a185a21068f3f6c198f4cff692e78ab6"
         },
-        "preparation_result_digest": "5ee8e753eba3fc4b340383e379cd139a07b6bc8f226e45047f6247cbb8bf571e",
+        "preparation_result_digest": "fece69546c30bdac28cd7bfad2a63a1368a25d7ffef5baf75ac1bae29bad0ffc",
         "override_receipts": [],
         "permission_proof": {
           "schema_version": 1,
@@ -5922,11 +6234,17 @@
           },
           "observed_at": "2026-10-04T12:00:00.000Z",
           "expires_at": "2026-10-04T13:00:00.000Z",
-          "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b"
+          "permission_fingerprint": "944d61f302591255e630d2a9584fa4c1c435178f42d93953c353d84004e32c8b",
+          "kind": "github_installation"
         },
-        "permission_proof_digest": "d63d6bd7d0eee7d636c6801393a4ce2efb1937873a68296b916133deeb7e6eb6",
+        "permission_proof_digest": "945497759cad3c5a073f1877486fcfb7a88a7b283d2844970937ea1f8e6423b6",
         "workflow_changes": true,
-        "expected_head": null
+        "expected_head": null,
+        "provider_metadata": {
+          "github": {
+            "repository_id": "42"
+          }
+        }
       }
     },
     {
@@ -5968,7 +6286,7 @@
         "finding_ids": [
           "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
         ],
-        "mapping_digest": "b622153069725b8623af0bb30b832d3df7894506785132c8e8f660a0cf150f69"
+        "mapping_digest": "d2433205652ef5674b5ef3343773e0394f61054eb843cf8d813c1bd914091d7c"
       }
     },
     {
@@ -5988,7 +6306,7 @@
           "finding_ids": [
             "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
           ],
-          "mapping_digest": "b622153069725b8623af0bb30b832d3df7894506785132c8e8f660a0cf150f69"
+          "mapping_digest": "d2433205652ef5674b5ef3343773e0394f61054eb843cf8d813c1bd914091d7c"
         }
       }
     },
@@ -6044,7 +6362,7 @@
         "name": "retry_remote_preparation",
         "payload": {
           "operation_id": "30000000-0000-4000-8000-000000000003",
-          "operation_digest": "877c851886ffb0792ff8a7c7a15d0dcf0845ce2678412fca4b2dfb4d2ec27f8b",
+          "operation_digest": "71fffc21a43e893d9f5b7d5d60dd50c459b5a5e5048fd4c48977aa822806c252",
           "expected_version": 1
         }
       }
@@ -6060,7 +6378,7 @@
         "name": "retry_remote_preparation",
         "payload": {
           "operation_id": "30000000-0000-4000-8000-000000000003",
-          "operation_digest": "877c851886ffb0792ff8a7c7a15d0dcf0845ce2678412fca4b2dfb4d2ec27f8b",
+          "operation_digest": "71fffc21a43e893d9f5b7d5d60dd50c459b5a5e5048fd4c48977aa822806c252",
           "expected_version": 0
         }
       }
@@ -6180,11 +6498,15 @@
         "runner_id": "runner_id",
         "storage_id": "storage_id",
         "repository_identity": "github.com/example/result",
-        "repository_id": "42",
         "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/delivery-acceptance-repo-v1",
         "status": "present",
         "head": "dddddddddddddddddddddddddddddddddddddddd",
-        "observed_at": "2026-10-04T12:00:00.000Z"
+        "observed_at": "2026-10-04T12:00:00.000Z",
+        "provider_metadata": {
+          "github": {
+            "repository_id": "42"
+          }
+        }
       }
     },
     {
@@ -6201,11 +6523,15 @@
         "runner_id": "runner_id",
         "storage_id": "storage_id",
         "repository_identity": "github.com/example/result",
-        "repository_id": "42",
         "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/Repo_A-1",
         "status": "present",
         "head": "dddddddddddddddddddddddddddddddddddddddd",
-        "observed_at": "2026-10-04T12:00:00.000Z"
+        "observed_at": "2026-10-04T12:00:00.000Z",
+        "provider_metadata": {
+          "github": {
+            "repository_id": "42"
+          }
+        }
       }
     },
     {
@@ -6222,11 +6548,15 @@
         "runner_id": "runner_id",
         "storage_id": "storage_id",
         "repository_identity": "github.com/example/result",
-        "repository_id": "42",
         "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/_",
         "status": "present",
         "head": "dddddddddddddddddddddddddddddddddddddddd",
-        "observed_at": "2026-10-04T12:00:00.000Z"
+        "observed_at": "2026-10-04T12:00:00.000Z",
+        "provider_metadata": {
+          "github": {
+            "repository_id": "42"
+          }
+        }
       }
     },
     {
@@ -6243,11 +6573,15 @@
         "runner_id": "runner_id",
         "storage_id": "storage_id",
         "repository_identity": "github.com/example/result",
-        "repository_id": "42",
         "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR",
         "status": "present",
         "head": "dddddddddddddddddddddddddddddddddddddddd",
-        "observed_at": "2026-10-04T12:00:00.000Z"
+        "observed_at": "2026-10-04T12:00:00.000Z",
+        "provider_metadata": {
+          "github": {
+            "repository_id": "42"
+          }
+        }
       }
     },
     {
@@ -6264,11 +6598,15 @@
         "runner_id": "runner_id",
         "storage_id": "storage_id",
         "repository_identity": "github.com/example/result",
-        "repository_id": "42",
         "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR",
         "status": "present",
         "head": "dddddddddddddddddddddddddddddddddddddddd",
-        "observed_at": "2026-10-04T12:00:00.000Z"
+        "observed_at": "2026-10-04T12:00:00.000Z",
+        "provider_metadata": {
+          "github": {
+            "repository_id": "42"
+          }
+        }
       }
     },
     {
@@ -6285,11 +6623,15 @@
         "runner_id": "runner_id",
         "storage_id": "storage_id",
         "repository_identity": "github.com/example/result",
-        "repository_id": "42",
         "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/",
         "status": "present",
         "head": "dddddddddddddddddddddddddddddddddddddddd",
-        "observed_at": "2026-10-04T12:00:00.000Z"
+        "observed_at": "2026-10-04T12:00:00.000Z",
+        "provider_metadata": {
+          "github": {
+            "repository_id": "42"
+          }
+        }
       }
     },
     {
@@ -6306,11 +6648,15 @@
         "runner_id": "runner_id",
         "storage_id": "storage_id",
         "repository_identity": "github.com/example/result",
-        "repository_id": "42",
         "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/../repo",
         "status": "present",
         "head": "dddddddddddddddddddddddddddddddddddddddd",
-        "observed_at": "2026-10-04T12:00:00.000Z"
+        "observed_at": "2026-10-04T12:00:00.000Z",
+        "provider_metadata": {
+          "github": {
+            "repository_id": "42"
+          }
+        }
       }
     },
     {
@@ -6327,11 +6673,15 @@
         "runner_id": "runner_id",
         "storage_id": "storage_id",
         "repository_identity": "github.com/example/result",
-        "repository_id": "42",
         "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/repo/other",
         "status": "present",
         "head": "dddddddddddddddddddddddddddddddddddddddd",
-        "observed_at": "2026-10-04T12:00:00.000Z"
+        "observed_at": "2026-10-04T12:00:00.000Z",
+        "provider_metadata": {
+          "github": {
+            "repository_id": "42"
+          }
+        }
       }
     },
     {
@@ -6348,11 +6698,15 @@
         "runner_id": "runner_id",
         "storage_id": "storage_id",
         "repository_identity": "github.com/example/result",
-        "repository_id": "42",
         "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/repo.lock",
         "status": "present",
         "head": "dddddddddddddddddddddddddddddddddddddddd",
-        "observed_at": "2026-10-04T12:00:00.000Z"
+        "observed_at": "2026-10-04T12:00:00.000Z",
+        "provider_metadata": {
+          "github": {
+            "repository_id": "42"
+          }
+        }
       }
     },
     {
@@ -6369,11 +6723,15 @@
         "runner_id": "runner_id",
         "storage_id": "storage_id",
         "repository_identity": "github.com/example/result",
-        "repository_id": "42",
         "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/repo:other",
         "status": "present",
         "head": "dddddddddddddddddddddddddddddddddddddddd",
-        "observed_at": "2026-10-04T12:00:00.000Z"
+        "observed_at": "2026-10-04T12:00:00.000Z",
+        "provider_metadata": {
+          "github": {
+            "repository_id": "42"
+          }
+        }
       }
     },
     {
@@ -6390,11 +6748,15 @@
         "runner_id": "runner_id",
         "storage_id": "storage_id",
         "repository_identity": "github.com/example/result",
-        "repository_id": "42",
         "delivery_ref": "refs/heads/monos/task/30000000-0000-4000-8000-000000000090/repo\n",
         "status": "present",
         "head": "dddddddddddddddddddddddddddddddddddddddd",
-        "observed_at": "2026-10-04T12:00:00.000Z"
+        "observed_at": "2026-10-04T12:00:00.000Z",
+        "provider_metadata": {
+          "github": {
+            "repository_id": "42"
+          }
+        }
       }
     },
     {
@@ -6411,11 +6773,15 @@
         "runner_id": "runner_id",
         "storage_id": "storage_id",
         "repository_identity": "github.com/example/result",
-        "repository_id": "42",
         "delivery_ref": "refs/heads/monos/task/task-name/repo",
         "status": "present",
         "head": "dddddddddddddddddddddddddddddddddddddddd",
-        "observed_at": "2026-10-04T12:00:00.000Z"
+        "observed_at": "2026-10-04T12:00:00.000Z",
+        "provider_metadata": {
+          "github": {
+            "repository_id": "42"
+          }
+        }
       }
     },
     {
@@ -6432,11 +6798,15 @@
         "runner_id": "runner_id",
         "storage_id": "storage_id",
         "repository_identity": "github.com/example/result",
-        "repository_id": "42",
         "delivery_ref": "refs/tags/monos/task/30000000-0000-4000-8000-000000000090/repo",
         "status": "present",
         "head": "dddddddddddddddddddddddddddddddddddddddd",
-        "observed_at": "2026-10-04T12:00:00.000Z"
+        "observed_at": "2026-10-04T12:00:00.000Z",
+        "provider_metadata": {
+          "github": {
+            "repository_id": "42"
+          }
+        }
       }
     }
   ]

@@ -1,4 +1,4 @@
-import type { PublicationCandidatePage, PublicationCandidateQuery, PublicationFindingPage, PublicationFindingsQuery, PublicationRecord, PublicationPublishedProof } from '../../../../packages/protocol/generated/types.ts';
+import type { PublicationCandidatePage, PublicationCandidateQuery, PublicationFindingPage, PublicationFindingsQuery, PublicationRecord, PublicationPublishedProof, RepositoryProviderMetadata } from '../../../../packages/protocol/generated/types.ts';
 import { validate } from '../../../../packages/protocol/src/validation.ts';
 import { APIError } from './api.ts';
 import { taskRead } from './task-api.ts';
@@ -14,12 +14,13 @@ export async function publicationDigest(value: unknown): Promise<string> {
 }
 function mismatch(): never { throw new APIError('invalid_response', 'Publication evidence did not match the selected result.'); }
 
-type Evidence = Pick<PublicationRecord, 'source' | 'source_digest' | 'effective_basis' | 'effective_basis_digest' | 'candidate' | 'candidate_manifest_digest' | 'mapping' | 'mapping_digest'>;
+type Evidence = Pick<PublicationRecord, 'source' | 'source_digest' | 'effective_basis' | 'effective_basis_digest' | 'candidate' | 'candidate_manifest_digest' | 'mapping' | 'mapping_digest'> & { provider_metadata?: RepositoryProviderMetadata };
 export async function publicationProof(proof: PublicationPublishedProof, digest: string, evidence: Evidence): Promise<void> {
   const source = evidence.source, observation = proof.observation;
   if (await publicationDigest(proof) !== digest || await publicationDigest(proof.candidate) !== proof.candidate_manifest_digest || await publicationDigest(observation) !== proof.observation_digest) mismatch();
   for (const key of ['task_id', 'resource_id', 'runner_id', 'storage_id', 'repository_identity'] as const) if (proof[key] !== source[key] || observation[key] !== proof[key]) mismatch();
-  for (const key of ['item_id', 'operation_id', 'repository_id', 'delivery_ref'] as const) if (observation[key] !== proof[key]) mismatch();
+  for (const key of ['item_id', 'operation_id', 'delivery_ref'] as const) if (observation[key] !== proof[key]) mismatch();
+  if (evidence.provider_metadata !== undefined && proof.provider_metadata.github?.repository_id !== evidence.provider_metadata.github?.repository_id || observation.provider_metadata.github?.repository_id !== proof.provider_metadata.github?.repository_id) mismatch();
   if (observation.status !== 'present' || observation.head !== proof.candidate.head) mismatch();
 }
 

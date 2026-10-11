@@ -1,7 +1,7 @@
 import type { Transaction } from '../../../packages/db/src/index.ts';
 import { canonicalJSON, validate } from '../../../packages/protocol/src/index.ts';
 import type { DeliveryAcceptanceManifest, DeliveryRepository, PublicationPrepareRequest, PublicationResult, PublicationOverrideProof } from '../../../packages/protocol/src/index.ts';
-import { publicationConfiguration, publicationDigest as hash, permissionConfigurationFingerprint } from './publication-policy.ts';
+import { publicationConfiguration, publicationDigest as hash, publicationPermissionCurrent } from './publication-policy.ts';
 import { effectiveResult } from './publication-candidates.ts';
 import { knownPublicExposureCount } from './publication-candidate-reads.ts';
 import { actualOverrideProofs } from './remote-preparation-state.ts';
@@ -31,15 +31,15 @@ export async function frozenDeliveryRepository(
   const manifest = validate<DeliveryAcceptanceManifest>('DeliveryAcceptanceManifest', batch.manifest);
   if (manifest.task_id !== item.task_id || hash(manifest) !== batch.content_digest || task.specification_id !== manifest.basis.specification_id || task.plan_id !== manifest.basis.plan_id || Number(task.accepted_delivery_input_cutoff) !== Number(batch.input_cutoff)) throw new RemoteAdmissionError('source_changed');
   const repository = manifest.repositories.find(r => r.resource_id === item.resource_id);
-  if (!repository || repository.outcome !== 'modified' || repository.repository_identity !== item.repository_identity || repository.provider_metadata.github?.repository_id !== item.repository_id || repository.preparation_request_digest !== hash(request) || !same(repository.preparation_request, request) || result && (repository.preparation_result_digest !== hash(result) || !same(repository.preparation_result, result))) throw new RemoteAdmissionError('identity_mismatch');
+  if (!repository || repository.outcome !== 'modified' || repository.repository_identity !== item.repository_identity || (repository.provider_metadata.github?.repository_id ?? null) !== item.repository_id || repository.preparation_request_digest !== hash(request) || !same(repository.preparation_request, request) || result && (repository.preparation_result_digest !== hash(result) || !same(repository.preparation_result, result))) throw new RemoteAdmissionError('identity_mismatch');
   const member = (await tx.query<{ repository: DeliveryRepository; repository_digest: string }>('SELECT repository,repository_digest FROM owner_delivery_batch_items WHERE batch_id=$1 AND item_id=$2 AND resource_id=$3', [batch.id, repository.item_id, item.resource_id])).rows[0];
   if (!member || !same(member.repository, repository) || member.repository_digest !== hash(repository)) throw new RemoteAdmissionError('identity_mismatch');
   const resource = (await tx.query<{ repository_identity: string; remote_url: string; active: boolean; settings: { provider_repo_id?: string; remote_preparation?: string; merge_method?: string } }>('SELECT * FROM project_resources WHERE id=$1', [item.resource_id])).rows[0];
-  if (!resource?.active || resource.repository_identity !== item.repository_identity || resource.settings.provider_repo_id !== item.repository_id || (resource.settings.remote_preparation ?? 'automatic') !== repository.remote_preparation || resource.settings.merge_method !== repository.merge_method) throw new RemoteAdmissionError('configuration_changed');
+  if (!resource?.active || resource.repository_identity !== item.repository_identity || (resource.settings.provider_repo_id ?? null) !== item.repository_id || (resource.settings.remote_preparation ?? 'automatic') !== repository.remote_preparation || repository.delivery_kind === 'github_pr' && resource.settings.merge_method !== repository.merge_method) throw new RemoteAdmissionError('configuration_changed');
   const destination=(await tx.query<{remote_url:string}>('SELECT remote_url FROM remote_preparation_items WHERE item_id=$1 AND task_id=$2',[repository.item_id,item.task_id])).rows[0];
   if(!destination||resource.remote_url!==destination.remote_url)throw new RemoteAdmissionError('configuration_changed');
   if (!(await effectiveResult(tx, request)).current) throw new RemoteAdmissionError('source_changed');
-  if (hash(await publicationConfiguration(tx, item.resource_id)) !== request.configuration_digest || !repository.permission_proof || repository.permission_proof.configuration_fingerprint !== await permissionConfigurationFingerprint(tx, item.resource_id)) throw new RemoteAdmissionError('configuration_changed');
+  if (hash(await publicationConfiguration(tx, item.resource_id)) !== request.configuration_digest || !repository.permission_proof || !await publicationPermissionCurrent(tx, item.resource_id, repository.permission_proof, repository.scan?.workflow_changes)) throw new RemoteAdmissionError('configuration_changed');
   const local = (await tx.query<{ request_digest: string; result_digest: string; state: string }>('SELECT request_digest,result_digest,state FROM delivery_operations WHERE id=$1 AND task_id=$2 AND resource_id=$3', [request.operation_id, item.task_id, item.resource_id])).rows[0];
   if (!local || local.state !== 'terminal' || local.request_digest !== repository.preparation_request_digest || local.result_digest !== repository.preparation_result_digest) throw new RemoteAdmissionError('source_changed');
   if (repository.scan?.status !== 'complete' || typeof repository.scan.workflow_changes !== 'boolean') throw new RemoteAdmissionError('scan_incomplete');

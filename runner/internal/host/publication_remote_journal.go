@@ -27,7 +27,7 @@ func physicalPublicationScanMatches(ctx context.Context, store string, r protoco
 		return false
 	}
 	c := r.Preparation.Configuration
-	l := publicationLimits{int(c.MaxCommits), int(c.MaxPaths), int(c.MaxVersions), int(c.MaxFindings), int(c.MaxEvidenceBytes), c.MaxBlobBytes, c.MaxAggregateBytes, c.LocalBlobLimit, c.ProviderBlobLimit}
+	l := publicationLimits{int(c.MaxCommits), int(c.MaxPaths), int(c.MaxVersions), int(c.MaxFindings), int(c.MaxEvidenceBytes), c.MaxBlobBytes, c.MaxAggregateBytes, c.LocalBlobLimit, publicationProviderLimit(c.ProviderBlobLimit)}
 	scan := scanPublication(ctx, store, r.Prepared.Candidate.Head, r.Prepared.Candidate.Parents, string(c.WorkflowWrite), l)
 	if !scan.Complete || scan.WorkflowChanges != r.WorkflowChanges {
 		return false
@@ -68,7 +68,7 @@ func publicationFindingsAuthorized(r protocol.PublicationPushRequest, findings [
 
 func verifyPublicationRemoteResult(r protocol.PublicationPushRequest, result protocol.PublicationPushResult) error {
 	o := result.Observation
-	if result.OperationID != r.OperationID || result.RequestDigest != publicationDigest(r) || result.ItemID != r.ItemID || result.CandidateHead != r.Prepared.Candidate.Head || result.CandidateManifestDigest != *r.Prepared.CandidateManifestDigest || result.DeliveryRef != r.DeliveryRef || !result.WorkerAbsent || result.ObservationDigest != publicationDigest(o) || o.OperationID != r.OperationID || o.ItemID != r.ItemID || o.TaskID != r.TaskID || o.ResourceID != r.ResourceID || o.RunnerID != r.RunnerID || o.StorageID != r.StorageID || o.RepositoryIdentity != r.RepositoryIdentity || o.RepositoryID != r.RepositoryID || o.DeliveryRef != r.DeliveryRef || result.Status == "published" && (o.Head == nil || *o.Head != result.CandidateHead) {
+	if result.OperationID != r.OperationID || result.RequestDigest != publicationDigest(r) || result.ItemID != r.ItemID || result.CandidateHead != r.Prepared.Candidate.Head || result.CandidateManifestDigest != *r.Prepared.CandidateManifestDigest || result.DeliveryRef != r.DeliveryRef || !result.WorkerAbsent || result.ObservationDigest != publicationDigest(o) || o.OperationID != r.OperationID || o.ItemID != r.ItemID || o.TaskID != r.TaskID || o.ResourceID != r.ResourceID || o.RunnerID != r.RunnerID || o.StorageID != r.StorageID || o.RepositoryIdentity != r.RepositoryIdentity || !wire.SameRepositoryProvider(&o.ProviderMetadata, &r.ProviderMetadata) || o.DeliveryRef != r.DeliveryRef || result.Status == "published" && (o.Head == nil || *o.Head != result.CandidateHead) {
 		return errors.New("publication remote result mismatch")
 	}
 	return nil

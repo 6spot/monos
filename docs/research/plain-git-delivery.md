@@ -1,10 +1,10 @@
 # Plain Git HTTPS and mixed-provider delivery
 
-Status: implementation proposal, based on the current multi-repository completion
-and GitHub delivery implementation. This research changes no production code and
-performs no remote Git/provider effects. Native acceptance remains deferred.
+Status: implemented after `bac64fa`, with local integration verification recorded below.
+This document retains the implementation decisions and boundaries. Native
+acceptance and live remote effects remain deferred.
 
-The next slice should support an ordinary HTTPS Git resource end to end: anonymous
+The implemented slice supports an ordinary HTTPS Git resource end to end: anonymous
 or service-credentialed read, managed workspace and Planner inspection, local
 candidate and scan, explicit delivery-branch push, and exact-version Owner
 acceptance with verified branch publication. The same accepted batch can contain
@@ -365,7 +365,7 @@ once before backend/Runner/UI implementations diverge.
 | `RemotePreparationProviderRequest`, `RemotePreparationReview` | Stay GitHub-specific; require concrete GitHub adapter narrowing before creation or API calls |
 | New `PublicationRefReadRequest/Response`, `Frame`, Ready | Dedicated correlated read frames/capability; response echoes full request and worker-absence observation |
 | `DeliveryRepository` | Modified-item `delivery_kind` discriminates common data plus PR-only fields; plain requires no fake PR or GitHub permissions |
-| `DeliveryItemProgress` | Add `delivery_kind`, `checks:not_applicable`, and `finalization_kind:'github_merge'|'git_branch'` for finalized items; plain never reports `merging`/passing checks; no fake merge operation ID |
+| `DeliveryItemProgress` | Add `delivery_kind`, `checks:not_applicable`, and `finality_kind:'github_merge'|'git_branch'` for finalized items; plain never reports `merging`/passing checks; no fake merge operation ID |
 | Remote/preparation read projections | Generic metadata, published-ref status and kind-aware capabilities/errors; no fabricated PR URL |
 
 Update shared TS fixtures, Go generated consumers and Web validators together.
@@ -373,7 +373,8 @@ Use a finite helper for exact HTTPS validation in TS/Go; do not rely only on a
 broad URL regex. Review all `repository_id` equality checks by ownership: keep
 GitHub checks strict while generic proof comparisons use exact provider metadata.
 
-Persistence changes belong in one fresh-development migration after 32:
+Persistence changes are implemented in migration 33 (credentials) and migration
+34 (plain and mixed delivery):
 
 - Add the resource credential table and safe configuration receipt linkage.
 - Generalize `publication_permission_observations` authority validation by proof
@@ -455,3 +456,38 @@ Reuse the current multi-repository GitHub and result-read evidence where inputs
 remain unchanged; integration reruns only invalidated checks. Native permissions,
 installed CLI behavior and real remote-provider behavior remain separate evidence
 boundaries, not prerequisites for implementing this functional slice.
+
+
+## 11. Implemented verification
+
+- Configuration: resource-scoped AES-GCM credential storage, safe immutable receipt,
+  exact endpoint validation, same-scope rotation, clear and cross-Project isolation.
+  Configuration PG suites passed 20 cases; actual workspace/inspection access
+  services passed five more, with a subsequent pinned-default regression rerun.
+- Delivery: plain automatic/deferred and both mixed resource orders; original
+  uncertain push recovery, all-item certificates, distinct fresh final observation,
+  partial success, unchanged remainder Retry and Cancel. Focused suites passed
+  25 plain/remote cases, 22 Owner/worker/review cases and 19 publication/preparation
+  cases. SQL-only negatives plus existing multi-GitHub passed 16 cases.
+- Runner: real local Git plus a controlled TLS Git endpoint covers public/Basic
+  read, exact endpoint, trusted CA, denied credentials, redirects, controlled push,
+  ref read and credential nonpersistence. Focused Host race passed, with later
+  bounded cache-output and daemon anonymous-scan regression checks also passing.
+- Shared wire: 681 protocol and Owner API tests passed, including 82 new plain-Git
+  fixtures and the final transport-bound regressions. Repository/inspection access
+  retains a 16 KiB limit; pushes reserve 32 KiB within the 512 KiB publication
+  budget, including Go JSON escape expansion and nested ref-read echoes. The
+  maximum tested response frame is 508,895 bytes. Go wire race, generation drift,
+  full Go consumer compilation and vet passed.
+- Web: built SPA uses actual protected service/PostgreSQL; synthetic provider and
+  ref-peer replies exercise plain acceptance, mixed partial/retry, both finality
+  kinds and truthful history. Credential save/rotation/clear/logout passed through
+  actual configuration commands, with no token in safe responses or browser storage.
+- Evidence: [desktop/mobile captures](evidence/plain-git-ui-v1/) record exact
+  source/build hashes. Only provider/Git observations named synthetic are used;
+  no live repository push, SSH, installed Agent CLI or Linux host acceptance was run.
+
+Final integrated verification passed 860 unit tests, typecheck, lint and build.
+PostgreSQL results and the scoped reruns are recorded with the evidence manifest. Ordinary
+HTTPS and mixed delivery implement the functional scope; generic SSH transport
+and deferred A06/A30 native acceptance are not claimed by this change.

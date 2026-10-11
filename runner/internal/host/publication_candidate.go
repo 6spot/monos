@@ -28,7 +28,7 @@ func PublicationPrepareWithAccess(ctx context.Context, r protocol.PublicationPre
 	if r.Published != nil && VerifyPublicationPublished(ctx, r, access) != nil {
 		return PublicationFailure(r, "reconciliation_required", "unverified_parent"), nil
 	}
-	if r.Configuration.WorkflowWrite != "unknown" && VerifyRetainedPublicationPermission(r) != nil {
+	if (r.Configuration.WorkflowWrite == "allowed" || r.Configuration.WorkflowWrite == "denied" || r.PermissionProof != nil) && VerifyRetainedPublicationPermission(r) != nil {
 		return PublicationFailure(r, "reconciliation_required", "identity_mismatch"), nil
 	}
 	dir, status := trustedResultExport(r.Source)
@@ -92,7 +92,7 @@ func ValidatePublicationRequest(r protocol.PublicationPrepareRequest) error {
 		}
 		seen[p.Commit] = true
 		if p.Kind == "published" {
-			if r.Published == nil || p.PublishedProof == nil || p.PublishedProofDigest == nil || publicationDigest(*p.PublishedProof) != *p.PublishedProofDigest || publicationDigest(*r.Published) != *p.PublishedProofDigest || p.Commit != p.PublishedProof.Candidate.Head || !publicationProofScope(*p.PublishedProof, s) || r.PermissionProof != nil && r.PermissionProof.RepositoryID != p.PublishedProof.RepositoryID {
+			if r.Published == nil || p.PublishedProof == nil || p.PublishedProofDigest == nil || publicationDigest(*p.PublishedProof) != *p.PublishedProofDigest || publicationDigest(*r.Published) != *p.PublishedProofDigest || p.Commit != p.PublishedProof.Candidate.Head || !publicationProofScope(*p.PublishedProof, s) || r.PermissionProof != nil && !publicationPermissionProvider(*r.PermissionProof, &p.PublishedProof.ProviderMetadata) {
 				return errors.New("unverified publication parent")
 			}
 			continue
@@ -101,7 +101,7 @@ func ValidatePublicationRequest(r protocol.PublicationPrepareRequest) error {
 			return errors.New("unverified publication parent")
 		}
 		m := p.Outcome.WorkspaceMetadata
-		if r.PermissionProof != nil && (m == nil || m.ProviderMetadata == nil || m.ProviderMetadata.Github == nil || m.ProviderMetadata.Github.RepositoryID != r.PermissionProof.RepositoryID) {
+		if r.PermissionProof != nil && (m == nil || !publicationPermissionProvider(*r.PermissionProof, m.ProviderMetadata) || r.PermissionProof.Kind == "git_https_configuration" && !publicationPermissionEndpoint(*r.PermissionProof, p.Workspace.Resource.RemoteURL, *m.ProviderMetadata)) {
 			return errors.New("publication permission repository mismatch")
 		}
 		if m == nil || p.Outcome.WorkspaceID == nil || *p.Outcome.WorkspaceID != s.WorkspaceID || m.Generation != p.Workspace.Generation || m.LeaseID != p.Workspace.LeaseID || m.RepositoryIdentity != s.RepositoryIdentity {
@@ -163,12 +163,13 @@ func verifyPublicationPinAt(ctx context.Context, p protocol.PublicationParent, s
 		return errors.New("unverified publication parent")
 	}
 	var pin struct {
-		Digest       string                     `json:"digest"`
-		BaseRef      string                     `json:"base_ref"`
-		TargetBranch string                     `json:"target_branch"`
-		RepositoryID string                     `json:"github_repository_id"`
-		Complete     bool                       `json:"complete"`
-		Metadata     protocol.WorkspaceMetadata `json:"metadata"`
+		Digest           string                              `json:"digest"`
+		BaseRef          string                              `json:"base_ref"`
+		TargetBranch     string                              `json:"target_branch"`
+		ProviderMetadata protocol.RepositoryProviderMetadata `json:"provider_metadata"`
+		RemoteURL        string                              `json:"remote_url"`
+		Complete         bool                                `json:"complete"`
+		Metadata         protocol.WorkspaceMetadata          `json:"metadata"`
 	}
 	if json.Unmarshal(raw, &pin) != nil {
 		return errors.New("unverified publication parent")
@@ -178,10 +179,10 @@ func verifyPublicationPinAt(ctx context.Context, p protocol.PublicationParent, s
 	if m == nil {
 		return errors.New("unverified publication parent")
 	}
-	if e != nil || !pin.Complete || pin.Digest != wd || pin.BaseRef == "" || pin.TargetBranch != target || pin.Metadata.FinalizedCommit != m.FinalizedCommit || pin.Metadata.Checkpoint != nil || m.Checkpoint != nil || pin.Metadata.BaseCommit != m.BaseCommit || pin.Metadata.TargetCommit != m.TargetCommit || pin.Metadata.TargetBranch != target || pin.Metadata.Generation != m.Generation || pin.Metadata.LeaseID != m.LeaseID || pin.Metadata.RepositoryIdentity != s.RepositoryIdentity || m.ProviderMetadata == nil || m.ProviderMetadata.Github == nil || pin.RepositoryID != m.ProviderMetadata.Github.RepositoryID || pin.Metadata.ProviderMetadata == nil || pin.Metadata.ProviderMetadata.Github == nil || pin.Metadata.ProviderMetadata.Github.RepositoryID != pin.RepositoryID {
+	if e != nil || !pin.Complete || pin.Digest != wd || pin.BaseRef == "" || pin.TargetBranch != target || pin.Metadata.FinalizedCommit != m.FinalizedCommit || pin.Metadata.Checkpoint != nil || m.Checkpoint != nil || pin.Metadata.BaseCommit != m.BaseCommit || pin.Metadata.TargetCommit != m.TargetCommit || pin.Metadata.TargetBranch != target || pin.Metadata.Generation != m.Generation || pin.Metadata.LeaseID != m.LeaseID || pin.Metadata.RepositoryIdentity != s.RepositoryIdentity || m.ProviderMetadata == nil || pin.Metadata.ProviderMetadata == nil || !wire.SameRepositoryProvider(&pin.ProviderMetadata, m.ProviderMetadata) || !wire.SameRepositoryProvider(pin.Metadata.ProviderMetadata, &pin.ProviderMetadata) {
 		return errors.New("unverified publication parent")
 	}
-	if p.Workspace.Resource.ProviderMetadata == nil || p.Workspace.Resource.ProviderMetadata.Github == nil || p.Workspace.Resource.ProviderMetadata.Github.RepositoryID != pin.RepositoryID {
+	if wire.ValidateRepositoryEndpoint(p.Workspace.Resource, pin.RemoteURL, pin.ProviderMetadata) != nil {
 		return errors.New("unverified publication parent")
 	}
 	if resultParents(cache, uid) != nil || serviceDirectory(cache, false) != nil || publicationGitStorage(ctx, cache) != nil {
@@ -374,7 +375,7 @@ func preparePublicationStoredAt(ctx context.Context, r protocol.PublicationPrepa
 		}
 	}
 	config := r.Configuration
-	limits := publicationLimits{int(config.MaxCommits), int(config.MaxPaths), int(config.MaxVersions), int(config.MaxFindings), int(config.MaxEvidenceBytes), config.MaxBlobBytes, config.MaxAggregateBytes, config.LocalBlobLimit, config.ProviderBlobLimit}
+	limits := publicationLimits{int(config.MaxCommits), int(config.MaxPaths), int(config.MaxVersions), int(config.MaxFindings), int(config.MaxEvidenceBytes), config.MaxBlobBytes, config.MaxAggregateBytes, config.LocalBlobLimit, publicationProviderLimit(config.ProviderBlobLimit)}
 	scan := scanPublication(ctx, dir, head, parents, string(config.WorkflowWrite), limits)
 	// External cancellation leaves an unfinished intent. The independently
 	// bounded processing deadline freezes an incomplete scan over this candidate.

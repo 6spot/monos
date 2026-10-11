@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -24,6 +25,10 @@ func gitEnv(dir string, extra []string, args ...string) (string, error) {
 	return gitScoped(dir, scopes, extra, args...)
 }
 func gitScoped(dir string, additional, extra []string, args ...string) (string, error) {
+	return gitScopedOutputLimit(dir, additional, extra, 0, args...)
+}
+
+func gitScopedOutputLimit(dir string, additional, extra []string, limit int, args ...string) (string, error) {
 	// Git 2.39's local clone transport removes GIT_CONFIG_PARAMETERS before
 	// upload-pack, so argv -c alone does not authorize cross-account sources.
 	// A private per-command protected config survives that subprocess boundary;
@@ -45,6 +50,14 @@ func gitScoped(dir string, additional, extra []string, args ...string) (string, 
 	cmd.Dir = dir
 	cmd.Env = []string{"PATH=/usr/bin:/bin", "HOME=/home/me", "LANG=C.UTF-8", "GIT_CONFIG_NOSYSTEM=1", "GIT_CONFIG_GLOBAL=" + config, "GIT_TERMINAL_PROMPT=0", "GIT_AUTHOR_NAME=monos probe", "GIT_AUTHOR_EMAIL=probe@monos.invalid", "GIT_COMMITTER_NAME=monos probe", "GIT_COMMITTER_EMAIL=probe@monos.invalid"}
 	cmd.Env = append(cmd.Env, extra...)
+	if limit > 0 {
+		output := &boundedGitOutput{remaining: limit}
+		cmd.Stdout, cmd.Stderr = output, io.Discard
+		if err := cmd.Run(); err != nil || output.exceeded {
+			return "", fmt.Errorf("bounded repository Git operation failed")
+		}
+		return strings.TrimSpace(output.buffer.String()), nil
+	}
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 	output, err := cmd.Output()
@@ -52,6 +65,21 @@ func gitScoped(dir string, additional, extra []string, args ...string) (string, 
 		return "", fmt.Errorf("git operation failed: %s: %w", strings.TrimSpace(stderr.String()), err)
 	}
 	return strings.TrimSpace(string(output)), nil
+}
+
+type boundedGitOutput struct {
+	buffer    bytes.Buffer
+	remaining int
+	exceeded  bool
+}
+
+func (b *boundedGitOutput) Write(raw []byte) (int, error) {
+	if len(raw) > b.remaining {
+		b.exceeded = true
+		return 0, fmt.Errorf("repository Git output limit")
+	}
+	b.remaining -= len(raw)
+	return b.buffer.Write(raw)
 }
 
 func scopedGitConfig(scopes []string) (string, error) {

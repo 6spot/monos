@@ -8,7 +8,7 @@ import type { DeliveryBatch, OwnerDeliveryStatus } from '../../../packages/proto
 const base = 'http://127.0.0.1:18556';
 const run = new Date().toISOString().replaceAll(/[^0-9]/g,'');
 interface Scenario { task: string; second: string; schema: string }
-interface Observed { batch: {id:string;content_digest:string;input_cutoff:string;status:string}[]; input:{sequence:string;accepted_delivery_operation_id:string}[];receipts:{request_id:string;envelope:{name:string};response:{operation_id?:string}}[];provider_calls:number }
+interface Observed { batch: {id:string;content_digest:string;input_cutoff:string;status:string}[]; input:{sequence:string;accepted_delivery_operation_id:string}[];receipts:{request_id:string;envelope:{name:string};response:{operation_id?:string}}[];provider_calls:number;task_state:string;finalizations:{batch_id:string;item_id:string;kind:string;final_commit:string;digest:string}[];certificates:{item_id:string}[];remote_operations:{id:string;kind:string}[];provider_mutations:{method:string;resource:string}[];ref_reads:{request_id:string;operation_id:string;resource_id:string}[] }
 async function control<T>(page: Page, path: string, data: object = {}): Promise<T> {
   const response = await page.request.post(path, { data, headers: { Origin: base } });
   expect(response.ok()).toBe(true); return response.json();
@@ -21,7 +21,7 @@ async function read<T>(page: Page, path: string): Promise<T> {
     return response.json();
   }, path);
 }
-async function scenario(page: Page, mode: 'repository_free'|'modified'|'no_change'|'multi_deferred') {
+async function scenario(page: Page, mode: 'repository_free'|'modified'|'no_change'|'multi_deferred'|'plain'|'mixed_deferred') {
   const value = await control<Scenario>(page, '/__test__/owner-delivery-scenario', { mode });
   await page.goto(`/#task?task_id=${value.task}&section=overview`);
   await expect(page.getByRole('heading',{name:'Acceptance and delivery',exact:true})).toBeVisible();
@@ -39,13 +39,13 @@ async function confirm(page: Page) {
   await expect(page.getByRole('dialog')).toContainText('Exact Owner confirmation recorded.');
 }
 async function capture(page: Page, info: TestInfo, name: string, state: string, dialog = false) {
-  const root = resolve('../..'), dir = resolve(root,`docs/research/evidence/multi-repository-ui-v1/owner-delivery-${run}`);
+  const root = resolve('../..'), dir = resolve(root,`docs/research/evidence/plain-git-ui-v1/owner-delivery-${run}`);
   await mkdir(dir,{recursive:true});
-  const sourcePaths = [...execFileSync('rg',['--files','apps/web/src','packages/protocol/src','packages/protocol/schemas','packages/protocol/generated'],{cwd:root,encoding:'utf8'}).trim().split('\n'),'apps/web/test/owner-delivery.e2e.ts','apps/web/test/owner-delivery-server.ts','apps/web/owner-delivery.playwright.config.ts'].sort();
+  const sourcePaths = [...execFileSync('rg',['--files','apps/web/src','apps/server/src','apps/server/test/fixtures','packages/db/migrations','packages/protocol/src','packages/protocol/schemas','packages/protocol/generated'],{cwd:root,encoding:'utf8'}).trim().split('\n'),'apps/web/test/owner-delivery.e2e.ts','apps/web/test/owner-delivery-server.ts','apps/web/owner-delivery.playwright.config.ts'].sort();
   const source = await Promise.all(sourcePaths.map(async path=>({path,sha256:createHash('sha256').update(await readFile(resolve(root,path))).digest('hex')})));
   const assets = await readdir(resolve(root,'apps/web/dist/assets'));
   const bundle = await Promise.all(assets.sort().map(async path=>({path,sha256:createHash('sha256').update(await readFile(resolve(root,'apps/web/dist/assets',path))).digest('hex')})));
-  const metadata = { head:execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim(),dirty_candidate:true,source,bundle,route:page.url(),state,test:info.title,evidence:'Current built SPA; real isolated PostgreSQL, protected Owner routes through createApp injection, actual prepare/confirm/accept/Retry/Cancel and conversation receipts. Git/process and provider progress are explicitly synthetic. No native Runtime or live provider claim.',views:[] as unknown[] };
+  const metadata = { head:execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim(),dirty_candidate:true,source,bundle,route:page.url(),state,test:info.title,evidence:'Current built SPA; real isolated PostgreSQL, protected Owner routes through createApp injection, actual prepare/confirm/accept/Retry/Cancel and conversation receipts. Git/process, GitHub responses and fresh Runner ref peer responses are explicitly synthetic; workers, certificates and finalization receipts use real backend code. No native Runtime or live provider claim.',views:[] as unknown[] };
   for(const viewport of [{width:1440,height:1000,label:'desktop'},{width:390,height:844,label:'mobile'}]){
     await page.setViewportSize(viewport);await page.evaluate(()=>document.fonts.ready);
     if(!dialog)await page.getByRole('article',{name:'Accepted delivery batch',exact:true}).scrollIntoViewIfNeeded();
@@ -54,7 +54,7 @@ async function capture(page: Page, info: TestInfo, name: string, state: string, 
       await action.scrollIntoViewIfNeeded();await expect(action).toBeInViewport();
     }
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`${name} page overflow`).toBe(true);
-    const body=await page.locator('body').innerText();expect(body).not.toContain('ephemeral-owner-delivery-test-grant');
+    const body=await page.locator('body').innerText();for(const secret of ['ephemeral-owner-delivery-test-grant','synthetic-plain-git-token','synthetic-multi-delivery-grant'])expect(body).not.toContain(secret);
     const image=await page.screenshot(),file=`${name}-${viewport.label}.png`;
     await writeFile(resolve(dir,file),image,{flag:'wx'});await info.attach(file,{body:image,contentType:'image/png'});
     metadata.views.push({viewport,file,sha256:createHash('sha256').update(image).digest('hex'),body});
@@ -149,6 +149,73 @@ test('deferred multi-repository acceptance retains partial success and retries o
   expect(completed.items.find(item => item.item_id === delivered.item_id)).toEqual(delivered);
   expect(completed.manifest).toEqual(partial.manifest);
   await capture(page, info, 'multi-repository-completed', 'Actual remaining-item Retry completes the frozen two-repository batch; first finalization is unchanged. Remote provider responses are synthetic.');
+});
+
+test('plain automatic publication stays in review until exact acceptance and distinct fresh branch verification',async({page},info)=>{
+  const f=await scenario(page,'plain');
+  await control(page,'/__test__/owner-delivery-git-progress',{action:'prepare'});
+  const prepared=await control<Observed>(page,'/__test__/owner-delivery-observe');
+  expect(prepared.task_state).toBe('REVIEW');expect(prepared.batch).toEqual([]);expect(prepared.finalizations).toEqual([]);
+  expect(prepared.remote_operations.map(operation=>operation.kind)).toEqual(['push','push']);expect(prepared.provider_calls).toBe(0);expect(prepared.ref_reads).toEqual([]);
+  await prepare(page);
+  await expect(page.getByRole('dialog')).toContainText('Delivery branch');
+  await expect(page.getByRole('dialog')).toContainText('Accepted branch publication; merge into the target branch manually.');
+  await expect(page.getByRole('dialog')).not.toContainText('Merge preference');
+  await expect(page.getByRole('dialog')).not.toContainText('Required checks');
+  await expect(page.getByRole('dialog').getByRole('link',{name:/Open .*PR/})).toHaveCount(0);
+  await confirm(page);await capture(page,info,'plain-exact-confirmation','Automatic branch preparation remains REVIEW with zero finality. Actual exact Owner confirmation binds both plain Git candidates; no acceptance yet.',true);
+  await page.getByRole('button',{name:'Accept delivery',exact:true}).click();
+  await expect(section(page)).toContainText('0 of 2 repository items finalized.');
+  const status=await read<OwnerDeliveryStatus>(page,`/v1/owner/tasks/${f.task}/delivery`),id=status.batches[0]!.operation_id;
+  const accepted=await read<DeliveryBatch>(page,`/v1/owner/tasks/${f.task}/delivery/batches/${id}`);
+  expect(accepted.items.every(item=>item.delivery_kind==='git_branch'&&item.checks==='not_applicable'&&!item.review)).toBe(true);
+  await expect(page.getByRole('article',{name:'Accepted delivery batch',exact:true})).not.toContainText('Required checks');
+  await control(page,'/__test__/owner-delivery-git-progress',{action:'certify'});
+  const certified=await control<Observed>(page,'/__test__/owner-delivery-observe');
+  expect(certified.certificates).toHaveLength(2);expect(certified.ref_reads).toHaveLength(2);expect(certified.finalizations).toEqual([]);expect(certified.task_state).toBe('REVIEW');
+  await control(page,'/__test__/owner-delivery-git-progress',{action:'finalize'});
+  await expect(section(page)).toContainText('This accepted delivery is complete.');
+  await expect(page.getByRole('article',{name:'Accepted delivery batch',exact:true})).toContainText('Accepted branch published');
+  await expect(page.getByRole('article',{name:'Accepted delivery batch',exact:true})).not.toContainText('Verified final commit');
+  const finished=await control<Observed>(page,'/__test__/owner-delivery-observe');
+  expect(finished.task_state).toBe('COMPLETED');expect(finished.ref_reads).toHaveLength(4);expect(new Set(finished.ref_reads.map(r=>r.request_id)).size).toBe(4);
+  expect(finished.finalizations.map(row=>row.kind)).toEqual(['git_branch','git_branch']);expect(finished.provider_mutations).toEqual([]);
+  const final=await read<DeliveryBatch>(page,`/v1/owner/tasks/${f.task}/delivery/batches/${id}`);
+  await expect(page.locator('body')).not.toContainText('Cancel requested');
+  expect(final.manifest).toEqual(accepted.manifest);expect(final.items.every(item=>item.finality_kind==='git_branch'&&item.final_commit===item.accepted_head)).toBe(true);
+  await capture(page,info,'plain-completed','Actual branch certificates and distinct fresh correlated ref reads finalize exact accepted heads. Real PostgreSQL and workers, synthetic Git/ref peer; no PR, check or target merge.');
+});
+
+test('mixed deferred delivery keeps the GitHub final and retries only the plain branch with no PR or checks',async({page},info)=>{
+  const f=await scenario(page,'mixed_deferred');
+  const before=await control<Observed>(page,'/__test__/owner-delivery-observe');expect(before.remote_operations).toEqual([]);expect(before.provider_calls).toBe(0);
+  await prepare(page);const dialog=page.getByRole('dialog');
+  await expect(dialog).toContainText('github.com/example/multi-0');await expect(dialog).toContainText('git.example.test:8443/Exact/Repo-1');
+  await expect(dialog).toContainText('Delivery branch');await expect(dialog).toContainText('Merge preference');await confirm(page);
+  await page.getByRole('button',{name:'Accept delivery',exact:true}).click();await expect(section(page)).toContainText('0 of 2 repository items finalized.');
+  await control(page,'/__test__/owner-delivery-git-progress',{action:'partial'});
+  await expect(section(page)).toContainText('1 of 2 repository items finalized.');
+  const article=page.getByRole('article',{name:'Accepted delivery batch',exact:true});
+  await expect(article).toContainText('Finalized · github.com/example/multi-0');await expect(article).toContainText('Attention · git.example.test:8443/Exact/Repo-1');
+  const plain=article.locator('section').filter({hasText:'git.example.test:8443/Exact/Repo-1'});
+  await expect(plain).not.toContainText('Required checks');await expect(plain.getByRole('link',{name:/Open .*PR/})).toHaveCount(0);
+  await expect(page.getByRole('button',{name:'Retry accepted delivery',exact:true})).toBeEnabled();
+  const status=await read<OwnerDeliveryStatus>(page,`/v1/owner/tasks/${f.task}/delivery`),id=status.batches[0]!.operation_id;
+  const partial=await read<DeliveryBatch>(page,`/v1/owner/tasks/${f.task}/delivery/batches/${id}`),observed=await control<Observed>(page,'/__test__/owner-delivery-observe');
+  const delivered=partial.items.find(item=>item.status==='finalized')!;
+  expect(partial.batch.status).toBe('attention');expect(observed.provider_mutations.filter(call=>call.method==='PUT')).toHaveLength(1);expect(observed.finalizations).toHaveLength(1);
+  await capture(page,info,'mixed-partial','Actual frozen mixed batch preserves first GitHub merge. Synthetic plain ref mismatch blocks remaining finality, with no fabricated plain PR or required checks.');
+  await page.getByRole('button',{name:'Retry accepted delivery',exact:true}).click();await expect(section(page)).not.toContainText('Accepted delivery · Attention');
+  await control(page,'/__test__/owner-delivery-git-progress',{action:'resume'});
+  await expect(section(page)).toContainText('2 of 2 repository items finalized.');await expect(section(page)).toContainText('This accepted delivery is complete.');
+  await expect(plain).toContainText('Accepted branch published');await expect(plain).not.toContainText('Verified final commit');
+  const completed=await read<DeliveryBatch>(page,`/v1/owner/tasks/${f.task}/delivery/batches/${id}`),after=await control<Observed>(page,'/__test__/owner-delivery-observe');
+  expect(completed.items.find(item=>item.item_id===delivered.item_id)).toEqual(delivered);expect(completed.manifest).toEqual(partial.manifest);
+  expect(after.finalizations.find(row=>row.item_id===delivered.item_id)).toEqual(observed.finalizations[0]);expect(after.remote_operations).toEqual(observed.remote_operations);
+  expect(after.provider_mutations.filter(call=>call.method==='PUT')).toHaveLength(1);
+  expect(completed.items.map(item=>item.finality_kind)).toEqual(['github_merge','git_branch']);
+  await expect(page.locator('body')).not.toContainText('Cancel requested');
+  await capture(page,info,'mixed-completed','Actual Owner Retry finalizes only the remaining plain branch through a fresh exact ref read. First GitHub finality and all frozen inputs remain unchanged.');
 });
 
 test('held delivery reads cannot restore another Task or a signed-out session',async({page})=>{

@@ -12,6 +12,7 @@ import (
 	"time"
 
 	protocol "monos.local/protocol"
+	"monos.local/runner/internal/wire"
 )
 
 type publicationPushFixture struct {
@@ -37,25 +38,39 @@ func publicationPushTestFixtureAt(t *testing.T, evidence string) *publicationPus
 	return publicationPushTestFixtureForResource(t, evidence, "22222222-2222-4222-8222-222222222222")
 }
 func publicationPushTestFixtureForResource(t *testing.T, evidence, resourceID string) *publicationPushFixture {
+	return publicationPushTestFixtureEndpoint(t, evidence, resourceID, "https://github.com/example/repository.git")
+}
+func publicationPushTestFixtureEndpoint(t *testing.T, evidence, resourceID, remoteURL string) *publicationPushFixture {
 	t.Helper()
 	f, r, _ := publicationPrepareFixture(t)
 	r.Source.ResourceID = resourceID
-	r.Source.RepositoryIdentity = "github.com/example/repository"
+	r.Source.RepositoryIdentity, _ = wire.HTTPSRepositoryIdentity(remoteURL)
 	r.SourceDigest = publicationDigest(r.Source)
 	r.Construction.SourceDigest = r.SourceDigest
 	r.Construction.RepositoryIdentity = r.Source.RepositoryIdentity
-	w := protocol.WorkspaceDescriptor{SchemaVersion: 1, WorkspaceID: r.Source.WorkspaceID, TaskID: r.Source.TaskID, ResourceID: r.Source.ResourceID, RunnerID: r.Source.RunnerID, ProjectID: "project", NodeID: r.Source.NodeID, NodeActivation: r.Source.NodeActivation, Generation: r.Source.Generation, LeaseID: "original-lease", OpenOperationID: "original-open", Resource: protocol.WorkspaceResource{ResourceID: r.Source.ResourceID, RepositoryIdentity: r.Source.RepositoryIdentity, RemoteURL: "https://" + r.Source.RepositoryIdentity + ".git", ProviderMetadata: &protocol.RepositoryProviderMetadata{Github: &protocol.RepositoryProviderMetadataGithub{RepositoryID: "123"}}}}
+	w := protocol.WorkspaceDescriptor{SchemaVersion: 1, WorkspaceID: r.Source.WorkspaceID, TaskID: r.Source.TaskID, ResourceID: r.Source.ResourceID, RunnerID: r.Source.RunnerID, ProjectID: "project", NodeID: r.Source.NodeID, NodeActivation: r.Source.NodeActivation, Generation: r.Source.Generation, LeaseID: "original-lease", OpenOperationID: "original-open", Resource: protocol.WorkspaceResource{ResourceID: r.Source.ResourceID, RepositoryIdentity: r.Source.RepositoryIdentity, RemoteURL: remoteURL, ProviderMetadata: &protocol.RepositoryProviderMetadata{Github: &protocol.GithubClass{RepositoryID: "123"}}}}
+	if !strings.HasPrefix(r.Source.RepositoryIdentity, "github.com/") {
+		w.Resource.ProviderMetadata = &protocol.RepositoryProviderMetadata{}
+		w.Resource.DefaultBranch = publicationPointer("main")
+	}
 	m := protocol.WorkspaceMetadata{BaseCommit: f.base, TargetCommit: f.base, FinalizedCommit: f.base, TargetBranch: "main", Generation: w.Generation, LeaseID: w.LeaseID, StorageID: r.Source.StorageID, RepositoryIdentity: r.Source.RepositoryIdentity, ProviderMetadata: w.Resource.ProviderMetadata}
 	p := protocol.PublicationParent{Kind: "materialization", Commit: f.base, RepositoryIdentity: r.Source.RepositoryIdentity, ObservationOperationID: publicationPointer(w.OpenOperationID), Workspace: &w, Outcome: &protocol.EffectResult{WorkspaceID: &w.WorkspaceID, WorkspaceMetadata: &m}}
 	p.ObservationDigest = publicationPointer(publicationDigest(map[string]any{"operation_id": p.ObservationOperationID, "workspace": p.Workspace, "outcome": p.Outcome}))
 	r.Construction.Parents = []protocol.PublicationParent{p}
 	r.ConstructionDigest = publicationDigest(r.Construction)
-	permission := protocol.PublicationPermissionProof{SchemaVersion: 1, ObservationID: "permission", ResourceID: r.Source.ResourceID, RepositoryIdentity: r.Source.RepositoryIdentity, RepositoryID: "123", AppID: "1", InstallationID: "2", KeyFingerprint: strings.Repeat("a", 64), ConfigurationFingerprint: strings.Repeat("b", 64), Permissions: protocol.PublicationPermissionGrants{Contents: "write", Metadata: "read"}, ObservedAt: time.Now().UTC().Format("2006-01-02T15:04:05.000Z"), ExpiresAt: time.Now().Add(time.Hour).UTC().Format("2006-01-02T15:04:05.000Z")}
-	permission.PermissionFingerprint = publicationDigest(map[string]any{"configuration_fingerprint": permission.ConfigurationFingerprint, "repository_id": permission.RepositoryID, "permissions": permission.Permissions})
+	permission := protocol.PublicationPermissionProof{SchemaVersion: 1, Kind: "github_installation", ObservationID: "permission", ResourceID: r.Source.ResourceID, RepositoryIdentity: r.Source.RepositoryIdentity, RepositoryID: publicationPointer("123"), AppID: publicationPointer("1"), InstallationID: publicationPointer("2"), KeyFingerprint: publicationPointer(strings.Repeat("a", 64)), ConfigurationFingerprint: strings.Repeat("b", 64), Permissions: &protocol.PublicationPermissionGrants{Contents: "write", Metadata: "read"}, ObservedAt: time.Now().UTC().Format("2006-01-02T15:04:05.000Z"), ExpiresAt: time.Now().Add(time.Hour).UTC().Format("2006-01-02T15:04:05.000Z")}
+	if w.Resource.ProviderMetadata.Github == nil {
+		permission = protocol.PublicationPermissionProof{SchemaVersion: 1, Kind: "git_https_configuration", ObservationID: "configuration-observation", ResourceID: r.Source.ResourceID, RepositoryIdentity: r.Source.RepositoryIdentity, RemoteURL: &remoteURL, Username: publicationPointer("git-user"), ConfigurationRequestID: publicationPointer("configure"), ConfigurationFingerprint: strings.Repeat("b", 64), ScopeDigest: publicationPointer(strings.Repeat("c", 64)), ObservedAt: permission.ObservedAt, ExpiresAt: permission.ExpiresAt}
+	}
+	permission.PermissionFingerprint = publicationPermissionFingerprint(permission)
 	r.PermissionProof = &permission
 	r.PermissionProofDigest = publicationPointer(publicationDigest(permission))
 	// Production grants omit workflows when the exact scan has no workflow changes.
 	r.Configuration.WorkflowWrite = "unknown"
+	if permission.Kind == "git_https_configuration" {
+		r.Configuration.WorkflowWrite = "not_applicable"
+		r.Configuration.ProviderBlobLimit = nil
+	}
 	r.Configuration.PermissionFingerprint = permission.PermissionFingerprint
 	r.ConfigurationDigest = publicationDigest(r.Configuration)
 	if ValidatePublicationRequest(r) != nil {
@@ -87,7 +102,7 @@ func publicationPushTestFixtureForResource(t *testing.T, evidence, resourceID st
 	if json.Unmarshal(raw, &prepared) != nil {
 		t.Fatal("prepared conversion")
 	}
-	request := protocol.PublicationPushRequest{SchemaVersion: 1, OperationID: "push", ItemID: "item", TaskID: r.Source.TaskID, ResourceID: r.Source.ResourceID, RunnerID: r.Source.RunnerID, StorageID: r.Source.StorageID, RepositoryIdentity: r.Source.RepositoryIdentity, RepositoryID: "123", RemoteURL: "https://" + r.Source.RepositoryIdentity + ".git", DeliveryRef: "refs/heads/monos/task/" + r.Source.TaskID + "/" + r.Source.ResourceID, TargetBranch: "main", Preparation: r, Prepared: prepared, PreparationResultDigest: publicationDigest(prepared), PermissionProof: permission, PermissionProofDigest: publicationDigest(permission), OverrideReceipts: []protocol.PublicationOverrideProof{}}
+	request := protocol.PublicationPushRequest{SchemaVersion: 1, OperationID: "push", ItemID: "item", TaskID: r.Source.TaskID, ResourceID: r.Source.ResourceID, RunnerID: r.Source.RunnerID, StorageID: r.Source.StorageID, RepositoryIdentity: r.Source.RepositoryIdentity, ProviderMetadata: *w.Resource.ProviderMetadata, RemoteURL: remoteURL, DeliveryRef: "refs/heads/monos/task/" + r.Source.TaskID + "/" + r.Source.ResourceID, TargetBranch: "main", Preparation: r, Prepared: prepared, PreparationResultDigest: publicationDigest(prepared), PermissionProof: permission, PermissionProofDigest: publicationDigest(permission), OverrideReceipts: []protocol.PublicationOverrideProof{}}
 	if e = ValidatePublicationPushRequest(request); e != nil {
 		t.Fatal(e)
 	}
@@ -95,7 +110,11 @@ func publicationPushTestFixtureForResource(t *testing.T, evidence, resourceID st
 	resultTestGit(t, filepath.Dir(root), nil, "init", "--bare", "--quiet", fixture.remote)
 	fixture.io = publicationRemoteIO{access: func(ctx context.Context, r protocol.PublicationPushRequest, purpose protocol.PublicationAccessRequestPurpose, attempt string) (protocol.PublicationAccessResult, error) {
 		token := "synthetic-no-provider-token"
-		a := protocol.PublicationAccessResult{SchemaVersion: 1, OperationID: r.OperationID, RequestDigest: publicationDigest(r), ItemID: r.ItemID, AttemptID: attempt, Purpose: purpose, RemoteURL: r.RemoteURL, RepositoryID: r.RepositoryID, DeliveryRef: r.DeliveryRef, CandidateHead: r.Prepared.Candidate.Head, ExpectedHead: r.ExpectedHead, Authentication: protocol.Authentication{Kind: "github_installation", Token: &token, ExpiresAt: &permission.ExpiresAt}}
+		a := protocol.PublicationAccessResult{SchemaVersion: 1, OperationID: r.OperationID, RequestDigest: publicationDigest(r), ItemID: r.ItemID, AttemptID: attempt, Purpose: purpose, RemoteURL: r.RemoteURL, ProviderMetadata: r.ProviderMetadata, DeliveryRef: r.DeliveryRef, CandidateHead: r.Prepared.Candidate.Head, ExpectedHead: r.ExpectedHead, Authentication: protocol.RepositoryAuthentication{Kind: "github_installation", Token: &token, ExpiresAt: &permission.ExpiresAt}}
+		if permission.Kind == "git_https_configuration" {
+			a.Authentication.Kind = "https_basic"
+			a.Authentication.Username = permission.Username
+		}
 		if purpose == "push" {
 			a.ClaimID = publicationPointer("claim")
 			a.ClaimExpiresAt = &permission.ExpiresAt
@@ -129,7 +148,7 @@ func (f *publicationPushFixture) ack(t *testing.T, result protocol.PublicationPu
 }
 func (f *publicationPushFixture) proof(result protocol.PublicationPushResult) protocol.PublicationPublishedProof {
 	r := f.request
-	return protocol.PublicationPublishedProof{SchemaVersion: 1, OperationID: r.OperationID, RequestDigest: publicationDigest(r), ResultDigest: publicationDigest(result), ItemID: r.ItemID, TaskID: r.TaskID, ResourceID: r.ResourceID, RunnerID: r.RunnerID, StorageID: r.StorageID, RepositoryIdentity: r.RepositoryIdentity, RepositoryID: r.RepositoryID, DeliveryRef: r.DeliveryRef, Candidate: *r.Prepared.Candidate, CandidateManifestDigest: *r.Prepared.CandidateManifestDigest, Observation: result.Observation, ObservationDigest: result.ObservationDigest}
+	return protocol.PublicationPublishedProof{SchemaVersion: 1, OperationID: r.OperationID, RequestDigest: publicationDigest(r), ResultDigest: publicationDigest(result), ItemID: r.ItemID, TaskID: r.TaskID, ResourceID: r.ResourceID, RunnerID: r.RunnerID, StorageID: r.StorageID, RepositoryIdentity: r.RepositoryIdentity, ProviderMetadata: r.ProviderMetadata, DeliveryRef: r.DeliveryRef, Candidate: *r.Prepared.Candidate, CandidateManifestDigest: *r.Prepared.CandidateManifestDigest, Observation: result.Observation, ObservationDigest: result.ObservationDigest}
 }
 
 func TestRemotePreparationNamedResourceRef(t *testing.T) {
@@ -177,7 +196,7 @@ func TestRemotePreparationLeastPrivilegeWorkflowGuard(t *testing.T) {
 		})
 	}
 	crossed := f.request
-	crossed.PermissionProof.AppID = "other-app"
+	crossed.PermissionProof.AppID = publicationPointer("other-app")
 	crossed.PermissionProofDigest = publicationDigest(crossed.PermissionProof)
 	if ValidatePublicationPushRequest(crossed) == nil {
 		t.Fatal("crossed scan and push permission contexts accepted")

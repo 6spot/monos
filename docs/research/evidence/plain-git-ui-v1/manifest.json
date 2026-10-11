@@ -1,0 +1,32 @@
+{
+  "base_commit": "bac64fae705d565a6116e46dd28b173c6e8899fc",
+  "change": "ordinary HTTPS Git credentials, branch-only finality and mixed GitHub/plain accepted delivery",
+  "routes": [
+    "/#projects",
+    "/#task?task_id=<synthetic Task>&section=overview"
+  ],
+  "viewports": {
+    "desktop": [
+      1440,
+      1000
+    ],
+    "mobile": [
+      390,
+      844
+    ]
+  },
+  "evidence": [
+    "credentials/manifest.json",
+    "owner-delivery-20261011101619995/inspection.json"
+  ],
+  "verification": {
+    "unit": "860 passed after the final wire byte-bound and copy changes; typecheck, lint and build passed.",
+    "postgres": "Full 69-suite run passed 584 and exposed 26 fixture/assertion failures. Four repaired multi-repository suites plus both delivery suites then passed 49/49; targeted migration upgrade passed. All 610 cases are covered by the combined current successful runs. After the final wire limits, plain delivery and actual service repository access passed 18/18.",
+    "browser": "6 Owner delivery scenarios passed, affected plain/mixed2 rerun after truthful-history/copy fixes; credential save/rotation/clear/logout1 passed and rerun after final layout fix.",
+    "protocol": "681 protocol and Owner API tests passed, including final nested-frame byte limits and Go JSON escape expansion; protocol generation drift passed. Maximum tested ref-read response frame: 508895 bytes.",
+    "runner": "Scoped real local Git/controlled HTTPS/race, wire/control/daemon and compilation/vet passed; final wire race passed in 14.351s. Native acceptance deferred."
+  },
+  "inspection": "Credential form has full-width fields, password input clears after commits, meaningful configured status, reachable 44 px mobile actions and no horizontal overflow. Final delivery screenshots inspected by owning implementer: plain finality is accepted branch publication, GitHub PR finality stays separate, remaining-item Retry preserves original successful item.",
+  "reference": ".trellis/spec/frontend/visual-design.md; recorded reference 44ea3b40c8b4f54f4c76d1dd3e3c92e0c0cabd19. Shared neutral shell, compact typography and separators retained; monos navigation and exact delivery attribution are intentional.",
+  "limitations": "Browser uses actual service/PostgreSQL and built SPA with synthetic GitHub/ref peer observations. Captures bind their recorded builds; later parser byte bounds and missing-authorization copy do not change the inspected layouts. Runner tests use local Git and controlled TLS endpoints. No real repository publication, SSH, deployed Linux/installed Agent CLI or A06/A30 acceptance."
+}

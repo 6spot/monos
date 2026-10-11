@@ -12,11 +12,14 @@ import { specificationFrozen } from './task-specification-state.ts';
 import { handleTaskConversation } from './task-conversation-state.ts';
 import { lockConfiguration } from './configuration-guards.ts';
 import { randomUUID } from 'node:crypto';
+import { repositoryAdapter } from '../../../packages/domain/src/repositories.ts';
+import { GitHTTPSCredentials } from './git-https-credentials.ts';
+import type { WorkspaceResource } from '../../../packages/protocol/src/index.ts';
 import { runnerForCredential, transaction } from '../../../packages/db/src/index.ts';
 import type { Database, Transaction } from '../../../packages/db/src/index.ts';
 import { CommandError, guardNewCommand } from '../../../packages/domain/src/commands.ts';
 import { canonicalJSON, digest, MAX_FRAME_BYTES, parseSubmission, ProtocolVersionError, validate } from '../../../packages/protocol/src/index.ts';
-import type { CommandEnvelope, CommandResult, CommandSubmission, Dispatch, Frame, GitHubRepositoryAccessResult, Operation, OperationResult, RepositoryAccessRequest, RunnerInventory, RuntimeEvent } from '../../../packages/protocol/src/index.ts';
+import type { CommandEnvelope, CommandResult, CommandSubmission, Dispatch, Frame, RepositoryAccessResult, Operation, OperationResult, RepositoryAccessRequest, RunnerInventory, RuntimeEvent } from '../../../packages/protocol/src/index.ts';
 import { assertNodeSource, blockNodeSource } from './node-execution-state.ts';
 import type { NodeSource } from './node-execution-state.ts';
 import { finishCompletionSettlement, projectCompletion, refreshTaskState } from './node-completion.ts';
@@ -133,15 +136,18 @@ export interface ServiceOptions {
   beforeAdmissionCommit?: () => void;
   afterAdmissionCommit?: () => void;
   github?: GitHub;
+  gitHTTPS?: GitHTTPSCredentials;
 }
 
 export class BoundaryService {
   readonly db: Database;
   readonly options: ServiceOptions;
+  readonly gitHTTPS: GitHTTPSCredentials;
   readonly instanceId = randomUUID();
   constructor(db: Database, options: ServiceOptions) {
     if (options.signingKey.length < 32) throw new Error('Attempt signing key must contain at least 32 characters');
     this.db = db; this.options = options;
+    this.gitHTTPS = options.gitHTTPS ?? new GitHTTPSCredentials(options.signingKey);
   }
 
   async authenticateRunner(token: string): Promise<string> {
@@ -151,7 +157,15 @@ export class BoundaryService {
     return id;
   }
 
-  async repositoryAccess(runnerId: string, operationId: string, body: unknown): Promise<GitHubRepositoryAccessResult> {
+  private async plainRepositoryAccess(tx: Transaction, resource: WorkspaceResource): Promise<Pick<RepositoryAccessResult, 'remote_url' | 'provider_metadata' | 'default_branch' | 'authentication'>> {
+    const saved = (await tx.query<{ remote_url: string; repository_identity: string }>('SELECT remote_url,repository_identity FROM project_resources WHERE id=$1 AND active', [resource.resource_id])).rows[0];
+    if (!saved || saved.remote_url !== resource.remote_url || saved.repository_identity !== resource.repository_identity
+      || !resource.default_branch || resource.provider_metadata?.github) throw new CommandError('denied_scope', 'Plain Git access differs from the admitted resource');
+    return { remote_url: resource.remote_url, provider_metadata: {}, default_branch: resource.default_branch,
+      authentication: await this.gitHTTPS.authentication(tx, resource.resource_id) };
+  }
+
+  async repositoryAccess(runnerId: string, operationId: string, body: unknown): Promise<RepositoryAccessResult> {
     validate('Id', operationId);
     const request = validate<RepositoryAccessRequest>('RepositoryAccessRequest', body);
     const authorized = () => transaction(this.db, async (tx) => {
@@ -173,10 +187,12 @@ export class BoundaryService {
         || lease.workspace_id !== operation.workspace_descriptor.workspace_id || Number(lease.generation) !== operation.workspace_descriptor.generation
         || operation.workspace_descriptor.runner_id !== runnerId || operation.workspace_descriptor.task_id !== attempt.task_id
         || operation.workspace_descriptor.node_id !== attempt.node_id || operation.workspace_descriptor.node_activation !== Number(attempt.node_activation)) throw new CommandError('denied_scope', 'Repository access is outside the admitted workspace lease');
-      const config = (await tx.query<GitHubCredentials>('SELECT app_id,installation_id,encrypted_key,key_fingerprint FROM github_configuration')).rows[0];
-      return { operation, config };
+      const plain = repositoryAdapter(operation.workspace_descriptor.resource.remote_url) === 'git_https';
+      const config = plain ? undefined : (await tx.query<GitHubCredentials>('SELECT app_id,installation_id,encrypted_key,key_fingerprint FROM github_configuration')).rows[0];
+      return { operation, config, access: plain ? await this.plainRepositoryAccess(tx, operation.workspace_descriptor.resource) : undefined };
     });
     const before = await authorized();
+    if (before.access) return validate('RepositoryAccessResult', { schema_version: 1, operation_id: operationId, workspace_digest: request.workspace_digest, ...before.access });
     const github = this.options.github ?? new GitHub(this.options.signingKey);
     const descriptor = before.operation.workspace_descriptor!;
     const pinnedMetadata = descriptor.basis?.provider_metadata;
@@ -184,7 +200,7 @@ export class BoundaryService {
     const access = await github.repositoryAccess({ ...descriptor.resource, ...(pinnedMetadata ? { provider_metadata: pinnedMetadata } : {}) }, before.config);
     const after = await authorized();
     if (canonicalJSON(before.config ?? null) !== canonicalJSON(after.config ?? null)) throw new CommandError('stale_execution', 'Provider configuration changed during access; reconcile this operation');
-    return validate('GitHubRepositoryAccessResult', { schema_version: 1, operation_id: operationId, workspace_digest: request.workspace_digest, ...access });
+    return validate('RepositoryAccessResult', { schema_version: 1, operation_id: operationId, workspace_digest: request.workspace_digest, ...access });
   }
 
   async inspectionRepositoryAccess(runnerId: string, operationId: string, body: unknown): Promise<InspectionRepositoryAccessResult> {
@@ -200,10 +216,13 @@ export class BoundaryService {
         throw new CommandError('stale_execution', 'Inspection no longer owns this Runner connection');
       const operation = (await tx.query<OperationRow>('SELECT *,operation_workspace_inputs(id) AS workspaces FROM operations WHERE id=$1 FOR UPDATE', [operationId])).rows[0]!;
       await assertInspectionAccess(tx, attempt, operation, request.inspection_digest);
-      const config = (await tx.query<GitHubCredentials>('SELECT app_id,installation_id,encrypted_key,key_fingerprint FROM github_configuration')).rows[0];
-      return { descriptor: operation.inspection_descriptor!, config };
+      const descriptor = operation.inspection_descriptor!;
+      const plain = repositoryAdapter(descriptor.resource.remote_url) === 'git_https';
+      const config = plain ? undefined : (await tx.query<GitHubCredentials>('SELECT app_id,installation_id,encrypted_key,key_fingerprint FROM github_configuration')).rows[0];
+      return { descriptor, config, access: plain ? await this.plainRepositoryAccess(tx, descriptor.resource) : undefined };
     });
     const before = await authorized();
+    if (before.access) return validate('InspectionRepositoryAccessResult', { schema_version: 1, operation_id: operationId, inspection_digest: request.inspection_digest, ...before.access });
     const access = await (this.options.github ?? new GitHub(this.options.signingKey)).repositoryAccess(before.descriptor.resource, before.config);
     const after = await authorized();
     if (canonicalJSON(before.config ?? null) !== canonicalJSON(after.config ?? null))

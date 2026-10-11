@@ -69,3 +69,25 @@ func (d *Daemon) replayRemotePublication(ctx context.Context) {
 		})
 	})
 }
+
+func (d *Daemon) publicationRefRead(ctx context.Context, frame protocol.Frame) {
+	if frame.PublicationRefRead == nil || frame.CorrelationID == nil || *frame.CorrelationID == "" {
+		return
+	}
+	r := *frame.PublicationRefRead
+	if host.ValidatePublicationRefReadRequest(r) != nil {
+		return
+	}
+	d.enqueueRemotePublication(ctx, "ref:"+r.RequestID, func() {
+		if retainedPublicationIdentity(d.DB, r.Push.Preparation) != nil {
+			return
+		}
+		deadline, cancel := context.WithTimeout(ctx, 10*time.Second)
+		defer cancel()
+		result, e := host.PublicationRefRead(deadline, r, d.Control.PublicationAccess)
+		if e != nil {
+			return
+		}
+		_ = d.Control.Send(ctx, protocol.Frame{Type: "publication_ref_read_result", CorrelationID: frame.CorrelationID, PublicationRefReadResult: &result})
+	})
+}

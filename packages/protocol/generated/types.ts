@@ -228,10 +228,10 @@ export interface WorkspaceIsolationMetadata {
 }
 
 export interface RepositoryProviderMetadata {
-    github?: RepositoryProviderMetadataGithub;
+    github?: Github;
 }
 
-export interface RepositoryProviderMetadataGithub {
+export interface Github {
     repository_id: string;
 }
 
@@ -510,38 +510,41 @@ export type WorkspaceUnavailableReason = "unsupported_remote" | "unsupported_mul
 export type CommandResultStatus = "admitted" | "committed" | "error" | "unknown";
 
 export interface Frame {
-    allowed?:                  boolean;
-    attempt_id?:               string;
-    boot_id?:                  string;
-    correlation_id?:           string;
-    credential?:               string;
-    dispatch?:                 Dispatch;
-    dispatch_id?:              string;
-    error?:                    ErrorInfo;
-    event?:                    RuntimeEvent;
-    expires_at?:               string;
-    incarnation?:              number;
-    log_modes?:                LogModeElement[];
-    operation?:                Operation;
-    operation_id?:             string;
-    operation_result?:         OperationResult;
-    publication_ack?:          PublicationACK;
-    publication_modes?:        PublicationMode[];
-    publication_prepare?:      PublicationPrepareRequest;
-    publication_push?:         PublicationPushRequest;
-    publication_push_ack?:     PublicationPushACK;
-    publication_push_result?:  PublicationPushResult;
-    publication_result?:       PublicationResultPage;
-    remote_preparation_modes?: RemotePreparationMode[];
-    result_read?:              ResultReadRequest;
-    result_read_modes?:        ResultReadMode[];
-    result_read_result?:       ResultReadResponse;
-    runner_id?:                string;
-    runtimes?:                 RuntimeInstallation[];
-    schema_version:            number;
-    sequence?:                 number;
-    stream_id?:                string;
-    type:                      Type;
+    allowed?:                     boolean;
+    attempt_id?:                  string;
+    boot_id?:                     string;
+    correlation_id?:              string;
+    credential?:                  string;
+    dispatch?:                    Dispatch;
+    dispatch_id?:                 string;
+    error?:                       ErrorInfo;
+    event?:                       RuntimeEvent;
+    expires_at?:                  string;
+    incarnation?:                 number;
+    log_modes?:                   LogModeElement[];
+    operation?:                   Operation;
+    operation_id?:                string;
+    operation_result?:            OperationResult;
+    publication_ack?:             PublicationACK;
+    publication_modes?:           PublicationMode[];
+    publication_prepare?:         PublicationPrepareRequest;
+    publication_push?:            PublicationPushRequest;
+    publication_push_ack?:        PublicationPushACK;
+    publication_push_result?:     PublicationPushResult;
+    publication_ref_read?:        PublicationRefReadRequest;
+    publication_ref_read_modes?:  PublicationRefReadMode[];
+    publication_ref_read_result?: PublicationRefReadResponse;
+    publication_result?:          PublicationResultPage;
+    remote_preparation_modes?:    RemotePreparationMode[];
+    result_read?:                 ResultReadRequest;
+    result_read_modes?:           ResultReadMode[];
+    result_read_result?:          ResultReadResponse;
+    runner_id?:                   string;
+    runtimes?:                    RuntimeInstallation[];
+    schema_version:               number;
+    sequence?:                    number;
+    stream_id?:                   string;
+    type:                         Type;
 }
 
 export interface Dispatch {
@@ -932,7 +935,7 @@ export interface PublicationScanConfiguration {
     max_versions:           number;
     permission_fingerprint: string;
     policy_version:         PolicyVersion;
-    provider_blob_limit:    number;
+    provider_blob_limit:    number | null;
     rule_version:           RuleVersion;
     schema_version:         number;
     traversal_version:      TraversalVersion;
@@ -945,7 +948,7 @@ export type RuleVersion = "credential_rules_v1";
 
 export type TraversalVersion = "all_parents_final_tree_v1";
 
-export type WorkflowWrite = "unknown" | "denied" | "allowed";
+export type WorkflowWrite = "unknown" | "denied" | "allowed" | "not_applicable";
 
 export interface PublicationConstruction {
     author_email:        AuthorEmail;
@@ -987,7 +990,7 @@ export interface PublicationPublishedProof {
     observation:               PublicationRefObservation;
     observation_digest:        string;
     operation_id:              string;
-    repository_id:             string;
+    provider_metadata:         RepositoryProviderMetadata;
     repository_identity:       string;
     request_digest:            string;
     resource_id:               string;
@@ -1016,8 +1019,8 @@ export interface PublicationRefObservation {
     observation_id:      string;
     observed_at:         string;
     operation_id:        string;
+    provider_metadata:   RepositoryProviderMetadata;
     reason?:             PublicationRefObservationReason;
-    repository_id:       string;
     repository_identity: string;
     resource_id:         string;
     runner_id:           string;
@@ -1040,19 +1043,24 @@ export interface PublicationEffectiveBasis {
 }
 
 export interface PublicationPermissionProof {
-    app_id:                    string;
+    app_id?:                   string;
     configuration_fingerprint: string;
+    configuration_request_id?: string;
     expires_at:                string;
-    installation_id:           string;
-    key_fingerprint:           string;
+    installation_id?:          string;
+    key_fingerprint?:          string;
+    kind:                      string;
     observation_id:            string;
     observed_at:               string;
     permission_fingerprint:    string;
-    permissions:               PublicationPermissionGrants;
-    repository_id:             string;
+    permissions?:              PublicationPermissionGrants;
+    remote_url?:               string;
+    repository_id?:            string;
     repository_identity:       string;
     resource_id:               string;
     schema_version:            number;
+    scope_digest?:             string;
+    username?:                 string;
 }
 
 export interface PublicationPermissionGrants {
@@ -1078,8 +1086,8 @@ export interface PublicationPushRequest {
     prepared:                  PublicationPushRequestPrepared;
     prior_published?:          PublicationPublishedProof;
     prior_published_digest?:   string;
+    provider_metadata:         RepositoryProviderMetadata;
     remote_url:                string;
-    repository_id:             string;
     repository_identity:       string;
     resource_id:               string;
     runner_id:                 string;
@@ -1192,6 +1200,23 @@ export interface PublicationPushResult {
 }
 
 export type PublicationPushResultStatus = "published" | "blocked" | "reconciliation_required";
+
+export interface PublicationRefReadRequest {
+    push:                PublicationPushRequest;
+    push_request_digest: string;
+    request_id:          string;
+    schema_version:      number;
+}
+
+export type PublicationRefReadMode = "git_ref_v1";
+
+export interface PublicationRefReadResponse {
+    observation:        PublicationRefObservation;
+    observation_digest: string;
+    request:            PublicationRefReadRequest;
+    schema_version:     number;
+    worker_absent:      boolean;
+}
 
 export interface PublicationResultPage {
     findings:       PublicationFinding[];
@@ -1306,7 +1331,7 @@ export interface RuntimeInstallation {
 
 export type Availability = "detected" | "not_found" | "unavailable";
 
-export type Type = "hello" | "welcome" | "ready" | "heartbeat" | "start" | "effect" | "authorize_dispatch" | "authorization" | "event" | "event_ack" | "operation_result" | "operation_ack" | "error" | "result_read" | "result_read_result" | "publication_prepare" | "publication_result" | "publication_ack" | "publication_push" | "publication_push_result" | "publication_push_ack";
+export type Type = "hello" | "welcome" | "ready" | "heartbeat" | "start" | "effect" | "authorize_dispatch" | "authorization" | "event" | "event_ack" | "operation_result" | "operation_ack" | "error" | "result_read" | "result_read_result" | "publication_prepare" | "publication_result" | "publication_ack" | "publication_push" | "publication_push_result" | "publication_push_ack" | "publication_ref_read" | "publication_ref_read_result";
 
 export interface RunnerInventory {
     dispatches:     Dispatch[];
@@ -1417,7 +1442,7 @@ export interface ConfigurationCommand {
     schema_version:           number;
 }
 
-export type ConfigurationCommandName = "save_project" | "save_role" | "save_policies" | "save_github" | "save_planner_guidance";
+export type ConfigurationCommandName = "save_project" | "save_role" | "save_policies" | "save_github" | "save_planner_guidance" | "save_git_https_credential" | "clear_git_https_credential";
 
 export interface PayloadClass {
     archived?:         boolean;
@@ -1435,6 +1460,9 @@ export interface PayloadClass {
     installation_id?:  string;
     private_key?:      string;
     guidance?:         string;
+    resource_id?:      string;
+    token?:            string;
+    username?:         string;
 }
 
 export interface ExecutionPolicy {
@@ -1468,23 +1496,42 @@ export type Provider = "github";
 export type RemotePreparation = "automatic" | "after_acceptance";
 
 export interface ConfigurationResult {
-    control_version?: number;
-    entity_id?:       string;
-    request_id:       string;
-    schema_version:   number;
-    status:           ConfigurationResultStatus;
+    control_version?:   number;
+    credential_change?: GitHTTPSCredentialChange;
+    entity_id?:         string;
+    request_id:         string;
+    schema_version:     number;
+    status:             ConfigurationResultStatus;
 }
+
+export interface GitHTTPSCredentialChange {
+    action:        Action;
+    generation?:   string;
+    resource_id:   string;
+    scope_digest?: string;
+    username?:     string;
+}
+
+export type Action = "saved" | "cleared";
 
 export type ConfigurationResultStatus = "committed" | "unknown";
 
 export interface ConfigurationSnapshot {
-    control_version:   number;
-    github?:           GitHubConfigurationStatus;
-    planner_guidance?: string;
-    policies:          PolicyConfiguration;
-    projects:          ProjectConfiguration[];
-    roles:             RoleConfiguration[];
-    schema_version:    number;
+    control_version:       number;
+    git_https_credentials: GitHTTPSCredentialStatus[];
+    github?:               GitHubConfigurationStatus;
+    planner_guidance?:     string;
+    policies:              PolicyConfiguration;
+    projects:              ProjectConfiguration[];
+    roles:                 RoleConfiguration[];
+    schema_version:        number;
+}
+
+export interface GitHTTPSCredentialStatus {
+    generation:   string;
+    resource_id:  string;
+    scope_digest: string;
+    username:     string;
 }
 
 export interface GitHubConfigurationStatus {
@@ -2136,32 +2183,6 @@ export interface RepositoryAccessRequest {
     incarnation:      number;
     schema_version:   number;
     workspace_digest: string;
-}
-
-export interface GitHubRepositoryAccessResult {
-    authentication:    RepositoryAuthentication;
-    default_branch:    string;
-    operation_id:      string;
-    provider_metadata: GitHubRepositoryAccessResultProviderMetadata;
-    remote_url:        string;
-    schema_version:    number;
-    workspace_digest:  string;
-}
-
-export interface RepositoryAuthentication {
-    expires_at?: string;
-    kind:        RepositoryAuthenticationKind;
-    token?:      string;
-}
-
-export type RepositoryAuthenticationKind = "anonymous" | "github_installation";
-
-export interface GitHubRepositoryAccessResultProviderMetadata {
-    github: PurpleGithub;
-}
-
-export interface PurpleGithub {
-    repository_id: string;
 }
 
 export interface RepositoryAccessError {
@@ -3011,7 +3032,7 @@ export type PublicationAccessRequestPurpose = "observe" | "push";
 
 export interface PublicationAccessResult {
     attempt_id:               string;
-    authentication:           Authentication;
+    authentication:           RepositoryAuthentication;
     candidate_head:           string;
     claim_expires_at?:        string;
     claim_id?:                string;
@@ -3021,20 +3042,21 @@ export interface PublicationAccessResult {
     operation_id:             string;
     permission_proof?:        PublicationPermissionProof;
     permission_proof_digest?: string;
+    provider_metadata:        RepositoryProviderMetadata;
     purpose:                  PublicationAccessRequestPurpose;
     remote_url:               string;
-    repository_id:            string;
     request_digest:           string;
     schema_version:           number;
 }
 
-export interface Authentication {
+export interface RepositoryAuthentication {
     expires_at?: string;
-    kind:        PurpleKind;
+    kind:        RepositoryAuthenticationKind;
     token?:      string;
+    username?:   string;
 }
 
-export type PurpleKind = "github_installation";
+export type RepositoryAuthenticationKind = "anonymous" | "github_installation" | "https_basic";
 
 export interface PublicationExposure {
     blob:                      string;
@@ -3077,6 +3099,7 @@ export interface RemotePreparationRecord {
     cleanup_allowed:             boolean;
     cooldown_until?:             string;
     current:                     boolean;
+    delivery_kind:               string;
     delivery_ref:                string;
     effective_basis:             PublicationEffectiveBasis;
     effective_basis_digest:      string;
@@ -3085,12 +3108,12 @@ export interface RemotePreparationRecord {
     mapping?:                    PublishedResultMapping;
     mapping_digest?:             string;
     operation?:                  RemotePreparationOperation;
+    provider_metadata:           RepositoryProviderMetadata;
     published?:                  PublicationPublishedProof;
     published_digest?:           string;
     read_retry_allowed:          boolean;
     reason?:                     PublicationRefObservationReason;
     remote_preparation:          RemotePreparation;
-    repository_id:               string;
     repository_identity:         string;
     resource_id:                 string;
     retry_allowed:               boolean;
@@ -3333,6 +3356,7 @@ export interface DeliveryOutputSource {
 export interface DeliveryRepository {
     candidate?:                 PublicationCandidateManifest;
     candidate_manifest_digest?: string;
+    delivery_kind?:             string;
     delivery_ref?:              string;
     effective_basis:            PublicationEffectiveBasis;
     effective_basis_digest:     string;
@@ -3408,7 +3432,9 @@ export interface DeliveryItemProgress {
     accepted_head:     string;
     checks:            Checks;
     cooldown_until?:   string;
+    delivery_kind:     string;
     final_commit?:     string;
+    finality_kind?:    string;
     finalized_at?:     string;
     item_id:           string;
     merge_method?:     MergeMethod;
@@ -3425,7 +3451,7 @@ export interface DeliveryItemProgress {
     test_merge_head?:  string;
 }
 
-export type Checks = "unknown" | "pending" | "passing" | "failing";
+export type Checks = "unknown" | "pending" | "passing" | "failing" | "not_applicable";
 
 export type OperationKindEnum = "push" | "create_pr" | "update_pr" | "close_pr" | "merge";
 
@@ -3798,20 +3824,32 @@ export interface InspectionRepositoryAccessResult {
     default_branch:    string;
     inspection_digest: string;
     operation_id:      string;
-    provider_metadata: InspectionRepositoryAccessResultProviderMetadata;
+    provider_metadata: RepositoryProviderMetadata;
     remote_url:        string;
     schema_version:    number;
-}
-
-export interface InspectionRepositoryAccessResultProviderMetadata {
-    github: FluffyGithub;
-}
-
-export interface FluffyGithub {
-    repository_id: string;
 }
 
 export interface InspectionRepositoryAccessError {
     reason:         InspectionUnavailableReason;
     schema_version: number;
+}
+
+export interface GitHTTPSCredentialInput {
+    resource_id: string;
+    token:       string;
+    username:    string;
+}
+
+export interface GitHTTPSCredentialClear {
+    resource_id: string;
+}
+
+export interface RepositoryAccessResult {
+    authentication:    RepositoryAuthentication;
+    default_branch:    string;
+    operation_id:      string;
+    provider_metadata: RepositoryProviderMetadata;
+    remote_url:        string;
+    schema_version:    number;
+    workspace_digest:  string;
 }

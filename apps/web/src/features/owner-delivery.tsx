@@ -17,8 +17,8 @@ const reasonText: Record<string, string> = {
   unsupported_mode: 'A repository in this result uses an unsupported delivery provider or mode.',
   input_pending: 'Resolve the earlier input or decision in Conversation before accepting.',
   work_unsettled: 'Current work or physical workspace effects still need to settle.',
-  permission_unknown: 'Verified repository permissions are missing or unavailable.',
-  expired_permission: 'The same repository permission scope needs to be refreshed.',
+  permission_unknown: 'Repository authorization is missing or unavailable.',
+  expired_permission: 'The same repository authorization scope needs to be refreshed.',
   scan_incomplete: 'The complete scan of the exact publication candidate is unavailable.',
   findings_blocked: 'Publication findings require an eligible exact policy decision or correction.',
   source_changed: 'The reviewed result is no longer current. Prepare a new review.',
@@ -142,7 +142,7 @@ function ProposalReview({ summary, enabled, ...props }: TaskViewProps & { summar
             {!proposal.confirmation_id && <Button className="max-sm:min-h-11" disabled={!fresh || busy} onClick={() => { void confirm(); }}>Confirm exact result</Button>}
             {proposal.confirmation_id && <Button className="max-sm:min-h-11" disabled={!fresh || busy} onClick={() => { void accept(); }}>{modified ? 'Accept delivery' : 'Accept result'}</Button>}
           </div>
-          <p className="text-sm text-muted-foreground">{modified ? 'Acceptance admits this frozen batch. Required checks and remote finalization may still be waiting.' : 'There are no modified repositories to publish. Exact acceptance can complete this result without provider calls.'}</p>
+          <p className="text-sm text-muted-foreground">{modified ? (manifest?.repositories.some(repository => repository.delivery_kind === 'github_pr') ? 'Acceptance admits this frozen batch. Required checks and remote finalization may still be waiting.' : 'Acceptance admits this frozen batch. Fresh verification of the published branches is still required.') : 'There are no modified repositories to publish. Exact acceptance can complete this result without provider calls.'}</p>
         </>}
       </DialogContent>
     </Dialog>
@@ -163,7 +163,8 @@ function ManifestReview({ manifest, digest }: { manifest: DeliveryAcceptanceMani
     {manifest.repositories.map(value => <article className="space-y-2 border-b border-border py-3" key={value.resource_id}>
       <h3 className="break-all font-medium">{value.repository_identity}</h3>
       {value.outcome === 'no_change' ? <p>No repository changes to publish; the exact terminal preparation reports no change.</p> : <>
-        <dl><Datum label="Public head"><code className="break-all">{value.candidate?.head}</code></Datum><Datum label="Exact tree"><code className="break-all">{value.candidate?.tree}</code></Datum><Datum label="Fixed target">{value.target_branch}</Datum><Datum label="Public parents">{value.candidate?.parents.map(parent => <code className="block break-all" key={parent}>{parent}</code>)}</Datum><Datum label="Merge preference">{value.merge_method ? human(value.merge_method) : 'First repository-allowed compatible method: merge, squash, rebase'}</Datum></dl>
+        <dl><Datum label="Public head"><code className="break-all">{value.candidate?.head}</code></Datum><Datum label="Exact tree"><code className="break-all">{value.candidate?.tree}</code></Datum><Datum label="Fixed target">{value.target_branch}</Datum><Datum label="Public parents">{value.candidate?.parents.map(parent => <code className="block break-all" key={parent}>{parent}</code>)}</Datum>{value.delivery_kind === 'github_pr' ? <Datum label="Merge preference">{value.merge_method ? human(value.merge_method) : 'First repository-allowed compatible method: merge, squash, rebase'}</Datum> : <Datum label="Delivery branch"><code className="break-all">{value.delivery_ref}</code></Datum>}</dl>
+        {value.delivery_kind === 'git_branch' && <p className="task-notice">Accepted branch publication; merge into the target branch manually.</p>}
         {value.mapping && <p className="task-notice">This exact result maps to an already published candidate. Zero new commits still requires final delivery of the approved head.</p>}
         <p>Complete publication scan · {value.scan?.findings_count} retained findings · {value.waivers?.length ?? 0} exact Owner override receipts.</p>
         {value.review && <p><a href={value.review.url} target="_blank" rel="noreferrer">Open existing PR #{value.review.pr_number}</a></p>}
@@ -198,11 +199,11 @@ function AcceptedBatch({ expected, active, ...props }: TaskViewProps & { expecte
       <BatchProgress data={data} />
       {batch?.status === 'completed' && <p className="task-notice">This accepted delivery is complete. Further implementation starts as an independent Task through <a href={props.task.todo_id ? `#todos?${new URLSearchParams({ todo_id: props.task.todo_id })}` : '#todos'}>Todo Discussion</a>.</p>}
       {batch?.status === 'cancelled' && <p className="task-notice">New delivery effects are revoked. Original uncertain effects still require reconciliation. Any later verified remote success stays in history and cannot revive this cancelled Task.</p>}
-      {batch?.status === 'revoked' && <p className="task-notice">This approval was revoked for requested changes. Fresh review and acceptance are required before delivery can resume. Its existing PR and branch are retained.</p>}
+      {batch?.status === 'revoked' && <p className="task-notice">This approval was revoked for requested changes. Fresh review and acceptance are required before delivery can resume. Its existing delivery branch and any PR are retained.</p>}
       {data.revocation && <p className="task-notice">{data.revocation.settled ? 'Original admitted effects have settled.' : 'Original admitted effects are still settling. Correction cannot acquire their physical ownership yet.'}</p>}
       <div className="task-actions">
         {batch?.retry_allowed && <Button className="max-sm:min-h-11" variant="outline" disabled={!fresh || !expected.retry_allowed || busy} onClick={() => { void act('retry_delivery'); }}>{batch.status === 'reconciling' ? 'Reconcile original delivery' : 'Retry accepted delivery'}</Button>}
-        {batch?.cancel_allowed && <Dialog open={cancelOpen} onOpenChange={setCancelOpen}><DialogTrigger render={<Button className="max-sm:min-h-11" variant="outline" disabled={!fresh || !expected.cancel_allowed || busy} />}>Cancel accepted delivery</DialogTrigger><DialogContent><DialogTitle className="pr-8 text-xl font-medium">Cancel this accepted delivery?</DialogTitle><DialogDescription>This cancels the Task and revokes new effects for this exact batch. It cannot undo a verified merge. Original uncertain effects remain under reconciliation. Undelivered open PRs are closed when safe; their branches are retained.</DialogDescription><p className="break-all text-sm">Accepted version · <code>{batch.content_digest}</code></p><Button disabled={!fresh || busy} onClick={() => { void act('cancel_delivery'); }}>Cancel this batch and Task</Button></DialogContent></Dialog>}
+        {batch?.cancel_allowed && <Dialog open={cancelOpen} onOpenChange={setCancelOpen}><DialogTrigger render={<Button className="max-sm:min-h-11" variant="outline" disabled={!fresh || !expected.cancel_allowed || busy} />}>Cancel accepted delivery</DialogTrigger><DialogContent><DialogTitle className="pr-8 text-xl font-medium">Cancel this accepted delivery?</DialogTitle><DialogDescription>This cancels the Task and revokes new effects for this exact batch. It cannot undo a verified merge or an accepted branch publication. Original uncertain effects remain under reconciliation. Undelivered open PRs are closed when safe; their branches are retained.</DialogDescription><p className="break-all text-sm">Accepted version · <code>{batch.content_digest}</code></p><Button disabled={!fresh || busy} onClick={() => { void act('cancel_delivery'); }}>Cancel this batch and Task</Button></DialogContent></Dialog>}
       </div>
       {!active && <p className="task-muted">Historical approval grants no new Retry or Cancel authority.</p>}
       {active && !fresh && (batch?.retry_allowed || batch?.cancel_allowed) && <p className="task-muted">Refreshing the exact batch capability before another decision.</p>}
@@ -228,12 +229,12 @@ function BatchProgress({ data }: { data: DeliveryBatch }) {
     {data.items.map(item => <section className="border-b border-border py-3" key={item.item_id}>
       <p className="break-all"><strong>{human(item.status)}</strong> · {data.manifest.repositories.find(repository => repository.resource_id === item.resource_id)?.repository_identity ?? item.resource_id}</p>
       <p className="break-all">Accepted head · <code>{item.accepted_head}</code></p>
-      {item.status !== 'finalized' && <p>Required checks · {human(item.checks)}{item.checks === 'unknown' ? '. Missing or unsupported readiness is not permission to merge.' : ''}</p>}
+      {item.status !== 'finalized' && item.checks !== 'not_applicable' && <p>Required checks · {human(item.checks)}{item.checks === 'unknown' ? '. Missing or unsupported readiness is not permission to merge.' : ''}</p>}
       {item.reason && <p className="task-notice">{explain(item.reason)}</p>}
       {item.reconciliation && <p className="task-notice">{reconciliation[item.reconciliation]}</p>}
       {item.status === 'reconciling' && <p className="task-muted">Reading the original exact PR to resolve an uncertain merge. A lost reply does not authorize another merge.</p>}
       {item.review && <p><a href={item.review.url} target="_blank" rel="noreferrer">Open PR #{item.review.pr_number}</a></p>}
-      {item.final_commit && <p className="break-all">Verified final commit · <code>{item.final_commit}</code>{item.finalized_at && ` · ${new Date(item.finalized_at).toLocaleString()}`}</p>}
+      {item.final_commit && <p className="break-all">{item.finality_kind === 'git_branch' ? 'Accepted branch published' : 'Verified final commit'} · <code>{item.final_commit}</code>{item.finalized_at && ` · ${new Date(item.finalized_at).toLocaleString()}`}</p>}
       {item.merge_method && <p className="task-muted">Requested merge method · {human(item.merge_method)}. Reconciliation alone does not establish the remote actor or method.</p>}
       {item.cooldown_until && <p className="task-muted">Provider cooldown until {new Date(item.cooldown_until).toLocaleString()}.</p>}
       {item.operation_id && <DetailIDs><dl><Datum label="Original operation">{item.operation_id}</Datum><Datum label="Request digest">{item.operation_digest}</Datum><Datum label="Operation state">{item.operation_state && human(item.operation_state)}</Datum></dl></DetailIDs>}

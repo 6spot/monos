@@ -134,7 +134,7 @@ func (c *Client) PublicationAccess(ctx context.Context, r protocol.PublicationPu
 	if e != nil {
 		return protocol.PublicationAccessResult{}, e
 	}
-	if result.OperationID != r.OperationID || result.RequestDigest != digest || result.ItemID != r.ItemID || result.AttemptID != attempt || result.Purpose != purpose || result.RemoteURL != r.RemoteURL || result.RepositoryID != r.RepositoryID || result.DeliveryRef != r.DeliveryRef || r.Prepared.Candidate == nil || result.CandidateHead != r.Prepared.Candidate.Head || !reflectPublicationHead(result.ExpectedHead, r.ExpectedHead) {
+	if result.OperationID != r.OperationID || result.RequestDigest != digest || result.ItemID != r.ItemID || result.AttemptID != attempt || result.Purpose != purpose || result.RemoteURL != r.RemoteURL || !wire.SameRepositoryProvider(&result.ProviderMetadata, &r.ProviderMetadata) || result.DeliveryRef != r.DeliveryRef || r.Prepared.Candidate == nil || result.CandidateHead != r.Prepared.Candidate.Head || !reflectPublicationHead(result.ExpectedHead, r.ExpectedHead) {
 		return protocol.PublicationAccessResult{}, errors.New("publication access mismatch")
 	}
 	return result, e

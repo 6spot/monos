@@ -13,6 +13,7 @@ import {RemotePreparationReads} from './remote-preparation-reads.ts';
 import {RemotePreparationCommands} from './remote-preparation-commands.ts';
 import {RemotePreparationAccess} from './remote-preparation-access.ts';
 import {GitHubRemote} from './github-remote.ts';
+import { PublicationRefReadBroker } from './publication-ref-read-broker.ts';
 import { ResultReadBroker } from "./result-read-broker.ts";
 import { resultContent } from "./result-content-reads.ts";
 import { TaskReplan } from './task-replan.ts';
@@ -76,7 +77,7 @@ function errorResult(error: unknown): CommandResult {
   return { schema_version: 1, status: 'error', error: error instanceof CommandError ? error.detail : { code: 'internal_error', message: 'Internal operation failed; reconcile existing request before retry' } };
 }
 
-export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: Buffer }, webRoot?: string, options:{remoteProvider?:GitHubRemote}={}) {
+export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: Buffer }, webRoot?: string, options:{remoteProvider?:GitHubRemote;refReads?:PublicationRefReadBroker}={}) {
   const app = Fastify({ ...(tls ? { https: tls } : {}), trustProxy: false, bodyLimit: MAX_BODY_BYTES, logger: { level: 'warn', redact: ['req.headers.authorization', 'req.headers.cookie', 'res.headers.set-cookie'] }, disableRequestLogging: true });
   app.setErrorHandler((error: unknown, request: FastifyRequest, reply: FastifyReply) => {
     if (webRoot && (request.url === '/' || request.url.startsWith('/assets/')) && error && typeof error === 'object' && 'statusCode' in error && typeof error.statusCode === 'number' && [400, 403, 404].includes(error.statusCode)) {
@@ -91,6 +92,7 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
   app.addHook('onRequest', async (request, reply) => { if (request.url.startsWith('/v1/owner/')) {void reply.header('Cache-Control', 'no-store');if(request.url.includes('/remote-preparation')||request.url.includes('/delivery')||request.url.includes('/review'))void reply.header('X-Content-Type-Options','nosniff');} });
   app.get('/health', async () => { await service.db.pool.query('SELECT 1'); return { schema_version: 1, database: 'ready', probe: true }; });
   const resultReads = new ResultReadBroker();
+  const refReads = options.refReads ?? new PublicationRefReadBroker();
   const publication = new PublicationPreparation(service.db,service.instanceId);
   const publicationReads = new PublicationCandidateReads(service.db,service.instanceId);
   const publicationCommands = new PublicationCommands(service.db);
@@ -99,7 +101,7 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
   const reviewCommands=new TaskReviewCommands(service.db,ownerReviewHooks);
   const reviewReads=new TaskReviewReads(service.db);
   const remoteProvider=options.remoteProvider??new GitHubRemote(service.options.github??new GitHub(service.options.signingKey));
-  const remote=new RemotePreparation(service.db,service.instanceId,remoteProvider);
+  const remote=new RemotePreparation(service.db,service.instanceId,remoteProvider,refReads);
   const remoteReads=new RemotePreparationReads(service.db,service.instanceId);
   const remoteCommands=new RemotePreparationCommands(service.db);
   const remoteAccess=new RemotePreparationAccess(service,remoteProvider);
@@ -113,7 +115,7 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
     const actual = await access.session(ownerCredential(request));
     if (expected !== actual.session_id) throw new CommandError('unauthorized', 'Owner session changed; reload the authenticated workspace');
   });
-  const configuration = new Configuration(service.db, new GitHub(service.options.signingKey));
+  const configuration = new Configuration(service.db, new GitHub(service.options.signingKey), service.gitHTTPS);
   const todos = new Todos(service.db);
   const discussion = new Discussion(service.db, service.instanceId);
   const todoAttempts = new TodoAttemptReads(service.db);
@@ -341,7 +343,11 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
               await service.touch(runnerId, incarnation, true, frame.runtimes);
               if(ws.readyState===WebSocket.OPEN){publicationSupported=frame.publication_modes?.includes('local_candidate_v1') ?? false;await service.db.pool.query('UPDATE runners SET publication_supported=$3 WHERE id=$1 AND incarnation=$2 AND connection_instance=$4',[runnerId,incarnation,publicationSupported,service.instanceId]);}
               if(ws.readyState===WebSocket.OPEN){remoteSupported=frame.remote_preparation_modes?.includes('github_review_v1')??false;await service.db.pool.query('UPDATE runners SET remote_preparation_supported=$3 WHERE id=$1 AND incarnation=$2 AND connection_instance=$4',[runnerId,incarnation,remoteSupported,service.instanceId]);}
-              if (ws.readyState === WebSocket.OPEN) resultReads.register(runnerId,incarnation,ws,frame.result_read_modes?.includes("git_objects_v1") ?? false,send); break;
+              if (ws.readyState === WebSocket.OPEN) resultReads.register(runnerId,incarnation,ws,frame.result_read_modes?.includes("git_objects_v1") ?? false,send);
+              if (ws.readyState === WebSocket.OPEN) refReads.register(runnerId,incarnation,ws,frame.publication_ref_read_modes?.includes("git_ref_v1") ?? false,send); break;
+            case 'publication_ref_read_result':
+              await service.touch(runnerId,incarnation);
+              refReads.response(runnerId,ws,frame); break;
             case 'result_read_result':
               await service.touch(runnerId,incarnation);
               resultReads.response(runnerId,ws,frame); break;
@@ -378,15 +384,15 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
     });
     ws.on('error', () => { /* Close handler owns reconciliation; no raw errors or credentials logged. */ });
     ws.on('close', () => {
-      resultReads.disconnect(runnerId,ws);
+      resultReads.disconnect(runnerId,ws); refReads.disconnect(runnerId,ws);
       clearInterval(poll); clearTimeout(helloDeadline);
       if (incarnation !== undefined) void service.disconnect(runnerId, incarnation).catch(() => undefined);
       // A hello already waiting on the database can finish after socket close.
-      void processing.finally(async () => { if (incarnation !== undefined) { resultReads.disconnect(runnerId,ws); await service.disconnect(runnerId, incarnation); } }).catch(() => undefined);
+      void processing.finally(async () => { if (incarnation !== undefined) { resultReads.disconnect(runnerId,ws); refReads.disconnect(runnerId,ws); await service.disconnect(runnerId, incarnation); } }).catch(() => undefined);
     });
   }
   app.addHook('onClose', async () => {
-    resultReads.shutdown();
+    resultReads.shutdown(); refReads.shutdown();
     for (const ws of sockets.clients) ws.terminate();
     await new Promise<void>((resolve) => sockets.close(() => resolve()));
   });

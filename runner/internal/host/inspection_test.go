@@ -39,7 +39,7 @@ func inspectionFixture(t *testing.T, id string) (string, protocol.Operation, *re
 }
 
 func localInspectionAccess(op protocol.Operation) protocol.InspectionRepositoryAccessResult {
-	return protocol.InspectionRepositoryAccessResult{SchemaVersion: 1, OperationID: op.OperationID, InspectionDigest: *op.InspectionDigest, RemoteURL: op.Inspection.Resource.RemoteURL, DefaultBranch: "main", Authentication: protocol.RepositoryAuthentication{Kind: "anonymous"}}
+	return protocol.InspectionRepositoryAccessResult{SchemaVersion: 1, OperationID: op.OperationID, InspectionDigest: *op.InspectionDigest, RemoteURL: op.Inspection.Resource.RemoteURL, DefaultBranch: "main", Authentication: protocol.RepositoryAuthentication{Kind: "anonymous"}, ProviderMetadata: protocol.RepositoryProviderMetadata{Github: &protocol.GithubClass{RepositoryID: "123"}}}
 }
 
 func localInspectionFetch(t *testing.T, f *resultGitFixture, after func() error) func(context.Context, *inspectionSession) (string, string, string, error) {
@@ -51,7 +51,7 @@ func localInspectionFetch(t *testing.T, f *resultGitFixture, after func() error)
 					args[n] = f.export
 				}
 			}
-			return s.git(ctx, repo, env, args...)
+			return s.git(ctx, repo, env, append([]string{"-c", "protocol.file.allow=always"}, args...)...)
 		}
 		path, commit, tree, err := s.fetch(ctx, func(_ context.Context, op protocol.Operation) (protocol.InspectionRepositoryAccessResult, error) {
 			return localInspectionAccess(op), nil

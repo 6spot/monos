@@ -24,15 +24,15 @@ func (e *RepositoryAccessFailure) Error() string {
 
 // RepositoryAccess is transient service-only data. It is never a command receipt
 // and may be requested during connected, not-yet-ready recovery of an admitted open.
-func (c *Client) RepositoryAccess(ctx context.Context, op protocol.Operation) (protocol.GitHubRepositoryAccessResult, error) {
-	var access protocol.GitHubRepositoryAccessResult
+func (c *Client) RepositoryAccess(ctx context.Context, op protocol.Operation) (protocol.RepositoryAccessResult, error) {
+	var access protocol.RepositoryAccessResult
 	if op.Workspace == nil || op.WorkspaceDigest == nil {
 		return access, fmt.Errorf("workspace descriptor required")
 	}
 	c.mu.Lock()
-	inc, connected := c.inc, c.conn != nil
+	inc, conn := c.inc, c.conn
 	c.mu.Unlock()
-	if !connected {
+	if conn == nil {
 		return access, fmt.Errorf("repository access connection unavailable")
 	}
 	raw, err := json.Marshal(protocol.RepositoryAccessRequest{SchemaVersion: 1, Incarnation: inc, WorkspaceDigest: *op.WorkspaceDigest})
@@ -63,17 +63,17 @@ func (c *Client) RepositoryAccess(ctx context.Context, op protocol.Operation) (p
 		}
 		return access, &RepositoryAccessFailure{Reason: reason}
 	}
-	if err = wire.Decode("GitHubRepositoryAccessResult", raw, &access); err != nil {
-		return protocol.GitHubRepositoryAccessResult{}, fmt.Errorf("invalid repository access response")
+	if err = wire.Decode("RepositoryAccessResult", raw, &access); err != nil {
+		return protocol.RepositoryAccessResult{}, fmt.Errorf("invalid repository access response")
 	}
-	if access.OperationID != op.OperationID || access.WorkspaceDigest != *op.WorkspaceDigest {
-		return protocol.GitHubRepositoryAccessResult{}, fmt.Errorf("repository access operation mismatch")
+	if access.OperationID != op.OperationID || access.WorkspaceDigest != *op.WorkspaceDigest || wire.ValidateRepositoryEndpoint(op.Workspace.Resource, access.RemoteURL, access.ProviderMetadata) != nil {
+		return protocol.RepositoryAccessResult{}, fmt.Errorf("repository access operation mismatch")
 	}
 	c.mu.Lock()
-	same := c.inc == inc && c.conn != nil
+	same := c.inc == inc && c.conn == conn
 	c.mu.Unlock()
 	if !same {
-		return protocol.GitHubRepositoryAccessResult{}, fmt.Errorf("repository access connection changed")
+		return protocol.RepositoryAccessResult{}, fmt.Errorf("repository access connection changed")
 	}
 	return access, nil
 }

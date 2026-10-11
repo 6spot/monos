@@ -6,7 +6,7 @@ import { multiReplanFixture } from './task-replan-multi-fixture.ts';
 type Base = Awaited<ReturnType<typeof multiReplanFixture>>;
 export type MultiRepositoryTurn = Awaited<ReturnType<Base['promote']>>;
 
-export async function multiRepositoryWorkspacesFixture() {
+export async function multiRepositoryWorkspacesFixture(plain: number[] = []) {
   const x = await multiReplanFixture();
   const resources: [string, string] = [randomUUID(), randomUUID()];
   resources.sort();
@@ -15,7 +15,7 @@ export async function multiRepositoryWorkspacesFixture() {
     await configuration.save(x.token, {
       schema_version: 1, request_id: randomUUID(), expected_control_version: (await configuration.read(x.token)).control_version,
       name: 'save_project', payload: { id: x.f.project, name: 'Multiple repositories', context: 'Complete every repository as one Node',
-        resources: resources.map((id, index) => ({ id, remote_url: `https://github.com/example/multi-${index}.git`,
+        resources: resources.map((id, index) => ({ id, remote_url: plain.includes(index)?`https://git.example.test:8443/Exact/Repo-${index}.git`:`https://github.com/example/multi-${index}.git`,
           remote_preparation: 'after_acceptance' as const, default_branch: 'main' })), role_ids: [x.f.role], archived: false },
     });
     async function admitOpen(turn: MultiRepositoryTurn, resource = resources[0]) {
@@ -26,7 +26,11 @@ export async function multiRepositoryWorkspacesFixture() {
       const w = operation.workspace!;
       const metadata: WorkspaceMetadata = {
         generation: w.generation, lease_id: w.lease_id, storage_id: `storage-${w.resource_id}`,
-        repository_identity: w.resource.repository_identity, provider_metadata: { github: { repository_id: String(resources.indexOf(w.resource_id) + 41) } },
+        repository_identity: w.resource.repository_identity,
+        // Successful materialization observes the fixture's GitHub ID even when configuration omitted it.
+        provider_metadata: w.resource.repository_identity.startsWith('github.com/')
+          ? { github: w.resource.provider_metadata?.github ?? { repository_id: String(resources.indexOf(w.resource_id) + 41) } }
+          : {},
         base_commit: 'a'.repeat(40), target_branch: 'main', target_commit: 'b'.repeat(40),
         finalized_commit: w.transfer?.kind === 'checkpoint' ? w.transfer.metadata.finalized_commit : w.basis?.finalized_commit ?? 'a'.repeat(40),
         ...(w.isolation ? { isolation: { allocation_id: w.isolation.allocation_id,

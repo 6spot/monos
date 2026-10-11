@@ -42,6 +42,7 @@ func TestResultReadConnectionCapabilityCorrelationAndCancellation(t *testing.T) 
 	defer cancel()
 	h := &resultConnectionHandler{frames: make(chan context.Context, 1), t: t}
 	i := protocol.ResultReadIdentity{TaskID: "task", OperationID: "completion", AttemptID: "attempt", DispatchID: "dispatch", NodeID: "node", SpecificationID: "spec", PlanID: "plan", WorkspaceID: "workspace", ResourceID: "repo", RunnerID: "runner", StorageID: "storage", LeaseID: "lease", NodeActivation: 1, Generation: 1, RepositoryIdentity: "repo", ManifestDigest: strings.Repeat("a", 64), OperationIdentityDigest: strings.Repeat("b", 64), BaseCommit: strings.Repeat("1", 40), GitCommit: strings.Repeat("2", 40), GitTree: strings.Repeat("3", 40)}
+	i.Capture = protocol.WorkspaceCaptureResult{StartCommit: i.BaseCommit, NodeCommit: i.GitCommit, NodeTree: i.GitTree}
 	_, digest, e := wire.Canonical(i)
 	if e != nil {
 		t.Fatal(e)

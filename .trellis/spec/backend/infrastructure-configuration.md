@@ -68,3 +68,53 @@ Correct: keep encrypted key storage private and return only safe fingerprints.
 
 Wrong: check Ready availability before returning from an unsupported publication lane.
 Correct: return an empty frame array before the transaction; keep all supported connection and dispatch guards.
+
+## Resource-scoped plain Git HTTPS credentials
+
+[git-https-credentials.ts](../../../apps/server/src/git-https-credentials.ts) and
+[migration 33](../../../packages/db/migrations/0033_git_https_credentials.sql) own
+plain HTTPS service credential storage. `GitHTTPSCredentials(signingKey)` is the
+third optional dependency of `Configuration(db,github?,gitHTTPS?)`. This is separate
+from global GitHub App configuration and never installs credentials into Agent
+CLIs, Project context or Task resource bindings.
+
+Each row binds immutable resource ID, repository identity and exact remote URL to
+username, encrypted token, opaque generation and safe save receipt. AES-256-GCM
+uses a random 12-byte IV and 16-byte tag. HKDF-SHA256 uses the provider salt above
+with distinct info `git-https-credential-v1`. Canonical JSON AAD binds the purpose,
+resource ID, exact remote URL, username and generation. The stable scope digest
+binds resource/identity/URL/username and allowed system use `read,observe,push`,
+excluding material generation, token and unrelated GitHub configuration. Same-user
+token rotation can therefore refresh material for an existing accepted scope.
+
+Inputs require nonempty username (at most 256 Unicode characters) and token
+(at most 4096 UTF-8 bytes), well-formed Unicode, no NUL/CR/LF, and no colon in the
+username. Tokens stay in memory during encryption/decryption. Public statuses and
+immutable receipts contain only resource ID, username, generation and scope
+digest. Encrypted tokens are also excluded from public responses. Decryption or
+binding failure yields a sanitized prerequisite error and never anonymous retry.
+
+Call `gitHTTPSCredentialScope(tx,resourceId)` and
+`GitHTTPSCredentials.authentication(tx,resourceId,expectedScopeDigest?)` while
+holding the configuration share lock before Runner/Task locks. Unknown/inactive
+resources and nonplain adapters are denied. A missing configured credential allows
+anonymous read only when no expected authorization scope is supplied. Configured
+access returns `https_basic` with an expiry five minutes ahead, a local grant-use
+deadline rather than a statement about upstream token expiry or provider-enforced
+read-only/repository-only attenuation. Callers retain exact operation/resource/URL
+checks and recheck material generation when crossing an external-I/O boundary.
+
+`verifyGitHTTPSCredentialReceipt` checks historical safe saved evidence against
+the current resource/user/scope. SQL `git_https_credential_receipt_matches` checks
+the exact safe saved response and optionally its material generation. A deferred
+constraint binds current material to its exact configuration receipt in the same
+transaction; resource/URL binding is immutable. Rotation preserves historical
+receipt truth; clear prevents new credentialed grants. Neither operation releases
+physical publication ownership or invalidates historical remote-effect evidence.
+
+`postgres-git-https-credentials.test.ts` covers safe snapshots/receipts, encryption
+and cross-resource/material binding failures, receipt/version rollback, same-scope
+renewal and replay, missing/foreign receipt rejection, clear/removal denial and
+anonymous independence from global GitHub configuration. These are local database
+and crypto checks, not evidence of native Runner permissions or real Git service
+authentication and write access.

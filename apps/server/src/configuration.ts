@@ -1,24 +1,27 @@
 import { transaction } from '../../../packages/db/src/index.ts';
 import type { Database, Transaction } from '../../../packages/db/src/index.ts';
 import { canonicalJSON, digest, MAX_BODY_BYTES, validate } from '../../../packages/protocol/src/index.ts';
-import type { ConfigurationCommand, ConfigurationResult, ConfigurationSnapshot, GitRepositoryResource, ProjectConfiguration, RoleConfiguration, PolicyConfiguration, GitHubConfigurationStatus, InfrastructureSnapshot, RuntimeInstallation } from '../../../packages/protocol/src/index.ts';
+import type { ConfigurationCommand, ConfigurationResult, ConfigurationSnapshot, GitRepositoryResource, ProjectConfiguration, RoleConfiguration, PolicyConfiguration, GitHubConfigurationStatus, GitHTTPSCredentialStatus, InfrastructureSnapshot, RuntimeInstallation } from '../../../packages/protocol/src/index.ts';
 import { CommandError } from '../../../packages/domain/src/commands.ts';
-import { repositoryIdentity, validateGitRef } from '../../../packages/domain/src/repositories.ts';
+import { repositoryIdentity, validateRepositorySettings } from '../../../packages/domain/src/repositories.ts';
 import { authenticateOwner } from './owner-commands.ts';
 import { lockConfiguration } from './configuration-guards.ts';
 import { discussionText } from './discussion-state.ts';
 import type { GitHub, GitHubCredentials } from './github.ts';
+import type { GitHTTPSCredentials } from './git-https-credentials.ts';
 
 async function snapshot(tx: Transaction, version: number): Promise<ConfigurationSnapshot> {
   const roleRows = (await tx.query<RoleConfiguration & { execution_policy: RoleConfiguration['execution_policy'] | null }>('SELECT id,name,description,instructions,archived,execution_policy FROM roles ORDER BY id')).rows;
   const roles = roleRows.map(({ execution_policy, ...role }) => ({ ...role, ...(execution_policy ? { execution_policy } : {}) }));
   const policies = (await tx.query<{ policies: PolicyConfiguration }>('SELECT policies FROM execution_policies')).rows[0]!.policies;
   const github = (await tx.query<GitHubConfigurationStatus>('SELECT app_id,installation_id,key_fingerprint FROM github_configuration')).rows[0];
+  const git_https_credentials = (await tx.query<GitHTTPSCredentialStatus>(`SELECT c.resource_id,c.username,c.generation,c.scope_digest
+    FROM git_https_credentials c JOIN project_resources r ON r.id=c.resource_id WHERE r.active ORDER BY c.resource_id`)).rows;
   const projects = (await tx.query<Omit<ProjectConfiguration, 'resources' | 'role_ids'>>('SELECT id,name,context,archived FROM projects ORDER BY id')).rows;
   const resources = (await tx.query<{ project_id: string; settings: GitRepositoryResource }>('SELECT project_id,settings FROM project_resources WHERE active ORDER BY id')).rows;
   const selected = (await tx.query<{ project_id: string; role_id: string }>('SELECT project_id,role_id FROM project_roles ORDER BY role_id')).rows;
   const planner_guidance = (await tx.query<{ planner_guidance: string }>('SELECT planner_guidance FROM execution_policies')).rows[0]!.planner_guidance;
-  const result = { schema_version: 1, control_version: version, roles, policies, planner_guidance, ...(github ? { github } : {}), projects: projects.map((project) => ({ ...project, resources: resources.filter((r) => r.project_id === project.id).map((r) => r.settings), role_ids: selected.filter((r) => r.project_id === project.id).map((r) => r.role_id) })) };
+  const result = { schema_version: 1, control_version: version, roles, policies, planner_guidance, git_https_credentials, ...(github ? { github } : {}), projects: projects.map((project) => ({ ...project, resources: resources.filter((r) => r.project_id === project.id).map((r) => r.settings), role_ids: selected.filter((r) => r.project_id === project.id).map((r) => r.role_id) })) };
   if (Buffer.byteLength(JSON.stringify(result)) > MAX_BODY_BYTES) throw new CommandError('unmet_precondition', 'Configuration exceeds the current 2 MiB snapshot limit');
   return validate('ConfigurationSnapshot', result);
 }
@@ -42,8 +45,7 @@ async function saveProject(tx: Transaction, project: ProjectConfiguration): Prom
   if (new Set(ids).size !== ids.length || new Set(identities).size !== identities.length) throw new CommandError('invalid_input', 'Duplicate repository resource or remote');
   const existing = (await tx.query<{ id: string; project_id: string; remote_url: string; repository_identity: string; settings: GitRepositoryResource }>('SELECT id,project_id,remote_url,repository_identity,settings FROM project_resources WHERE project_id=$1 OR id=ANY($2::text[])', [project.id, ids])).rows;
   for (const [index, resource] of project.resources.entries()) {
-    if (resource.default_ref !== undefined) validateGitRef(resource.default_ref);
-    if (resource.default_branch !== undefined) validateGitRef(resource.default_branch);
+    validateRepositorySettings(resource);
     const old = existing.find((row) => row.id === resource.id);
     if (resource.provider && !identities[index]!.startsWith('github.com/')) throw new CommandError('invalid_input', 'GitHub metadata requires a GitHub remote');
     if (old?.settings.provider_repo_id && (old.settings.provider_repo_id !== resource.provider_repo_id || old.settings.provider !== resource.provider)) throw new CommandError('payload_conflict', 'Provider repository identity is immutable');
@@ -71,7 +73,8 @@ async function saveProject(tx: Transaction, project: ProjectConfiguration): Prom
 export class Configuration {
   readonly db: Database;
   private readonly github?: GitHub;
-  constructor(db: Database, github?: GitHub) { this.db = db; this.github = github; }
+  private readonly gitHTTPS?: GitHTTPSCredentials;
+  constructor(db: Database, github?: GitHub, gitHTTPS?: GitHTTPSCredentials) { this.db = db; this.github = github; this.gitHTTPS = gitHTTPS; }
 
   async read(token: string): Promise<ConfigurationSnapshot> {
     return transaction(this.db, async (tx) => { await authenticateOwner(tx, token); return snapshot(tx, await lockConfiguration(tx)); });
@@ -91,7 +94,14 @@ export class Configuration {
         return prior.response;
       }
       if (version !== command.expected_control_version) throw new CommandError('version_conflict', 'Configuration changed; reload and review your edit', version);
+      let credential_change: ConfigurationResult['credential_change'];
       switch (command.name) {
+        case 'save_git_https_credential':
+          if (!this.gitHTTPS) throw new CommandError('unmet_precondition', 'HTTPS credential storage is not configured');
+          credential_change = await this.gitHTTPS.configure(tx, validate('GitHTTPSCredentialInput', command.payload), command.request_id); break;
+        case 'clear_git_https_credential':
+          if (!this.gitHTTPS) throw new CommandError('unmet_precondition', 'HTTPS credential storage is not configured');
+          credential_change = await this.gitHTTPS.clear(tx, validate<{ resource_id: string }>('GitHTTPSCredentialClear', command.payload).resource_id); break;
         case 'save_planner_guidance': {
           const { guidance } = validate<{ guidance: string }>('PlannerGuidance', command.payload); discussionText(guidance, true);
           await tx.query('UPDATE execution_policies SET planner_guidance=$1', [guidance]); break;
@@ -105,7 +115,7 @@ export class Configuration {
       }
       await tx.query('UPDATE configuration_control SET version=version+1');
       await snapshot(tx, version + 1); // Bounded complete snapshots; failure rolls back this edit.
-      const response = validate<ConfigurationResult>('ConfigurationResult', { schema_version: 1, request_id: command.request_id, status: 'committed', control_version: version + 1, entity_id: command.payload.id ?? command.name });
+      const response = validate<ConfigurationResult>('ConfigurationResult', { schema_version: 1, request_id: command.request_id, status: 'committed', control_version: version + 1, entity_id: command.payload.id ?? command.name, ...(credential_change ? { credential_change } : {}) });
       await tx.query('INSERT INTO configuration_receipts(request_id,digest,response) VALUES($1,$2,$3)', [command.request_id, hash, response]);
       return response;
     });

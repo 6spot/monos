@@ -109,7 +109,7 @@ type Request struct {
 	Dispatch            *protocol.Dispatch                     `json:"dispatch,omitempty"`
 	Operation           *protocol.Operation                    `json:"operation,omitempty"`
 	CompletionOperation *protocol.Operation                    `json:"completion_operation,omitempty"`
-	RepositoryAccess    *protocol.GitHubRepositoryAccessResult `json:"repository_access,omitempty"`
+	RepositoryAccess    *protocol.RepositoryAccessResult `json:"repository_access,omitempty"`
 }
 type Status struct {
 	PreparedIntegration    *protocol.WorkspaceIntegrationResult `json:"prepared_integration,omitempty"`
