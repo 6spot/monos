@@ -24,7 +24,7 @@ func workspaceStopPath(lease string) string {
 
 func validateWorkspaceUnit(values map[string]string, r operationRecord) error {
 	expected := "me"
-	if r.WorkspaceAction == "fetch" || r.WorkspaceAction == "history" {
+	if serviceWorkspaceAction(r.WorkspaceAction) {
 		expected = "monos-probe"
 	}
 	unit := operationUnit(r.Operation.OperationID)
@@ -35,6 +35,10 @@ func validateWorkspaceUnit(values map[string]string, r operationRecord) error {
 		return fmt.Errorf("workspace cgroup mismatch")
 	}
 	return nil
+}
+
+func serviceWorkspaceAction(action string) bool {
+	return action == "fetch" || action == "history" || action == "export_node" || action == "integrate"
 }
 
 // Retained worker identity is checked even after a lost systemd-run response.
@@ -100,7 +104,7 @@ func settleLeaseWorkers(ctx context.Context, op protocol.Operation) error {
 }
 
 func acquireWorkspaceCoordinator(ctx context.Context, op protocol.Operation) (*os.File, error) {
-	p := filepath.Join(Root, "launch", "workspaces", op.Workspace.WorkspaceID+".coordinator.lock")
+	p := filepath.Join(Root, "launch", "workspaces", workspaceAllocationKey(op.Workspace.WorkspaceID, op.Workspace.Isolation)+".coordinator.lock")
 	if op.Kind != protocol.Stop && op.Kind != protocol.SettleCompletion {
 		return acquireFileLock(ctx, p)
 	}
@@ -156,7 +160,7 @@ func prepareWorkspaceWorkerPaths(op protocol.Operation) error {
 	if err != nil {
 		return err
 	}
-	p := filepath.Join(Root, "launch", "workspaces", op.Workspace.WorkspaceID+".writer.lock")
+	p := filepath.Join(Root, "launch", "workspaces", workspaceAllocationKey(op.Workspace.WorkspaceID, op.Workspace.Isolation)+".writer.lock")
 	f, err := os.OpenFile(p, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
 	if err == nil {
 		err = f.Chown(uid, gid)
@@ -211,18 +215,49 @@ func runWorkspaceWorker(ctx context.Context, op protocol.Operation, action strin
 			return empty, fmt.Errorf("open Agent absent; admitted Stop must settle workspace")
 		}
 	}
-	if err = requireUnfencedCompletion(op); err != nil {
-		releaseFileLock(lock)
-		return empty, err
+	continuingIntegration := action == "integrate" && old.IntegrationStarted
+	if !continuingIntegration {
+		if err = requireUnfencedCompletion(op); err != nil {
+			releaseFileLock(lock)
+			return empty, err
+		}
 	}
 	record := operationRecord{Operation: op, BootID: boot, WorkspaceAction: action}
+	if action == "integrate" || action == "export_node" {
+		record.FinalizationResult = old.FinalizationResult
+		if !continuingIntegration {
+			if action == "integrate" && (old.WorkspaceAction != "export_node" || !old.Settled || old.Status.Error != "") {
+				releaseFileLock(lock)
+				return empty, fmt.Errorf("integration requires settled protected Node export")
+			}
+			if old.FinalizationResult == nil && (!old.Settled || old.Status.Error != "") {
+				releaseFileLock(lock)
+				return empty, fmt.Errorf("integration requires settled private finalization")
+			}
+			if record.FinalizationResult == nil {
+				record.FinalizationResult = old.Status.Result
+			}
+		}
+		workspace, e := readWorkspaceAllocation(op.Workspace)
+		if e != nil {
+			releaseFileLock(lock)
+			return empty, e
+		}
+		if e = validateIntegrationCapture(op, workspace.Metadata, record.FinalizationResult); e != nil {
+			releaseFileLock(lock)
+			return empty, e
+		}
+		// This fsynced record is the integration/cancellation ordering barrier.
+		// The same helper lock protects fenceCompletion's durable cancellation.
+		record.IntegrationStarted = action == "integrate"
+	}
 	if err = saveRecord(operationPath(op.OperationID), record); err != nil {
 		releaseFileLock(lock)
 		return empty, err
 	}
 	args := []string{"--quiet", "--wait", "--pipe", "--collect", "--service-type=exec", "--unit=" + operationUnit(op.OperationID), "--description=monos workspace operation " + op.OperationID}
 	props := properties(op.AttemptID, true)
-	if action == "fetch" || action == "history" {
+	if serviceWorkspaceAction(action) {
 		props[0] = "User=monos-probe"
 		for i, p := range props {
 			if strings.HasPrefix(p, "WorkingDirectory=") {
@@ -282,10 +317,16 @@ func stopWorkspaceAgentFirst(stopAgent func() (Status, error), persistFence func
 
 func loadWorkspaceForOpen(op protocol.Operation, storage string) (workspaceRecord, error) {
 	w := op.Workspace
-	r, err := readWorkspaceRecord(w.WorkspaceID)
+	r, err := readWorkspaceAllocation(w)
 	if os.IsNotExist(err) {
-		if w.Basis != nil || w.Transfer != nil {
+		if w.Transfer != nil && w.Transfer.Kind == "checkpoint" || w.Isolation == nil && (w.Basis != nil || w.Transfer != nil) {
 			return r, fmt.Errorf("storage_unavailable: initialized workspace marker missing")
+		}
+		if err = validateCanonicalWorkspaceSource(op); err != nil {
+			return r, err
+		}
+		if err = validateWorkspaceHistoryEvidence(op); err != nil {
+			return r, err
 		}
 		return workspaceRecord{Operation: op, Stage: "intent", Metadata: protocol.WorkspaceMetadata{StorageID: storage, Generation: w.Generation, LeaseID: w.LeaseID, RepositoryIdentity: w.Resource.RepositoryIdentity}}, nil
 	}
@@ -299,6 +340,9 @@ func loadWorkspaceForOpen(op protocol.Operation, storage string) (workspaceRecor
 	}
 	if r.Operation.Workspace.LeaseID != w.LeaseID {
 		if err = validateWorkspaceHistoryEvidence(op); err != nil {
+			return r, err
+		}
+		if err = validateCanonicalWorkspaceSource(op); err != nil {
 			return r, err
 		}
 	}
@@ -321,7 +365,7 @@ func reuseWorkspaceRecord(r workspaceRecord, op protocol.Operation, storage stri
 		return r, fmt.Errorf("ownership_unresolved: prior lease has not settled")
 	}
 	if r.Stage == "cancelled" && r.OpenResult == nil && w.Basis == nil {
-		if err := retireCancelledAllocation(w.WorkspaceID, old.LeaseID); err != nil {
+		if err := retireCancelledAllocation(w, old.LeaseID); err != nil {
 			return r, err
 		}
 		return workspaceRecord{Operation: op, Stage: "intent", Metadata: protocol.WorkspaceMetadata{StorageID: storage, Generation: w.Generation, LeaseID: w.LeaseID, RepositoryIdentity: w.Resource.RepositoryIdentity}}, nil
@@ -330,8 +374,11 @@ func reuseWorkspaceRecord(r workspaceRecord, op protocol.Operation, storage stri
 	if !reflect.DeepEqual(old.Resource, w.Resource) {
 		return r, fmt.Errorf("storage_unavailable: initialized resource settings changed")
 	}
-	if b == nil || b.StorageID != storage || b.RepositoryIdentity != r.Metadata.RepositoryIdentity || b.BaseCommit != r.Metadata.BaseCommit || b.TargetBranch != r.Metadata.TargetBranch || b.FinalizedCommit != r.Metadata.FinalizedCommit || !reflect.DeepEqual(b.ProviderMetadata, r.Metadata.ProviderMetadata) {
+	if b == nil || b.StorageID != storage || b.RepositoryIdentity != r.Metadata.RepositoryIdentity || b.BaseCommit != r.Metadata.BaseCommit || b.TargetBranch != r.Metadata.TargetBranch || w.Isolation == nil && b.FinalizedCommit != r.Metadata.FinalizedCommit || !reflect.DeepEqual(b.ProviderMetadata, r.Metadata.ProviderMetadata) {
 		return r, fmt.Errorf("storage_unavailable: fixed workspace basis changed")
+	}
+	if !reflect.DeepEqual(w.Isolation, old.Isolation) {
+		return r, fmt.Errorf("storage_unavailable: retained workspace allocation changed")
 	}
 	if w.Transfer != nil || old.NodeID != w.NodeID || old.NodeActivation != w.NodeActivation {
 		if err := validateWorkspaceTransfer(r, op); err != nil {
@@ -357,7 +404,7 @@ func prepareCloneStage(op protocol.Operation) error {
 	if err != nil {
 		return err
 	}
-	p := TaskWorkspacePath(op.Workspace.WorkspaceID, "staging-"+op.OperationID)
+	p := WorkspacePath(op.Workspace, "staging-"+op.OperationID)
 	if entries, e := os.ReadDir(p); e == nil && len(entries) > 0 {
 		if _, e = os.Stat(filepath.Join(p, "HEAD")); os.IsNotExist(e) {
 			// An interrupted unexposed clone is retained under its operation,
@@ -427,7 +474,7 @@ func runWorkspaceEffect(ctx context.Context, op protocol.Operation, access *prot
 	} else if !os.IsNotExist(e) {
 		return status, e
 	}
-	if err = saveRecord(workspaceRecordPath(op.Workspace.WorkspaceID), r); err != nil {
+	if err = saveRecord(workspaceAllocationRecordPath(op.Workspace), r); err != nil {
 		return status, err
 	}
 	if err = resumeWorkspaceRework(ctx, &r, op); err != nil {
@@ -458,12 +505,12 @@ func runWorkspaceEffect(ctx context.Context, op protocol.Operation, access *prot
 		} else {
 			r.Stage = "pinned"
 		}
-		if err = saveRecord(workspaceRecordPath(op.Workspace.WorkspaceID), r); err != nil {
+		if err = saveRecord(workspaceAllocationRecordPath(op.Workspace), r); err != nil {
 			return status, err
 		}
 	}
 	if r.Stage == "pinned" {
-		common := TaskWorkspacePath(op.Workspace.WorkspaceID, "common")
+		common := WorkspacePath(op.Workspace, "common")
 		if entries, e := os.ReadDir(common); e != nil || len(entries) != 0 {
 			return status, fmt.Errorf("storage_unavailable: initial common directory is not empty")
 		}
@@ -475,18 +522,18 @@ func runWorkspaceEffect(ctx context.Context, op protocol.Operation, access *prot
 			return status, err
 		}
 		r.Stage = "promoting"
-		if err = saveRecord(workspaceRecordPath(op.Workspace.WorkspaceID), r); err != nil {
+		if err = saveRecord(workspaceAllocationRecordPath(op.Workspace), r); err != nil {
 			return status, err
 		}
 	}
 	if r.Stage == "promoting" {
-		common := TaskWorkspacePath(op.Workspace.WorkspaceID, "common")
-		staging := TaskWorkspacePath(op.Workspace.WorkspaceID, "staging-"+op.OperationID)
+		common := WorkspacePath(op.Workspace, "common")
+		staging := WorkspacePath(op.Workspace, "staging-"+op.OperationID)
 		if err = promoteWorkspaceCommon(staging, common); err != nil {
 			return status, err
 		}
 		r.Stage = "common_ready"
-		if err = saveRecord(workspaceRecordPath(op.Workspace.WorkspaceID), r); err != nil {
+		if err = saveRecord(workspaceAllocationRecordPath(op.Workspace), r); err != nil {
 			return status, err
 		}
 	}
@@ -499,7 +546,7 @@ func runWorkspaceEffect(ctx context.Context, op protocol.Operation, access *prot
 		return status, err
 	}
 	status.Result.WorkspaceMetadata = &r.Metadata
-	if err = persistWorkspaceReady(workspaceRecordPath(op.Workspace.WorkspaceID), &r, status.Result); err != nil {
+	if err = persistWorkspaceReady(workspaceAllocationRecordPath(op.Workspace), &r, status.Result); err != nil {
 		return status, err
 	}
 	return status, nil
@@ -543,14 +590,14 @@ func syncDirectory(path string) error {
 	return f.Sync()
 }
 
-func retireCancelledAllocation(id, lease string) error {
+func retireCancelledAllocation(w *protocol.WorkspaceDescriptor, lease string) error {
 	uid, gid, err := workspaceAccounts()
 	if err != nil {
 		return err
 	}
 	for _, name := range []string{"common", "worktree"} {
-		p := TaskWorkspacePath(id, name)
-		retained := TaskWorkspacePath(id, name+"-cancelled-"+lease)
+		p := WorkspacePath(w, name)
+		retained := WorkspacePath(w, name+"-cancelled-"+lease)
 		if _, e := os.Lstat(retained); os.IsNotExist(e) {
 			if err = os.Rename(p, retained); err != nil {
 				return err
@@ -569,7 +616,7 @@ func retireCancelledAllocation(id, lease string) error {
 			return err
 		}
 	}
-	return syncDirectory(TaskWorkspacePath(id, ""))
+	return syncDirectory(WorkspacePath(w, ""))
 }
 
 func readCancellingID(lease string) *string {
@@ -599,8 +646,11 @@ func stopWorkspace(ctx context.Context, op protocol.Operation, storage string) (
 	if err != nil {
 		return status, err
 	}
-	r, err := readWorkspaceRecord(op.Workspace.WorkspaceID)
+	r, err := readWorkspaceAllocation(op.Workspace)
 	if os.IsNotExist(err) {
+		if op.Workspace.Transfer != nil && op.Workspace.Transfer.Kind == "checkpoint" || op.Workspace.Isolation == nil && op.Workspace.Basis != nil {
+			return status, fmt.Errorf("storage_unavailable: initialized workspace marker missing")
+		}
 		r = workspaceRecord{Operation: op, Stage: "intent", Metadata: protocol.WorkspaceMetadata{StorageID: storage}}
 	} else if err != nil {
 		return status, err
@@ -622,30 +672,10 @@ func stopWorkspace(ctx context.Context, op protocol.Operation, storage string) (
 	if err = resumeWorkspaceRework(ctx, &r, op); err != nil {
 		return status, err
 	}
-	if len(op.Workspace.ReworkHistory) > 0 && r.OpenResult == nil {
-		if _, err = runWorkspaceWorker(ctx, op, "history", nil); err != nil {
-			return status, err
-		}
-	}
-	if r.OpenResult == nil && op.Workspace.Basis != nil {
-		if err = prepareStopRecovery(&r, op); err != nil {
-			return status, err
-		}
-		if err = saveRecord(workspaceRecordPath(op.Workspace.WorkspaceID), r); err != nil {
-			return status, err
-		}
-		recovered, e := runWorkspaceWorker(ctx, op, "recover", nil)
-		if e != nil {
-			return recovered, e
-		}
-		if recovered.Result == nil || recovered.Result.Path == nil {
-			return recovered, fmt.Errorf("missing retained workspace recovery result")
-		}
-		r.OpenResult = recovered.Result
-		r.Stage = "ready"
-		if err = saveRecord(workspaceRecordPath(op.Workspace.WorkspaceID), r); err != nil {
-			return status, err
-		}
+	if err = recoverWorkspaceForStop(&r, op,
+		func() error { return saveRecord(workspaceAllocationRecordPath(op.Workspace), r) },
+		func(action string) (Status, error) { return runWorkspaceWorker(ctx, op, action, nil) }); err != nil {
+		return status, err
 	}
 	prior := protocol.OperationResult{AttemptID: op.AttemptID, OperationID: op.Workspace.OpenOperationID}
 	if r.OpenResult == nil {
@@ -670,7 +700,7 @@ func stopWorkspace(ctx context.Context, op protocol.Operation, storage string) (
 	}
 	status.Known = true
 	status.PriorOperationResult = &prior
-	if err = saveRecord(workspaceRecordPath(op.Workspace.WorkspaceID), r); err != nil {
+	if err = saveRecord(workspaceAllocationRecordPath(op.Workspace), r); err != nil {
 		return status, err
 	}
 	boot, err := BootID()
@@ -681,6 +711,51 @@ func stopWorkspace(ctx context.Context, op protocol.Operation, storage string) (
 		return status, err
 	}
 	return status, nil
+}
+
+func recoverWorkspaceForStop(r *workspaceRecord, op protocol.Operation, save func() error, run func(string) (Status, error)) error {
+	if r.OpenResult != nil {
+		return nil
+	}
+	if op.Workspace.Isolation != nil {
+		switch r.Stage {
+		case "intent", "pinned", "promoting", "common_ready", "cancelled":
+			if op.Workspace.Transfer != nil && op.Workspace.Transfer.Kind == "checkpoint" {
+				return fmt.Errorf("storage_unavailable: checkpoint allocation lacks initialized recovery state")
+			}
+			// This allocation has never exposed an open result. Its history is
+			// already protected in the predecessor's export; cancelling needs
+			// neither an import nor a worker that requires a local open record.
+			return nil
+		case "refresh_intent", "refresh_pinned":
+		default:
+			return fmt.Errorf("storage_unavailable: unrecognized isolated Stop recovery stage")
+		}
+	}
+	if len(op.Workspace.ReworkHistory) > 0 {
+		if _, err := run("history"); err != nil {
+			return err
+		}
+	}
+	if op.Workspace.Basis == nil {
+		return nil
+	}
+	if err := prepareStopRecovery(r, op); err != nil {
+		return err
+	}
+	if err := save(); err != nil {
+		return err
+	}
+	recovered, err := run("recover")
+	if err != nil {
+		return err
+	}
+	if recovered.Result == nil || recovered.Result.Path == nil {
+		return fmt.Errorf("missing retained workspace recovery result")
+	}
+	r.OpenResult = recovered.Result
+	r.Stage = "ready"
+	return save()
 }
 
 func prepareStopRecovery(r *workspaceRecord, op protocol.Operation) error {
@@ -713,7 +788,7 @@ func completeWorkspace(ctx context.Context, op protocol.Operation, storage strin
 	if err := requireUnfencedCompletion(op); err != nil {
 		return Status{}, err
 	}
-	r, err := readWorkspaceRecord(op.Workspace.WorkspaceID)
+	r, err := readWorkspaceAllocation(op.Workspace)
 	if err != nil {
 		return Status{}, err
 	}
@@ -727,11 +802,11 @@ func completeWorkspace(ctx context.Context, op protocol.Operation, storage strin
 	if readErr != nil && !os.IsNotExist(readErr) {
 		return Status{}, readErr
 	}
-	if readErr == nil && old.Settled && old.Status.Error == "" && old.Status.Result != nil && old.Status.Result.GitCommit != nil {
-		r.Metadata.FinalizedCommit = *old.Status.Result.GitCommit
+	if readErr == nil && old.Settled && old.Status.Error == "" && old.Status.Result != nil && (op.Integration == nil && old.Status.Result.GitCommit != nil || op.Integration != nil && old.Status.Result.Integration != nil) {
+		r.Metadata = *old.Status.Result.WorkspaceMetadata
 		r.PrivateCheckpoint = nil
 		r.Released = true
-		if err = saveRecord(workspaceRecordPath(op.Workspace.WorkspaceID), r); err != nil {
+		if err = saveRecord(workspaceAllocationRecordPath(op.Workspace), r); err != nil {
 			return Status{}, err
 		}
 		return old.Status, nil
@@ -739,14 +814,29 @@ func completeWorkspace(ctx context.Context, op protocol.Operation, storage strin
 	if _, err = stop(ctx, op.AttemptID); err != nil {
 		return Status{}, err
 	}
-	status, err := runWorkspaceWorker(ctx, op, "finalize", nil)
-	if err != nil {
-		return status, err
+	var status Status
+	if op.Integration == nil || !old.IntegrationStarted && old.FinalizationResult == nil && !(old.Settled && old.Status.Error == "" && old.Status.Result != nil && old.Status.Result.GitCommit != nil) {
+		status, err = runWorkspaceWorker(ctx, op, "finalize", nil)
+		if err != nil {
+			return status, err
+		}
 	}
-	r.Metadata.FinalizedCommit = *status.Result.GitCommit
+	if op.Integration != nil {
+		if !old.IntegrationStarted && !(old.WorkspaceAction == "export_node" && old.Settled && old.Status.Error == "") {
+			status, err = runWorkspaceWorker(ctx, op, "export_node", nil)
+			if err != nil {
+				return status, err
+			}
+		}
+		status, err = runWorkspaceWorker(ctx, op, "integrate", nil)
+		if err != nil {
+			return status, err
+		}
+	}
+	r.Metadata = *status.Result.WorkspaceMetadata
 	r.PrivateCheckpoint = nil
 	r.Released = true
-	if err = saveRecord(workspaceRecordPath(op.Workspace.WorkspaceID), r); err != nil {
+	if err = saveRecord(workspaceAllocationRecordPath(op.Workspace), r); err != nil {
 		return status, err
 	}
 	return status, nil

@@ -106,6 +106,7 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Multi-Node Replan SQL 
       generation: workspace.generation, lease_id: workspace.lease_id, storage_id: 'replan-sql-storage',
       repository_identity: workspace.resource.repository_identity, provider_metadata: { github: { repository_id: '42' } },
       base_commit: 'a'.repeat(40), target_branch: 'main', target_commit: 'b'.repeat(40), finalized_commit: 'a'.repeat(40),
+      ...(workspace.isolation ? { isolation: { ...workspace.isolation, start_commit: 'a'.repeat(40) } } : {}),
     };
     await x.service.finishOperation(x.f.runner, x.f.incarnation, { operation_id: operation.operation_id, attempt_id: turn.dispatch.attempt_id,
       success: true, result: { workspace_id: workspace.workspace_id, path: '/runner/worktree', instruction_files: [], workspace_metadata: metadata } });

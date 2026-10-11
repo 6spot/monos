@@ -116,14 +116,19 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Multi-Node planning an
 
   it.each(['upstream', 'leaf'] as const)('reactivates the requested %s subset and only its descendants with exact Review provenance', async (selection) => {
     await start();
-    for (const n of nodes) {
+    const completed = new Set<string>();
+    for (let i = 0; i < nodes.length; i++) {
       const a = await x.node();
-      expect(a.dispatch.node_id).toBe(n.node_id);
+      const n = nodes.find(n => n.node_id === a.dispatch.node_id)!;
+      expect(n).toBeDefined();
+      expect(completed.has(n.node_id)).toBe(false);
+      completed.add(n.node_id);
       const artifact = randomUUID();
       await x.agent(a, 'publish_artifact', { artifact_id: artifact, title: `Result ${n.node_id}`, content: { text: n.goal, media_type: 'text/plain' } });
       const out = await x.agent(a, 'complete_node', { summary: n.goal, artifact_ids: [artifact] });
       await x.finish(out.operation_id!, a.dispatch.attempt_id);
     }
+    expect(completed).toEqual(new Set(nodes.map(n => n.node_id)));
     const original = (await x.db.pool.query('SELECT * FROM node_completions ORDER BY node_id')).rows;
     const reads = new TaskReviewReads(x.db), commands = new TaskReviewCommands(x.db, ownerReviewHooks), coordinator = new TaskReviewCoordinator(x.db, x.service.instanceId, ownerReviewHooks);
     const current = await reads.task(x.token, x.f.task), feedback = randomUUID();

@@ -26,7 +26,7 @@ func completeWithoutRepository(ctx context.Context, d protocol.Dispatch, op prot
 	// allocations and any workspace opened by this Attempt; a released predecessor
 	// checkpoint can belong to a later Node and must remain untouched here.
 	for _, reservation := range d.WorkspaceReservations.Resources {
-		r, err := readWorkspaceRecord(reservation.WorkspaceID)
+		r, err := readWorkspaceReservation(reservation.WorkspaceID, d.WorkspaceReservations.Isolation)
 		if os.IsNotExist(err) {
 			continue
 		}

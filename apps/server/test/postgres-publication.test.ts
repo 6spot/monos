@@ -117,7 +117,7 @@ suite('Durable local publication',()=>{
    expect((await x.db.pool.query('SELECT count(*) n FROM delivery_operations')).rows[0]!.n).toBe('4');
   }finally{await x.close();}
  },30000);
- it('upgrades populated version 21 PostgreSQL to version 29 without changing prior checksums or Task revision history',async()=>{
+ it('upgrades populated version 21 PostgreSQL to version 30 without changing prior checksums or Task revision history',async()=>{
   const url=new URL(process.env.DATABASE_URL!),admin=database(url.toString()),namespace='publication_upgrade_'+randomUUID().replaceAll('-','');
   await admin.pool.query(`CREATE SCHEMA ${namespace}`);url.searchParams.set('options',`-c search_path=${namespace}`);const db=database(url.toString());
   try {
@@ -128,7 +128,7 @@ suite('Durable local publication',()=>{
    await transaction(db,tx=>initializeTask(tx,{task_id:randomUUID(),specification_id:randomUUID(),specification:'Retained pre-delivery Task'}));
    const versions=(await db.pool.query('SELECT * FROM schema_migrations ORDER BY version')).rows;
    const tasks=(await db.pool.query('SELECT * FROM tasks')).rows,revisions=(await db.pool.query('SELECT * FROM specification_revisions')).rows;
-   await migrate(db);await migrate(db);expect((await db.pool.query('SELECT version FROM schema_migrations ORDER BY version DESC LIMIT 1')).rows[0]!.version).toBe(29);
+   await migrate(db);await migrate(db);expect((await db.pool.query('SELECT version FROM schema_migrations ORDER BY version DESC LIMIT 1')).rows[0]!.version).toBe(30);
    expect((await db.pool.query('SELECT * FROM schema_migrations ORDER BY version')).rows.slice(0,21)).toEqual(versions);
    expect((await db.pool.query('SELECT * FROM tasks')).rows).toEqual(tasks.map(task => ({ ...task, rework_epoch: '1' })));expect((await db.pool.query('SELECT * FROM specification_revisions')).rows).toEqual(revisions);
    expect((await db.pool.query('SELECT * FROM delivery_operations')).rows).toEqual([]);

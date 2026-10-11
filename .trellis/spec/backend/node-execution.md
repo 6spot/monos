@@ -1,10 +1,11 @@
-# Serial Node execution, Artifacts and recovery
+# Node execution, Artifacts and recovery
 
 Sources: `apps/server/src/{node-execution,node-execution-state,node-completion,artifacts}.ts`,
 `packages/db/migrations/0018_node_execution.sql` and the shared protocol schema.
 Task Conversation extends these contracts via [guidance handling](task-conversation.md).
-Multi-Node replacement Plans remain subsequent work. Upstream Agent-requested
-Rework is implemented for the strictly serial graph as described below.
+Multi-Node replacement Plans follow [Replan](task-replan.md). Independent Nodes
+use [isolated allocations](workspaces.md); upstream Agent-requested Rework retains
+the conservative cross-Node settlement precondition described below.
 
 ## 1. Scope / Trigger
 
@@ -45,9 +46,10 @@ assignments. Exclude Todo/cache/sessions, Planner Guidance, other Roles/Tasks, r
 logs and Git bytes. Historical Artifact publication is not current
 completion. Queue identity and prompt cannot refresh after configuration changes.
 
-Automatic source preparation waits for current completed dependencies and all prior
-Task Node processes, operations and leases to settle. Prepare one serial candidate
-at a time, so a downstream source observes current Role configuration and completion
+Automatic source preparation waits for current completed dependencies and prior
+ownership of the same Node, subject to direct-workspace exclusivity. Prepare a
+bounded batch of independent ready Nodes with frozen isolated placement; a
+downstream source observes current Role configuration and completed integration
 evidence. Explicit Owner/guidance/Runtime continuation intents may be retained before
 settlement, but cannot queue or promote before their dependency and physical barriers.
 
@@ -61,6 +63,13 @@ for another Node cannot revoke that source: continue to validate the exact curre
 source pointer, activation, effective Spec/Plan, mutation authority and freeze guards.
 Owner commands still compare the live Task control version. Source replacement,
 Rework and requirement changes fence affected work explicitly.
+
+Guidance for completed work waits for the full affected descendant closure to
+settle before reactivation. `inspectNodeReactivation` and the reactivation primitive
+share the same check for queued Attempts, unreleased processes/leases and pending
+operations under the Task lock. Unrelated live branches do not block that closure.
+Completed Nodes evaluate prospective placement; their old direct source cannot
+block an unrelated isolated writer after Replan. Live Nodes retain frozen placement.
 
 Queue admission makes Node RUNNING. Offline/no-Runner/stale observation waits
 durably; unsupported or exhausted selection records a factual blocker. Retry reads

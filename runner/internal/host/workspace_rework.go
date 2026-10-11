@@ -10,10 +10,10 @@ import (
 )
 
 func resumeWorkspaceRework(ctx context.Context, r *workspaceRecord, op protocol.Operation) error {
-	return resumeWorkspaceReworkUsing(r, op, func() error { return saveRecord(workspaceRecordPath(op.Workspace.WorkspaceID), *r) },
+	return resumeWorkspaceReworkUsing(r, op, func() error { return saveRecord(workspaceAllocationRecordPath(op.Workspace), *r) },
 		func(action string) (Status, error) { return runWorkspaceWorker(ctx, op, action, nil) },
 		func() error {
-			return archiveWorkspaceAllocation(TaskWorkspacePath(op.Workspace.WorkspaceID, ""), *op.Workspace.Transfer.ReworkRequestID, op.Workspace.Transfer.FromLeaseID, 0)
+			return archiveWorkspaceAllocation(WorkspacePath(op.Workspace, ""), *op.Workspace.Transfer.ReworkRequestID, op.Workspace.Transfer.FromLeaseID, 0)
 		},
 		func() error {
 			uid, gid, err := workspaceAccounts()
@@ -21,7 +21,7 @@ func resumeWorkspaceRework(ctx context.Context, r *workspaceRecord, op protocol.
 				return err
 			}
 			for _, name := range []string{"common", "worktree"} {
-				p := TaskWorkspacePath(op.Workspace.WorkspaceID, name)
+				p := WorkspacePath(op.Workspace, name)
 				if err = os.Mkdir(p, 0750); err == nil {
 					if err = os.Chown(p, uid, gid); err != nil {
 						return err
@@ -36,7 +36,7 @@ func resumeWorkspaceRework(ctx context.Context, r *workspaceRecord, op protocol.
 					return err
 				}
 			}
-			return syncDirectory(filepath.Dir(TaskWorkspacePath(op.Workspace.WorkspaceID, "common")))
+			return syncDirectory(filepath.Dir(WorkspacePath(op.Workspace, "common")))
 		})
 }
 

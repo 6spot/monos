@@ -1,3 +1,4 @@
+import { retryIntegrationConflict } from './node-integration.ts';
 import { ensureLocalCandidate } from './publication-candidates.ts';
 import { specificationFrozen } from './task-specification-state.ts';
 import { settleHandledGuidance } from './task-guidance.ts';
@@ -34,6 +35,7 @@ export async function projectCompletion(
   operation: OperationRow,
   message: OperationResult
 ): Promise<void> {
+  if (message.result.integration?.outcome === 'conflict') throw new CommandError('denied_scope', 'Integration conflicts cannot produce Node completion evidence');
   const task = (await tx.query<NodeTask>('SELECT * FROM tasks WHERE id=$1', [attempt.task_id])).rows[0]!;
   // A cancellation closes current evidence while retaining truthful physical settlement.
   if (task.state === 'CANCELLED' && attempt.launch.node_execution_source) {
@@ -180,7 +182,7 @@ export async function finishCompletionSettlement(
     throw new CommandError('unmet_precondition', 'Unrelated effects still own workspace');
   const nested = pair.completion_result;
   if (pair.disposition === 'already_finalized') {
-    if (!nested.success || nested.cancelled_by_operation_id || !nested.result.git_commit || !nested.result.git_tree)
+    if (!nested.success || nested.cancelled_by_operation_id || (nested.result.integration?.outcome !== 'conflict' && (!nested.result.git_commit || !nested.result.git_tree)))
       throw new CommandError('denied_scope', 'Already-finalized result requires exact Git success');
     if (original.state === 'succeeded') {
       if (canonicalJSON(original.result) !== canonicalJSON(nested.result))
@@ -222,7 +224,10 @@ export async function finishCompletionSettlement(
     "UPDATE attempts SET mutation_allowed=false,process_absent=true,process_released=true,state=$2,end_reason=CASE WHEN $3::boolean THEN 'completion_corrected' ELSE end_reason END WHERE id=$1",
     [attempt.id, pair.disposition === 'already_finalized' ? 'SUCCEEDED' : 'CANCELLED', pair.disposition === 'cancelled']
   );
-  if (pair.disposition === 'already_finalized') {
+  if (pair.disposition === 'already_finalized' && nested.result.integration?.outcome === 'conflict') {
+    await tx.query("UPDATE attempts SET state='FAILED',end_reason='integration_conflict' WHERE id=$1", [attempt.id]);
+    await retryIntegrationConflict(tx, attempt, original, nested, configurationVersion);
+  } else if (pair.disposition === 'already_finalized') {
     if (!(await tx.query('SELECT 1 FROM node_completions WHERE operation_id=$1', [original.id])).rowCount)
       await projectCompletion(tx, attempt, original, nested);
     else await refreshTaskState(tx, attempt.task_id!);

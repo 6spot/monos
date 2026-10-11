@@ -1,4 +1,4 @@
-# Canonical serial Task workspaces
+# Canonical Task workspaces
 
 Sources: [Workspace](../../../docs/04-workspace-and-git.md),
 [protocol](../protocol/commands.md), and the
@@ -8,7 +8,7 @@ see the task's verification report for versions, retained failures and limits.
 
 ## 1. Scope / Trigger
 
-Canonical Node dispatch, lazy `open_workspace`, same-Task serial lease reuse,
+Canonical Node dispatch, lazy `open_workspace`, direct lease reuse and isolated allocations,
 completion and system Stop reconciliation. [Node execution](node-execution.md)
 adds Task-driven dispatch, Artifacts and hard-completion recovery. Multi-repository
 completion remains a later slice. Planner reads use independent
@@ -83,6 +83,45 @@ The admitted open descriptor persists this proof; Runner verifies retained prede
 manifest and settlement evidence before adoption. Historical completed code may
 remain the physical basis after Review Rework without becoming current evidence.
 Ordinary cross-Plan Replan transfer retains exact proposal/publication provenance.
+
+### Parallel allocations and integration
+
+Migration 30 and `workspace-placement.ts` freeze optional
+`workspace_reservations.isolation: { allocation_id }` before queue admission. A
+dependency-ready batch uses independent allocations; retained isolated work keeps
+later placement isolated. Retained direct private work keeps serial placement until
+adopted/finalized. A queued direct Attempt already excludes other Task writers,
+even before first open. Same-allocation ownership remains exclusive independently
+of Runner capacity. Task identity and `storage_id` remain allocation-independent.
+
+The first isolated initialization is serialized; subsequent descriptors freeze the
+exact Task revision and `canonical_source` proof. Initial sources retain original
+open pins; completed sources retain protected exports. An optional
+`recovery_operation_id` binds the precise succeeded Stop and original result pair.
+Never select a newer row as replacement proof. SQL independently checks source
+operation, Attempt, released lease, metadata, fixed basis and integration result.
+
+`workspace_metadata.isolation` contains allocation ID and immutable `start_commit`.
+Later Stop/open metadata describes that allocation, even when another allocation
+advanced the Task. Same-activation checkpoint continuation reuses its allocation;
+Rework and conflict retry allocate fresh storage while retaining old private work.
+
+`complete_node` holds a single Task completion admission boundary and freezes
+`integration.expected_task_commit`. A competing request fails before fencing its
+Attempt or writing its manifest/receipt. No DB lock spans Runner or Git work.
+An `integrated` result atomically advances Task Git and exact Node evidence. A
+`conflict` result is physical success only: no top-level Git completion fields,
+no `node_completions`, unchanged Task revision, and preserved private Node result.
+Release settled ownership and retry the same activation with a fresh allocation
+and exact `conflict_source`. Three conflicts since the last Owner-created source
+exhaust automatic retry into `integration_conflict_limit`; Owner Retry resets the
+effective budget. Replan freezes retry; dismissal resumes it idempotently.
+
+Cancellation before integration checkpoints private work. After integration begins,
+reconcile the same immutable operation and retain physical code without granting
+cancelled work completion evidence. `settle_completion` may report
+`already_finalized` for either integrated success or a terminal physical conflict.
+See [implementation and verification](../../../docs/research/parallel-workspaces.md).
 
 ## 4. Validation & Error Matrix
 

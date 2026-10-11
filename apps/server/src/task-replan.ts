@@ -1,4 +1,5 @@
 import {resumeReviewAfterDismissal} from './task-review-state.ts';
+import { derivedTaskState } from './owner-execution.ts';
 import { replanRead } from './task-replan-reads.ts';
 import { randomUUID } from 'node:crypto';
 import { supersedeRuntimeContinuation } from './runtime-continuation-state.ts';
@@ -33,7 +34,7 @@ export async function revokeReplanGeneration(tx:Transaction,r:ReplanRequest,requ
 async function reconcileDismissal(tx:Transaction,task:SpecificationTask,r:ReplanRequest):Promise<void>{
  if(!await replanQuiescent(tx,task.id))return;
  if(r.origin_node_id)await tx.query("UPDATE nodes n SET state='PENDING',blocker_id=NULL,execution_source_id=NULL WHERE n.id=$1 AND n.activation=$2 AND NOT n.guidance_paused AND EXISTS(SELECT 1 FROM node_blockers b WHERE b.id=n.blocker_id AND b.id=$3)",[r.origin_node_id,r.origin_activation,r.requester_blocker_id]);
- if(!r.review_operation_id&&task.state!=='CANCELLED')await tx.query("UPDATE tasks SET state=CASE WHEN EXISTS(SELECT 1 FROM nodes n JOIN plan_nodes p ON p.node_id=n.id WHERE p.plan_id=tasks.plan_id AND n.state='BLOCKED') THEN 'BLOCKED' WHEN NOT EXISTS(SELECT 1 FROM nodes n JOIN plan_nodes p ON p.node_id=n.id WHERE p.plan_id=tasks.plan_id AND n.state<>'COMPLETED') THEN 'REVIEW' ELSE 'RUNNING' END,control_version=control_version+1 WHERE id=$1",[task.id]);
+ if(!r.review_operation_id&&task.state!=='CANCELLED')await tx.query('UPDATE tasks SET state=$2,control_version=control_version+1 WHERE id=$1',[task.id,await derivedTaskState(tx,task.plan_id!)]);
  await tx.query('UPDATE replan_requests SET reconciled=true WHERE id=$1',[r.id]);
 }
 export class TaskReplan {

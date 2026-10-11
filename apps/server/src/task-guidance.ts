@@ -11,7 +11,7 @@ import type { AttemptRow } from './service.ts';
 import type { NodeTask, ExecutionNode } from './node-execution-state.ts';
 import { prepareNodeSource } from './node-execution-state.ts';
 import { admitWorkspaceEffect } from './workspaces.ts';
-import { reactivateSettledNodes } from './task-records.ts';
+import { inspectNodeReactivation, reactivateSettledNodes } from './task-records.ts';
 import { nodeDependenciesReady, serialNodeReady } from './dispatch-queue.ts';
 import { planningEvent } from './task-planning-state.ts';
 import { currentNodeRework, reactivationNodeRework } from './node-rework-state.ts';
@@ -361,11 +361,11 @@ export async function advanceGuidanceFollowup(
     ).rowCount
   )
     return;
-  // Guidance may target a future dependent or completed work whose descendants
-  // still own the serial workspace. Retain the obligation until it can safely
-  // build current context or reactivate the settled subgraph.
+  // Guidance waits for current dependency evidence and this Node's ownership.
+  // Completed work chooses its next placement; a carried historical source may
+  // predate isolation. Its affected descendants must also settle below.
   if (!await nodeDependenciesReady(tx, task.plan_id, node.id) ||
-      !await serialNodeReady(tx, task.id, node.id, node.execution_source_id ?? undefined)) return;
+      !await serialNodeReady(tx, task.id, node.id, node.state === 'COMPLETED' ? undefined : node.execution_source_id ?? undefined)) return;
   // An Owner Retry/Continue may already have prepared a source containing all
   // pending guidance; consume follow-up responsibility without replacing it.
   if (
@@ -385,6 +385,7 @@ export async function advanceGuidanceFollowup(
   }
   if (node.state === 'COMPLETED') {
     if (!await remoteItemQuiescent(tx,task.id)) return;
+    if (!(await inspectNodeReactivation(tx, task.id, task.plan_id, [node.id])).settled) return;
     await reactivateSettledNodes(tx, {
       task_id: task.id,
       expected: {

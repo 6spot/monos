@@ -17,12 +17,22 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Exact serial upstream 
     ];
   }, 20000);
   afterEach(async () => { await x?.close(); }, 20000);
-  async function start() {
+  async function start(heldNode = nodes.find(n => n.node_id !== x.f.node && n.dependencies.length === 0)?.node_id) {
     await x.owner('start_task', { specification_id: x.f.spec }); await x.planning.pump();
     const planner = await x.promote(), result = await x.agent(planner, 'publish_execution_plan', {
       planning_intent_id: planner.dispatch.task_planning_source!.intent_id, plan_id: x.f.plan, nodes: [nodes[0]!, ...nodes.slice(1)],
     });
     await x.finish(result.operation_id!, planner.dispatch.attempt_id);
+    if (heldNode) {
+      // Rework admission requires sibling ownership to settle, including queued work.
+      await x.execution.pump();
+      const status = await x.execution.status(x.token, x.f.task, heldNode);
+      await x.owner('stop_node', { node_id: heldNode, node_activation: status.node_activation, source_id: status.source!.source_id });
+    }
+  }
+  async function resume(nodeId: string) {
+    const status = await x.execution.status(x.token, x.f.task, nodeId);
+    await x.owner('continue_node', { node_id: nodeId, node_activation: status.node_activation, source_id: status.source!.source_id, blocker_id: status.blocker!.id });
   }
   async function completeNext() {
     const a = await x.node(), result = await x.agent(a, 'complete_node', { summary: `Completed ${a.dispatch.node_id}` });
@@ -147,10 +157,14 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Exact serial upstream 
   });
 
   it('disables stale saved Apply after another affected branch progresses while retaining Continue', async () => {
-    nodes[2]!.dependencies = [x.f.node];
+    const gate = { node_id: `rework-d-${randomUUID()}`, role_id: x.f.role, goal: 'Gate the other affected branch', dependencies: [] };
+    nodes[2]!.dependencies = [x.f.node, gate.node_id];
+    nodes.push(gate);
     const { a, result, request } = await reachLimit(); await x.finish(result.operation_id!, a.dispatch.attempt_id);
     expect((await rework.status(x.token, x.f.task)).current!.can_apply).toBe(true);
-    await completeNext();
+    await resume(gate.node_id);
+    expect((await completeNext()).dispatch.node_id).toBe(gate.node_id);
+    expect((await completeNext()).dispatch.node_id).toBe(nodes[2]!.node_id);
     const status = await rework.status(x.token, x.f.task);
     expect(status.current).toMatchObject({ can_apply: false, can_continue: true });
     expect(status.current!.waiting_reason).toContain('completion evidence changed');

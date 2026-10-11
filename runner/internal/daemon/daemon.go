@@ -433,6 +433,9 @@ func (d *Daemon) effect(ctx context.Context, op protocol.Operation) error {
 		// cancellation alone: resume the target pair's export and atomic journal.
 		return d.replayCompletionSettlement(ctx, op, *status.CancelledByOperationID)
 	}
+	if err == nil && op.Kind == protocol.KindCompleteNode && op.Workspace != nil && status.Result != nil {
+		err = wire.ValidateWorkspaceIntegration(op, *status.Result)
+	}
 	if err == nil && op.Workspace != nil && status.PriorOperationResult != nil {
 		prior := status.PriorOperationResult
 		// The helper supplies only an exact prior open outcome for this lease.
@@ -482,7 +485,8 @@ func (d *Daemon) effect(ctx context.Context, op protocol.Operation) error {
 	if err == nil && (op.Kind == protocol.Stop || op.Kind == protocol.KindCompleteNode || op.Kind == protocol.SettleCompletion) && status.Populated {
 		err = fmt.Errorf("writer absence unresolved")
 	}
-	if err == nil && op.Kind == protocol.KindCompleteNode && op.RepositoryFree == nil && status.CancelledByOperationID == nil && (status.Result == nil || status.Result.GitCommit == nil || status.Result.GitTree == nil) {
+	conflicted := status.Result != nil && status.Result.Integration != nil && string(status.Result.Integration.Outcome) == "conflict"
+	if err == nil && op.Kind == protocol.KindCompleteNode && op.RepositoryFree == nil && status.CancelledByOperationID == nil && !conflicted && (status.Result == nil || status.Result.GitCommit == nil || status.Result.GitTree == nil) {
 		err = fmt.Errorf("missing finalized Git evidence")
 	}
 	if err == nil && op.RepositoryFree != nil {

@@ -94,7 +94,11 @@ func RuntimePaths(d protocol.Dispatch) ([]string, error) {
 		if err != nil || id != reservation.WorkspaceID {
 			return nil, fmt.Errorf("invalid workspace reservation")
 		}
-		paths = append(paths, TaskWorkspacePath(id, "worktree"), TaskWorkspacePath(id, "common"))
+		isolation := d.WorkspaceReservations.Isolation
+		if isolation != nil && !ValidID(isolation.AllocationID) {
+			return nil, fmt.Errorf("invalid workspace allocation reservation")
+		}
+		paths = append(paths, reservedWorkspacePath(id, isolation, "worktree"), reservedWorkspacePath(id, isolation, "common"))
 	}
 	return paths, nil
 }

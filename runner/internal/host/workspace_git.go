@@ -248,6 +248,11 @@ func clonePinned(cache, common string, metadata protocol.WorkspaceMetadata, oper
 	if _, err = workspaceGit(common, cache, common, nil, "fetch", "--no-tags", cache, prefix+"/base:"+prefix+"/base", prefix+"/target:"+prefix+"/target"); err != nil {
 		return err
 	}
+	if metadata.Isolation != nil {
+		if _, err = workspaceGit(common, cache, common, nil, "fetch", "--no-tags", cache, prefix+"/finalized:"+prefix+"/finalized"); err != nil {
+			return err
+		}
+	}
 	for _, oid := range []string{metadata.BaseCommit, metadata.TargetCommit} {
 		if _, err = workspaceGit(common, cache, common, nil, "cat-file", "-e", oid+"^{commit}"); err != nil {
 			return err
@@ -491,17 +496,17 @@ func WorkspaceWorker(operation string, input io.Reader) (Status, error) {
 		return Status{Known: true, Result: &result}, fmt.Errorf("workspace operation required")
 	}
 	w := op.Workspace
-	record, err := readWorkspaceRecord(w.WorkspaceID)
+	record, err := readWorkspaceAllocation(w)
 	if err != nil {
 		return Status{Known: true, Result: &result}, err
 	}
 	if !sameWorkspaceOperation(record.Operation, op) {
 		return Status{Known: true, Result: &result}, fmt.Errorf("workspace worker identity mismatch")
 	}
-	cache, common, workspace := resourceCache(w.ResourceID), TaskWorkspacePath(w.WorkspaceID, "common"), TaskWorkspacePath(w.WorkspaceID, "worktree")
+	cache, common, workspace := resourceCache(w.ResourceID), WorkspacePath(w, "common"), WorkspacePath(w, "worktree")
 	metadata := record.Metadata
-	lockPath := filepath.Join(Root, "launch", "workspaces", w.WorkspaceID+".writer.lock")
-	if r.WorkspaceAction == "fetch" || r.WorkspaceAction == "history" {
+	lockPath := filepath.Join(Root, "launch", "workspaces", workspaceAllocationKey(w.WorkspaceID, w.Isolation)+".writer.lock")
+	if serviceWorkspaceAction(r.WorkspaceAction) {
 		lockPath = filepath.Join(Root, "service", "workspace-locks", w.ResourceID+".lock")
 	}
 	// Writer lock files are created with the appropriate account by the helper.
@@ -512,7 +517,7 @@ func WorkspaceWorker(operation string, input io.Reader) (Status, error) {
 	defer releaseFileLock(lock)
 	// A delayed systemd submission can reach this lock after Stop or a newer
 	// lease. Revalidate after acquiring physical ownership, before any mutation.
-	current, err := readWorkspaceRecord(w.WorkspaceID)
+	current, err := readWorkspaceAllocation(w)
 	if err != nil || !sameWorkspaceOperation(current.Operation, op) {
 		return Status{Known: true, Result: &result}, fmt.Errorf("workspace worker superseded before writer lock")
 	}
@@ -523,8 +528,10 @@ func WorkspaceWorker(operation string, input io.Reader) (Status, error) {
 			return Status{Known: true, Result: &result}, e
 		}
 	}
-	if err = requireUnfencedCompletion(op); err != nil {
-		return Status{Known: true, Result: &result}, err
+	if r.WorkspaceAction != "integrate" || !r.IntegrationStarted {
+		if err = requireUnfencedCompletion(op); err != nil {
+			return Status{Known: true, Result: &result}, err
+		}
 	}
 	if op.Kind == protocol.SettleCompletion {
 		original, e := readOperation(operationPath(*op.CompletionOperationID))
@@ -541,6 +548,12 @@ func WorkspaceWorker(operation string, input io.Reader) (Status, error) {
 		return settlementWorker(op, original.Operation, metadata, workspace, common)
 	}
 	switch r.WorkspaceAction {
+	case "export_node":
+		result, err = exportWorkspaceCapture(r, metadata)
+		return Status{Known: true, Result: &result}, err
+	case "integrate":
+		result, err = integrateWorkspaceCapture(context.Background(), r, metadata)
+		return Status{Known: true, Result: &result}, err
 	case "history":
 		if err = seedWorkspaceHistory(cache, op); err != nil {
 			return Status{Known: true, Result: &result}, err
@@ -565,12 +578,25 @@ func WorkspaceWorker(operation string, input io.Reader) (Status, error) {
 		if err != nil {
 			return Status{Known: true, Result: &result}, err
 		}
-	case "clone":
-		if err = clonePinned(cache, TaskWorkspacePath(w.WorkspaceID, "staging-"+operation), metadata, operation); err != nil {
+		if err = seedIsolatedWorkspace(cache, op, &metadata, record.Metadata); err != nil {
 			return Status{Known: true, Result: &result}, err
 		}
+	case "clone":
+		if err = clonePinned(cache, WorkspacePath(w, "staging-"+operation), metadata, operation); err != nil {
+			return Status{Known: true, Result: &result}, err
+		}
+		if err = copyWorkspaceHistory(WorkspacePath(w, "staging-"+operation), cache, w.ReworkHistory); err != nil {
+			return Status{Known: true, Result: &result}, err
+		}
+		if source := w.ConflictSource; source != nil {
+			ref := "refs/monos/conflicts/" + source.OperationID
+			staging := WorkspacePath(w, "staging-"+operation)
+			if _, err = workspaceGit(staging, cache, staging, nil, "fetch", "--no-tags", cache, ref+":"+ref); err != nil {
+				return Status{Known: true, Result: &result}, err
+			}
+		}
 	case "checkout":
-		if err = checkoutPinned(workspace, common, cache, metadata.BaseCommit); err != nil {
+		if err = checkoutPinned(workspace, common, cache, metadata.FinalizedCommit); err != nil {
 			return Status{Known: true, Result: &result}, err
 		}
 	case "recover":

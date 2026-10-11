@@ -1,6 +1,6 @@
 # Exact multi-Node replacement Plans
 
-Implementation: `apps/server/src/task-replan*.ts`, migrations 21 and 29, and
+Implementation: `apps/server/src/task-replan*.ts`, migrations 21, 29 and 30, and
 protocol `TaskReplanSource`, `PrepareReplan`, `WorkspaceTransfer`.
 Status: multi-Node extension implemented on 2026-10-11, with PostgreSQL, protocol,
 Runner and browser verification in `docs/research/multi-node-replan.md`. Earlier
@@ -11,7 +11,7 @@ does not establish native acceptance of the multi-Node extension; that is deferr
 ## 1. Scope / Trigger
 
 Actual semantic insufficiency requests a replacement graph within the same Task.
-The current slice supports complete acyclic graphs of 1..256 required Nodes, executed serially. It preserves immutable Plans,
+The current slice supports complete acyclic graphs of 1..256 required Nodes, with independent isolated execution. It preserves immutable Plans,
 activations, Specification revisions, completion manifests and physical leases.
 Runtime failure/silence and ordinary Owner feedback do not imply insufficiency.
 Review-feedback routing can request the same canonical Replan. Nonempty Artifact consumes and standalone multi-Node sufficient-graph Specification changes remain unsupported.
@@ -111,8 +111,15 @@ already accounts for pending holds before that source is created.
 `workspaces` entries pair exact `input` with approved `target_nodes`. A checkpoint
 requires one exact target activation, which cannot complete without reopening and
 finalizing the retained private work. Completed input can allow several destinations
-or an explicit empty list. The first opener claims one exact immutable transfer
+or an explicit empty list. Each opener claims its exact immutable transfer
 under the workspace lock; earlier repository-free work does not force a checkout.
+Inventory includes canonical integrated input and every unconsumed checkpoint,
+keyed by source lease/allocation. General transfer uniqueness is publication,
+source lease and target Node/activation; checkpoint sources additionally have one
+recipient. Completed canonical input can feed multiple approved isolated targets.
+Reject several private checkpoints assigned to one target. Physical completed input
+requires exact successful operation/manifest/released lease/Git proof; it need not
+retain current semantic `node_completions` evidence after cancellation or Replan.
 Completed code access may follow an approved unchanged Node to its later current
 activation in the same published Plan when original applicability and current Node
 authority remain valid. This never carries old completion evidence. Checkpoints
@@ -152,7 +159,7 @@ Plan can precede the most recent applicable Plan. Future target Attempt/open/lea
 IDs are bound when the system admits the new descriptor. Backend and root Host
 independently check exact released predecessor. Never clear a checkpoint to bypass
 ownership. Once adopted, failed new open/Stop/retry uses the new lease; a third Node
-uses ordinary settled serial transfer after its predecessor completes. Completed inheritance checks finalized Git, not old dirty
+uses the appropriate direct transfer or isolated canonical source. Completed inheritance checks finalized Git, not old dirty
 HEAD/index equality.
 
 ## 4. Validation & Error Matrix

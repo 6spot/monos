@@ -200,6 +200,7 @@ export interface WorkspaceMetadata {
     checkpoint?:                     WorkspaceCheckpoint;
     finalized_commit:                string;
     generation:                      number;
+    isolation?:                      WorkspaceIsolationMetadata;
     lease_id:                        string;
     provider_metadata?:              RepositoryProviderMetadata;
     recovered_by_stop_operation_id?: string;
@@ -217,6 +218,11 @@ export interface WorkspaceCheckpoint {
     head_commit:                 string;
     operation_id:                string;
     tree_id:                     string;
+}
+
+export interface WorkspaceIsolationMetadata {
+    allocation_id: string;
+    start_commit:  string;
 }
 
 export interface RepositoryProviderMetadata {
@@ -310,6 +316,7 @@ export interface EffectResult {
     input_id?:                     string;
     inspection?:                   InspectionResult;
     instruction_files?:            InstructionFile[];
+    integration?:                  WorkspaceIntegrationResult;
     message?:                      string;
     message_id?:                   string;
     obligation_id?:                string;
@@ -402,6 +409,18 @@ export interface InspectionSnapshot {
 export type InspectionResultStatus = "available" | "unavailable";
 
 export type InstructionFile = "AGENTS.md" | "CLAUDE.md";
+
+export interface WorkspaceIntegrationResult {
+    expected_task_commit: string;
+    node_commit:          string;
+    node_tree:            string;
+    outcome:              WorkspaceIntegrationResultOutcome;
+    start_commit:         string;
+    task_commit:          string;
+    task_tree:            string;
+}
+
+export type WorkspaceIntegrationResultOutcome = "integrated" | "conflict";
 
 export interface PlanningOutcome {
     issue_sequence?:    number;
@@ -598,8 +617,13 @@ export type ThinkingLevel = "none" | "minimal" | "low" | "medium" | "high" | "xh
 
 export interface WorkspaceReservations {
     configuration_version: number;
+    isolation?:            WorkspaceIsolation;
     project_id:            string;
     resources:             WorkspaceReservation[];
+}
+
+export interface WorkspaceIsolation {
+    allocation_id: string;
 }
 
 export interface WorkspaceReservation {
@@ -634,6 +658,7 @@ export interface Operation {
     dispatch_id:                 string;
     inspection?:                 InspectionDescriptor;
     inspection_digest?:          string;
+    integration?:                WorkspaceIntegration;
     kind:                        OperationKind;
     operation_id:                string;
     repository_free?:            boolean;
@@ -677,6 +702,7 @@ export interface ResultReadIdentity {
     generation:                number;
     git_commit:                string;
     git_tree:                  string;
+    integration?:              WorkspaceIntegrationResult;
     lease_id:                  string;
     manifest_digest:           string;
     node_activation:           number;
@@ -697,7 +723,10 @@ export type InspectionOriginKind = "default_ref" | "task_completion" | "task_ope
 
 export interface WorkspaceDescriptor {
     basis?:            WorkspaceBasis;
+    canonical_source?: WorkspaceCanonicalSource;
+    conflict_source?:  WorkspaceCanonicalSource;
     generation:        number;
+    isolation?:        WorkspaceIsolation;
     lease_id:          string;
     node_activation:   number;
     node_id:           string;
@@ -720,6 +749,15 @@ export interface WorkspaceBasis {
     repository_identity: string;
     storage_id:          string;
     target_branch:       string;
+}
+
+export interface WorkspaceCanonicalSource {
+    attempt_id:             string;
+    integration?:           WorkspaceIntegrationResult;
+    kind:                   string;
+    metadata:               WorkspaceMetadata;
+    operation_id:           string;
+    recovery_operation_id?: string;
 }
 
 export interface WorkspaceResource {
@@ -790,6 +828,10 @@ export interface InspectionPlannerSource {
 export type InspectionPlannerSourceKind = "todo_discussion" | "task_initial_planning" | "task_conversation" | "task_replan" | "task_review";
 
 export type ScopeKind = "task" | "todo";
+
+export interface WorkspaceIntegration {
+    expected_task_commit: string;
+}
 
 export type OperationKind = "open_workspace" | "inspect_repository" | "complete_node" | "stop" | "settle_completion";
 
@@ -2245,6 +2287,7 @@ export interface CompletionManifest {
 export interface NodeExecutionOperationStatus {
     completion_identity_digest?: string;
     failure_kind:                null | string;
+    integration?:                WorkspaceIntegrationResult;
     kind:                        OperationKind;
     operation_id:                string;
     state:                       OpenStateEnum;
@@ -2763,6 +2806,7 @@ export interface TaskLocalGitResult {
     git_commit:      string;
     git_tree:        string;
     identity_digest: string;
+    integration?:    WorkspaceIntegrationResult;
     metadata:        WorkspaceMetadata;
     resource_id:     string;
     runner_id:       string;

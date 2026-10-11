@@ -1,3 +1,4 @@
+import { nodeWorkspaceReady } from './workspace-placement.ts';
 import {assertReviewSource} from './task-review-sources.ts';
 import {reviewDispatchBlocked} from './task-review-state.ts';
 import type {TaskReviewSource} from '../../../packages/protocol/src/index.ts';
@@ -50,25 +51,8 @@ export async function nodeDependenciesReady(tx: Transaction, planId: string, nod
   return !missing.rowCount;
 }
 
-/** Caller holds Task control. Reserve one runnable source at a time, before
- * freezing its context, and retain that reservation through physical settlement.
- * Owner-created successor intents may coexist; the oldest current intent wins. */
-export async function serialNodeReady(tx: Transaction, taskId: string, nodeId: string, sourceId?: string): Promise<boolean> {
-  const held = await tx.query(`SELECT 1 FROM attempts a WHERE a.task_id=$1 AND a.kind='node'
-      AND (NOT a.process_released OR EXISTS (
-        SELECT 1 FROM operations o WHERE o.attempt_id=a.id AND o.state NOT IN ('succeeded','cancelled'))
-        OR (a.state='QUEUED' AND a.node_id<>$2))
-    UNION ALL SELECT 1 FROM workspace_leases WHERE task_id=$1 AND state<>'released'
-    UNION ALL SELECT 1 FROM nodes n JOIN tasks t ON t.id=n.task_id JOIN plan_nodes p ON p.plan_id=t.plan_id AND p.node_id=n.id
-      WHERE t.id=$1 AND n.id<>$2 AND n.state='RUNNING'
-    UNION ALL SELECT 1 FROM node_execution_outbox s JOIN nodes n ON n.execution_source_id=s.id
-      JOIN tasks t ON t.id=s.task_id
-      WHERE s.task_id=$1 AND s.node_id<>$2 AND NOT s.done AND n.state='PENDING'
-        AND n.activation=s.node_activation AND t.specification_id=s.specification_id AND t.plan_id=s.plan_id
-        AND ($3::text IS NULL OR (s.created_at,s.id)<(
-          SELECT current.created_at,current.id FROM node_execution_outbox current WHERE current.id=$3))`, [taskId, nodeId, sourceId ?? null]);
-  return !held.rowCount;
-}
+/** Current callers retain the name while the guard now follows frozen placement. */
+export const serialNodeReady = nodeWorkspaceReady;
 
 export class DispatchQueue {
   readonly db: Database;
@@ -121,7 +105,7 @@ export class DispatchQueue {
       activation = Number(node.activation);
       if ((await assertCurrentNode(tx, { task_id: input.task_id, node_id: input.node_id, node_activation: activation })).state !== 'PENDING') throw new CommandError('unmet_precondition', 'Node is not pending');
       if (!(await nodeDependenciesReady(tx, input.expected.plan_id!, input.node_id))) throw new CommandError('unmet_precondition', 'Upstream results are not current');
-      if (input.node_execution_source && !await serialNodeReady(tx, input.task_id, input.node_id, input.node_execution_source.source_id)) throw new CommandError('unmet_precondition', 'Prior serial Node execution must settle');
+      if (input.node_execution_source && !await serialNodeReady(tx, input.task_id, input.node_id, input.node_execution_source.source_id)) throw new CommandError('unmet_precondition', 'Conflicting Node workspace ownership must settle');
     } else if (input.node_id) throw new CommandError('invalid_input', 'Planner is not a Node');
     const owner = input.kind === 'node' ? `node:${input.node_id}` : `planner:${input.task_id}`;
     if ((await tx.query("SELECT id FROM attempts WHERE owner_key=$1 AND state='QUEUED'", [owner])).rowCount) throw new CommandError('unmet_precondition', 'Owner already has selected queued work');
@@ -197,14 +181,16 @@ export class DispatchQueue {
         if (Number(count.count) >= runner.capacity) return null;
         // Filter unresolved owners before LIMIT. Hold at most one Task lock in this
         // transaction, avoiding cross-Runner lock inversion while skipping waiters.
-        // Stage A serializes Node writers for a Task until parallel worktrees exist.
+        // Direct placement reserves the Task; isolated placements reserve only their owner/allocation.
         const candidates = (await tx.query<Queued>(`SELECT q.* FROM attempts q WHERE q.runner_id=$1 AND q.state='QUEUED'
           AND (q.selection_context IS NULL OR $3::boolean OR EXISTS (SELECT 1 FROM runtime_installations i
             WHERE i.runner_id=q.runner_id AND i.runtime_id=(q.launch->>'runtime_id') AND i.incarnation=$2))
           AND NOT EXISTS (SELECT 1 FROM attempts a WHERE a.id<>q.id
-            AND (a.owner_key=q.owner_key OR (a.task_id=q.task_id AND a.kind='node' AND q.kind='node'))
-            AND (NOT a.process_released OR EXISTS (SELECT 1 FROM operations o WHERE o.attempt_id=a.id AND o.state NOT IN ('succeeded','cancelled'))))
-          AND (q.task_conversation_source_id IS NOT NULL OR NOT EXISTS (SELECT 1 FROM workspace_leases l WHERE l.task_id=q.task_id AND l.state<>'released'))
+            AND (a.owner_key=q.owner_key OR (a.task_id=q.task_id AND a.kind='node' AND q.kind='node'
+              AND (NOT COALESCE(a.launch->'workspace_reservations' ? 'isolation',false) OR NOT COALESCE(q.launch->'workspace_reservations' ? 'isolation',false))))
+            AND (NOT a.process_released OR (a.state='QUEUED' AND (a.created_at,a.id)<(q.created_at,q.id)) OR EXISTS (SELECT 1 FROM operations o WHERE o.attempt_id=a.id AND o.state NOT IN ('succeeded','cancelled'))))
+          AND (q.task_conversation_source_id IS NOT NULL OR NOT EXISTS (SELECT 1 FROM workspace_leases l WHERE l.task_id=q.task_id AND l.state<>'released'
+            AND (q.kind<>'node' OR NOT COALESCE(q.launch->'workspace_reservations' ? 'isolation',false) OR l.allocation_id IS NULL OR l.node_id=q.node_id)))
           ORDER BY CASE WHEN q.kind='planner' THEN 0 ELSE 1 END,q.created_at,q.id LIMIT 1`, [runnerId, incarnation, Number(runner.runtime_report_incarnation) === incarnation])).rows;
         for (const candidate of candidates) {
           const discussion = candidate.todo_id ? await lockDiscussion(tx, candidate.todo_id) : null;

@@ -27,7 +27,7 @@ import { GitHub } from '../../src/github.ts';
 import { remoteProfile, RemoteProviderError } from '../../src/github-remote.ts';
 import type { AcquireGitHubRemoteGrant } from '../../src/github-remote.ts';
 
-const scenarios = ['ready', 'board_pages', 'queued', 'planning_issue', 'node_queued', 'running', 'running_workspace', 'review_git', 'result_inspection', 'result_empty', 'log_pages', 'blocked', 'review', 'completion_recovery', 'replan', 'multi_replan', 'replan_issue', 'joint', 'specification', 'guidance', 'input_issue'] as const;
+const scenarios = ['ready', 'board_pages', 'queued', 'planning_issue', 'node_queued', 'running', 'running_workspace', 'review_git', 'result_inspection', 'result_empty', 'log_pages', 'blocked', 'review', 'completion_recovery', 'replan', 'multi_replan', 'replan_issue', 'joint', 'specification', 'guidance', 'input_issue', 'parallel_review', 'parallel_conflict'] as const;
 type Scenario = typeof scenarios[number];
 interface Context { task: string; spec: string; plan: string; node: string; project: string; role: string; runner: string; incarnation: number; resource_id?: string }
 interface Agent { dispatch: Dispatch; credential: string }
@@ -259,7 +259,8 @@ export class ExecutionUIFixture {
     await transaction(this.db, (tx) => authenticateOwner(tx, token));
     if (!scenarios.includes(input.kind) || (input.title !== undefined && (typeof input.title !== 'string' || input.title.length > 256))) throw new Error('Invalid browser scenario');
     const f: Context = { task: randomUUID(), spec: randomUUID(), plan: randomUUID(), node: randomUUID(), project: randomUUID(), role: randomUUID(), runner: randomUUID(), incarnation: 0 };
-    const resource_id = ['running_workspace', 'review_git', 'result_inspection', 'result_empty'].includes(input.kind) ? randomUUID() : undefined;
+    const parallel = input.kind === 'parallel_review' || input.kind === 'parallel_conflict';
+    const resource_id = ['running_workspace', 'review_git', 'result_inspection', 'result_empty'].includes(input.kind) || parallel ? randomUUID() : undefined;
     const config = new Configuration(this.db);
     await config.save(token, { schema_version: 1, request_id: randomUUID(), expected_control_version: (await config.read(token)).control_version, name: 'save_role', payload: { id: f.role, name: 'Careful builder', description: 'Synthetic browser scenario', instructions: 'Implement the exact requirement and report evidence.', archived: false } });
     await config.save(token, { schema_version: 1, request_id: randomUUID(), expected_control_version: (await config.read(token)).control_version, name: 'save_project', payload: { id: f.project, name: `Execution UI · ${input.kind}`, context: 'Isolated browser fixture; no real Runtime execution.', resources: resource_id ? [{ id: resource_id, remote_url: 'https://github.com/example/execution-ui.git', remote_preparation: automatic ? 'automatic' : 'after_acceptance', ...(automatic ? { provider: 'github' as const, provider_repo_id: '42' } : {}), default_branch: 'main' }] : [], role_ids: [f.role], archived: false } });
@@ -322,12 +323,46 @@ export class ExecutionUIFixture {
     if (input.kind === 'queued') return f;
     const multiSuccessor = randomUUID();
     const planner = await this.promote(f);
-    const planned = await this.agent(f, planner, input.kind === 'planning_issue' ? 'raise_planning_issue' : 'publish_execution_plan', input.kind === 'planning_issue' ? { planning_intent_id: planner.dispatch.task_planning_source!.intent_id, reason: 'Which output should be authoritative? Please describe the expected behavior.' } : { planning_intent_id: planner.dispatch.task_planning_source!.intent_id, plan_id: f.plan, nodes: [{ node_id: f.node, role_id: f.role, goal: 'Implement and verify the exact requested behavior', dependencies: [], expected_outputs: ['A verified local result with a readable summary'] }, ...(input.kind === 'multi_replan' ? [{ node_id: multiSuccessor, role_id: f.role, goal: 'Extend the original behavior', dependencies: [f.node] }] : [])] });
+    const planned = await this.agent(f, planner, input.kind === 'planning_issue' ? 'raise_planning_issue' : 'publish_execution_plan', input.kind === 'planning_issue' ? { planning_intent_id: planner.dispatch.task_planning_source!.intent_id, reason: 'Which output should be authoritative? Please describe the expected behavior.' } : { planning_intent_id: planner.dispatch.task_planning_source!.intent_id, plan_id: f.plan, nodes: [{ node_id: f.node, role_id: f.role, goal: 'Implement and verify the exact requested behavior', dependencies: [], expected_outputs: ['A verified local result with a readable summary'] }, ...(input.kind === 'multi_replan' || parallel ? [{ node_id: multiSuccessor, role_id: f.role, goal: 'Extend the original behavior', dependencies: parallel ? [] : [f.node] }] : [])] });
     await this.finish(f, planned.operation_id!, planner.dispatch.attempt_id);
     if (input.kind === 'planning_issue') return f;
     await execution.pump();
     if (input.kind === 'node_queued') return f;
     let node = await this.promote(f);
+    if (parallel) {
+      const first = node;
+      let second = await this.promote(f);
+      const open = async (agent: Agent) => {
+        const requested = await this.agent(f, agent, 'open_workspace', { resource_id: resource_id! });
+        const op = await this.service.recoverOperation(f.runner, requested.operation_id!), w = op.workspace!;
+        const metadata: WorkspaceMetadata = { generation: 1, storage_id: 'synthetic-browser-storage', lease_id: w.lease_id,
+          repository_identity: w.resource.repository_identity, provider_metadata: { github: { repository_id: '42' } },
+          base_commit: 'a'.repeat(40), target_branch: 'main', target_commit: 'b'.repeat(40),
+          finalized_commit: w.basis?.finalized_commit ?? 'a'.repeat(40),
+          isolation: { allocation_id: w.isolation!.allocation_id, start_commit: w.basis?.finalized_commit ?? 'a'.repeat(40) } };
+        await this.service.finishOperation(f.runner, f.incarnation, { operation_id: op.operation_id, attempt_id: agent.dispatch.attempt_id,
+          success: true, result: { workspace_id: w.workspace_id, path: `/synthetic/${w.isolation!.allocation_id}/worktree`, instruction_files: [], workspace_metadata: metadata } });
+        return { workspace_id: w.workspace_id, metadata };
+      };
+      const finish = async (agent: Agent, opened: Awaited<ReturnType<typeof open>>, conflict: boolean, revision: string) => {
+        const requested = await this.agent(f, agent, 'complete_node', { summary: `Parallel work produced revision ${revision.repeat(40)}; validation applies to that private result.` });
+        const op = await this.service.recoverOperation(f.runner, requested.operation_id!);
+        const integration = { outcome: conflict ? 'conflict' as const : 'integrated' as const, start_commit: opened.metadata.isolation!.start_commit,
+          node_commit: revision.repeat(40), node_tree: 'd'.repeat(40), expected_task_commit: op.integration!.expected_task_commit,
+          task_commit: conflict ? op.integration!.expected_task_commit : (revision === 'c' ? 'e' : 'f').repeat(40), task_tree: '1'.repeat(40) };
+        await this.service.finishOperation(f.runner, f.incarnation, { operation_id: op.operation_id, attempt_id: agent.dispatch.attempt_id,
+          success: true, result: { writer_absent: true, workspace_id: opened.workspace_id, integration,
+            workspace_metadata: { ...opened.metadata, finalized_commit: conflict ? opened.metadata.finalized_commit : integration.task_commit },
+            ...(!conflict ? { git_commit: integration.task_commit, git_tree: integration.task_tree } : {}) } });
+      };
+      const a = await open(first); let b = await open(second);
+      await finish(first, a, false, 'c');
+      for (let index = 0; index < (input.kind === 'parallel_conflict' ? 3 : 1); index++) {
+        await finish(second, b, input.kind === 'parallel_conflict', 'b');
+        if (input.kind === 'parallel_conflict' && index < 2) { await execution.pump(); second = await this.promote(f); b = await open(second); }
+      }
+      return { ...f, node: second.dispatch.node_id!, resource_id, attempt_id: second.dispatch.attempt_id };
+    }
     if (input.kind === 'multi_replan') {
       const done = await this.agent(f, node, 'complete_node', { summary: 'Verified existing behavior, retained by the replacement Plan.' });
       await this.finish(f, done.operation_id!, node.dispatch.attempt_id);

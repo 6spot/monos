@@ -248,9 +248,22 @@ export function TaskResults(props: TaskViewProps) {
           ) : (
             r.git && (
               <dl>
-                <Datum label="Local commit">
+                <Datum label={r.git.integration ? "Combined Task commit" : "Local commit"}>
                   <code>{r.git.git_commit}</code>
                 </Datum>
+                {r.git.integration && (
+                  <>
+                    <Datum label="Work started from">
+                      <code>{r.git.integration.start_commit}</code>
+                    </Datum>
+                    <Datum label="Work result before integration">
+                      <code>{r.git.integration.node_commit}</code>
+                    </Datum>
+                    <Datum label="Validation scope">
+                      Work reported here applies to its own result. Validation of the combined result requires subsequent work.
+                    </Datum>
+                  </>
+                )}
                 <Datum label="Result tree">
                   <code>{r.git.git_tree}</code>
                 </Datum>

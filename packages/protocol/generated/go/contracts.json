@@ -1083,6 +1083,9 @@
         },
         "inspection": {
           "$ref": "#/definitions/InspectionResult"
+        },
+        "integration": {
+          "$ref": "#/definitions/WorkspaceIntegrationResult"
         }
       },
       "allOf": [
@@ -1128,6 +1131,92 @@
               "requirement_operation_id": false,
               "replan_outcome": false,
               "rework_outcome": false
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "required": [
+              "integration"
+            ],
+            "properties": {
+              "integration": {}
+            }
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "writer_absent": {
+                "const": true
+              },
+              "workspace_metadata": {
+                "type": "object",
+                "properties": {
+                  "isolation": {
+                    "$ref": "#/definitions/WorkspaceIsolationMetadata"
+                  }
+                },
+                "required": [
+                  "isolation"
+                ]
+              }
+            },
+            "required": [
+              "writer_absent",
+              "workspace_id",
+              "workspace_metadata"
+            ]
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "required": [
+              "integration"
+            ],
+            "properties": {
+              "integration": {
+                "type": "object",
+                "properties": {
+                  "outcome": {
+                    "const": "integrated"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "type": "object",
+            "properties": {},
+            "required": [
+              "git_commit",
+              "git_tree"
+            ]
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "required": [
+              "integration"
+            ],
+            "properties": {
+              "integration": {
+                "type": "object",
+                "properties": {
+                  "outcome": {
+                    "const": "conflict"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "git_commit": false,
+              "git_tree": false
             }
           }
         }
@@ -1684,6 +1773,9 @@
         },
         "inspection_digest": {
           "$ref": "#/definitions/SHA256"
+        },
+        "integration": {
+          "$ref": "#/definitions/WorkspaceIntegration"
         }
       },
       "allOf": [
@@ -1922,6 +2014,73 @@
               "completion_identity_digest": false
             }
           }
+        },
+        {
+          "if": {
+            "type": "object",
+            "required": [
+              "integration"
+            ],
+            "properties": {
+              "integration": {}
+            }
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "const": "complete_node"
+              },
+              "workspace": {
+                "type": "object",
+                "properties": {
+                  "isolation": {
+                    "$ref": "#/definitions/WorkspaceIsolation"
+                  }
+                },
+                "required": [
+                  "isolation"
+                ]
+              },
+              "repository_free": false
+            },
+            "required": [
+              "workspace"
+            ]
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "required": [
+              "workspace"
+            ],
+            "properties": {
+              "kind": {
+                "const": "complete_node"
+              },
+              "workspace": {
+                "type": "object",
+                "required": [
+                  "isolation"
+                ],
+                "properties": {
+                  "isolation": {}
+                }
+              }
+            }
+          },
+          "then": {
+            "type": "object",
+            "required": [
+              "integration"
+            ],
+            "properties": {
+              "integration": {
+                "$ref": "#/definitions/WorkspaceIntegration"
+              }
+            }
+          }
         }
       ],
       "dependencies": {
@@ -2149,6 +2308,34 @@
               }
             },
             "type": "object"
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "required": [
+              "result"
+            ],
+            "properties": {
+              "result": {
+                "type": "object",
+                "required": [
+                  "integration"
+                ],
+                "properties": {
+                  "integration": {}
+                }
+              }
+            }
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "const": true
+              },
+              "failure_kind": false
+            }
           }
         }
       ]
@@ -6548,6 +6735,9 @@
           "items": {
             "$ref": "#/definitions/WorkspaceReservation"
           }
+        },
+        "isolation": {
+          "$ref": "#/definitions/WorkspaceIsolation"
         }
       }
     },
@@ -6692,8 +6882,107 @@
           "minItems": 1,
           "maxItems": 64,
           "uniqueItems": true
+        },
+        "isolation": {
+          "$ref": "#/definitions/WorkspaceIsolation"
+        },
+        "canonical_source": {
+          "$ref": "#/definitions/WorkspaceCanonicalSource"
+        },
+        "conflict_source": {
+          "$ref": "#/definitions/WorkspaceCanonicalSource"
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "required": [
+              "canonical_source"
+            ],
+            "properties": {
+              "canonical_source": {}
+            }
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "isolation": {
+                "$ref": "#/definitions/WorkspaceIsolation"
+              },
+              "basis": {
+                "$ref": "#/definitions/WorkspaceBasis"
+              },
+              "canonical_source": {
+                "type": "object",
+                "properties": {
+                  "integration": {
+                    "type": "object",
+                    "properties": {
+                      "outcome": {
+                        "const": "integrated"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "required": [
+              "isolation",
+              "basis"
+            ]
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "required": [
+              "conflict_source"
+            ],
+            "properties": {
+              "conflict_source": {}
+            }
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "isolation": {
+                "$ref": "#/definitions/WorkspaceIsolation"
+              },
+              "canonical_source": {
+                "$ref": "#/definitions/WorkspaceCanonicalSource"
+              },
+              "basis": {
+                "$ref": "#/definitions/WorkspaceBasis"
+              },
+              "conflict_source": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "const": "complete_node"
+                  },
+                  "integration": {
+                    "type": "object",
+                    "properties": {
+                      "outcome": {
+                        "const": "conflict"
+                      }
+                    }
+                  }
+                },
+                "required": [
+                  "integration"
+                ]
+              }
+            },
+            "required": [
+              "isolation",
+              "basis",
+              "canonical_source"
+            ]
+          }
+        }
+      ]
     },
     "WorkspaceCheckpoint": {
       "type": "object",
@@ -6786,6 +7075,9 @@
         },
         "target_observation_lease_id": {
           "$ref": "#/definitions/Id"
+        },
+        "isolation": {
+          "$ref": "#/definitions/WorkspaceIsolationMetadata"
         }
       },
       "allOf": [
@@ -7753,9 +8045,7 @@
                   "result": {
                     "type": "object",
                     "required": [
-                      "writer_absent",
-                      "git_commit",
-                      "git_tree"
+                      "writer_absent"
                     ],
                     "properties": {
                       "writer_absent": {
@@ -7767,7 +8057,42 @@
                       "git_tree": {
                         "$ref": "#/definitions/GitOID"
                       }
-                    }
+                    },
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "required": [
+                          "git_commit",
+                          "git_tree"
+                        ],
+                        "properties": {
+                          "git_commit": {
+                            "$ref": "#/definitions/GitOID"
+                          },
+                          "git_tree": {
+                            "$ref": "#/definitions/GitOID"
+                          }
+                        }
+                      },
+                      {
+                        "type": "object",
+                        "required": [
+                          "integration"
+                        ],
+                        "properties": {
+                          "integration": {
+                            "type": "object",
+                            "properties": {
+                              "outcome": {
+                                "const": "conflict"
+                              }
+                            }
+                          },
+                          "git_commit": false,
+                          "git_tree": false
+                        }
+                      }
+                    ]
                   }
                 },
                 "type": "object",
@@ -7887,6 +8212,9 @@
         },
         "completion_identity_digest": {
           "$ref": "#/definitions/SHA256"
+        },
+        "integration": {
+          "$ref": "#/definitions/WorkspaceIntegrationResult"
         }
       },
       "required": [
@@ -10875,7 +11203,7 @@
           "items": {
             "$ref": "#/definitions/ReplanWorkspaceDisposition"
           },
-          "maxItems": 1
+          "maxItems": 256
         }
       },
       "required": [
@@ -11989,6 +12317,9 @@
         },
         "identity_digest": {
           "$ref": "#/definitions/SHA256"
+        },
+        "integration": {
+          "$ref": "#/definitions/WorkspaceIntegrationResult"
         }
       },
       "required": [
@@ -11999,6 +12330,32 @@
         "git_tree",
         "metadata",
         "identity_digest"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "required": [
+              "integration"
+            ],
+            "properties": {
+              "integration": {}
+            }
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "integration": {
+                "type": "object",
+                "properties": {
+                  "outcome": {
+                    "const": "integrated"
+                  }
+                }
+              }
+            }
+          }
+        }
       ]
     },
     "TaskLocalResult": {
@@ -12366,6 +12723,9 @@
         },
         "git_tree": {
           "$ref": "#/definitions/GitOID"
+        },
+        "integration": {
+          "$ref": "#/definitions/WorkspaceIntegrationResult"
         }
       },
       "required": [
@@ -12389,6 +12749,32 @@
         "base_commit",
         "git_commit",
         "git_tree"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "required": [
+              "integration"
+            ],
+            "properties": {
+              "integration": {}
+            }
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "integration": {
+                "type": "object",
+                "properties": {
+                  "outcome": {
+                    "const": "integrated"
+                  }
+                }
+              }
+            }
+          }
+        }
       ]
     },
     "ResultPath": {
@@ -20820,6 +21206,169 @@
                 "minItems": 1,
                 "maxItems": 1
               }
+            }
+          }
+        }
+      ]
+    },
+    "WorkspaceIsolation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "allocation_id"
+      ],
+      "properties": {
+        "allocation_id": {
+          "$ref": "#/definitions/Id"
+        }
+      }
+    },
+    "WorkspaceIsolationMetadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "allocation_id",
+        "start_commit"
+      ],
+      "properties": {
+        "allocation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "start_commit": {
+          "$ref": "#/definitions/GitOID"
+        }
+      }
+    },
+    "WorkspaceIntegration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "expected_task_commit"
+      ],
+      "properties": {
+        "expected_task_commit": {
+          "$ref": "#/definitions/GitOID"
+        }
+      }
+    },
+    "WorkspaceIntegrationResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "outcome",
+        "start_commit",
+        "node_commit",
+        "node_tree",
+        "expected_task_commit",
+        "task_commit",
+        "task_tree"
+      ],
+      "properties": {
+        "outcome": {
+          "type": "string",
+          "enum": [
+            "integrated",
+            "conflict"
+          ]
+        },
+        "start_commit": {
+          "$ref": "#/definitions/GitOID"
+        },
+        "node_commit": {
+          "$ref": "#/definitions/GitOID"
+        },
+        "node_tree": {
+          "$ref": "#/definitions/GitOID"
+        },
+        "expected_task_commit": {
+          "$ref": "#/definitions/GitOID"
+        },
+        "task_commit": {
+          "$ref": "#/definitions/GitOID"
+        },
+        "task_tree": {
+          "$ref": "#/definitions/GitOID"
+        }
+      }
+    },
+    "WorkspaceCanonicalSource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operation_id",
+        "attempt_id",
+        "kind",
+        "metadata"
+      ],
+      "properties": {
+        "operation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "attempt_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "kind": {
+          "type": "string",
+          "pattern": "^(?:open_workspace|complete_node)$"
+        },
+        "metadata": {
+          "$ref": "#/definitions/WorkspaceMetadata"
+        },
+        "integration": {
+          "$ref": "#/definitions/WorkspaceIntegrationResult"
+        },
+        "recovery_operation_id": {
+          "$ref": "#/definitions/Id"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "required": [
+              "integration"
+            ],
+            "properties": {
+              "integration": {}
+            }
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "const": "complete_node"
+              },
+              "metadata": {
+                "type": "object",
+                "properties": {
+                  "isolation": {
+                    "$ref": "#/definitions/WorkspaceIsolationMetadata"
+                  }
+                },
+                "required": [
+                  "isolation"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "required": [
+              "recovery_operation_id"
+            ],
+            "properties": {
+              "recovery_operation_id": {}
+            }
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "const": "open_workspace"
+              },
+              "integration": false
             }
           }
         }

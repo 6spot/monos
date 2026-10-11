@@ -194,6 +194,7 @@ type WorkspaceMetadata struct {
 	Checkpoint                 *WorkspaceCheckpoint        `json:"checkpoint,omitempty"`
 	FinalizedCommit            string                      `json:"finalized_commit"`
 	Generation                 int64                       `json:"generation"`
+	Isolation                  *WorkspaceIsolationMetadata `json:"isolation,omitempty"`
 	LeaseID                    string                      `json:"lease_id"`
 	ProviderMetadata           *RepositoryProviderMetadata `json:"provider_metadata,omitempty"`
 	RecoveredByStopOperationID *string                     `json:"recovered_by_stop_operation_id,omitempty"`
@@ -211,6 +212,11 @@ type WorkspaceCheckpoint struct {
 	HeadCommit               string  `json:"head_commit"`
 	OperationID              string  `json:"operation_id"`
 	TreeID                   string  `json:"tree_id"`
+}
+
+type WorkspaceIsolationMetadata struct {
+	AllocationID string `json:"allocation_id"`
+	StartCommit  string `json:"start_commit"`
 }
 
 type RepositoryProviderMetadata struct {
@@ -298,6 +304,7 @@ type EffectResult struct {
 	InputID                    *string                     `json:"input_id,omitempty"`
 	Inspection                 *InspectionResult           `json:"inspection,omitempty"`
 	InstructionFiles           []InstructionFile           `json:"instruction_files,omitempty"`
+	Integration                *WorkspaceIntegrationResult `json:"integration,omitempty"`
 	Message                    *string                     `json:"message,omitempty"`
 	MessageID                  *string                     `json:"message_id,omitempty"`
 	ObligationID               *string                     `json:"obligation_id,omitempty"`
@@ -379,6 +386,16 @@ type InspectionSnapshot struct {
 	SnapshotID         string   `json:"snapshot_id"`
 	StorageID          string   `json:"storage_id"`
 	Tree               string   `json:"tree"`
+}
+
+type WorkspaceIntegrationResult struct {
+	ExpectedTaskCommit string                            `json:"expected_task_commit"`
+	NodeCommit         string                            `json:"node_commit"`
+	NodeTree           string                            `json:"node_tree"`
+	Outcome            WorkspaceIntegrationResultOutcome `json:"outcome"`
+	StartCommit        string                            `json:"start_commit"`
+	TaskCommit         string                            `json:"task_commit"`
+	TaskTree           string                            `json:"task_tree"`
 }
 
 type PlanningOutcome struct {
@@ -556,8 +573,13 @@ type TaskReviewSource struct {
 
 type WorkspaceReservations struct {
 	ConfigurationVersion int64                  `json:"configuration_version"`
+	Isolation            *WorkspaceIsolation    `json:"isolation,omitempty"`
 	ProjectID            string                 `json:"project_id"`
 	Resources            []WorkspaceReservation `json:"resources"`
+}
+
+type WorkspaceIsolation struct {
+	AllocationID string `json:"allocation_id"`
 }
 
 type WorkspaceReservation struct {
@@ -588,6 +610,7 @@ type Operation struct {
 	DispatchID               string                `json:"dispatch_id"`
 	Inspection               *InspectionDescriptor `json:"inspection,omitempty"`
 	InspectionDigest         *string               `json:"inspection_digest,omitempty"`
+	Integration              *WorkspaceIntegration `json:"integration,omitempty"`
 	Kind                     OperationKind         `json:"kind"`
 	OperationID              string                `json:"operation_id"`
 	RepositoryFree           *bool                 `json:"repository_free,omitempty"`
@@ -625,44 +648,48 @@ type InspectionOrigin struct {
 }
 
 type ResultReadIdentity struct {
-	AttemptID               string `json:"attempt_id"`
-	BaseCommit              string `json:"base_commit"`
-	DispatchID              string `json:"dispatch_id"`
-	Generation              int64  `json:"generation"`
-	GitCommit               string `json:"git_commit"`
-	GitTree                 string `json:"git_tree"`
-	LeaseID                 string `json:"lease_id"`
-	ManifestDigest          string `json:"manifest_digest"`
-	NodeActivation          int64  `json:"node_activation"`
-	NodeID                  string `json:"node_id"`
-	OperationID             string `json:"operation_id"`
-	OperationIdentityDigest string `json:"operation_identity_digest"`
-	PlanID                  string `json:"plan_id"`
-	RepositoryIdentity      string `json:"repository_identity"`
-	ResourceID              string `json:"resource_id"`
-	RunnerID                string `json:"runner_id"`
-	SpecificationID         string `json:"specification_id"`
-	StorageID               string `json:"storage_id"`
-	TaskID                  string `json:"task_id"`
-	WorkspaceID             string `json:"workspace_id"`
+	AttemptID               string                      `json:"attempt_id"`
+	BaseCommit              string                      `json:"base_commit"`
+	DispatchID              string                      `json:"dispatch_id"`
+	Generation              int64                       `json:"generation"`
+	GitCommit               string                      `json:"git_commit"`
+	GitTree                 string                      `json:"git_tree"`
+	Integration             *WorkspaceIntegrationResult `json:"integration,omitempty"`
+	LeaseID                 string                      `json:"lease_id"`
+	ManifestDigest          string                      `json:"manifest_digest"`
+	NodeActivation          int64                       `json:"node_activation"`
+	NodeID                  string                      `json:"node_id"`
+	OperationID             string                      `json:"operation_id"`
+	OperationIdentityDigest string                      `json:"operation_identity_digest"`
+	PlanID                  string                      `json:"plan_id"`
+	RepositoryIdentity      string                      `json:"repository_identity"`
+	ResourceID              string                      `json:"resource_id"`
+	RunnerID                string                      `json:"runner_id"`
+	SpecificationID         string                      `json:"specification_id"`
+	StorageID               string                      `json:"storage_id"`
+	TaskID                  string                      `json:"task_id"`
+	WorkspaceID             string                      `json:"workspace_id"`
 }
 
 type WorkspaceDescriptor struct {
-	Basis           *WorkspaceBasis          `json:"basis,omitempty"`
-	Generation      int64                    `json:"generation"`
-	LeaseID         string                   `json:"lease_id"`
-	NodeActivation  int64                    `json:"node_activation"`
-	NodeID          string                   `json:"node_id"`
-	OpenOperationID string                   `json:"open_operation_id"`
-	ProjectID       string                   `json:"project_id"`
-	Resource        WorkspaceResource        `json:"resource"`
-	ResourceID      string                   `json:"resource_id"`
-	ReworkHistory   []WorkspaceReworkHistory `json:"rework_history,omitempty"`
-	RunnerID        string                   `json:"runner_id"`
-	SchemaVersion   int64                    `json:"schema_version"`
-	TaskID          string                   `json:"task_id"`
-	Transfer        *WorkspaceTransfer       `json:"transfer,omitempty"`
-	WorkspaceID     string                   `json:"workspace_id"`
+	Basis           *WorkspaceBasis           `json:"basis,omitempty"`
+	CanonicalSource *WorkspaceCanonicalSource `json:"canonical_source,omitempty"`
+	ConflictSource  *WorkspaceCanonicalSource `json:"conflict_source,omitempty"`
+	Generation      int64                     `json:"generation"`
+	Isolation       *WorkspaceIsolation       `json:"isolation,omitempty"`
+	LeaseID         string                    `json:"lease_id"`
+	NodeActivation  int64                     `json:"node_activation"`
+	NodeID          string                    `json:"node_id"`
+	OpenOperationID string                    `json:"open_operation_id"`
+	ProjectID       string                    `json:"project_id"`
+	Resource        WorkspaceResource         `json:"resource"`
+	ResourceID      string                    `json:"resource_id"`
+	ReworkHistory   []WorkspaceReworkHistory  `json:"rework_history,omitempty"`
+	RunnerID        string                    `json:"runner_id"`
+	SchemaVersion   int64                     `json:"schema_version"`
+	TaskID          string                    `json:"task_id"`
+	Transfer        *WorkspaceTransfer        `json:"transfer,omitempty"`
+	WorkspaceID     string                    `json:"workspace_id"`
 }
 
 type WorkspaceBasis struct {
@@ -672,6 +699,15 @@ type WorkspaceBasis struct {
 	RepositoryIdentity string                      `json:"repository_identity"`
 	StorageID          string                      `json:"storage_id"`
 	TargetBranch       string                      `json:"target_branch"`
+}
+
+type WorkspaceCanonicalSource struct {
+	AttemptID           string                      `json:"attempt_id"`
+	Integration         *WorkspaceIntegrationResult `json:"integration,omitempty"`
+	Kind                string                      `json:"kind"`
+	Metadata            WorkspaceMetadata           `json:"metadata"`
+	OperationID         string                      `json:"operation_id"`
+	RecoveryOperationID *string                     `json:"recovery_operation_id,omitempty"`
 }
 
 type WorkspaceResource struct {
@@ -735,6 +771,10 @@ type InspectionPlannerSource struct {
 	Kind            InspectionPlannerSourceKind `json:"kind"`
 	SourceID        string                      `json:"source_id"`
 	SourceWatermark int64                       `json:"source_watermark"`
+}
+
+type WorkspaceIntegration struct {
+	ExpectedTaskCommit string `json:"expected_task_commit"`
 }
 
 type OperationResult struct {
@@ -2033,11 +2073,12 @@ type CompletionManifest struct {
 }
 
 type NodeExecutionOperationStatus struct {
-	CompletionIdentityDigest *string       `json:"completion_identity_digest,omitempty"`
-	FailureKind              *string       `json:"failure_kind"`
-	Kind                     OperationKind `json:"kind"`
-	OperationID              string        `json:"operation_id"`
-	State                    OpenStateEnum `json:"state"`
+	CompletionIdentityDigest *string                     `json:"completion_identity_digest,omitempty"`
+	FailureKind              *string                     `json:"failure_kind"`
+	Integration              *WorkspaceIntegrationResult `json:"integration,omitempty"`
+	Kind                     OperationKind               `json:"kind"`
+	OperationID              string                      `json:"operation_id"`
+	State                    OpenStateEnum               `json:"state"`
 }
 
 type TaskConversationCommand struct {
@@ -2518,13 +2559,14 @@ type TaskLocalResult struct {
 }
 
 type TaskLocalGitResult struct {
-	GitCommit      string            `json:"git_commit"`
-	GitTree        string            `json:"git_tree"`
-	IdentityDigest string            `json:"identity_digest"`
-	Metadata       WorkspaceMetadata `json:"metadata"`
-	ResourceID     string            `json:"resource_id"`
-	RunnerID       string            `json:"runner_id"`
-	WorkspaceID    string            `json:"workspace_id"`
+	GitCommit      string                      `json:"git_commit"`
+	GitTree        string                      `json:"git_tree"`
+	IdentityDigest string                      `json:"identity_digest"`
+	Integration    *WorkspaceIntegrationResult `json:"integration,omitempty"`
+	Metadata       WorkspaceMetadata           `json:"metadata"`
+	ResourceID     string                      `json:"resource_id"`
+	RunnerID       string                      `json:"runner_id"`
+	WorkspaceID    string                      `json:"workspace_id"`
 }
 
 type TaskResultQuery struct {
@@ -3550,6 +3592,13 @@ type InstructionFile string
 const (
 	AGENTSMd InstructionFile = "AGENTS.md"
 	CLAUDEMd InstructionFile = "CLAUDE.md"
+)
+
+type WorkspaceIntegrationResultOutcome string
+
+const (
+	Conflict   WorkspaceIntegrationResultOutcome = "conflict"
+	Integrated WorkspaceIntegrationResultOutcome = "integrated"
 )
 
 type PlanningOutcomeKind string

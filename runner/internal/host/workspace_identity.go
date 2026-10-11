@@ -39,6 +39,9 @@ func validateWorkspaceScope(d protocol.Dispatch, op protocol.Operation) error {
 	if w == nil || op.WorkspaceDigest == nil || d.TaskID == nil || d.WorkspaceReservations == nil || d.Kind != protocol.Node {
 		return fmt.Errorf("canonical workspace descriptor required")
 	}
+	if err := validateWorkspaceIsolation(d, op); err != nil {
+		return err
+	}
 	_, digest, err := wire.Canonical(w)
 	if err != nil || digest != *op.WorkspaceDigest {
 		return fmt.Errorf("workspace digest mismatch")
@@ -84,6 +87,9 @@ func reserveWorkspaces(d protocol.Dispatch, uid, gid int) error {
 	if d.TaskID == nil {
 		return fmt.Errorf("workspace reservation requires Task")
 	}
+	if d.WorkspaceReservations.Isolation != nil && !ValidID(d.WorkspaceReservations.Isolation.AllocationID) {
+		return fmt.Errorf("invalid workspace allocation reservation")
+	}
 	for _, r := range d.WorkspaceReservations.Resources {
 		id, err := TaskWorkspaceID(*d.TaskID, r.ResourceID)
 		if err != nil || r.WorkspaceID != id {
@@ -92,6 +98,15 @@ func reserveWorkspaces(d protocol.Dispatch, uid, gid int) error {
 		base := TaskWorkspacePath(id, "")
 		if err = createTraversalRoot(base, 0, 0); err != nil {
 			return err
+		}
+		if isolation := d.WorkspaceReservations.Isolation; isolation != nil {
+			if err = createTraversalRoot(filepath.Join(base, "allocations"), 0, 0); err != nil {
+				return err
+			}
+			base = reservedWorkspacePath(id, isolation, "")
+			if err = createTraversalRoot(base, 0, 0); err != nil {
+				return err
+			}
 		}
 		for _, name := range []string{"worktree", "common"} {
 			p := filepath.Join(base, name)

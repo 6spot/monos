@@ -52,6 +52,50 @@ func TestResultReadRetainedCompletionHistoricalAuthorityAndPreservation(t *testi
 		t.Fatal("read changed operation", e)
 	}
 }
+
+func TestResultReadBindsPrivateAndIntegratedRevisions(t *testing.T) {
+	db := testDB(t)
+	_, d, op, identity, result := retainedReadFixture(t)
+	isolation := &protocol.WorkspaceIsolation{AllocationID: "allocation"}
+	d.WorkspaceReservations.Isolation, op.Workspace.Isolation = isolation, isolation
+	op.Integration = &protocol.WorkspaceIntegration{ExpectedTaskCommit: identity.BaseCommit}
+	result.Result.WorkspaceMetadata.Isolation = &protocol.WorkspaceIsolationMetadata{AllocationID: isolation.AllocationID, StartCommit: identity.BaseCommit}
+	result.Result.Integration = &protocol.WorkspaceIntegrationResult{Outcome: protocol.Integrated, StartCommit: identity.BaseCommit, NodeCommit: strings.Repeat("4", 40), NodeTree: strings.Repeat("5", 40), ExpectedTaskCommit: identity.BaseCommit, TaskCommit: identity.GitCommit, TaskTree: identity.GitTree}
+	identity.Integration = result.Result.Integration
+	_, descriptorDigest, err := wire.Canonical(op.Workspace)
+	if err != nil {
+		t.Fatal(err)
+	}
+	op.WorkspaceDigest = &descriptorDigest
+	identity.OperationIdentityDigest, err = wire.OperationIdentity(op)
+	if err != nil {
+		t.Fatal(err)
+	}
+	retainRecovery(t, db, d, op, &result)
+	if err := retainedResultIdentity(db, identity); err != nil {
+		t.Fatal(err)
+	}
+	for _, field := range []string{"missing", "node", "start", "expected", "conflict"} {
+		raw, _ := json.Marshal(identity)
+		var bad protocol.ResultReadIdentity
+		_ = json.Unmarshal(raw, &bad)
+		switch field {
+		case "missing":
+			bad.Integration = nil
+		case "node":
+			bad.Integration.NodeCommit = strings.Repeat("6", 40)
+		case "start":
+			bad.Integration.StartCommit = strings.Repeat("6", 40)
+		case "expected":
+			bad.Integration.ExpectedTaskCommit = strings.Repeat("6", 40)
+		case "conflict":
+			bad.Integration.Outcome = protocol.Conflict
+		}
+		if retainedResultIdentity(db, bad) == nil {
+			t.Fatalf("accepted changed integration %s", field)
+		}
+	}
+}
 func TestResultReadRetainedCompletionRejectsCrossedIdentity(t *testing.T) {
 	fields := []string{"task_id", "operation_id", "attempt_id", "dispatch_id", "node_id", "specification_id", "plan_id", "workspace_id", "resource_id", "runner_id", "storage_id", "lease_id", "repository_identity", "manifest_digest", "operation_identity_digest", "base_commit", "git_commit", "git_tree", "generation", "node_activation"}
 	for _, field := range fields {

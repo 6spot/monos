@@ -115,26 +115,32 @@ export async function assertCurrentNode(tx: Transaction, input: { task_id: strin
   return row;
 }
 
-// Caller authorizes Rework and records its decision/event; this primitive only
-// resets a fully settled subgraph. Live-writer settlement belongs to orchestration.
-export async function reactivateSettledNodes(tx: Transaction, input: { task_id: string; expected: ControlBasis; node_ids: string[] }): Promise<string[]> {
-  const task = await control(tx, input.task_id, input.expected);
-  await assertSpecificationUnfrozen(tx,input.task_id);
-  if (!['RUNNING', 'BLOCKED', 'REVIEW'].includes(task.state) || !task.plan_id) throw new CommandError('unmet_precondition', 'Task cannot reactivate work');
-  const members = (await tx.query<{ node_id: string; definition: { dependencies: string[] } }>('SELECT node_id,definition FROM plan_nodes WHERE plan_id=$1', [task.plan_id])).rows;
-  const affected = new Set(input.node_ids);
-  if (!affected.size || input.node_ids.some((id) => !members.some((node) => node.node_id === id))) throw new CommandError('denied_scope', 'Reactivation target is outside the Plan');
+export async function inspectNodeReactivation(tx: Transaction, taskId: string, planId: string, nodeIds: string[]): Promise<{ node_ids: string[]; settled: boolean }> {
+  const members = (await tx.query<{ node_id: string; definition: { dependencies: string[] } }>('SELECT node_id,definition FROM plan_nodes WHERE plan_id=$1', [planId])).rows;
+  const affected = new Set(nodeIds);
+  if (!affected.size || nodeIds.some((id) => !members.some((node) => node.node_id === id))) throw new CommandError('denied_scope', 'Reactivation target is outside the Plan');
   let changed = true;
   while (changed) {
     changed = false;
     for (const node of members) if (!affected.has(node.node_id) && node.definition.dependencies.some((id) => affected.has(id))) { affected.add(node.node_id); changed = true; }
   }
   const ids = [...affected].sort();
+  const owners = await tx.query(`SELECT a.id FROM attempts a WHERE a.task_id=$1 AND a.node_id=ANY($2::text[])
+    AND (a.state='QUEUED' OR NOT a.process_released OR EXISTS (SELECT 1 FROM operations o WHERE o.attempt_id=a.id AND o.state NOT IN ('succeeded','cancelled')))
+    UNION ALL SELECT id FROM workspace_leases WHERE task_id=$1 AND node_id=ANY($2::text[]) AND state<>'released' LIMIT 1`, [taskId, ids]);
+  return { node_ids: ids, settled: !owners.rowCount };
+}
+
+// Caller authorizes Rework and records its decision/event; this primitive only
+// resets a fully settled subgraph. Live-writer settlement belongs to orchestration.
+export async function reactivateSettledNodes(tx: Transaction, input: { task_id: string; expected: ControlBasis; node_ids: string[] }): Promise<string[]> {
+  const task = await control(tx, input.task_id, input.expected);
+  await assertSpecificationUnfrozen(tx,input.task_id);
+  if (!['RUNNING', 'BLOCKED', 'REVIEW'].includes(task.state) || !task.plan_id) throw new CommandError('unmet_precondition', 'Task cannot reactivate work');
+  const { node_ids: ids, settled } = await inspectNodeReactivation(tx, input.task_id, task.plan_id, input.node_ids);
   if (await hasUnadoptedCheckpointTargets(tx, input.task_id, ids))
     throw new CommandError('unmet_precondition', 'Open the approved inherited private workspace before reactivating its target');
-  const owners = await tx.query(`SELECT a.id FROM attempts a WHERE a.task_id=$1 AND a.node_id=ANY($2::text[])
-    AND (NOT a.process_released OR EXISTS (SELECT 1 FROM operations o WHERE o.attempt_id=a.id AND o.state NOT IN ('succeeded','cancelled')))`, [input.task_id, ids]);
-  if (owners.rowCount) throw new CommandError('unmet_precondition', 'Old writers and admitted operations must settle before reactivation');
+  if (!settled) throw new CommandError('unmet_precondition', 'Old writers and admitted operations must settle before reactivation');
   for (const id of ids) {
     const node = (await tx.query<{ activation: string }>("UPDATE nodes SET activation=activation+1,state='PENDING',result=NULL,execution_source_id=NULL,blocker_id=NULL WHERE id=$1 RETURNING activation", [id])).rows[0]!;
     await tx.query("INSERT INTO node_activations(task_id,node_id,activation,specification_id,plan_id,basis_source) VALUES($1,$2,$3,$4,$5,'recorded')", [input.task_id, id, node.activation, task.specification_id, task.plan_id]);

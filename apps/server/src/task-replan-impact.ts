@@ -52,23 +52,8 @@ export async function replanImpact(tx: Transaction, task: SpecificationTask): Pr
   const guidance = await effectiveGuidanceTargets(tx, task.id);
   if (guidance.length > 256) throw new CommandError('unmet_precondition', 'Guidance exceeds complete impact budget');
   const workspaces: ReplanImpact['workspaces'] = [];
-  for (const w of (await tx.query(`SELECT w.*,l.id lease_id,l.attempt_id,l.node_id,l.node_activation,l.settle_operation_id,l.checkpoint,a.plan_id
-    FROM task_workspaces w JOIN LATERAL(SELECT * FROM workspace_leases WHERE workspace_id=w.id ORDER BY created_at DESC,id DESC LIMIT 1) l ON true
-    JOIN attempts a ON a.id=l.attempt_id WHERE w.task_id=$1 AND w.ever_materialized ORDER BY w.id`, [task.id])).rows) {
-    const settlementId = w.checkpoint?.operation_id ?? w.settle_operation_id;
-    if (!settlementId) throw new CommandError('unmet_precondition', 'Workspace has no exact settlement');
-    const op = (await tx.query("SELECT * FROM operations WHERE id=$1 AND workspace_lease_id=$2 AND state='succeeded'", [settlementId, w.lease_id])).rows[0];
-    if (!op) throw new CommandError('unmet_precondition', 'Workspace settlement is not successful');
-    const result = op.result as { workspace_metadata?: ReplanWorkspaceInput['metadata']; git_tree?: string } | null;
-    if (!result?.workspace_metadata) throw new CommandError('unmet_precondition', 'Workspace settlement metadata unavailable');
-    const input: ReplanWorkspaceInput = { workspace_id: w.id, task_id: task.id, resource_id: w.resource_id, runner_id: w.runner_id,
-      from_plan_id: w.plan_id, from_node_id: w.node_id, from_node_activation: Number(w.node_activation), from_attempt_id: w.attempt_id,
-      from_lease_id: w.lease_id, settle_operation_id: settlementId, kind: w.checkpoint ? 'checkpoint' : 'completed', metadata: result.workspace_metadata };
-    if (!w.checkpoint) {
-      const c = (await tx.query('SELECT operation_id FROM node_completions WHERE attempt_id=$1', [w.attempt_id])).rows[0];
-      if (!c || !result.git_tree) throw new CommandError('unmet_precondition', 'Completed workspace lacks exact completion');
-      input.completion_operation_id = c.operation_id; input.completion_manifest_digest = op.completion_manifest_digest; input.finalized_tree = result.git_tree;
-    }
+  for (const row of (await tx.query<{ input: ReplanWorkspaceInput }>('SELECT input FROM replan_workspace_input_rows($1) ORDER BY workspace_id,from_lease_id', [task.id])).rows) {
+    const input = row.input;
     const targetMembers = input.kind === 'completed' ? members : [members.find(n => n.id === input.from_node_id) ?? members.find(n => !n.operation_id)].filter((n): n is Member => !!n);
     if (input.kind === 'checkpoint' && !targetMembers.length) throw new CommandError('unmet_precondition', 'Private work needs an explicit unfinished target');
     workspaces.push({ input, target_nodes: targetMembers.map(n => ({ node_id: n.id, node_activation: Number(n.activation) })) });
@@ -129,11 +114,18 @@ export async function checkReplanImpact(tx: Transaction, task: SpecificationTask
   const holdFacts = (rows: ReplanImpact['holds']) => rows.map(h => canonicalJSON(h.origin)).sort();
   if (canonicalJSON(holdFacts(actual.holds)) !== canonicalJSON(holdFacts(impact.holds)) || new Set(holdFacts(impact.holds)).size !== impact.holds.length) throw new CommandError('version_conflict', 'Every independent control must be preserved');
   if (impact.holds.some(h => !validTargets(h.target_node_ids, false))) throw new CommandError('invalid_input', 'Independent holds need exact replacement graph recipients');
-  const workspaces = new Map(actual.workspaces.map(w => [w.input.workspace_id, w.input]));
+  const workspaces = new Map(actual.workspaces.map(w => [w.input.from_lease_id, w.input]));
   const activations = replanTargetActivations(impact, nodes);
-  if (impact.workspaces.length !== workspaces.size || new Set(impact.workspaces.map(w => w.input.workspace_id)).size !== workspaces.size) throw new CommandError('version_conflict', 'Complete workspace membership changed');
+  if (impact.workspaces.length !== workspaces.size || new Set(impact.workspaces.map(w => w.input.from_lease_id)).size !== workspaces.size) throw new CommandError('version_conflict', 'Complete workspace membership changed');
+  const checkpointTargets = new Set<string>();
   for (const w of impact.workspaces) {
-    const actualInput = workspaces.get(w.input.workspace_id);
+    if (w.input.kind === 'checkpoint') {
+      for (const target of w.target_nodes) {
+        if (checkpointTargets.has(target.node_id)) throw new CommandError('invalid_input', 'Multiple private checkpoints cannot be assigned to the same Node');
+        checkpointTargets.add(target.node_id);
+      }
+    }
+    const actualInput = workspaces.get(w.input.from_lease_id);
     if (!actualInput || canonicalJSON(w.input) !== canonicalJSON(actualInput)) throw new CommandError('version_conflict', 'Exact workspace predecessor changed');
     if (!validTargets(w.target_nodes.map(n => n.node_id), w.input.kind === 'completed') || w.target_nodes.some(n => activations.get(n.node_id) !== n.node_activation)
       || w.input.kind === 'checkpoint' && (w.target_nodes.length !== 1 || dispositions.get(w.target_nodes[0]!.node_id)?.disposition === 'carry')) throw new CommandError('invalid_input', 'Workspace disposition requires exact eligible target activations');

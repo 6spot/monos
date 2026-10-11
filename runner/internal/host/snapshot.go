@@ -106,6 +106,13 @@ func ExportWorkspace(op protocol.Operation, result protocol.EffectResult) error 
 	if op.Workspace == nil {
 		return fmt.Errorf("workspace descriptor required")
 	}
+	if result.Integration != nil {
+		commit, tree := result.Integration.TaskCommit, result.Integration.TaskTree
+		if string(result.Integration.Outcome) == "conflict" {
+			commit, tree = result.Integration.NodeCommit, result.Integration.NodeTree
+		}
+		return verifyProtectedWorkspaceResult(filepath.Join(Root, "results", op.OperationID), commit, tree)
+	}
 	commit, tree, ref := "", "", ""
 	if result.WorkspaceMetadata != nil && result.WorkspaceMetadata.Checkpoint != nil {
 		cp := result.WorkspaceMetadata.Checkpoint
@@ -115,14 +122,17 @@ func ExportWorkspace(op protocol.Operation, result protocol.EffectResult) error 
 	} else {
 		return nil
 	}
-	return exportPaths(TaskWorkspacePath(op.Workspace.WorkspaceID, "worktree"), TaskWorkspacePath(op.Workspace.WorkspaceID, "common"), op.OperationID, commit, tree, ref)
+	return exportPaths(WorkspacePath(op.Workspace, "worktree"), WorkspacePath(op.Workspace, "common"), op.OperationID, commit, tree, ref)
 }
 
 func exportPaths(workspace, common, op, commit, tree, ref string) error {
+	return exportPathsTo(workspace, common, op, commit, tree, ref, filepath.Join(Root, "results", op))
+}
+
+func exportPathsTo(workspace, common, op, commit, tree, ref, destination string) error {
 	if !ValidID(op) || !objectID.MatchString(commit) || !objectID.MatchString(tree) || os.Geteuid() == 0 {
 		return fmt.Errorf("invalid service export identity")
 	}
-	destination := filepath.Join(Root, "results", op)
 	if err := serviceDirectory(filepath.Dir(destination), true); err != nil {
 		return err
 	}

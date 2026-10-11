@@ -121,8 +121,9 @@ function SelectedNode({
               <ul>
                 {q.data.operations.map((o) => (
                   <li key={o.operation_id}>
-                    {human(o.kind)} · {human(o.state)}
+                    {human(o.kind)} · {o.integration?.outcome === "conflict" ? "Integration conflict · result preserved" : human(o.state)}
                     {o.failure_kind ? ` · ${human(o.failure_kind)}` : ""}
+                    {" "}
                     <code>{o.operation_id}</code>
                   </li>
                 ))}

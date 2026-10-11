@@ -30,6 +30,11 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Upstream Rework execut
       ],
     });
     await x.finish(outcome.operation_id!, planner.dispatch.attempt_id);
+    // Keep the unrelated branch available for later Owner Continue while each
+    // Rework request exercises its conservative sibling-settlement precondition.
+    await x.execution.pump();
+    const status = await x.execution.status(x.token, x.f.task, independent);
+    await x.owner('stop_node', { node_id: independent, node_activation: status.node_activation, source_id: status.source!.source_id });
   });
   afterEach(async () => { await x?.close(); });
 
@@ -37,6 +42,12 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Upstream Rework execut
     const result = await x.agent(attempt, 'complete_node', { summary });
     await x.finish(result.operation_id!, attempt.dispatch.attempt_id);
     return result;
+  }
+
+  async function resumeIndependent() {
+    const status = await x.execution.status(x.token, x.f.task, independent);
+    await x.owner('continue_node', { node_id: independent, node_activation: status.node_activation, source_id: status.source!.source_id, blocker_id: status.blocker!.id });
+    await x.db.pool.query('UPDATE runners SET capacity=1 WHERE id=$1', [x.f.runner]);
   }
 
   async function launchRequester() {
@@ -83,7 +94,7 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Upstream Rework execut
     expect(await transaction(x.db, tx => inspectNodeRuntimeFallback(tx, predecessor))).toEqual({ status: 'superseded', reason: 'node_rework_owned' });
     await rework.pump();
     await x.execution.pump();
-    expect((await x.db.pool.query("SELECT id FROM attempts WHERE task_id=$1 AND kind='node'", [x.f.task])).rowCount).toBe(2);
+    expect((await x.db.pool.query('SELECT id FROM attempts WHERE node_id=ANY($1::text[])', [[x.f.node, downstream]])).rowCount).toBe(2);
     expect((await unresolved()).status).toBe('settling');
     await x.finish(result.operation_id!, requester.dispatch.attempt_id);
     await rework.pump();
@@ -132,6 +143,7 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Upstream Rework execut
     await x.conversation.pump();
     expect(await x.execution.status(x.token, x.f.task, x.f.node)).toMatchObject({ state: 'COMPLETED', node_activation: 4, guidance_followup_pending: true });
     expect((await x.execution.status(x.token, x.f.task, downstream)).source!.source_id).toBe(status.source!.source_id);
+    await resumeIndependent();
     const other = await x.node();
     expect(other.dispatch).toMatchObject({ node_id: independent, node_activation: 1 });
     const ownerRequest = randomUUID();
@@ -140,7 +152,8 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Upstream Rework execut
       payload: { rework_request_id: request.id, expected_version: Number(request.version), answer: 'OWNER_APPROVES_EXACT_CORRECTION' } });
     await rework.pump();
     await x.execution.pump();
-    expect(await x.execution.status(x.token, x.f.task, x.f.node)).toMatchObject({ node_activation: 5, state: 'PENDING', source: null });
+    expect(await x.execution.status(x.token, x.f.task, x.f.node)).toMatchObject({ node_activation: 5, state: 'RUNNING', attempt: { state: 'QUEUED' } });
+    expect(await x.queue.promoteNext(x.f.runner, x.service.instanceId, x.f.incarnation)).toBeNull();
     await complete(other, 'Independent source retains authority after Owner Rework decision');
     await rework.pump();
     const corrected = await x.node();
@@ -168,8 +181,9 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Upstream Rework execut
     expect((await unresolved()).id).toBe(request.id);
   });
 
-  it('retains the Owner continuation decision when independent work delays requester preparation', async () => {
+  it('retains the Owner continuation decision when independent work delays requester dispatch', async () => {
     const request = await reachLimit();
+    await resumeIndependent();
     const other = await x.node();
     expect(other.dispatch.node_id).toBe(independent);
     const ownerRequest = randomUUID();
@@ -177,7 +191,8 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Upstream Rework execut
       expected_control_version: await x.version(), name: 'continue_without_rework',
       payload: { rework_request_id: request.id, expected_version: Number(request.version), answer: 'CONTINUE_WITHOUT_APPLYING_THE_PROPOSAL' } });
     await x.execution.pump();
-    expect(await x.execution.status(x.token, x.f.task, downstream)).toMatchObject({ node_activation: 4, source: null, state: 'PENDING' });
+    expect(await x.execution.status(x.token, x.f.task, downstream)).toMatchObject({ node_activation: 4, state: 'RUNNING', attempt: { state: 'QUEUED' } });
+    expect(await x.queue.promoteNext(x.f.runner, x.service.instanceId, x.f.incarnation)).toBeNull();
     await complete(other, 'Independent work settles before requester continuation');
     const continued = await x.node();
     expect(continued.dispatch).toMatchObject({ node_id: downstream, node_activation: 4 });
@@ -200,6 +215,6 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Upstream Rework execut
     await rework.pump();
     await x.execution.pump();
     expect((await x.db.pool.query('SELECT state FROM tasks WHERE id=$1', [x.f.task])).rows[0].state).toBe('CANCELLED');
-    expect((await x.db.pool.query("SELECT id FROM attempts WHERE task_id=$1 AND kind='node'", [x.f.task])).rowCount).toBe(2);
+    expect((await x.db.pool.query('SELECT id FROM attempts WHERE node_id=ANY($1::text[])', [[x.f.node, downstream]])).rowCount).toBe(2);
   });
 });

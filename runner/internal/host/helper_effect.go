@@ -91,11 +91,13 @@ func validateUnit(values map[string]string, unit, description string) error {
 }
 
 type operationRecord struct {
-	Operation       protocol.Operation `json:"operation"`
-	BootID          string             `json:"boot_id"`
-	Settled         bool               `json:"settled"`
-	Status          Status             `json:"status"`
-	WorkspaceAction string             `json:"workspace_action,omitempty"`
+	Operation          protocol.Operation     `json:"operation"`
+	BootID             string                 `json:"boot_id"`
+	Settled            bool                   `json:"settled"`
+	Status             Status                 `json:"status"`
+	WorkspaceAction    string                 `json:"workspace_action,omitempty"`
+	FinalizationResult *protocol.EffectResult `json:"finalization_result,omitempty"`
+	IntegrationStarted bool                   `json:"integration_started,omitempty"`
 }
 
 func operationPath(id string) string { return filepath.Join(Root, "launch", id+".operation.json") }

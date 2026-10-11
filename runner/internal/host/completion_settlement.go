@@ -126,7 +126,7 @@ func settleCompletion(ctx context.Context, op protocol.Operation, storage string
 	if err = wire.ValidateCompletionTarget(op, original.Operation); err != nil {
 		return Status{}, err
 	}
-	r, err := readWorkspaceRecord(op.Workspace.WorkspaceID)
+	r, err := readWorkspaceAllocation(op.Workspace)
 	if err != nil {
 		return Status{}, err
 	}
@@ -147,7 +147,16 @@ func settleCompletion(ctx context.Context, op protocol.Operation, storage string
 		return Status{}, err
 	}
 	var status Status
-	if original.Settled && original.Status.Error == "" && original.Status.Result != nil && original.Status.Result.GitCommit != nil {
+	if original.Operation.Integration != nil && original.IntegrationStarted {
+		physical := original.Status
+		if !original.Settled || physical.Error != "" || physical.Result == nil || physical.Result.Integration == nil {
+			physical, err = runWorkspaceWorker(ctx, original.Operation, "integrate", nil)
+			if err != nil {
+				return physical, err
+			}
+		}
+		status = Status{Known: true, Result: &protocol.EffectResult{WriterAbsent: ptr(true)}, CompletionSettlement: &protocol.CompletionSettlement{CompletionOperationID: original.Operation.OperationID, Disposition: protocol.AlreadyFinalized, CompletionResult: protocol.CompletionOperationResult{AttemptID: op.AttemptID, OperationID: original.Operation.OperationID, Success: true, Result: *physical.Result}}}
+	} else if original.Operation.Integration == nil && original.Settled && original.Status.Error == "" && original.Status.Result != nil && original.Status.Result.GitCommit != nil {
 		status = Status{Known: true, Result: &protocol.EffectResult{WriterAbsent: ptr(true)}, CompletionSettlement: &protocol.CompletionSettlement{CompletionOperationID: original.Operation.OperationID, Disposition: protocol.AlreadyFinalized, CompletionResult: protocol.CompletionOperationResult{AttemptID: op.AttemptID, OperationID: original.Operation.OperationID, Success: true, Result: *original.Status.Result}}}
 	} else {
 		status, err = runWorkspaceWorker(ctx, op, "settle_completion", nil)
@@ -177,13 +186,13 @@ func persistCompletionSettlement(op, original protocol.Operation, r workspaceRec
 	}
 	c := status.CompletionSettlement.CompletionResult
 	if c.Success {
-		r.Metadata.FinalizedCommit = *c.Result.GitCommit
+		r.Metadata = *c.Result.WorkspaceMetadata
 		r.PrivateCheckpoint = nil
 	} else {
 		r.PrivateCheckpoint = status.Result.WorkspaceMetadata.Checkpoint
 	}
 	r.Released = true
-	if err = saveRecord(workspaceRecordPath(op.Workspace.WorkspaceID), r); err != nil {
+	if err = saveRecord(workspaceAllocationRecordPath(op.Workspace), r); err != nil {
 		return status, err
 	}
 	prior := Status{Known: true, Result: &c.Result, CancelledByOperationID: c.CancelledByOperationID}
@@ -197,9 +206,13 @@ func settlementWorker(op protocol.Operation, original protocol.Operation, metada
 	if err := wire.ValidateCompletionTarget(op, original); err != nil {
 		return Status{}, err
 	}
-	finalized, err := reconcileFinalization(workspace, common, original.OperationID, metadata.FinalizedCommit)
-	if err != nil {
-		return Status{}, err
+	var finalized *protocol.EffectResult
+	if original.Integration == nil {
+		var err error
+		finalized, err = reconcileFinalization(workspace, common, original.OperationID, metadata.FinalizedCommit)
+		if err != nil {
+			return Status{}, err
+		}
 	}
 	p := &protocol.CompletionSettlement{CompletionOperationID: original.OperationID}
 	status := Status{Known: true, Result: &protocol.EffectResult{WriterAbsent: ptr(true)}, CompletionSettlement: p}

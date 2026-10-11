@@ -35,7 +35,8 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Serial completed works
       const open = await x.service.recoverOperation(x.f.runner, opened.operation_id!), w = open.workspace!;
       const metadata: WorkspaceMetadata = { generation: 1, storage_id: 'serial-storage', lease_id: w.lease_id,
         repository_identity: w.resource.repository_identity, provider_metadata: { github: { repository_id: '42' } },
-        base_commit: 'a'.repeat(40), target_branch: 'main', target_commit: 'b'.repeat(40), finalized_commit: 'a'.repeat(40) };
+        base_commit: 'a'.repeat(40), target_branch: 'main', target_commit: 'b'.repeat(40), finalized_commit: 'a'.repeat(40),
+        ...(w.isolation ? { isolation: { allocation_id: w.isolation.allocation_id, start_commit: 'a'.repeat(40) } } : {}) };
       await x.service.finishOperation(x.f.runner, x.f.incarnation, { operation_id: open.operation_id,
         attempt_id: first.dispatch.attempt_id, success: true,
         result: { workspace_id: w.workspace_id, path: '/runner/worktree', instruction_files: [], workspace_metadata: metadata } });
@@ -104,8 +105,9 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Serial completed works
       ]) expect(await transaction(x.db, tx => serialWorkspaceTransfer(tx, changed, x.w.workspace_id, x.w.lease_id))).toBeUndefined();
       const changedSource = { ...row, launch: { ...row.launch, node_execution_source: { ...row.launch.node_execution_source!, plan_id: randomUUID() } } };
       await expect(transaction(x.db, tx => serialWorkspaceTransfer(tx, changedSource, x.w.workspace_id, x.w.lease_id))).rejects.toMatchObject({ detail: { code: 'stale_execution' } });
+      await expect(x.db.pool.query('UPDATE attempts SET process_released=false WHERE id=$1', [x.first.dispatch.attempt_id]))
+        .rejects.toMatchObject({ code: '23514', message: 'direct Node admission requires exclusive Task ownership' });
       for (const [sql, params] of [
-        ['UPDATE attempts SET process_released=false WHERE id=$1', [x.first.dispatch.attempt_id]],
         ['UPDATE attempts SET process_absent=false WHERE id=$1', [x.first.dispatch.attempt_id]],
         ['UPDATE task_workspaces SET finalized_commit=$2 WHERE id=$1', [x.w.workspace_id, 'e'.repeat(40)]],
       ] as const) {
@@ -119,14 +121,19 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Serial completed works
     } finally { await x.close(); }
   }, 15000);
 
-  it('does not hand off a released private checkpoint to another same-Plan Node', async () => {
+  it('preserves a released private checkpoint when an independent same-Plan allocation opens canonical code', async () => {
     const x = await fixture('checkpoint');
     try {
       await x.settle();
       const second = await x.node();
       expect(second.dispatch.node_id).toBe(x.downstream);
-      await expect(x.agent(second, 'open_workspace', { resource_id: x.resource })).rejects.toMatchObject({ detail: { code: 'unmet_precondition' } });
-      expect((await x.db.pool.query('SELECT id,state,checkpoint FROM workspace_leases WHERE workspace_id=$1', [x.w.workspace_id])).rows)
+      const opened = await x.agent(second, 'open_workspace', { resource_id: x.resource });
+      const operation = await x.service.recoverOperation(x.f.runner, opened.operation_id!);
+      expect(operation.workspace!.isolation?.allocation_id).not.toBe(x.w.isolation!.allocation_id);
+      expect(operation.workspace!.transfer).toBeUndefined();
+      expect(operation.workspace!.basis?.finalized_commit).toBe('a'.repeat(40));
+      expect(operation.workspace!.canonical_source).toMatchObject({ operation_id: x.w.open_operation_id, kind: 'open_workspace' });
+      expect((await x.db.pool.query('SELECT id,state,checkpoint FROM workspace_leases WHERE id=$1', [x.w.lease_id])).rows)
         .toEqual([{ id: x.w.lease_id, state: 'released', checkpoint: x.finalized.checkpoint }]);
     } finally { await x.close(); }
   }, 15000);

@@ -6,8 +6,8 @@ import type { ReplanImpact, WorkspaceTransfer } from '../../../packages/protocol
 import { assertNodeSource } from './node-execution-state.ts';
 import type { WorkspaceAttempt } from './workspaces.ts';
 
-/** Called while the canonical workspace row is locked. Approval retains possible
- * recipients; the first actual repository opener claims one immutable transfer. */
+/** Called while the canonical workspace row is locked. Private input has one
+ * recipient; each approved reader of completed code gets an exact transfer. */
 export async function workspaceTransfer(tx: Transaction, attempt: WorkspaceAttempt, workspaceId: string, leaseId: string): Promise<WorkspaceTransfer | undefined> {
   const source = attempt.launch.node_execution_source;
   if (!source || !attempt.task_id || !attempt.node_id) return;
@@ -19,9 +19,10 @@ export async function workspaceTransfer(tx: Transaction, attempt: WorkspaceAttem
     FROM tasks t JOIN replan_publications p ON p.task_id=t.id AND p.new_plan_id=t.plan_id
     JOIN replan_proposals proposal ON proposal.id=p.proposal_id
     CROSS JOIN LATERAL jsonb_array_elements(proposal.content->'impact'->'workspaces') w
-    LEFT JOIN replan_workspace_transfers x ON x.publication_id=p.id AND x.workspace_id=$2
+    LEFT JOIN replan_workspace_transfers x ON x.publication_id=p.id AND x.from_lease_id=$3
+      AND (w.value->'input'->>'kind'='checkpoint' OR (x.target_node_id=$4 AND x.target_node_activation=$5))
     WHERE t.id=$1 AND w.value->'input'->>'workspace_id'=$2 AND w.value->'input'->>'from_lease_id'=$3`,
-  [attempt.task_id, workspaceId, leaseId])).rows[0];
+  [attempt.task_id, workspaceId, leaseId, attempt.node_id, attempt.node_activation])).rows[0];
   if (!row) return;
   const { input, target_nodes: targets } = row.disposition;
   const approved = targets.find(n => n.node_id === attempt.node_id && (input.kind === 'checkpoint'
@@ -44,14 +45,18 @@ export async function workspaceTransfer(tx: Transaction, attempt: WorkspaceAttem
       AND old.plan_id=$9 AND old.process_released AND old.process_absent AND NOT old.mutation_allowed
       AND op.state='succeeded' AND op.result->>'writer_absent'='true'
       AND (CASE WHEN $10='checkpoint' THEN l.checkpoint->>'operation_id'=$4 ELSE l.checkpoint IS NULL AND l.settle_operation_id=$4 END)
-      AND NOT EXISTS(SELECT 1 FROM workspace_leases later WHERE later.workspace_id=w.id AND (later.created_at,later.id)>(l.created_at,l.id))
-      AND NOT EXISTS(SELECT 1 FROM workspace_leases live WHERE live.task_id=w.task_id AND live.state<>'released')
+      AND ($10<>'checkpoint' OR NOT EXISTS(SELECT 1 FROM workspace_leases later WHERE later.workspace_id=w.id
+        AND later.allocation_id IS NOT DISTINCT FROM l.allocation_id AND (later.created_at,later.id)>(l.created_at,l.id)))
+      AND NOT EXISTS(SELECT 1 FROM workspace_leases live WHERE live.task_id=w.task_id AND live.state<>'released'
+        AND (NOT $12::boolean OR live.allocation_id IS NULL OR ($10='checkpoint' AND live.allocation_id=l.allocation_id)))
       AND NOT EXISTS(SELECT 1 FROM attempts writer WHERE writer.task_id=w.task_id AND writer.kind='node' AND writer.id<>$11
-        AND (writer.mutation_allowed OR NOT writer.process_released))
+        AND (writer.mutation_allowed OR NOT writer.process_released)
+        AND (NOT $12::boolean OR NOT COALESCE(writer.launch->'workspace_reservations' ? 'isolation',false)))
       AND NOT EXISTS(SELECT 1 FROM operations effect JOIN attempts owner ON owner.id=effect.attempt_id
-        WHERE owner.task_id=w.task_id AND owner.kind='node' AND owner.id<>$11 AND effect.state IN ('admitted','recovery'))`,
+        WHERE owner.task_id=w.task_id AND owner.kind='node' AND owner.id<>$11 AND effect.state IN ('admitted','recovery')
+        AND (NOT $12::boolean OR NOT COALESCE(owner.launch->'workspace_reservations' ? 'isolation',false)))`,
   [workspaceId, attempt.task_id, attempt.runner_id, input.settle_operation_id, leaseId, input.from_node_id,
-    input.from_node_activation, input.from_attempt_id, input.from_plan_id, input.kind, attempt.id])).rows[0];
+    input.from_node_activation, input.from_attempt_id, input.from_plan_id, input.kind, attempt.id, !!attempt.launch.workspace_reservations?.isolation])).rows[0];
   if (!physical || canonicalJSON(physical.metadata) !== canonicalJSON(input.metadata)) throw new CommandError('unmet_precondition', 'Approved workspace predecessor is no longer exact and settled');
   const descriptor = validate<WorkspaceTransfer>('WorkspaceTransfer', { ...input, publication_id: row.publication_id,
     proposal_id: row.proposal_id, to_plan_id: row.plan_id, to_node_id: attempt.node_id, to_node_activation: Number(attempt.node_activation) });
@@ -77,6 +82,6 @@ export async function hasUnadoptedCheckpointTargets(tx: Transaction, taskId: str
       AND EXISTS(SELECT 1 FROM jsonb_array_elements(w.value->'target_nodes') target
         JOIN nodes n ON n.id=target->>'node_id' AND n.task_id=t.id
         WHERE n.id=ANY($2::text[]) AND (target->>'node_activation')::bigint<=n.activation)
-      AND NOT EXISTS(SELECT 1 FROM workspace_leases later WHERE later.workspace_id=l.workspace_id AND (later.created_at,later.id)>(l.created_at,l.id))`,
+      AND NOT EXISTS(SELECT 1 FROM workspace_leases later WHERE later.workspace_id=l.workspace_id AND later.allocation_id IS NOT DISTINCT FROM l.allocation_id AND (later.created_at,later.id)>(l.created_at,l.id))`,
   [taskId, nodeIds])).rowCount;
 }

@@ -179,7 +179,16 @@ func readResultObjects(ctx context.Context, dir string, r protocol.ResultReadReq
 		return resultOutcome(r, "identity_mismatch")
 	}
 	i := r.Identity
-	for expression, want := range map[string]string{"refs/monos/result": i.GitCommit, i.GitCommit + "^{tree}": i.GitTree, i.BaseCommit + "^{commit}": i.BaseCommit} {
+	objects := map[string]string{"refs/monos/result": i.GitCommit, i.GitCommit + "^{tree}": i.GitTree, i.BaseCommit + "^{commit}": i.BaseCommit}
+	if integration := i.Integration; integration != nil {
+		if integration.Outcome != protocol.Integrated || integration.TaskCommit != i.GitCommit || integration.TaskTree != i.GitTree {
+			return resultOutcome(r, "identity_mismatch")
+		}
+		objects[integration.StartCommit+"^{commit}"] = integration.StartCommit
+		objects[integration.NodeCommit+"^{tree}"] = integration.NodeTree
+		objects[integration.ExpectedTaskCommit+"^{commit}"] = integration.ExpectedTaskCommit
+	}
+	for expression, want := range objects {
 		raw, e := resultGit(ctx, dir, 256, "rev-parse", "--verify", expression)
 		if e != nil || strings.TrimSpace(string(raw)) != want {
 			if ctx.Err() != nil {

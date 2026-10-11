@@ -117,6 +117,15 @@ Desktop/mobile layouts contain code overflow and retain usable 44px mobile contr
 
 ## 4. Validation & Error Matrix
 
+Isolated completions include immutable `integration` provenance in both
+`TaskLocalGitResult` and `ResultReadIdentity`: allocation start, private Node
+commit/tree, expected Task revision and integrated Task commit/tree. Backend and
+Runner reject missing or changed provenance; root verifies the corresponding Git
+objects in the protected result export. UI displays the Node's own result separately
+from the combined Task result. A Node's validation claim does not establish later
+combined-code validation. Physical integration conflicts never become local
+completed-result entries.
+
 | Condition | Outcome |
 | --- | --- |
 | Invalid query/path/Unicode/noncanonical cursor | `invalid_input`; reject before WSS admission |

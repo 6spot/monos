@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"time"
 
 	protocol "monos.local/protocol"
@@ -51,6 +52,9 @@ func retainedResultIdentity(db *journal.DB, i protocol.ResultReadIdentity) error
 	m := r.WorkspaceMetadata
 	if m == nil || r.WriterAbsent == nil || !*r.WriterAbsent || r.WorkspaceID == nil || *r.WorkspaceID != i.WorkspaceID || r.GitCommit == nil || *r.GitCommit != i.GitCommit || r.GitTree == nil || *r.GitTree != i.GitTree || m.Generation != i.Generation || m.LeaseID != i.LeaseID || m.StorageID != i.StorageID || m.RepositoryIdentity != i.RepositoryIdentity || m.BaseCommit != i.BaseCommit || m.FinalizedCommit != i.GitCommit || m.Checkpoint != nil {
 		return fmt.Errorf("retained physical result mismatch")
+	}
+	if !reflect.DeepEqual(i.Integration, r.Integration) || wire.ValidateWorkspaceIntegration(op, r) != nil {
+		return fmt.Errorf("retained integration provenance mismatch")
 	}
 	return nil
 }

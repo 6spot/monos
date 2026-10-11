@@ -15,7 +15,9 @@ async function openedWorkspace(x: Fixture, turn: Turn, resource: string) {
     generation: workspace.generation, lease_id: workspace.lease_id, storage_id: 'multi-replan-storage',
     repository_identity: workspace.resource.repository_identity, provider_metadata: { github: { repository_id: '42' } },
     base_commit: 'a'.repeat(40), target_branch: 'main', target_commit: 'b'.repeat(40),
-    finalized_commit: workspace.basis?.finalized_commit ?? 'a'.repeat(40),
+    finalized_commit: workspace.transfer?.kind === 'checkpoint' ? workspace.transfer.metadata.finalized_commit : workspace.basis?.finalized_commit ?? 'a'.repeat(40),
+    ...(workspace.isolation ? { isolation: { allocation_id: workspace.isolation.allocation_id,
+      start_commit: workspace.transfer?.kind === 'checkpoint' ? workspace.transfer.metadata.isolation?.start_commit ?? workspace.transfer.metadata.finalized_commit : workspace.basis?.finalized_commit ?? 'a'.repeat(40) } } : {}),
   };
   await x.service.finishOperation(x.f.runner, x.f.incarnation, { operation_id: operation.operation_id, attempt_id: turn.dispatch.attempt_id,
     success: true, result: { workspace_id: workspace.workspace_id, path: '/runner/worktree', instruction_files: [], workspace_metadata: metadata } });
@@ -38,9 +40,13 @@ async function workspaceFixture(kind: 'checkpoint' | 'completed') {
     const settled: WorkspaceMetadata = kind === 'checkpoint'
       ? { ...opened.metadata, checkpoint: { operation_id: stop.operation_id!, head_commit: 'a'.repeat(40), tree_id: 'b'.repeat(40), commit_id: 'c'.repeat(40) } }
       : { ...opened.metadata, finalized_commit: 'c'.repeat(40) };
+    const completion = kind === 'completed' ? await x.service.recoverOperation(x.f.runner, stop.operation_id!) : undefined;
     await x.service.finishOperation(x.f.runner, x.f.incarnation, { operation_id: stop.operation_id!, attempt_id: turn.dispatch.attempt_id,
       success: true, result: { writer_absent: true, workspace_id: opened.workspace.workspace_id, workspace_metadata: settled,
-        ...(kind === 'completed' ? { git_commit: 'c'.repeat(40), git_tree: 'b'.repeat(40) } : {}) } });
+        ...(kind === 'completed' ? { git_commit: 'c'.repeat(40), git_tree: 'b'.repeat(40),
+          ...(completion?.integration ? { integration: { outcome: 'integrated' as const,
+            start_commit: opened.metadata.isolation!.start_commit, expected_task_commit: completion.integration.expected_task_commit,
+            node_commit: 'c'.repeat(40), node_tree: 'b'.repeat(40), task_commit: 'c'.repeat(40), task_tree: 'b'.repeat(40) } } : {}) } : {}) } });
     if (kind === 'completed') await x.request();
     return { ...x, resource, original, sibling, old: opened.workspace, settled, settlementId: stop.operation_id! };
   } catch (error) { await x.close(); throw error; }
@@ -55,7 +61,7 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Multi-Node Replan work
       await x.publish(p);
       expect((await x.db.pool.query('SELECT count(*) FROM replan_workspace_transfers')).rows[0].count).toBe('0');
       const unrelated = await x.node(); expect(unrelated.dispatch.node_id).toBe(free.node_id);
-      await expect(x.agent(unrelated, 'open_workspace', { resource_id: x.resource })).rejects.toMatchObject({ detail: { code: 'unmet_precondition' } });
+      expect(unrelated.dispatch.workspace_reservations!.isolation!.allocation_id).not.toBe(p.payload.impact.workspaces[0]!.input.metadata.isolation!.allocation_id);
       await x.complete(unrelated, 'Repository-free prerequisite');
       const target = await x.node(); expect(target.dispatch.node_id).toBe(adopter.node_id);
       await expect(x.agent(target, 'complete_node', { summary: 'Discard inherited checkpoint' })).rejects.toMatchObject({ detail: { code: 'unmet_precondition' } });
@@ -93,9 +99,16 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Multi-Node Replan work
       await x.publish(p);
       const oldIdentity = await x.node(); expect(oldIdentity.dispatch.node_id).toBe(x.original.node_id);
       expect(oldIdentity.dispatch.node_execution_source!.node_activation).toBe(1);
-      await expect(x.agent(oldIdentity, 'open_workspace', { resource_id: x.resource })).rejects.toMatchObject({ detail: { code: 'unmet_precondition' } });
+      const separate = await openedWorkspace(x, oldIdentity, x.resource);
+      expect(separate.workspace.transfer).toBeUndefined();
+      expect(separate.workspace.isolation!.allocation_id).not.toBe(x.old.isolation!.allocation_id);
       expect((await x.db.pool.query('SELECT count(*) FROM replan_workspace_transfers')).rows[0].count).toBe('0');
-      await x.complete(oldIdentity, 'Repository-free prerequisite for the assigned checkpoint owner');
+      const done = await x.agent(oldIdentity, 'complete_node', { summary: 'Separate canonical allocation preserves the assigned private checkpoint' });
+      const completion = await x.service.recoverOperation(x.f.runner, done.operation_id!);
+      await x.service.finishOperation(x.f.runner, x.f.incarnation, { operation_id: done.operation_id!, attempt_id: oldIdentity.dispatch.attempt_id, success: true,
+        result: { writer_absent: true, workspace_id: separate.workspace.workspace_id, workspace_metadata: { ...separate.metadata, finalized_commit: 'd'.repeat(40) },
+          git_commit: 'd'.repeat(40), git_tree: 'e'.repeat(40), integration: { outcome: 'integrated', start_commit: separate.metadata.isolation!.start_commit,
+            expected_task_commit: completion.integration!.expected_task_commit, node_commit: 'd'.repeat(40), node_tree: 'e'.repeat(40), task_commit: 'd'.repeat(40), task_tree: 'e'.repeat(40) } } });
       const target = await x.node(); expect(target.dispatch.node_id).toBe(replacement.node_id);
       const { workspace } = await openedWorkspace(x, target, x.resource);
       expect(workspace.transfer).toMatchObject({ from_node_id: x.original.node_id, to_node_id: replacement.node_id, kind: 'checkpoint' });
@@ -245,7 +258,7 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Multi-Node Replan work
   it.each(['checkpoint', 'completed'] as const)('retries after %s adoption without consuming the old predecessor twice', async kind => {
     const x = await workspaceFixture(kind);
     try {
-      const adopter = x.definition(), other = x.definition();
+      const adopter = x.definition(), other = x.definition(undefined, [adopter.node_id]);
       const p = await x.prepare([adopter, other]); await x.publish(p);
       const target = await x.node(), adopted = await openedWorkspace(x, target, x.resource);
       const blocked = await x.agent(target, 'block_node', { reason: 'Clarify the adopted private work' });

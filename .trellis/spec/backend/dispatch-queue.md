@@ -34,8 +34,11 @@ epoch/input watermark, not the global execution control version; it shares the
 `planner:<task>` owner with initial planning. Its authenticated scratch-only scope
 may overlap a held Task workspace without acquiring writable access, while shared
 capacity, locality and previous Planner settlement still apply. Lock Runner -> one Task -> Attempt. Filter blocked owners
-before LIMIT and never hold several Task locks while scanning. Stage A serializes
-Node writers within one Task until isolated parallel worktrees are implemented.
+before LIMIT and never hold several Task locks while scanning. Independent Nodes
+can run concurrently with frozen isolated allocations. Direct placement reserves
+exclusive Task access from enqueue until settlement, including before first open;
+same-Node prior ownership still blocks its successor. Placement cannot change
+after admission. See [workspace contracts](workspaces.md).
 Selected production Attempts recheck current installation facts before Start. A complete current report of missing/unavailable Runtime cancels pre-start work; an omitted report or disconnected sole Runner leaves it queued. Stale heads are retried in separate transactions, at most 16 per poll, so one transaction never holds several Task locks.
 
 Set RUNNING, physical reservation, monotonic owner fence, Node RUNNING and the

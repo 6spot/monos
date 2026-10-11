@@ -1,0 +1,91 @@
+{
+  "base_commit": "eec90a9c50fe70156c3b7bdd8420b55b7370b799",
+  "change": "parallel isolated workspaces, integration conflict recovery and result provenance",
+  "routes": [
+    "/#task?task_id=<synthetic Task>&section=overview",
+    "/#task?task_id=<synthetic Task>&section=execution"
+  ],
+  "scenarios": [
+    "parallel_review: two independent integrated results from the same start, with explicit private Node and combined Task revisions",
+    "parallel_conflict: repeated preserved conflicts exhaust bounded retries and offer Owner Retry without completion"
+  ],
+  "viewports": {
+    "desktop": [
+      1440,
+      1000
+    ],
+    "mobile": [
+      390,
+      844
+    ]
+  },
+  "inspection": "Desktop and mobile full-page images inspected: revisions are separately attributed; conflict remains blocked with retained result and visible Retry; long identifiers wrap without horizontal overflow.",
+  "browser_tests": "1 passed: parallel results preserve revision attribution and conflicts remain unfinished",
+  "runtime": "Synthetic Runner acknowledgements against actual authenticated server/PostgreSQL and built SPA. Native Agent CLI, Linux isolation and remote writes are not exercised.",
+  "assets": [
+    {
+      "path": "apps/web/dist/assets/index-CnQmS_Vc.js",
+      "sha256": "4456b114c94a48e9cfb763796ebb6e8e0d8878e40f8f743b3112c9ae6c40e97b"
+    },
+    {
+      "path": "apps/web/dist/assets/index-TKEvhF-s.css",
+      "sha256": "9a7ee1ea709417c88d0cee9a7bf954ccfec714c49e5050b4f2501645a810d85e"
+    }
+  ],
+  "sources": [
+    {
+      "path": "apps/web/src/features/task-overview.tsx",
+      "sha256": "73788eedbfef357786d8cd50a317a9e84b9c3ad1ffe2ac34fd204c0bba3576e5"
+    },
+    {
+      "path": "apps/web/src/features/task-execution.tsx",
+      "sha256": "65a571a8bf741239bfcdaf97ef98ee27f276125a49d2783c4a6248cd4fe74060"
+    },
+    {
+      "path": "apps/server/src/task-result-reads.ts",
+      "sha256": "b32a7bcd6448afa2c74f7de45cdf92c2f4c61c70b068e4cc9c6261318a7209a4"
+    },
+    {
+      "path": "apps/server/test/fixtures/execution-ui-fixture.ts",
+      "sha256": "eacdbc1dd31032597e892725d68b8fe47dfd989e7680b437b49ed1a7056466fc"
+    },
+    {
+      "path": "apps/web/test/execution.e2e.ts",
+      "sha256": "5ae76c2bc667440e5ede4802db35341468e871042fd59457fdb9c17aedd8b147"
+    }
+  ],
+  "images": [
+    {
+      "path": "parallel-conflict-recovery-desktop-full.png",
+      "sha256": "8215e37f3f860eb4ffa90da72e3bf732f0a795d1e979ace9c5150948fe93c1d6"
+    },
+    {
+      "path": "parallel-conflict-recovery-desktop.png",
+      "sha256": "5997540af4ba6d87891cfe563410bd57bd8373b810b68fbae5bddfce0de2ecb8"
+    },
+    {
+      "path": "parallel-conflict-recovery-mobile-full.png",
+      "sha256": "d2f8c7e69ac7cc515f7d488fcdf941c91d263e6529084ea08a14ff6d2056b1d6"
+    },
+    {
+      "path": "parallel-conflict-recovery-mobile.png",
+      "sha256": "e460f956efea9d01814a4642bf74c164f1953df20877064ef8ab8bab19c0b8e8"
+    },
+    {
+      "path": "parallel-result-provenance-desktop-full.png",
+      "sha256": "8ac60218dd409d15db6f29cdaa1b7d7a0f488e0af4ab2abb912c3ecf7c697835"
+    },
+    {
+      "path": "parallel-result-provenance-desktop.png",
+      "sha256": "35e81f545dffd6cfe9f7bb6038a73ef9aad20ea1f7208b390f8ea6c72f89be38"
+    },
+    {
+      "path": "parallel-result-provenance-mobile-full.png",
+      "sha256": "c7f647df76cca65787d01072061293dccb8f8a0fd067f98edbc4ea018e4576a9"
+    },
+    {
+      "path": "parallel-result-provenance-mobile.png",
+      "sha256": "852e32129f7bd9bad4f0e26417c7ace43ce98b811ca1287135c9e7a32a8d40c9"
+    }
+  ]
+}

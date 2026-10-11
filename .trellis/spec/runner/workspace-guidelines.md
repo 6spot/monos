@@ -1,6 +1,6 @@
 # Workspace and Git Effects
 
-Sources: [Workspace](../../../docs/04-workspace-and-git.md), [host permissions](../../../docs/11-technology-and-deployment.md).
+Sources: [Workspace](../../../docs/04-workspace-and-git.md), [parallel workspaces](../../../docs/research/parallel-workspaces.md), [host permissions](../../../docs/11-technology-and-deployment.md).
 
 ## 1. Scope / Trigger
 
@@ -18,6 +18,25 @@ dispatches retain fixture behavior. Product Start/Node scheduling is backend-own
 hard-recovery pairs. Delivery remains separate work; native serial-workspace acceptance is recorded in the
 [serial-workspace task](../../tasks/archive/2026-09/09-30-a-serial-workspaces/prd.md).
 
+Parallel execution freezes `WorkspaceReservations.isolation.allocation_id` in the
+Attempt launch and repeats it in `WorkspaceDescriptor.isolation`. The open result
+adds `WorkspaceMetadata.isolation: {allocation_id,start_commit}`. Isolated
+`complete_node` admission adds `Operation.integration: {expected_task_commit}`;
+all three identities are immutable across replay and completion settlement.
+
+[Integration](../../../runner/internal/host/workspace_integration.go) exposes:
+
+```go
+func IntegrateWorkspace(ctx context.Context, input WorkspaceIntegrationInput) (WorkspaceIntegrationResult, error)
+```
+
+Input binds the operation ID, protected Task and Node repositories, expected Task
+commit, Node start commit, produced Node commit and tree. The wire result's
+`integration` object records `outcome`, `start_commit`, `node_commit`, `node_tree`,
+`expected_task_commit`, `task_commit` and `task_tree`. Backend Tool Protocol
+settlement owns canonical Task state and Node completion; a Git ref alone does
+not publish either domain fact.
+
 `Daemon.Reconcile(ctx, inventory)` validates and retains one recovery batch;
 `Daemon.ConnectionReady(ctx)` enables it only after the Ready frame is sent.
 `exportFetchArgs(workspace, common, ref)` selects the exact administrative source
@@ -27,12 +46,34 @@ for importing the operation ref into service-owned result storage.
 
 Reserve allowed paths before CLI launch, including Git common directories. Materialize lazily without moving a live process. A resource added after launch is available to later Attempts.
 
-Canonical stable paths derive only from the shared workspace hash under
-`Root/tasks/<workspace_id>/{worktree,common}`; cache lives at
-`Root/cache/resources/<resource_id>.git`. The root-owned parent/metadata and
-service-owned cache are separate from execution-owned Git/files. A stable storage
+Canonical paths derive from the logical workspace hash and admitted allocation:
+
+| Purpose | Path under `Root` (`/var/lib/monos-probe`) |
+| --- | --- |
+| Direct private workspace | `tasks/<workspace_id>/{worktree,common}` |
+| Isolated private workspace | `tasks/<workspace_id>/allocations/<allocation_id>/{worktree,common}` |
+| Resource object cache | `cache/resources/<resource_id>.git` |
+| Protected original Node result | `service/node-results/<completion_operation_id>` |
+| Protected canonical Task repository | `service/task-results/<workspace_id>.git` |
+| Retained operation export | `results/<operation_id>` |
+
+`WorkspacePath` and allocation-keyed root records/coordinator/writer locks must
+agree with the launch reservation. One allocation never receives a sibling's
+writable paths. The root-owned parent/metadata and service-owned cache and exports
+are separate from execution-owned Git/files. A stable storage
 ID has service-private and root-owned copies; missing/mismatched initialized
 identity requires recovery, never replacement cloning.
+
+An isolated open with an existing Task basis requires the exact
+`canonical_source` operation and metadata; a conflict retry also carries the
+same Node activation's exact settled `conflict_source`. Validate root-owned
+operation/manifest identity and protected exports, never select the latest local
+directory or trust mutable Agent refs. Original materialization recovered by Stop
+may name `recovery_operation_id`; accept only its exact successful
+`PriorOperationResult` pair, preserving any already-retained original open result.
+Fresh allocations pin their admitted Task start even if the Task advances before
+open finishes. Checkpoint continuation/adoption reuses its original allocation and
+start revision; unrelated siblings cannot change that basis.
 
 SQLite effects retain immutable descriptor/digest and terminal results; root
 workspace/operation JSON owns fsynced stages and physical lease identity; private
@@ -48,13 +89,26 @@ cover network waits and prevent Stop. A lost launch response still owns its exac
 unit until physical reconciliation. Pin base/target before checkout, preserve clone
 staging after failure, and refresh only remote observations on later leases.
 
-Stop cancels only never-exposed, never-materialized opens. Initialized work needs
+Stop cancels only an allocation with no exposed or previously initialized open.
+Initialized work needs
 checkpoint, including a new lease whose refresh failed. Stop-only recovery carries
 exact old-observation provenance under the [backend contract](../backend/workspaces.md);
 ordinary opens still fetch. Checkpoints use a temporary index and preserve actual
 HEAD/index/files, including ignored private local data. Only completion updates the
 finalized pointer. Preserve the original fresh target-observation lease across
 repeated Stop recovery; clear recovery provenance after a genuine new fetch.
+
+For an isolated fresh allocation, Stop may overtake the first local open intent.
+`recoverWorkspaceForStop` skips history import/recovery for unexposed `intent`,
+`pinned`, `promoting`, `common_ready` and `cancelled` stages; the final Stop record
+retains the exact original-open cancellation pair and writer absence. Rework
+history already exists in protected predecessor storage and does not require a
+new allocation merely to cancel it. Starting a history worker before any local
+allocation record exists otherwise loops on missing-record failure. A checkpoint
+transfer with missing initialized state, unknown stage or missing direct-workspace
+basis marker remains a recovery error. Initialized `refresh_intent` and
+`refresh_pinned` still recover an open and produce a checkpoint after any required
+history import. These rules do not release a sibling lease or discard its files.
 
 A complete reconnect inventory must not strand canonical workspace operations
 in `recovery` while normal outbox delivery handles only `admitted`. After Start
@@ -69,10 +123,14 @@ reconnect or explicit scoped repair; no timer loop or automatic Agent retry.
 
 The probe's `createTraversalRoot(path, uid, gid)` explicitly applies `0755` after creating/chowning a new Attempt parent; `mkdir(0755)` alone is filtered by the service's `0027` umask. Execution-owned children explicitly receive `02750`. Existing parents must already have the exact expected owner/group/type/mode; reject symlinks or mismatches without taking them over. Preserve failed Attempt directories and use a fresh Attempt ID after verified release.
 
-One direct workspace lease prevents other Node dispatch for that Task. The serial
-execution path preserves the same Task worktree across Nodes and activations.
-Serialize integration and reserve a whole multi-repository completion boundary
-before partial effects can become visible.
+A direct Node launch reservation excludes other Node writers for that Task before
+its first repository open, including queued direct Attempts. Independent isolated
+Attempts may coexist, with one live lease per logical workspace/allocation. The
+backend serializes initial Task materialization and completion admission; an
+already-running sibling can continue using its private allocation. The direct path
+preserves the same Task worktree across Nodes and activations. Stage A still admits
+one materialized repository per Task; a future multi-repository completion needs
+one whole boundary before any partial integration becomes visible.
 
 An immutable open descriptor may carry `WorkspaceTransfer.purpose: serial` only
 for a completed predecessor in the same Plan. It carries no Replan publication or
@@ -103,6 +161,13 @@ rebuilds resume under the same immutable lease. Stop can finish that local rebui
 and recover the prior target observation before producing its own checkpoint;
 an interrupted Rework is never an empty initial allocation.
 
+That archive/rebuild flow applies to a direct allocation transfer. Isolated Rework
+starts a fresh allocation at the current Task revision; its prior checkpoint is
+historical input. Integration-conflict retry also uses a fresh allocation, while
+retaining the same Node activation. The backend owns retry policy and Replan's
+exact checkpoint recipient; the Runner never chooses a successor or merges
+unrelated private allocations on its own.
+
 `WorkspaceDescriptor.rework_history` admits bounded history only for the exact
 applied target activation. Service verifies the protected export and seeds the
 resource cache; execution imports the exact checkpoint objects under
@@ -113,7 +178,50 @@ execution repository are mutable conveniences; exact commit/tree and protected
 export remain authoritative. Raw archives are system recovery data, not an
 Agent-readable history browser.
 
-Stop writers, finalize, integrate, then grant completion evidence. Preserve operation-specific refs and local journal stages. Interrupted private work is not a completed integrated result. Rework corrects existing code rather than automatically reverting it.
+Stop writers, finalize, integrate, then grant completion evidence. Isolated
+completion first finalizes private Git, then the service `export_node` worker
+retains the exact Node commit/tree under `service/node-results`. Under the same
+root helper lock used by cancellation, persist `IntegrationStarted` with action
+`integrate` before launching the service integration worker. The worker consumes
+only that protected Node export and the service-owned Task repository. Task storage
+has its own initialization intent; missing previously initialized storage is an
+error, never permission to re-clone it.
+
+The per-Task integration lock and `monos-integration-<operation_id>.json` retain
+immutable inputs, commit date, expected tree and prepared outcome. Git 2.39's
+`merge-tree --write-tree` uses a synthetic Node-tree commit whose sole parent is
+the recorded Node start, fixing the three-way merge base even if private history
+contains other merges. The actual integrated commit keeps the expected Task head
+and original Node commit as parents. `refs/monos/integration-inputs/<operation>`
+pins imported history; `refs/monos/integration-prepared/<operation>` and
+`refs/monos/integration-conflicts/<operation>` retain prepared commits/trees
+through garbage collection without granting success.
+
+`git update-ref --stdin` with expected-old-value checks publishes
+`refs/monos/task-finalized` and `refs/monos/integrations/<operation>` together.
+Replay validates the retained intent, repairs a partially installed ref pair, and
+returns the original result even when later integrations advanced the Task. A
+changed input/ref or unrelated Task head is an error. A killed Git transaction may
+leave `.lock` files: current recovery retains intent and fails closed; it does not
+remove an unproven lock or claim automatic stale-lock repair.
+
+An integrated result exposes the Task commit/tree as top-level `git_commit` and
+`git_tree`, with the original Node result retained separately. A conflict exposes
+`integration.outcome="conflict"`, the unchanged expected Task commit/tree and
+original Node commit/tree; it has no top-level Git completion fields and cannot
+grant Node completion or unlock dependencies. `results/<operation_id>` contains
+the integrated Task result on success and the original Node result on conflict.
+Only backend settlement advances the logical finalized pointer. Tests on the
+private branch alone do not establish correctness of later integrated code.
+
+Cancellation before the durable integration-start barrier captures private work
+as a checkpoint, even if finalization already produced a commit. Cancellation
+after that barrier reconciles this exact integration and reports the original
+physical integrated/conflict outcome through the `already_finalized` settlement
+pair. Backend cancellation suppresses semantic completion/retry where appropriate;
+uncertain writer or Git ownership remains retained. Interrupted private work is not
+a completed integrated result. Rework corrects code rather than automatically
+reverting it.
 
 The probe persists finalization inputs before `commit-tree` and retains an operation-specific ref for replay. Typed `recoverable` failures retain the admitted operation; `capture_hard_limit` and `invalid_finalization` block completion. Retrying repairs the same operation, under current activation/basis guards, rather than granting the terminal Agent a fresh mutation.
 
@@ -138,6 +246,12 @@ Export the exact final tree with controlled public parents; never push private A
 | --- | --- |
 | Stale materialization generation | Reject local mutation |
 | Integration conflict | Preserve result; bounded retry same Node/activation |
+| Fresh isolated Stop before local open intent, including Rework history | No history worker; persist exact cancelled-open/Stop pair |
+| Lost checkpoint-transfer marker or unknown recovery stage | Error and retain ownership; no empty cancellation |
+| Cancel before integration-start barrier | Preserve checkpoint; canonical Task head unchanged |
+| Cancel after integration-start barrier | Reconcile original operation and retain exact terminal pair |
+| Changed integration inputs/ref or unrelated canonical Task head | Identity/revision error; no replacement integration |
+| Unresolved Git transaction lock after process loss | Retain durable intent; no unproven lock removal |
 | Unexpected revision | Stop for reconciliation |
 | Local capture hard limit | Preserve work; Node BLOCKED; no completion |
 | Publication-only finding | Finalized result enters REVIEW; no remote write |
@@ -153,6 +267,12 @@ Export the exact final tree with controlled public parents; never push private A
 Good: a crash after Git integration resolves from operation refs once.
 Base: serial work lazily opens one Task workspace.
 Bad: expose partially integrated repositories to downstream work or publish all private refs.
+
+Parallel case: two allocations start at the same Task commit, produce disjoint
+edits, and integrate in sequence without losing either edit. A conflicting second
+result remains readable but cannot complete its Node. A same-request replay after
+a later integration returns its original Task/Node identities without advancing
+the Task again.
 
 ## 6. Tests Required
 
@@ -178,7 +298,33 @@ operations, cancelled old keys with failure/success/hard outcomes, missing and
 changed journal/Start scope, open plus Stop, and one retry per complete connection
 snapshot. Cached terminal replay must make zero Host calls.
 
+Parallel regression scope is in
+[integration tests](../../../runner/internal/host/workspace_integration_test.go),
+[effect tests](../../../runner/internal/host/workspace_integration_effect_test.go)
+and [allocation tests](../../../runner/internal/host/workspace_isolation_test.go).
+Use real local Git for disjoint/conflicting edits, immutable start ancestry,
+input/result/ref-stage interruption, partial ref-pair recovery, GC retention and
+replay after later Task advancement. Effect tests assert protected export
+identity, cancellation on both sides of the integration-start barrier and retained
+Node output. Stop tests cover no local open record, partially materialized
+unexposed stages, initialized recovery and unknown/checkpoint state rejection.
+Repository-free completion inspects only its own reserved allocation.
+
+The parallel implementation has local Git and focused race-test evidence, including
+the fresh Stop regression and existing initialized/direct Rework recovery. Service
+export tests require a non-root account and skip when run as root. These checks do
+not establish native systemd/cgroup cancellation, deployed two-account permissions,
+live concurrent restart or host reboot behavior. Those real-host parallel acceptance
+checks remain deferred; previous serial host evidence does not cover them. Reuse
+unchanged local evidence and run the affected compile/vet/integration gates under
+the [verification scope rule](../guides/verification-scope.md).
+
 ## 7. Wrong vs Correct
 
 Wrong: a lease timeout alone permits another worker to reset the workspace.
 Correct: validate generation/revision, stop/reconcile the old effect owner, then acquire physical ownership.
+
+Wrong: import Rework history before cancelling a fresh allocation whose open never
+wrote its root record, or clear a Git transaction lock on the assumption that its
+owner died. Correct: cancel only proven unexposed allocation state without a worker;
+reconcile admitted integration from durable intent and preserve unresolved locks.

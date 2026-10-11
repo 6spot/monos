@@ -142,6 +142,7 @@ async function taskResultsInTransaction(tx:Transaction,taskId:string,cursor?:str
           );
       } else {
         const metadata = effect.workspace_metadata;
+        const integration = effect.integration;
         if (
           !row.workspace_id ||
           !metadata ||
@@ -159,6 +160,11 @@ async function taskResultsInTransaction(tx:Transaction,taskId:string,cursor?:str
             "unmet_precondition",
             "Completed result lacks exact finalized workspace evidence",
           );
+        if (!!metadata.isolation !== !!integration || (integration && (integration.outcome !== 'integrated'
+          || integration.start_commit !== metadata.isolation?.start_commit
+          || integration.task_commit !== effect.git_commit || integration.task_tree !== effect.git_tree
+          || row.operation.integration?.expected_task_commit !== integration.expected_task_commit)))
+          throw new CommandError('unmet_precondition', 'Completed result lacks exact integration provenance');
         const identity = resultIdentity(row, manifest, effect);
         if (captured) captured.identity=identity;
         git = {
@@ -169,6 +175,7 @@ async function taskResultsInTransaction(tx:Transaction,taskId:string,cursor?:str
           git_tree: effect.git_tree,
           metadata,
           identity_digest: digest(canonicalJSON(identity)),
+          ...(integration ? { integration } : {}),
         };
       }
       const item = validate<TaskLocalResult>("TaskLocalResult", {
@@ -222,7 +229,8 @@ function resultIdentity(row: ResultRow, m: CompletionManifest, effect: EffectRes
     manifest_digest:m.content_digest, operation_identity_digest:completionIdentity(row.operation,row.dispatch_id),
     workspace_id:w.workspace_id, resource_id:row.resource_id, runner_id:row.runner_id,
     generation:md.generation, storage_id:md.storage_id, lease_id:md.lease_id, repository_identity:md.repository_identity,
-    base_commit:md.base_commit, git_commit:effect.git_commit, git_tree:effect.git_tree
+    base_commit:md.base_commit, git_commit:effect.git_commit, git_tree:effect.git_tree,
+    ...(effect.integration ? { integration: effect.integration } : {})
   });
 }
 export async function selectedTaskResult(db: Database, token: string, taskId: string, operationId: string) {

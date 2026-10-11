@@ -1,3 +1,5 @@
+import { retryIntegrationConflict } from './node-integration.ts';
+import { assertCompletionBoundaryAvailable } from './workspaces.ts';
 import { admitRepositoryInspection, assertInspectionAccess, settleRepositoryInspection } from './repository-inspection.ts';
 import type { InspectionDescriptor, InspectionRepositoryAccessRequest, InspectionRepositoryAccessResult } from '../../../packages/protocol/src/index.ts';
 import { requestNodeRework } from './node-rework-state.ts';
@@ -76,7 +78,7 @@ function toDispatch(row: AttemptRow): Dispatch {
   return { ...row.launch, mutation_allowed: row.mutation_allowed, process_released: row.process_released };
 }
 function toOperation(row: OperationRow, attempt: Pick<AttemptRow, 'dispatch_id'>): Operation {
-  return { ...(row.inspection_descriptor ? { inspection: row.inspection_descriptor, inspection_digest: row.inspection_digest! } : {}), schema_version: row.schema_version, operation_id: row.id, attempt_id: row.attempt_id, dispatch_id: attempt.dispatch_id, request_id: row.request_id, kind: row.kind, ...(row.resource_id ? { resource_id: row.resource_id } : {}), state: row.state, ...(row.repository_free ? {repository_free:true as const}:{}), ...(row.completion_manifest_digest?{completion_manifest_digest:row.completion_manifest_digest}:{}), ...(row.completion_operation_id?{completion_operation_id:row.completion_operation_id,completion_identity_digest:row.completion_identity_digest!}:{}), ...(row.result ? { result: row.result } : {}), ...(row.workspace_descriptor ? { workspace: row.workspace_descriptor, workspace_digest: row.workspace_digest! } : {}), ...(row.cancelled_by_operation_id ? { cancelled_by_operation_id: row.cancelled_by_operation_id } : {}) };
+  return { ...(row.inspection_descriptor ? { inspection: row.inspection_descriptor, inspection_digest: row.inspection_digest! } : {}), ...(row.integration ? { integration: row.integration } : {}), schema_version: row.schema_version, operation_id: row.id, attempt_id: row.attempt_id, dispatch_id: attempt.dispatch_id, request_id: row.request_id, kind: row.kind, ...(row.resource_id ? { resource_id: row.resource_id } : {}), state: row.state, ...(row.repository_free ? {repository_free:true as const}:{}), ...(row.completion_manifest_digest?{completion_manifest_digest:row.completion_manifest_digest}:{}), ...(row.completion_operation_id?{completion_operation_id:row.completion_operation_id,completion_identity_digest:row.completion_identity_digest!}:{}), ...(row.result ? { result: row.result } : {}), ...(row.workspace_descriptor ? { workspace: row.workspace_descriptor, workspace_digest: row.workspace_digest! } : {}), ...(row.cancelled_by_operation_id ? { cancelled_by_operation_id: row.cancelled_by_operation_id } : {}) };
 }
 
 async function taskEvent(tx: Transaction, attempt: AttemptRow, kind: string, body: unknown, operationId: string | null = null): Promise<void> {
@@ -120,6 +122,7 @@ async function receiptResponse(tx: Transaction, receipt: ReceiptRow): Promise<Co
   const operation = (await tx.query<OperationRow>('SELECT * FROM operations WHERE id=$1', [receipt.operation_id])).rows[0]!;
   if (operation.state === 'cancelled') return { schema_version: 1, request_id: receipt.response.request_id, operation_id: operation.id, status: 'error', error: { code: 'unmet_precondition', message: operation.kind==='complete_node' ? 'Completion was cancelled by its trusted settlement; retained output remains available for correction or cancellation history.' : 'Workspace open was cancelled by Stop; no workspace was granted.' } };
   if (operation.state !== 'succeeded') return receipt.response;
+  if (operation.result?.integration?.outcome === 'conflict') return { schema_version: 1, request_id: receipt.response.request_id, operation_id: operation.id, status: 'error', error: { code: 'unmet_precondition', message: 'Workspace integration conflicted; the private result is retained and this Node activation requires a fresh Attempt.' } };
   return { ...receipt.response, status: 'committed', result: operation.result ?? {} };
 }
 
@@ -360,6 +363,7 @@ export class BoundaryService {
         await tx.query('INSERT INTO command_receipts(attempt_id,scope_id,request_id,command_name,digest,schema_version,envelope_json,response,operation_id) VALUES($1,$2,$3,$4,$5,1,$6,$7,$8)',[attempt.id,task.id,command.request_id,command.name,submission.sha256,submission.envelope_json,response,operationId??null]);
         this.options.beforeAdmissionCommit?.();return response;
       }
+      if (command.name === 'complete_node') await assertCompletionBoundaryAvailable(tx, task.id, attempt.id);
       const frozen = command.name==='complete_node' && source ? await freezeManifest(tx,source,command) : undefined;
       if (command.name === 'complete_node' || command.name === 'commit_task_turn') {
         const unfinished = await tx.query("SELECT id FROM operations WHERE attempt_id=$1 AND state NOT IN ('succeeded','cancelled')", [attempt.id]);
@@ -588,15 +592,19 @@ export class BoundaryService {
       if (captureBlocked && operation.kind !== 'complete_node') throw new CommandError('invalid_input', 'Capture failure classification requires a completion operation');
       if (await settleWorkspaceOperation(tx, attempt, operation, message)) return;
       if (message.success) {
+        const integrationConflict = operation.kind === 'complete_node' && message.result.integration?.outcome === 'conflict';
         const terminal = operation.kind === 'complete_node' || operation.kind === 'stop';
         if (terminal && message.result.writer_absent !== true) throw new CommandError('unmet_precondition', 'Whole-tree absence is required');
         if (terminal && (await tx.query("SELECT id FROM operations WHERE attempt_id=$1 AND id<>$2 AND state NOT IN ('succeeded','cancelled')", [attempt.id, operation.id])).rowCount) throw new CommandError('unmet_precondition', 'Other admitted workspace operations must reconcile before releasing ownership');
-        if (operation.kind === 'complete_node' && !operation.repository_free && (!message.result.git_commit || !message.result.git_tree)) throw new CommandError('unmet_precondition', 'Exact finalized Git result is required');
+        if (operation.kind === 'complete_node' && !operation.repository_free && !integrationConflict && (!message.result.git_commit || !message.result.git_tree)) throw new CommandError('unmet_precondition', 'Exact finalized Git result is required');
         if ((operation.kind === 'open_workspace' || operation.kind === 'inspect_repository') && (!message.result.workspace_id || !message.result.path)) throw new CommandError('unmet_precondition', 'Workspace identity and Runner-local locator are required');
         await tx.query("UPDATE operations SET state='succeeded',result=$2 WHERE id=$1", [operation.id, message.result]);
         await tx.query('UPDATE outbox SET done=true WHERE operation_id=$1', [operation.id]);
         if (terminal) await tx.query("UPDATE attempts SET mutation_allowed=false,process_absent=true,process_released=true,state=CASE WHEN $2::boolean THEN 'SUCCEEDED' WHEN state='RUNNING' THEN 'CANCELLED' ELSE state END WHERE id=$1", [attempt.id, operation.kind === 'complete_node']);
-        if (operation.kind === 'complete_node') await projectCompletion(tx,attempt,operation,message);
+        if (integrationConflict) {
+          await tx.query("UPDATE attempts SET state='FAILED',end_reason='integration_conflict' WHERE id=$1", [attempt.id]);
+          await retryIntegrationConflict(tx, attempt, operation, message, configurationVersion);
+        } else if (operation.kind === 'complete_node') await projectCompletion(tx,attempt,operation,message);
         else if(operation.kind==='stop' && attempt.task_id) await refreshTaskState(tx,attempt.task_id);
       } else {
         if (message.result.writer_absent === true) await tx.query('UPDATE attempts SET process_absent=true WHERE id=$1', [attempt.id]);

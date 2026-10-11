@@ -1,3 +1,4 @@
+import { workspaceIsolation } from './workspace-placement.ts';
 import { activateInheritedHold } from './task-replan-holds.ts';
 import { liveReplanAuthority, assertNoReplan, pendingReplan } from './task-replan-state.ts';
 import { assertSpecificationUnfrozen, assertTaskUnaccepted, specificationFrozen } from './task-specification-state.ts';
@@ -100,6 +101,7 @@ const protocol = [
   'Use monos open_workspace with resource_id only when repository work is needed. Work freely within that managed workspace; preserve previous private work and fixed Git ancestry. Do not create your own repository as a substitute for managed work.',
   'Optional durable outputs use monos publish_artifact with artifact_id, title, content:{text,media_type}, optional references:[{url,label?}] and supersedes. UTF-8 text is limited to 256 KiB. Artifact publication is not completion. Read exact Task content with monos read_artifact {artifact_id}. HTML is managed data.',
   'Finish with monos complete_node {summary,artifact_ids?,handled_guidance_ids?}. Explicitly declare every required_guidance_id you have handled; absence declares none and rejects missing required handling. If blocked, use block_node with the precise reason. Guidance launch is not proof of handling. Omitted artifact_ids selects outputs from this Attempt; [] selects none; explicit IDs select same Node/activation outputs. No Artifact or repository is mandatory. If a previous Attempt left a private workspace checkpoint, reopen and finalize it before completion. Complete closes mutation authority and the system stops the process and finalizes Git; prose/process exit never completes.',
+  'If complete_node reports another completion still owns the Task boundary, your Attempt remains active. Wait briefly and retry; a precondition rejection is not completed work. A recovery.integration_conflict record preserves the old result for inspection: open_workspace on the latest Task base, inspect the supplied old node commit, and adapt your work rather than replaying the old tree. Integration conflict retry retains this Node activation.',
   'If external input prevents this valid Node from continuing, call monos block_node {reason}. This records a precise Owner-answerable blocker and closes this Attempt. Never fabricate Runtime failure.',
   'If existing upstream work must be redone while the graph remains valid, use monos request_rework {target_node_id?,reason}. Omit target_node_id only with exactly one direct dependency; an explicit target must be a current upstream ancestor. The system preserves history and reactivates that Node and every descendant after physical settlement. Three automatic requests are allowed per Task between Owner resets; a further request is preserved for an exact Owner decision. This command ends your current Attempt.',
   'Use monos COMMAND --request-id ID --input payload.json --output json (or --input -); monos command-status --request-id ID --output json; monos retry --request-id ID --output json. On uncertainty recover the same request, never substitute a new lifecycle command.',
@@ -169,6 +171,13 @@ export async function prepareNodeSource(
     planned_attempt_id: attemptId,
     configuration_version: configurationVersion,
   };
+  const isolation = await workspaceIsolation(tx, task.id, node.id, node.activation);
+  const conflict = (await tx.query<{ facts: object }>(`SELECT jsonb_build_object('operation_id',o.id,'attempt_id',a.id,
+    'resource_id',o.resource_id) || (o.result->'integration') facts FROM operations o JOIN attempts a ON a.id=o.attempt_id
+    WHERE a.task_id=$1 AND a.node_id=$2 AND a.node_activation=$3 AND o.kind='complete_node' AND o.state='succeeded'
+      AND o.result->'integration'->>'outcome'='conflict' ORDER BY o.created_at DESC,o.id DESC LIMIT 1`,
+  [task.id, node.id, node.activation])).rows[0];
+  const recovery = { ...(conflict ? { integration_conflict: conflict.facts } : {}), ...options.recovery };
   let failure: string | null = null;
   let upstream: Awaited<ReturnType<typeof nodeUpstreamContext>> | undefined;
   let rework: Awaited<ReturnType<typeof nodeReworkContext>> = [];
@@ -251,6 +260,7 @@ export async function prepareNodeSource(
         role,
         project,
         workspace_reservations: {
+          ...(isolation ? { isolation } : {}),
           project_id: task.project_id,
           configuration_version: configurationVersion,
           resources: (project.resources as { resource_id: string }[]).map((r) => ({
@@ -271,7 +281,7 @@ export async function prepareNodeSource(
           COALESCE((SELECT jsonb_agg(w ORDER BY w->'input'->>'workspace_id') FROM jsonb_array_elements(proposal.content->'impact'->'workspaces') w
             WHERE EXISTS(SELECT 1 FROM jsonb_array_elements(w->'target_nodes') target WHERE target->>'node_id'=$2)),'[]'::jsonb) workspace_dispositions
           FROM replan_publications p JOIN replan_proposals proposal ON proposal.id=p.proposal_id WHERE p.new_plan_id=$1`,[task.plan_id,node.id])).rows.map(r=>({...r,validity:'Historical input only; never completion of the current activation. Adopt assigned private work through open_workspace before completion; finalized work remains historical code under the exact approved Node scope.'})),
-        recovery: options.recovery ?? {},
+        recovery,
       };
       prompt = canonicalJSON(context);
       if (
@@ -301,7 +311,7 @@ export async function prepareNodeSource(
       definition.role_id,
       node.execution_source_id,
       options.request_id ?? null,
-      options.recovery ?? {},
+      recovery,
       context,
       prompt,
       hash,

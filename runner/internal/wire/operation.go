@@ -68,10 +68,14 @@ func ValidateCompletionPair(op, original protocol.Operation, r protocol.Operatio
 	}
 	c := p.CompletionResult
 	if p.Disposition == protocol.AlreadyFinalized {
-		if !c.Success || c.CancelledByOperationID != nil || c.Result.GitCommit == nil || c.Result.GitTree == nil || r.Result.GitCommit != nil || r.Result.GitTree != nil || r.Result.WorkspaceMetadata != nil {
+		conflict := c.Result.Integration != nil && c.Result.Integration.Outcome == protocol.Conflict
+		if !c.Success || c.CancelledByOperationID != nil || (!conflict && (c.Result.GitCommit == nil || c.Result.GitTree == nil)) || r.Result.GitCommit != nil || r.Result.GitTree != nil || r.Result.WorkspaceMetadata != nil || r.Result.Integration != nil {
 			return fmt.Errorf("invalid already-finalized pair")
 		}
 		if err := validateCompletionWorkspace(original, c.Result); err != nil {
+			return err
+		}
+		if err := ValidateWorkspaceIntegration(original, c.Result); err != nil {
 			return err
 		}
 	} else if p.Disposition == protocol.DispositionCancelled {
@@ -98,6 +102,35 @@ func validateCompletionWorkspace(original protocol.Operation, r protocol.EffectR
 	}
 	if r.GitCommit != nil && (m.FinalizedCommit != *r.GitCommit || m.Checkpoint != nil) {
 		return fmt.Errorf("completion pair finalized metadata mismatch")
+	}
+	if (w.Isolation == nil) != (m.Isolation == nil) || w.Isolation != nil && w.Isolation.AllocationID != m.Isolation.AllocationID {
+		return fmt.Errorf("completion pair allocation mismatch")
+	}
+	return nil
+}
+
+// ValidateWorkspaceIntegration binds the terminal physical outcome to its admitted
+// allocation and Task revision. A conflict is settled work, not Node completion.
+func ValidateWorkspaceIntegration(op protocol.Operation, r protocol.EffectResult) error {
+	w, m, i := op.Workspace, r.WorkspaceMetadata, r.Integration
+	if w == nil || w.Isolation == nil {
+		if op.Integration != nil || i != nil || m != nil && m.Isolation != nil {
+			return fmt.Errorf("direct completion cannot claim isolated integration")
+		}
+		return nil
+	}
+	if op.Integration == nil || i == nil || m == nil || m.Isolation == nil || m.Checkpoint != nil ||
+		m.Isolation.AllocationID != w.Isolation.AllocationID || i.StartCommit != m.Isolation.StartCommit ||
+		i.ExpectedTaskCommit != op.Integration.ExpectedTaskCommit {
+		return fmt.Errorf("integration outcome differs from admitted ownership")
+	}
+	if i.Outcome == protocol.Conflict {
+		if r.GitCommit != nil || r.GitTree != nil || i.TaskCommit != i.ExpectedTaskCommit {
+			return fmt.Errorf("conflict cannot advance the Task result")
+		}
+	} else if i.Outcome != protocol.Integrated || r.GitCommit == nil || r.GitTree == nil ||
+		*r.GitCommit != i.TaskCommit || *r.GitTree != i.TaskTree || m.FinalizedCommit != i.TaskCommit {
+		return fmt.Errorf("integration result revisions differ")
 	}
 	return nil
 }

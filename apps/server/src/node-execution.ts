@@ -1,4 +1,6 @@
 import { remoteItemQuiescent, requestRemoteCancel } from './remote-preparation-state.ts';
+import { retryIntegrationConflict } from './node-integration.ts';
+import type { OperationRow } from './service.ts';
 import { cancelReviewOperations } from './task-review-state.ts';
 import { activateInheritedHold,resolveInheritedHold } from './task-replan-holds.ts';
 import { assertCurrentNode } from './task-records.ts';
@@ -44,6 +46,8 @@ export interface CompletionOperation {
   request_id: string;
   resource_id: string | null;
   workspace_descriptor: Operation['workspace'] | null;
+  integration?: Operation['integration'] | null;
+  result?: Operation['result'] | null;
   workspace_digest: string | null;
   workspace_lease_id: string | null;
   repository_free: boolean | null;
@@ -64,6 +68,7 @@ export function completionIdentity(operation: CompletionOperation, dispatchId: s
       request_id: operation.request_id,
       kind: operation.kind,
       ...(operation.resource_id ? { resource_id: operation.resource_id } : {}),
+      ...(operation.integration ? { integration: operation.integration } : {}),
       ...(operation.workspace_descriptor
         ? { workspace: operation.workspace_descriptor, workspace_digest: operation.workspace_digest }
         : {}),
@@ -165,7 +170,7 @@ export class NodeExecution {
     try {
       const fresh = (
         await this.db.pool.query<{ task_id: string; node_id: string }>(
-          `SELECT DISTINCT ON (t.id) t.id task_id,n.id node_id FROM tasks t JOIN plan_nodes pn ON pn.plan_id=t.plan_id JOIN nodes n ON n.id=pn.node_id
+          `SELECT t.id task_id,n.id node_id FROM tasks t JOIN plan_nodes pn ON pn.plan_id=t.plan_id JOIN nodes n ON n.id=pn.node_id
     WHERE (t.state='RUNNING' OR (t.state='BLOCKED' AND EXISTS(SELECT 1 FROM replan_control_holds h JOIN replan_publications rp ON rp.id=h.publication_id WHERE h.task_id=t.id AND rp.new_plan_id=t.plan_id AND h.node_id=n.id AND h.node_activation=n.activation AND h.resolved_by IS NULL))) AND n.state='PENDING' AND n.execution_source_id IS NULL AND (EXISTS(
      SELECT 1 FROM task_events e JOIN attempts a ON a.id=e.attempt_id JOIN task_planning_outbox p ON p.id=a.planning_intent_id
      WHERE e.task_id=t.id AND a.task_id=t.id AND p.task_id=t.id AND e.kind='plan_published' AND e.body->>'plan_id'=t.plan_id AND e.body->>'planning_intent_id'=p.id) OR EXISTS(SELECT 1 FROM replan_publications rp WHERE rp.task_id=t.id AND rp.new_plan_id=t.plan_id))
@@ -177,13 +182,6 @@ export class NodeExecution {
       JOIN plan_nodes member ON member.plan_id=t.plan_id AND member.node_id=upstream.id
       WHERE upstream.id=dep.value AND upstream.state='COMPLETED'
         AND activation_applies(t.id,upstream.id,upstream.activation,t.specification_id,t.plan_id)))
-    AND NOT EXISTS(SELECT 1 FROM attempts a WHERE a.task_id=t.id AND a.kind='node' AND
-      (a.state='QUEUED' OR NOT a.process_released OR EXISTS(SELECT 1 FROM operations o WHERE o.attempt_id=a.id AND o.state NOT IN ('succeeded','cancelled'))))
-    AND NOT EXISTS(SELECT 1 FROM workspace_leases l WHERE l.task_id=t.id AND l.state<>'released')
-    AND NOT EXISTS(SELECT 1 FROM nodes running JOIN plan_nodes member ON member.plan_id=t.plan_id AND member.node_id=running.id WHERE running.state='RUNNING')
-    AND NOT EXISTS(SELECT 1 FROM node_execution_outbox s JOIN nodes pending ON pending.execution_source_id=s.id
-      WHERE s.task_id=t.id AND NOT s.done AND pending.state='PENDING' AND pending.activation=s.node_activation
-        AND s.specification_id=t.specification_id AND s.plan_id=t.plan_id)
     ORDER BY t.id,n.id LIMIT $1`,
           [limit]
         )
@@ -262,6 +260,7 @@ export class NodeExecution {
       ).rows;
       for (const row of ended)
         await transaction(this.db, async (tx) => {
+          const configurationVersion = await lockConfiguration(tx);
           await tx.query('SELECT id FROM runners WHERE id=$1 FOR UPDATE', [row.runner_id]);
           const task = (await tx.query<NodeTask>('SELECT * FROM tasks WHERE id=$1 FOR UPDATE', [row.task_id])).rows[0]!;
           const attempt = (await tx.query<Attempt>('SELECT * FROM attempts WHERE id=$1 FOR UPDATE', [row.id])).rows[0]!;
@@ -274,8 +273,18 @@ export class NodeExecution {
           const node = (await tx.query<ExecutionNode>('SELECT * FROM nodes WHERE id=$1', [source.node_id])).rows[0]!;
           if (await currentNodeRework(tx, task.id, node.id)) return;
           const guidanceOwned=(await tx.query("SELECT 1 FROM task_guidance_followups WHERE source_id=$1 AND status='waiting'",[source.id])).rowCount;
-          if (!(await specificationFrozen(tx,task.id)) && attempt.end_reason!=='specification_change' && !guidanceOwned && task.state === 'RUNNING' && node.state === 'RUNNING' && node.execution_source_id === source.id)
+          if (!(await specificationFrozen(tx,task.id)) && attempt.end_reason!=='specification_change' && !guidanceOwned && task.state === 'RUNNING' && node.state === 'RUNNING' && node.execution_source_id === source.id) {
+            if (attempt.end_reason === 'integration_conflict' && attempt.process_released) {
+              const conflict = (await tx.query<OperationRow>(`SELECT * FROM operations WHERE attempt_id=$1 AND kind='complete_node'
+                AND state='succeeded' AND result->'integration'->>'outcome'='conflict' ORDER BY created_at DESC,id DESC LIMIT 1`, [attempt.id])).rows[0];
+              if (conflict?.result) {
+                await retryIntegrationConflict(tx, attempt, conflict, { operation_id: conflict.id, attempt_id: attempt.id,
+                  success: true, result: conflict.result }, configurationVersion);
+                return;
+              }
+            }
             await blockNodeSource(tx, source, 'factual', attempt.end_reason ?? 'missing_formal_outcome', attempt.id);
+          }
         });
     } finally {
       this.pumping = false;
@@ -635,6 +644,7 @@ export class NodeExecution {
         kind: o.kind,
         state: o.state,
         failure_kind: o.failure_kind ?? null,
+        ...(o.result?.integration ? { integration: o.result.integration } : {}),
         ...(o.kind === 'complete_node'
           ? { completion_identity_digest: completionIdentity(o, attempt!.dispatch_id) }
           : {}),
@@ -652,7 +662,7 @@ export class NodeExecution {
       if (rework) waitingReason = 'waiting_for_node_rework';
       else if (!source && node.state === 'PENDING' && task.plan_id) {
         if (!await nodeDependenciesReady(tx, task.plan_id, node.id)) waitingReason = 'waiting_for_dependencies';
-        else if (!await serialNodeReady(tx, task.id, node.id)) waitingReason = 'waiting_for_serial_execution';
+        else if (!await serialNodeReady(tx, task.id, node.id)) waitingReason = 'waiting_for_workspace_ownership';
       }
       const result = {
         schema_version: 1,

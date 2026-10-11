@@ -43,6 +43,17 @@ or backend checks for current sources, formal outcomes and physical settlement.
 
 ## 4. Validation & Error Matrix
 
+Parallel workspaces use optional `WorkspaceIsolation`, metadata with immutable
+`start_commit`, exact `WorkspaceCanonicalSource`, and combined completion
+`WorkspaceIntegration`/`WorkspaceIntegrationResult`. Integration is required for
+isolated `complete_node` and forbidden elsewhere. `integrated` requires matching
+top-level Git fields; `conflict` forbids them and cannot advance Task Git. An exact
+`CompletionSettlement` pair with `already_finalized` may contain either terminal
+outcome. Optional result-read/status provenance must survive every consumer.
+Canonical sources exclude conflicts, while `conflict_source` requires one; Stop
+recovery IDs apply only to original open sources. Shared TS/Go fixtures test these
+conditions. Schema shape checks never replace retained identity/source validation.
+
 | Condition | Result |
 | --- | --- |
 | Unsupported schema version | Reject before dispatch/admission |

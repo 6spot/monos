@@ -32,6 +32,22 @@ async function screenshots(page: Page, info: TestInfo, name: string) {
   await page.setViewportSize({ width: 1440, height: 1000 });
 }
 
+test('parallel results preserve revision attribution and conflicts remain unfinished', async ({ page }, info) => {
+  await signIn(page); const f = await scenario(page, 'parallel_review'); await openTask(page, f, 'overview');
+  const results = page.getByRole('region', { name: 'Local results', exact: true });
+  await expect(results.getByText('Combined Task commit', { exact: true })).toHaveCount(2);
+  await expect(results.getByText('Work result before integration', { exact: true })).toHaveCount(2);
+  await expect(results.getByText('Work started from', { exact: true })).toHaveCount(2);
+  await expect(results.getByText(/Validation of the combined result requires subsequent work/)).toHaveCount(2);
+  await screenshots(page, info, 'parallel-result-provenance');
+  const conflict = await scenario(page, 'parallel_conflict'); await openTask(page, conflict, 'execution');
+  await page.getByLabel('Work item', { exact: true }).selectOption(conflict.node);
+  await expect(page.getByText(/integration_conflict_limit/)).toBeVisible();
+  await page.getByText('Execution operations', { exact: true }).click();
+  await expect(page.getByText(/Integration conflict · result preserved/)).toBeVisible();
+  await screenshots(page, info, 'parallel-conflict-recovery');
+});
+
 test('Board canonical columns, normal queueing, local Review and responsive navigation', async ({ page }, info) => {
   await signIn(page);
   const ready = await scenario(page, 'ready', 'A ready independent task');
