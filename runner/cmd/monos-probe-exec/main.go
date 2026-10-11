@@ -59,9 +59,19 @@ func run() error {
 func main() {
 	if err := run(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
-		if errors.Is(err, adapter.ErrCaptureFailure) {
-			os.Exit(host.CaptureFailureExitCode)
-		}
-		os.Exit(1)
+		os.Exit(workerExitCode(err))
 	}
+}
+
+func workerExitCode(err error) int {
+	if errors.Is(err, adapter.ErrCaptureFailure) {
+		return host.CaptureFailureExitCode
+	}
+	if errors.Is(err, adapter.ErrRuntimeFailure) {
+		return host.RuntimeFailureExitCode
+	}
+	if err != nil {
+		return 1
+	}
+	return 0
 }

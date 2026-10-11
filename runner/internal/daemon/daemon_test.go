@@ -168,7 +168,7 @@ func TestFastCaptureExitRetainsFailureWhenStartSendFails(t *testing.T) {
 		t.Fatal("expected interrupted Start delivery")
 	}
 	events, err := db.PendingEvents()
-	if err != nil || len(events) != 3 || events[0].Kind != protocol.KindStarted || events[1].Kind != protocol.CaptureFailed || events[2].Kind != protocol.Exited {
+	if err != nil || len(events) != 4 || events[0].Kind != protocol.KindStarted || events[1].Kind != protocol.CaptureFailed || events[2].Kind != protocol.Exited || events[3].Kind != protocol.ProcessAbsent {
 		t.Fatalf("fast output failure lost: %+v %v", events, err)
 	}
 	if len(supervisor.Calls) != 1 || supervisor.Calls[0].Action != "stop" {

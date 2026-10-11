@@ -429,3 +429,24 @@ func (d *DB) HasRuntimeEvent(attempt string, kind protocol.RuntimeEventKind) (bo
 	err := d.db.QueryRow("SELECT count(*) FROM events WHERE attempt=? AND stream='runtime' AND json_extract(body,'$.kind')=?", attempt, kind).Scan(&count)
 	return count > 0, err
 }
+
+// TerminalEvent reads the immutable retained terminal fact, including ACKed
+// rows. PendingEvents is only a delivery batch and cannot prove a past exit.
+func (d *DB) TerminalEvent(attempt, dispatch string, kind protocol.RuntimeEventKind) (protocol.RuntimeEvent, bool, error) {
+	var event protocol.RuntimeEvent
+	if kind != protocol.Exited && kind != protocol.ProcessAbsent {
+		return event, false, fmt.Errorf("not a terminal runtime event")
+	}
+	var raw []byte
+	err := d.db.QueryRow("SELECT body FROM events WHERE attempt=? AND stream='runtime' AND json_extract(body,'$.dispatch_id')=? AND json_extract(body,'$.kind')=? ORDER BY seq LIMIT 1", attempt, dispatch, kind).Scan(&raw)
+	if errors.Is(err, sql.ErrNoRows) {
+		return event, false, nil
+	}
+	if err != nil {
+		return event, false, err
+	}
+	if err = json.Unmarshal(raw, &event); err != nil {
+		return event, false, err
+	}
+	return event, true, nil
+}

@@ -14,6 +14,7 @@ import { DispatchQueue } from './dispatch-queue.ts';
 import { RuntimeScheduling } from './runtime-scheduling.ts';
 import { assertPlanningSource, createPlanningIntent, planningEvent, planningSource, planningTask, planningText, startEligibility, stopPlanningAttempt } from './task-planning-state.ts';
 import type { PlanningAttempt, PlanningIntent } from './task-planning-state.ts';
+import { activeRuntimeContinuation, supersedeRuntimeContinuation } from './runtime-continuation-state.ts';
 
 interface Target { specification_id?: string; planning_intent_id?: string; issue_sequence?: number; answer?: string; attempt_id?: string }
 
@@ -52,6 +53,7 @@ export class TaskPlanning {
         if (attempt?.id !== selected?.id || (attempt && attempt.runner_id !== selected?.runner_id)) return retryLocks;
         if (Number(task.control_version) !== command.expected_control_version) throw new CommandError('version_conflict', 'Task control basis changed', Number(task.control_version));
         if (task.plan_id !== null || !['PLANNING', 'RUNNING'].includes(task.state)) throw new CommandError('unmet_precondition', 'Only an unfinished pre-Plan Task accepts this control');
+        if (intent && command.name !== 'start_task') await supersedeRuntimeContinuation(tx, intent.planned_attempt_id, command.name);
         let next = intent; let operationId: string | undefined; let endReason: string | undefined;
         if (command.name === 'start_task') {
           if (task.state !== 'PLANNING' || task.specification_id !== target.specification_id) throw new CommandError('unmet_precondition', 'Start requires the viewed PLANNING Specification');
@@ -159,15 +161,16 @@ export class TaskPlanning {
       const held = !!(await tx.query(`SELECT 1 FROM attempts a WHERE task_id=$1 AND kind='planner' AND
         (NOT process_released OR EXISTS(SELECT 1 FROM operations WHERE attempt_id=a.id AND state NOT IN ('succeeded','cancelled')))`, [task.id])).rowCount;
       const issue = task.planning_issue_sequence ? (await tx.query<{ body: { reason: string } }>("SELECT body FROM task_events WHERE task_id=$1 AND sequence=$2 AND kind='planning_issue_raised'", [task.id, task.planning_issue_sequence])).rows[0]?.body : undefined;
+      const continuing = intent ? await activeRuntimeContinuation(tx, intent.planned_attempt_id) : false;
       const actions: TaskPlanningStatus['available_actions'] = [];
       if (!task.plan_id && ['PLANNING', 'RUNNING'].includes(task.state)) {
         actions.push('cancel_task');
         if (task.state === 'PLANNING' && await startEligibility(tx, task)) actions.push('start_task');
         if (intent && task.state === 'RUNNING') actions.push('stop_initial_planning');
-        if (intent && (!attempt || (!attempt.mutation_allowed && ['FAILED', 'CANCELLED', 'SUCCEEDED'].includes(attempt.state))) && (task.state === 'RUNNING' || await startEligibility(tx, task))) actions.push('retry_initial_planning');
+        if (!continuing && intent && (!attempt || (!attempt.mutation_allowed && ['FAILED', 'CANCELLED', 'SUCCEEDED'].includes(attempt.state))) && (task.state === 'RUNNING' || await startEligibility(tx, task))) actions.push('retry_initial_planning');
       }
       const status: TaskPlanningStatus['status'] = task.plan_id ? 'published' : task.state === 'CANCELLED' ? 'cancelled' : task.state === 'PLANNING' ? intent ? 'stopped' : 'not_started'
-        : issue ? 'issue' : attempt?.state === 'RUNNING' && attempt.mutation_allowed ? 'processing' : held ? 'settling' : attempt?.state === 'QUEUED' ? 'queued'
+        : issue ? 'issue' : attempt?.state === 'RUNNING' && attempt.mutation_allowed ? 'processing' : held || continuing ? 'settling' : attempt?.state === 'QUEUED' ? 'queued'
           : attempt ? 'interrupted' : intent?.waiting_reason ? 'unavailable' : 'pending';
       return validate<TaskPlanningStatus>('TaskPlanningStatus', { schema_version: 1, task_id: task.id, state: task.state, specification_id: task.specification_id, control_version: Number(task.control_version), status, available_actions: actions,
         ...(task.plan_id ? { plan_id: task.plan_id } : {}), ...(intent ? { planning_source: planningSource(intent) } : {}), ...(attempt ? { attempt_id: attempt.id } : {}),

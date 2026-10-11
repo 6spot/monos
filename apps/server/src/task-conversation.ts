@@ -1,6 +1,7 @@
 import {reviewInputDisposition} from './task-review-state.ts';
 import { operationSummary, inputOperationPage, guidanceRecipientPage } from './task-conversation-reads.ts';
 import { randomUUID } from 'node:crypto';
+import { activeRuntimeContinuation, supersedeRuntimeContinuation, runtimeContinuation } from './runtime-continuation-state.ts';
 import { transaction } from '../../../packages/db/src/index.ts';
 import type { Database, Transaction } from '../../../packages/db/src/index.ts';
 import { canonicalJSON, digest, MAX_BODY_BYTES, validate } from '../../../packages/protocol/src/index.ts';
@@ -173,6 +174,8 @@ export class TaskConversation {
           if (command.name === 'retry_task_input') {
             if (task.conversation_input_id !== input.id)
               throw new CommandError('unmet_precondition', 'Earlier input must be resolved first');
+            if (source && await activeRuntimeContinuation(tx, source.planned_attempt_id))
+              throw new CommandError('unmet_precondition', 'Stop the automatic Runtime continuation before Retry');
             if (attempt && (attempt.mutation_allowed || attempt.state === 'QUEUED'))
               throw new CommandError('unmet_precondition', 'Stop the live turn before Retry');
             if (source)
@@ -185,6 +188,7 @@ export class TaskConversation {
               [task.id],
             );
           } else {
+            if (source) await supersedeRuntimeContinuation(tx, source.planned_attempt_id, command.name);
             if (attempt) {
               operationId = await stopConversationAttempt(tx, attempt, command.request_id);
               await tx.query(
@@ -424,6 +428,7 @@ export class TaskConversation {
           ).rows[0]
         : undefined;
       const guards = await taskInputGuards(tx, taskId);
+      const continuation = source ? await runtimeContinuation(tx, source.planned_attempt_id) : undefined;
       const current = inputs.items.find((i) => i.id === task.conversation_input_id);
       return validate<TaskConversationStatus>('TaskConversationStatus', {
         schema_version: 1,
@@ -442,7 +447,7 @@ export class TaskConversation {
         ...(source
           ? {
               source: conversationSource(source),
-              waiting_reason: source.waiting_reason,
+              waiting_reason: continuation ? continuation.reason ?? 'runtime_fallback_pending' : source.waiting_reason,
               preparation_failure: source.preparation_failure,
             }
           : {}),

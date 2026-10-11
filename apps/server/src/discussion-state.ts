@@ -3,6 +3,7 @@ import type { Transaction } from '../../../packages/db/src/index.ts';
 import { CommandError } from '../../../packages/domain/src/commands.ts';
 import { canonicalJSON, digest, MAX_ITEM_BYTES, validate } from '../../../packages/protocol/src/index.ts';
 import type { CommandEnvelope, DiscussionMessage, DiscussionPage, Dispatch, EffectResult, TaskPreview } from '../../../packages/protocol/src/index.ts';
+import type { RuntimePredecessor, RuntimeFallbackInspection, RuntimeFallbackPreparation } from './runtime-continuation-state.ts';
 
 export interface DiscussionControl {
   todo_id: string; original_capture: string; project_id: string | null; project_context_version: string;
@@ -56,6 +57,43 @@ export async function ensureDiscussionIntent(tx: Transaction, control: Discussio
   if (!source) return;
   await tx.query('UPDATE todo_discussion_controls SET source_message_id=$2,desired_attempt_id=NULL,waiting_reason=NULL WHERE todo_id=$1', [control.todo_id, source.id]);
   await tx.query('INSERT INTO todo_discussion_outbox(id,todo_id,source_message_id,planned_attempt_id,expected_version) VALUES($1,$2,$3,$4,$5)', [randomUUID(), control.todo_id, source.id, randomUUID(), control.version]);
+}
+
+export async function inspectDiscussionRuntimeFallback(tx: Transaction, predecessor: RuntimePredecessor): Promise<RuntimeFallbackInspection> {
+  if (!predecessor.todo_id || !predecessor.launch.source_message_id) return { status: 'superseded', reason: 'discussion_source_missing' };
+  const current = (await tx.query(`SELECT 1 FROM todo_discussion_controls c JOIN todo_discussion_outbox s ON s.planned_attempt_id=$1
+    WHERE c.todo_id=$2 AND s.todo_id=c.todo_id AND c.desired_attempt_id=$1 AND c.source_message_id=s.source_message_id
+    AND c.source_message_id=$3 AND c.version=s.expected_version AND c.version=$4
+    AND NOT EXISTS(SELECT 1 FROM todo_discussion_resolutions r WHERE r.source_message_id=c.source_message_id)`,
+  [predecessor.id, predecessor.todo_id, predecessor.launch.source_message_id, predecessor.launch.control_version])).rowCount;
+  return current ? { status: 'ready' } : { status: 'superseded', reason: 'discussion_source_changed' };
+}
+
+export async function prepareDiscussionRuntimeFallback(tx: Transaction, predecessor: RuntimePredecessor, configurationVersion: number): Promise<RuntimeFallbackPreparation> {
+  const inspected = await inspectDiscussionRuntimeFallback(tx, predecessor);
+  if (inspected.status !== 'ready') return inspected;
+  const control = await lockDiscussion(tx, predecessor.todo_id!);
+  const previous = (await tx.query<{ id: string }>('SELECT id FROM todo_discussion_outbox WHERE planned_attempt_id=$1', [predecessor.id])).rows[0]!;
+  const id = randomUUID(), plannedAttemptId = randomUUID(), version = Number(control.version) + 1;
+  let context: DiscussionContext | null = null, failure: string | undefined;
+  try { context = await prepareDiscussionContext(tx, { ...control, version: String(version), desired_attempt_id: null }, configurationVersion); }
+  catch (error) { if (!(error instanceof CommandError)) throw error; failure = 'context_budget_exceeded'; }
+  await tx.query('UPDATE todo_discussion_outbox SET done=true WHERE id=$1', [previous.id]);
+  await tx.query('UPDATE todo_discussion_controls SET version=$2,desired_attempt_id=NULL,waiting_reason=$3 WHERE todo_id=$1', [control.todo_id, version, failure ?? null]);
+  await tx.query(`INSERT INTO todo_discussion_outbox(id,todo_id,source_message_id,planned_attempt_id,expected_version,context,previous_intent_id,done)
+    VALUES($1,$2,$3,$4,$5,$6,$7,$8)`, [id, control.todo_id, control.source_message_id, plannedAttemptId, version, context, previous.id, !!failure]);
+  return { status: 'prepared', source_id: id, planned_attempt_id: plannedAttemptId, ...(failure ? { preparation_failure: failure } : {}) };
+}
+
+export async function exhaustDiscussionRuntimeFallback(tx: Transaction, plannedAttemptId: string, reason: string): Promise<boolean> {
+  const source = (await tx.query<{ id: string; todo_id: string }>(`SELECT s.id,s.todo_id FROM todo_discussion_outbox s JOIN todo_discussion_controls c ON c.todo_id=s.todo_id
+    WHERE s.planned_attempt_id=$1 AND c.source_message_id=s.source_message_id AND c.version=s.expected_version
+    AND (c.desired_attempt_id IS NULL OR c.desired_attempt_id=$1)
+    AND NOT EXISTS(SELECT 1 FROM todo_discussion_resolutions r WHERE r.source_message_id=s.source_message_id)`, [plannedAttemptId])).rows[0];
+  if (!source) return false;
+  await tx.query('UPDATE todo_discussion_outbox SET done=true WHERE id=$1', [source.id]);
+  await tx.query('UPDATE todo_discussion_controls SET waiting_reason=$2 WHERE todo_id=$1', [source.todo_id, reason]);
+  return true;
 }
 
 function historyCursor(todoId: string, after: number, cutoff: number | null, recent: boolean): string {

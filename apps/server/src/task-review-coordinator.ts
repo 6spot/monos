@@ -5,7 +5,7 @@ import {lockConfiguration} from './configuration-guards.ts';
 import {RuntimeScheduling} from './runtime-scheduling.ts';
 import {DispatchQueue} from './dispatch-queue.ts';
 import {createReviewSource} from './task-review-sources.ts';
-import {reviewOperation,reviewSettlementReady} from './task-review-state.ts';
+import {reviewOperation,reviewSettlementReady,reviewInputOrderBlocked} from './task-review-state.ts';
 import type {ReviewOperationRow,ReviewSourceRow} from './task-review-state.ts';
 import type {ReviewHooks} from './task-review-commands.ts';
 import type {SpecificationTask} from './task-specification-state.ts';
@@ -25,7 +25,7 @@ export class TaskReviewCoordinator {
       await tx.query('UPDATE task_review_operations SET settlement_pending=false,reason=NULL WHERE id=$1',[op.id]);if(op.status!=='settling')return;
      }
      if(!['settling','queued'].includes(op.status)||task.state!=='REVIEW')return;
-     if(op.purpose==='route_feedback'&&(await tx.query("SELECT 1 FROM task_input_reconsiderations i JOIN task_review_operations child ON child.id=i.operation_id WHERE i.feedback_id=$1 AND (i.status='pending' OR child.settlement_pending OR EXISTS(SELECT 1 FROM task_review_operations successor WHERE successor.reconsideration_id=i.id AND successor.status IN('settling','queued','running','issue','failed'))) LIMIT 1",[op.feedback_id])).rowCount||op.purpose==='reconsider_input'&&(await tx.query("SELECT 1 FROM task_input_reconsiderations current JOIN task_input_reconsiderations earlier ON earlier.feedback_id=current.feedback_id AND earlier.sequence<current.sequence JOIN task_review_operations child ON child.reconsideration_id=earlier.id WHERE current.id=$1 AND (earlier.status='pending' OR child.settlement_pending OR child.status IN('settling','queued','running','issue','failed')) LIMIT 1",[op.reconsideration_id])).rowCount){await tx.query("UPDATE task_review_operations SET due_at=clock_timestamp()+interval '1 second' WHERE id=$1",[op.id]);return;}
+     if(await reviewInputOrderBlocked(tx,op)){await tx.query("UPDATE task_review_operations SET due_at=clock_timestamp()+interval '1 second' WHERE id=$1",[op.id]);return;}
      if(op.source_id)return (await tx.query<ReviewSourceRow>('SELECT * FROM task_review_sources WHERE id=$1 AND preparation_failure IS NULL',[op.source_id])).rows[0];
      return createReviewSource(tx,task,op,config);
     });

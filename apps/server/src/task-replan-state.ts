@@ -12,6 +12,7 @@ import { blockNodeSource } from './node-execution-state.ts';
 import type { NodeSource } from './node-execution-state.ts';
 import { assertCurrentNode, validatePlan } from './task-records.ts';
 import { prepareTaskProposal } from './owner-commands.ts';
+import type { RuntimePredecessor, RuntimeFallbackInspection, RuntimeFallbackPreparation } from './runtime-continuation-state.ts';
 
 export interface ReplanRequest { review_operation_id:string|null;review_source_id:string|null; id:string;task_id:string;reason:string;status:string;version:string;source_id:string|null;proposal_id:string|null;issue_id:string|null;origin_node_id:string|null;origin_activation:string|null;input_id:string|null;direction:string|null;requester_blocker_id:string|null }
 export interface ReplanSource { id:string;task_id:string;request_id:string;planned_attempt_id:string;specification_id:string;plan_id:string;expected_version:string;input_cutoff:string;event_cutoff:string;context:Record<string,unknown>|null;context_digest:string;prompt:string|null;done:boolean;preparation_failure:string|null;waiting_reason:string|null }
@@ -37,6 +38,35 @@ export function replanSource(s:ReplanSource):TaskReplanSource{return {request_id
 export async function assertReplanSource(tx:Transaction,taskId:string,source:TaskReplanSource,attemptId:string,prompt?:string):Promise<ReplanSource>{
  const s=(await tx.query<ReplanSource>(`SELECT s.* FROM replan_sources s JOIN replan_requests r ON r.source_id=s.id JOIN tasks t ON t.id=s.task_id WHERE s.id=$1 AND s.task_id=$2 AND s.planned_attempt_id=$3 AND r.status='pending' AND r.issue_id IS NULL AND r.proposal_id IS NULL AND t.state='REPLAN_REQUIRED' AND t.specification_id=s.specification_id AND t.plan_id=s.plan_id AND t.control_version=s.expected_version AND NOT EXISTS(SELECT 1 FROM task_publication_slots p WHERE p.task_id=t.id)`,[source.source_id,taskId,attemptId])).rows[0];
  if(!s||s.preparation_failure||canonicalJSON(replanSource(s))!==canonicalJSON(source)||(prompt!==undefined&&s.prompt!==prompt))throw new CommandError('stale_execution','Replan source or exact basis is no longer current');return s;
+}
+
+export async function inspectReplanRuntimeFallback(tx: Transaction, predecessor: RuntimePredecessor): Promise<RuntimeFallbackInspection> {
+  const binding = predecessor.launch.task_replan_source;
+  if (!binding || !predecessor.task_id) return { status: 'superseded', reason: 'replan_source_missing' };
+  try { await assertReplanSource(tx, predecessor.task_id, binding, predecessor.id, predecessor.launch.prompt); }
+  catch (error) { if (!(error instanceof CommandError)) throw error; return { status: 'superseded', reason: 'replan_source_changed' }; }
+  return { status: 'ready' };
+}
+
+export async function prepareReplanRuntimeFallback(tx: Transaction, predecessor: RuntimePredecessor, configurationVersion: number): Promise<RuntimeFallbackPreparation> {
+  const inspected = await inspectReplanRuntimeFallback(tx, predecessor);
+  if (inspected.status !== 'ready') return inspected;
+  if (!await replanQuiescent(tx, predecessor.task_id!)) return { status: 'waiting', reason: 'waiting_for_original_settlement' };
+  const task = (await tx.query<SpecificationTask>('SELECT * FROM tasks WHERE id=$1', [predecessor.task_id])).rows[0]!;
+  const request = (await tx.query<ReplanRequest>('SELECT * FROM replan_requests WHERE id=$1 FOR UPDATE', [predecessor.launch.task_replan_source!.request_id])).rows[0]!;
+  await tx.query('UPDATE replan_sources SET done=true WHERE id=$1', [request.source_id]);
+  await createReplanSource(tx, task, request, configurationVersion);
+  const source = (await tx.query<ReplanSource>('SELECT s.* FROM replan_sources s JOIN replan_requests r ON r.source_id=s.id WHERE r.id=$1', [request.id])).rows[0]!;
+  return { status: 'prepared', source_id: source.id, planned_attempt_id: source.planned_attempt_id,
+    ...(source.preparation_failure ? { preparation_failure: source.preparation_failure } : {}) };
+}
+
+export async function exhaustReplanRuntimeFallback(tx: Transaction, plannedAttemptId: string, reason: string): Promise<boolean> {
+  const changed = await tx.query(`UPDATE replan_sources s SET done=true,waiting_reason=$2 FROM replan_requests r,tasks t
+    WHERE s.planned_attempt_id=$1 AND r.source_id=s.id AND r.status='pending' AND r.issue_id IS NULL AND r.proposal_id IS NULL
+    AND t.id=s.task_id AND t.state='REPLAN_REQUIRED' AND t.specification_id=s.specification_id AND t.plan_id=s.plan_id
+    AND t.control_version=s.expected_version`, [plannedAttemptId, reason]);
+  return !!changed.rowCount;
 }
 export async function replanImpact(tx:Transaction,task:SpecificationTask,targetNodeId?:string):Promise<ReplanImpact>{
  const n=(await tx.query(`SELECT n.*,c.operation_id,m.content_digest FROM nodes n JOIN plan_nodes p ON p.node_id=n.id LEFT JOIN node_completions c ON c.node_id=n.id AND c.activation=n.activation LEFT JOIN completion_manifests m ON m.operation_id=c.operation_id WHERE p.plan_id=$1`,[task.plan_id])).rows;

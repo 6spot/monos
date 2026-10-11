@@ -1,6 +1,7 @@
 import {resumeReviewAfterDismissal} from './task-review-state.ts';
 import { replanRead } from './task-replan-reads.ts';
 import { randomUUID } from 'node:crypto';
+import { supersedeRuntimeContinuation } from './runtime-continuation-state.ts';
 import { transaction } from '../../../packages/db/src/index.ts';
 import type { Database,Transaction } from '../../../packages/db/src/index.ts';
 import { CommandError } from '../../../packages/domain/src/commands.ts';
@@ -23,6 +24,8 @@ export interface ReplanHooks {beforeCommit?:()=>void;afterCommit?:()=>void;befor
 export async function revokeReplanGeneration(tx:Transaction,r:ReplanRequest,requestId:string):Promise<string|undefined>{
  if(r.proposal_id)await tx.query('UPDATE task_command_proposals SET revoked=true WHERE id=$1 AND NOT revoked',[r.proposal_id]);
  if(!r.source_id)return;
+ const source=(await tx.query<{planned_attempt_id:string}>('SELECT planned_attempt_id FROM replan_sources WHERE id=$1',[r.source_id])).rows[0];
+ if(source)await supersedeRuntimeContinuation(tx,source.planned_attempt_id,'replan_revoked');
  await tx.query('UPDATE replan_sources SET done=true WHERE id=$1',[r.source_id]);
  const a=(await tx.query<PlanningAttempt>('SELECT a.* FROM attempts a JOIN replan_sources s ON s.planned_attempt_id=a.id WHERE s.id=$1 FOR UPDATE OF a',[r.source_id])).rows[0];if(!a)return;
  await tx.query("UPDATE attempts SET mutation_allowed=false,state=CASE WHEN state='SUCCEEDED' THEN state ELSE 'CANCELLED' END,end_reason=CASE WHEN state='SUCCEEDED' THEN end_reason ELSE 'replan_revoked' END WHERE id=$1",[a.id]);return stopPlanningAttempt(tx,a,requestId);

@@ -1,3 +1,5 @@
+import { recordRuntimeContinuation, failRuntimeContinuationCapture } from './runtime-continuation.ts';
+import type { RuntimeSelectionContext } from './runtime-continuation-state.ts';
 import {handleReviewCommand,assertReviewSource} from './task-review-sources.ts';
 import type { SpecificationTask } from './task-specification-state.ts';
 import { liveReplanAuthority, handleReplanCommand, requestReplan } from './task-replan-state.ts';
@@ -30,6 +32,7 @@ import type { GitHubCredentials } from './github.ts';
 interface RunnerRow { id: string; incarnation: string; connected: boolean; ready: boolean; available: boolean; capacity: number; connection_instance: string | null }
 interface TaskRow extends SpecificationTask { id: string; resource_id: string | null; control_version: string; project_id: string | null }
 export interface AttemptRow {
+  selection_context: RuntimeSelectionContext | null; runtime_chain_root_id: string | null; runtime_target_index: number | null; runtime_predecessor_id: string | null;
   planning_intent_id: string | null; specification_id: string | null; plan_id: string | null; recovery_consumed_by: string | null; end_reason: string | null;
   id: string; runner_id: string; task_id: string | null; todo_id: string | null; discussion_context: DiscussionContext | null; node_id: string | null; dispatch_id: string;
   kind: 'node' | 'planner'; fencing_generation: string; node_activation: string;
@@ -463,6 +466,7 @@ export class BoundaryService {
         await tx.query("UPDATE outbox SET done=true WHERE attempt_id=$1 AND kind='start'", [attempt.id]);
         // A late start after revocation retains the admitted stop operation and reservation.
       }
+      if (event.kind === 'capture_failed') await failRuntimeContinuationCapture(tx, attempt);
       if (event.kind === 'capture_failed' && !attempt.process_released) {
         const completion = (await tx.query("SELECT 1 FROM operations WHERE attempt_id=$1 AND kind='complete_node'", [attempt.id])).rowCount;
         if (!completion && attempt.mutation_allowed) {
@@ -488,7 +492,7 @@ export class BoundaryService {
       if (event.kind === 'exited' || event.kind === 'process_absent') {
         await tx.query('UPDATE attempts SET exit_observed=true WHERE id=$1', [attempt.id]);
         const pendingCompletion = (await tx.query("SELECT 1 FROM operations WHERE attempt_id=$1 AND kind='complete_node' AND state NOT IN ('succeeded','cancelled')", [attempt.id])).rowCount;
-        if (!pendingCompletion) await missingFormalOutcome(tx, attempt, event.kind, event.exit_code);
+        if (!pendingCompletion && !await recordRuntimeContinuation(tx, attempt, event)) await missingFormalOutcome(tx, attempt, event.kind, event.exit_code);
         if (event.kind === 'process_absent' && pendingCompletion) {
           const recovering = (await tx.query("SELECT id FROM operations WHERE attempt_id=$1 AND kind='complete_node' AND state='recovery' AND failure_kind IN ('capture_hard_limit','invalid_finalization')", [attempt.id])).rows[0];
           if (recovering) {

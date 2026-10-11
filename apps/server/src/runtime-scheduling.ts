@@ -3,7 +3,9 @@ import { CommandError } from '../../../packages/domain/src/commands.ts';
 import { canonicalJSON, digest, validate } from '../../../packages/protocol/src/index.ts';
 import type { ExecutionPolicy, ExecutionTarget, PolicyConfiguration, RuntimeInstallation } from '../../../packages/protocol/src/index.ts';
 import { lockConfiguration } from './configuration-guards.ts';
+import { lockDiscussion } from './discussion-state.ts';
 import type { DispatchQueue, QueueInput } from './dispatch-queue.ts';
+import type { RuntimeContinuationRow, RuntimePredecessor } from './runtime-continuation-state.ts';
 
 const freeModel = 'opencode/longcat-2.5-preview-free';
 const deepSeekModel = 'volcengine/deepseek-v4-flash-ga-260731';
@@ -12,8 +14,8 @@ const codexThinking = new Set(['none', 'minimal', 'low', 'medium', 'high', 'xhig
 type Source = 'explicit' | 'planner' | 'role' | 'global';
 export type SelectionReason = 'policy_missing' | 'role_missing' | 'unsupported_runtime' | 'unsupported_model' |
   'unsupported_thinking' | 'runner_missing' | 'runner_offline' | 'installation_stale' |
-  'installation_unavailable' | 'model_control_unavailable' | 'thinking_control_unavailable' | 'ambiguous_auto_placement';
-export type SchedulingRequest = Omit<QueueInput, 'runner_id' | 'runtime_id' | 'model' | 'thinking_level' | 'selection_context'> & {
+  'installation_unavailable' | 'model_control_unavailable' | 'thinking_control_unavailable' | 'ambiguous_auto_placement' | 'unsupported_runner_transfer' | 'runtime_targets_exhausted';
+export type SchedulingRequest = Omit<QueueInput, 'runner_id' | 'runtime_id' | 'model' | 'thinking_level' | 'selection_context' | 'runtime_chain_root_id' | 'runtime_target_index' | 'runtime_predecessor_id'> & {
   role_id?: string; explicit_target?: ExecutionTarget;
 };
 export type SchedulingResult =
@@ -50,7 +52,7 @@ function targetIssue(target: ExecutionTarget): SelectionReason | null {
 
 function allowsFallback(reason: SelectionReason): boolean {
   return reason === 'unsupported_runtime' || reason === 'unsupported_model' || reason === 'unsupported_thinking' ||
-    reason === 'installation_unavailable' || reason === 'model_control_unavailable' || reason === 'thinking_control_unavailable';
+    reason === 'installation_unavailable' || reason === 'model_control_unavailable' || reason === 'thinking_control_unavailable' || reason === 'unsupported_runner_transfer' || reason === 'runtime_targets_exhausted';
 }
 
 /**
@@ -80,19 +82,35 @@ export class RuntimeScheduling {
       return { status: 'queued', dispatch_id: prior.dispatch_id, runner_id: prior.runner_id, source: prior.selection_context.source, target: prior.selection_context.target };
     }
 
-    const policies = (await tx.query<{ policies: PolicyConfiguration }>('SELECT policies FROM execution_policies')).rows[0]!.policies;
-    let rolePolicy: ExecutionPolicy | null = null;
-    if (request.kind === 'node' && request.role_id) {
-      const role = (await tx.query<{ execution_policy: ExecutionPolicy | null }>('SELECT execution_policy FROM roles WHERE id=$1', [request.role_id])).rows[0];
-      if (!role) return { status: 'unavailable', reason: 'role_missing' };
-      rolePolicy = role.execution_policy;
+    const continuation = (await tx.query<RuntimeContinuationRow>(
+      'SELECT * FROM runtime_continuations WHERE successor_planned_attempt_id=$1', [request.attempt_id])).rows[0];
+    if (continuation && continuation.state !== 'prepared') throw new CommandError('stale_execution', 'Runtime continuation no longer owns this source');
+    const predecessor = continuation ? (await tx.query<RuntimePredecessor>('SELECT * FROM attempts WHERE id=$1', [continuation.predecessor_attempt_id])).rows[0]! : undefined;
+    let source: Source; let targets: ExecutionTarget[]; let firstIndex = 0;
+    if (predecessor) {
+      if (!predecessor.selection_context?.policy_targets || predecessor.runtime_target_index == null || !predecessor.runtime_chain_root_id)
+        throw new CommandError('stale_execution', 'Runtime continuation has no frozen policy');
+      source = predecessor.selection_context.source; targets = predecessor.selection_context.policy_targets;
+      firstIndex = predecessor.runtime_target_index + 1;
+    } else {
+      const policies = (await tx.query<{ policies: PolicyConfiguration }>('SELECT policies FROM execution_policies')).rows[0]!.policies;
+      let rolePolicy: ExecutionPolicy | null = null;
+      if (request.kind === 'node' && request.role_id) {
+        const role = (await tx.query<{ execution_policy: ExecutionPolicy | null }>('SELECT execution_policy FROM roles WHERE id=$1', [request.role_id])).rows[0];
+        if (!role) return { status: 'unavailable', reason: 'role_missing' };
+        rolePolicy = role.execution_policy;
+      }
+      source = request.explicit_target ? 'explicit' :
+        request.kind === 'planner' && policies.planner ? 'planner' :
+          request.kind === 'node' && rolePolicy ? 'role' : 'global';
+      const policy = source === 'planner' ? policies.planner : source === 'role' ? rolePolicy : policies.global;
+      targets = request.explicit_target ? [request.explicit_target] : policy ? [policy.default_target, ...policy.fallback_targets] : [];
     }
-    const source: Source = request.explicit_target ? 'explicit' :
-      request.kind === 'planner' && policies.planner ? 'planner' :
-        request.kind === 'node' && rolePolicy ? 'role' : 'global';
-    const policy = source === 'planner' ? policies.planner : source === 'role' ? rolePolicy : policies.global;
-    const targets = request.explicit_target ? [request.explicit_target] : policy ? [policy.default_target, ...policy.fallback_targets] : [];
-    const candidates = targets.map((target) => ({ target, reason: targetIssue(target) }));
+    const candidates = targets.slice(firstIndex).map((target, offset) => ({
+      target, index: firstIndex + offset,
+      placement: predecessor ? { ...target, runner_id: predecessor.runner_id } : target,
+      reason: predecessor && target.runner_id && target.runner_id !== predecessor.runner_id ? 'unsupported_runner_transfer' as const : targetIssue(target),
+    }));
     const compatible = candidates.filter((candidate) => candidate.reason === null);
 
     // Lock the entire candidate scope before any Runner row lock. Auto must
@@ -101,28 +119,41 @@ export class RuntimeScheduling {
     // SHARE ROW EXCLUSIVE would permit their row lock, then block their UPDATE
     // while Auto waits for that row, forming a deadlock. Pinned-only policies
     // acquire all candidate rows in one order, even if policy order differs.
-    if (compatible.some(({ target }) => !target.runner_id)) await tx.query('LOCK TABLE runners IN EXCLUSIVE MODE');
+    if (predecessor) await tx.query('SELECT id FROM runners WHERE id=$1 FOR UPDATE', [predecessor.runner_id]);
+    else if (compatible.some(({ placement }) => !placement.runner_id)) await tx.query('LOCK TABLE runners IN EXCLUSIVE MODE');
     else if (compatible.length) {
-      const runnerIds = [...new Set(compatible.map(({ target }) => target.runner_id!))].sort();
+      const runnerIds = [...new Set(compatible.map(({ placement }) => placement.runner_id!))].sort();
       await tx.query('SELECT id FROM runners WHERE id=ANY($1::text[]) ORDER BY id FOR UPDATE', [runnerIds]);
     }
 
-    let unavailable: Extract<SchedulingResult, { status: 'unavailable' }> = { status: 'unavailable', reason: 'policy_missing', source };
-    let selected: { target: ExecutionTarget; runner: RunnerFact } | undefined;
+    let unavailable: Extract<SchedulingResult, { status: 'unavailable' }> = { status: 'unavailable', reason: predecessor ? 'runtime_targets_exhausted' : 'policy_missing', source };
+    let selected: { target: ExecutionTarget; runner: RunnerFact; index: number } | undefined;
     for (const candidate of candidates) {
-      const result = candidate.reason ? { reason: candidate.reason } : await this.selectRunner(tx, candidate.target, !!request.node_execution_source);
+      const result = candidate.reason ? { reason: candidate.reason } : await this.selectRunner(tx, candidate.placement, !!request.node_execution_source);
       if ('reason' in result) {
         unavailable = { status: 'unavailable', reason: result.reason, source, target: candidate.target };
         if (!allowsFallback(result.reason)) break;
       } else {
-        selected = { target: candidate.target, runner: result.runner };
+        selected = { target: candidate.target, runner: result.runner, index: candidate.index };
         break;
       }
     }
-    if (!selected) return unavailable;
+    if (!selected) {
+      if (continuation) {
+        // Owner controls can hold Task/Todo without locking a physically
+        // released Runner. Preserve Runner -> scope -> continuation order even
+        // when no queue admission will take the scope lock for us.
+        if (predecessor!.todo_id) await lockDiscussion(tx, predecessor!.todo_id);
+        else await tx.query('SELECT id FROM tasks WHERE id=$1 FOR UPDATE', [predecessor!.task_id]);
+        const changed = await tx.query(`UPDATE runtime_continuations SET state=$2,reason=$3,last_checked_at=clock_timestamp()
+          WHERE predecessor_attempt_id=$1 AND state='prepared'`, [continuation.predecessor_attempt_id, allowsFallback(unavailable.reason) ? 'exhausted' : 'prepared', unavailable.reason]);
+        if (!changed.rowCount) throw new CommandError('stale_execution', 'Runtime continuation was superseded during selection');
+      }
+      return unavailable;
+    }
     const { target, runner } = selected;
     const selection_context: NonNullable<QueueInput['selection_context']> = {
-      source, configuration_version: configurationVersion, target,
+      source, configuration_version: predecessor?.selection_context?.configuration_version ?? configurationVersion, target, policy_targets: targets,
       ...(runner.observation!.version ? { observed_version: runner.observation!.version } : {}), request_digest: requestDigest,
     };
     // Capacity and Task locality remain queue concerns. Enqueue only the final
@@ -133,10 +164,16 @@ export class RuntimeScheduling {
       todo_id: request.todo_id, discussion_context: request.discussion_context, task_review_source:request.task_review_source, task_replan_source: request.task_replan_source, task_planning_source: request.task_planning_source, task_conversation_source: request.task_conversation_source, node_execution_source: request.node_execution_source,
       kind: request.kind, expected: request.expected, resource_id: request.resource_id,
       ...(request.legacy_probe ? { legacy_probe: true as const } : {}),
+      runtime_chain_root_id: predecessor?.runtime_chain_root_id ?? request.attempt_id, runtime_target_index: selected.index,
+      ...(predecessor ? { runtime_predecessor_id: predecessor.id } : {}),
       prompt: request.prompt, source_watermark: request.source_watermark,
       runner_id: runner.id, runtime_id: target.runtime_id as QueueInput['runtime_id'], model: target.model_id!,
       ...(target.thinking_level !== undefined ? { thinking_level: target.thinking_level as QueueInput['thinking_level'] } : {}), selection_context,
     });
+    if (continuation) {
+      const changed = await tx.query("UPDATE runtime_continuations SET state='queued',reason=NULL,resolved_at=clock_timestamp() WHERE predecessor_attempt_id=$1 AND state='prepared'", [continuation.predecessor_attempt_id]);
+      if (!changed.rowCount) throw new CommandError('stale_execution', 'Runtime continuation was superseded before queue admission');
+    }
     return { status: 'queued', dispatch_id, runner_id: runner.id, source, target };
   }
 

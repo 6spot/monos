@@ -6718,8 +6718,38 @@
             "type": "string",
             "maxLength": 65536,
             "pattern": "^[A-Za-z0-9+/]*={0,2}$"
+          },
+          "runtime_failure": {
+            "type": "string",
+            "enum": [
+              "native_terminal_error"
+            ]
           }
-        }
+        },
+        "allOf": [
+          {
+            "if": {
+              "required": [
+                "runtime_failure"
+              ],
+              "type": "object",
+              "properties": {
+                "runtime_failure": {}
+              }
+            },
+            "then": {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "exited",
+                    "process_absent"
+                  ]
+                }
+              },
+              "type": "object"
+            }
+          }
+        ]
       },
       "OperationResult": {
         "type": "object",

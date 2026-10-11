@@ -18,6 +18,7 @@ import { assertPlanningSource } from './task-planning-state.ts';
 import { assertNodeSource } from './node-execution-state.ts';
 import { assertConversationSource } from './task-conversation-state.ts';
 import { lockConfiguration } from './configuration-guards.ts';
+import type { RuntimeSelectionContext } from './runtime-continuation-state.ts';
 
 export interface QueueInput {
   attempt_id: string; runner_id: string; task_id?: string; todo_id?: string; node_id?: string;
@@ -30,11 +31,8 @@ export interface QueueInput {
   node_execution_source?: NodeExecutionSource;
   legacy_probe?: true; // Internal fixture admission only; never copied to wire data.
   runtime_id: Dispatch['runtime_id']; model: Dispatch['model']; thinking_level?: Dispatch['thinking_level']; prompt: string; source_watermark: number;
-  selection_context?: {
-    source: 'explicit' | 'planner' | 'role' | 'global'; configuration_version: number;
-    target: { runtime_id: string; runner_id?: string; model_id?: string; thinking_level?: string };
-    observed_version?: string; request_digest: string;
-  };
+  selection_context?: RuntimeSelectionContext;
+  runtime_chain_root_id?: string; runtime_target_index?: number; runtime_predecessor_id?: string;
 }
 export type TaskQueueInput = QueueInput & { task_id: string; expected: ControlBasis };
 interface Queued { planning_intent_id: string | null; id: string; task_id: string | null; todo_id: string | null; node_id: string | null; owner_key: string; state: string; launch: Dispatch; specification_id: string; plan_id: string | null; selection_context: QueueInput['selection_context'] | null }
@@ -112,9 +110,9 @@ export class DispatchQueue {
     };
     validate('Dispatch', launch);
     await tx.query(`INSERT INTO attempts(id,runner_id,task_id,node_id,owner_key,dispatch_id,kind,fencing_generation,node_activation,
-      launch,mutation_allowed,process_released,state,queue_digest,specification_id,plan_id,selection_context,planning_intent_id,node_execution_source_id,task_conversation_source_id,replan_source_id,task_review_source_id)
-      VALUES($1,$2,$3,$4,$5,$6,$7,1,$8,$9,false,true,'QUEUED',$10,$11,$12,$13,$14,$15,$16,$17,$18)`,
-    [input.attempt_id, input.runner_id, input.task_id, input.node_id ?? null, owner, launch.dispatch_id, input.kind, activation, launch, hash, task.specification_id, task.plan_id, input.selection_context ?? null, input.task_planning_source?.intent_id ?? null,input.node_execution_source?.source_id ?? null,input.task_conversation_source?.source_id ?? null,input.task_replan_source?.source_id??null,input.task_review_source?.source_id??null]);
+      launch,mutation_allowed,process_released,state,queue_digest,specification_id,plan_id,selection_context,planning_intent_id,node_execution_source_id,task_conversation_source_id,replan_source_id,task_review_source_id,runtime_chain_root_id,runtime_target_index,runtime_predecessor_id)
+      VALUES($1,$2,$3,$4,$5,$6,$7,1,$8,$9,false,true,'QUEUED',$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)`,
+    [input.attempt_id, input.runner_id, input.task_id, input.node_id ?? null, owner, launch.dispatch_id, input.kind, activation, launch, hash, task.specification_id, task.plan_id, input.selection_context ?? null, input.task_planning_source?.intent_id ?? null,input.node_execution_source?.source_id ?? null,input.task_conversation_source?.source_id ?? null,input.task_replan_source?.source_id??null,input.task_review_source?.source_id??null,input.runtime_chain_root_id??null,input.runtime_target_index??null,input.runtime_predecessor_id??null]);
     if(input.node_execution_source) await tx.query("UPDATE nodes SET state='RUNNING' WHERE id=$1",[input.node_id]);
     if (input.legacy_probe) await tx.query('INSERT INTO legacy_probe_attempts(attempt_id) VALUES($1)', [input.attempt_id]);
     return launch.dispatch_id;
@@ -140,8 +138,8 @@ export class DispatchQueue {
       log_mode: 'ordered_v1', mutation_allowed: false, process_released: true };
     validate('Dispatch', launch);
     await tx.query(`INSERT INTO attempts(id,runner_id,todo_id,owner_key,dispatch_id,kind,fencing_generation,node_activation,launch,
-      mutation_allowed,process_released,state,queue_digest,selection_context,discussion_context)
-      VALUES($1,$2,$3,$4,$5,'planner',1,0,$6,false,true,'QUEUED',$7,$8,$9)`, [input.attempt_id, input.runner_id, input.todo_id, owner, launch.dispatch_id, launch, hash, input.selection_context ?? null, context]);
+      mutation_allowed,process_released,state,queue_digest,selection_context,discussion_context,runtime_chain_root_id,runtime_target_index,runtime_predecessor_id)
+      VALUES($1,$2,$3,$4,$5,'planner',1,0,$6,false,true,'QUEUED',$7,$8,$9,$10,$11,$12)`, [input.attempt_id, input.runner_id, input.todo_id, owner, launch.dispatch_id, launch, hash, input.selection_context ?? null, context,input.runtime_chain_root_id??null,input.runtime_target_index??null,input.runtime_predecessor_id??null]);
     await tx.query('UPDATE todo_discussion_controls SET desired_attempt_id=$2,waiting_reason=NULL WHERE todo_id=$1', [input.todo_id, input.attempt_id]);
     return launch.dispatch_id;
   }

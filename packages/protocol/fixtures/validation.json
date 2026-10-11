@@ -9510,5 +9510,101 @@
       "process_released": false,
       "thinking_level": null
     }
+  },
+  {
+    "name": "typed native terminal exit",
+    "schema": "RuntimeEvent",
+    "valid": true,
+    "value": {
+      "attempt_id": "attempt-a",
+      "dispatch_id": "dispatch-a",
+      "stream_id": "runtime",
+      "sequence": 1,
+      "order_sequence": 1,
+      "kind": "exited",
+      "text": "native terminal fact",
+      "exit_code": 75,
+      "runtime_failure": "native_terminal_error"
+    }
+  },
+  {
+    "name": "typed native failure with physical absence",
+    "schema": "RuntimeEvent",
+    "valid": true,
+    "value": {
+      "attempt_id": "attempt-a",
+      "dispatch_id": "dispatch-a",
+      "stream_id": "runtime",
+      "sequence": 1,
+      "order_sequence": 1,
+      "kind": "process_absent",
+      "text": "native terminal fact",
+      "exit_code": 75,
+      "runtime_failure": "native_terminal_error"
+    }
+  },
+  {
+    "name": "native failure cannot be output",
+    "schema": "RuntimeEvent",
+    "valid": false,
+    "value": {
+      "attempt_id": "attempt-a",
+      "dispatch_id": "dispatch-a",
+      "stream_id": "runtime",
+      "sequence": 1,
+      "order_sequence": 1,
+      "kind": "output",
+      "text": "native terminal fact",
+      "exit_code": 75,
+      "runtime_failure": "native_terminal_error"
+    }
+  },
+  {
+    "name": "native failure cannot be process start",
+    "schema": "RuntimeEvent",
+    "valid": false,
+    "value": {
+      "attempt_id": "attempt-a",
+      "dispatch_id": "dispatch-a",
+      "stream_id": "runtime",
+      "sequence": 1,
+      "order_sequence": 1,
+      "kind": "started",
+      "text": "native terminal fact",
+      "exit_code": 75,
+      "runtime_failure": "native_terminal_error"
+    }
+  },
+  {
+    "name": "native failure kind is closed",
+    "schema": "RuntimeEvent",
+    "valid": false,
+    "value": {
+      "attempt_id": "attempt-a",
+      "dispatch_id": "dispatch-a",
+      "stream_id": "runtime",
+      "sequence": 1,
+      "order_sequence": 1,
+      "kind": "exited",
+      "text": "native terminal fact",
+      "exit_code": 75,
+      "runtime_failure": "quota_from_text"
+    }
+  },
+  {
+    "name": "native failure cannot be null",
+    "schema": "RuntimeEvent",
+    "valid": false,
+    "value": {
+      "attempt_id": "attempt-a",
+      "dispatch_id": "dispatch-a",
+      "stream_id": "runtime",
+      "sequence": 1,
+      "order_sequence": 1,
+      "kind": "exited",
+      "text": "native terminal fact",
+      "exit_code": 75,
+      "runtime_failure": null
+    }
   }
 ]

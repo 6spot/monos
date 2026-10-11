@@ -33,6 +33,7 @@ and [technology](../../../docs/11-technology-and-deployment.md).
 - For selected Attempt queue/promotion, read [dispatch queue](dispatch-queue.md).
 - For canonical repository admission, serial leases and ephemeral fetch access, read [workspaces](workspaces.md).
 - For production Runtime target choice and shared capacity, read [Runtime scheduling](runtime-scheduling.md).
+- For verified native failure, settled same-Runner fallback and source recovery, read [Runtime continuation](runtime-continuation.md).
 - For revision/activation publication, read [Task records](task-records.md).
 - For Owner sessions/proposal consumption, read [Owner commands](owner-commands.md).
 - For commands/persistence, read [database](database-guidelines.md), [errors](error-handling.md) and [protocol](../protocol/commands.md).

@@ -470,6 +470,7 @@ func statusOfUnit(ctx context.Context, id string, m Manifest, boot string, io un
 	}
 	s.MainExited, s.ExitCode = mainExit(values)
 	s.CaptureFailed = captureFailedExit(values)
+	s.RuntimeFailed = runtimeFailedExit(values)
 	// Failed status must not promote an unacknowledged historical launch into
 	// authority for a later query. Persist only after every observation passes.
 	if !m.Acknowledged {
@@ -594,6 +595,23 @@ func captureFailedExit(values map[string]string) bool {
 	exited, code := mainExit(values)
 	return exited && code != nil && *code == CaptureFailureExitCode && values["Result"] == "exit-code"
 }
+
+func runtimeFailedExit(values map[string]string) bool {
+	exited, code := mainExit(values)
+	return exited && code != nil && *code == RuntimeFailureExitCode && values["Result"] == "exit-code"
+}
+
+// Workspace settlement has its own result/ownership status. Preserve the
+// Agent worker's independently validated wait result across that later work.
+func withRuntimeExit(result, stopped Status) Status {
+	if stopped.Known && stopped.MainExited {
+		result.MainExited = true
+		result.ExitCode = stopped.ExitCode
+		result.CaptureFailed = stopped.CaptureFailed
+		result.RuntimeFailed = stopped.RuntimeFailed
+	}
+	return result
+}
 func stop(ctx context.Context, id string) (Status, error) {
 	return stopWith(ctx, id, status, command)
 }
@@ -715,7 +733,8 @@ func Handle(ctx context.Context, r Request) (Status, error) {
 			if stopErr != nil {
 				return stopped, errors.Join(stopErr, settleLeaseWorkers(ctx, *r.Operation))
 			}
-			return runWorkspaceEffect(ctx, *r.Operation, nil)
+			result, err := runWorkspaceEffect(ctx, *r.Operation, nil)
+			return withRuntimeExit(result, stopped), err
 		}
 		if r.Operation.Kind == protocol.Stop {
 			// Physical Agent stop must remain reachable when workspace storage or
@@ -729,7 +748,8 @@ func Handle(ctx context.Context, r Request) (Status, error) {
 				workerErr := settleLeaseWorkers(ctx, *r.Operation)
 				return stopped, errors.Join(stopErr, workerErr)
 			}
-			return runWorkspaceEffect(ctx, *r.Operation, r.RepositoryAccess)
+			result, err := runWorkspaceEffect(ctx, *r.Operation, r.RepositoryAccess)
+			return withRuntimeExit(result, stopped), err
 		}
 		// Canonical effects never hold the helper-wide lock across Git/network
 		// waits. Their durable record and specific writer locks own recovery.

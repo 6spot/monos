@@ -9,7 +9,10 @@ import type {
 } from '../../../packages/protocol/src/index.ts';
 
 const operationQuery = `SELECT i.id,'input' kind,i.status,i.version,m.content,i.message_id,NULL::text node_id,i.accepted_delivery_operation_id,m.sequence input_sequence,EXISTS(SELECT 1 FROM task_input_reconsiderations restored WHERE restored.input_id=i.id) reconsidered,
- EXISTS(SELECT 1 FROM task_conversation_outbox s JOIN attempts a ON a.id=s.planned_attempt_id JOIN tasks t ON t.conversation_source_id=s.id WHERE s.input_id=i.id AND (a.mutation_allowed OR a.state='QUEUED')) live
+ EXISTS(SELECT 1 FROM task_conversation_outbox s JOIN tasks t ON t.conversation_source_id=s.id LEFT JOIN attempts a ON a.id=s.planned_attempt_id
+   WHERE s.input_id=i.id AND (a.mutation_allowed OR a.state='QUEUED' OR EXISTS(SELECT 1 FROM runtime_continuations c
+     WHERE (c.predecessor_attempt_id=s.planned_attempt_id OR c.successor_planned_attempt_id=s.planned_attempt_id)
+     AND (c.state IN('settling','prepared') OR c.state='exhausted' AND c.resolved_at IS NULL)))) live
  FROM task_inputs i JOIN task_messages m ON m.id=i.message_id WHERE i.task_id=$1
  UNION ALL SELECT id,'guidance',status,version,text,NULL,node_id,NULL,0,false,false FROM task_guidance WHERE task_id=$1
  UNION ALL SELECT id,'issue',status,version,reason,NULL,NULL,NULL,0,false,false FROM task_input_issues WHERE task_id=$1`;

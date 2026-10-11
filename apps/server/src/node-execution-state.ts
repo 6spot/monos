@@ -1,5 +1,9 @@
-import { liveReplanAuthority, assertNoReplan } from './task-replan-state.ts';
-import { assertSpecificationUnfrozen, assertTaskUnaccepted } from './task-specification-state.ts';
+import { liveReplanAuthority, assertNoReplan, pendingReplan } from './task-replan-state.ts';
+import { assertSpecificationUnfrozen, assertTaskUnaccepted, specificationFrozen } from './task-specification-state.ts';
+import { remoteItemQuiescent } from './remote-preparation-state.ts';
+import { reviewDispatchBlocked } from './task-review-state.ts';
+import type { RuntimeFallbackInspection, RuntimeFallbackPreparation, RuntimePredecessor } from './runtime-continuation-state.ts';
+import { runtimePredecessorSettled } from './runtime-continuation-state.ts';
 import { guidanceContext, assignGuidance } from './task-guidance.ts';
 import { randomUUID } from 'node:crypto';
 import type { Transaction } from '../../../packages/db/src/index.ts';
@@ -295,4 +299,68 @@ export async function blockNodeSource(
     attemptId
   );
   return id;
+}
+
+/** The caller holds Runner and Task control locks before inspecting this source. */
+export async function inspectNodeRuntimeFallback(tx: Transaction, predecessor: RuntimePredecessor): Promise<RuntimeFallbackInspection> {
+  const binding = predecessor.launch.node_execution_source;
+  if (!binding || !predecessor.task_id || !predecessor.node_id || predecessor.todo_id || predecessor.launch.kind !== 'node')
+    return { status: 'superseded', reason: 'node_source_missing' };
+  const source = (await tx.query<NodeSource>('SELECT * FROM node_execution_outbox WHERE planned_attempt_id=$1', [predecessor.id])).rows[0];
+  const task = (await tx.query<NodeTask & { accepted_delivery_operation_id: string | null }>('SELECT * FROM tasks WHERE id=$1', [predecessor.task_id])).rows[0];
+  const node = (await tx.query<ExecutionNode>('SELECT * FROM nodes WHERE id=$1 AND task_id=$2', [predecessor.node_id, predecessor.task_id])).rows[0];
+  if (!source || !task || !node || source.preparation_failure || source.task_id !== task.id || source.node_id !== node.id ||
+      source.planned_attempt_id !== predecessor.id || node.execution_source_id !== source.id ||
+      Number(node.activation) !== Number(source.node_activation) || Number(node.activation) !== Number(predecessor.node_activation) ||
+      source.specification_id !== predecessor.specification_id || source.plan_id !== predecessor.plan_id ||
+      task.specification_id !== source.specification_id || task.plan_id !== source.plan_id || Number(task.control_version) !== Number(source.expected_version) ||
+      canonicalJSON(nodeSource(source)) !== canonicalJSON(binding) || source.prompt !== predecessor.launch.prompt)
+    return { status: 'superseded', reason: 'node_source_obsolete' };
+  if (task.accepted_delivery_operation_id || task.state !== 'RUNNING' || node.state !== 'RUNNING' || node.blocker_id || node.guidance_paused)
+    return { status: 'superseded', reason: 'node_execution_resolved' };
+  if ((await tx.query("SELECT 1 FROM operations WHERE attempt_id=$1 AND kind='complete_node' AND state<>'cancelled'", [predecessor.id])).rowCount)
+    return { status: 'superseded', reason: 'node_completion_owned' };
+  if ((await tx.query("SELECT 1 FROM task_guidance_followups WHERE node_id=$1 AND status='waiting'", [node.id])).rowCount)
+    return { status: 'superseded', reason: 'node_guidance_owned' };
+  if (await specificationFrozen(tx, task.id)) return { status: 'waiting', reason: 'specification_change' };
+  if (await pendingReplan(tx, task.id)) return { status: 'waiting', reason: 'replan_pending' };
+  if (await reviewDispatchBlocked(tx, task.id)) return { status: 'waiting', reason: 'task_input_pending' };
+  if (!await remoteItemQuiescent(tx, task.id)) return { status: 'waiting', reason: 'remote_effects_pending' };
+  return { status: 'ready' };
+}
+
+export async function prepareNodeRuntimeFallback(tx: Transaction, predecessor: RuntimePredecessor, configurationVersion: number): Promise<RuntimeFallbackPreparation> {
+  const inspected = await inspectNodeRuntimeFallback(tx, predecessor);
+  if (inspected.status !== 'ready') return inspected;
+  // Recheck current physical facts even for a direct caller. Logical failure
+  // alone never authorizes another source to reopen the same private workspace.
+  const settled = (await tx.query<RuntimePredecessor & { end_reason: string | null }>(`SELECT a.* FROM attempts a
+    JOIN runtime_continuations c ON c.predecessor_attempt_id=a.id
+    JOIN operations stopped ON stopped.id=c.stop_operation_id AND stopped.attempt_id=a.id AND stopped.kind='stop' AND stopped.state='succeeded'
+    WHERE a.id=$1 AND a.state='FAILED' AND NOT a.mutation_allowed AND c.state='settling'`, [predecessor.id])).rows[0];
+  if (!settled || !await runtimePredecessorSettled(tx, settled)) return { status: 'waiting', reason: 'runtime_fallback_settling' };
+  const task = (await tx.query<NodeTask>('SELECT * FROM tasks WHERE id=$1', [predecessor.task_id])).rows[0]!;
+  const node = (await tx.query<ExecutionNode>('SELECT * FROM nodes WHERE id=$1 FOR UPDATE', [predecessor.node_id])).rows[0]!;
+  await tx.query('UPDATE node_execution_outbox SET done=true WHERE id=$1', [node.execution_source_id]);
+  await tx.query("UPDATE nodes SET state='PENDING' WHERE id=$1", [node.id]);
+  const source = await prepareNodeSource(tx, task, node, configurationVersion, {
+    recovery: { runtime_predecessor_attempt_id: predecessor.id, prior_source_id: node.execution_source_id, reason: settled.end_reason ?? 'runtime_failed' },
+  });
+  return { status: 'prepared', source_id: source.id, planned_attempt_id: source.planned_attempt_id,
+    ...(source.preparation_failure ? { preparation_failure: source.preparation_failure } : {}) };
+}
+
+export async function exhaustNodeRuntimeFallback(tx: Transaction, plannedAttemptId: string, reason: string): Promise<boolean> {
+  const source = (await tx.query<NodeSource>(`SELECT s.* FROM node_execution_outbox s JOIN nodes n ON n.id=s.node_id JOIN tasks t ON t.id=s.task_id
+    WHERE s.planned_attempt_id=$1 AND n.execution_source_id=s.id AND n.activation=s.node_activation
+      AND t.specification_id=s.specification_id AND t.plan_id=s.plan_id AND t.control_version=s.expected_version
+      AND t.accepted_delivery_operation_id IS NULL AND t.state IN('RUNNING','BLOCKED')`, [plannedAttemptId])).rows[0];
+  if (!source) return false;
+  const node = (await tx.query<ExecutionNode>('SELECT * FROM nodes WHERE id=$1', [source.node_id])).rows[0]!;
+  if (node.state === 'BLOCKED') return !!(await tx.query("SELECT 1 FROM node_blockers WHERE id=$1 AND source_id=$2 AND kind='factual' AND reason=$3", [node.blocker_id, source.id, reason])).rowCount;
+  if (!['PENDING', 'RUNNING'].includes(node.state) || node.guidance_paused || node.blocker_id || await specificationFrozen(tx, source.task_id) || await pendingReplan(tx, source.task_id)) return false;
+  if ((await tx.query("SELECT 1 FROM task_guidance_followups WHERE node_id=$1 AND status='waiting'", [node.id])).rowCount) return false;
+  const attempt = (await tx.query<{ id: string }>('SELECT id FROM attempts WHERE id=$1', [plannedAttemptId])).rows[0];
+  await blockNodeSource(tx, source, 'factual', reason, attempt?.id);
+  return true;
 }

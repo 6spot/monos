@@ -557,19 +557,22 @@ export interface WorkspaceReservation {
 }
 
 export interface RuntimeEvent {
-    attempt_id:      string;
-    boot_id?:        string;
-    data_base64?:    string;
-    dispatch_id:     string;
-    exit_code?:      number;
-    kind:            RuntimeEventKind;
-    order_sequence?: number;
-    sequence:        number;
-    stream_id:       string;
-    text:            string;
+    attempt_id:       string;
+    boot_id?:         string;
+    data_base64?:     string;
+    dispatch_id:      string;
+    exit_code?:       number;
+    kind:             RuntimeEventKind;
+    order_sequence?:  number;
+    runtime_failure?: RuntimeFailure;
+    sequence:         number;
+    stream_id:        string;
+    text:             string;
 }
 
 export type RuntimeEventKind = "started" | "output" | "attention" | "capture_failed" | "exited" | "process_absent";
+
+export type RuntimeFailure = "native_terminal_error";
 
 export interface Operation {
     attempt_id:                  string;

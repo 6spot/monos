@@ -7,6 +7,8 @@ import type { CommandEnvelope, EffectResult, ExecutionPlanNode, TaskPlanningSour
 import { publishInitialPlan, validatePlan } from './task-records.ts';
 import { admitWorkspaceEffect } from './workspaces.ts';
 import type { WorkspaceAttempt } from './workspaces.ts';
+import type { RuntimePredecessor, RuntimeFallbackInspection, RuntimeFallbackPreparation } from './runtime-continuation-state.ts';
+import { specificationFrozen } from './task-specification-state.ts';
 
 export interface PlanningTask {
   id: string; project_id: string | null; state: string; specification_id: string; plan_id: string | null;
@@ -48,7 +50,7 @@ const protocol = [
   'The server ends this Attempt after either committed outcome. Structural validation can be corrected within this same Attempt. On an uncertain response query or retry the exact same request ID. Natural-language output is provisional. CLI usage: monos COMMAND --request-id ID --input payload.json --output json (or --input - for stdin); monos command-status --request-id ID --output json; monos retry --request-id ID --output json.',
 ].join('\n');
 
-export async function createPlanningIntent(tx: Transaction, task: PlanningTask, requestId: string, configurationVersion: number, changeId?: string): Promise<PlanningIntent> {
+export async function createPlanningIntent(tx: Transaction, task: PlanningTask, requestId: string | { runtime_predecessor_attempt_id: string }, configurationVersion: number, changeId?: string): Promise<PlanningIntent> {
   await assertSpecificationUnfrozen(tx,task.id);
   const id = randomUUID(); const attemptId = randomUUID(); const version = Number(task.control_version) + 1;
   const basis = { planning_intent_id: id, task_id: task.id, specification_id: task.specification_id, configuration_version: configurationVersion };
@@ -76,10 +78,41 @@ export async function createPlanningIntent(tx: Transaction, task: PlanningTask, 
   const failure = prompt === null ? 'context_budget_exceeded' : null;
   const hash = digest(prompt ?? canonicalJSON({ ...basis, preparation_failure: failure }));
   await tx.query(`INSERT INTO task_planning_outbox(id,task_id,previous_intent_id,owner_request_id,specification_id,expected_version,
-    planned_attempt_id,configuration_version,context,prompt,context_digest,preparation_failure,waiting_reason,requirement_change_id)
-    VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$12,$13)`, [id, task.id, task.initial_planning_intent_id, changeId ? null : requestId, task.specification_id, version, attemptId, configurationVersion, context, prompt, hash, failure, changeId ?? null]);
+    planned_attempt_id,configuration_version,context,prompt,context_digest,preparation_failure,waiting_reason,requirement_change_id,runtime_predecessor_attempt_id)
+    VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$12,$13,$14)`, [id, task.id, task.initial_planning_intent_id, !changeId && typeof requestId === 'string' ? requestId : null, task.specification_id, version, attemptId, configurationVersion, context, prompt, hash, failure, changeId ?? null, typeof requestId === 'string' ? null : requestId.runtime_predecessor_attempt_id]);
   await tx.query("UPDATE tasks SET state='RUNNING',control_version=$2,initial_planning_intent_id=$3,planning_issue_sequence=NULL WHERE id=$1", [task.id, version, id]);
   return { id, task_id: task.id, specification_id: task.specification_id, expected_version: String(version), planned_attempt_id: attemptId, context_digest: hash, prompt, preparation_failure: failure, waiting_reason: failure, done: false };
+}
+
+export async function inspectPlanningRuntimeFallback(tx: Transaction, predecessor: RuntimePredecessor): Promise<RuntimeFallbackInspection> {
+  const binding = predecessor.launch.task_planning_source;
+  if (!binding || !predecessor.task_id) return { status: 'superseded', reason: 'planning_source_missing' };
+  const current = (await tx.query(`SELECT 1 FROM task_planning_outbox s JOIN tasks t ON t.id=s.task_id
+    WHERE s.id=$1 AND s.planned_attempt_id=$2 AND t.id=$3 AND t.initial_planning_intent_id=s.id
+    AND t.state='RUNNING' AND t.plan_id IS NULL AND t.planning_issue_sequence IS NULL
+    AND t.specification_id=s.specification_id AND t.control_version=s.expected_version
+    AND s.context_digest=$4 AND s.preparation_failure IS NULL`, [binding.intent_id, predecessor.id, predecessor.task_id, binding.context_digest])).rowCount;
+  if (!current) return { status: 'superseded', reason: 'planning_source_changed' };
+  if (await specificationFrozen(tx, predecessor.task_id)) return { status: 'waiting', reason: 'specification_settling' };
+  return { status: 'ready' };
+}
+
+export async function preparePlanningRuntimeFallback(tx: Transaction, predecessor: RuntimePredecessor, configurationVersion: number): Promise<RuntimeFallbackPreparation> {
+  const inspected = await inspectPlanningRuntimeFallback(tx, predecessor);
+  if (inspected.status !== 'ready') return inspected;
+  const task = await planningTask(tx, predecessor.task_id!);
+  await tx.query('UPDATE task_planning_outbox SET done=true WHERE id=$1', [task.initial_planning_intent_id]);
+  const source = await createPlanningIntent(tx, task, { runtime_predecessor_attempt_id: predecessor.id }, configurationVersion);
+  return { status: 'prepared', source_id: source.id, planned_attempt_id: source.planned_attempt_id,
+    ...(source.preparation_failure ? { preparation_failure: source.preparation_failure } : {}) };
+}
+
+export async function exhaustPlanningRuntimeFallback(tx: Transaction, plannedAttemptId: string, reason: string): Promise<boolean> {
+  const changed = await tx.query(`UPDATE task_planning_outbox s SET done=true,waiting_reason=$2
+    FROM tasks t WHERE s.planned_attempt_id=$1 AND t.id=s.task_id AND t.initial_planning_intent_id=s.id
+    AND t.state='RUNNING' AND t.plan_id IS NULL AND t.planning_issue_sequence IS NULL
+    AND t.specification_id=s.specification_id AND t.control_version=s.expected_version`, [plannedAttemptId, reason]);
+  return !!changed.rowCount;
 }
 
 export function planningSource(intent: PlanningIntent): TaskPlanningSource {

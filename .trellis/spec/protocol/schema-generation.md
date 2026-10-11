@@ -15,6 +15,7 @@ Every command, dispatch, normalized Runtime event, recovery page or backend/Runn
 - `RunnerInventory { schema_version, snapshot_id, dispatches, operations, next_cursor? }`; `InventoryQuery { after?, snapshot_id? }` requires both query fields together.
 - `OperationResult { operation_id, attempt_id, success, result, failure_kind? }`; failure classification is forbidden on success.
 - `Dispatch.log_mode="ordered_v1"`, `Ready.log_modes`, `RuntimeEvent.order_sequence` and `RuntimeEvent.data_base64` establish ordered capture. `AttemptStatus`, `AttemptListPage`, and `AttemptLogPage` are generated Owner read contracts; see [execution logs](../backend/execution-logs.md).
+- `RuntimeEvent.runtime_failure?: "native_terminal_error"` is allowed only with `kind="exited"` or `kind="process_absent"`. It is a trusted Runner observation, separate from `OperationResult.failure_kind` and any formal Agent outcome.
 
 ## 3. Contracts
 
@@ -30,6 +31,16 @@ Inventory pages contain only unresolved ownership/operations. Collect every page
 
 Runtime delivery is at least once. Deduplicate `(attempt_id, stream_id, sequence)` without acknowledging missing earlier events. A transport acknowledgement is not lifecycle completion. Large logs/content use bounded authenticated batches; credentials never enter envelopes or journals.
 
+The Runner attaches `runtime_failure` to both its retained main-exit event and
+later verified process-absence event when native terminal proof exists. Recovery
+must reuse immutable exit proof even after ACK; do not send a bare terminal event
+and later rewrite it or expect a separate failure event to reinterpret it.
+Absence of this optional field conveys no classified native error. Raw output,
+numeric child exit codes and diagnostic message text cannot supply the field.
+Capture failure takes precedence. See the [Runner parsing and provenance contract](../runner/execution-guidelines.md#trusted-native-terminal-failure).
+Schema shape validation does not replace authenticated Attempt/dispatch ownership
+or backend checks for current sources, formal outcomes and physical settlement.
+
 ## 4. Validation & Error Matrix
 
 | Condition | Result |
@@ -39,6 +50,7 @@ Runtime delivery is at least once. Deduplicate `(attempt_id, stream_id, sequence
 | Unsafe or fractional counter | Validation failure |
 | Unicode payload exceeds encoded byte budget | Reject before dispatch admission |
 | Success result includes `failure_kind` | Validation failure |
+| `runtime_failure` on output/attention/started/capture events, an unknown value or null | Validation failure |
 | Cursor without snapshot, or snapshot without cursor | Validation failure |
 | Snapshot changes between pages | HTTP 409 `version_conflict`; discard partial scan |
 | Duplicate/conflicting page records or cursor loop | Deduplicate exact records; reject conflicts/loops without releasing ownership |
@@ -49,13 +61,26 @@ Good: three long Unicode prompts cross a page boundary; the Runner collects all 
 Base: matching generated TS/Go validators accept the same shared fixture.
 Bad: a Go struct silently ignores a field, or one partial recovery page is treated as the complete live-process set.
 
+Terminal proof: typed `exited` and `process_absent` remain usable in either
+delivery order; an ordinary untyped exit never becomes a native failure by
+examining its text or exit code.
+
 ## 6. Tests Required
 
 Run `pnpm protocol:check` and `pnpm test`, then `go test ./...` from `runner`. Shared [validation](../../../packages/protocol/fixtures/validation.json) and [canonicalization](../../../packages/protocol/fixtures/canonicalization.json) fixtures cover versions, optional/null fields, unknown members and stable UTF-8 content.
 
 Real [PostgreSQL tests](../../../apps/server/test/postgres.test.ts) exercise Unicode/operation pagination, stale snapshot restart, preserved receipt reads, event reordering and typed failure recovery. Producer and consumer tests must agree after regeneration. Quicktype may rename existing Go enums when another definition introduces the same field/value; compile every Runner consumer after adding schemas, even when existing wire values are unchanged. Distinct backend/Runner roots and verified TLS still require real deployment evidence.
 
+Runtime-failure fixtures must accept the field on both terminal kinds and reject
+null, unknown values and nonterminal kinds in TS and Go. Verify exact replay and
+both terminal delivery orders against backend continuation guards; capture or an
+already admitted formal outcome must not acquire new fallback authority.
+
 ## 7. Wrong vs Correct
 
 Wrong: edit generated Go fields or return the first 1000 rows as a complete inventory.
 Correct: edit the versioned schema, regenerate both consumers, and use bounded pages with explicit completeness and snapshot conflict handling.
+
+Wrong: serialize `runtime_failure` on arbitrary output because a log resembles an
+error. Correct: generate the restricted terminal field from the trusted Runner
+contract and preserve the same immutable evidence through recovery.

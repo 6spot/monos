@@ -517,16 +517,17 @@ type WorkspaceReservation struct {
 }
 
 type RuntimeEvent struct {
-	AttemptID     string           `json:"attempt_id"`
-	BootID        *string          `json:"boot_id,omitempty"`
-	DataBase64    *string          `json:"data_base64,omitempty"`
-	DispatchID    string           `json:"dispatch_id"`
-	ExitCode      *int64           `json:"exit_code,omitempty"`
-	Kind          RuntimeEventKind `json:"kind"`
-	OrderSequence *int64           `json:"order_sequence,omitempty"`
-	Sequence      int64            `json:"sequence"`
-	StreamID      string           `json:"stream_id"`
-	Text          string           `json:"text"`
+	AttemptID      string           `json:"attempt_id"`
+	BootID         *string          `json:"boot_id,omitempty"`
+	DataBase64     *string          `json:"data_base64,omitempty"`
+	DispatchID     string           `json:"dispatch_id"`
+	ExitCode       *int64           `json:"exit_code,omitempty"`
+	Kind           RuntimeEventKind `json:"kind"`
+	OrderSequence  *int64           `json:"order_sequence,omitempty"`
+	RuntimeFailure *RuntimeFailure  `json:"runtime_failure,omitempty"`
+	Sequence       int64            `json:"sequence"`
+	StreamID       string           `json:"stream_id"`
+	Text           string           `json:"text"`
 }
 
 type Operation struct {
@@ -3394,6 +3395,12 @@ const (
 	KindStarted   RuntimeEventKind = "started"
 	Output        RuntimeEventKind = "output"
 	ProcessAbsent RuntimeEventKind = "process_absent"
+)
+
+type RuntimeFailure string
+
+const (
+	NativeTerminalError RuntimeFailure = "native_terminal_error"
 )
 
 type OperationKind string

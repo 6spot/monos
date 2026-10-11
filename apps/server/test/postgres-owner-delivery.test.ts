@@ -67,7 +67,10 @@ suite('exact Owner delivery authority',()=>{
  it('rejects missing SQL authority, direct pointers, missing JSON and modified unsupported mode before consuming confirmation',async()=>{
   const x=await ownerDeliveryFixture('modified');try{
    const p=await x.prepareDelivery(),c=await x.confirmDelivery(p),detail=await x.reads.proposal(x.token,x.f.task,p.proposal_id!);expect(detail.manifest.repositories[0]).toMatchObject({outcome:'modified',scan:{status:'complete',workflow_changes:false}});expect(x.grantCalls()).toBe(1);
-   await expect(x.db.pool.query('UPDATE tasks SET accepted_delivery_operation_id=$2,accepted_delivery_input_cutoff=0 WHERE id=$1',[x.f.task,randomUUID()])).rejects.toMatchObject({code:'23503'});
+   const before=(await x.db.pool.query('SELECT state,control_version,accepted_delivery_operation_id,accepted_delivery_input_cutoff FROM tasks WHERE id=$1',[x.f.task])).rows[0];
+   await expect(x.db.pool.query('UPDATE tasks SET accepted_delivery_operation_id=$2,accepted_delivery_input_cutoff=0 WHERE id=$1',[x.f.task,randomUUID()])).rejects.toMatchObject({code:'23514',message:'Accepted pointer must install a fresh unrevoked live batch'});
+   expect((await x.db.pool.query('SELECT state,control_version,accepted_delivery_operation_id,accepted_delivery_input_cutoff FROM tasks WHERE id=$1',[x.f.task])).rows[0]).toEqual(before);
+   expect((await x.db.pool.query('SELECT consumed_by FROM authorization_receipts WHERE id=$1',[c.confirmation_id])).rows[0]!.consumed_by).toBeNull();
    await expect(transaction(x.db,tx=>tx.query('INSERT INTO owner_delivery_command_receipts(task_id,request_id,digest,envelope,response) VALUES($1,$2,$3,$4,$5)',[x.f.task,randomUUID(),'a'.repeat(64),{},{schema_version:1}]))).rejects.toMatchObject({code:'23514'});
    await expect(x.db.pool.query('INSERT INTO authorization_receipts(id,proposal_id) VALUES($1,$2)',[randomUUID(),p.proposal_id])).rejects.toMatchObject({code:'23505'});
    await expect(x.db.pool.query("UPDATE task_command_proposals SET content=content||'{\"task_id\":\"wrong\"}'::jsonb WHERE id=$1",[p.proposal_id])).rejects.toMatchObject({code:'23514'});
@@ -132,7 +135,7 @@ suite('exact Owner delivery authority',()=>{
    }finally{if(child){child.child.kill('SIGKILL');await child.done;}await x.close();}
   }
  },20000);
- it('upgrades exact version23 to version25 and atomically refuses legacy nonnull seam values without changing history',async()=>{
+ it('upgrades exact version 23 to version 26 and atomically refuses legacy nonnull seam values without changing history',async()=>{
   for(const legacy of [false,true]){
    const url=new URL(process.env.DATABASE_URL!),admin=database(url.toString()),schema='delivery_upgrade_'+randomUUID().replaceAll('-','');await admin.pool.query(`CREATE SCHEMA ${schema}`);url.searchParams.set('options',`-c search_path=${schema}`);const db=database(url.toString());
    try{
@@ -140,7 +143,7 @@ suite('exact Owner delivery authority',()=>{
     for(const [i,file] of files.slice(0,23).entries()){const sql=await readFile(new URL('../../../packages/db/migrations/'+file,import.meta.url),'utf8');await db.pool.query(sql);await db.pool.query('INSERT INTO schema_migrations VALUES($1,$2)',[i+1,createHash('sha256').update(sql).digest('hex')]);}
     const old=(await db.pool.query('SELECT * FROM schema_migrations ORDER BY version')).rows;
     if(legacy){const task=randomUUID();await transaction(db,tx=>initializeTask(tx,{task_id:task,specification_id:randomUUID(),specification:'Legacy seam test'}));await db.pool.query('UPDATE tasks SET accepted_delivery_operation_id=$2,accepted_delivery_input_cutoff=0 WHERE id=$1',[task,randomUUID()]);await expect(migrate(db)).rejects.toMatchObject({code:'23514'});expect((await db.pool.query("SELECT to_regclass('owner_delivery_batches') present")).rows[0]!.present).toBeNull();expect((await db.pool.query('SELECT * FROM schema_migrations ORDER BY version')).rows).toEqual(old);expect((await db.pool.query('SELECT accepted_delivery_operation_id FROM tasks')).rows[0]!.accepted_delivery_operation_id).not.toBeNull();}
-    else {await migrate(db);expect((await db.pool.query('SELECT * FROM schema_migrations ORDER BY version')).rows.slice(0,23)).toEqual(old);expect((await db.pool.query('SELECT max(version) v FROM schema_migrations')).rows[0]!.v).toBe(25);}
+    else {await migrate(db);expect((await db.pool.query('SELECT * FROM schema_migrations ORDER BY version')).rows.slice(0,23)).toEqual(old);expect((await db.pool.query('SELECT max(version) v FROM schema_migrations')).rows[0]!.v).toBe(26);}
    }finally{await db.pool.end();await admin.pool.query(`DROP SCHEMA ${schema} CASCADE`);await admin.pool.end();}
   }
  },20000);

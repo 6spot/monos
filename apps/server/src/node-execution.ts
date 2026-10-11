@@ -21,8 +21,9 @@ import { authenticateOwner } from './owner-commands.ts';
 import { DispatchQueue } from './dispatch-queue.ts';
 import { RuntimeScheduling } from './runtime-scheduling.ts';
 import { planningEvent, planningText } from './task-planning-state.ts';
-import { assertNodeSource, blockNodeSource, nodeSource, prepareNodeSource } from './node-execution-state.ts';
+import { assertNodeSource, blockNodeSource, exhaustNodeRuntimeFallback, nodeSource, prepareNodeSource } from './node-execution-state.ts';
 import type { ExecutionNode, NodeSource, NodeTask } from './node-execution-state.ts';
+import { activeRuntimeContinuation, runtimeContinuation, supersedeRuntimeContinuation } from './runtime-continuation-state.ts';
 import { admitWorkspaceEffect, lockAttemptWorkspace } from './workspaces.ts';
 import type { WorkspaceAttempt } from './workspaces.ts';
 
@@ -213,11 +214,11 @@ export class NodeExecution {
               result.status === 'unavailable' &&
               !['runner_offline', 'runner_missing', 'installation_stale'].includes(result.reason)
             ) {
-              await blockNodeSource(tx, source, 'factual', result.reason);
+              await exhaustNodeRuntimeFallback(tx, source.planned_attempt_id, result.reason);
               return;
             }
             await tx.query(
-              'UPDATE node_execution_outbox SET done=$2,waiting_reason=$3,last_checked_at=clock_timestamp() WHERE id=$1',
+              'UPDATE node_execution_outbox SET done=$2,waiting_reason=$3,last_checked_at=clock_timestamp() WHERE id=$1 AND NOT done',
               [source.id, result.status === 'queued', result.status === 'unavailable' ? result.reason : null]
             );
           });
@@ -232,7 +233,9 @@ export class NodeExecution {
       // A factual prelaunch rejection has no live writer. Preserve its source and expose Retry.
       const ended = (
         await this.db.pool.query<{ id: string; runner_id: string; task_id: string }>(
-          `SELECT a.id,a.runner_id,a.task_id FROM attempts a JOIN nodes n ON n.execution_source_id=a.node_execution_source_id WHERE n.state='RUNNING' AND a.state IN ('FAILED','CANCELLED') AND NOT a.mutation_allowed AND a.node_execution_source_id IS NOT NULL AND NOT EXISTS(SELECT 1 FROM task_guidance_followups f WHERE f.source_id=a.node_execution_source_id AND f.status='waiting') ORDER BY a.id LIMIT $1`,
+          `SELECT a.id,a.runner_id,a.task_id FROM attempts a JOIN nodes n ON n.execution_source_id=a.node_execution_source_id WHERE n.state='RUNNING' AND a.state IN ('FAILED','CANCELLED') AND NOT a.mutation_allowed AND a.node_execution_source_id IS NOT NULL AND NOT EXISTS(SELECT 1 FROM task_guidance_followups f WHERE f.source_id=a.node_execution_source_id AND f.status='waiting')
+            AND NOT EXISTS(SELECT 1 FROM runtime_continuations c WHERE (c.predecessor_attempt_id=a.id OR c.successor_planned_attempt_id=a.id)
+              AND (c.state IN('settling','prepared') OR (c.state='exhausted' AND c.resolved_at IS NULL))) ORDER BY a.id LIMIT $1`,
           [limit]
         )
       ).rows;
@@ -241,6 +244,7 @@ export class NodeExecution {
           await tx.query('SELECT id FROM runners WHERE id=$1 FOR UPDATE', [row.runner_id]);
           const task = (await tx.query<NodeTask>('SELECT * FROM tasks WHERE id=$1 FOR UPDATE', [row.task_id])).rows[0]!;
           const attempt = (await tx.query<Attempt>('SELECT * FROM attempts WHERE id=$1 FOR UPDATE', [row.id])).rows[0]!;
+          if (await activeRuntimeContinuation(tx, attempt.id)) return;
           const source = (
             await tx.query<NodeSource>('SELECT * FROM node_execution_outbox WHERE id=$1', [
               attempt.launch.node_execution_source!.source_id,
@@ -333,6 +337,8 @@ export class NodeExecution {
           const attempts = (
             await tx.query<Attempt>('SELECT * FROM attempts WHERE task_id=$1 ORDER BY id FOR UPDATE', [task.id])
           ).rows;
+          for (const source of (await tx.query<{ planned_attempt_id: string }>('SELECT planned_attempt_id FROM node_execution_outbox WHERE task_id=$1', [task.id])).rows)
+            await supersedeRuntimeContinuation(tx, source.planned_attempt_id, 'task_cancelled');
           for (const attempt of attempts) {
             if (attempt.process_released && attempt.state !== 'QUEUED') continue;
             attemptId = attempt.id;
@@ -420,6 +426,7 @@ export class NodeExecution {
             const pendingGuidance=(await tx.query("SELECT 1 FROM task_guidance_followups WHERE node_id=$1 AND status='waiting'",[node.id])).rowCount;
             if (!['PENDING', 'RUNNING'].includes(node.state) && !(node.state==='COMPLETED'&&pendingGuidance))
               throw new CommandError('unmet_precondition', 'Node is not stoppable');
+            await supersedeRuntimeContinuation(tx, source.planned_attempt_id, 'owner_stopped');
             if(node.state==='COMPLETED'){await tx.query('UPDATE tasks SET control_version=control_version+1 WHERE id=$1',[task.id]);return this.receipt(tx,command,hash,json,{schema_version:1,request_id:command.request_id,status:'committed',task_id:task.id,control_version:Number(task.control_version)+1,source_id:source.id});}
             if (attempt) {
               operationId = await stopAttempt(tx, attempt, command.request_id, 'owner_stopped');
@@ -486,6 +493,7 @@ export class NodeExecution {
               ).rowCount
             )
               throw new CommandError('unmet_precondition', 'Recover original completion before a fresh Attempt');
+            await supersedeRuntimeContinuation(tx, source.planned_attempt_id, command.name === 'retry_node' ? 'owner_retried' : 'owner_continued');
             const carriedHold=blocker&&(await tx.query(`SELECT 1 FROM replan_control_holds h JOIN node_completions c ON c.node_id=h.node_id AND c.activation=h.node_activation WHERE h.node_id=$1 AND h.current_blocker_id=$2 AND h.resolved_by IS NULL`,[node.id,blocker.id])).rowCount;
             if(carriedHold){
               await resolveInheritedHold(tx,node.id,blocker!.id,command.request_id);
@@ -579,6 +587,7 @@ export class NodeExecution {
       const attempt = source
         ? (await tx.query<Attempt>('SELECT * FROM attempts WHERE id=$1', [source.planned_attempt_id])).rows[0]
         : null;
+      const continuation = source ? await runtimeContinuation(tx, source.planned_attempt_id) : undefined;
       const blocker = node.blocker_id
         ? (await tx.query('SELECT id,kind,reason FROM node_blockers WHERE id=$1', [node.blocker_id])).rows[0]
         : null;
@@ -621,7 +630,7 @@ export class NodeExecution {
         guidance_paused:node.guidance_paused,
         guidance_followup_pending:!!(await tx.query("SELECT 1 FROM task_guidance_followups WHERE node_id=$1 AND status='waiting'",[nodeId])).rowCount,
         source: source ? nodeSource(source) : null,
-        waiting_reason: source?.waiting_reason ?? null,
+        waiting_reason: continuation ? (continuation.reason ?? (continuation.state === 'settling' ? 'runtime_fallback_settling' : 'runtime_fallback_pending')) : source?.waiting_reason ?? null,
         attempt: attempt
           ? {
               attempt_id: attempt.id,

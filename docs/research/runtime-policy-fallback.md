@@ -49,7 +49,8 @@ deployed service, Runtime model or remote provider was used.
 
 The [Codex second CLI](codex-runtime-adapter.md) now has a separate implementation
 and local verification record. Structured objective Runtime failure reports and
-post-launch fallback after physical Stop/workspace settlement remain subsequent
-work. Current queued pre-start loss still follows its existing cancellation and
+[post-launch fallback](runtime-post-launch-fallback.md) after physical Stop/workspace
+settlement are now implemented with local verification. Current queued pre-start
+loss still follows its existing cancellation and
 Owner recovery path. [A06/A30 native acceptance](stage-a-acceptance.md) remains
 deferred, not passed.

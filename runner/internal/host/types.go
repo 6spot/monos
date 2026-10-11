@@ -59,6 +59,9 @@ func UnavailableRuntimes() []protocol.RuntimeInstallation {
 // Reserved worker exit status for a checked stdout/stderr write or sync failure.
 const CaptureFailureExitCode = 74
 
+// Reserved for an adapter-validated native terminal error and failed CLI exit.
+const RuntimeFailureExitCode = 75
+
 var idPattern = regexp.MustCompile(`^[A-Za-z0-9_-]{1,128}$`)
 
 func ValidID(id string) bool       { return idPattern.MatchString(id) }
@@ -111,6 +114,7 @@ type Status struct {
 	MainExited             bool                           `json:"main_exited,omitempty"`
 	ExitCode               *int64                         `json:"exit_code,omitempty"`
 	CaptureFailed          bool                           `json:"capture_failed,omitempty"`
+	RuntimeFailed          bool                           `json:"runtime_failed,omitempty"`
 	BootID                 string                         `json:"boot_id"`
 	PID                    int                            `json:"pid"`
 	Birth                  string                         `json:"birth"`

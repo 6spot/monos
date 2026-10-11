@@ -16,6 +16,7 @@ Generate transport types from protocol schemas. Current entrypoints:
 - `monos <command> --input <file|-> --request-id <id> --output json`; `retry` and `command-status` take the existing ID and no replacement input.
 - The service account invokes only `/usr/local/libexec/monos-probe-launch` with no argv. Bounded JSON stdin selects a fixed action and validated dispatch/operation; it cannot choose executable, UID or arbitrary systemd properties. See [helper](../../../runner/internal/host/helper.go) and [bootstrap](../../../infra/runner/bootstrap.sh).
 - [Socket attribution](../../../runner/internal/local/socket.go), [Linux process identity](../../../runner/internal/host/process_linux.go), [journal](../../../runner/internal/journal/journal.go) and [control reconciliation](../../../runner/internal/daemon/daemon.go) own the corresponding boundaries.
+- `adapter.ErrRuntimeFailure` maps to reserved worker exit `75`; validated Host `Status.RuntimeFailed` becomes optional `RuntimeEvent.runtime_failure="native_terminal_error"` on `exited` and `process_absent`. See [wire schema](../protocol/schema-generation.md) and the parsing contract below.
 
 ## 3. Contracts
 
@@ -35,7 +36,7 @@ Generate transport types from protocol schemas. Current entrypoints:
 - Inventory reconciliation consumes all bounded snapshot pages before readiness. A changed snapshot restarts the read; incomplete, conflicting or over-limit inventory preserves ownership and cannot enable dispatch. See [inventory tests](../../../runner/internal/control/inventory_test.go).
 - Missing launch evidence or mismatched process birth is uncertainty, not proof of absence. Persist the process-absence event before releasing local ownership so a daemon crash cannot strand the backend claim.
 - For `ordered_v1`, sync each bounded stdout/stderr write into the supervised spool before the Runner journal allocates an Attempt-wide event order and advances the source offset. Retain source bytes in `data_base64`; display text may replace invalid UTF-8. Hold an incomplete UTF-8 suffix while the worker is running so a read boundary does not corrupt valid display text; after termination preserve even malformed trailing bytes in the raw field. No fixed output truncation is allowed. A write/sync failure cancels the child, leaves a preallocated marker when possible, and uses worker exit code `74` through the validated systemd Attempt unit as the authoritative capture-failure fact. The service account also needs its own fsynced failure marker: a worker-owned `capture.failure` file may be unreadable across the account boundary or after restart. Emit `capture_failed` before `exited`, request whole-tree Stop, and retain the reservation until absence is verified.
-- systemd `MainPID=0` with `ExecMainCode=1` is a completed main process even when `ActiveState=active (exited)` and detached descendants keep the cgroup populated. Journal one `exited` observation and let the backend revoke a missing formal result; keep local phase `running` and the slot held until Stop plus whole-tree absence. `process_absent` is a separate later fact. Do not wait for `!Populated` before reporting a main exit, and do not release ownership on main exit alone.
+- systemd `MainPID=0` with `ExecMainCode=1` is a completed main process even when `ActiveState=active (exited)` and detached descendants keep the cgroup populated. Journal one `exited` observation with any trusted Runtime failure so the backend can evaluate continuation or a missing formal result; keep local phase `running` and the slot held until Stop plus whole-tree absence. `process_absent` is a separate later fact. Do not wait for `!Populated` before reporting a main exit, and do not release ownership on main exit alone.
 - An acknowledged launched transient `active/exited` unit with `RemainAfterExit=yes`
   and `Restart=no` may outlive its removed kernel cgroup. `statusOfUnit` uses
   `verifyExitedUnit` for an empty ControlGroup or a missing nonempty cgroup path.
@@ -58,6 +59,58 @@ Generate transport types from protocol schemas. Current entrypoints:
 - Bound the complete free preflight to 30 seconds, handshake/SSE frames to 64 KiB, and stdout/SSE lifetime/catalog bodies to 4 MiB. EOF, protocol error and overflow cannot become success during shutdown. Close requests/stdin, reap the private server, settle its inherited process group and join readers before model launch; cleanup has its own bounded grace (1-second normal exit, 3-second group settlement and 100-millisecond final stdout drain). Failed/uncertain cleanup forbids launch. Attempt cgroups retain whole-execution ownership, including escaped descendants. A verified selected-entry snapshot is not an all-plugin readiness or future-price guarantee; keep that evidence limit explicit. See the [native no-generation probe](../../../docs/research/evidence/opencode-v2-free-catalog-v1/README.md).
 - Host-reboot verification preserves the old dispatch/PID/birth/boot/cgroup record. A new boot establishes old-process absence, not successful semantic completion: reconcile Stop, revoke writes and release only after physical verification. Retained but unsent requests remain unadmitted; never replay them or start a successor as part of evidence verification.
 
+### Trusted native terminal failure
+
+The [observer](../../../runner/internal/adapter/runtime_failure.go) reads stdout
+only after the [durable writer](../../../runner/internal/adapter/execution.go)
+has retained and synced it. Each JSONL frame must be a complete UTF-8 object,
+ending in a newline, with at most 64 KiB before that newline. Malformed or
+oversized frames, an incomplete final frame, or duplicate event/error object
+keys disable classification for the entire run. This parser limit never
+truncates retained output. A parse rejection alone is not `capture_failed`;
+actual output write/sync failure follows the existing capture path.
+
+| Runtime | Supported top-level evidence | Terminal check |
+| --- | --- | --- |
+| Codex | `type="turn.failed"`, with `error.message` a nonempty string | Must remain the final complete event; later events clear the failure observation |
+| OpenCode 2.0.20 | `type="error"`, with nonempty `error.message` and `error.type` equal to `provider.transport` or `unknown` | Retain the failure observation across subsequent native text/tool projections; `error.type="aborted"` suppresses classification |
+
+Both require a normal nonzero child exit. Signals, context cancellation,
+deadlines, successful exits and OpenCode's SIGINT exit `130` do not classify.
+Use exact envelope fields, never message wording, stderr, assistant prose,
+nested tool JSON or `tool_use.part.state.status="error"`. Other OpenCode error
+types and preflight failures have no mapping in this observer. No authentication,
+quota or rate-limit subtype is inferred from this generic terminal fact.
+
+The shape comes from the [Codex SDK event contract](https://github.com/openai/codex/blob/main/sdk/typescript/src/events.ts)
+and OpenCode `v2.0.20` [startup error emitter](https://github.com/anomalyco/opencode/blob/v2.0.20/packages/cli/src/run/run.ts#L248),
+[terminal failure fixture](https://github.com/anomalyco/opencode/blob/v2.0.20/packages/cli/test/run/noninteractive.test.ts#L379)
+and [projection after termination](https://github.com/anomalyco/opencode/blob/v2.0.20/packages/cli/src/run/noninteractive.ts#L752).
+These source contracts and local fixtures establish the narrow decoder behavior;
+they do not establish installed CLI/provider failure acceptance or complete
+coverage of either Runtime's failures.
+
+The [worker](../../../runner/cmd/monos-probe-exec/main.go) reserves `75` only for
+typed `ErrRuntimeFailure`; an arbitrary child exit `75` remains worker exit `1`.
+Typed capture failure takes precedence and emits worker exit `74`. The
+[Host](../../../runner/internal/host/helper.go) accepts either reserved status only
+after validating the owned Attempt unit, with `MainPID=0`, `ExecMainCode=1`
+(`CLD_EXITED`) and `Result=exit-code`. An Agent-writable file is never Runtime
+failure authority. Workspace Stop/settlement preserves the validated Agent wait
+fields without replacing the workspace effect's ownership/result fields.
+
+The daemon persists the typed `exited` fact even while descendants remain.
+Before recording verified `process_absent`, it reads that immutable exit by exact
+Attempt/dispatch from `journal.TerminalEvent`, including ACKed rows. A pending
+delivery batch is insufficient proof. Carry the same classification on both
+terminal events so delivery order cannot erase it; a retained capture alert
+suppresses Runtime classification. Replay the original terminal event, including
+its sequence and boot identity, without rewriting it or allocating a replacement.
+Launch, reconciliation, polling and successful terminal effects must persist
+absence before setting local phase `absent`, including when the Start send fails.
+The backend owns policy continuation and formal settlement; neither typed failure
+nor a main exit releases physical ownership.
+
 ## 4. Validation & Error Matrix
 
 | Condition | Result |
@@ -76,15 +129,23 @@ Generate transport types from protocol schemas. Current entrypoints:
 | Node shell writes/builds in workspace | Works under the normal execution identity without a command allowlist |
 | Selected model missing from Attempt catalog, invalid pricing, refresh failure/timeout or oversized catalog | Sanitized preflight failure; no model invocation |
 | Output write and marker write both fail | Worker exit code `74` survives as the validated systemd capture-failure fact; Stop and retain reservation |
+| Recognized native terminal error plus normal failed exit | Worker `75`; attach `native_terminal_error` to retained exit and later verified absence |
+| Raw child exit `75`, nested tool error or unrecognized envelope | No trusted Runtime classification; preserve ordinary exit/log behavior |
+| Malformed, oversized or incomplete native frame | No trusted Runtime classification; raw output remains retained |
+| Native failure followed by capture failure | Worker `74` and capture handling take precedence |
 | Retained exited unit, absent PID/cgroup, stable exact identity | Report physical absence; reconcile original operation normally |
 | Unacknowledged exit, changed identity, live PID/group or pending/unknown jobs | Error; no acknowledgement write or release |
-| Main process exits while descendants remain | Emit `exited` once; backend blocks missing result and admits Stop; keep physical slot until absence |
+| Main process exits while descendants remain | Emit `exited` once with any trusted failure; backend handles continuation or missing result; keep physical slot until absence |
 
 ## 5. Good / Base / Bad Cases
 
 Good: lost start acknowledgement reconnects to the same supervised process.
 Base: one Attempt launches with scoped paths and current context.
 Bad: kill one PID, release its slot and start a successor while descendants write.
+
+Terminal evidence: an ACKed typed exit can supply a later absence event after
+daemon recovery. A plain nonzero exit supplies no native-failure classification.
+An error-shaped string inside tool output must never select a fallback target.
 
 Model preflight: a refreshed, active, tool-capable zero-price entry permits the selected model; an already populated valid cache follows the same validation; a successful catalog command with no selected entry must not launch it.
 
@@ -97,6 +158,17 @@ envelope cannot be treated as an admitted result.
 Real Linux cgroups/systemd tests: escaped/background descendants, freeze/kill, daemon restart, host reboot, birth identity and two concurrent same-UID Attempts. Probe read-only Planner commands, input files, worktree common-directory grants and completion-triggered CLI termination. Test local journal/spool write failure and receipt recovery after expiry.
 
 For ordered logs, assert byte-complete chunking, UTF-8 split and malformed-tail behavior, stable Attempt order after retransmission, service-owned marker plus worker-exit capture failure across a daemon restart, `active (exited)` with live descendants, one `exited` event before physical absence, and no premature slot release. The selected Node/Planner host probes must use the installed CLI, explicit selected model and its applicable pricing gate; a missing-formal-result probe must show backend `BLOCKED` plus stopped descendants.
+
+[Native failure tests](../../../runner/internal/adapter/runtime_failure_test.go)
+cover runtime-specific envelopes, OpenCode output after failure, cancellation,
+successful/ordinary exits, nested spoofing, duplicate keys, frame bounds, raw-byte
+preservation and capture precedence. The worker and Host tests distinguish raw
+child `75` from the reserved worker fact and reject signals/unknown unit evidence.
+[Journal](../../../runner/internal/journal/terminal_event_test.go) and
+[daemon tests](../../../runner/internal/daemon/runtime_failure_test.go) must retain
+typed proof after ACK/reopen, preserve both fast terminal events despite a failed
+Start send, handle Stop before polling, and replay without duplicate effects or
+terminal events. These local checks do not substitute for native acceptance.
 
 [Exited-unit tests](../../../runner/internal/host/exited_unit_test.go) must exercise
 actual status routing: empty/nonempty removed cgroup, disappearance during
@@ -117,6 +189,11 @@ unchanged request digests/receipts, no replacement Start, BLOCKED interrupted wo
 successful physical Stop/release and scoped reads without fresh Agent authority.
 
 ## 7. Wrong vs Correct
+
+Wrong: infer Runtime failure from exit `1`, a log message or a worker-owned marker.
+Correct: validate the bounded native envelope and failed child exit, transport
+the typed worker result through the owned systemd unit, and retain immutable
+exit proof for every later absence observation.
 
 Wrong: map socket callers to Attempt using an environment variable.
 Correct: verify kernel peer/birth/cgroup against the daemon's durable dispatch record before each journal/credential operation.

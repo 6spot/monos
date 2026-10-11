@@ -78,6 +78,6 @@ warning remains. A synthetic config-only Codex check accepted the managed config
 keys without warnings; it did not invoke a model, MCP server or login flow.
 
 Native Linux sandbox, socket/cgroup, installed authentication,
-actual model output and formal monos lifecycle calls remain deferred. The next
-functional slice is [post-launch fallback](runtime-post-launch-fallback.md);
-ordinary exit or raw model prose does not currently trigger an automatic switch.
+actual model output and formal monos lifecycle calls remain deferred. Subsequent
+[post-launch fallback](runtime-post-launch-fallback.md) now has implementation and
+local verification; ordinary exit or raw model prose never triggers that switch.

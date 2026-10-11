@@ -9,7 +9,7 @@ import {planningEvent,stopPlanningAttempt} from './task-planning-state.ts';
 import type {SpecificationTask} from './task-specification-state.ts';
 import {exactBasis,prepareSpecification,requirementProposal,attachSpecification} from './task-specification-state.ts';
 import {canonicalReviewManifest} from './task-review-basis.ts';
-import {reviewOperation,reviewFeedback} from './task-review-state.ts';
+import {reviewOperation,reviewFeedback,reviewSettlementReady,reviewInputOrderBlocked} from './task-review-state.ts';
 import type {ReviewOperationRow,ReviewSourceRow,ReviewInputRow} from './task-review-state.ts';
 import {reactivateSettledNodes} from './task-records.ts';
 import {requestReplan} from './task-replan-state.ts';
@@ -17,6 +17,44 @@ import {routeTaskInput} from './task-guidance.ts';
 import {taskContext,taskHistory} from './task-conversation-state.ts';
 import type {ConversationTask} from './task-conversation-state.ts';
 import {publicationDigest as hash} from './publication-policy.ts';
+import type { RuntimePredecessor, RuntimeFallbackInspection, RuntimeFallbackPreparation } from './runtime-continuation-state.ts';
+
+export async function inspectReviewRuntimeFallback(tx: Transaction, predecessor: RuntimePredecessor): Promise<RuntimeFallbackInspection> {
+  const binding = predecessor.launch.task_review_source;
+  if (!binding || !predecessor.task_id) return { status: 'superseded', reason: 'review_source_missing' };
+  try { await assertReviewSource(tx, predecessor.task_id, binding, predecessor.id, predecessor.launch.prompt); }
+  catch (error) { if (!(error instanceof CommandError)) throw error; return { status: 'superseded', reason: 'review_source_changed' }; }
+  if ((await tx.query('SELECT 1 FROM task_review_resolutions WHERE operation_id=$1', [binding.operation_id])).rowCount)
+    return { status: 'superseded', reason: 'review_outcome_committed' };
+  return { status: 'ready' };
+}
+
+export async function prepareReviewRuntimeFallback(tx: Transaction, predecessor: RuntimePredecessor, configurationVersion: number): Promise<RuntimeFallbackPreparation> {
+  const inspected = await inspectReviewRuntimeFallback(tx, predecessor);
+  if (inspected.status !== 'ready') return inspected;
+  if (!await reviewSettlementReady(tx, predecessor.task_id!)) return { status: 'waiting', reason: 'waiting_for_original_settlement' };
+  const task = (await tx.query<SpecificationTask>('SELECT * FROM tasks WHERE id=$1', [predecessor.task_id])).rows[0]!;
+  const op = await reviewOperation(tx, task.id, predecessor.launch.task_review_source!.operation_id, true);
+  if (await reviewInputOrderBlocked(tx, op)) return { status: 'waiting', reason: 'earlier_review_input_pending' };
+  await tx.query('UPDATE task_review_sources SET done=true WHERE id=$1', [op.source_id]);
+  await tx.query('UPDATE task_review_operations SET previous_source_id=source_id,source_id=NULL,version=version+1 WHERE id=$1', [op.id]);
+  const current = await reviewOperation(tx, task.id, op.id, true);
+  const source = await createReviewSource(tx, task, current, configurationVersion);
+  return { status: 'prepared', source_id: source.id, planned_attempt_id: source.planned_attempt_id,
+    ...(source.preparation_failure ? { preparation_failure: source.preparation_failure } : {}) };
+}
+
+export async function exhaustReviewRuntimeFallback(tx: Transaction, plannedAttemptId: string, reason: string): Promise<boolean> {
+  const source = (await tx.query<ReviewSourceRow>(`SELECT s.* FROM task_review_sources s JOIN task_review_operations o ON o.source_id=s.id JOIN tasks t ON t.id=s.task_id
+    WHERE s.planned_attempt_id=$1 AND o.status IN('queued','running','failed') AND o.issue_id IS NULL
+    AND o.version=(s.source->>'operation_version')::bigint AND t.state='REVIEW' AND t.accepted_delivery_operation_id IS NULL
+    AND t.specification_id=s.source->>'specification_id' AND t.plan_id=s.source->>'plan_id' AND t.control_version=(s.source->>'control_version')::bigint
+    AND NOT EXISTS(SELECT 1 FROM task_review_resolutions r WHERE r.operation_id=o.id)`, [plannedAttemptId])).rows[0];
+  if (!source) return false;
+  await tx.query('UPDATE task_review_sources SET done=true,waiting_reason=$2 WHERE id=$1', [source.id, reason]);
+  await tx.query("UPDATE task_review_operations SET status='failed',reason=$2 WHERE id=$1", [source.operation_id, reason]);
+  return true;
+}
 
 const instructions='You are the Task Review Planner. This is a repository-free scratch phase. Use read_task_context, read_task_history and retained result evidence for actual facts; inspect_repository is unavailable in this Stage A scratch phase. No workspace, Node start, acceptance or implicit Owner approval. Every action must bind feedback_id, operation_id, source_id and operation_version from this exact source. Main feedback: apply_review_rework with exact basis/node_ids/reason when the graph suffices; request_replan only for genuine graph insufficiency; prepare_specification_revision prepares a complete genuine requirement proposal, followed by terminal commit_review_feedback with its exact proposal_id. You may adopt only a same-feedback, same-semantic-basis reconsideration proposal explicitly listed in your context. raise_planning_issue is terminal and requires an Owner Answer & Retry. Reconsider input: terminal resolve_review_input with reconsideration_id, summary and a genuine existing routing kind. Graph insufficiency must use resolve_review_input with routing.kind=replan; generic request_replan is unavailable for this purpose. This records a new semantic decision; do not append another chat reply or reset the old input. Your own feedback/reconsideration guard is not a reason to avoid deciding. Independent issues/requirements/publication/Stop obligations remain and new Node dispatch waits for them. Retry preserves original request identity; uncertain submissions replay exact request IDs.';
 export async function createReviewSource(tx:Transaction,task:SpecificationTask,op:ReviewOperationRow,config:number):Promise<ReviewSourceRow>{

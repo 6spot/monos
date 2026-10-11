@@ -2,7 +2,7 @@
 
 ## 1. Scope / Trigger
 
-Use `RuntimeScheduling` when an authenticated product control command has prepared immutable Planner or Node context and must choose a Runtime target before queuing an Attempt. It resolves policy and installation facts; `DispatchQueue` owns the actual queue and promotion. Todo/Task semantic control remains with the caller, and Runner never selects product policy. OpenCode and Codex support initial-admission ordered fallback; post-launch failure fallback remains later Stage B work.
+Use `RuntimeScheduling` when an authenticated product control command has prepared immutable Planner or Node context and must choose a Runtime target before queuing an Attempt. It resolves policy and installation facts; `DispatchQueue` owns the actual queue and promotion. Todo/Task semantic control remains with the caller, and Runner never selects product policy. OpenCode and Codex support initial-admission ordered fallback and [post-launch continuation](runtime-continuation.md) after verified native terminal failure and physical settlement.
 
 ## 2. Signatures
 
@@ -46,7 +46,14 @@ replays do not switch when policy or registry facts later change.
 
 OpenCode accepts explicitly selected `opencode/longcat-2.5-preview-free` or `volcengine/deepseek-v4-flash-ga-260731` and does not support thinking level. Codex requires an explicit model identifier matching `^[A-Za-z0-9][A-Za-z0-9._/-]{0,159}$`; optional thinking is `none`, `minimal`, `low`, `medium`, `high` or `xhigh`. Dispatch preserves exact runtime/model/thinking in Task and Todo paths, including replay and Start. Installation facts must support model selection and, if selected, thinking control; promotion rechecks these capabilities. CLI discovery establishes no model availability, login, reasoning support for a particular model or quota guarantee. Native rejection remains a factual execution failure. The free OpenCode model requires verified zero pricing; the explicitly authorized DeepSeek model may incur provider charges. DeepSeek startup uses the native OpenCode v2 activation barrier; a cold catalog snapshot is not a readiness barrier. See [Codex profile](../../../docs/research/codex-runtime-adapter.md).
 
-An Attempt ID is serialized by a transaction advisory lock. Replay of identical caller input returns its original target and dispatch ID even if policy later changes; changed input gives `payload_conflict`. `selection_context` records source, configuration version, exact target, observed CLI version when available, and caller-input digest. Admission, receipt and queued Attempt must commit together. The caller handles an unavailable result without creating a fake process or new Task state.
+An Attempt ID is serialized by a transaction advisory lock. Replay of identical caller input returns its original target and dispatch ID even if policy later changes; changed input gives `payload_conflict`. `selection_context` records source, configuration version, exact target, complete ordered `policy_targets`, observed CLI version when available, and caller-input digest. Migration 26 binds root, target index and predecessor to each selected Attempt. Admission, receipt and queued Attempt must commit together. The caller handles an unavailable result without creating a fake process or new Task state.
+
+A prepared Runtime continuation selects only the frozen suffix after its predecessor,
+on that predecessor's Runner. A different hard pin is `unsupported_runner_transfer`;
+Auto stays local. Never restart policy resolution or transfer a workspace implicitly.
+Continuation selection locks Runner, then Task/Todo, then continuation, including the
+unavailable/exhausted branch. Queue insertion and `queued` continuation resolution
+commit together. Exhaustion is projected by the source owner; no skipped Attempt exists.
 
 Planner and Node Attempts share the configured Runner slots; the existing enrollment helper defaults to two. A separate production enrollment flow is still pending. Promotion counts unresolved physical reservations, prioritizes Planner over Node and uses oldest `created_at,id` within a class. A blocked owner is filtered before choosing a candidate. Stale queue heads are cancelled and retried in separate transactions, at most 16 per poll, so each transaction locks only one Task. A full slot or disconnected sole Runner leaves work `QUEUED`; a complete current report showing Runtime absence/unavailability cancels selected pre-start work with a factual reason and no Start. Promotion commits fence, reservation, Node state and Start outbox atomically.
 
@@ -84,8 +91,8 @@ Ordered-selection regressions cover the first eligible fallback, exhausted
 Planner/Role policies, explicit-target refusal, current unavailable versus
 offline/stale/missing facts, mixed unknown Auto reports, capacity waiting and Task
 locality rejection. Exercise the heartbeat lock barrier with both direct Auto and
-a pinned default followed by Auto. No native Runtime or post-launch fallback
-claim follows from these PostgreSQL tests.
+a pinned default followed by Auto. The separate Node/Planner fallback suites cover
+post-launch continuation; no native Runtime claim follows from these PostgreSQL tests.
 
 ## 7. Wrong vs Correct
 

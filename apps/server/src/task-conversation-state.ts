@@ -18,6 +18,8 @@ import type { AttemptRow } from './service.ts';
 import { admitWorkspaceEffect } from './workspaces.ts';
 import { routeTaskInput } from './task-guidance.ts';
 import { planningEvent } from './task-planning-state.ts';
+import type { RuntimePredecessor, RuntimeFallbackInspection, RuntimeFallbackPreparation } from './runtime-continuation-state.ts';
+import { supersedeRuntimeContinuation } from './runtime-continuation-state.ts';
 
 export interface ConversationTask {
   id: string;
@@ -95,6 +97,44 @@ export async function assertConversationSource(
   )
     throw new CommandError('stale_execution', 'Task input source is no longer current');
   return row;
+}
+
+export async function inspectConversationRuntimeFallback(tx: Transaction, predecessor: RuntimePredecessor): Promise<RuntimeFallbackInspection> {
+  const binding = predecessor.launch.task_conversation_source;
+  if (!binding || !predecessor.task_id) return { status: 'superseded', reason: 'conversation_source_missing' };
+  try { await assertConversationSource(tx, predecessor.task_id, binding, predecessor.id, predecessor.launch.prompt); }
+  catch (error) { if (!(error instanceof CommandError)) throw error; return { status: 'superseded', reason: 'conversation_source_changed' }; }
+  if ((await tx.query('SELECT 1 FROM requirement_changes WHERE admission_attempt_id=$1', [predecessor.id])).rowCount)
+    return { status: 'superseded', reason: 'requirement_operation_admitted' };
+  const task = await conversationTask(tx, predecessor.task_id);
+  if (['COMPLETED', 'CANCELLED'].includes(task.state) && !binding.reply_only) return { status: 'superseded', reason: 'task_terminal' };
+  if ((await tx.query("SELECT 1 FROM task_review_feedback WHERE task_id=$1 AND status='active'", [task.id])).rowCount)
+    return { status: 'waiting', reason: 'review_owns_conversation' };
+  return { status: 'ready' };
+}
+
+export async function prepareConversationRuntimeFallback(tx: Transaction, predecessor: RuntimePredecessor, configurationVersion: number): Promise<RuntimeFallbackPreparation> {
+  const inspected = await inspectConversationRuntimeFallback(tx, predecessor);
+  if (inspected.status !== 'ready') return inspected;
+  const task = await conversationTask(tx, predecessor.task_id!);
+  const previous = task.conversation_source_id!;
+  await tx.query('UPDATE task_conversation_outbox SET done=true WHERE id=$1', [previous]);
+  await tx.query('UPDATE tasks SET conversation_version=conversation_version+1 WHERE id=$1', [task.id]);
+  const source = await prepareConversationSource(tx, { ...task, conversation_version: String(Number(task.conversation_version) + 1) }, configurationVersion, previous);
+  return { status: 'prepared', source_id: source.id, planned_attempt_id: source.planned_attempt_id,
+    ...(source.preparation_failure ? { preparation_failure: source.preparation_failure } : {}) };
+}
+
+export async function exhaustConversationRuntimeFallback(tx: Transaction, plannedAttemptId: string, reason: string): Promise<boolean> {
+  const source = (await tx.query<ConversationSource>(`SELECT s.* FROM task_conversation_outbox s JOIN tasks t ON t.id=s.task_id JOIN task_inputs i ON i.id=s.input_id
+    WHERE s.planned_attempt_id=$1 AND t.conversation_source_id=s.id AND t.conversation_input_id=s.input_id
+    AND t.conversation_version=s.expected_version AND i.status='pending'
+    AND NOT EXISTS(SELECT 1 FROM task_input_reconsiderations re WHERE re.input_id=i.id)`, [plannedAttemptId])).rows[0];
+  if (!source) return false;
+  await tx.query('UPDATE task_conversation_outbox SET done=true,waiting_reason=$2 WHERE id=$1', [source.id, reason]);
+  await tx.query("UPDATE task_inputs SET status='failed',version=version+1 WHERE id=$1", [source.input_id]);
+  await tx.query('UPDATE tasks SET conversation_version=conversation_version+1 WHERE id=$1', [source.task_id]);
+  return true;
 }
 export async function ensureConversationHead(tx: Transaction, taskId: string): Promise<void> {
   const task = await conversationTask(tx, taskId);
@@ -394,6 +434,7 @@ export async function stopConversationAttempt(
   attempt: AttemptRow,
   requestId: string,
 ): Promise<string | undefined> {
+  await supersedeRuntimeContinuation(tx, attempt.id, 'conversation_stopped');
   await tx.query("UPDATE outbox SET done=true WHERE attempt_id=$1 AND kind='start'", [attempt.id]);
   if (attempt.state === 'QUEUED') {
     await tx.query(

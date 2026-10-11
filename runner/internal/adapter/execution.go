@@ -174,9 +174,14 @@ func runWithPreflight(d protocol.Dispatch, execute func(*exec.Cmd) error, sink o
 	}
 	cmd.Stdout = DurableWriter{W: sink.stdout, Sync: sink.syncOut, Mark: mark, Stop: cancel}
 	cmd.Stderr = DurableWriter{W: sink.stderr, Sync: sink.syncErr, Mark: mark, Stop: cancel}
+	terminal := nativeTerminalObserver{runtimeID: d.RuntimeID}
+	cmd.Stdout = io.MultiWriter(cmd.Stdout, &terminal)
 	err = execute(cmd)
 	if failed.Load() {
 		return fmt.Errorf("%w: %v", ErrCaptureFailure, err)
+	}
+	if ctx.Err() == nil && terminal.runtimeFailed(err) {
+		return fmt.Errorf("%w: %w", ErrRuntimeFailure, err)
 	}
 	return err
 }

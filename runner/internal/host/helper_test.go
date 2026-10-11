@@ -1,6 +1,7 @@
 package host
 
 import (
+	"context"
 	protocol "monos.local/protocol"
 	"os"
 	"path/filepath"
@@ -346,5 +347,66 @@ func TestSystemdMainExitFactDoesNotRequireWholeTreeAbsence(t *testing.T) {
 	values["ExecMainCode"] = "2"
 	if exited, code := mainExit(values); !exited || code != nil {
 		t.Fatal("signal exit lost or misreported as numeric exit code")
+	}
+}
+
+func TestRuntimeFailureRequiresValidatedCompletedWorkerUnit(t *testing.T) {
+	for _, mode := range []string{"runtime-failure", "capture-failure", "ordinary-exit", "signal", "wrong-result", "not-found", "unknown-wait", "foreign-unit", "unacknowledged"} {
+		t.Run(mode, func(t *testing.T) {
+			m, v := exitedUnitFixture()
+			v["ExecMainStatus"], v["Result"] = "75", "exit-code"
+			switch mode {
+			case "capture-failure":
+				v["ExecMainStatus"] = "74"
+			case "ordinary-exit":
+				v["ExecMainStatus"] = "1"
+			case "signal":
+				v["ExecMainCode"] = "2"
+			case "wrong-result":
+				v["Result"] = "signal"
+			case "not-found":
+				v["LoadState"] = "not-found"
+			case "unknown-wait":
+				v["ExecMainCode"] = "0"
+			case "foreign-unit":
+				v["Description"] = "monos probe attempt other"
+			case "unacknowledged":
+				m.Acknowledged = false
+			}
+			s, err := statusOfUnit(context.Background(), "attempt", m, "boot", actualUnitStatusIO(t, &m, v))
+			if s.RuntimeFailed != (mode == "runtime-failure") {
+				t.Fatal("untrusted runtime failure classification", s, err)
+			}
+			if mode == "runtime-failure" && (err != nil || !s.MainExited || s.CaptureFailed) {
+				t.Fatal("lost trusted runtime exit", s, err)
+			}
+		})
+	}
+	values := map[string]string{"MainPID": "42", "Result": "exit-code", "ExecMainCode": "1", "ExecMainStatus": "75"}
+	if runtimeFailedExit(values) {
+		t.Fatal("live process acquired terminal proof")
+	}
+}
+
+func TestWorkspaceSettlementKeepsValidatedAgentExitSeparateFromEffectResult(t *testing.T) {
+	for _, code := range []string{"75", "74"} {
+		m, values := exitedUnitFixture()
+		values["ExecMainStatus"], values["Result"] = code, "exit-code"
+		stopped, err := statusOfUnit(context.Background(), "attempt", m, "boot", actualUnitStatusIO(t, &m, values))
+		if err != nil {
+			t.Fatal(err)
+		}
+		result := &protocol.EffectResult{WorkspaceID: ptr("workspace")}
+		// Later workspace work can fail or still own a writer. Its own status
+		// must not be replaced by the already-absent Agent's status.
+		effect := Status{Known: false, Populated: true, Result: result, Error: "workspace settlement unresolved"}
+		combined := withRuntimeExit(effect, stopped)
+		if combined.Known || !combined.Populated || combined.Result != result || combined.Error != effect.Error || !combined.MainExited || combined.ExitCode == nil || combined.RuntimeFailed != (code == "75") || combined.CaptureFailed != (code == "74") {
+			t.Fatal("lost worker proof or replaced workspace ownership", combined)
+		}
+	}
+	unknown := Status{MainExited: true, RuntimeFailed: true}
+	if got := withRuntimeExit(Status{Known: true}, unknown); got.MainExited || got.RuntimeFailed {
+		t.Fatal("unknown worker observation became proof", got)
 	}
 }

@@ -49,7 +49,13 @@ func (d *Daemon) InstalledRuntimes(ctx context.Context) []protocol.RuntimeInstal
 }
 
 func (d *Daemon) event(ctx context.Context, start journal.Start, kind protocol.RuntimeEventKind, text string) error {
-	e, err := d.DB.Event(protocol.RuntimeEvent{AttemptID: start.Dispatch.AttemptID, DispatchID: start.Dispatch.DispatchID, StreamID: "runtime", Kind: kind, Text: text, BootID: &d.Boot})
+	var e protocol.RuntimeEvent
+	var err error
+	if kind == protocol.ProcessAbsent {
+		e, err = d.retainAbsence(start, text)
+	} else {
+		e, err = d.DB.Event(protocol.RuntimeEvent{AttemptID: start.Dispatch.AttemptID, DispatchID: start.Dispatch.DispatchID, StreamID: "runtime", Kind: kind, Text: text, BootID: &d.Boot})
+	}
 	if err != nil {
 		return err
 	}
@@ -128,6 +134,12 @@ func (d *Daemon) Reconcile(ctx context.Context, inventory protocol.RunnerInvento
 			if err != nil {
 				return err
 			}
+			if status.CaptureFailed {
+				d.captureFailure(ctx, s, fmt.Errorf("supervised output writer failed"))
+			}
+			if err = d.observeMainExit(s, status); err != nil {
+				return err
+			}
 		}
 		if status.Populated {
 			if status.BootID != s.BootID || status.Cgroup == "" {
@@ -145,7 +157,7 @@ func (d *Daemon) Reconcile(ctx context.Context, inventory protocol.RunnerInvento
 			s.Phase = "running"
 		} else {
 			if s.Phase != "absent" && s.Phase != "revoked" {
-				if _, err = d.DB.Event(protocol.RuntimeEvent{AttemptID: s.Dispatch.AttemptID, DispatchID: s.Dispatch.DispatchID, StreamID: "runtime", Kind: protocol.ProcessAbsent, Text: "reconciled verified whole-tree absence", BootID: &d.Boot}); err != nil {
+				if _, err = d.retainAbsence(s, "reconciled verified whole-tree absence"); err != nil {
 					return err
 				}
 			}
@@ -283,29 +295,31 @@ func (d *Daemon) recordLaunch(ctx context.Context, retained journal.Start, statu
 	retained.Birth = status.Birth
 	retained.Cgroup = status.Cgroup
 	retained.Phase = "running"
-	if !status.Populated {
-		retained.Phase = "absent"
-	}
 	if err := d.DB.SaveStart(retained); err != nil {
 		return err
 	}
 	startErr := d.event(ctx, retained, protocol.KindStarted, "supervised runtime launch")
 	// A worker can fail output capture and exit before the helper returns its
 	// first status. Preserve that fact even when the Start send is interrupted;
-	// this path will no longer be polled as running once absence is recorded.
+	// retain terminal events before the phase stops being polled as running.
 	if status.CaptureFailed {
 		d.captureFailure(ctx, retained, fmt.Errorf("supervised output writer failed"))
 	}
 	if err := d.observeMainExit(retained, status); err != nil {
-		return err
+		return errors.Join(startErr, err)
 	}
-	if startErr != nil {
-		return startErr
+	if !status.Populated {
+		event, err := d.retainAbsence(retained, "verified no live descendants")
+		if err != nil {
+			return errors.Join(startErr, err)
+		}
+		retained.Phase = "absent"
+		if err = d.DB.SaveStart(retained); err != nil {
+			return errors.Join(startErr, err)
+		}
+		return errors.Join(startErr, d.Control.Send(ctx, protocol.Frame{Type: protocol.Event, Event: &event}))
 	}
-	if retained.Phase == "absent" {
-		return d.event(ctx, retained, protocol.ProcessAbsent, "verified no live descendants")
-	}
-	return nil
+	return startErr
 }
 func (d *Daemon) effect(ctx context.Context, op protocol.Operation) error {
 	if err := d.DB.BeginEffect(op); err != nil {
@@ -481,7 +495,7 @@ func (d *Daemon) effect(ctx context.Context, op protocol.Operation) error {
 		if op.Kind == protocol.Stop || op.Kind == protocol.KindCompleteNode || op.Kind == protocol.SettleCompletion {
 			absent := !status.Populated
 			result.Result.WriterAbsent = &absent
-			if err = d.recordEffectAbsence(op); err != nil {
+			if err = d.recordEffectAbsence(ctx, op, status); err != nil {
 				return err
 			}
 		}
@@ -492,7 +506,7 @@ func (d *Daemon) effect(ctx context.Context, op protocol.Operation) error {
 	return d.Control.Send(ctx, protocol.Frame{Type: protocol.TypeOperationResult, OperationResult: &result})
 }
 
-func (d *Daemon) recordEffectAbsence(op protocol.Operation) error {
+func (d *Daemon) recordEffectAbsence(ctx context.Context, op protocol.Operation, status host.Status) error {
 	// Canonical network/Git work runs outside mu. Re-read under the short
 	// lifecycle lock so a completed effect cannot overwrite a newer launch or
 	// reconciliation PID/birth/cgroup with its pre-network snapshot.
@@ -507,7 +521,16 @@ func (d *Daemon) recordEffectAbsence(op protocol.Operation) error {
 	if latest.Dispatch.DispatchID != op.DispatchID {
 		return fmt.Errorf("effect absence dispatch changed")
 	}
+	if status.CaptureFailed {
+		d.captureFailure(ctx, latest, fmt.Errorf("supervised output writer failed"))
+	}
+	if err = d.observeMainExit(latest, status); err != nil {
+		return err
+	}
 	if latest.Phase != "revoked" {
+		if _, err = d.retainAbsence(latest, "effect verified whole-tree absence"); err != nil {
+			return err
+		}
 		latest.Phase = "absent"
 	}
 	return d.DB.SaveStart(latest)
@@ -680,7 +703,7 @@ func (d *Daemon) Tick(ctx context.Context) {
 				continue
 			}
 			if !status.Populated && status.Known {
-				if _, err = d.DB.Event(protocol.RuntimeEvent{AttemptID: s.Dispatch.AttemptID, DispatchID: s.Dispatch.DispatchID, StreamID: "runtime", Kind: protocol.ProcessAbsent, Text: "verified whole-tree absence", BootID: &d.Boot}); err != nil {
+				if _, err = d.retainAbsence(s, "verified whole-tree absence"); err != nil {
 					continue
 				}
 				s.Phase = "absent"
@@ -745,12 +768,41 @@ func (d *Daemon) observeMainExit(s journal.Start, status host.Status) error {
 	if !status.Known || !status.MainExited {
 		return nil
 	}
-	found, err := d.DB.HasRuntimeEvent(s.Dispatch.AttemptID, protocol.Exited)
+	_, found, err := d.DB.TerminalEvent(s.Dispatch.AttemptID, s.Dispatch.DispatchID, protocol.Exited)
 	if err != nil || found {
 		return err
 	}
-	_, err = d.DB.Event(protocol.RuntimeEvent{AttemptID: s.Dispatch.AttemptID, DispatchID: s.Dispatch.DispatchID, StreamID: "runtime", Kind: protocol.Exited, Text: "runtime main process exited; formal completion is independent", ExitCode: status.ExitCode, BootID: &d.Boot})
+	event := protocol.RuntimeEvent{AttemptID: s.Dispatch.AttemptID, DispatchID: s.Dispatch.DispatchID, StreamID: "runtime", Kind: protocol.Exited, Text: "runtime main process exited; formal completion is independent", ExitCode: status.ExitCode, BootID: &d.Boot}
+	capture, err := d.DB.HasCaptureAlert(s.Dispatch.AttemptID)
+	if err != nil {
+		return err
+	}
+	if status.RuntimeFailed && !status.CaptureFailed && !capture {
+		failure := protocol.NativeTerminalError
+		event.RuntimeFailure = &failure
+	}
+	_, err = d.DB.Event(event)
 	return err
+}
+
+func (d *Daemon) retainAbsence(s journal.Start, text string) (protocol.RuntimeEvent, error) {
+	event, found, err := d.DB.TerminalEvent(s.Dispatch.AttemptID, s.Dispatch.DispatchID, protocol.ProcessAbsent)
+	if err != nil || found {
+		return event, err
+	}
+	event = protocol.RuntimeEvent{AttemptID: s.Dispatch.AttemptID, DispatchID: s.Dispatch.DispatchID, StreamID: "runtime", Kind: protocol.ProcessAbsent, Text: text, BootID: &d.Boot}
+	exit, found, err := d.DB.TerminalEvent(s.Dispatch.AttemptID, s.Dispatch.DispatchID, protocol.Exited)
+	if err != nil {
+		return event, err
+	}
+	capture, err := d.DB.HasCaptureAlert(s.Dispatch.AttemptID)
+	if err != nil {
+		return event, err
+	}
+	if found && !capture {
+		event.RuntimeFailure = exit.RuntimeFailure
+	}
+	return d.DB.Event(event)
 }
 
 // A failed durable capture freezes this Attempt by asking the constrained host
