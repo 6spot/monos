@@ -210,6 +210,11 @@ func runEffect(ctx context.Context, op protocol.Operation) (Status, error) {
 	if op.Kind == protocol.KindCompleteNode && base == "" {
 		return Status{}, fmt.Errorf("finalization requires retained system materialization base")
 	}
+	if op.Kind == protocol.KindOpenWorkspace {
+		if err = guardMaterialization(); err != nil {
+			return Status{}, err
+		}
+	}
 	if err = requireAbsentUnit(ctx, operationUnit(op.OperationID)); err != nil {
 		return Status{}, err
 	}

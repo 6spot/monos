@@ -51,7 +51,7 @@ func (c *Client) publicationPost(ctx context.Context, path, name string, payload
 			requestCancel()
 			return errors.New("publication request unavailable")
 		}
-		req.Header.Set("Authorization", "Bearer "+c.token)
+		req.Header.Set("Authorization", "Bearer "+c.credential())
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("Cache-Control", "no-store")
 		resp, e := c.HTTP.Do(req)

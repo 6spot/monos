@@ -20,10 +20,15 @@ import (
 	"monos.local/runner/internal/control"
 	"monos.local/runner/internal/host"
 	"monos.local/runner/internal/journal"
+	"monos.local/runner/internal/resources"
 	"monos.local/runner/internal/wire"
 )
 
 type Daemon struct {
+	Resources         *resources.Monitor
+	maintenanceMu     sync.Mutex
+	lastMaintenance   time.Time
+	maintenanceCursor string
 	DB                *journal.DB
 	Control           *control.Client
 	Host              host.Supervisor
@@ -51,6 +56,10 @@ func (d *Daemon) InstalledRuntimes(ctx context.Context) []protocol.RuntimeInstal
 		return host.UnavailableRuntimes()
 	}
 	return status.Runtimes
+}
+
+func (d *Daemon) ResourceObservation(context.Context) *protocol.RunnerResources {
+	return d.Resources.Report()
 }
 
 func (d *Daemon) event(ctx context.Context, start journal.Start, kind protocol.RuntimeEventKind, text string) error {
@@ -210,7 +219,7 @@ func (d *Daemon) enqueueLocked(ctx context.Context, key string, work func() erro
 			d.drainRecoveryLocked()
 			d.queueMu.Unlock()
 		}()
-		if !strings.HasPrefix(key, "workspace:") && !strings.HasPrefix(key, "inspection:") {
+		if !strings.HasPrefix(key, "workspace:") && !strings.HasPrefix(key, "inspection:") && !strings.HasPrefix(key, "cleanup:") {
 			d.mu.Lock()
 			defer d.mu.Unlock()
 		}
@@ -225,6 +234,17 @@ func (d *Daemon) enqueueLocked(ctx context.Context, key string, work func() erro
 }
 func (d *Daemon) Frame(ctx context.Context, frame protocol.Frame) {
 	switch frame.Type {
+	case protocol.Type("task_cleanup"):
+		if frame.CleanupRequest != nil {
+			request := *frame.CleanupRequest
+			d.enqueue(ctx, "cleanup:"+request.CleanupID, func() error { return d.taskCleanup(ctx, request) })
+		}
+	case protocol.Type("task_cleanup_ack"):
+		if frame.CleanupACK != nil {
+			if err := d.DB.AckTaskCleanup(*frame.CleanupACK); err != nil {
+				log.Print("Task cleanup acknowledgement rejected")
+			}
+		}
 	case protocol.Type("publication_prepare"):
 		d.publicationPrepare(ctx, frame)
 	case protocol.Type("publication_ref_read"):
@@ -288,6 +308,18 @@ func (d *Daemon) start(ctx context.Context, dispatch protocol.Dispatch) error {
 	if !errors.Is(err, sql.ErrNoRows) {
 		return err
 	}
+	if dispatch.TaskID != nil {
+		retirement, err := d.DB.TaskCleanup(*dispatch.TaskID)
+		if err != nil {
+			return err
+		}
+		if retirement != nil && !host.CleanupAllowsConversation(*retirement, dispatch) {
+			return fmt.Errorf("completed Task is retired")
+		}
+	}
+	if err = d.Resources.Guard(); err != nil {
+		return err
+	}
 	if _, err = d.Control.Authorize(ctx, dispatch.DispatchID); err != nil {
 		return err
 	}
@@ -340,6 +372,15 @@ func (d *Daemon) recordLaunch(ctx context.Context, retained journal.Start, statu
 	return startErr
 }
 func (d *Daemon) effect(ctx context.Context, op protocol.Operation) error {
+	if op.Kind == protocol.KindOpenWorkspace && op.Workspace != nil {
+		retired, err := d.DB.TaskRetired(op.Workspace.TaskID)
+		if err != nil {
+			return err
+		}
+		if retired {
+			return fmt.Errorf("completed Task workspace is retired")
+		}
+	}
 	if err := d.DB.BeginEffect(op); err != nil {
 		return err
 	}
@@ -348,6 +389,15 @@ func (d *Daemon) effect(ctx context.Context, op protocol.Operation) error {
 		return err
 	}
 	if old != nil && (old.Success || old.CancelledByOperationID != nil) {
+		if op.Inspection != nil {
+			retired, err := d.DB.InspectionRetired(op.OperationID)
+			if err != nil {
+				return err
+			}
+			if retired {
+				return host.ErrInspectionRetired
+			}
+		}
 		if op.Kind == protocol.KindCompleteNode && old.CancelledByOperationID != nil {
 			return d.replayCompletionSettlement(ctx, op, *old.CancelledByOperationID)
 		}
@@ -505,7 +555,7 @@ func (d *Daemon) effect(ctx context.Context, op protocol.Operation) error {
 		result.Result.Message = &message
 		result.FailureKind = &kind
 		if canonicalWorkspaceOperation(op) {
-			reason := protocol.OwnershipUnresolved
+			reason := protocol.WorkspaceUnavailableReason("ownership_unresolved")
 			for _, candidate := range []protocol.WorkspaceUnavailableReason{protocol.WorkspaceUnavailableReasonCredentialsMissing, protocol.RepositoryDenied, protocol.WorkspaceUnavailableReasonRefUnavailable, protocol.StorageUnavailable, protocol.UnsupportedRemote} {
 				if strings.Contains(err.Error(), string(candidate)) {
 					reason = candidate
@@ -621,10 +671,19 @@ func (d *Daemon) confirmNeverLaunched(ctx context.Context, s journal.Start) (jou
 	return s, nil
 }
 func (d *Daemon) Tick(ctx context.Context) {
+	defer d.scheduleMaintenance(ctx)
 	if !d.mu.TryLock() {
 		return
 	}
 	defer d.mu.Unlock()
+	if results, err := d.DB.PendingTaskCleanupResults(); err == nil {
+		for _, result := range results {
+			r := result
+			if d.Control.Send(ctx, protocol.Frame{Type: "task_cleanup_result", CleanupResult: &r}) != nil {
+				return
+			}
+		}
+	}
 	pending, err := d.DB.PendingEvents()
 	if err != nil {
 		log.Printf("journal event recovery failed: %v", err)
@@ -660,7 +719,16 @@ func (d *Daemon) Tick(ctx context.Context) {
 				d.captureFailure(ctx, s, fmt.Errorf("supervised output writer failed"))
 			}
 		}
-		for _, stream := range []string{"stdout", "stderr"} {
+		retirement, retirementErr := d.DB.LogRetirement(s.Dispatch.AttemptID)
+		if retirementErr != nil {
+			d.captureFailure(ctx, s, retirementErr)
+			continue
+		}
+		streams := []string{"stdout", "stderr"}
+		if retirement != nil {
+			streams = nil
+		}
+		for _, stream := range streams {
 			offset, e := d.DB.LogOffset(s.Dispatch.AttemptID, stream)
 			if e != nil {
 				d.captureFailure(ctx, s, e)

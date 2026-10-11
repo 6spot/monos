@@ -12,12 +12,14 @@ import (
 	"time"
 
 	protocol "monos.local/protocol"
+	"monos.local/runner/internal/resources"
 	"monos.local/runner/internal/wire"
 )
 
 type InspectionAccess func(context.Context, protocol.Operation) (protocol.InspectionRepositoryAccessResult, error)
 
 type inspectionRecord struct {
+	Retired      bool                          `json:"retired,omitempty"`
 	Descriptor   protocol.InspectionDescriptor `json:"descriptor"`
 	Digest       string                        `json:"digest"`
 	StorageID    string                        `json:"storage_id"`
@@ -142,6 +144,9 @@ func inspectRepositoryAt(ctx context.Context, root, storage string, op protocol.
 			}
 		}
 		if s.record.Result != nil {
+			if s.record.Retired {
+				return protocol.EffectResult{}, ErrInspectionRetired
+			}
 			result := s.record.Result
 			raw, _, err := wire.Canonical(result)
 			if err != nil || wire.Validate("InspectionResult", raw) != nil || result.InspectionID != op.OperationID || result.DescriptorDigest != digest {
@@ -173,6 +178,9 @@ func inspectRepositoryAt(ctx context.Context, root, storage string, op protocol.
 	}
 	if time.Now().Unix() >= s.record.Deadline {
 		return finish("timeout")
+	}
+	if err := resources.GuardContext(ctx, "journal", "cache", "inspection"); err != nil {
+		return finish("resource_unavailable")
 	}
 	var source, commit, tree string
 	if sourceOverride != nil {

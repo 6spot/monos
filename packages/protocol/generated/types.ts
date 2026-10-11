@@ -30,7 +30,9 @@ type DeliveryRef = string;
 type CompletionOutcome = string;
 
 export interface SetupReport {
+    cleanup?:              CleanupSummary;
     configuration_version: number;
+    database_storage?:     BackendStorageObservation;
     observed_at:           string;
     planner:               SetupPolicyStatus;
     projects:              SetupProjectStatus[];
@@ -39,6 +41,45 @@ export interface SetupReport {
     schema_version:        number;
     unverified:            [Unverified, Unverified, Unverified, Unverified, Unverified, ...Unverified[]];
 }
+
+export interface CleanupSummary {
+    attention:        number;
+    attention_items?: CleanupAttention[];
+    completed:        number;
+    pending:          number;
+    policy:           RetentionPolicy;
+}
+
+export interface CleanupAttention {
+    reason:    CleanupAttentionReason;
+    runner_id: string;
+    task_id:   string;
+}
+
+export type CleanupAttentionReason = "ownership_unresolved" | "storage_identity_mismatch" | "result_unavailable" | "cleanup_failed" | "request_too_large";
+
+export interface RetentionPolicy {
+    completed_task_days: number;
+    enabled:             boolean;
+}
+
+export interface BackendStorageObservation {
+    current:     boolean;
+    observation: StorageHealth;
+    observed_at: string;
+}
+
+export interface StorageHealth {
+    free_bytes?:    number;
+    min_free_bytes: number;
+    scope:          StorageHealthScope;
+    status:         StorageHealthStatus;
+    total_bytes?:   number;
+}
+
+export type StorageHealthScope = "database" | "journal" | "logs" | "cache" | "workspaces" | "inspection";
+
+export type StorageHealthStatus = "ok" | "low" | "unknown";
 
 export interface SetupPolicyStatus {
     action?:    SetupPolicyStatusAction;
@@ -49,9 +90,9 @@ export interface SetupPolicyStatus {
     target?:    ExecutionTarget;
 }
 
-export type SetupPolicyStatusAction = "configure_policy" | "configure_role" | "enroll_runner" | "start_runner" | "refresh_runtime" | "select_runner" | "review_target";
+export type SetupPolicyStatusAction = "configure_policy" | "configure_role" | "enroll_runner" | "start_runner" | "refresh_runtime" | "select_runner" | "review_target" | "restore_storage";
 
-export type SetupPolicyStatusReason = "policy_missing" | "role_missing" | "unsupported_runtime" | "unsupported_model" | "unsupported_thinking" | "runner_missing" | "runner_offline" | "installation_stale" | "installation_unavailable" | "model_control_unavailable" | "thinking_control_unavailable" | "ambiguous_auto_placement" | "unsupported_runner_transfer" | "runtime_targets_exhausted";
+export type SetupPolicyStatusReason = "policy_missing" | "role_missing" | "unsupported_runtime" | "unsupported_model" | "unsupported_thinking" | "runner_missing" | "runner_offline" | "installation_stale" | "installation_unavailable" | "model_control_unavailable" | "thinking_control_unavailable" | "ambiguous_auto_placement" | "unsupported_runner_transfer" | "runtime_targets_exhausted" | "runner_storage_attention" | "database_storage_attention";
 
 export type Source = "planner" | "global" | "role";
 
@@ -80,10 +121,31 @@ export interface Role {
 export type SetupProjectStatusStatus = "configured" | "missing_roles" | "runtime_unavailable";
 
 export interface RunnerConfiguration {
-    capacity:  number;
-    online:    boolean;
-    runner_id: string;
-    runtimes:  Runtime[];
+    capacity:            number;
+    credential_revoked?: boolean;
+    online:              boolean;
+    resources?:          RunnerResourceObservation;
+    runner_id:           string;
+    runtimes:            Runtime[];
+}
+
+export interface RunnerResourceObservation {
+    current:     boolean;
+    observation: RunnerResources;
+    observed_at: string;
+}
+
+export interface RunnerResources {
+    execution_limits:           ExecutionResourceLimits;
+    inspection_retention_hours: number;
+    log_retention_hours:        number;
+    storage:                    [StorageHealth, StorageHealth, StorageHealth, StorageHealth, StorageHealth, ...StorageHealth[]];
+}
+
+export interface ExecutionResourceLimits {
+    cpu_quota_percent: number;
+    memory_max_bytes:  number;
+    tasks_max:         number;
 }
 
 export interface Runtime {
@@ -629,6 +691,10 @@ export interface Frame {
     allowed?:                     boolean;
     attempt_id?:                  string;
     boot_id?:                     string;
+    cleanup_ack?:                 TaskCleanupACK;
+    cleanup_modes?:               CleanupMode[];
+    cleanup_request?:             TaskCleanupRequest;
+    cleanup_result?:              TaskCleanupResult;
     correlation_id?:              string;
     credential?:                  string;
     dispatch?:                    Dispatch;
@@ -652,6 +718,7 @@ export interface Frame {
     publication_ref_read_result?: PublicationRefReadResponse;
     publication_result?:          PublicationResultPage;
     remote_preparation_modes?:    RemotePreparationMode[];
+    resources?:                   RunnerResources;
     result_read?:                 ResultReadRequest;
     result_read_modes?:           ResultReadMode[];
     result_read_result?:          ResultReadResponse;
@@ -662,6 +729,76 @@ export interface Frame {
     stream_id?:                   string;
     type:                         Type;
 }
+
+export interface TaskCleanupACK {
+    cleanup_id:     string;
+    request_digest: string;
+}
+
+export type CleanupMode = "completed_task_v1";
+
+export interface TaskCleanupRequest {
+    attempts:       TaskCleanupAttempt[];
+    cleanup_id:     string;
+    completed_at:   string;
+    results:        ResultReadIdentity[];
+    runner_id:      string;
+    schema_version: number;
+    task_id:        string;
+    workspaces:     TaskCleanupWorkspace[];
+}
+
+export interface TaskCleanupAttempt {
+    attempt_id:  string;
+    dispatch_id: string;
+}
+
+export interface ResultReadIdentity {
+    attempt_id:                string;
+    base_commit:               string;
+    capture:                   WorkspaceCaptureResult;
+    dispatch_id:               string;
+    generation:                number;
+    git_commit:                string;
+    git_tree:                  string;
+    integration?:              WorkspaceIntegrationResult;
+    lease_id:                  string;
+    manifest_digest:           string;
+    node_activation:           number;
+    node_id:                   string;
+    operation_id:              string;
+    operation_identity_digest: string;
+    plan_id:                   string;
+    repository_identity:       string;
+    resource_id:               string;
+    runner_id:                 string;
+    specification_id:          string;
+    storage_id:                string;
+    task_id:                   string;
+    workspace_id:              string;
+}
+
+export interface TaskCleanupWorkspace {
+    allocation_ids:   string[];
+    direct:           boolean;
+    finalized_commit: string;
+    generation:       number;
+    resource_id:      string;
+    storage_id:       string;
+    workspace_id:     string;
+}
+
+export interface TaskCleanupResult {
+    cleanup_id:     string;
+    reason?:        TaskCleanupResultReason;
+    request_digest: string;
+    schema_version: number;
+    status:         TaskCleanupResultStatus;
+}
+
+export type TaskCleanupResultReason = "ownership_unresolved" | "storage_identity_mismatch" | "result_unavailable" | "cleanup_failed";
+
+export type TaskCleanupResultStatus = "completed" | "blocked";
 
 export interface Dispatch {
     attempt_id:                string;
@@ -830,31 +967,6 @@ export interface InspectionOrigin {
     operation_id?:     string;
     workspace?:        WorkspaceDescriptor;
     workspace_digest?: string;
-}
-
-export interface ResultReadIdentity {
-    attempt_id:                string;
-    base_commit:               string;
-    capture:                   WorkspaceCaptureResult;
-    dispatch_id:               string;
-    generation:                number;
-    git_commit:                string;
-    git_tree:                  string;
-    integration?:              WorkspaceIntegrationResult;
-    lease_id:                  string;
-    manifest_digest:           string;
-    node_activation:           number;
-    node_id:                   string;
-    operation_id:              string;
-    operation_identity_digest: string;
-    plan_id:                   string;
-    repository_identity:       string;
-    resource_id:               string;
-    runner_id:                 string;
-    specification_id:          string;
-    storage_id:                string;
-    task_id:                   string;
-    workspace_id:              string;
 }
 
 export type InspectionOriginKind = "default_ref" | "task_completion" | "task_open";
@@ -1359,7 +1471,7 @@ export interface PublicationFinding {
     path:                    string;
     path_redacted:           boolean;
     rule_id:                 PublicationFindingRuleID;
-    scope:                   Scope;
+    scope:                   PublicationFindingScope;
     size?:                   number;
 }
 
@@ -1369,7 +1481,7 @@ export type Message = "Tracked file matches ignore rules." | "Blob exceeds local
 
 export type PublicationFindingRuleID = "tracked_ignore" | "policy_blob_size" | "provider_blob_size" | "workflow_permission" | "pem_private_key" | "github_classic_token" | "github_fine_grained_token" | "aws_access_key";
 
-export type Scope = "publication_commit" | "final_tree";
+export type PublicationFindingScope = "publication_commit" | "final_tree";
 
 export interface PublicationResult {
     candidate?:                 PublicationCandidateManifest;
@@ -1435,7 +1547,7 @@ export type ResultChangeStatus = "A" | "D" | "M" | "T";
 
 export type ResultReadResponseStatus = "available" | "absent" | "binary" | "oversized" | "scan_limit" | "unsupported_path" | "unavailable" | "identity_mismatch" | "offline" | "unsupported" | "busy" | "timeout" | "no_git";
 
-export type Type = "hello" | "welcome" | "ready" | "heartbeat" | "start" | "effect" | "authorize_dispatch" | "authorization" | "event" | "event_ack" | "operation_result" | "operation_ack" | "error" | "result_read" | "result_read_result" | "publication_prepare" | "publication_result" | "publication_ack" | "publication_push" | "publication_push_result" | "publication_push_ack" | "publication_ref_read" | "publication_ref_read_result";
+export type Type = "hello" | "welcome" | "ready" | "heartbeat" | "start" | "effect" | "authorize_dispatch" | "authorization" | "event" | "event_ack" | "operation_result" | "operation_ack" | "error" | "result_read" | "result_read_result" | "publication_prepare" | "publication_result" | "publication_ack" | "publication_push" | "publication_push_result" | "publication_push_ack" | "publication_ref_read" | "publication_ref_read_result" | "task_cleanup" | "task_cleanup_result" | "task_cleanup_ack";
 
 export interface RunnerInventory {
     dispatches:     Dispatch[];
@@ -1546,27 +1658,29 @@ export interface ConfigurationCommand {
     schema_version:           number;
 }
 
-export type ConfigurationCommandName = "save_project" | "save_role" | "save_policies" | "save_github" | "save_planner_guidance" | "save_git_https_credential" | "clear_git_https_credential";
+export type ConfigurationCommandName = "save_project" | "save_role" | "save_policies" | "save_github" | "save_planner_guidance" | "save_git_https_credential" | "clear_git_https_credential" | "save_retention";
 
 export interface PayloadClass {
-    archived?:         boolean;
-    context?:          string;
-    id?:               string;
-    name?:             string;
-    resources?:        GitRepositoryResource[];
-    role_ids?:         string[];
-    description?:      string;
-    execution_policy?: ExecutionPolicy;
-    instructions?:     string;
-    global?:           ExecutionPolicy;
-    planner?:          ExecutionPolicy;
-    app_id?:           string;
-    installation_id?:  string;
-    private_key?:      string;
-    guidance?:         string;
-    resource_id?:      string;
-    token?:            string;
-    username?:         string;
+    archived?:            boolean;
+    context?:             string;
+    id?:                  string;
+    name?:                string;
+    resources?:           GitRepositoryResource[];
+    role_ids?:            string[];
+    description?:         string;
+    execution_policy?:    ExecutionPolicy;
+    instructions?:        string;
+    global?:              ExecutionPolicy;
+    planner?:             ExecutionPolicy;
+    app_id?:              string;
+    installation_id?:     string;
+    private_key?:         string;
+    guidance?:            string;
+    resource_id?:         string;
+    token?:               string;
+    username?:            string;
+    completed_task_days?: number;
+    enabled?:             boolean;
 }
 
 export interface ExecutionPolicy {
@@ -1620,6 +1734,7 @@ export interface ConfigurationSnapshot {
     planner_guidance?:     string;
     policies:              PolicyConfiguration;
     projects:              ProjectConfiguration[];
+    retention?:            RetentionPolicy;
     roles:                 RoleConfiguration[];
     schema_version:        number;
 }
@@ -2965,6 +3080,7 @@ export interface Execution {
 }
 
 export interface AttemptWorkspace {
+    cleaned_at?:           string;
     failure_kind:          null | string;
     lease_id:              string;
     lease_state:           LeaseState;
@@ -3936,4 +4052,50 @@ export interface RepositoryAccessResult {
     remote_url:        string;
     schema_version:    number;
     workspace_digest:  string;
+}
+
+export interface RunnerManageCommand {
+    action:         RunnerManageCommandAction;
+    capacity?:      number;
+    runner_id:      string;
+    schema_version: number;
+    ttl_seconds?:   number;
+}
+
+export type RunnerManageCommandAction = "rotate" | "revoke" | "set_capacity";
+
+export interface RunnerManageResult {
+    capacity:           number;
+    credential_revoked: boolean;
+    runner_id:          string;
+    schema_version:     number;
+}
+
+export interface RunnerRotationGrant {
+    expires_at:     string;
+    rotation_id:    string;
+    rotation_token: string;
+    runner_id:      string;
+    schema_version: number;
+}
+
+export interface RunnerRotationRequest {
+    credential:     string;
+    request_id:     string;
+    rotation_token: string;
+    runner_id:      string;
+    schema_version: number;
+}
+
+export interface RunnerRotationResponse {
+    request_id:     string;
+    runner_id:      string;
+    schema_version: number;
+}
+
+export interface RunnerEnrollmentProof {
+    credential_hash: string;
+    enrollment_id:   string;
+    runner_id:       string;
+    schema_version:  number;
 }

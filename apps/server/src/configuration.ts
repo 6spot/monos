@@ -1,7 +1,9 @@
+import { retentionPolicy } from './task-cleanup.ts';
+import { readRunnerConfigurations } from './runner-observations.ts';
 import { transaction } from '../../../packages/db/src/index.ts';
 import type { Database, Transaction } from '../../../packages/db/src/index.ts';
 import { canonicalJSON, digest, MAX_BODY_BYTES, validate } from '../../../packages/protocol/src/index.ts';
-import type { ConfigurationCommand, ConfigurationResult, ConfigurationSnapshot, GitRepositoryResource, ProjectConfiguration, RoleConfiguration, PolicyConfiguration, GitHubConfigurationStatus, GitHTTPSCredentialStatus, InfrastructureSnapshot, RuntimeInstallation } from '../../../packages/protocol/src/index.ts';
+import type { ConfigurationCommand, ConfigurationResult, ConfigurationSnapshot, GitRepositoryResource, ProjectConfiguration, RoleConfiguration, PolicyConfiguration, GitHubConfigurationStatus, GitHTTPSCredentialStatus, InfrastructureSnapshot } from '../../../packages/protocol/src/index.ts';
 import { CommandError } from '../../../packages/domain/src/commands.ts';
 import { repositoryIdentity, validateRepositorySettings } from '../../../packages/domain/src/repositories.ts';
 import { authenticateOwner } from './owner-commands.ts';
@@ -21,7 +23,7 @@ async function snapshot(tx: Transaction, version: number): Promise<Configuration
   const resources = (await tx.query<{ project_id: string; settings: GitRepositoryResource }>('SELECT project_id,settings FROM project_resources WHERE active ORDER BY id')).rows;
   const selected = (await tx.query<{ project_id: string; role_id: string }>('SELECT project_id,role_id FROM project_roles ORDER BY role_id')).rows;
   const planner_guidance = (await tx.query<{ planner_guidance: string }>('SELECT planner_guidance FROM execution_policies')).rows[0]!.planner_guidance;
-  const result = { schema_version: 1, control_version: version, roles, policies, planner_guidance, git_https_credentials, ...(github ? { github } : {}), projects: projects.map((project) => ({ ...project, resources: resources.filter((r) => r.project_id === project.id).map((r) => r.settings), role_ids: selected.filter((r) => r.project_id === project.id).map((r) => r.role_id) })) };
+  const result = { schema_version: 1, control_version: version, roles, policies, retention: await retentionPolicy(tx), planner_guidance, git_https_credentials, ...(github ? { github } : {}), projects: projects.map((project) => ({ ...project, resources: resources.filter((r) => r.project_id === project.id).map((r) => r.settings), role_ids: selected.filter((r) => r.project_id === project.id).map((r) => r.role_id) })) };
   if (Buffer.byteLength(JSON.stringify(result)) > MAX_BODY_BYTES) throw new CommandError('unmet_precondition', 'Configuration exceeds the current 2 MiB snapshot limit');
   return validate('ConfigurationSnapshot', result);
 }
@@ -96,6 +98,7 @@ export class Configuration {
       if (version !== command.expected_control_version) throw new CommandError('version_conflict', 'Configuration changed; reload and review your edit', version);
       let credential_change: ConfigurationResult['credential_change'];
       switch (command.name) {
+        case 'save_retention': await tx.query('UPDATE maintenance_configuration SET retention=$1', [validate('RetentionPolicy', command.payload)]); break;
         case 'save_git_https_credential':
           if (!this.gitHTTPS) throw new CommandError('unmet_precondition', 'HTTPS credential storage is not configured');
           credential_change = await this.gitHTTPS.configure(tx, validate('GitHTTPSCredentialInput', command.payload), command.request_id); break;
@@ -142,10 +145,7 @@ export class Configuration {
   async infrastructure(token: string, instanceId: string): Promise<InfrastructureSnapshot> {
     return transaction(this.db, async (tx) => {
       await authenticateOwner(tx, token);
-      const rows = (await tx.query<{ runner_id: string; capacity: number; online: boolean; runtimes: { installation: RuntimeInstallation; observed_at: string; current: boolean }[] }>(`SELECT r.id AS runner_id,r.capacity,
-        (r.connected AND r.ready AND r.connection_instance=$1 AND r.last_seen>clock_timestamp()-interval '15 seconds') AS online,
-        COALESCE((SELECT jsonb_agg(jsonb_build_object('installation',i.observation,'observed_at',to_char(i.observed_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'),'current',i.incarnation=r.incarnation) ORDER BY i.runtime_id) FROM runtime_installations i WHERE i.runner_id=r.id),'[]'::jsonb) AS runtimes
-        FROM runners r ORDER BY r.id`, [instanceId])).rows;
+      const rows = await readRunnerConfigurations(tx, instanceId);
       return validate('InfrastructureSnapshot', { schema_version: 1, runners: rows });
     });
   }

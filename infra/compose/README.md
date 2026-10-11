@@ -1,6 +1,14 @@
-# Isolated backend/database probe
+# Single-host backend and database
 
-This deploys only the boundary probe, not the Stage A product. Use the Owner-authorized Linux test host. Backend and PostgreSQL have no Runner filesystem mounts; PostgreSQL has **no published host port**. The default published endpoint is `http://127.0.0.1:18443`, with authenticated HTTP/WS and no certificates. HTTPS/WSS is optional. Agents never receive backend/Runner credentials or access to the Compose private directory.
+These templates deploy the current Web/backend and PostgreSQL. For a complete
+fresh installation, use the [single-host installer](../install/README.md), which
+also bootstraps Owner access and the host Runner. The historical Compose project
+name remains `monos-boundary-probe`; it is a packaging identity, not a feature gate.
+Backend and PostgreSQL have no Runner filesystem mounts; PostgreSQL has **no
+published host port**. The default published endpoint is
+`http://127.0.0.1:18443`, with authenticated HTTP/WS and no certificates. HTTPS/WSS
+is optional. Agents never receive backend/Runner credentials or access to the
+Compose private directory.
 
 The server joins a separate ordinary `ingress` bridge as well as the private `control` network. Docker 29 did not install the loopback port mapping when the server joined only an `internal:true` network. The ordinary bridge enables the explicit `127.0.0.1:18443` binding; PostgreSQL remains attached only to `control`, with no published database port.
 
@@ -36,11 +44,24 @@ Images are pinned to official multiarchitecture manifest digests checked through
 
 The Runner connection row also binds the current backend process instance. After backend restart, new Agent effects wait for Runner reconnect/reconciliation even if the previous heartbeat was recent. Existing authenticated receipt/recovery reads remain available. This probe has one backend process; future multi-backend routing must forward to the connection owner instead of dropping this guard or using a stale heartbeat as authority.
 
-Migrations currently end at version 3. Migration 2 adds backend connection-instance ownership; migration 3 retains typed capture failure classification on the original operation. Startup checks previously applied migration checksums before applying new versions. Runner inventory uses byte-bounded pages and a consistent snapshot token; clients must collect every page before reconciliation. See the [protocol contract](../../packages/protocol/README.md).
+Startup applies the current registered migrations under the existing database
+lock and validates their recorded checksums. See `packages/db/src/migrate.ts`
+for the current registry. Runner inventory uses byte-bounded pages and a
+consistent snapshot token; clients collect every page before reconciliation.
+See the [protocol contract](../../packages/protocol/README.md).
 
-## Local fixture administration
+The server receives a read-only mount of `database_data` at
+`/var/lib/monos-database-observation` for `statfs` free-space observations.
+`MONOS_DATABASE_STORAGE_PATH` selects it and `MONOS_STORAGE_MIN_FREE_BYTES`
+defaults to 1073741824. PostgreSQL owns all database writes. This mount is never
+given to the Runner or execution account and is not a durability/backup check.
+
+## Local legacy fixture administration
 
 The local command reads a JSON object from stdin. Pipe it into `docker compose -f infra/compose/compose.yaml exec -T server node --experimental-strip-types apps/server/src/admin.ts`. Do not place credentials in argv or print input.
+
+These commands support the explicit boundary fixtures. Ordinary installation uses
+the one-use [Runner enrollment](../runner/enrollment.md) and Owner Web flows.
 
 - Enroll: `{ "action":"enroll", "runner_id":"probe-runner", "credential":"<read private/runner_credential in the administrative process>", "capacity":2 }`. Repeating identical enrollment is safe; differing credentials/capacity do not overwrite the existing row.
 - Create: `{ "action":"attempt", "runner_id":"probe-runner", "attempt_id":"trial-1", "task_id":"task-1", "kind":"node", "resource_id":"fixture-repo", "prompt":"..." }`. Use `kind:"planner"` for a read-only Planner. This creates a fixture Specification/Plan and transactional ownership/dispatch, not a general scheduler. Each trial uses a distinct Task/Attempt. The selected Runtime/model is fixed to the authorized OpenCode free model.

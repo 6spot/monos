@@ -365,6 +365,11 @@ function ExecutionWorkspace({
         <div className="task-work-card" key={w.lease_id}>
           <dl>
             <Datum label="Repository">{w.repository_identity}</Datum>
+            {w.cleaned_at && (
+              <Datum label="Workspace storage">
+                Cleaned {new Date(w.cleaned_at).toLocaleString()}; results and history retained
+              </Datum>
+            )}
             <Datum label="Workspace access">
               {human(w.lease_state)} · open {human(w.open_state)}
               {w.settle_state ? ` · cleanup ${human(w.settle_state)}` : ""}
@@ -391,7 +396,7 @@ function ExecutionWorkspace({
                   <code>{w.metadata.base_commit}</code>
                 </Datum>
                 <Datum label="Target branch">{w.metadata.target_branch}</Datum>
-                <Datum label="Verified local head">
+                <Datum label={w.cleaned_at ? "Recorded finalized commit" : "Verified local head"}>
                   <code>{w.metadata.finalized_commit}</code>
                 </Datum>
               </>

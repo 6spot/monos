@@ -43,7 +43,7 @@ func (c *Client) RepositoryAccess(ctx context.Context, op protocol.Operation) (p
 	if err != nil {
 		return access, err
 	}
-	req.Header.Set("Authorization", "Bearer "+c.token)
+	req.Header.Set("Authorization", "Bearer "+c.credential())
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Cache-Control", "no-store")
 	resp, err := c.HTTP.Do(req)
@@ -57,7 +57,7 @@ func (c *Client) RepositoryAccess(ctx context.Context, op protocol.Operation) (p
 	}
 	if resp.StatusCode != http.StatusOK {
 		failure := protocol.RepositoryAccessError{}
-		reason := protocol.OwnershipUnresolved
+		reason := protocol.WorkspaceUnavailableReasonOwnershipUnresolved
 		if wire.Decode("RepositoryAccessError", raw, &failure) == nil {
 			reason = failure.Reason
 		}

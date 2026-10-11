@@ -147,7 +147,7 @@ export async function prepareNodeSource(
   task: NodeTask,
   node: ExecutionNode,
   configurationVersion: number,
-  options: { request_id?: string; recovery?: object } = {}
+  options: { request_id?: string; recovery?: object; defer_dependencies?: true } = {}
 ): Promise<NodeSource> {
   await assertCompletionBoundaryAvailable(tx, task.id);
   await assertSpecificationUnfrozen(tx,task.id);
@@ -157,7 +157,7 @@ export async function prepareNodeSource(
   const id = randomUUID(),
     attemptId = randomUUID();
   const definition = (
-    await tx.query<{ definition: { role_id: string; dependencies: string[] } }>(
+    await tx.query<{ definition: { role_id: string; dependencies: string[]; consumes?: string[] } }>(
       'SELECT definition FROM plan_nodes WHERE plan_id=$1 AND node_id=$2',
       [task.plan_id, node.id]
     )
@@ -183,12 +183,14 @@ export async function prepareNodeSource(
   let upstream: Awaited<ReturnType<typeof nodeUpstreamContext>> | undefined;
   let rework: Awaited<ReturnType<typeof nodeReworkContext>> = [];
   try {
-    upstream = await nodeUpstreamContext(tx, task.id, task.plan_id, definition.dependencies);
+    upstream = await nodeUpstreamContext(tx, task.id, task.plan_id, definition.dependencies, definition.consumes ?? []);
     rework = await nodeReworkContext(tx, task, node);
   }
   catch (error) {
-    if (!(error instanceof CommandError) || error.message !== 'context_budget_exceeded') throw error;
-    failure = 'context_budget_exceeded';
+    if (!(error instanceof CommandError)) throw error;
+    if (options.defer_dependencies && error.message === 'Node dependencies lack current completion evidence') failure = 'waiting_for_dependencies';
+    else if (error.message === 'context_budget_exceeded') failure = 'context_budget_exceeded';
+    else throw error;
   }
   let context: object | null = null,
     prompt: string | null = null;
@@ -340,7 +342,12 @@ export async function prepareNodeSource(
     waiting_reason: failure,
     done: !!failure,
   };
-  if (failure) await blockNodeSource(tx, source, 'factual', failure);
+  // Requirement publication may need an exact blocked source before upstream
+  // reactivation finishes. Its caller preserves the original Owner/blocker
+  // reason in this transaction; no executable context exists yet.
+  if (failure) {
+    if (!(options.defer_dependencies && failure === 'waiting_for_dependencies')) await blockNodeSource(tx, source, 'factual', failure);
+  }
   else if (!options.request_id) await activateInheritedHold(tx, source);
   return source;
 }

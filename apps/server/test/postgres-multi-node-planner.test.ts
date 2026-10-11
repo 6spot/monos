@@ -63,13 +63,13 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Multi-Node planning an
     expect((await x.db.pool.query("SELECT 1 FROM operations WHERE kind='stop'")).rowCount).toBe(1);
   });
 
-  it('rejects missing references, cycles, and consumes on a later Node while preserving a correctable Planner', async () => {
+  it('rejects missing graph or future Artifact references and cycles while preserving a correctable Planner', async () => {
     const a = await planner();
     for (const graph of [
       nodes.map((n, i) => i === 1 ? { ...n, dependencies: ['missing-node'] } : n),
       nodes.map((n, i) => i === 0 ? { ...n, dependencies: [nodes[1]!.node_id] } : n),
     ]) await expect(publish(a, graph)).rejects.toMatchObject({ detail: { code: 'invalid_input' } });
-    await expect(publish(a, nodes.map((n, i) => i === 2 ? { ...n, consumes: ['unavailable-artifact'] } : n))).rejects.toMatchObject({ detail: { code: 'unmet_precondition' } });
+    await expect(publish(a, nodes.map((n, i) => i === 2 ? { ...n, consumes: ['unavailable-artifact'] } : n))).rejects.toMatchObject({ detail: { code: 'denied_scope' } });
     expect((await x.db.pool.query('SELECT 1 FROM plan_revisions')).rowCount).toBe(0);
     expect((await x.db.pool.query('SELECT mutation_allowed FROM attempts WHERE id=$1', [a.dispatch.attempt_id])).rows[0].mutation_allowed).toBe(true);
     expect((await publish(a)).status).toBe('committed');
@@ -90,7 +90,7 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Multi-Node planning an
     expect((await publish(a, graph)).status).toBe('committed');
   });
 
-  it('retains complete Conversation impact and rejects multi-Node requirement mutation before effects', async () => {
+  it('retains complete Conversation impact and rejects incomplete or duplicate requirement membership before effects', async () => {
     await start();
     const running = await x.node();
     const input = await x.send('Explain current progress'), turn = await x.turn();
@@ -101,9 +101,10 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Multi-Node planning an
     const before = await effects(), basis = await x.basis();
     const proposal = { proposal_id: randomUUID(), specification: 'Changed complete requirement', summary: 'Change scope', basis,
       impact: context.specification_impact, source_input_ids: [input.input_id!] };
-    for (const impact of [context.specification_impact, { ...context.specification_impact, nodes: context.specification_impact.nodes.slice(0, 1) }]) {
-      await expect(x.agent(turn, 'prepare_specification_revision', { ...proposal, impact })).rejects.toThrow('unsupported_multi_node_specification_change');
-      await expect(new TaskSpecification(x.db).command(x.token, { schema_version: 1, task_id: x.f.task, request_id: randomUUID(), name: 'edit_specification', payload: { ...proposal, impact } })).rejects.toThrow('unsupported_multi_node_specification_change');
+    for (const impact of [{ ...context.specification_impact, nodes: context.specification_impact.nodes.slice(0, 1) },
+      { ...context.specification_impact, nodes: context.specification_impact.nodes.map(() => context.specification_impact.nodes[0]) }]) {
+      await expect(x.agent(turn, 'prepare_specification_revision', { ...proposal, impact })).rejects.toThrow();
+      await expect(new TaskSpecification(x.db).command(x.token, { schema_version: 1, task_id: x.f.task, request_id: randomUUID(), name: 'edit_specification', payload: { ...proposal, impact } })).rejects.toThrow();
     }
     expect(await effects()).toEqual(before);
     const reply = await x.reply(turn);
@@ -142,7 +143,8 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Multi-Node planning an
       basis = { control_version: source.control_version, specification_id: source.specification_id, plan_id: source.plan_id };
     const before = await effects();
     await expect(x.agent(a, 'apply_review_rework', { ...binding, basis, node_ids: ['outside-plan'], reason: 'Invalid selection' })).rejects.toMatchObject({ detail: { code: 'denied_scope' } });
-    await expect(x.agent(a, 'prepare_specification_revision', { proposal_id: randomUUID(), specification: 'Changed full scope', summary: 'Change', basis, impact: JSON.parse(context.observation.snapshot).specification_impact, source_input_ids: [] })).rejects.toThrow('unsupported_multi_node_specification_change');
+    const incompleteImpact = { ...JSON.parse(context.observation.snapshot).specification_impact, nodes: [] };
+    await expect(x.agent(a, 'prepare_specification_revision', { proposal_id: randomUUID(), specification: 'Changed full scope', summary: 'Change', basis, impact: incompleteImpact, source_input_ids: [] })).rejects.toMatchObject({ detail: { code: 'version_conflict' } });
     expect(await effects()).toEqual(before);
     const requested: [string] = [nodes[selection === 'upstream' ? 0 : 1]!.node_id], affected = selection === 'upstream' ? nodes.slice(0, 2) : [nodes[1]!];
     const payload = { ...binding, basis, node_ids: requested, reason: 'Improve selected output within the existing graph' }, request = randomUUID();

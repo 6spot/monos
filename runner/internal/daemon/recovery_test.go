@@ -537,7 +537,7 @@ func TestReconnectTerminalReplayFollowsReadyOnWireWithoutHostEffect(t *testing.T
 				}
 			}))
 			defer server.Close()
-			d.Control = &control.Client{Config: control.Config{Endpoint: server.URL, RunnerID: "runner"}, HTTP: server.Client()}
+			d.Control = &control.Client{Config: control.Config{Endpoint: server.URL, RunnerID: "runner", TokenFile: controlCredentialFixture(t)}, HTTP: server.Client()}
 			_ = d.Control.Run(ctx, "boot", &d)
 			d.workers.Wait()
 			if len(received) != 2 {

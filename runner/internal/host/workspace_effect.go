@@ -408,6 +408,11 @@ func runWorkspaceEffect(ctx context.Context, op protocol.Operation, access *prot
 	if op.Workspace == nil {
 		return status, fmt.Errorf("workspace descriptor required")
 	}
+	if op.Kind == protocol.KindOpenWorkspace {
+		if err := rejectRetiredTask(op.Workspace.TaskID); err != nil {
+			return status, err
+		}
+	}
 	lock, err := acquireWorkspaceCoordinator(ctx, op)
 	if err != nil {
 		return status, err
@@ -438,6 +443,9 @@ func runWorkspaceEffect(ctx context.Context, op protocol.Operation, access *prot
 	}
 	if r.Stage == "ready" && r.OpenResult != nil {
 		return Status{Known: true, Result: r.OpenResult}, nil
+	}
+	if err = guardMaterialization(); err != nil {
+		return status, err
 	}
 	if _, e := os.Stat(workspaceStopPath(op.Workspace.LeaseID)); e == nil {
 		return status, fmt.Errorf("open fenced by admitted Stop")

@@ -14,6 +14,7 @@ import type { PlanningTask } from './task-planning-state.ts';
 import { prepareNodeSource,blockNodeSource } from './node-execution-state.ts';
 import type { NodeTask,ExecutionNode } from './node-execution-state.ts';
 import { bindTaskGuidance, withdrawGuidance, settleHandledGuidance } from './task-guidance.ts';
+import { derivedTaskState } from './owner-execution.ts';
 
 export interface RequirementChange {id:string;task_id:string;proposal_id:string;authorization_id:string;status:string;version:string;specification_id:string;admission_control_version:string;attention:string|null}
 export async function admitSpecification(tx:Transaction,task:SpecificationTask,p:RequirementProposal,confirmationId:string,requestId:string,admissionAttemptId?:string):Promise<RequirementChange>{
@@ -89,13 +90,13 @@ export async function advanceSpecification(tx:Transaction,task:SpecificationTask
  }
  await tx.query("UPDATE requirement_obligations SET status=$2,version=version+1 WHERE id=$1 AND current_proposal_id=$3 AND status='pending'",[p.obligation_id,status,p.id]);
  await tx.query('DELETE FROM task_publication_slots WHERE task_id=$1 AND operation_id=$2',[task.id,c.id]);
- for(const blocked of blockedContinuations){const freshTask=(await tx.query<NodeTask>('SELECT * FROM tasks WHERE id=$1',[task.id])).rows[0]!;const node=(await tx.query<ExecutionNode>('SELECT * FROM nodes WHERE id=$1',[blocked.nodeId])).rows[0]!;const source=await prepareNodeSource(tx,freshTask,node,configurationVersion,{recovery:{requirement_change_id:c.id}});await blockNodeSource(tx,source,blocked.kind,blocked.reason);}
+ for(const blocked of blockedContinuations){const freshTask=(await tx.query<NodeTask>('SELECT * FROM tasks WHERE id=$1',[task.id])).rows[0]!;const node=(await tx.query<ExecutionNode>('SELECT * FROM nodes WHERE id=$1',[blocked.nodeId])).rows[0]!;const source=await prepareNodeSource(tx,freshTask,node,configurationVersion,{defer_dependencies:true,recovery:{requirement_change_id:c.id}});await blockNodeSource(tx,source,blocked.kind,blocked.reason);}
  if(withdrawing&&task.state!=='CANCELLED'){
   const completed=(await tx.query<{id:string;result:object;operation_id:string;source_id:string;handled_guidance_ids:string[]}>(`SELECT n.id,c.result,c.operation_id,m.source_id,m.handled_guidance_ids FROM nodes n JOIN node_completions c ON c.node_id=n.id AND c.activation=n.activation JOIN completion_manifests m ON m.operation_id=c.operation_id WHERE n.task_id=$1 AND n.state<>'COMPLETED'`,[task.id])).rows;
   for(const result of completed){await settleHandledGuidance(tx,result.source_id,result.operation_id,result.handled_guidance_ids);await tx.query("UPDATE nodes SET state='COMPLETED',result=$2 WHERE id=$1",[result.id,result.result]);}
   await tx.query("UPDATE nodes SET execution_source_id=CASE WHEN guidance_paused OR blocker_id IS NOT NULL THEN execution_source_id ELSE NULL END,state=CASE WHEN guidance_paused OR blocker_id IS NOT NULL THEN 'BLOCKED' ELSE 'PENDING' END WHERE task_id=$1 AND state<>'COMPLETED'",[task.id]);
  }
- if(task.plan_id&&task.state!=='CANCELLED')await tx.query("UPDATE tasks SET state=CASE WHEN EXISTS(SELECT 1 FROM nodes n JOIN plan_nodes pn ON pn.node_id=n.id WHERE pn.plan_id=tasks.plan_id AND n.state='BLOCKED') THEN 'BLOCKED' WHEN NOT EXISTS(SELECT 1 FROM nodes n JOIN plan_nodes pn ON pn.node_id=n.id WHERE pn.plan_id=tasks.plan_id AND n.state<>'COMPLETED') THEN 'REVIEW' ELSE 'RUNNING' END WHERE id=$1",[task.id]);
+ if(task.plan_id&&task.state!=='CANCELLED')await tx.query('UPDATE tasks SET state=$2 WHERE id=$1',[task.id,await derivedTaskState(tx,task.plan_id)]);
  if(!task.plan_id&&task.state==='RUNNING'&&task.planning_issue_sequence===null){const fresh=(await tx.query<PlanningTask>('SELECT * FROM tasks WHERE id=$1',[task.id])).rows[0]!;await createPlanningIntent(tx,fresh,c.id,configurationVersion,c.id);}
  if(!withdrawing)await resolvePublishedReviewRequirement(tx,p.id);
  await planningEvent(tx,task.id,'specification_change_'+status,{change_id:c.id,proposal_id:p.id,...(!withdrawing?{specification_id:c.specification_id}: {})});

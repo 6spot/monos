@@ -168,3 +168,115 @@ test('keyboard skip navigation retains the current view and moves focus to conte
   await page.getByRole('link', { name: 'Skip to content', exact: true }).focus(); await page.keyboard.press('Enter');
   await expect(page.getByRole('main')).toBeFocused(); await expect(page.getByRole('heading', { name: 'Roles', exact: true })).toBeVisible();
 });
+
+test('setup status retries failed reads and exposes concrete recovery without claiming execution readiness', async ({ page }, info) => {
+  let unavailable = true;
+  let storageAttention = false;
+  await page.route('**/v1/owner/setup-readiness', async (route) => {
+    if (unavailable) return route.fulfill({ status: 503, json: { schema_version: 1, status: 'error', error: { code: 'control_unavailable', message: 'Setup observation temporarily unavailable' } } });
+    const response = await route.fetch();
+    const report = await response.json();
+    await route.fulfill({ json: { ...report,
+      planner: storageAttention ? { status: 'unavailable', source: 'global', reason: 'database_storage_attention', action: 'restore_storage' } : { status: 'unavailable', source: 'global', reason: 'runner_missing', action: 'enroll_runner' },
+      database_storage: { current: false, observed_at: new Date().toISOString(), observation: { scope: 'database', status: 'low', min_free_bytes: 1024 ** 3, free_bytes: 1024 ** 2, total_bytes: 1024 ** 4 } },
+    } });
+  });
+  await signIn(page); await navigate(page, 'Execution');
+  const setup = page.getByRole('region', { name: 'Setup status', exact: true });
+  await expect(setup.getByRole('alert')).toContainText('Setup observation temporarily unavailable');
+  unavailable = false;
+  await setup.getByRole('button', { name: 'Retry setup check', exact: true }).click();
+  await expect(setup.getByRole('heading', { name: 'Still unverified', exact: true })).toBeVisible();
+  for (const label of ['Storage durability and host recovery', 'Coding tool login', 'Actual model execution', 'Git read access', 'Git write access']) await expect(setup.getByText(label, { exact: true })).toBeVisible();
+  await setup.getByRole('button', { name: 'Enroll a Runner', exact: true }).click();
+  await expect(setup.getByText('Runner enrollment and recovery', { exact: true })).toBeFocused();
+  await expect(setup.getByText('pnpm runner:enroll-token', { exact: false })).toBeVisible();
+  await expect(setup.getByText('These checks do not run a model', { exact: false })).toBeVisible();
+  storageAttention = true;
+  await setup.getByRole('button', { name: 'Refresh setup', exact: true }).click();
+  await setup.getByRole('button', { name: 'Restore storage', exact: true }).click();
+  await expect(setup.getByText('Storage recovery', { exact: true })).toBeFocused();
+  await expect(setup.getByText('Previous or expired observation', { exact: false })).toBeVisible();
+  await captureView(page, info, 'setup-recovery');
+});
+
+test('policy editing supports Codex before discovery and keeps pinned observations separate', async ({ page }, info) => {
+  const ids = ['10000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-000000000002'] as const;
+  let observed = false;
+  await page.route('**/v1/owner/infrastructure', (route) => route.fulfill({ json: { schema_version: 1, runners: observed ? ids.map((runner_id, index) => ({ runner_id, capacity: 1, online: index === 0, runtimes: [{ current: index === 0, observed_at: new Date().toISOString(), installation: { runtime_id: 'codex', executable: 'codex', availability: 'detected', model_ids: [], supports_model: index === 0, supports_thinking: index === 0 } }] })) : [] } }));
+  await signIn(page); await navigate(page, 'Execution');
+  const policies = page.locator('form').filter({ has: page.getByRole('heading', { name: 'Execution policies', exact: true }) });
+  await policies.getByRole('checkbox', { name: 'Set a global default policy', exact: true }).uncheck();
+  await policies.getByRole('checkbox', { name: 'Set a global default policy', exact: true }).check();
+  await policies.getByLabel('Default Runtime', { exact: true }).selectOption('codex');
+  const model = policies.getByLabel('Default model', { exact: true });
+  await expect(model).toBeVisible();
+  await expect(model).toHaveAttribute('required', '');
+  await policies.getByRole('button', { name: 'Save changes', exact: true }).click();
+  await expect(model).toBeFocused();
+  await model.fill('gpt-5.4');
+  await policies.getByLabel('Default thinking level', { exact: true }).selectOption('high');
+  await save(page);
+  observed = true;
+  await page.getByRole('button', { name: 'Refresh status', exact: true }).click();
+  await policies.getByLabel('Default Runner', { exact: true }).selectOption(ids[1]);
+  const facts = policies.getByLabel('Default Runner observations', { exact: true });
+  await expect(facts).toContainText(ids[1]);
+  await expect(facts).not.toContainText(ids[0]);
+  await expect(facts).toContainText('Previous connection');
+  await expect(facts).toContainText('Model control: not reported');
+  await expect(model).toHaveValue('gpt-5.4');
+  await expect(policies.getByLabel('Default thinking level', { exact: true })).toHaveValue('high');
+  await policies.getByLabel('Default Runner', { exact: true }).selectOption('');
+  await expect(facts).toContainText(ids[0]);
+  await expect(facts).toContainText(ids[1]);
+  await captureView(page, info, 'policy-observations');
+});
+
+test('GitHub picker retries a failed page and searches only the explicitly selected page', async ({ page }, info) => {
+  await signIn(page); await navigate(page, 'GitHub');
+  const key = generateKeyPairSync('rsa', { modulusLength: 2048 }).privateKey.export({ type: 'pkcs8', format: 'pem' }).toString();
+  await page.getByLabel('GitHub App ID', { exact: true }).fill('123');
+  await page.getByLabel('Installation ID', { exact: true }).fill('456');
+  await page.getByLabel('App private key', { exact: true }).fill(key); await save(page);
+  let failed = true;
+  await page.route('**/v1/owner/github/repositories?*', (route) => {
+    if (failed) return route.fulfill({ status: 503, json: { schema_version: 1, status: 'error', error: { code: 'control_unavailable', message: 'Repository page temporarily unavailable' } } });
+    const second = new URL(route.request().url()).searchParams.get('page') === '2';
+    const name = second ? 'second-repository' : 'first-repository';
+    return route.fulfill({ json: { schema_version: 1, repositories: [{ provider_repo_id: second ? '202' : '201', full_name: `example/${name}`, remote_url: `https://github.com/example/${name}.git`, default_branch: 'main', private: true }], ...(second ? {} : { next_page: 2 }) } });
+  });
+  await navigate(page, 'Projects'); await page.getByRole('button', { name: 'New project', exact: true }).click();
+  await page.getByRole('button', { name: 'Choose from GitHub', exact: true }).click();
+  await expect(page.getByRole('alert')).toContainText('Repository page temporarily unavailable');
+  failed = false; await page.getByRole('button', { name: 'Retry repository page', exact: true }).click();
+  await page.getByLabel('Search repositories on this page', { exact: true }).fill('SECOND');
+  await expect(page.getByText('No matching repositories on page 1. Other pages have not been searched.', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Next page', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'example/second-repository Private', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'example/second-repository Private', exact: true }).click();
+  await expect(page.getByLabel('Repository 1 remote URL', { exact: true })).toHaveValue('https://github.com/example/second-repository.git');
+  await page.getByRole('button', { name: 'Choose from GitHub', exact: true }).click();
+  await expect(page.getByLabel('Search repositories on this page', { exact: true })).toHaveValue('');
+  await expect(page.getByRole('button', { name: 'Previous page', exact: true })).toBeDisabled();
+  await captureView(page, info, 'github-page-search');
+});
+
+test('completed Task cleanup settings persist while retaining the configured disabled interval', async ({ page }) => {
+  await signIn(page); await navigate(page, 'Execution');
+  const cleanup = page.getByRole('form', { name: 'Completed Task cleanup settings', exact: true });
+  await cleanup.getByLabel('Days after Task completion', { exact: true }).fill('14');
+  await cleanup.getByRole('checkbox', { name: 'Automatically clean up completed Tasks', exact: true }).uncheck();
+  await cleanup.getByRole('button', { name: 'Save cleanup settings', exact: true }).click();
+  await expect(cleanup.getByText('Unsaved cleanup settings', { exact: true })).toHaveCount(0);
+  await page.reload();
+  await expect(cleanup.getByLabel('Days after Task completion', { exact: true })).toHaveValue('14');
+  await expect(cleanup.getByRole('checkbox', { name: 'Automatically clean up completed Tasks', exact: true })).not.toBeChecked();
+  await cleanup.getByRole('checkbox', { name: 'Automatically clean up completed Tasks', exact: true }).check();
+  await cleanup.getByRole('button', { name: 'Save cleanup settings', exact: true }).click();
+  await expect(cleanup.getByText('Unsaved cleanup settings', { exact: true })).toHaveCount(0);
+  await page.reload();
+  await expect(cleanup.getByRole('checkbox', { name: 'Automatically clean up completed Tasks', exact: true })).toBeChecked();
+  await expect(cleanup.getByLabel('Days after Task completion', { exact: true })).toHaveValue('14');
+  await expect(cleanup).toContainText('Cancelled Tasks keep their private work.');
+});

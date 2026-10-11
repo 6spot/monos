@@ -102,6 +102,17 @@ fieldset { border:0; margin:0; padding:0; min-width:0; }
 .runtime-row small { display:block; margin-top:4px; color:var(--muted-foreground); font-size:12px; line-height:16px; }
 .policy-editor { background:var(--surface); padding:0 16px 16px; border:1px solid var(--border); border-radius:8px; margin:16px 0; }
 .target-fields { padding-top:16px; }
+.policy-observations { display:grid; gap:8px; padding:8px 0; }
+.setup-readiness > .hint { margin-bottom:12px; }
+.setup-item { border-top:1px solid var(--border); margin-top:16px; padding-top:16px; overflow-wrap:anywhere; font-size:13px; line-height:20px; }
+.setup-role { margin-top:12px; }
+.setup-policy > p { margin-top:4px; }
+.setup-policy .button-row { margin-top:8px; }
+.setup-item ul { list-style:disc; padding-left:20px; margin:8px 0; }
+.setup-help { border-top:1px solid var(--border); margin-top:16px; padding-top:8px; font-size:13px; line-height:20px; overflow-wrap:anywhere; }
+.setup-help summary { cursor:pointer; min-height:44px; padding:12px 0; font-weight:500; }
+.setup-help p { margin:8px 0; }
+.setup-help pre { white-space:pre-wrap; overflow-wrap:anywhere; padding:12px; background:var(--muted); border-radius:6px; font-size:12px; line-height:18px; }
 .fallback { border-top:1px solid var(--border); padding-bottom:16px; }
 .settings-grid { display:grid; grid-template-columns:minmax(0,1fr) 240px; gap:24px; align-items:start; padding:16px; }
 .settings-grid > .editor { padding:0; }

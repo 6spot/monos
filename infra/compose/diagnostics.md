@@ -1,5 +1,9 @@
 # Check installation configuration
 
+For a fresh host, start with the [single-host installer](../install/README.md).
+The Web app exposes the same observations and recovery steps in Execution →
+Setup status after sign-in.
+
 After [Owner bootstrap](../../docs/11-technology-and-deployment.md) and
 [Runner enrollment](../runner/enrollment.md), run a configuration and connection
 check without creating a Task. The existing `/health` endpoint remains a lightweight
@@ -47,11 +51,16 @@ the existing configuration entry point:
 | `refresh_runtime` | Check the installed CLI under the execution account and reconnect for fresh discovery |
 | `select_runner` | Choose an explicit Runner when Auto placement is ambiguous |
 | `review_target` | Select a supported Runtime, model and thinking setting |
+| `restore_storage` | Repair the affected volume/free space, then refresh and reconnect for a current observation |
 
 These are observations, not reservations. Full capacity may queue future work;
 it does not invalidate otherwise usable configuration. No repository or GitHub
 credential is required for repository-free tasks.
 
-Storage, CLI login, model invocation and Git read/write permissions remain listed
+Database and Runner storage reports show free space, minimum thresholds and
+observation currentness. Runner reports also carry execution limits and retention
+periods. Missing or expired reports do not certify current storage health.
+
+Storage durability, CLI login, model invocation and Git read/write permissions remain listed
 under `unverified`. Exit `0` does not certify these capabilities or native host
 readiness. Their real execution checks remain a separate acceptance step.

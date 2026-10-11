@@ -124,7 +124,9 @@ function containsSecret(value: unknown, secrets: string[]): boolean {
 }
 
 export function configurationExitCode(report: SetupReport): 0 | 2 {
-  return report.schema.status === 'current' && report.planner.status === 'available' &&
+  const storageReady = !report.database_storage || report.database_storage.current && report.database_storage.observation.status === 'ok';
+  const runnersReady = report.runners.every(runner => !runner.resources || runner.resources.current && runner.resources.observation.storage.every(item => item.status === 'ok'));
+  return storageReady && runnersReady && report.schema.status === 'current' && report.planner.status === 'available' &&
     report.projects.length > 0 && report.projects.every(project => project.status === 'configured') &&
     report.runners.some(runner => runner.online) ? 0 : 2;
 }

@@ -14,7 +14,7 @@ const codexThinking = new Set(['none', 'minimal', 'low', 'medium', 'high', 'xhig
 type Source = 'explicit' | 'planner' | 'role' | 'global';
 export type SelectionReason = 'policy_missing' | 'role_missing' | 'unsupported_runtime' | 'unsupported_model' |
   'unsupported_thinking' | 'runner_missing' | 'runner_offline' | 'installation_stale' |
-  'installation_unavailable' | 'model_control_unavailable' | 'thinking_control_unavailable' | 'ambiguous_auto_placement' | 'unsupported_runner_transfer' | 'runtime_targets_exhausted';
+  'installation_unavailable' | 'model_control_unavailable' | 'thinking_control_unavailable' | 'ambiguous_auto_placement' | 'unsupported_runner_transfer' | 'runtime_targets_exhausted' | 'runner_storage_attention' | 'database_storage_attention';
 export type SchedulingRequest = Omit<QueueInput, 'runner_id' | 'runtime_id' | 'model' | 'thinking_level' | 'selection_context' | 'runtime_chain_root_id' | 'runtime_target_index' | 'runtime_predecessor_id'> & {
   role_id?: string; explicit_target?: ExecutionTarget;
 };
@@ -23,12 +23,14 @@ export type SchedulingResult =
   | { status: 'unavailable'; reason: SelectionReason; source?: Source; target?: ExecutionTarget };
 
 interface RunnerFact {
-  id: string; incarnation: string; online: boolean; runtime_report_incarnation: string | null;
+  id: string; incarnation: string; online: boolean; storage_attention: boolean; database_storage_attention: boolean; runtime_report_incarnation: string | null;
   installation_incarnation: string | null; observation: RuntimeInstallation | null;
 }
 
 function issue(fact: RunnerFact, target: ExecutionTarget): SelectionReason | null {
   if (!fact.online) return 'runner_offline';
+  if (fact.database_storage_attention) return 'database_storage_attention';
+  if (fact.storage_attention) return 'runner_storage_attention';
   if (!fact.observation || Number(fact.installation_incarnation) !== Number(fact.incarnation))
     return Number(fact.runtime_report_incarnation) === Number(fact.incarnation) ? 'installation_unavailable' : 'installation_stale';
   if (fact.observation.availability !== 'detected') return 'installation_unavailable';
@@ -67,6 +69,8 @@ async function selectRunner(tx: Transaction, backendInstance: string, target: Ex
   // Admission calls this after locking its candidate scope. Setup diagnosis uses
   // the same predicates in a fixed read snapshot, without reserving a Runner.
   const facts = (await tx.query<RunnerFact>(`SELECT r.id,r.incarnation,r.runtime_report_incarnation,
+    runner_storage_attention(r,COALESCE($4::timestamptz,clock_timestamp())) storage_attention,
+    database_storage_attention($2,COALESCE($4::timestamptz,clock_timestamp())) database_storage_attention,
     (r.connected AND r.ready AND r.connection_instance=$2 AND r.last_seen>COALESCE($4::timestamptz,clock_timestamp())-interval '15 seconds') AS online,
     i.incarnation AS installation_incarnation,i.observation
     FROM runners r LEFT JOIN runtime_installations i ON i.runner_id=r.id AND i.runtime_id=$1

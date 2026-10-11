@@ -3,7 +3,7 @@ import { transaction } from '../../../packages/db/src/index.ts';
 import type { Database } from '../../../packages/db/src/index.ts';
 import { CommandError } from '../../../packages/domain/src/commands.ts';
 import { canonicalJSON, digest, validate } from '../../../packages/protocol/src/index.ts';
-import type { RunnerEnrollmentGrant, RunnerEnrollmentIssue, RunnerEnrollmentRequest, RunnerEnrollmentResponse } from '../../../packages/protocol/src/index.ts';
+import type { RunnerEnrollmentGrant, RunnerEnrollmentIssue, RunnerEnrollmentProof, RunnerEnrollmentRequest, RunnerEnrollmentResponse } from '../../../packages/protocol/src/index.ts';
 
 interface Enrollment {
   id: string;
@@ -11,6 +11,19 @@ interface Enrollment {
   request_id: string | null;
   request_digest: string | null;
   runner_id: string | null;
+}
+
+// Local read-only recovery proof for an installer that lost the successful
+// enrollment process output. Existence alone cannot bind an identity to a grant.
+export async function verifyRunnerEnrollment(db: Database, input: unknown): Promise<RunnerEnrollmentResponse> {
+  const proof = validate<RunnerEnrollmentProof>('RunnerEnrollmentProof', input);
+  const row = (await db.pool.query<{ request_id: string; runner_id: string }>(`SELECT e.request_id,e.runner_id
+    FROM runner_enrollments e JOIN runners r ON r.id=e.runner_id
+    WHERE e.id=$1 AND e.runner_id=$2 AND e.credential_hash=$3 AND e.request_id IS NOT NULL
+      AND r.credential_hash=e.credential_hash AND NOT r.credential_revoked`,
+  [proof.enrollment_id, proof.runner_id, proof.credential_hash])).rows[0];
+  if (!row) throw new CommandError('unmet_precondition', 'Runner identity does not match the consumed enrollment');
+  return validate('RunnerEnrollmentResponse', { schema_version: 1, ...row });
 }
 
 // Local administrative authority only. No unauthenticated minting HTTP route.

@@ -10,6 +10,7 @@ apps/web/test-results
 apps/web/playwright-report
 coverage
 infra/compose/private
+infra/install/private
 runner
 .env
 .env.*

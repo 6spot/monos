@@ -14,7 +14,8 @@ import type {
 import { authenticateOwner } from "./owner-commands.ts";
 
 interface WorkspaceRow
-  extends Omit<AttemptWorkspace, "metadata" | "metadata_operation_id"> {
+  extends Omit<AttemptWorkspace, "metadata" | "metadata_operation_id" | "cleaned_at"> {
+  cleaned_at: string | null;
   open_result: unknown;
   settle_result: unknown;
   settle_kind: string | null;
@@ -53,6 +54,7 @@ export async function attemptWorkspace(
     const rows = (
       await tx.query<WorkspaceRow>(
         `SELECT w.id workspace_id,w.resource_id,w.runner_id,l.id lease_id,l.state lease_state,w.repository_identity,
+   to_char(w.cleaned_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS cleaned_at,
    opened.id open_operation_id,opened.state open_state,opened.result open_result,
    settled.id settle_operation_id,settled.state settle_state,settled.kind settle_kind,settled_item.result settle_result,COALESCE(settled.failure_kind,opened.failure_kind) failure_kind,
    recovered.id recovery_operation_id,recovered_item.result recovery_result
@@ -120,6 +122,7 @@ export async function attemptWorkspace(
         settle_state: row.settle_state,
         failure_kind: row.failure_kind,
         metadata,
+        ...(row.cleaned_at ? { cleaned_at: row.cleaned_at } : {}),
         metadata_operation_id: metadata
           ? recovered?.workspace_metadata
             ? row.recovery_operation_id

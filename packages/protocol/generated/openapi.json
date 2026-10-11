@@ -4989,7 +4989,9 @@
               "thinking_control_unavailable",
               "ambiguous_auto_placement",
               "unsupported_runner_transfer",
-              "runtime_targets_exhausted"
+              "runtime_targets_exhausted",
+              "runner_storage_attention",
+              "database_storage_attention"
             ]
           },
           "action": {
@@ -5000,7 +5002,8 @@
               "start_runner",
               "refresh_runtime",
               "select_runner",
-              "review_target"
+              "review_target",
+              "restore_storage"
             ]
           }
         },
@@ -5167,6 +5170,12 @@
                 "git_write"
               ]
             }
+          },
+          "database_storage": {
+            "$ref": "#/components/schemas/BackendStorageObservation"
+          },
+          "cleanup": {
+            "$ref": "#/components/schemas/CleanupSummary"
           }
         },
         "required": [
@@ -7867,7 +7876,10 @@
               "publication_push_result",
               "publication_push_ack",
               "publication_ref_read",
-              "publication_ref_read_result"
+              "publication_ref_read_result",
+              "task_cleanup",
+              "task_cleanup_result",
+              "task_cleanup_ack"
             ]
           },
           "runner_id": {
@@ -8012,6 +8024,28 @@
             },
             "maxItems": 1,
             "uniqueItems": true
+          },
+          "resources": {
+            "$ref": "#/components/schemas/RunnerResources"
+          },
+          "cleanup_request": {
+            "$ref": "#/components/schemas/TaskCleanupRequest"
+          },
+          "cleanup_result": {
+            "$ref": "#/components/schemas/TaskCleanupResult"
+          },
+          "cleanup_ack": {
+            "$ref": "#/components/schemas/TaskCleanupAck"
+          },
+          "cleanup_modes": {
+            "type": "array",
+            "minItems": 0,
+            "maxItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "const": "completed_task_v1"
+            }
           }
         },
         "allOf": [
@@ -8091,7 +8125,9 @@
                 "result_read_modes": {},
                 "publication_modes": {},
                 "remote_preparation_modes": {},
-                "publication_ref_read_modes": {}
+                "publication_ref_read_modes": {},
+                "resources": {},
+                "cleanup_modes": {}
               },
               "additionalProperties": false,
               "type": "object"
@@ -8115,7 +8151,8 @@
               "properties": {
                 "schema_version": {},
                 "type": {},
-                "incarnation": {}
+                "incarnation": {},
+                "resources": {}
               },
               "additionalProperties": false,
               "type": "object"
@@ -8664,6 +8701,93 @@
                 "incarnation",
                 "correlation_id",
                 "publication_ref_read_result"
+              ]
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "task_cleanup"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "schema_version": {},
+                "type": {},
+                "incarnation": {},
+                "cleanup_request": {}
+              },
+              "required": [
+                "schema_version",
+                "type",
+                "incarnation",
+                "cleanup_request"
+              ]
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "task_cleanup_result"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "schema_version": {},
+                "type": {},
+                "incarnation": {},
+                "cleanup_result": {}
+              },
+              "required": [
+                "schema_version",
+                "type",
+                "incarnation",
+                "cleanup_result"
+              ]
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "const": "task_cleanup_ack"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "schema_version": {},
+                "type": {},
+                "incarnation": {},
+                "cleanup_ack": {}
+              },
+              "required": [
+                "schema_version",
+                "type",
+                "incarnation",
+                "cleanup_ack"
               ]
             }
           }
@@ -9398,7 +9522,8 @@
               "save_github",
               "save_planner_guidance",
               "save_git_https_credential",
-              "clear_git_https_credential"
+              "clear_git_https_credential",
+              "save_retention"
             ]
           },
           "payload": {
@@ -9423,6 +9548,9 @@
               },
               {
                 "$ref": "#/components/schemas/GitHTTPSCredentialClear"
+              },
+              {
+                "$ref": "#/components/schemas/RetentionPolicy"
               }
             ]
           }
@@ -9576,6 +9704,27 @@
               },
               "required": []
             }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "const": "save_retention"
+                }
+              },
+              "required": [
+                "name"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "payload": {
+                  "$ref": "#/components/schemas/RetentionPolicy"
+                }
+              }
+            }
           }
         ]
       },
@@ -9689,6 +9838,9 @@
             "items": {
               "$ref": "#/components/schemas/GitHTTPSCredentialStatus"
             }
+          },
+          "retention": {
+            "$ref": "#/components/schemas/RetentionPolicy"
           }
         }
       },
@@ -9896,6 +10048,12 @@
               }
             },
             "maxItems": 32
+          },
+          "resources": {
+            "$ref": "#/components/schemas/RunnerResourceObservation"
+          },
+          "credential_revoked": {
+            "type": "boolean"
           }
         }
       },
@@ -18258,6 +18416,11 @@
                 "type": "null"
               }
             ]
+          },
+          "cleaned_at": {
+            "type": "string",
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}Z$",
+            "maxLength": 24
           }
         },
         "required": [
@@ -27901,6 +28064,674 @@
           "worker_absent",
           "observation",
           "observation_digest"
+        ]
+      },
+      "ExecutionResourceLimits": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "cpu_quota_percent": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100000
+          },
+          "memory_max_bytes": {
+            "type": "integer",
+            "minimum": 67108864,
+            "maximum": 9007199254740991
+          },
+          "tasks_max": {
+            "type": "integer",
+            "minimum": 16,
+            "maximum": 1048576
+          }
+        },
+        "required": [
+          "cpu_quota_percent",
+          "memory_max_bytes",
+          "tasks_max"
+        ]
+      },
+      "StorageHealth": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "scope": {
+            "enum": [
+              "database",
+              "journal",
+              "logs",
+              "cache",
+              "workspaces",
+              "inspection"
+            ]
+          },
+          "status": {
+            "enum": [
+              "ok",
+              "low",
+              "unknown"
+            ]
+          },
+          "min_free_bytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "free_bytes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "total_bytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "scope",
+          "status",
+          "min_free_bytes"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "unknown"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "free_bytes": false,
+                "total_bytes": false
+              }
+            },
+            "else": {
+              "required": [
+                "free_bytes",
+                "total_bytes"
+              ],
+              "properties": {
+                "free_bytes": {},
+                "total_bytes": {}
+              }
+            }
+          }
+        ]
+      },
+      "RunnerResources": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "storage": {
+            "type": "array",
+            "minItems": 5,
+            "maxItems": 5,
+            "items": {
+              "$ref": "#/components/schemas/StorageHealth"
+            }
+          },
+          "execution_limits": {
+            "$ref": "#/components/schemas/ExecutionResourceLimits"
+          },
+          "log_retention_hours": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 87600
+          },
+          "inspection_retention_hours": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 87600
+          }
+        },
+        "required": [
+          "storage",
+          "execution_limits",
+          "log_retention_hours",
+          "inspection_retention_hours"
+        ]
+      },
+      "RunnerResourceObservation": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "observation": {
+            "$ref": "#/components/schemas/RunnerResources"
+          },
+          "observed_at": {
+            "type": "string",
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}Z$",
+            "maxLength": 24
+          },
+          "current": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "observation",
+          "observed_at",
+          "current"
+        ]
+      },
+      "BackendStorageObservation": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "observation": {
+            "$ref": "#/components/schemas/StorageHealth"
+          },
+          "observed_at": {
+            "type": "string",
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}Z$",
+            "maxLength": 24
+          },
+          "current": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "observation",
+          "observed_at",
+          "current"
+        ]
+      },
+      "RunnerManageCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "action": {
+            "enum": [
+              "rotate",
+              "revoke",
+              "set_capacity"
+            ]
+          },
+          "runner_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "ttl_seconds": {
+            "type": "integer",
+            "minimum": 60,
+            "maximum": 3600
+          },
+          "capacity": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 32
+          }
+        },
+        "required": [
+          "schema_version",
+          "action",
+          "runner_id"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "action": {
+                  "const": "rotate"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "ttl_seconds"
+              ],
+              "properties": {
+                "capacity": false,
+                "ttl_seconds": {}
+              }
+            },
+            "else": {
+              "properties": {
+                "ttl_seconds": false
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "action": {
+                  "const": "set_capacity"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "capacity"
+              ],
+              "properties": {
+                "capacity": {}
+              }
+            },
+            "else": {
+              "properties": {
+                "capacity": false
+              }
+            }
+          }
+        ]
+      },
+      "RunnerManageResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "runner_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "capacity": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 32
+          },
+          "credential_revoked": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "schema_version",
+          "runner_id",
+          "capacity",
+          "credential_revoked"
+        ]
+      },
+      "RunnerRotationGrant": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "runner_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "rotation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "rotation_token": {
+            "type": "string",
+            "minLength": 43,
+            "maxLength": 43,
+            "pattern": "^[A-Za-z0-9_-]{43}$"
+          },
+          "expires_at": {
+            "type": "string",
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}Z$",
+            "maxLength": 24
+          }
+        },
+        "required": [
+          "schema_version",
+          "runner_id",
+          "rotation_id",
+          "rotation_token",
+          "expires_at"
+        ]
+      },
+      "RunnerRotationRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "request_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "runner_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "rotation_token": {
+            "type": "string",
+            "minLength": 43,
+            "maxLength": 43,
+            "pattern": "^[A-Za-z0-9_-]{43}$"
+          },
+          "credential": {
+            "type": "string",
+            "minLength": 43,
+            "maxLength": 43,
+            "pattern": "^[A-Za-z0-9_-]{43}$"
+          }
+        },
+        "required": [
+          "schema_version",
+          "request_id",
+          "runner_id",
+          "rotation_token",
+          "credential"
+        ]
+      },
+      "RunnerRotationResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "request_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "runner_id": {
+            "$ref": "#/components/schemas/Id"
+          }
+        },
+        "required": [
+          "schema_version",
+          "request_id",
+          "runner_id"
+        ]
+      },
+      "RetentionPolicy": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "completed_task_days": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3650
+          }
+        },
+        "required": [
+          "enabled",
+          "completed_task_days"
+        ]
+      },
+      "CleanupSummary": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "policy": {
+            "$ref": "#/components/schemas/RetentionPolicy"
+          },
+          "pending": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "completed": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "attention": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "attention_items": {
+            "type": "array",
+            "maxItems": 16,
+            "items": {
+              "$ref": "#/components/schemas/CleanupAttention"
+            }
+          }
+        },
+        "required": [
+          "policy",
+          "pending",
+          "completed",
+          "attention"
+        ]
+      },
+      "TaskCleanupWorkspace": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "workspace_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "resource_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "generation": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "storage_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "direct": {
+            "type": "boolean"
+          },
+          "allocation_ids": {
+            "type": "array",
+            "maxItems": 1024,
+            "uniqueItems": true,
+            "items": {
+              "$ref": "#/components/schemas/Id"
+            }
+          },
+          "finalized_commit": {
+            "type": "string",
+            "pattern": "^(?:[a-f0-9]{40}|[a-f0-9]{64})$"
+          }
+        },
+        "required": [
+          "workspace_id",
+          "resource_id",
+          "generation",
+          "storage_id",
+          "direct",
+          "allocation_ids",
+          "finalized_commit"
+        ]
+      },
+      "TaskCleanupAttempt": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "attempt_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "dispatch_id": {
+            "$ref": "#/components/schemas/Id"
+          }
+        },
+        "required": [
+          "attempt_id",
+          "dispatch_id"
+        ]
+      },
+      "TaskCleanupRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "cleanup_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "task_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "runner_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "completed_at": {
+            "type": "string",
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}Z$",
+            "maxLength": 24
+          },
+          "workspaces": {
+            "type": "array",
+            "maxItems": 256,
+            "items": {
+              "$ref": "#/components/schemas/TaskCleanupWorkspace"
+            }
+          },
+          "attempts": {
+            "type": "array",
+            "maxItems": 4096,
+            "items": {
+              "$ref": "#/components/schemas/TaskCleanupAttempt"
+            }
+          },
+          "results": {
+            "type": "array",
+            "maxItems": 256,
+            "items": {
+              "$ref": "#/components/schemas/ResultReadIdentity"
+            }
+          }
+        },
+        "required": [
+          "schema_version",
+          "cleanup_id",
+          "task_id",
+          "runner_id",
+          "completed_at",
+          "workspaces",
+          "attempts",
+          "results"
+        ]
+      },
+      "TaskCleanupResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "cleanup_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "request_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "status": {
+            "enum": [
+              "completed",
+              "blocked"
+            ]
+          },
+          "reason": {
+            "enum": [
+              "ownership_unresolved",
+              "storage_identity_mismatch",
+              "result_unavailable",
+              "cleanup_failed"
+            ]
+          }
+        },
+        "required": [
+          "schema_version",
+          "cleanup_id",
+          "request_digest",
+          "status"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "completed"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "reason": false
+              }
+            },
+            "else": {
+              "required": [
+                "reason"
+              ],
+              "properties": {
+                "reason": {}
+              }
+            }
+          }
+        ]
+      },
+      "TaskCleanupAck": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "cleanup_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "request_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          }
+        },
+        "required": [
+          "cleanup_id",
+          "request_digest"
+        ]
+      },
+      "CleanupAttention": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "task_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "runner_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "ownership_unresolved",
+              "storage_identity_mismatch",
+              "result_unavailable",
+              "cleanup_failed",
+              "request_too_large"
+            ]
+          }
+        },
+        "required": [
+          "task_id",
+          "runner_id",
+          "reason"
+        ]
+      },
+      "RunnerEnrollmentProof": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "const": 1
+          },
+          "enrollment_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "runner_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "credential_hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        },
+        "required": [
+          "schema_version",
+          "enrollment_id",
+          "runner_id",
+          "credential_hash"
         ]
       }
     },

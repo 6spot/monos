@@ -1,5 +1,10 @@
 # Isolated Linux Runner installation
 
+For a new single-host installation, the [installer](../install/README.md) combines
+this bootstrap with backend startup, Owner bootstrap, private configuration,
+one-use enrollment and service enable/start. The steps below remain the individual
+host provisioning and legacy probe recipes.
+
 Use the [naming and upgrade contract](../../docs/12-product-naming-and-upgrades.md)
 before migrating an existing installation. Renamed paths/units do not automatically
 migrate recorded process identities, Git worktree paths or service-owned storage.
@@ -8,9 +13,11 @@ The bootstrap installs only task-prefixed resources. Review it before running as
 root. It intentionally does not install/authenticate OpenCode, start the Runner,
 replace Owner configuration, publish Git repositories, or reboot the host.
 
-Prerequisites: Linux cgroup v2, systemd, `git`, Debian `sudo`, the existing `me`
-account, OpenCode 1.18.30 at `/home/linuxbrew/.linuxbrew/bin/opencode`, and the
-explicit zero-cost `opencode/longcat-2.5-preview-free` model. Build needs Go 1.26+
+Prerequisites: Linux cgroup v2, systemd, `git`, Debian `sudo`, and the existing `me`
+account. Coding tools are installed/authenticated separately by the Owner before
+execution; they are not a prerequisite for enrolling the Runner. The current
+OpenCode adapter targets 2.0.20; Codex is also supported through its own adapter.
+Select an explicit supported model in execution policy. Build needs Go 1.26+
 and a C compiler. A task-owned Docker Go build image can provide these without
 changing the host toolchain. SQLite is statically compiled by its Go driver.
 
@@ -34,7 +41,8 @@ the current boundary-probe provisioning form.
 - `/etc/monos-probe/ca.pem`: optional public custom CA certificate for HTTPS,
   mode `0644`; omit this file and `ca_file` for HTTP or system-trusted HTTPS.
 - `/etc/monos-probe/runner.json`: non-secret settings, mode `0640`, owner
-  `monos-probe`; never put a bearer in JSON or an argv.
+  `root`, group `monos-probe-read`; never put a bearer in JSON or an argv.
+  The privileged helper accepts resource limits only from this root-owned file.
 
 ```json
 {
@@ -43,7 +51,15 @@ the current boundary-probe provisioning form.
   "runner_id": "runner-a",
   "journal": "/var/lib/monos-probe/service/journal.sqlite",
   "socket": "/run/monos-probe/command.sock",
-  "execution_uid": 1000
+  "execution_uid": 1000,
+  "execution_limits": {
+    "cpu_quota_percent": 200,
+    "memory_max_bytes": 4294967296,
+    "tasks_max": 512
+  },
+  "storage_min_free_bytes": 1073741824,
+  "log_retention_hours": 168,
+  "inspection_retention_hours": 24
 }
 ```
 
@@ -67,11 +83,18 @@ systemctl start monos-probe-runner.service
 The no-argument sudo policy grants only `monos-probe` the fixed root-owned
 helper. The helper rejects unknown JSON fields/actions, limits stdin to 1 MiB,
 derives units/paths and fixes the execution identity/properties. Unit control
-requires its root-owned retained manifest. The root helper never executes Git or
-OpenCode: systemd starts fixed workers as `me`. Ordinary shell commands and
+requires its root-owned retained manifest. The helper never runs Git or a coding
+CLI as root: systemd starts execution workers as `me`, and immutable result checks
+use the service account. Ordinary shell commands and
 Node filesystem writes remain unrestricted by a product sandbox. Planner
 inspection is a service-owned snapshot protected with ordinary Unix ownership.
 This is the accepted non-hostile-Agent model; it is not hostile-code containment.
+
+For ongoing capacity changes, credential rotation/revocation, disk diagnosis and
+completed-Task retention, use the [operations recipe](operations.md). Cleanup
+checks Git result objects under the service account; it never executes Git as
+root. Resource limits constrain Agent and Git worker cgroups while backend and
+recovery services keep their separate identities.
 
 The preflight rejects existing unrelated service/group names, task directories,
 unit names, symlinks, writable artifacts and invalid installation markers.

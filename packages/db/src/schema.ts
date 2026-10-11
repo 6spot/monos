@@ -2,6 +2,7 @@ import { bigint, boolean, integer, jsonb, pgTable, text, timestamp } from 'drizz
 
 // Reviewed migration owns locking/constraints. These mappings support typed reads.
 export const runners = pgTable('runners', {
+  credentialRevoked: boolean('credential_revoked').notNull(),
   id: text('id').primaryKey(), credentialHash: text('credential_hash').notNull(), capacity: integer('capacity').notNull(),
   incarnation: bigint('incarnation', { mode: 'number' }).notNull(), connected: boolean('connected').notNull(), ready: boolean('ready').notNull(),
   bootId: text('boot_id'), lastSeen: timestamp('last_seen', { withTimezone: true }), connectionInstance: text('connection_instance'),

@@ -26,13 +26,17 @@ export async function checkImpact(tx:Transaction,task:SpecificationTask,impact:S
 
  await assertNoTaskRework(tx,task.id);
  validate('SpecificationImpact',impact);if(new Set(impact.guidance.map(g=>g.guidance_id)).size!==impact.guidance.length)throw new CommandError('invalid_input','Impact guidance IDs must be unique');const actual=await specificationImpact(tx,task);
- if(actual.nodes.length>1)throw new CommandError('unmet_precondition','unsupported_multi_node_specification_change: Requirement mutation supports one unchanged Node graph');
+ if(new Set(impact.nodes.map(n=>n.node_id)).size!==impact.nodes.length)throw new CommandError('invalid_input','Impact Node IDs must be unique');
  if(actual.nodes.length!==impact.nodes.length||actual.guidance.length!==impact.guidance.length)throw new CommandError('version_conflict','Complete impact membership changed');
  for(const n of impact.nodes){await assertCurrentNode(tx,{task_id:task.id,node_id:n.node_id,node_activation:n.node_activation});const a=actual.nodes.find(x=>x.node_id===n.node_id);if(!a||a.node_activation!==n.node_activation||a.source_id!==n.source_id)throw new CommandError('version_conflict','Node activation/source changed');
  if(n.disposition==='refresh'&&n.completion_operation_id!==null)throw new CommandError('invalid_input','Completed work requires carry or invalidate');
  if(n.disposition!=='refresh'&&n.completion_operation_id===null)throw new CommandError('invalid_input','Unfinished work requires disclosed fresh context');
  if(!(settled&&n.disposition==='refresh')&&(a.completion_operation_id!==n.completion_operation_id||a.completion_manifest_digest!==n.completion_manifest_digest))throw new CommandError('version_conflict','Exact completion evidence changed');
  }
+ const graph=(await tx.query<{node_id:string;dependencies:string[]}>('SELECT node_id,definition->\'dependencies\' dependencies FROM plan_nodes WHERE task_id=$1 AND plan_id=$2',[task.id,task.plan_id])).rows;
+ const dispositions=new Map(impact.nodes.map(n=>[n.node_id,n.disposition]));
+ if(graph.some(n=>dispositions.get(n.node_id)==='carry'&&n.dependencies.some(id=>dispositions.get(id)!=='carry')))
+  throw new CommandError('invalid_input','Carried completion requires carried dependency evidence');
  for(const g of impact.guidance)if(!actual.guidance.some(a=>a.guidance_id===g.guidance_id&&a.version===g.version))throw new CommandError('version_conflict','Guidance impact changed');
 }
 export async function laterSpecificationInputs(tx:Transaction,p:RequirementProposal):Promise<void>{

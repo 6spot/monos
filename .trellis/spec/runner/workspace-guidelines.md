@@ -304,6 +304,27 @@ the Task again.
 
 ## 6. Tests Required
 
+Completed-Task retirement uses negotiated `completed_task_v1` control frames and
+an exact immutable request recorded in both SQLite and the root journal. Check
+every listed Attempt and operation is absent/settled, each workspace storage and
+allocation identity matches, and each final result export is independently
+readable before deleting disposable data. Git verification runs under the fixed
+service account with empty supplementary groups, never as root. Preserve result
+exports, managed Artifacts, rework archives, root/service records, shared caches
+and unknown directories. `CANCELLED` is not retention eligibility.
+
+Root stores target inode/device identities before deletion. The same Task
+retirement record fences new Start/open, but permits exact receipts, Stop and
+result reads. A new terminal `TaskConversationSource.reply_only=true` Planner
+with valid scope and zero workspace reservations remains eligible for normal
+authorization; both its Attempt and dispatch must be absent from the frozen
+request. Such later private directories are not cleanup targets and cannot block
+or expand the original cleanup. Retry must retain the same request/path scope, reject replacements
+and cross-device trees, and allow interruption during traversal/deletion. Confirm
+local Git result readability after worktree deletion, unresolved-owner protection,
+replacement rejection and exact result/ACK replay with focused tests. Installed
+account/cgroup/reboot behavior remains separate native evidence.
+
 Exercise two-account fetch/clone/export, direct-lease late repository access, concurrent integrations, crash after each effect, retained private work, cleanup protection and exact candidate-tree equality. Test capture/publication limits separately. Provider write tests require an explicitly authorized test repository.
 
 Use real local Git to prove completed serial handoff preserves actual HEAD/tree

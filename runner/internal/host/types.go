@@ -104,14 +104,17 @@ func RuntimePaths(d protocol.Dispatch) ([]string, error) {
 }
 
 type Request struct {
-	Action              string                                 `json:"action"`
-	AttemptID           string                                 `json:"attempt_id"`
-	Dispatch            *protocol.Dispatch                     `json:"dispatch,omitempty"`
-	Operation           *protocol.Operation                    `json:"operation,omitempty"`
-	CompletionOperation *protocol.Operation                    `json:"completion_operation,omitempty"`
+	CleanupRequest      *protocol.TaskCleanupRequest     `json:"cleanup_request,omitempty"`
+	LogRetirement       *LogRetirement                   `json:"log_retirement,omitempty"`
+	Action              string                           `json:"action"`
+	AttemptID           string                           `json:"attempt_id"`
+	Dispatch            *protocol.Dispatch               `json:"dispatch,omitempty"`
+	Operation           *protocol.Operation              `json:"operation,omitempty"`
+	CompletionOperation *protocol.Operation              `json:"completion_operation,omitempty"`
 	RepositoryAccess    *protocol.RepositoryAccessResult `json:"repository_access,omitempty"`
 }
 type Status struct {
+	CleanupResult          *protocol.TaskCleanupResult          `json:"cleanup_result,omitempty"`
 	PreparedIntegration    *protocol.WorkspaceIntegrationResult `json:"prepared_integration,omitempty"`
 	Known                  bool                                 `json:"known"`
 	Exists                 bool                                 `json:"exists"`

@@ -22,7 +22,10 @@ services:
       MONOS_SIGNING_KEY_FILE: /run/secrets/signing_key
       MONOS_LISTEN_HOST: 0.0.0.0
       MONOS_PORT: "18443"
+      MONOS_DATABASE_STORAGE_PATH: /var/lib/monos-database-observation
+      MONOS_STORAGE_MIN_FREE_BYTES: "1073741824"
     secrets: [database_url, signing_key]
+    volumes: [database_data:/var/lib/monos-database-observation:ro]
     ports: ["127.0.0.1:18443:18443"]
     networks: [control, ingress]
     depends_on: { database: { condition: service_healthy } }

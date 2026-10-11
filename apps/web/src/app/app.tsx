@@ -2,7 +2,7 @@ import { randomUUID } from '../lib/browser-crypto.ts';
 import { useCallback, useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Folder, GitBranch, Inbox, Layers, LogOut, Settings2, Columns3, Menu } from 'lucide-react';
-import type { ConfigurationSnapshot, InfrastructureSnapshot, OwnerSessionStatus } from '../../../../packages/protocol/generated/types.ts';
+import type { ConfigurationSnapshot, InfrastructureSnapshot, OwnerSessionStatus, SetupReport } from '../../../../packages/protocol/generated/types.ts';
 import { Button } from '../components/ui/button.tsx';
 import { Field } from '../components/forms.tsx';
 import type { Save } from '../components/forms.tsx';
@@ -38,10 +38,11 @@ function Workspace({ sessionId, onUnauthorized }: { sessionId: string; onUnautho
   useEffect(() => { const change = () => { setView(currentView()); setTaskId(new URLSearchParams(location.hash.split('?')[1]).get('task_id') ?? ''); }; addEventListener('hashchange', change); return () => removeEventListener('hashchange', change); }, []);
   const configuration = useQuery({ queryKey: ['configuration'], queryFn: () => request<ConfigurationSnapshot>('/v1/owner/configuration', 'ConfigurationSnapshot'), retry: false, refetchInterval: 30000 });
   const infrastructure = useQuery({ queryKey: ['infrastructure'], queryFn: () => request<InfrastructureSnapshot>('/v1/owner/infrastructure', 'InfrastructureSnapshot'), retry: false, refetchInterval: 15000 });
+  const setup = useQuery({ queryKey: ['setup-readiness', sessionId, configuration.data?.control_version], queryFn: ({ signal }) => request<SetupReport>('/v1/owner/setup-readiness', 'SetupReport', undefined, sessionId, signal), enabled: view === 'execution', retry: false, refetchInterval: view === 'execution' ? 15000 : false });
   const refreshConfiguration = configuration.refetch;
   useEffect(() => { if (view === 'board' || view === 'task') void refreshConfiguration(); }, [view, taskId, refreshConfiguration]);
   const command = useCommand(onUnauthorized);
-  useEffect(() => { if ([configuration.error, infrastructure.error].some((error) => error instanceof APIError && error.code === 'unauthorized')) onUnauthorized(); }, [configuration.error, infrastructure.error, onUnauthorized]);
+  useEffect(() => { if ([configuration.error, infrastructure.error, setup.error].some((error) => error instanceof APIError && error.code === 'unauthorized')) onUnauthorized(); }, [configuration.error, infrastructure.error, setup.error, onUnauthorized]);
   const save: Save = (name, payload, basis) => command.execute({ schema_version: 1, request_id: randomUUID(), expected_control_version: basis, name, payload });
   const disabled = command.busy || !!command.pending;
   const navigate = (id: ReturnType<typeof currentView>) => { setView(id); setMenuOpen(false); };
@@ -66,7 +67,7 @@ function Workspace({ sessionId, onUnauthorized }: { sessionId: string; onUnautho
         <section className="todos-page" hidden={view !== 'todos'}><Todos snapshot={configuration.data} onUnauthorized={onUnauthorized} /></section>
         <section className="settings-page" hidden={view !== 'projects'}><Projects snapshot={configuration.data} save={save} disabled={disabled} committed={command.committed} /></section>
         <section className="settings-page" hidden={view !== 'roles'}><Roles snapshot={configuration.data} infrastructure={infrastructure.data} save={save} disabled={disabled} committed={command.committed} /></section>
-        <section className="settings-page" hidden={view !== 'execution'}><Execution snapshot={configuration.data} infrastructure={infrastructure.data} infrastructureError={infrastructure.error} refresh={() => { void infrastructure.refetch(); }} save={save} disabled={disabled} committed={command.committed} /></section>
+        <section className="settings-page" hidden={view !== 'execution'}><Execution snapshot={configuration.data} infrastructure={infrastructure.data} infrastructureError={infrastructure.error} setup={setup.data} setupError={setup.error} setupBusy={setup.isFetching} refresh={() => { void infrastructure.refetch(); void setup.refetch(); }} save={save} disabled={disabled} committed={command.committed} /></section>
         <section className="settings-page" hidden={view !== 'github'}><GitHubSettings snapshot={configuration.data} save={save} disabled={disabled} committed={command.committed} /></section>
       </>}
     </div></main></div>;

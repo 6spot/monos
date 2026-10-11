@@ -40,7 +40,9 @@
             "thinking_control_unavailable",
             "ambiguous_auto_placement",
             "unsupported_runner_transfer",
-            "runtime_targets_exhausted"
+            "runtime_targets_exhausted",
+            "runner_storage_attention",
+            "database_storage_attention"
           ]
         },
         "action": {
@@ -51,7 +53,8 @@
             "start_runner",
             "refresh_runtime",
             "select_runner",
-            "review_target"
+            "review_target",
+            "restore_storage"
           ]
         }
       },
@@ -218,6 +221,12 @@
               "git_write"
             ]
           }
+        },
+        "database_storage": {
+          "$ref": "#/definitions/BackendStorageObservation"
+        },
+        "cleanup": {
+          "$ref": "#/definitions/CleanupSummary"
         }
       },
       "required": [
@@ -235,54 +244,138 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "schema_version": { "type": "integer", "const": 1 },
-        "capacity": { "type": "integer", "minimum": 1, "maximum": 32 },
-        "ttl_seconds": { "type": "integer", "minimum": 60, "maximum": 3600 }
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "capacity": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 32
+        },
+        "ttl_seconds": {
+          "type": "integer",
+          "minimum": 60,
+          "maximum": 3600
+        }
       },
-      "required": ["schema_version", "capacity", "ttl_seconds"]
+      "required": [
+        "schema_version",
+        "capacity",
+        "ttl_seconds"
+      ]
     },
     "RunnerEnrollmentGrant": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "schema_version": { "type": "integer", "const": 1 },
-        "enrollment_id": { "$ref": "#/definitions/Id" },
-        "enrollment_token": { "type": "string", "minLength": 43, "maxLength": 43, "pattern": "^[A-Za-z0-9_-]{43}$" },
-        "expires_at": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}Z$", "maxLength": 24 },
-        "capacity": { "type": "integer", "minimum": 1, "maximum": 32 }
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "enrollment_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "enrollment_token": {
+          "type": "string",
+          "minLength": 43,
+          "maxLength": 43,
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+        },
+        "expires_at": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}Z$",
+          "maxLength": 24
+        },
+        "capacity": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 32
+        }
       },
-      "required": ["schema_version", "enrollment_id", "enrollment_token", "expires_at", "capacity"]
+      "required": [
+        "schema_version",
+        "enrollment_id",
+        "enrollment_token",
+        "expires_at",
+        "capacity"
+      ]
     },
     "RunnerEnrollmentRequest": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "schema_version": { "type": "integer", "const": 1 },
-        "request_id": { "$ref": "#/definitions/Id" },
-        "enrollment_token": { "type": "string", "minLength": 43, "maxLength": 43, "pattern": "^[A-Za-z0-9_-]{43}$" },
-        "credential": { "type": "string", "minLength": 43, "maxLength": 43, "pattern": "^[A-Za-z0-9_-]{43}$" }
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "request_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "enrollment_token": {
+          "type": "string",
+          "minLength": 43,
+          "maxLength": 43,
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+        },
+        "credential": {
+          "type": "string",
+          "minLength": 43,
+          "maxLength": 43,
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+        }
       },
-      "required": ["schema_version", "request_id", "enrollment_token", "credential"]
+      "required": [
+        "schema_version",
+        "request_id",
+        "enrollment_token",
+        "credential"
+      ]
     },
     "RunnerEnrollmentResponse": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "schema_version": { "type": "integer", "const": 1 },
-        "request_id": { "$ref": "#/definitions/Id" },
-        "runner_id": { "$ref": "#/definitions/Id" }
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "request_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "runner_id": {
+          "$ref": "#/definitions/Id"
+        }
       },
-      "required": ["schema_version", "request_id", "runner_id"]
+      "required": [
+        "schema_version",
+        "request_id",
+        "runner_id"
+      ]
     },
     "RunnerCredential": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "schema_version": { "type": "integer", "const": 1 },
-        "runner_id": { "$ref": "#/definitions/Id" },
-        "credential": { "type": "string", "minLength": 43, "maxLength": 43, "pattern": "^[A-Za-z0-9_-]{43}$" }
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "runner_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "credential": {
+          "type": "string",
+          "minLength": 43,
+          "maxLength": 43,
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+        }
       },
-      "required": ["schema_version", "runner_id", "credential"]
+      "required": [
+        "schema_version",
+        "runner_id",
+        "credential"
+      ]
     },
     "Id": {
       "type": "string",
@@ -2834,7 +2927,10 @@
             "publication_push_result",
             "publication_push_ack",
             "publication_ref_read",
-            "publication_ref_read_result"
+            "publication_ref_read_result",
+            "task_cleanup",
+            "task_cleanup_result",
+            "task_cleanup_ack"
           ]
         },
         "runner_id": {
@@ -2979,6 +3075,28 @@
           },
           "maxItems": 1,
           "uniqueItems": true
+        },
+        "resources": {
+          "$ref": "#/definitions/RunnerResources"
+        },
+        "cleanup_request": {
+          "$ref": "#/definitions/TaskCleanupRequest"
+        },
+        "cleanup_result": {
+          "$ref": "#/definitions/TaskCleanupResult"
+        },
+        "cleanup_ack": {
+          "$ref": "#/definitions/TaskCleanupAck"
+        },
+        "cleanup_modes": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "const": "completed_task_v1"
+          }
         }
       },
       "allOf": [
@@ -3058,7 +3176,9 @@
               "result_read_modes": {},
               "publication_modes": {},
               "remote_preparation_modes": {},
-              "publication_ref_read_modes": {}
+              "publication_ref_read_modes": {},
+              "resources": {},
+              "cleanup_modes": {}
             },
             "additionalProperties": false,
             "type": "object"
@@ -3082,7 +3202,8 @@
             "properties": {
               "schema_version": {},
               "type": {},
-              "incarnation": {}
+              "incarnation": {},
+              "resources": {}
             },
             "additionalProperties": false,
             "type": "object"
@@ -3631,6 +3752,93 @@
               "incarnation",
               "correlation_id",
               "publication_ref_read_result"
+            ]
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "const": "task_cleanup"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "schema_version": {},
+              "type": {},
+              "incarnation": {},
+              "cleanup_request": {}
+            },
+            "required": [
+              "schema_version",
+              "type",
+              "incarnation",
+              "cleanup_request"
+            ]
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "const": "task_cleanup_result"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "schema_version": {},
+              "type": {},
+              "incarnation": {},
+              "cleanup_result": {}
+            },
+            "required": [
+              "schema_version",
+              "type",
+              "incarnation",
+              "cleanup_result"
+            ]
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "const": "task_cleanup_ack"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "schema_version": {},
+              "type": {},
+              "incarnation": {},
+              "cleanup_ack": {}
+            },
+            "required": [
+              "schema_version",
+              "type",
+              "incarnation",
+              "cleanup_ack"
             ]
           }
         }
@@ -4365,7 +4573,8 @@
             "save_github",
             "save_planner_guidance",
             "save_git_https_credential",
-            "clear_git_https_credential"
+            "clear_git_https_credential",
+            "save_retention"
           ]
         },
         "payload": {
@@ -4390,6 +4599,9 @@
             },
             {
               "$ref": "#/definitions/GitHTTPSCredentialClear"
+            },
+            {
+              "$ref": "#/definitions/RetentionPolicy"
             }
           ]
         }
@@ -4543,6 +4755,27 @@
             },
             "required": []
           }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "const": "save_retention"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "payload": {
+                "$ref": "#/definitions/RetentionPolicy"
+              }
+            }
+          }
         }
       ]
     },
@@ -4656,6 +4889,9 @@
           "items": {
             "$ref": "#/definitions/GitHTTPSCredentialStatus"
           }
+        },
+        "retention": {
+          "$ref": "#/definitions/RetentionPolicy"
         }
       }
     },
@@ -4863,6 +5099,12 @@
             }
           },
           "maxItems": 32
+        },
+        "resources": {
+          "$ref": "#/definitions/RunnerResourceObservation"
+        },
+        "credential_revoked": {
+          "type": "boolean"
         }
       }
     },
@@ -7916,7 +8158,7 @@
       "type": "string",
       "minLength": 1,
       "maxLength": 65536,
-      "pattern": "[^ \\t\\n\\r\\f\\v\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff]",
+      "pattern": "[^ \\t\\n\\r\\f\\v   -     　﻿]",
       "allOf": [
         {
           "pattern": "^[^\\x00]*$"
@@ -7956,7 +8198,7 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 4096,
-            "pattern": "[^ \\t\\n\\r\\f\\v\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff]",
+            "pattern": "[^ \\t\\n\\r\\f\\v   -     　﻿]",
             "allOf": [
               {
                 "pattern": "^[^\\x00]*$"
@@ -7971,7 +8213,7 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 4096,
-            "pattern": "[^ \\t\\n\\r\\f\\v\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff]",
+            "pattern": "[^ \\t\\n\\r\\f\\v   -     　﻿]",
             "allOf": [
               {
                 "pattern": "^[^\\x00]*$"
@@ -13225,6 +13467,11 @@
               "type": "null"
             }
           ]
+        },
+        "cleaned_at": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}Z$",
+          "maxLength": 24
         }
       },
       "required": [
@@ -13465,7 +13712,7 @@
         },
         {
           "if": {
-            "pattern": "[\r\n\u2028\u2029]$"
+            "pattern": "[\r\n  ]$"
           },
           "then": {},
           "else": {
@@ -22868,6 +23115,674 @@
         "worker_absent",
         "observation",
         "observation_digest"
+      ]
+    },
+    "ExecutionResourceLimits": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "cpu_quota_percent": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000
+        },
+        "memory_max_bytes": {
+          "type": "integer",
+          "minimum": 67108864,
+          "maximum": 9007199254740991
+        },
+        "tasks_max": {
+          "type": "integer",
+          "minimum": 16,
+          "maximum": 1048576
+        }
+      },
+      "required": [
+        "cpu_quota_percent",
+        "memory_max_bytes",
+        "tasks_max"
+      ]
+    },
+    "StorageHealth": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "scope": {
+          "enum": [
+            "database",
+            "journal",
+            "logs",
+            "cache",
+            "workspaces",
+            "inspection"
+          ]
+        },
+        "status": {
+          "enum": [
+            "ok",
+            "low",
+            "unknown"
+          ]
+        },
+        "min_free_bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "free_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "total_bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "scope",
+        "status",
+        "min_free_bytes"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "unknown"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "free_bytes": false,
+              "total_bytes": false
+            }
+          },
+          "else": {
+            "required": [
+              "free_bytes",
+              "total_bytes"
+            ],
+            "properties": {
+              "free_bytes": {},
+              "total_bytes": {}
+            }
+          }
+        }
+      ]
+    },
+    "RunnerResources": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "storage": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "items": {
+            "$ref": "#/definitions/StorageHealth"
+          }
+        },
+        "execution_limits": {
+          "$ref": "#/definitions/ExecutionResourceLimits"
+        },
+        "log_retention_hours": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 87600
+        },
+        "inspection_retention_hours": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 87600
+        }
+      },
+      "required": [
+        "storage",
+        "execution_limits",
+        "log_retention_hours",
+        "inspection_retention_hours"
+      ]
+    },
+    "RunnerResourceObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "observation": {
+          "$ref": "#/definitions/RunnerResources"
+        },
+        "observed_at": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}Z$",
+          "maxLength": 24
+        },
+        "current": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "observation",
+        "observed_at",
+        "current"
+      ]
+    },
+    "BackendStorageObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "observation": {
+          "$ref": "#/definitions/StorageHealth"
+        },
+        "observed_at": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}Z$",
+          "maxLength": 24
+        },
+        "current": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "observation",
+        "observed_at",
+        "current"
+      ]
+    },
+    "RunnerManageCommand": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "action": {
+          "enum": [
+            "rotate",
+            "revoke",
+            "set_capacity"
+          ]
+        },
+        "runner_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "ttl_seconds": {
+          "type": "integer",
+          "minimum": 60,
+          "maximum": 3600
+        },
+        "capacity": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 32
+        }
+      },
+      "required": [
+        "schema_version",
+        "action",
+        "runner_id"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "action": {
+                "const": "rotate"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "ttl_seconds"
+            ],
+            "properties": {
+              "capacity": false,
+              "ttl_seconds": {}
+            }
+          },
+          "else": {
+            "properties": {
+              "ttl_seconds": false
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "action": {
+                "const": "set_capacity"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "capacity"
+            ],
+            "properties": {
+              "capacity": {}
+            }
+          },
+          "else": {
+            "properties": {
+              "capacity": false
+            }
+          }
+        }
+      ]
+    },
+    "RunnerManageResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "runner_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "capacity": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 32
+        },
+        "credential_revoked": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "schema_version",
+        "runner_id",
+        "capacity",
+        "credential_revoked"
+      ]
+    },
+    "RunnerRotationGrant": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "runner_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "rotation_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "rotation_token": {
+          "type": "string",
+          "minLength": 43,
+          "maxLength": 43,
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+        },
+        "expires_at": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}Z$",
+          "maxLength": 24
+        }
+      },
+      "required": [
+        "schema_version",
+        "runner_id",
+        "rotation_id",
+        "rotation_token",
+        "expires_at"
+      ]
+    },
+    "RunnerRotationRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "request_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "runner_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "rotation_token": {
+          "type": "string",
+          "minLength": 43,
+          "maxLength": 43,
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+        },
+        "credential": {
+          "type": "string",
+          "minLength": 43,
+          "maxLength": 43,
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+        }
+      },
+      "required": [
+        "schema_version",
+        "request_id",
+        "runner_id",
+        "rotation_token",
+        "credential"
+      ]
+    },
+    "RunnerRotationResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "request_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "runner_id": {
+          "$ref": "#/definitions/Id"
+        }
+      },
+      "required": [
+        "schema_version",
+        "request_id",
+        "runner_id"
+      ]
+    },
+    "RetentionPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "completed_task_days": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3650
+        }
+      },
+      "required": [
+        "enabled",
+        "completed_task_days"
+      ]
+    },
+    "CleanupSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "policy": {
+          "$ref": "#/definitions/RetentionPolicy"
+        },
+        "pending": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "completed": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "attention": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "attention_items": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {
+            "$ref": "#/definitions/CleanupAttention"
+          }
+        }
+      },
+      "required": [
+        "policy",
+        "pending",
+        "completed",
+        "attention"
+      ]
+    },
+    "TaskCleanupWorkspace": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "workspace_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "resource_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "generation": {
+          "$ref": "#/definitions/Counter"
+        },
+        "storage_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "direct": {
+          "type": "boolean"
+        },
+        "allocation_ids": {
+          "type": "array",
+          "maxItems": 1024,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/Id"
+          }
+        },
+        "finalized_commit": {
+          "type": "string",
+          "pattern": "^(?:[a-f0-9]{40}|[a-f0-9]{64})$"
+        }
+      },
+      "required": [
+        "workspace_id",
+        "resource_id",
+        "generation",
+        "storage_id",
+        "direct",
+        "allocation_ids",
+        "finalized_commit"
+      ]
+    },
+    "TaskCleanupAttempt": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "attempt_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "dispatch_id": {
+          "$ref": "#/definitions/Id"
+        }
+      },
+      "required": [
+        "attempt_id",
+        "dispatch_id"
+      ]
+    },
+    "TaskCleanupRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "cleanup_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "task_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "runner_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "completed_at": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}Z$",
+          "maxLength": 24
+        },
+        "workspaces": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "$ref": "#/definitions/TaskCleanupWorkspace"
+          }
+        },
+        "attempts": {
+          "type": "array",
+          "maxItems": 4096,
+          "items": {
+            "$ref": "#/definitions/TaskCleanupAttempt"
+          }
+        },
+        "results": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "$ref": "#/definitions/ResultReadIdentity"
+          }
+        }
+      },
+      "required": [
+        "schema_version",
+        "cleanup_id",
+        "task_id",
+        "runner_id",
+        "completed_at",
+        "workspaces",
+        "attempts",
+        "results"
+      ]
+    },
+    "TaskCleanupResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "cleanup_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "request_digest": {
+          "$ref": "#/definitions/SHA256"
+        },
+        "status": {
+          "enum": [
+            "completed",
+            "blocked"
+          ]
+        },
+        "reason": {
+          "enum": [
+            "ownership_unresolved",
+            "storage_identity_mismatch",
+            "result_unavailable",
+            "cleanup_failed"
+          ]
+        }
+      },
+      "required": [
+        "schema_version",
+        "cleanup_id",
+        "request_digest",
+        "status"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "completed"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "reason": false
+            }
+          },
+          "else": {
+            "required": [
+              "reason"
+            ],
+            "properties": {
+              "reason": {}
+            }
+          }
+        }
+      ]
+    },
+    "TaskCleanupAck": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "cleanup_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "request_digest": {
+          "$ref": "#/definitions/SHA256"
+        }
+      },
+      "required": [
+        "cleanup_id",
+        "request_digest"
+      ]
+    },
+    "CleanupAttention": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "task_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "runner_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "reason": {
+          "type": "string",
+          "enum": [
+            "ownership_unresolved",
+            "storage_identity_mismatch",
+            "result_unavailable",
+            "cleanup_failed",
+            "request_too_large"
+          ]
+        }
+      },
+      "required": [
+        "task_id",
+        "runner_id",
+        "reason"
+      ]
+    },
+    "RunnerEnrollmentProof": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "enrollment_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "runner_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "credential_hash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "required": [
+        "schema_version",
+        "enrollment_id",
+        "runner_id",
+        "credential_hash"
       ]
     }
   }

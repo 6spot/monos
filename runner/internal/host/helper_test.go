@@ -197,7 +197,7 @@ func TestHelperLaunchRequiresExplicitApprovedModel(t *testing.T) {
 
 func TestHelperCodexTargetValidation(t *testing.T) {
 	d := protocol.Dispatch{AttemptID: "a", DispatchID: "d", RunnerID: "runner", TaskID: ptr("task"), ResourceID: ptr("repo"), Kind: protocol.Node, RuntimeID: protocol.Codex, Model: "gpt-5.4", MutationAllowed: true, Prompt: "probe"}
-	for _, thinking := range []protocol.ThinkingLevel{protocol.ThinkingLevelNone, protocol.Minimal, protocol.Low, protocol.Medium, protocol.High, protocol.Xhigh} {
+	for _, thinking := range []protocol.ThinkingLevel{protocol.ThinkingLevelNone, protocol.Minimal, protocol.ThinkingLevelLow, protocol.Medium, protocol.High, protocol.Xhigh} {
 		d.ThinkingLevel = &thinking
 		if !ApprovedTarget(d) {
 			t.Fatalf("supported thinking rejected: %s", thinking)

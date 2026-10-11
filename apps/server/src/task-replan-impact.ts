@@ -5,6 +5,7 @@ import type { ExecutionPlanNode, ReplanHold, ReplanImpact, ReplanWorkspaceInput 
 import type { SpecificationTask } from './task-specification-state.ts';
 import { assertCurrentNode, validatePlan } from './task-records.ts';
 import { effectiveGuidanceTargets } from './task-guidance.ts';
+import { assertNodeConsumes } from './node-consumes.ts';
 
 type Member = {
   id: string; activation: string; execution_source_id: string | null; blocker_id: string | null;
@@ -75,7 +76,7 @@ export function replanTargetActivations(impact: ReplanImpact, nodes: ExecutionPl
 
 export async function checkReplanImpact(tx: Transaction, task: SpecificationTask, impact: ReplanImpact, nodes: ExecutionPlanNode[]): Promise<void> {
   validate('ReplanImpact', impact); validatePlan(nodes);
-  if (nodes.some(n => n.consumes?.length)) throw new CommandError('unmet_precondition', 'unsupported_artifact_consumption: Artifact consumption is unavailable in this stage');
+  await assertNodeConsumes(tx, task.id, nodes);
   const actual = await replanImpact(tx, task), previous = new Map(actual.nodes.map(n => [n.node_id, n]));
   const graph = new Map(nodes.map(n => [n.node_id, n]));
   const dispositions = new Map(impact.nodes.map(n => [n.node_id, n]));

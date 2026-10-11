@@ -20,10 +20,12 @@ import (
 	"github.com/coder/websocket"
 	protocol "monos.local/protocol"
 	"monos.local/runner/internal/enrollment/storage"
+	"monos.local/runner/internal/resources"
 	"monos.local/runner/internal/wire"
 )
 
 type Config struct {
+	resources.Config
 	Endpoint     string `json:"endpoint"`
 	CAFile       string `json:"ca_file"`
 	TokenFile    string `json:"token_file"`
@@ -33,14 +35,15 @@ type Config struct {
 	ExecutionUID uint32 `json:"execution_uid"`
 }
 type Client struct {
-	Config  Config
-	HTTP    *http.Client
-	token   string
-	mu      sync.Mutex
-	conn    *websocket.Conn
-	inc     int64
-	ready   bool
-	pending map[string]chan protocol.Frame
+	Config       Config
+	HTTP         *http.Client
+	token        string
+	identityFile bool
+	mu           sync.Mutex
+	conn         *websocket.Conn
+	inc          int64
+	ready        bool
+	pending      map[string]chan protocol.Frame
 }
 
 type HTTPError struct{ Status int }
@@ -64,10 +67,16 @@ func ReadConfig(path string) (Config, []byte, error) {
 	if err = decoder.Decode(&config); err != nil {
 		return config, nil, fmt.Errorf("invalid Runner configuration")
 	}
+	if err = config.Config.Normalize(); err != nil {
+		return config, nil, err
+	}
 	return config, raw, nil
 }
 
 func New(c Config) (*Client, error) {
+	if err := c.Config.Normalize(); err != nil {
+		return nil, err
+	}
 	if _, err := backendOrigin(c.Endpoint); err != nil {
 		return nil, err
 	}
@@ -97,7 +106,7 @@ func New(c Config) (*Client, error) {
 			return nil, fmt.Errorf("invalid Runner identity")
 		}
 		c.RunnerID = identity.RunnerID
-		return &Client{Config: c, HTTP: client, token: identity.Credential, pending: map[string]chan protocol.Frame{}}, nil
+		return &Client{Config: c, HTTP: client, identityFile: true, token: identity.Credential, pending: map[string]chan protocol.Frame{}}, nil
 	}
 	token, err := os.ReadFile(c.TokenFile)
 	if err != nil {
@@ -120,7 +129,7 @@ func (c *Client) Get(ctx context.Context, path, name string, out any) error {
 	if err != nil {
 		return err
 	}
-	request.Header.Set("Authorization", "Bearer "+c.token)
+	request.Header.Set("Authorization", "Bearer "+c.credential())
 	response, err := c.HTTP.Do(request)
 	if err != nil {
 		return fmt.Errorf("Runner recovery read unavailable")
@@ -280,13 +289,16 @@ type Handler interface {
 }
 
 func (c *Client) Run(ctx context.Context, boot string, h Handler) error {
+	if err := c.reloadCredential(); err != nil {
+		return err
+	}
 	// Dispatch workers belong to this connection incarnation. On disconnect,
 	// cancel queued/in-flight work before another connection can become ready;
 	// durable start/effect records remain available for normal reconciliation.
 	ctx, cancelConnection := context.WithCancel(ctx)
 	defer cancelConnection()
 	header := http.Header{}
-	header.Set("Authorization", "Bearer "+c.token)
+	header.Set("Authorization", "Bearer "+c.credential())
 	endpoint, err := backendOrigin(c.Config.Endpoint)
 	if err != nil {
 		return err
@@ -333,6 +345,18 @@ func (c *Client) Run(ctx context.Context, boot string, h Handler) error {
 		return err
 	}
 	ready := protocol.Frame{Type: protocol.TypeReady, LogModes: []protocol.LogModeElement{protocol.PurpleOrderedV1}}
+	observeResources := func() *protocol.RunnerResources {
+		if reporter, ok := h.(interface {
+			ResourceObservation(context.Context) *protocol.RunnerResources
+		}); ok {
+			return reporter.ResourceObservation(ctx)
+		}
+		return nil
+	}
+	ready.Resources = observeResources()
+	if support, ok := h.(interface{ SupportsTaskCleanup() bool }); ok && support.SupportsTaskCleanup() {
+		ready.CleanupModes = []protocol.CleanupMode{protocol.CompletedTaskV1}
+	}
 	if reporter, ok := h.(interface {
 		InstalledRuntimes(context.Context) []protocol.RuntimeInstallation
 	}); ok {
@@ -361,7 +385,7 @@ func (c *Client) Run(ctx context.Context, boot string, h Handler) error {
 			case <-heartbeatCtx.Done():
 				return
 			case <-timer.C:
-				if c.Send(heartbeatCtx, protocol.Frame{Type: protocol.Heartbeat}) != nil {
+				if c.Send(heartbeatCtx, protocol.Frame{Type: protocol.Heartbeat, Resources: observeResources()}) != nil {
 					conn.CloseNow()
 					return
 				}

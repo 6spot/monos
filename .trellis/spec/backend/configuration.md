@@ -65,3 +65,21 @@ Good: replay a lost edit response with the original request. Base: archive and r
 ## 7. Wrong vs Correct
 Wrong: lock Task, then configuration; remove resources by checking only Task terminal status.
 Correct: configuration barrier precedes Runner/Task; preserve unresolved physical writer/operation ownership even after terminal status.
+
+## Completed-Task retention settings
+
+`save_retention` uses the same Owner/CSRF, expected control version and receipt
+transaction as other configuration commands. Its exact payload is
+`{enabled:boolean,completed_task_days:integer}` with 1–3650 days. The initial
+policy is enabled at seven days and is included in the coherent configuration
+snapshot. Disabling preserves the selected interval. Readiness includes cleanup
+counts and up to 16 recent blocked Task/Runner reasons; it exposes no host paths.
+
+`TaskCleanup` takes the configuration barrier before Runner/Task locks, rechecks
+formal completion age and unsettled local/provider ownership, then persists one
+immutable request per Task/Runner. Policy changes apply only to new admissions.
+The rotating candidate cursor must advance past unresolved or lock-busy Tasks.
+Match retained results by the entire workspace/resource/storage/generation/Runner
+identity and current finalized commit before freezing the request. `cleaned_at`
+is a storage observation in workspace details, never a new Task lifecycle state.
+See [maintenance](../../../infra/runner/operations.md).

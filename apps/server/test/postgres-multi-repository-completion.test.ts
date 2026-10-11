@@ -26,6 +26,25 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Multi-repository compl
       .rejects.toMatchObject({ code: '23514', message: 'Task repository pointer requires its exact atomic completion result' });
   });
 
+  it('freezes every dependency repository revision and private/integrated provenance in a later Node source', async () => {
+    const root = x.definition(x.f.node), independent = x.definition(), dependent = x.definition(undefined, [root.node_id]);
+    await x.start([root, independent, dependent]); await x.execution.pump();
+    const first = await x.promote(), second = await x.promote();
+    const turn = first.dispatch.node_id === root.node_id ? first : second;
+    const sibling = turn === first ? second : first;
+    await x.openAll(turn);
+    const { operation } = await x.admitCompletion(turn), result = await x.settleCompletion(turn, operation);
+    await x.complete(sibling);
+    const next = await x.node(), context = JSON.parse(next.dispatch.prompt);
+    expect(next.dispatch.node_id).toBe(dependent.node_id);
+    expect(context.upstream_outputs.items[0].repositories).toEqual(result.workspace_results.map(item => ({
+      resource_id: item.resource_id, workspace_id: item.workspace_id,
+      git_commit: item.git_commit, git_tree: item.git_tree, capture: item.capture, integration: item.integration,
+    })));
+    expect(context.upstream_outputs.items[0].repositories.every((item: { integration?: unknown }) => item.integration)).toBe(true);
+    expect(context.upstream_outputs.items[0]).not.toHaveProperty('git_commit');
+  });
+
   it.each([
     ['omitted sibling', "jsonb_set(NEW.result,'{workspace_results}',jsonb_build_array(NEW.result->'workspace_results'->0))"],
     ['reordered members', "jsonb_set(NEW.result,'{workspace_results}',jsonb_build_array(NEW.result->'workspace_results'->1,NEW.result->'workspace_results'->0))"],

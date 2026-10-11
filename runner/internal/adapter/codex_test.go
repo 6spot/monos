@@ -169,7 +169,7 @@ func TestCodexThinkingIsExactAndOmissionKeepsRuntimeDefault(t *testing.T) {
 	if err != nil || codexOverrides(t, args)["model_reasoning_effort"] != "" {
 		t.Fatal("unspecified thinking was overridden", err)
 	}
-	for _, level := range []protocol.ThinkingLevel{protocol.ThinkingLevelNone, protocol.Minimal, protocol.Low, protocol.Medium, protocol.High, protocol.Xhigh} {
+	for _, level := range []protocol.ThinkingLevel{protocol.ThinkingLevelNone, protocol.Minimal, protocol.ThinkingLevelLow, protocol.Medium, protocol.High, protocol.Xhigh} {
 		d.ThinkingLevel = &level
 		args, err = codexArguments(d)
 		if err != nil || codexOverrides(t, args)["model_reasoning_effort"] != `"`+string(level)+`"` {

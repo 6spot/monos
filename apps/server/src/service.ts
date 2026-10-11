@@ -1,3 +1,4 @@
+import { runnerResources } from './runner-observations.ts';
 import { retryIntegrationConflict } from './node-integration.ts';
 import { assertCompletionBoundaryAvailable } from './workspaces.ts';
 import { admitRepositoryInspection, assertInspectionAccess, settleRepositoryInspection } from './repository-inspection.ts';
@@ -230,14 +231,16 @@ export class BoundaryService {
     return validate('InspectionRepositoryAccessResult', { schema_version: 1, operation_id: operationId, inspection_digest: request.inspection_digest, ...access });
   }
 
-  async connect(runnerId: string, bootId: string): Promise<number> {
+  async connect(runnerId: string, bootId: string, credential?: string): Promise<number> {
     return transaction(this.db, async (tx) => {
       await lockRunner(tx, runnerId);
-      const result = await tx.query<{ incarnation: string }>('UPDATE runners SET incarnation=incarnation+1,connected=true,ready=false,boot_id=$2,last_seen=now(),connection_instance=$3 WHERE id=$1 RETURNING incarnation', [runnerId, bootId, this.instanceId]);
+      const result = await tx.query<{ incarnation: string }>('UPDATE runners SET incarnation=incarnation+1,connected=true,ready=false,boot_id=$2,last_seen=now(),connection_instance=$3 WHERE id=$1 AND NOT credential_revoked AND ($4::text IS NULL OR credential_hash=$4) RETURNING incarnation', [runnerId, bootId, this.instanceId, credential === undefined ? null : digest(credential)]);
+      if (!result.rowCount) throw new CommandError('unauthorized', 'Runner credential changed or was revoked');
       return Number(result.rows[0]!.incarnation);
     });
   }
-  async touch(runnerId: string, incarnation: number, ready = false, runtimes?: Frame['runtimes']): Promise<void> {
+  async touch(runnerId: string, incarnation: number, ready = false, runtimes?: Frame['runtimes'], resources?: Frame['resources']): Promise<void> {
+    if (resources !== undefined) runnerResources(resources);
     if (runtimes !== undefined) {
       validate('Frame', { schema_version: 1, type: 'ready', incarnation, runtimes });
       if (!ready || new Set(runtimes.map((row) => row.runtime_id)).size !== runtimes.length) throw new CommandError('invalid_input', 'Runtime report must contain unique installation IDs');
@@ -251,6 +254,7 @@ export class BoundaryService {
         for (const row of runtimes) await tx.query('INSERT INTO runtime_installations(runner_id,runtime_id,incarnation,observation) VALUES($1,$2,$3,$4)', [runnerId, row.runtime_id, incarnation, row]);
         await tx.query('UPDATE runners SET runtime_report_incarnation=$2 WHERE id=$1', [runnerId, incarnation]);
       }
+      if (resources !== undefined) await tx.query('UPDATE runners SET resource_observation=$2,resource_observed_at=clock_timestamp(),resource_incarnation=$3 WHERE id=$1', [runnerId, resources, incarnation]);
       await tx.query('UPDATE runners SET last_seen=now(),ready=ready OR $2 WHERE id=$1', [runnerId, ready]);
     });
   }
@@ -290,6 +294,10 @@ export class BoundaryService {
       if (receipt) {
         if (receipt.digest !== submission.sha256 || receipt.command_name !== command.name) throw new CommandError('payload_conflict', 'Request ID already records different content');
         return receiptResponse(tx, receipt);
+      }
+      if (command.name === 'open_workspace' || command.name === 'inspect_repository') {
+        const attention = (await tx.query<{ value: boolean }>('SELECT runner_storage_attention(r) OR database_storage_attention($2) value FROM runners r WHERE id=$1', [runner.id, this.instanceId])).rows[0]!.value;
+        if (attention) throw new CommandError('unmet_precondition', 'Storage needs attention; restore free space and retry this request');
       }
       if (command.name === 'inspect_repository' && !await explicitLegacyAttempt(tx, attempt.id)) {
         const operationId = await admitRepositoryInspection(tx, attempt, command, runner.available && runner.connection_instance === this.instanceId);
@@ -486,7 +494,8 @@ export class BoundaryService {
       if (!runner.available) return [];
       // Recovery rows retain their durable intent, but must not consume the
       // bounded dispatch batch and starve unrelated runnable work.
-      const rows = (await tx.query<{ id: string; attempt_id: string; kind: 'start' | 'effect'; operation_id: string | null }>("SELECT * FROM outbox WHERE runner_id=$1 AND NOT done AND (last_sent_at IS NULL OR last_sent_at < now()-interval '2 seconds') AND (kind='start' OR EXISTS (SELECT 1 FROM operations WHERE operations.id=outbox.operation_id AND operations.state='admitted')) ORDER BY id LIMIT 16 FOR UPDATE", [runnerId])).rows;
+      const attention = (await tx.query<{ value: boolean }>('SELECT runner_storage_attention(r) OR database_storage_attention($2) value FROM runners r WHERE id=$1', [runnerId, this.instanceId])).rows[0]!.value;
+      const rows = (await tx.query<{ id: string; attempt_id: string; kind: 'start' | 'effect'; operation_id: string | null }>("SELECT * FROM outbox WHERE runner_id=$1 AND NOT done AND (last_sent_at IS NULL OR last_sent_at < now()-interval '2 seconds') AND ((kind='start' AND NOT $2) OR EXISTS (SELECT 1 FROM operations WHERE operations.id=outbox.operation_id AND operations.state='admitted')) ORDER BY id LIMIT 16 FOR UPDATE", [runnerId, attention])).rows;
       const frames: Frame[] = [];
       for (const row of rows) {
         const attempt = (await tx.query<AttemptRow>('SELECT * FROM attempts WHERE id=$1', [row.attempt_id])).rows[0]!;

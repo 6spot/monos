@@ -1,5 +1,10 @@
 # Enroll a new Runner
 
+The [fresh single-host installer](../install/README.md) runs this sequence and
+generates the private configuration automatically. Use the individual commands
+below for an already provisioned backend or an additional separately configured
+Runner.
+
 Use this after provisioning the service and execution accounts and persistent
 paths described in the [Runner recipe](README.md). Enrollment registers a new
 Runner; it does not install or authenticate coding CLIs or certify host readiness.
@@ -30,9 +35,11 @@ a Runner. There is no public grant-issuance endpoint.
 
 ## Configure and enroll
 
-Create `/etc/monos-probe/runner.json` as a regular file owned by root or the Runner
-service account, without group/other write permission. Set the actual non-root
-execution UID. For a fresh installation use:
+Create `/etc/monos-probe/runner.json` as a regular root-owned file with mode `0640`
+and group `monos-probe-read`. Its directory must also be root-owned with no
+group/other write permission. The daemon reads these nonsecret settings; the
+privileged helper requires root ownership for its resource policy. Set the actual
+non-root execution UID. For a fresh installation use:
 
 ```json
 {
@@ -90,8 +97,16 @@ values before retry. An unused token that expires remains denied.
 
 A fresh invocation refuses existing identity or journal/WAL/SHM files. Never
 delete those records to force registration. Restore the original matching private
-identity when recovering an existing Runner. This enrollment slice does not
-implement credential replacement or remove unresolved execution ownership.
+identity when recovering an existing Runner. Use the separate
+[credential rotation command](operations.md) to replace a credential while
+retaining the same Runner and unresolved execution ownership.
+
+The single-host installer also handles an interruption after enrollment removes
+its pending file but before the installer records success. It verifies the
+service-private identity against the original consumed grant using the local
+administrative `runner-enrollment-admin.ts --verify` read. That proof matches the
+enrollment ID, Runner ID and credential hash against the current unrevoked Runner;
+an arbitrary existing identity or an old rotated credential is never adopted.
 
 Validation uses real local file operations, controlled HTTP/TLS and PostgreSQL.
 Installed service/account permissions, coding CLI access and reboot recovery

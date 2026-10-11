@@ -205,4 +205,22 @@ Expose configured execution concurrency and per-process resource limits appropri
 
 Monitor free space for database volumes, Runner journal/log spool, caches and workspaces. Below configured thresholds stop new dispatch/materialization and report storage attention. If a durable journal/spool write fails, stop or freeze affected execution safely and do not acknowledge unpersisted effects or silently discard required records. Recovery requires restored storage and reconciliation before retry. Cleanup may remove disposable inspection data and acknowledged logs according to retention, but never unresolved-operation records or live/recoverable workspaces merely to free space. Do not automatically delete unrelated host files.
 
+Completed Tasks have a separate configurable retention policy, initially enabled
+at seven days after formal completion. The Owner can disable future cleanup or
+choose 1–3650 days in Execution settings. Only `COMPLETED` Tasks qualify;
+`CANCELLED` Tasks retain their private work. Before cleanup, the backend waits for
+all physical writers, leases, operations and delivery workers to settle and
+freezes an exact Task/Runner request. The Runner independently verifies its
+journal, root-owned identities and standalone final result exports before
+deleting the listed disposable worktrees, dependencies and Attempt runtime data.
+Artifacts, results, history, rework archives, ownership records, shared caches
+and unknown directories remain. Durable retirement fences delayed Start/open,
+and interrupted deletion resumes the same request without expanding its scope.
+New reply-only Conversations on completed Tasks remain authorized and use their
+own Attempt directories; they cannot reopen retired Task workspaces or enlarge
+an earlier cleanup request.
+Settings changes affect future admissions; already admitted cleanup retains its
+original authority. See [operations](../infra/runner/operations.md) for defaults,
+diagnosis and credential maintenance.
+
 Before actual use begins, follow the [development deployment policy](12-product-naming-and-upgrades.md): validate a fresh current-version installation, without historical deployment/data migration or rollback gates. Replacing a runtime used by an active execution still requires stopping/reconciling its actual writers before reusing their resources. Backups taken for a concrete current-run purpose cover the corresponding PostgreSQL, service configuration and Runner journal/workspaces; a database-only restore cannot claim recovery of missing workspaces. After actual use begins, define migration, backup and recovery scope against the real deployment. Permanent disk loss remains outside V1's execution-recovery guarantee.

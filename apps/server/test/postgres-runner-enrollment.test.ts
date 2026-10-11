@@ -10,7 +10,7 @@ import type { RunnerEnrollmentGrant, RunnerEnrollmentRequest, RunnerEnrollmentRe
 import { createApp } from '../src/app.ts';
 import { BoundaryService } from '../src/service.ts';
 import { createAttemptFixture } from '../src/fixtures.ts';
-import { issueRunnerEnrollment, redeemRunnerEnrollment } from '../src/runner-enrollment.ts';
+import { issueRunnerEnrollment, redeemRunnerEnrollment, verifyRunnerEnrollment } from '../src/runner-enrollment.ts';
 
 const secret = () => randomBytes(32).toString('base64url');
 const fault = (code: string) => ({ detail: { code } });
@@ -126,11 +126,15 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('one-use local administ
   it('replays the original safe response after expiry without restoring a rotated Runner credential', async () => {
     const grant = await historicalGrant(500), input = request(grant), first = await redeemRunnerEnrollment(db, input);
     const nextCredential = secret(), service = new BoundaryService(db, { signingKey });
+    const proof = { schema_version: 1, enrollment_id: grant.enrollment_id, runner_id: first.runner_id, credential_hash: digest(input.credential) };
+    expect(await verifyRunnerEnrollment(db, proof)).toEqual(first);
     await db.pool.query('UPDATE runners SET credential_hash=$2 WHERE id=$1', [first.runner_id, digest(nextCredential)]);
     await expired(grant);
     expect(await redeemRunnerEnrollment(db, input)).toEqual(first);
     await expect(service.authenticateRunner(input.credential)).rejects.toMatchObject(fault('unauthorized'));
     expect(await service.authenticateRunner(nextCredential)).toBe(first.runner_id);
+    await expect(verifyRunnerEnrollment(db, proof)).rejects.toMatchObject(fault('unmet_precondition'));
+    await expect(verifyRunnerEnrollment(db, { ...proof, credential_hash: digest(nextCredential) })).rejects.toMatchObject(fault('unmet_precondition'));
   });
 
   it('rolls back Runner creation and token consumption together when commit fails', async () => {
@@ -192,16 +196,26 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('one-use local administ
 
   it('issues through bounded native stdin and emits no grant or secret-bearing error on invalid input', async () => {
     const command = fileURLToPath(new URL('../src/runner-enrollment-admin.ts', import.meta.url));
-    const run = (input: string) => spawnSync(process.execPath, ['--experimental-strip-types', command], { input, encoding: 'utf8', timeout: 10000,
+    const run = (input: string, verify = false) => spawnSync(process.execPath, ['--experimental-strip-types', command, ...(verify ? ['--verify'] : [])], { input, encoding: 'utf8', timeout: 10000,
       env: { ...process.env, DATABASE_URL: databaseUrl, MONOS_DATABASE_URL_FILE: '' } });
     const issued = run(JSON.stringify({ schema_version: 1, capacity: 3, ttl_seconds: 60 }));
     expect(issued.status).toBe(0); expect(issued.stderr).toBe('');
     const grant = validate<RunnerEnrollmentGrant>('RunnerEnrollmentGrant', JSON.parse(issued.stdout));
     expect((await record(grant)).token_hash).toBe(digest(grant.enrollment_token));
+    const input = request(grant), identity = await redeemRunnerEnrollment(db, input), before = await runners();
+    const proof = { schema_version: 1, enrollment_id: grant.enrollment_id, runner_id: identity.runner_id, credential_hash: digest(input.credential) };
+    const verified = run(JSON.stringify(proof), true);
+    expect(verified.status).toBe(0); expect(verified.stderr).toBe(''); expect(JSON.parse(verified.stdout)).toEqual(identity);
+    for (const mismatch of [{ ...proof, enrollment_id: randomUUID() }, { ...proof, credential_hash: digest(secret()) }]) {
+      const denied = run(JSON.stringify(mismatch), true); expect(denied.status).toBe(1); expect(denied.stdout).toBe('');
+    }
+    await db.pool.query('UPDATE runners SET credential_revoked=true WHERE id=$1', [identity.runner_id]);
+    expect(run(JSON.stringify(proof), true).status).toBe(1);
+    expect(await runners()).toBe(before);
     for (const input of [JSON.stringify({ schema_version: 1, capacity: 0, ttl_seconds: 60, token: 'synthetic-private-value' }), 'x'.repeat(5000)]) {
       const denied = run(input); expect(denied.status).toBe(1); expect(denied.stdout).toBe('');
       expect(denied.stderr).not.toContain('synthetic-private-value'); expect(denied.stderr).not.toContain(databaseUrl);
-      expect(denied.stderr).toBe('Runner enrollment issue failed; check database configuration and bounded issue JSON on stdin.\n');
+      expect(denied.stderr).toBe('Runner enrollment administration failed; check database configuration and bounded command JSON on stdin.\n');
     }
   });
 });

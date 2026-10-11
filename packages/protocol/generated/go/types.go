@@ -34,14 +34,49 @@ type ReworkActivationMap []NodeReworkActivation
 type CompletionOutcome string
 
 type SetupReport struct {
-	ConfigurationVersion int64                 `json:"configuration_version"`
-	ObservedAt           string                `json:"observed_at"`
-	Planner              SetupPolicyStatus     `json:"planner"`
-	Projects             []SetupProjectStatus  `json:"projects"`
-	Runners              []RunnerConfiguration `json:"runners"`
-	Schema               Schema                `json:"schema"`
-	SchemaVersion        int64                 `json:"schema_version"`
-	Unverified           []Unverified          `json:"unverified"`
+	Cleanup              *CleanupSummary            `json:"cleanup,omitempty"`
+	ConfigurationVersion int64                      `json:"configuration_version"`
+	DatabaseStorage      *BackendStorageObservation `json:"database_storage,omitempty"`
+	ObservedAt           string                     `json:"observed_at"`
+	Planner              SetupPolicyStatus          `json:"planner"`
+	Projects             []SetupProjectStatus       `json:"projects"`
+	Runners              []RunnerConfiguration      `json:"runners"`
+	Schema               Schema                     `json:"schema"`
+	SchemaVersion        int64                      `json:"schema_version"`
+	Unverified           []Unverified               `json:"unverified"`
+}
+
+type CleanupSummary struct {
+	Attention      int64              `json:"attention"`
+	AttentionItems []CleanupAttention `json:"attention_items,omitempty"`
+	Completed      int64              `json:"completed"`
+	Pending        int64              `json:"pending"`
+	Policy         RetentionPolicy    `json:"policy"`
+}
+
+type CleanupAttention struct {
+	Reason   CleanupAttentionReason `json:"reason"`
+	RunnerID string                 `json:"runner_id"`
+	TaskID   string                 `json:"task_id"`
+}
+
+type RetentionPolicy struct {
+	CompletedTaskDays int64 `json:"completed_task_days"`
+	Enabled           bool  `json:"enabled"`
+}
+
+type BackendStorageObservation struct {
+	Current     bool          `json:"current"`
+	Observation StorageHealth `json:"observation"`
+	ObservedAt  string        `json:"observed_at"`
+}
+
+type StorageHealth struct {
+	FreeBytes    *int64              `json:"free_bytes,omitempty"`
+	MinFreeBytes int64               `json:"min_free_bytes"`
+	Scope        StorageHealthScope  `json:"scope"`
+	Status       StorageHealthStatus `json:"status"`
+	TotalBytes   *int64              `json:"total_bytes,omitempty"`
 }
 
 type SetupPolicyStatus struct {
@@ -74,10 +109,31 @@ type RoleElement struct {
 }
 
 type RunnerConfiguration struct {
-	Capacity int64     `json:"capacity"`
-	Online   bool      `json:"online"`
-	RunnerID string    `json:"runner_id"`
-	Runtimes []Runtime `json:"runtimes"`
+	Capacity          int64                      `json:"capacity"`
+	CredentialRevoked *bool                      `json:"credential_revoked,omitempty"`
+	Online            bool                       `json:"online"`
+	Resources         *RunnerResourceObservation `json:"resources,omitempty"`
+	RunnerID          string                     `json:"runner_id"`
+	Runtimes          []Runtime                  `json:"runtimes"`
+}
+
+type RunnerResourceObservation struct {
+	Current     bool            `json:"current"`
+	Observation RunnerResources `json:"observation"`
+	ObservedAt  string          `json:"observed_at"`
+}
+
+type RunnerResources struct {
+	ExecutionLimits          ExecutionResourceLimits `json:"execution_limits"`
+	InspectionRetentionHours int64                   `json:"inspection_retention_hours"`
+	LogRetentionHours        int64                   `json:"log_retention_hours"`
+	Storage                  []StorageHealth         `json:"storage"`
+}
+
+type ExecutionResourceLimits struct {
+	CPUQuotaPercent int64 `json:"cpu_quota_percent"`
+	MemoryMaxBytes  int64 `json:"memory_max_bytes"`
+	TasksMax        int64 `json:"tasks_max"`
 }
 
 type Runtime struct {
@@ -581,6 +637,10 @@ type Frame struct {
 	Allowed                  *bool                       `json:"allowed,omitempty"`
 	AttemptID                *string                     `json:"attempt_id,omitempty"`
 	BootID                   *string                     `json:"boot_id,omitempty"`
+	CleanupACK               *TaskCleanupACK             `json:"cleanup_ack,omitempty"`
+	CleanupModes             []CleanupMode               `json:"cleanup_modes,omitempty"`
+	CleanupRequest           *TaskCleanupRequest         `json:"cleanup_request,omitempty"`
+	CleanupResult            *TaskCleanupResult          `json:"cleanup_result,omitempty"`
 	CorrelationID            *string                     `json:"correlation_id,omitempty"`
 	Credential               *string                     `json:"credential,omitempty"`
 	Dispatch                 *Dispatch                   `json:"dispatch,omitempty"`
@@ -604,6 +664,7 @@ type Frame struct {
 	PublicationRefReadResult *PublicationRefReadResponse `json:"publication_ref_read_result,omitempty"`
 	PublicationResult        *PublicationResultPage      `json:"publication_result,omitempty"`
 	RemotePreparationModes   []RemotePreparationMode     `json:"remote_preparation_modes,omitempty"`
+	Resources                *RunnerResources            `json:"resources,omitempty"`
 	ResultRead               *ResultReadRequest          `json:"result_read,omitempty"`
 	ResultReadModes          []ResultReadMode            `json:"result_read_modes,omitempty"`
 	ResultReadResult         *ResultReadResponse         `json:"result_read_result,omitempty"`
@@ -613,6 +674,70 @@ type Frame struct {
 	Sequence                 *int64                      `json:"sequence,omitempty"`
 	StreamID                 *string                     `json:"stream_id,omitempty"`
 	Type                     Type                        `json:"type"`
+}
+
+type TaskCleanupACK struct {
+	CleanupID     string `json:"cleanup_id"`
+	RequestDigest string `json:"request_digest"`
+}
+
+type TaskCleanupRequest struct {
+	Attempts      []TaskCleanupAttempt   `json:"attempts"`
+	CleanupID     string                 `json:"cleanup_id"`
+	CompletedAt   string                 `json:"completed_at"`
+	Results       []ResultReadIdentity   `json:"results"`
+	RunnerID      string                 `json:"runner_id"`
+	SchemaVersion int64                  `json:"schema_version"`
+	TaskID        string                 `json:"task_id"`
+	Workspaces    []TaskCleanupWorkspace `json:"workspaces"`
+}
+
+type TaskCleanupAttempt struct {
+	AttemptID  string `json:"attempt_id"`
+	DispatchID string `json:"dispatch_id"`
+}
+
+type ResultReadIdentity struct {
+	AttemptID               string                      `json:"attempt_id"`
+	BaseCommit              string                      `json:"base_commit"`
+	Capture                 WorkspaceCaptureResult      `json:"capture"`
+	DispatchID              string                      `json:"dispatch_id"`
+	Generation              int64                       `json:"generation"`
+	GitCommit               string                      `json:"git_commit"`
+	GitTree                 string                      `json:"git_tree"`
+	Integration             *WorkspaceIntegrationResult `json:"integration,omitempty"`
+	LeaseID                 string                      `json:"lease_id"`
+	ManifestDigest          string                      `json:"manifest_digest"`
+	NodeActivation          int64                       `json:"node_activation"`
+	NodeID                  string                      `json:"node_id"`
+	OperationID             string                      `json:"operation_id"`
+	OperationIdentityDigest string                      `json:"operation_identity_digest"`
+	PlanID                  string                      `json:"plan_id"`
+	RepositoryIdentity      string                      `json:"repository_identity"`
+	ResourceID              string                      `json:"resource_id"`
+	RunnerID                string                      `json:"runner_id"`
+	SpecificationID         string                      `json:"specification_id"`
+	StorageID               string                      `json:"storage_id"`
+	TaskID                  string                      `json:"task_id"`
+	WorkspaceID             string                      `json:"workspace_id"`
+}
+
+type TaskCleanupWorkspace struct {
+	AllocationIDS   []string `json:"allocation_ids"`
+	Direct          bool     `json:"direct"`
+	FinalizedCommit string   `json:"finalized_commit"`
+	Generation      int64    `json:"generation"`
+	ResourceID      string   `json:"resource_id"`
+	StorageID       string   `json:"storage_id"`
+	WorkspaceID     string   `json:"workspace_id"`
+}
+
+type TaskCleanupResult struct {
+	CleanupID     string                   `json:"cleanup_id"`
+	Reason        *TaskCleanupResultReason `json:"reason,omitempty"`
+	RequestDigest string                   `json:"request_digest"`
+	SchemaVersion int64                    `json:"schema_version"`
+	Status        TaskCleanupResultStatus  `json:"status"`
 }
 
 type Dispatch struct {
@@ -768,31 +893,6 @@ type InspectionOrigin struct {
 	OperationID     *string              `json:"operation_id,omitempty"`
 	Workspace       *WorkspaceDescriptor `json:"workspace,omitempty"`
 	WorkspaceDigest *string              `json:"workspace_digest,omitempty"`
-}
-
-type ResultReadIdentity struct {
-	AttemptID               string                      `json:"attempt_id"`
-	BaseCommit              string                      `json:"base_commit"`
-	Capture                 WorkspaceCaptureResult      `json:"capture"`
-	DispatchID              string                      `json:"dispatch_id"`
-	Generation              int64                       `json:"generation"`
-	GitCommit               string                      `json:"git_commit"`
-	GitTree                 string                      `json:"git_tree"`
-	Integration             *WorkspaceIntegrationResult `json:"integration,omitempty"`
-	LeaseID                 string                      `json:"lease_id"`
-	ManifestDigest          string                      `json:"manifest_digest"`
-	NodeActivation          int64                       `json:"node_activation"`
-	NodeID                  string                      `json:"node_id"`
-	OperationID             string                      `json:"operation_id"`
-	OperationIdentityDigest string                      `json:"operation_identity_digest"`
-	PlanID                  string                      `json:"plan_id"`
-	RepositoryIdentity      string                      `json:"repository_identity"`
-	ResourceID              string                      `json:"resource_id"`
-	RunnerID                string                      `json:"runner_id"`
-	SpecificationID         string                      `json:"specification_id"`
-	StorageID               string                      `json:"storage_id"`
-	TaskID                  string                      `json:"task_id"`
-	WorkspaceID             string                      `json:"workspace_id"`
 }
 
 type WorkspaceDescriptor struct {
@@ -1245,7 +1345,7 @@ type PublicationFinding struct {
 	Path                 string                   `json:"path"`
 	PathRedacted         bool                     `json:"path_redacted"`
 	RuleID               PublicationFindingRuleID `json:"rule_id"`
-	Scope                Scope                    `json:"scope"`
+	Scope                PublicationFindingScope  `json:"scope"`
 	Size                 *int64                   `json:"size,omitempty"`
 }
 
@@ -1399,24 +1499,26 @@ type ConfigurationCommand struct {
 }
 
 type PayloadClass struct {
-	Archived        *bool                   `json:"archived,omitempty"`
-	Context         *string                 `json:"context,omitempty"`
-	ID              *string                 `json:"id,omitempty"`
-	Name            *string                 `json:"name,omitempty"`
-	Resources       []GitRepositoryResource `json:"resources,omitempty"`
-	RoleIDS         []string                `json:"role_ids,omitempty"`
-	Description     *string                 `json:"description,omitempty"`
-	ExecutionPolicy *ExecutionPolicy        `json:"execution_policy,omitempty"`
-	Instructions    *string                 `json:"instructions,omitempty"`
-	Global          *ExecutionPolicy        `json:"global,omitempty"`
-	Planner         *ExecutionPolicy        `json:"planner,omitempty"`
-	AppID           *string                 `json:"app_id,omitempty"`
-	InstallationID  *string                 `json:"installation_id,omitempty"`
-	PrivateKey      *string                 `json:"private_key,omitempty"`
-	Guidance        *string                 `json:"guidance,omitempty"`
-	ResourceID      *string                 `json:"resource_id,omitempty"`
-	Token           *string                 `json:"token,omitempty"`
-	Username        *string                 `json:"username,omitempty"`
+	Archived          *bool                   `json:"archived,omitempty"`
+	Context           *string                 `json:"context,omitempty"`
+	ID                *string                 `json:"id,omitempty"`
+	Name              *string                 `json:"name,omitempty"`
+	Resources         []GitRepositoryResource `json:"resources,omitempty"`
+	RoleIDS           []string                `json:"role_ids,omitempty"`
+	Description       *string                 `json:"description,omitempty"`
+	ExecutionPolicy   *ExecutionPolicy        `json:"execution_policy,omitempty"`
+	Instructions      *string                 `json:"instructions,omitempty"`
+	Global            *ExecutionPolicy        `json:"global,omitempty"`
+	Planner           *ExecutionPolicy        `json:"planner,omitempty"`
+	AppID             *string                 `json:"app_id,omitempty"`
+	InstallationID    *string                 `json:"installation_id,omitempty"`
+	PrivateKey        *string                 `json:"private_key,omitempty"`
+	Guidance          *string                 `json:"guidance,omitempty"`
+	ResourceID        *string                 `json:"resource_id,omitempty"`
+	Token             *string                 `json:"token,omitempty"`
+	Username          *string                 `json:"username,omitempty"`
+	CompletedTaskDays *int64                  `json:"completed_task_days,omitempty"`
+	Enabled           *bool                   `json:"enabled,omitempty"`
 }
 
 type ExecutionPolicy struct {
@@ -1460,6 +1562,7 @@ type ConfigurationSnapshot struct {
 	PlannerGuidance     *string                    `json:"planner_guidance,omitempty"`
 	Policies            PolicyConfiguration        `json:"policies"`
 	Projects            []ProjectConfiguration     `json:"projects"`
+	Retention           *RetentionPolicy           `json:"retention,omitempty"`
 	Roles               []RoleConfiguration        `json:"roles"`
 	SchemaVersion       int64                      `json:"schema_version"`
 }
@@ -2707,6 +2810,7 @@ type Execution struct {
 }
 
 type AttemptWorkspace struct {
+	CleanedAt           *string            `json:"cleaned_at,omitempty"`
 	FailureKind         *string            `json:"failure_kind"`
 	LeaseID             string             `json:"lease_id"`
 	LeaseState          LeaseState         `json:"lease_state"`
@@ -3602,6 +3706,79 @@ type RepositoryAccessResult struct {
 	WorkspaceDigest  string                     `json:"workspace_digest"`
 }
 
+type RunnerManageCommand struct {
+	Action        RunnerManageCommandAction `json:"action"`
+	Capacity      *int64                    `json:"capacity,omitempty"`
+	RunnerID      string                    `json:"runner_id"`
+	SchemaVersion int64                     `json:"schema_version"`
+	TTLSeconds    *int64                    `json:"ttl_seconds,omitempty"`
+}
+
+type RunnerManageResult struct {
+	Capacity          int64  `json:"capacity"`
+	CredentialRevoked bool   `json:"credential_revoked"`
+	RunnerID          string `json:"runner_id"`
+	SchemaVersion     int64  `json:"schema_version"`
+}
+
+type RunnerRotationGrant struct {
+	ExpiresAt     string `json:"expires_at"`
+	RotationID    string `json:"rotation_id"`
+	RotationToken string `json:"rotation_token"`
+	RunnerID      string `json:"runner_id"`
+	SchemaVersion int64  `json:"schema_version"`
+}
+
+type RunnerRotationRequest struct {
+	Credential    string `json:"credential"`
+	RequestID     string `json:"request_id"`
+	RotationToken string `json:"rotation_token"`
+	RunnerID      string `json:"runner_id"`
+	SchemaVersion int64  `json:"schema_version"`
+}
+
+type RunnerRotationResponse struct {
+	RequestID     string `json:"request_id"`
+	RunnerID      string `json:"runner_id"`
+	SchemaVersion int64  `json:"schema_version"`
+}
+
+type RunnerEnrollmentProof struct {
+	CredentialHash string  `json:"credential_hash"`
+	EnrollmentID   string  `json:"enrollment_id"`
+	RunnerID       string  `json:"runner_id"`
+	SchemaVersion  float64 `json:"schema_version"`
+}
+
+type CleanupAttentionReason string
+
+const (
+	PurpleCleanupFailed           CleanupAttentionReason = "cleanup_failed"
+	PurpleOwnershipUnresolved     CleanupAttentionReason = "ownership_unresolved"
+	PurpleResultUnavailable       CleanupAttentionReason = "result_unavailable"
+	PurpleStorageIdentityMismatch CleanupAttentionReason = "storage_identity_mismatch"
+	RequestTooLarge               CleanupAttentionReason = "request_too_large"
+)
+
+type StorageHealthScope string
+
+const (
+	Cache      StorageHealthScope = "cache"
+	Database   StorageHealthScope = "database"
+	Inspection StorageHealthScope = "inspection"
+	Journal    StorageHealthScope = "journal"
+	Logs       StorageHealthScope = "logs"
+	Workspaces StorageHealthScope = "workspaces"
+)
+
+type StorageHealthStatus string
+
+const (
+	Ok            StorageHealthStatus = "ok"
+	PurpleUnknown StorageHealthStatus = "unknown"
+	StatusLow     StorageHealthStatus = "low"
+)
+
 type SetupPolicyStatusAction string
 
 const (
@@ -3609,6 +3786,7 @@ const (
 	ConfigureRole   SetupPolicyStatusAction = "configure_role"
 	EnrollRunner    SetupPolicyStatusAction = "enroll_runner"
 	RefreshRuntime  SetupPolicyStatusAction = "refresh_runtime"
+	RestoreStorage  SetupPolicyStatusAction = "restore_storage"
 	ReviewTarget    SetupPolicyStatusAction = "review_target"
 	SelectRunner    SetupPolicyStatusAction = "select_runner"
 	StartRunner     SetupPolicyStatusAction = "start_runner"
@@ -3618,6 +3796,7 @@ type SetupPolicyStatusReason string
 
 const (
 	AmbiguousAutoPlacement     SetupPolicyStatusReason = "ambiguous_auto_placement"
+	DatabaseStorageAttention   SetupPolicyStatusReason = "database_storage_attention"
 	InstallationStale          SetupPolicyStatusReason = "installation_stale"
 	InstallationUnavailable    SetupPolicyStatusReason = "installation_unavailable"
 	ModelControlUnavailable    SetupPolicyStatusReason = "model_control_unavailable"
@@ -3625,6 +3804,7 @@ const (
 	PurpleRunnerOffline        SetupPolicyStatusReason = "runner_offline"
 	RoleMissing                SetupPolicyStatusReason = "role_missing"
 	RunnerMissing              SetupPolicyStatusReason = "runner_missing"
+	RunnerStorageAttention     SetupPolicyStatusReason = "runner_storage_attention"
 	RuntimeTargetsExhausted    SetupPolicyStatusReason = "runtime_targets_exhausted"
 	ThinkingControlUnavailable SetupPolicyStatusReason = "thinking_control_unavailable"
 	UnsupportedModel           SetupPolicyStatusReason = "unsupported_model"
@@ -3845,22 +4025,44 @@ const (
 type WorkspaceUnavailableReason string
 
 const (
-	OwnershipUnresolved                          WorkspaceUnavailableReason = "ownership_unresolved"
-	RepositoryDenied                             WorkspaceUnavailableReason = "repository_denied"
-	StorageUnavailable                           WorkspaceUnavailableReason = "storage_unavailable"
-	UnsupportedMultipleWorkspaces                WorkspaceUnavailableReason = "unsupported_multiple_workspaces"
-	UnsupportedRemote                            WorkspaceUnavailableReason = "unsupported_remote"
-	WorkspaceUnavailableReasonCredentialsMissing WorkspaceUnavailableReason = "credentials_missing"
-	WorkspaceUnavailableReasonRefUnavailable     WorkspaceUnavailableReason = "ref_unavailable"
+	RepositoryDenied                              WorkspaceUnavailableReason = "repository_denied"
+	StorageUnavailable                            WorkspaceUnavailableReason = "storage_unavailable"
+	UnsupportedMultipleWorkspaces                 WorkspaceUnavailableReason = "unsupported_multiple_workspaces"
+	UnsupportedRemote                             WorkspaceUnavailableReason = "unsupported_remote"
+	WorkspaceUnavailableReasonCredentialsMissing  WorkspaceUnavailableReason = "credentials_missing"
+	WorkspaceUnavailableReasonOwnershipUnresolved WorkspaceUnavailableReason = "ownership_unresolved"
+	WorkspaceUnavailableReasonRefUnavailable      WorkspaceUnavailableReason = "ref_unavailable"
 )
 
 type CommandResultStatus string
 
 const (
+	FluffyUnknown   CommandResultStatus = "unknown"
 	PurpleAdmitted  CommandResultStatus = "admitted"
 	PurpleCommitted CommandResultStatus = "committed"
-	PurpleUnknown   CommandResultStatus = "unknown"
 	StatusError     CommandResultStatus = "error"
+)
+
+type CleanupMode string
+
+const (
+	CompletedTaskV1 CleanupMode = "completed_task_v1"
+)
+
+type TaskCleanupResultReason string
+
+const (
+	FluffyCleanupFailed           TaskCleanupResultReason = "cleanup_failed"
+	FluffyOwnershipUnresolved     TaskCleanupResultReason = "ownership_unresolved"
+	FluffyResultUnavailable       TaskCleanupResultReason = "result_unavailable"
+	FluffyStorageIdentityMismatch TaskCleanupResultReason = "storage_identity_mismatch"
+)
+
+type TaskCleanupResultStatus string
+
+const (
+	PurpleBlocked   TaskCleanupResultStatus = "blocked"
+	PurpleCompleted TaskCleanupResultStatus = "completed"
 )
 
 type DispatchKind string
@@ -3894,9 +4096,9 @@ type ThinkingLevel string
 
 const (
 	High              ThinkingLevel = "high"
-	Low               ThinkingLevel = "low"
 	Medium            ThinkingLevel = "medium"
 	Minimal           ThinkingLevel = "minimal"
+	ThinkingLevelLow  ThinkingLevel = "low"
 	ThinkingLevelNone ThinkingLevel = "none"
 	Xhigh             ThinkingLevel = "xhigh"
 )
@@ -4135,7 +4337,7 @@ const (
 type PublicationPushResultStatus string
 
 const (
-	Blocked                      PublicationPushResultStatus = "blocked"
+	FluffyBlocked                PublicationPushResultStatus = "blocked"
 	PurplePublished              PublicationPushResultStatus = "published"
 	PurpleReconciliationRequired PublicationPushResultStatus = "reconciliation_required"
 )
@@ -4181,11 +4383,11 @@ const (
 	RuleIDWorkflowPermission     PublicationFindingRuleID = "workflow_permission"
 )
 
-type Scope string
+type PublicationFindingScope string
 
 const (
-	FinalTree         Scope = "final_tree"
-	PublicationCommit Scope = "publication_commit"
+	FinalTree         PublicationFindingScope = "final_tree"
+	PublicationCommit PublicationFindingScope = "publication_commit"
 )
 
 type PublicationResultStatus string
@@ -4279,6 +4481,7 @@ const (
 	ResultRead                Type = "result_read"
 	ResultReadResult          Type = "result_read_result"
 	Start                     Type = "start"
+	TaskCleanup               Type = "task_cleanup"
 	TypeError                 Type = "error"
 	TypeOperationResult       Type = "operation_result"
 	TypePublicationACK        Type = "publication_ack"
@@ -4286,6 +4489,8 @@ const (
 	TypePublicationPushResult Type = "publication_push_result"
 	TypePublicationResult     Type = "publication_result"
 	TypeReady                 Type = "ready"
+	TypeTaskCleanupACK        Type = "task_cleanup_ack"
+	TypeTaskCleanupResult     Type = "task_cleanup_result"
 	Welcome                   Type = "welcome"
 )
 
@@ -4326,8 +4531,8 @@ type OwnerCommandResultStatus string
 
 const (
 	FluffyCommitted   OwnerCommandResultStatus = "committed"
-	FluffyUnknown     OwnerCommandResultStatus = "unknown"
 	TentacledAdmitted OwnerCommandResultStatus = "admitted"
+	TentacledUnknown  OwnerCommandResultStatus = "unknown"
 )
 
 type ConfigurationCommandName string
@@ -4339,6 +4544,7 @@ const (
 	SavePlannerGuidance     ConfigurationCommandName = "save_planner_guidance"
 	SavePolicies            ConfigurationCommandName = "save_policies"
 	SaveProject             ConfigurationCommandName = "save_project"
+	SaveRetention           ConfigurationCommandName = "save_retention"
 	SaveRole                ConfigurationCommandName = "save_role"
 )
 
@@ -4373,8 +4579,8 @@ const (
 type ConfigurationResultStatus string
 
 const (
+	StickyUnknown      ConfigurationResultStatus = "unknown"
 	TentacledCommitted ConfigurationResultStatus = "committed"
-	TentacledUnknown   ConfigurationResultStatus = "unknown"
 )
 
 type AttemptStatusLogMode string
@@ -4570,12 +4776,12 @@ const (
 type TaskOverviewState string
 
 const (
+	FluffyCOMPLETED    TaskOverviewState = "COMPLETED"
 	Planning           TaskOverviewState = "PLANNING"
-	PurpleBLOCKED      TaskOverviewState = "BLOCKED"
-	PurpleCOMPLETED    TaskOverviewState = "COMPLETED"
 	PurpleRUNNING      TaskOverviewState = "RUNNING"
 	ReplanRequired     TaskOverviewState = "REPLAN_REQUIRED"
 	Review             TaskOverviewState = "REVIEW"
+	TentacledBLOCKED   TaskOverviewState = "BLOCKED"
 	TentacledCANCELLED TaskOverviewState = "CANCELLED"
 )
 
@@ -4625,10 +4831,10 @@ const (
 type NodeExecutionStatusState string
 
 const (
-	FluffyBLOCKED      NodeExecutionStatusState = "BLOCKED"
-	FluffyCOMPLETED    NodeExecutionStatusState = "COMPLETED"
 	HilariousCANCELLED NodeExecutionStatusState = "CANCELLED"
 	Pending            NodeExecutionStatusState = "PENDING"
+	StickyBLOCKED      NodeExecutionStatusState = "BLOCKED"
+	TentacledCOMPLETED NodeExecutionStatusState = "COMPLETED"
 	TentacledRUNNING   NodeExecutionStatusState = "RUNNING"
 )
 
@@ -4865,11 +5071,11 @@ type RemotePreparationOperationState string
 
 const (
 	IndigoPending RemotePreparationOperationState = "pending"
+	IndigoUnknown RemotePreparationOperationState = "unknown"
 	Settled       RemotePreparationOperationState = "settled"
 	StateFailed   RemotePreparationOperationState = "failed"
 	StateRevoked  RemotePreparationOperationState = "revoked"
 	StateStarted  RemotePreparationOperationState = "started"
-	StickyUnknown RemotePreparationOperationState = "unknown"
 )
 
 type RemotePreparationReviewState string
@@ -4923,7 +5129,7 @@ type RemotePreparationCheckState string
 
 const (
 	IndecentPending      RemotePreparationCheckState = "pending"
-	IndigoUnknown        RemotePreparationCheckState = "unknown"
+	IndecentUnknown      RemotePreparationCheckState = "unknown"
 	MischievousCancelled RemotePreparationCheckState = "cancelled"
 	StateFailure         RemotePreparationCheckState = "failure"
 	StateNeutral         RemotePreparationCheckState = "neutral"
@@ -4978,7 +5184,7 @@ const (
 	PurpleActive      DeliveryBatchSummaryStatus = "active"
 	PurpleAttention   DeliveryBatchSummaryStatus = "attention"
 	PurpleRevoked     DeliveryBatchSummaryStatus = "revoked"
-	StatusCompleted   DeliveryBatchSummaryStatus = "completed"
+	StickyCompleted   DeliveryBatchSummaryStatus = "completed"
 	Waiting           DeliveryBatchSummaryStatus = "waiting"
 )
 
@@ -5164,4 +5370,12 @@ type InspectionTaskOpenKind string
 
 const (
 	FluffyTaskOpen InspectionTaskOpenKind = "task_open"
+)
+
+type RunnerManageCommandAction string
+
+const (
+	Revoke      RunnerManageCommandAction = "revoke"
+	Rotate      RunnerManageCommandAction = "rotate"
+	SetCapacity RunnerManageCommandAction = "set_capacity"
 )

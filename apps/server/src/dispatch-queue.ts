@@ -176,7 +176,7 @@ export class DispatchQueue {
     // poll and commit each cancellation before taking another Task lock.
     for (let scanned = 0; scanned < 16; scanned++) {
       const result = await transaction(this.db, async (tx) => {
-        const runner = (await tx.query<{ capacity: number; available: boolean; runtime_report_incarnation: string | null }>("SELECT capacity,runtime_report_incarnation,(connected AND ready AND connection_instance=$2 AND incarnation=$3 AND last_seen>now()-interval '15 seconds') AS available FROM runners WHERE id=$1 FOR UPDATE", [runnerId, connectionInstance, incarnation])).rows[0];
+        const runner = (await tx.query<{ capacity: number; available: boolean; runtime_report_incarnation: string | null }>("SELECT capacity,runtime_report_incarnation,(connected AND ready AND connection_instance=$2 AND incarnation=$3 AND last_seen>now()-interval '15 seconds' AND NOT runner_storage_attention(runners) AND NOT database_storage_attention($2)) AS available FROM runners WHERE id=$1 FOR UPDATE", [runnerId, connectionInstance, incarnation])).rows[0];
         if (!runner?.available) return null;
         const count = (await tx.query<{ count: string }>('SELECT count(*) FROM attempts WHERE runner_id=$1 AND NOT process_released', [runnerId])).rows[0]!;
         if (Number(count.count) >= runner.capacity) return null;

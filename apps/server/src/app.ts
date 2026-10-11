@@ -1,3 +1,5 @@
+import { TaskCleanup } from './task-cleanup.ts';
+import { redeemRunnerRotation } from './runner-management.ts';
 import { NodeRework } from './node-rework.ts';
 import {OwnerDeliveryCommands} from './owner-delivery-commands.ts';
 import {OwnerDeliveryReads} from './owner-delivery-reads.ts';
@@ -91,7 +93,8 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
     if (code === 'rate_limited') void reply.header('Retry-After', error instanceof RemoteProviderWaiting ? String(error.retry_after_seconds) : '60');
     void reply.code(code === 'unauthorized' ? 401 : code === 'denied_scope' ? 403 : code === 'rate_limited' ? 429 : code === 'internal_error' ? 500 : 409).send(result);
   });
-  app.addHook('onRequest', async (request, reply) => { if (request.url.startsWith('/v1/owner/') || request.url.split('?')[0] === '/v1/runner/enroll') {void reply.header('Cache-Control', 'no-store');if(request.url.includes('/remote-preparation')||request.url.includes('/delivery')||request.url.includes('/review')||request.url.split('?')[0] === '/v1/runner/enroll')void reply.header('X-Content-Type-Options','nosniff');} });
+  app.addHook('onRequest', async (request, reply) => { if (request.url.startsWith('/v1/owner/') || ['/v1/runner/enroll', '/v1/runner/rotate-credential'].includes(request.url.split('?')[0]!)) {void reply.header('Cache-Control', 'no-store');if(request.url.includes('/remote-preparation')||request.url.includes('/delivery')||request.url.includes('/review')||['/v1/runner/enroll', '/v1/runner/rotate-credential'].includes(request.url.split('?')[0]!))void reply.header('X-Content-Type-Options','nosniff');} });
+  app.post('/v1/runner/rotate-credential', { bodyLimit: 4096 }, async request => redeemRunnerRotation(service.db, request.body));
   app.post('/v1/runner/enroll', { bodyLimit: 4096 }, async request => redeemRunnerEnrollment(service.db, request.body));
   app.get('/health', async () => { await service.db.pool.query('SELECT 1'); return { schema_version: 1, database: 'ready', probe: true }; });
   const resultReads = new ResultReadBroker();
@@ -292,16 +295,19 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
   app.server.on('upgrade', (request, socket, head) => {
     if (request.url !== '/v1/runner') { socket.destroy(); return; }
     void Promise.resolve().then(() => service.authenticateRunner(bearer(request))).then((runnerId) => {
-      sockets.handleUpgrade(request, socket, head, (ws) => attach(ws, runnerId));
+      sockets.handleUpgrade(request, socket, head, (ws) => attach(ws, runnerId, bearer(request)));
     }).catch(() => { socket.write('HTTP/1.1 401 Unauthorized\r\nConnection: close\r\n\r\n'); socket.destroy(); });
   });
 
-  function attach(ws: WebSocket, runnerId: string): void {
+  const cleanup = new TaskCleanup(service.db, service.instanceId);
+
+  function attach(ws: WebSocket, runnerId: string, credential: string): void {
     let incarnation: number | undefined;
     let processing = Promise.resolve();
     let polling = false;
     let publicationSupported = false;
     let remoteSupported = false;
+    let cleanupSupported = false;
     let queuedMessages = 0;
     let queuedBytes = 0;
     const send = (frame: Frame) => {
@@ -315,7 +321,7 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
     const poll = setInterval(() => {
       if (incarnation === undefined || polling || ws.readyState !== WebSocket.OPEN) return;
       polling = true;
-      void Promise.all([service.pending(runnerId, incarnation),publication.pending(runnerId,incarnation,publicationSupported),remote.pending(runnerId,incarnation,remoteSupported)]).then((groups) => groups.flat().forEach(send)).catch(() => ws.close(4001, 'Control connection unavailable')).finally(() => { polling = false; });
+      void Promise.all([cleanup.pending(runnerId, incarnation, cleanupSupported),service.pending(runnerId, incarnation),publication.pending(runnerId,incarnation,publicationSupported),remote.pending(runnerId,incarnation,remoteSupported)]).then((groups) => groups.flat().forEach(send)).catch(() => ws.close(4001, 'Control connection unavailable')).finally(() => { polling = false; });
     }, 250);
     poll.unref();
     const helloDeadline = setTimeout(() => { if (incarnation === undefined) ws.close(4000, 'Version handshake required'); }, 5000);
@@ -335,7 +341,7 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
         if(frame.type.startsWith('publication_') && bytes>512*1024){ws.close(4000,'Publication frame exceeds limit');return;}
         if (incarnation === undefined) {
           if (frame.type !== 'hello' || frame.runner_id !== runnerId) { ws.close(4003, 'Invalid Runner identity'); return; }
-          incarnation = await service.connect(runnerId, frame.boot_id!);
+          incarnation = await service.connect(runnerId, frame.boot_id!, credential);
           send({ schema_version: 1, type: 'welcome', runner_id: runnerId, incarnation });
           return;
         }
@@ -343,8 +349,9 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
         try {
           switch (frame.type) {
             case 'ready':
+              cleanupSupported = frame.cleanup_modes?.includes('completed_task_v1') ?? false;
               if (!frame.log_modes?.includes('ordered_v1')) throw new CommandError('unmet_precondition', 'Runner does not support ordered execution logs');
-              await service.touch(runnerId, incarnation, true, frame.runtimes);
+              await service.touch(runnerId, incarnation, true, frame.runtimes, frame.resources);
               if(ws.readyState===WebSocket.OPEN){publicationSupported=frame.publication_modes?.includes('local_candidate_v1') ?? false;await service.db.pool.query('UPDATE runners SET publication_supported=$3 WHERE id=$1 AND incarnation=$2 AND connection_instance=$4',[runnerId,incarnation,publicationSupported,service.instanceId]);}
               if(ws.readyState===WebSocket.OPEN){remoteSupported=frame.remote_preparation_modes?.includes('github_review_v1')??false;await service.db.pool.query('UPDATE runners SET remote_preparation_supported=$3 WHERE id=$1 AND incarnation=$2 AND connection_instance=$4',[runnerId,incarnation,remoteSupported,service.instanceId]);}
               if (ws.readyState === WebSocket.OPEN) resultReads.register(runnerId,incarnation,ws,frame.result_read_modes?.includes("git_objects_v1") ?? false,send);
@@ -365,7 +372,13 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
               const ack=await remote.finish(runnerId,incarnation,frame.publication_push_result);
               send({schema_version:1,type:'publication_push_ack',incarnation,publication_push_ack:ack});break;
             }
-            case 'heartbeat': await service.touch(runnerId, incarnation); break;
+            case 'task_cleanup_result': {
+              await service.touch(runnerId, incarnation);
+              const ack = await cleanup.finish(runnerId, incarnation, frame.cleanup_result);
+              if (ack) send({ schema_version: 1, type: 'task_cleanup_ack', incarnation, cleanup_ack: ack });
+              break;
+            }
+            case 'heartbeat': await service.touch(runnerId, incarnation, false, undefined, frame.resources); break;
             case 'authorize_dispatch': {
               const grant = await service.authorize(runnerId, incarnation, frame.dispatch_id!);
               send({ schema_version: 1, type: 'authorization', incarnation, correlation_id: frame.correlation_id!, allowed: grant !== null, ...(grant ?? {}) });

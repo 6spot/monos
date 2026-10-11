@@ -8,6 +8,7 @@ import (
 	protocol "monos.local/protocol"
 	"monos.local/runner/internal/host"
 	"monos.local/runner/internal/journal"
+	"monos.local/runner/internal/resources"
 	"monos.local/runner/internal/wire"
 )
 
@@ -123,7 +124,7 @@ func (d *Daemon) runInspection(ctx context.Context, op protocol.Operation) (prot
 	if d.inspectionRun != nil {
 		return d.inspectionRun(ctx, op)
 	}
-	return host.InspectRepository(ctx, op, d.Control.InspectionRepositoryAccess)
+	return host.InspectRepository(resources.WithMonitor(ctx, d.Resources), op, d.Control.InspectionRepositoryAccess)
 }
 func (d *Daemon) cancelInspection(ctx context.Context, op protocol.Operation) (protocol.EffectResult, error) {
 	if d.inspectionCancel != nil {
@@ -165,6 +166,13 @@ func (d *Daemon) drainInspections(ctx context.Context, attempt string, emit bool
 			return err
 		}
 		if old != nil && old.Success {
+			retired, err := d.DB.InspectionRetired(op.OperationID)
+			if err != nil {
+				return err
+			}
+			if retired {
+				continue
+			}
 			if emit {
 				_ = d.Control.Send(ctx, protocol.Frame{Type: protocol.TypeOperationResult, OperationResult: old})
 			}

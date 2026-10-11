@@ -1,9 +1,11 @@
+import { cleanupSummary } from './task-cleanup.ts';
+import { readRunnerConfigurations } from './runner-observations.ts';
 import { transaction } from '../../../packages/db/src/index.ts';
 import type { Database } from '../../../packages/db/src/index.ts';
 import { latestSchemaVersion } from '../../../packages/db/src/migrate.ts';
 import { CommandError } from '../../../packages/domain/src/commands.ts';
 import { canonicalJSON, MAX_BODY_BYTES, validate } from '../../../packages/protocol/src/index.ts';
-import type { ExecutionPolicy, PolicyConfiguration, RunnerConfiguration, SetupPolicyStatus, SetupProjectStatus, SetupReport } from '../../../packages/protocol/src/index.ts';
+import type { ExecutionPolicy, BackendStorageObservation, PolicyConfiguration, SetupPolicyStatus, SetupProjectStatus, SetupReport } from '../../../packages/protocol/src/index.ts';
 import { authenticateOwner } from './owner-commands.ts';
 import { diagnoseRuntimePolicy } from './runtime-scheduling.ts';
 import type { RuntimePolicyDiagnosis, SelectionReason } from './runtime-scheduling.ts';
@@ -14,6 +16,7 @@ const actions: Record<SelectionReason, NonNullable<SetupPolicyStatus['action']>>
   unsupported_runtime: 'review_target', unsupported_model: 'review_target', unsupported_thinking: 'review_target',
   model_control_unavailable: 'review_target', thinking_control_unavailable: 'review_target',
   unsupported_runner_transfer: 'select_runner', runtime_targets_exhausted: 'review_target',
+  runner_storage_attention: 'restore_storage', database_storage_attention: 'restore_storage',
 };
 
 function policyStatus(diagnosis: RuntimePolicyDiagnosis, hasRunners: boolean): SetupPolicyStatus {
@@ -34,12 +37,10 @@ export async function setupReadiness(db: Database, token: string, instanceId: st
     const configuration = (await tx.query<{ version: string }>('SELECT version FROM configuration_control')).rows[0]!;
     const schema = (await tx.query<{ first: number | null; current: number; count: number }>(
       'SELECT min(version) first,COALESCE(max(version),0) current,count(*)::int count FROM schema_migrations')).rows[0]!;
-    const runners = (await tx.query<RunnerConfiguration>(`SELECT r.id AS runner_id,r.capacity,
-      (r.connected AND r.ready AND r.connection_instance=$1 AND r.last_seen>$2::timestamptz-interval '15 seconds') AS online,
-      COALESCE((SELECT jsonb_agg(jsonb_build_object('installation',i.observation,
-        'observed_at',to_char(i.observed_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'),
-        'current',i.incarnation=r.incarnation) ORDER BY i.runtime_id) FROM runtime_installations i WHERE i.runner_id=r.id),'[]'::jsonb) AS runtimes
-      FROM runners r ORDER BY r.id`, [instanceId, observedAt])).rows;
+    const runners = await readRunnerConfigurations(tx, instanceId, observedAt);
+    const storage = (await tx.query<BackendStorageObservation>(`SELECT observation,
+      to_char(observed_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') observed_at,
+      observed_at>$2::timestamptz-interval '15 seconds' AS current FROM backend_storage_observations WHERE instance_id=$1`, [instanceId, observedAt])).rows[0];
     const projects = (await tx.query<{ id: string; name: string }>('SELECT id,name FROM projects WHERE NOT archived ORDER BY id')).rows;
     const roles = (await tx.query<{ project_id: string; role_id: string; name: string; execution_policy: ExecutionPolicy | null }>(`SELECT pr.project_id,r.id role_id,r.name,r.execution_policy
       FROM project_roles pr JOIN roles r ON r.id=pr.role_id JOIN projects p ON p.id=pr.project_id
@@ -67,7 +68,7 @@ export async function setupReadiness(db: Database, token: string, instanceId: st
     const report: SetupReport = { schema_version: 1, observed_at: observedAt, configuration_version: Number(configuration.version),
       schema: { status: schema.first === 1 && schema.current === latestSchemaVersion && schema.count === latestSchemaVersion ? 'current' : 'mismatch',
         current_version: schema.current, expected_version: latestSchemaVersion },
-      planner, projects: projectRows, runners, unverified: ['storage', 'cli_authentication', 'model_execution', 'git_read', 'git_write'] };
+      planner, projects: projectRows, runners, cleanup: await cleanupSummary(tx), ...(storage ? { database_storage: storage } : {}), unverified: ['storage', 'cli_authentication', 'model_execution', 'git_read', 'git_write'] };
     if (Buffer.byteLength(JSON.stringify(report)) > MAX_BODY_BYTES) throw new CommandError('unmet_precondition', 'Setup report exceeds the current 2 MiB response limit');
     return validate('SetupReport', report);
   });

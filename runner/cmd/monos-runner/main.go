@@ -11,6 +11,7 @@ import (
 	"monos.local/runner/internal/host"
 	"monos.local/runner/internal/journal"
 	"monos.local/runner/internal/local"
+	"monos.local/runner/internal/resources"
 	"os"
 	"os/signal"
 	"syscall"
@@ -22,7 +23,8 @@ func run() error {
 	}
 	args := os.Args[1:]
 	enrolling := len(args) > 0 && args[0] == "enroll"
-	if enrolling {
+	rotating := len(args) > 0 && args[0] == "rotate"
+	if enrolling || rotating {
 		args = args[1:]
 	}
 	flags := flag.NewFlagSet("monos-runner", flag.ContinueOnError)
@@ -30,10 +32,18 @@ func run() error {
 	flags.SetOutput(io.Discard)
 	path := flags.String("config", "/etc/monos-probe/runner.json", "Runner configuration")
 	if err := flags.Parse(args); err != nil || flags.NArg() != 0 {
-		return fmt.Errorf("usage: monos-runner [enroll] --config <path>; enrollment grant uses stdin")
+		return fmt.Errorf("usage: monos-runner [enroll|rotate] --config <path>; administrative grant uses stdin")
 	}
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
+	if rotating {
+		id, err := enrollment.Rotate(ctx, *path, os.Stdin)
+		if err != nil {
+			return err
+		}
+		fmt.Fprintf(os.Stdout, "Runner credential rotated: %s\n", id)
+		return nil
+	}
 	if enrolling {
 		id, err := enrollment.Enroll(ctx, *path, os.Stdin)
 		if err != nil {
@@ -64,7 +74,11 @@ func run() error {
 		return err
 	}
 	service := local.Service{DB: db, Control: client, UID: config.ExecutionUID}
-	d := daemon.Daemon{DB: db, Control: client, Host: host.Client{}, Boot: boot}
+	monitor, err := resources.New(config.Config, host.Root, config.Journal)
+	if err != nil {
+		return err
+	}
+	d := daemon.Daemon{DB: db, Control: client, Host: host.Client{}, Boot: boot, Resources: monitor}
 	errors := make(chan error, 2)
 	go func() { errors <- service.Serve(ctx, config.Socket) }()
 	go func() { errors <- d.Run(ctx) }()

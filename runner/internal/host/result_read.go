@@ -42,14 +42,19 @@ func (b *boundedOutput) Write(p []byte) (int, error) {
 
 // No worktree, user environment, lazy fetch, external diff or config side effects.
 func resultGit(ctx context.Context, dir string, limit int, args ...string) ([]byte, error) {
+	return resultGitWithCredential(ctx, dir, limit, nil, args...)
+}
+
+func resultGitWithCredential(ctx context.Context, dir string, limit int, credential *syscall.Credential, args ...string) ([]byte, error) {
 	parentCtx := ctx
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	out := &boundedOutput{limit: limit, cancel: cancel}
 	stderr := &boundedOutput{limit: 4096, cancel: cancel}
-	fixed := []string{"--no-replace-objects", "--git-dir=" + dir, "-c", "safe.directory=" + dir, "-c", "core.hooksPath=/dev/null", "-c", "core.quotePath=true", "-c", "diff.external=", "-c", "core.attributesFile=/dev/null"}
-	cmd := exec.CommandContext(ctx, "/usr/bin/git", append(fixed, args...)...)
-	cmd.Env = []string{"PATH=/usr/bin:/bin", "HOME=/nonexistent", "LANG=C.UTF-8", "GIT_CONFIG_NOSYSTEM=1", "GIT_CONFIG_GLOBAL=/dev/null", "GIT_TERMINAL_PROMPT=0", "GIT_NO_LAZY_FETCH=1", "GIT_LITERAL_PATHSPECS=1", "GIT_OPTIONAL_LOCKS=0"}
+	cmd, err := resultGitCommand(ctx, dir, credential, args...)
+	if err != nil {
+		return nil, err
+	}
 	cmd.Stdout = out
 	cmd.Stderr = stderr
 	if err := cmd.Run(); err != nil {
@@ -62,6 +67,24 @@ func resultGit(ctx context.Context, dir string, limit int, args ...string) ([]by
 		return nil, fmt.Errorf("immutable Git object unavailable")
 	}
 	return out.buffer.Bytes(), nil
+}
+
+func resultGitCommand(ctx context.Context, dir string, credential *syscall.Credential, args ...string) (*exec.Cmd, error) {
+	if os.Geteuid() == 0 && credential == nil {
+		return nil, fmt.Errorf("read-only Git requires the service identity")
+	}
+	if credential != nil && (credential.Uid == 0 || credential.Gid == 0 || len(credential.Groups) != 0 || credential.NoSetGroups) {
+		return nil, fmt.Errorf("invalid read-only Git service identity")
+	}
+	fixed := []string{"--no-replace-objects", "--git-dir=" + dir, "-c", "safe.directory=" + dir, "-c", "core.hooksPath=/dev/null", "-c", "core.quotePath=true", "-c", "diff.external=", "-c", "core.attributesFile=/dev/null"}
+	cmd := exec.CommandContext(ctx, "/usr/bin/git", append(fixed, args...)...)
+	cmd.Env = []string{"PATH=/usr/bin:/bin", "HOME=/nonexistent", "LANG=C.UTF-8", "GIT_CONFIG_NOSYSTEM=1", "GIT_CONFIG_GLOBAL=/dev/null", "GIT_TERMINAL_PROMPT=0", "GIT_NO_LAZY_FETCH=1", "GIT_LITERAL_PATHSPECS=1", "GIT_OPTIONAL_LOCKS=0"}
+	if credential != nil {
+		copy := *credential
+		copy.Groups = []uint32{}
+		cmd.SysProcAttr = &syscall.SysProcAttr{Credential: &copy}
+	}
+	return cmd, nil
 }
 func validResultPath(p string) bool {
 	if p == "" || !utf8.ValidString(p) || len(p) > 4096 || strings.ContainsAny(p, "\x00\\") || strings.HasPrefix(p, "/") || len(p) >= 2 && p[1] == ':' && (p[0] >= 'A' && p[0] <= 'Z' || p[0] >= 'a' && p[0] <= 'z') {

@@ -57,7 +57,12 @@ func Open(path string) (*DB, error) {
  CREATE TABLE IF NOT EXISTS requests(attempt TEXT NOT NULL, id TEXT NOT NULL, envelope BLOB NOT NULL, digest TEXT NOT NULL, PRIMARY KEY(attempt,id));
  CREATE TABLE IF NOT EXISTS effects(id TEXT PRIMARY KEY, body BLOB NOT NULL, result BLOB);
  CREATE TABLE IF NOT EXISTS events(attempt TEXT NOT NULL, stream TEXT NOT NULL, seq INTEGER NOT NULL, body BLOB NOT NULL, acked INTEGER NOT NULL DEFAULT 0, order_seq INTEGER, PRIMARY KEY(attempt,stream,seq));
- CREATE TABLE IF NOT EXISTS log_offsets(attempt TEXT NOT NULL, stream TEXT NOT NULL, position INTEGER NOT NULL, PRIMARY KEY(attempt,stream));`)
+ CREATE TABLE IF NOT EXISTS log_offsets(attempt TEXT NOT NULL, stream TEXT NOT NULL, position INTEGER NOT NULL, PRIMARY KEY(attempt,stream));
+ CREATE TABLE IF NOT EXISTS event_high_water(attempt TEXT NOT NULL, stream TEXT NOT NULL, sequence INTEGER NOT NULL, PRIMARY KEY(attempt,stream));
+ CREATE TABLE IF NOT EXISTS retention_eligible(attempt TEXT PRIMARY KEY, dispatch TEXT NOT NULL, since INTEGER NOT NULL);
+ CREATE TABLE IF NOT EXISTS log_retirements(attempt TEXT PRIMARY KEY, dispatch TEXT NOT NULL, stdout INTEGER NOT NULL, stderr INTEGER NOT NULL, cleaned INTEGER NOT NULL DEFAULT 0);
+ CREATE TABLE IF NOT EXISTS inspection_retirements(id TEXT PRIMARY KEY, body BLOB NOT NULL, cleaned INTEGER NOT NULL DEFAULT 0);
+ CREATE TABLE IF NOT EXISTS task_cleanups(id TEXT PRIMARY KEY, task TEXT UNIQUE NOT NULL, request BLOB NOT NULL, digest TEXT NOT NULL, result BLOB, acked INTEGER NOT NULL DEFAULT 0);`)
 	if err != nil {
 		handle.Close()
 		return nil, err
@@ -236,6 +241,13 @@ func (d *DB) LogEvent(e protocol.RuntimeEvent, from, to int64) (protocol.Runtime
 		return e, err
 	}
 	defer tx.Rollback()
+	var retired int
+	if err = tx.QueryRow("SELECT count(*) FROM log_retirements WHERE attempt=?", e.AttemptID).Scan(&retired); err != nil {
+		return e, err
+	}
+	if retired != 0 {
+		return e, ErrConflict
+	}
 	var current int64
 	err = tx.QueryRow("SELECT position FROM log_offsets WHERE attempt=? AND stream=?", e.AttemptID, e.StreamID).Scan(&current)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
@@ -244,13 +256,11 @@ func (d *DB) LogEvent(e protocol.RuntimeEvent, from, to int64) (protocol.Runtime
 	if current != from || to <= from {
 		return e, ErrConflict
 	}
-	if err = tx.QueryRow("SELECT COALESCE(MAX(seq),0)+1 FROM events WHERE attempt=? AND stream=?", e.AttemptID, e.StreamID).Scan(&e.Sequence); err != nil {
+	sequence, order, err := nextEvent(tx, e.AttemptID, e.StreamID)
+	if err != nil {
 		return e, err
 	}
-	var order int64
-	if err = tx.QueryRow("SELECT COALESCE(MAX(order_seq),0)+1 FROM events WHERE attempt=?", e.AttemptID).Scan(&order); err != nil {
-		return e, err
-	}
+	e.Sequence = sequence
 	e.OrderSequence = &order
 	raw, err := json.Marshal(e)
 	if err != nil {
@@ -382,13 +392,11 @@ func (d *DB) Event(e protocol.RuntimeEvent) (protocol.RuntimeEvent, error) {
 		return e, err
 	}
 	defer tx.Rollback()
-	if err = tx.QueryRow("SELECT COALESCE(MAX(seq),0)+1 FROM events WHERE attempt=? AND stream=?", e.AttemptID, e.StreamID).Scan(&e.Sequence); err != nil {
+	sequence, order, err := nextEvent(tx, e.AttemptID, e.StreamID)
+	if err != nil {
 		return e, err
 	}
-	var order int64
-	if err = tx.QueryRow("SELECT COALESCE(MAX(order_seq),0)+1 FROM events WHERE attempt=?", e.AttemptID).Scan(&order); err != nil {
-		return e, err
-	}
+	e.Sequence = sequence
 	e.OrderSequence = &order
 	raw, err := json.Marshal(e)
 	if err != nil {

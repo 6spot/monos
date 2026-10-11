@@ -32,6 +32,19 @@ type Manifest struct {
 
 func manifestPath(id string) string { return filepath.Join(Root, "launch", id+".json") }
 func ValidateRequest(r Request) error {
+	if (r.Action == "cleanup_task") != (r.CleanupRequest != nil) {
+		return fmt.Errorf("Task cleanup requires its own action")
+	}
+	if r.Action == "cleanup_task" {
+		if r.AttemptID != "" || r.Dispatch != nil || r.Operation != nil || r.CompletionOperation != nil || r.RepositoryAccess != nil || r.LogRetirement != nil {
+			return fmt.Errorf("Task cleanup accepts only its exact request")
+		}
+		_, err := ValidateTaskCleanup(*r.CleanupRequest)
+		return err
+	}
+	if (r.Action == "retire_logs") != (r.LogRetirement != nil) {
+		return fmt.Errorf("log retirement requires its own action")
+	}
 	if r.CompletionOperation != nil {
 		if r.Action != "effect" || r.Operation == nil {
 			return fmt.Errorf("completion target only belongs to settlement")
@@ -57,6 +70,10 @@ func ValidateRequest(r Request) error {
 		return fmt.Errorf("invalid attempt ID")
 	}
 	switch r.Action {
+	case "retire_logs":
+		if r.Dispatch != nil || r.Operation != nil || !ValidID(r.LogRetirement.DispatchID) || r.LogRetirement.StdoutBytes < 0 || r.LogRetirement.StderrBytes < 0 {
+			return fmt.Errorf("invalid log retirement")
+		}
 	case "start", "tombstone":
 		if r.Dispatch == nil || r.Operation != nil {
 			return fmt.Errorf("start/tombstone requires only dispatch")
@@ -708,6 +725,17 @@ func Handle(ctx context.Context, r Request) (Status, error) {
 		}
 	}
 	defer syscall.Flock(int(lock.Fd()), syscall.LOCK_UN)
+	if r.Action == "cleanup_task" {
+		record, e := beginTaskCleanup(*r.CleanupRequest)
+		if e != nil {
+			return Status{}, e
+		}
+		if e = syscall.Flock(int(lock.Fd()), syscall.LOCK_UN); e != nil {
+			return Status{}, e
+		}
+		result := runTaskCleanup(ctx, record)
+		return Status{Known: true, CleanupResult: &result}, nil
+	}
 	if r.Action == "effect" && (r.Operation.Workspace != nil || r.Operation.Workspaces != nil || r.Operation.Kind == protocol.SettleCompletion) {
 		m, e := readManifest(r.AttemptID)
 		if e != nil {
@@ -759,6 +787,19 @@ func Handle(ctx context.Context, r Request) (Status, error) {
 		return runWorkspaceEffect(ctx, *r.Operation, r.RepositoryAccess)
 	}
 	switch r.Action {
+	case "retire_logs":
+		m, e := readManifest(r.AttemptID)
+		if e != nil {
+			return Status{}, e
+		}
+		if m.Dispatch.DispatchID != r.LogRetirement.DispatchID || !m.Launched {
+			return Status{}, fmt.Errorf("log retirement ownership mismatch")
+		}
+		s, e := status(ctx, r.AttemptID)
+		if e != nil || !s.Known || s.Populated {
+			return s, errors.Join(e, fmt.Errorf("log retirement requires physical absence"))
+		}
+		return s, retireLogFiles(filepath.Join(Root, "logs"), r.AttemptID, *r.LogRetirement, 0)
 	case "status":
 		return status(ctx, r.AttemptID)
 	case "stop":
@@ -798,6 +839,13 @@ func Handle(ctx context.Context, r Request) (Status, error) {
 		} else if !os.IsNotExist(e) {
 			return Status{}, e
 		}
+		policy, e := installedResources()
+		if e != nil {
+			return Status{}, e
+		}
+		if e = rejectRetiredStart(*r.Dispatch); e != nil {
+			return Status{}, e
+		}
 		if err = requireAbsentUnit(ctx, Unit(r.AttemptID)); err != nil {
 			return Status{}, err
 		}
@@ -814,7 +862,7 @@ func Handle(ctx context.Context, r Request) (Status, error) {
 			return Status{}, err
 		}
 		args := []string{"--quiet", "--unit=" + Unit(r.AttemptID), "--service-type=exec", "--description=monos probe attempt " + r.Dispatch.DispatchID}
-		for _, p := range properties(r.AttemptID, false) {
+		for _, p := range append(properties(r.AttemptID, false), policy.Config.ExecutionLimits.Properties()...) {
 			args = append(args, "--property="+p)
 		}
 		args = append(args, "--property=StandardOutput=append:"+filepath.Join(Root, "logs", r.AttemptID+".stdout"), "--property=StandardError=append:"+filepath.Join(Root, "logs", r.AttemptID+".stderr"), Worker, "attempt", r.AttemptID)

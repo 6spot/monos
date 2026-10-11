@@ -124,7 +124,7 @@ func TestPublicationDaemonMissingPermissionStillRunsAnonymousLocalPreparation(t 
 				}
 			}))
 			defer server.Close()
-			d := &Daemon{DB: db, Control: &control.Client{Config: control.Config{Endpoint: server.URL, RunnerID: "runner"}, HTTP: server.Client()}}
+			d := &Daemon{DB: db, Control: &control.Client{Config: control.Config{Endpoint: server.URL, RunnerID: "runner", TokenFile: controlCredentialFixture(t)}, HTTP: server.Client()}}
 			runErr := d.Control.Run(ctx, "boot", &publicationPermissionHandler{daemon: d})
 			d.workers.Wait()
 			if permissionRequests.Load() != 1 {

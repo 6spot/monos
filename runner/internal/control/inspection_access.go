@@ -51,7 +51,7 @@ func (c *Client) InspectionRepositoryAccess(ctx context.Context, op protocol.Ope
 	if err != nil {
 		return access, fmt.Errorf("invalid inspection access endpoint")
 	}
-	req.Header.Set("Authorization", "Bearer "+c.token)
+	req.Header.Set("Authorization", "Bearer "+c.credential())
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Cache-Control", "no-store")
 	resp, err := c.HTTP.Do(req)
