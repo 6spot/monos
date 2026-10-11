@@ -19,6 +19,7 @@ import { assertNodeSource } from './node-execution-state.ts';
 import { assertConversationSource } from './task-conversation-state.ts';
 import { lockConfiguration } from './configuration-guards.ts';
 import type { RuntimeSelectionContext } from './runtime-continuation-state.ts';
+import { currentNodeRework } from './node-rework-state.ts';
 
 export interface QueueInput {
   attempt_id: string; runner_id: string; task_id?: string; todo_id?: string; node_id?: string;
@@ -114,6 +115,7 @@ export class DispatchQueue {
     let activation = 0;
     if (input.kind === 'node') {
       if (!input.node_id) throw new CommandError('invalid_input', 'Node owner required');
+      if (await currentNodeRework(tx, input.task_id, input.node_id)) throw new CommandError('unmet_precondition', 'Upstream Rework owns this Node execution');
       const node = (await tx.query<{ activation: string }>('SELECT activation FROM nodes WHERE id=$1 AND task_id=$2', [input.node_id, input.task_id])).rows[0];
       if (!node) throw new CommandError('denied_scope', 'Node belongs to another Task');
       activation = Number(node.activation);
@@ -222,6 +224,9 @@ export class DispatchQueue {
           }
           if(current && row.task_id && !row.launch.task_conversation_source){try{await assertSpecificationUnfrozen(tx,row.task_id);}catch(error){if(!(error instanceof CommandError))throw error;current=false;}}
           if(current && row.launch.node_execution_source) {try { await assertNodeSource(tx,row.task_id!,row.launch.node_execution_source,row.id,row.launch.prompt); } catch(error){if(!(error instanceof CommandError))throw error;current=false;} }
+          if (current && row.node_id) {
+            if (await currentNodeRework(tx, row.task_id!, row.node_id)) current = false;
+          }
           if (current && row.node_id) {
             try { current = (await assertCurrentNode(tx, { task_id: row.task_id!, node_id: row.node_id, node_activation: row.launch.node_activation })).state === (row.launch.node_execution_source ? 'RUNNING' : 'PENDING') && await nodeDependenciesReady(tx, row.plan_id!, row.node_id); }
             catch (error) { if (!(error instanceof CommandError)) throw error; current = false; }

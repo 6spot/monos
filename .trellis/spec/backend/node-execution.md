@@ -3,7 +3,8 @@
 Sources: `apps/server/src/{node-execution,node-execution-state,node-completion,artifacts}.ts`,
 `packages/db/migrations/0018_node_execution.sql` and the shared protocol schema.
 Task Conversation extends these contracts via [guidance handling](task-conversation.md).
-Multi-Node replacement Plans and new Agent-requested Rework remain subsequent work.
+Multi-Node replacement Plans remain subsequent work. Upstream Agent-requested
+Rework is implemented for the strictly serial graph as described below.
 
 ## 1. Scope / Trigger
 
@@ -145,3 +146,49 @@ retention claim. Browser tests inspect exported HTML functionality.
 Wrong: replace the original lease settle pointer, then let each operation wait on
 the other. Correct: retain original identity, authorize a separate exact settlement
 relation, quiesce/export and commit a typed atomic pair before releasing ownership.
+
+## 8. Upstream Rework
+
+`request_rework {target_node_id?,reason}` is a terminal canonical Node outcome.
+Omission requires one direct dependency; an explicit target must be an ancestor.
+Admission records the exact target-plus-descendant activation/source/completion
+snapshot, fences the requester, and retains its original Stop plus Agent receipt
+atomically. The serial implementation requires other Node writers and effects to
+be settled and rejects competing requirement/Replan/review ownership and affected
+Owner holds before any writes. Activation publication waits for Stop, process,
+operation and lease settlement; existing identities and integrated code survive.
+
+Migration 27 persists `node_rework_requests`, `node_rework_targets`,
+`node_rework_decisions` and `tasks.rework_epoch`. Three automatic requests per epoch
+span fallback, Retry and activation changes. A fourth records `limit_blocked` and
+blocks only its requester. Independent work may proceed. Owner `apply_rework` and
+`continue_without_rework` bind the preserved request/version and live Task control.
+Apply verifies all saved targets and physical settlement, atomically publishes
+activations and resets the epoch; Continue replaces the requester source at the
+same activation without resetting the budget. Its answer survives delayed source
+preparation. Committed outcomes are respectively `applied` at request version +2
+and `continued` at version +1. Replays retain the original result.
+
+Generic Stop/Retry/Continue cannot resolve request ownership. Completed-ancestor
+guidance and Owner continuation check their entire reactivation closure, preventing
+indirect invalidation of a limit-blocked requester. Cancel retains cleanup and
+prevents late reactivation. SQL rejects limit-to-settling without an exact Owner
+decision; no generic budget reset exists.
+
+`GET /v1/owner/tasks/:task_id/rework` exposes reason, saved identity/version,
+settlement attention and current Apply/Continue capabilities. A stale target makes
+Apply unavailable while requester-only Continue may remain valid. UI retains
+these decisions in the existing Task command journal and validates the matching
+outcome before clearing an uncertain request.
+
+Fresh context distinguishes applied correction from continued proposals and
+historical completion evidence. An applied workspace checkpoint records its exact
+Stop, resource, immutable commit/tree and `refs/monos/history/<request>`; it becomes
+readable after `open_workspace`. Historical objects never overwrite current code.
+Host archives both raw Git common storage and worktree, preserving ignored files
+and separate index content which checkpoint Git trees do not fully represent.
+
+Required focused evidence: real PostgreSQL admission/replay/limit/Cancel/control
+contention, A→B→A2→B2 workspace provenance, native CLI/local source allowlists, real
+Git archival interruption and history inspection, and browser saved-decision
+recovery. Local macOS/fake Runner tests do not establish native Linux acceptance.

@@ -13,6 +13,7 @@ import type { NodeExecutionSource } from '../../../packages/protocol/src/index.t
 import { planningEvent } from './task-planning-state.ts';
 import { derivedTaskState } from './owner-execution.ts';
 import { nodeUpstreamContext } from './node-upstream-context.ts';
+import { currentNodeRework } from './node-rework-state.ts';
 
 export interface NodeSource {
   id: string;
@@ -66,6 +67,8 @@ export async function assertNodeSource(
   prompt?: string
 ): Promise<NodeSource> {
   await assertTaskUnaccepted(tx,taskId);
+  if (await currentNodeRework(tx, taskId, source.node_id))
+    throw new CommandError('stale_execution', 'Upstream Rework owns this Node execution');
   if(await liveReplanAuthority(tx,taskId,attemptId)){const live=(await tx.query<NodeSource>('SELECT * FROM node_execution_outbox WHERE id=$1',[source.source_id])).rows[0];if(live&&canonicalJSON(nodeSource(live))===canonicalJSON(source)&&(prompt===undefined||live.prompt===prompt))return live;throw new CommandError('stale_execution','Live Replan source differs');}
   await assertSpecificationUnfrozen(tx,taskId);
   const row = (
@@ -90,13 +93,51 @@ export async function assertNodeSource(
 const protocol = [
   'You execute exactly the bound Node. Only monos Tool Protocol commands change formal state. Follow the effective Specification, exact Node requirements, current Role instructions and formal Owner answers. Todo, prior Tasks and Runtime memory are not authority.',
   'Apply the exact review_rework feedback and Planner routing reason for this activation. They request correction within the effective Specification; they do not replace the Specification or create guidance IDs.',
+  'node_rework records the exact upstream correction request, affected activations and any Owner decision. Applied requests require correction of the existing integrated code. A continued request records the Owner decision to continue without its proposed upstream correction; that proposal was not applied. Prior completion results and private workspace checkpoints are retained history, not completion or validation of this activation. Validate the current result.',
+  'If node_rework contains historical_checkpoint, first successfully open_workspace for its resource_id. Inspect the exact checkpoint.commit_id or git_ref with native git show/diff; the stopped private changes are historical context. Adapt relevant work to the current integrated result. Never automatically checkout, cherry-pick or replay the checkpoint. The original raw workspace remains separately archived by the system.',
   'upstream_outputs contains current completed direct dependencies and their selected Artifact metadata. Read exact content with read_artifact. Historical output and earlier Git revisions do not prove that the current combined result is valid.',
   'Use monos open_workspace with resource_id only when repository work is needed. Work freely within that managed workspace; preserve previous private work and fixed Git ancestry. Do not create your own repository as a substitute for managed work.',
   'Optional durable outputs use monos publish_artifact with artifact_id, title, content:{text,media_type}, optional references:[{url,label?}] and supersedes. UTF-8 text is limited to 256 KiB. Artifact publication is not completion. Read exact Task content with monos read_artifact {artifact_id}. HTML is managed data.',
   'Finish with monos complete_node {summary,artifact_ids?,handled_guidance_ids?}. Explicitly declare every required_guidance_id you have handled; absence declares none and rejects missing required handling. If blocked, use block_node with the precise reason. Guidance launch is not proof of handling. Omitted artifact_ids selects outputs from this Attempt; [] selects none; explicit IDs select same Node/activation outputs. No Artifact or repository is mandatory. If a previous Attempt left a private workspace checkpoint, reopen and finalize it before completion. Complete closes mutation authority and the system stops the process and finalizes Git; prose/process exit never completes.',
   'If external input prevents this valid Node from continuing, call monos block_node {reason}. This records a precise Owner-answerable blocker and closes this Attempt. Never fabricate Runtime failure.',
+  'If existing upstream work must be redone while the graph remains valid, use monos request_rework {target_node_id?,reason}. Omit target_node_id only with exactly one direct dependency; an explicit target must be a current upstream ancestor. The system preserves history and reactivates that Node and every descendant after physical settlement. Three automatic requests are allowed per Task between Owner resets; a further request is preserved for an exact Owner decision. This command ends your current Attempt.',
   'Use monos COMMAND --request-id ID --input payload.json --output json (or --input -); monos command-status --request-id ID --output json; monos retry --request-id ID --output json. On uncertainty recover the same request, never substitute a new lifecycle command.',
 ].join('\n');
+
+async function nodeReworkContext(tx: Transaction, task: NodeTask, node: ExecutionNode) {
+  const rows = (await tx.query<{ item: Record<string, unknown>; bytes: string }>(`WITH contexts AS (
+    SELECT jsonb_build_object('rework_request_id',r.id,'status',r.status,'reason',r.reason,'target_node_id',r.target_node_id,
+      'requester_node_id',r.requester_node_id,'requester_activation',r.requester_activation,
+      'requester_attempt_id',r.requester_attempt_id,'requester_source_id',r.requester_source_id,
+      'agent_request_id',r.agent_request_id,'applied_control_version',r.applied_control_version,
+      'affected_nodes',(SELECT jsonb_agg(jsonb_build_object('node_id',x.node_id,'prior_activation',x.from_activation,
+        'node_activation',CASE WHEN r.status='applied' THEN x.from_activation+1 ELSE x.from_activation END,'prior_source_id',x.source_id,
+        'completion_operation_id',x.completion_operation_id,'completion_manifest_digest',x.completion_manifest_digest,
+        'historical_result',c.result) ORDER BY x.node_id)
+        FROM node_rework_targets x LEFT JOIN node_completions c ON c.operation_id=x.completion_operation_id
+        WHERE x.request_id=r.id),
+      'owner_decision',CASE WHEN d.owner_request_id IS NOT NULL THEN jsonb_build_object('request_id',d.owner_request_id,
+        'name',d.name,'answer',d.answer,'expected_version',d.expected_version) ELSE NULL END,
+      'historical_checkpoint',CASE WHEN r.status='applied' AND stop.result->'workspace_metadata'->'checkpoint' IS NOT NULL THEN
+        jsonb_build_object('workspace_id',stop.workspace_descriptor->>'workspace_id',
+          'resource_id',stop.workspace_descriptor->>'resource_id','stop_operation_id',stop.id,
+          'checkpoint',stop.result->'workspace_metadata'->'checkpoint',
+          'git_ref','refs/monos/history/'||r.id) ELSE NULL END,
+      'validity','Prior completion identities and results are historical only; they do not complete or validate the reactivated subgraph.') item
+    FROM node_rework_requests r JOIN node_rework_targets target ON target.request_id=r.id
+    LEFT JOIN node_rework_decisions d ON d.request_id=r.id AND d.owner_request_id=r.owner_decision_request_id
+    LEFT JOIN operations stop ON stop.id=r.stop_operation_id AND stop.attempt_id=r.requester_attempt_id
+      AND stop.kind='stop' AND stop.state='succeeded' AND stop.request_id=r.agent_request_id
+    WHERE r.task_id=$1 AND r.specification_id=$2 AND r.plan_id=$3 AND target.node_id=$4
+      AND ((r.status='applied' AND target.from_activation+1=$5)
+        OR (r.status='continued' AND r.requester_node_id=$4 AND r.requester_activation=$5))
+  ), sized AS (SELECT item,sum(octet_length(item::text)) OVER () bytes FROM contexts)
+  SELECT CASE WHEN bytes<=$6 THEN item ELSE '{}'::jsonb END item,bytes FROM sized ORDER BY item->>'rework_request_id'`,
+  [task.id, task.specification_id, task.plan_id, node.id, node.activation, MAX_ITEM_BYTES / 2])).rows;
+  if (rows.some(row => Number(row.bytes) > MAX_ITEM_BYTES / 2)) throw new CommandError('unmet_precondition', 'context_budget_exceeded');
+  return rows.map(row => row.item);
+}
+
 export async function prepareNodeSource(
   tx: Transaction,
   task: NodeTask,
@@ -106,6 +147,8 @@ export async function prepareNodeSource(
 ): Promise<NodeSource> {
   await assertSpecificationUnfrozen(tx,task.id);
   await assertNoReplan(tx,task.id);
+  if (await currentNodeRework(tx, task.id, node.id))
+    throw new CommandError('unmet_precondition', 'Upstream Rework must resolve before preparing this Node');
   const id = randomUUID(),
     attemptId = randomUUID();
   const definition = (
@@ -127,7 +170,11 @@ export async function prepareNodeSource(
   };
   let failure: string | null = null;
   let upstream: Awaited<ReturnType<typeof nodeUpstreamContext>> | undefined;
-  try { upstream = await nodeUpstreamContext(tx, task.id, task.plan_id, definition.dependencies); }
+  let rework: Awaited<ReturnType<typeof nodeReworkContext>> = [];
+  try {
+    upstream = await nodeUpstreamContext(tx, task.id, task.plan_id, definition.dependencies);
+    rework = await nodeReworkContext(tx, task, node);
+  }
   catch (error) {
     if (!(error instanceof CommandError) || error.message !== 'context_budget_exceeded') throw error;
     failure = 'context_budget_exceeded';
@@ -187,6 +234,7 @@ export async function prepareNodeSource(
         protocol,
         guidance,
         upstream_outputs: upstream,
+        node_rework: rework,
         review_rework:(await tx.query(`SELECT f.id feedback_id,f.request_id owner_request_id,f.text,f.basis,
           o.id operation_id,r.source_id review_source_id,r.attempt_id planner_attempt_id,r.request_id routing_request_id,
           r.body->>'reason' reason,$2::text node_id,$3::bigint node_activation
@@ -314,6 +362,8 @@ export async function inspectNodeRuntimeFallback(tx: Transaction, predecessor: R
   const binding = predecessor.launch.node_execution_source;
   if (!binding || !predecessor.task_id || !predecessor.node_id || predecessor.todo_id || predecessor.launch.kind !== 'node')
     return { status: 'superseded', reason: 'node_source_missing' };
+  if (await currentNodeRework(tx, predecessor.task_id, predecessor.node_id))
+    return { status: 'superseded', reason: 'node_rework_owned' };
   const source = (await tx.query<NodeSource>('SELECT * FROM node_execution_outbox WHERE planned_attempt_id=$1', [predecessor.id])).rows[0];
   const task = (await tx.query<NodeTask & { accepted_delivery_operation_id: string | null }>('SELECT * FROM tasks WHERE id=$1', [predecessor.task_id])).rows[0];
   const node = (await tx.query<ExecutionNode>('SELECT * FROM nodes WHERE id=$1 AND task_id=$2', [predecessor.node_id, predecessor.task_id])).rows[0];
@@ -364,6 +414,7 @@ export async function exhaustNodeRuntimeFallback(tx: Transaction, plannedAttempt
       AND t.specification_id=s.specification_id AND t.plan_id=s.plan_id
       AND t.accepted_delivery_operation_id IS NULL AND t.state IN('RUNNING','BLOCKED')`, [plannedAttemptId])).rows[0];
   if (!source) return false;
+  if (await currentNodeRework(tx, source.task_id, source.node_id)) return false;
   const node = (await tx.query<ExecutionNode>('SELECT * FROM nodes WHERE id=$1', [source.node_id])).rows[0]!;
   if (node.state === 'BLOCKED') return !!(await tx.query("SELECT 1 FROM node_blockers WHERE id=$1 AND source_id=$2 AND kind='factual' AND reason=$3", [node.blocker_id, source.id, reason])).rowCount;
   if (!['PENDING', 'RUNNING'].includes(node.state) || node.guidance_paused || node.blocker_id || await specificationFrozen(tx, source.task_id) || await pendingReplan(tx, source.task_id)) return false;

@@ -24,7 +24,7 @@ func workspaceStopPath(lease string) string {
 
 func validateWorkspaceUnit(values map[string]string, r operationRecord) error {
 	expected := "me"
-	if r.WorkspaceAction == "fetch" {
+	if r.WorkspaceAction == "fetch" || r.WorkspaceAction == "history" {
 		expected = "monos-probe"
 	}
 	unit := operationUnit(r.Operation.OperationID)
@@ -222,7 +222,7 @@ func runWorkspaceWorker(ctx context.Context, op protocol.Operation, action strin
 	}
 	args := []string{"--quiet", "--wait", "--pipe", "--collect", "--service-type=exec", "--unit=" + operationUnit(op.OperationID), "--description=monos workspace operation " + op.OperationID}
 	props := properties(op.AttemptID, true)
-	if action == "fetch" {
+	if action == "fetch" || action == "history" {
 		props[0] = "User=monos-probe"
 		for i, p := range props {
 			if strings.HasPrefix(p, "WorkingDirectory=") {
@@ -297,6 +297,11 @@ func loadWorkspaceForOpen(op protocol.Operation, storage string) (workspaceRecor
 			return r, err
 		}
 	}
+	if r.Operation.Workspace.LeaseID != w.LeaseID {
+		if err = validateWorkspaceHistoryEvidence(op); err != nil {
+			return r, err
+		}
+	}
 	return reuseWorkspaceRecord(r, op, storage)
 }
 
@@ -335,6 +340,9 @@ func reuseWorkspaceRecord(r workspaceRecord, op protocol.Operation, storage stri
 	}
 	r.Operation = op
 	r.Stage = "refresh_intent"
+	if w.Transfer != nil && w.Transfer.Purpose != nil && *w.Transfer.Purpose == protocol.PurposeRework {
+		r.Stage = "rework_intent"
+	}
 	r.OpenResult = nil
 	r.Released = false
 	if r.TargetObservationLeaseID == "" {
@@ -421,6 +429,14 @@ func runWorkspaceEffect(ctx context.Context, op protocol.Operation, access *prot
 	}
 	if err = saveRecord(workspaceRecordPath(op.Workspace.WorkspaceID), r); err != nil {
 		return status, err
+	}
+	if err = resumeWorkspaceRework(ctx, &r, op); err != nil {
+		return status, err
+	}
+	if len(op.Workspace.ReworkHistory) > 0 {
+		if _, err = runWorkspaceWorker(ctx, op, "history", nil); err != nil {
+			return status, err
+		}
 	}
 	if r.Stage == "intent" || r.Stage == "refresh_intent" {
 		if access == nil {
@@ -602,6 +618,14 @@ func stopWorkspace(ctx context.Context, op protocol.Operation, storage string) (
 	}
 	if r.Metadata.StorageID != storage {
 		return status, fmt.Errorf("storage_unavailable: Stop storage identity mismatch")
+	}
+	if err = resumeWorkspaceRework(ctx, &r, op); err != nil {
+		return status, err
+	}
+	if len(op.Workspace.ReworkHistory) > 0 && r.OpenResult == nil {
+		if _, err = runWorkspaceWorker(ctx, op, "history", nil); err != nil {
+			return status, err
+		}
 	}
 	if r.OpenResult == nil && op.Workspace.Basis != nil {
 		if err = prepareStopRecovery(&r, op); err != nil {

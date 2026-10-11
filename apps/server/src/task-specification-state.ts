@@ -1,3 +1,4 @@
+import { assertNoTaskRework } from './node-rework-state.ts';
 import { assertNoReplan, eligibleReplan, replanProposal } from './task-replan-state.ts';
 import { assertCurrentNode } from './task-records.ts';
 import { randomUUID } from 'node:crypto';
@@ -22,6 +23,8 @@ export async function specificationImpact(tx:Transaction,task:SpecificationTask)
  return {graph_sufficient:true,nodes:nodes.map(n=>({node_id:n.node_id,node_activation:Number(n.node_activation),source_id:n.source_id,completion_operation_id:n.completion_operation_id,completion_manifest_digest:n.completion_manifest_digest,disposition:n.completion_operation_id?'invalidate':'refresh'})),guidance:guidance.map(g=>({...g,version:Number(g.version),disposition:'retain'}))};
 }
 export async function checkImpact(tx:Transaction,task:SpecificationTask,impact:SpecificationImpact,settled=false):Promise<void>{
+
+ await assertNoTaskRework(tx,task.id);
  validate('SpecificationImpact',impact);if(new Set(impact.guidance.map(g=>g.guidance_id)).size!==impact.guidance.length)throw new CommandError('invalid_input','Impact guidance IDs must be unique');const actual=await specificationImpact(tx,task);
  if(actual.nodes.length>1)throw new CommandError('unmet_precondition','unsupported_multi_node_specification_change: Requirement mutation supports one unchanged Node graph');
  if(actual.nodes.length!==impact.nodes.length||actual.guidance.length!==impact.guidance.length)throw new CommandError('version_conflict','Complete impact membership changed');

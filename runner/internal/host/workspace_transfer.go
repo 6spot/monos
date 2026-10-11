@@ -25,8 +25,14 @@ func validateWorkspaceTransfer(r workspaceRecord, op protocol.Operation) error {
 		return err
 	}
 	serial := t.Purpose != nil && *t.Purpose == protocol.Serial
-	if serial && (t.FromPlanID != t.ToPlanID || t.Kind != "completed") || !serial && t.FromPlanID == t.ToPlanID {
+	rework := t.Purpose != nil && *t.Purpose == protocol.PurposeRework
+	if serial && t.Kind != "completed" || rework && t.Kind != "checkpoint" || (serial || rework) && t.FromPlanID != t.ToPlanID || !serial && !rework && t.FromPlanID == t.ToPlanID {
 		return fmt.Errorf("ownership_unresolved: workspace transfer Plan mismatch")
+	}
+	if rework {
+		if err := validateReworkActivations(t.ReworkActivations, t.FromNodeID, t.FromNodeActivation, t.ToNodeID, t.ToNodeActivation); err != nil {
+			return err
+		}
 	}
 	if !r.Released || t.WorkspaceID != old.WorkspaceID || t.WorkspaceID != w.WorkspaceID || t.TaskID != old.TaskID || t.TaskID != w.TaskID || t.ResourceID != old.ResourceID || t.ResourceID != w.ResourceID || t.RunnerID != old.RunnerID || t.RunnerID != w.RunnerID || t.FromAttemptID != r.Operation.AttemptID || t.FromLeaseID != old.LeaseID || t.FromNodeID != old.NodeID || t.FromNodeActivation != old.NodeActivation || t.ToNodeID != w.NodeID || t.ToNodeActivation != w.NodeActivation {
 		return fmt.Errorf("ownership_unresolved: workspace transfer ownership mismatch")
@@ -88,7 +94,7 @@ func validateWorkspaceTransferProof(r workspaceRecord, op protocol.Operation, m 
 	}
 	t := op.Workspace.Transfer
 	s := m.Dispatch.NodeExecutionSource
-	if t.Purpose != nil && *t.Purpose == protocol.Serial && (m.Dispatch.TaskID == nil || *m.Dispatch.TaskID != t.TaskID || m.Dispatch.RunnerID != t.RunnerID) {
+	if t.Purpose != nil && (m.Dispatch.TaskID == nil || *m.Dispatch.TaskID != t.TaskID || m.Dispatch.RunnerID != t.RunnerID) {
 		return fmt.Errorf("ownership_unresolved: serial predecessor manifest scope mismatch")
 	}
 	if s == nil || s.PlanID != t.FromPlanID || s.NodeID != t.FromNodeID || s.NodeActivation != t.FromNodeActivation || m.Dispatch.AttemptID != t.FromAttemptID || m.Dispatch.DispatchID != r.Operation.DispatchID {
@@ -98,6 +104,9 @@ func validateWorkspaceTransferProof(r workspaceRecord, op protocol.Operation, m 
 		return fmt.Errorf("ownership_unresolved: transfer settlement missing")
 	}
 	result := proof.Status.Result
+	if t.Purpose != nil && *t.Purpose == protocol.PurposeRework && (proof.Operation.Kind != protocol.Stop || t.ReworkCommandRequestID == nil || proof.Operation.RequestID != *t.ReworkCommandRequestID || result.WorkspaceID == nil || *result.WorkspaceID != t.WorkspaceID) {
+		return fmt.Errorf("ownership_unresolved: Rework requester Stop differs")
+	}
 	if t.Purpose != nil && *t.Purpose == protocol.Serial && (result.WriterAbsent == nil || !*result.WriterAbsent || result.WorkspaceID == nil || *result.WorkspaceID != t.WorkspaceID || result.WorkspaceMetadata == nil || !reflect.DeepEqual(*result.WorkspaceMetadata, t.Metadata)) {
 		return fmt.Errorf("ownership_unresolved: serial completion settlement mismatch")
 	}

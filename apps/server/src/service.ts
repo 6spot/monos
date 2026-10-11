@@ -1,3 +1,4 @@
+import { requestNodeRework } from './node-rework-state.ts';
 import { recordRuntimeContinuation, failRuntimeContinuationCapture } from './runtime-continuation.ts';
 import type { RuntimeSelectionContext } from './runtime-continuation-state.ts';
 import {handleReviewCommand,assertReviewSource} from './task-review-sources.ts';
@@ -291,6 +292,15 @@ export class BoundaryService {
       }
       const source = attempt.launch.node_execution_source
         ? await assertNodeSource(tx,task.id,attempt.launch.node_execution_source,attempt.id,attempt.launch.prompt) : undefined;
+      if (command.name === 'request_rework') {
+        if (!source || legacy || !task.project_id || !task.plan_id) throw new CommandError('denied_scope', 'Canonical Node source required');
+        const outcome = await requestNodeRework(tx, { ...task, project_id: task.project_id, plan_id: task.plan_id }, attempt, source, command);
+        const response: CommandResult = { schema_version: 1, request_id: command.request_id, status: 'committed', result: outcome.result, operation_id: outcome.operation_id };
+        validate('CommandResult', response);
+        await tx.query('INSERT INTO command_receipts(attempt_id,scope_id,request_id,command_name,digest,schema_version,envelope_json,response,operation_id) VALUES($1,$2,$3,$4,$5,1,$6,$7,$8)',
+          [attempt.id,task.id,command.request_id,command.name,submission.sha256,submission.envelope_json,response,outcome.operation_id]);
+        this.options.beforeAdmissionCommit?.(); return response;
+      }
       if(command.name==='request_replan'){if(!source||legacy)throw new CommandError('denied_scope','Canonical Node source required');const id=await requestReplan(tx,task,attempt,command.payload.reason!,command.request_id,{node:source});const op=(await tx.query<{id:string}>("SELECT id FROM operations WHERE attempt_id=$1 AND kind='stop'",[attempt.id])).rows[0];const response:CommandResult={schema_version:1,request_id:command.request_id,status:'committed',result:{replan_outcome:{kind:'request',replan_request_id:id}},operation_id:op?.id};await tx.query('INSERT INTO command_receipts(attempt_id,scope_id,request_id,command_name,digest,schema_version,envelope_json,response,operation_id) VALUES($1,$2,$3,$4,$5,1,$6,$7,$8)',[attempt.id,task.id,command.request_id,command.name,submission.sha256,submission.envelope_json,response,op?.id]);this.options.beforeAdmissionCommit?.();return response;}
       if (['publish_artifact','read_artifact','block_node'].includes(command.name)) {
         if (!source || legacy) throw new CommandError('denied_scope','Canonical Node source is required');

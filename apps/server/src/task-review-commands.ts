@@ -1,3 +1,4 @@
+import { assertNoTaskRework } from './node-rework-state.ts';
 import {randomUUID} from 'node:crypto';
 import {transaction} from '../../../packages/db/src/index.ts';
 import type {Database,Transaction} from '../../../packages/db/src/index.ts';
@@ -38,6 +39,7 @@ export class TaskReviewCommands {
   await lockConfiguration(tx);const discover=async()=>(await tx.query<{runner_id:string}>('SELECT DISTINCT runner_id FROM attempts WHERE task_id=$1 AND NOT process_released ORDER BY runner_id',[command.task_id])).rows.map(r=>r.runner_id);const runners=await discover();for(const r of runners)await tx.query('SELECT id FROM runners WHERE id=$1 FOR UPDATE',[r]);const task=(await tx.query<{state:string;control_version:string;accepted_delivery_operation_id:string|null}>('SELECT * FROM tasks WHERE id=$1 FOR UPDATE',[command.task_id])).rows[0];if(!task)throw new CommandError('denied_scope','Unknown Task');const locked=await replay();if(locked)return locked;if(canonicalJSON(await discover())!==canonicalJSON(runners))throw discoveryChanged;
   const p=command.payload,result:OwnerReviewCommandResult={schema_version:1,task_id:command.task_id,request_id:command.request_id,status:'committed',name:command.name,feedback_id:p.feedback_id};let written=false;
   if(command.name==='request_changes'){
+  await assertNoTaskRework(tx,command.task_id);
    await assertReviewCorrectionEligible(tx,command.task_id);const basis=await reviewBasis(tx,command.task_id);if(canonicalJSON(basis)!==canonicalJSON(p.basis))throw new CommandError('version_conflict','Reviewed result basis changed');
    if(!!task.accepted_delivery_operation_id!==!!p.accepted_batch)throw new CommandError('unmet_precondition','Exact current accepted batch binding required');
    const batch=task.accepted_delivery_operation_id?await deliveryBatch(tx,command.task_id,task.accepted_delivery_operation_id,true):undefined;

@@ -1,3 +1,4 @@
+import { NodeRework } from './node-rework.ts';
 import {OwnerDeliveryCommands} from './owner-delivery-commands.ts';
 import {OwnerDeliveryReads} from './owner-delivery-reads.ts';
 import {ownerDeliveryHooks} from './owner-delivery-control.ts';
@@ -103,6 +104,7 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
   const remoteCommands=new RemotePreparationCommands(service.db);
   const remoteAccess=new RemotePreparationAccess(service,remoteProvider);
   const owner = new OwnerCommands(service.db);
+  const rework = new NodeRework(service.db);
   const reads = new OwnerReads(service.db);
   const access = new OwnerAccess(service.db);
   app.addHook('onRequest', async request => {
@@ -201,6 +203,7 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
     reply.header('Cache-Control','no-store').header('X-Content-Type-Options','nosniff');
     return resultContent(service,resultReads,ownerCredential(request),request.headers['x-monos-session'] as string|undefined,request.params.task_id,request.params.operation_id,mode,request.query);
   });
+  app.get<{ Params: { task_id: string } }>('/v1/owner/tasks/:task_id/rework', async request => rework.status(ownerCredential(request),request.params.task_id));
   app.get<{ Params: { task_id: string; node_id:string } }>('/v1/owner/tasks/:task_id/nodes/:node_id/execution', async request => execution.status(ownerCredential(request),request.params.task_id,request.params.node_id));
   app.get<{ Params: { task_id: string }; Querystring: { cursor?:string } }>('/v1/owner/tasks/:task_id/artifacts', async request => ownerArtifacts(service.db,ownerCredential(request),request.params.task_id,request.query.cursor));
   app.get<{ Params: { task_id: string; artifact_id:string } }>('/v1/owner/tasks/:task_id/artifacts/:artifact_id', async (request,reply) => {reply.header('cache-control','no-store').header('x-content-type-options','nosniff');return ownerArtifact(service.db,ownerCredential(request),request.params.task_id,request.params.artifact_id);});

@@ -8,6 +8,7 @@ import { APIError } from "../lib/api.ts";
 import { taskRead } from "../lib/task-api.ts";
 import type { TaskController } from "../lib/use-task-command.ts";
 import { TaskControls } from "./task-controls.tsx";
+import { NodeReworkPanel } from "./node-rework.tsx";
 import { TaskConversationView } from "./task-conversation.tsx";
 import { TaskDecisions } from "./task-decisions.tsx";
 import { TaskOverviewView } from "./task-overview.tsx";
@@ -135,6 +136,7 @@ export function TaskDetail({
         <ReadProblem error={q.error} retry={q.refetch} />
         <PendingRequests commands={commands} taskId={taskId} />
         <TaskControls {...props} />
+        <NodeReworkPanel {...props} />
         {section === "conversation" ? (
           <>
             <TaskDecisions {...props} />

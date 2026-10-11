@@ -1,6 +1,7 @@
 import type { WorkspaceTransfer } from '../../../packages/protocol/src/index.ts';
 import { workspaceTransfer } from './task-replan-state.ts';
 import { serialWorkspaceTransfer } from './workspace-serial-transfer.ts';
+import { reworkWorkspaceTransfer, workspaceReworkHistory } from './workspace-rework-transfer.ts';
 import { randomUUID } from 'node:crypto';
 import type { Transaction } from '../../../packages/db/src/index.ts';
 import { CommandError } from '../../../packages/domain/src/commands.ts';
@@ -88,10 +89,12 @@ export async function admitWorkspaceOpen(tx: Transaction, attempt: WorkspaceAtte
     return held.open_operation_id;
   }
   let transfer: WorkspaceTransfer|undefined;
+  const reworkHistory = workspace ? await workspaceReworkHistory(tx, attempt, workspace.id) : [];
   if (workspace) {
     const interrupted = (await tx.query<Lease>('SELECT * FROM workspace_leases WHERE workspace_id=$1 ORDER BY created_at DESC,id DESC LIMIT 1', [workspace.id])).rows[0];
     if (interrupted && (interrupted.node_id !== attempt.node_id || interrupted.node_activation !== attempt.node_activation)) {
       transfer = await workspaceTransfer(tx, attempt.task_id, attempt.node_id, Number(attempt.node_activation), workspace.id, interrupted.id)
+        ?? reworkWorkspaceTransfer(attempt, workspace, interrupted.id, reworkHistory)
         ?? await serialWorkspaceTransfer(tx, attempt, workspace.id, interrupted.id);
       if (!transfer && workspace.ever_materialized) throw new CommandError('unmet_precondition', 'Interrupted workspace requires explicit activation disposition');
     }
@@ -107,11 +110,11 @@ export async function admitWorkspaceOpen(tx: Transaction, attempt: WorkspaceAtte
   await tx.query(`INSERT INTO workspace_leases(id,workspace_id,task_id,node_id,node_activation,attempt_id,dispatch_id,generation,open_operation_id)
     VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)`, [leaseId, workspace.id, attempt.task_id, attempt.node_id, attempt.node_activation, attempt.id, attempt.dispatch_id, workspace.generation, id]);
   const priorBasis = basis(workspace);
-  const descriptor: WorkspaceDescriptor = { schema_version: 1, workspace_id: workspace.id, task_id: attempt.task_id,
+  const descriptor = validate<WorkspaceDescriptor>('WorkspaceDescriptor', { schema_version: 1, workspace_id: workspace.id, task_id: attempt.task_id,
     project_id: projectId, resource_id: resourceId, runner_id: attempt.runner_id, generation: Number(workspace.generation),
     lease_id: leaseId, node_id: attempt.node_id, node_activation: Number(attempt.node_activation), open_operation_id: id,
-    resource: snapshot, ...(transfer?{transfer}:{}), ...(priorBasis ? { basis: priorBasis } : {}) };
-  validate('WorkspaceDescriptor', descriptor);
+    resource: snapshot, ...(transfer?{transfer}:{}), ...(priorBasis ? { basis: priorBasis } : {}),
+    ...(reworkHistory.length ? { rework_history: reworkHistory } : {}) });
   return insertOperation(tx, attempt, 'open_workspace', requestId, id, resourceId, descriptor);
 }
 

@@ -15,6 +15,7 @@ import {
   useTaskRead,
 } from "./task-shared.tsx";
 import type { TaskViewProps } from "./task-shared.tsx";
+import { useNodeRework } from "./node-rework.tsx";
 
 export function TaskControls(props: TaskViewProps) {
   const planning = useTaskRead<TaskPlanningStatus>(
@@ -162,6 +163,7 @@ export function NodeControls({
   status,
   ...props
 }: TaskViewProps & { status: NodeExecutionStatus }) {
+  const rework = useNodeRework(props);
   const s = status,
     scope = `node:${s.node_id}`,
     busy = Busy({
@@ -192,6 +194,10 @@ export function NodeControls({
     name: OwnerCommand["name"],
     payload: OwnerCommand["payload"] = target,
   ) => executeOwner(props, scope, name, payload, s.control_version);
+  const pendingRework = rework.data?.current;
+  if (pendingRework && (pendingRework.requester_node_id === s.node_id ||
+      pendingRework.status === 'settling' && pendingRework.affected_node_ids.includes(s.node_id)))
+    return <p className="task-muted">Upstream rework is pending. Use the rework controls above to resolve the saved request.</p>;
   if (!s.source)
     return (
       <p className="task-muted">

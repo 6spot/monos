@@ -196,6 +196,9 @@ func Envelope(raw []byte) (protocol.CommandEnvelope, error) {
 		required = []string{"artifact_id"}
 	case "block_node", "request_replan":
 		required = []string{"reason"}
+	case "request_rework":
+		required = []string{"reason"}
+		allowed["target_node_id"] = true
 	case protocol.CommitTaskTurn:
 		required = []string{"reply", "source_watermark", "routing"}
 		allowed["source_id"], allowed["input_id"] = true, true

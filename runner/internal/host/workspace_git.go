@@ -49,7 +49,7 @@ func readWorkspaceRecordAt(p, id string, owner uint32) (workspaceRecord, error) 
 	}
 	if err == nil {
 		switch r.Stage {
-		case "intent", "pinned", "promoting", "common_ready", "ready", "refresh_intent", "refresh_pinned", "cancelled":
+		case "intent", "pinned", "promoting", "common_ready", "ready", "refresh_intent", "refresh_pinned", "cancelled", "rework_intent", "rework_archiving", "rework_archived":
 		default:
 			err = fmt.Errorf("unknown workspace materialization stage")
 		}
@@ -501,7 +501,7 @@ func WorkspaceWorker(operation string, input io.Reader) (Status, error) {
 	cache, common, workspace := resourceCache(w.ResourceID), TaskWorkspacePath(w.WorkspaceID, "common"), TaskWorkspacePath(w.WorkspaceID, "worktree")
 	metadata := record.Metadata
 	lockPath := filepath.Join(Root, "launch", "workspaces", w.WorkspaceID+".writer.lock")
-	if r.WorkspaceAction == "fetch" {
+	if r.WorkspaceAction == "fetch" || r.WorkspaceAction == "history" {
 		lockPath = filepath.Join(Root, "service", "workspace-locks", w.ResourceID+".lock")
 	}
 	// Writer lock files are created with the appropriate account by the helper.
@@ -541,6 +541,17 @@ func WorkspaceWorker(operation string, input io.Reader) (Status, error) {
 		return settlementWorker(op, original.Operation, metadata, workspace, common)
 	}
 	switch r.WorkspaceAction {
+	case "history":
+		if err = seedWorkspaceHistory(cache, op); err != nil {
+			return Status{Known: true, Result: &result}, err
+		}
+	case "rework_rebuild":
+		if record.Stage != "rework_archived" || op.Workspace.Transfer == nil || op.Workspace.Transfer.Purpose == nil || *op.Workspace.Transfer.Purpose != protocol.PurposeRework {
+			return Status{Known: true, Result: &result}, fmt.Errorf("Rework rebuild lacks archived disposition")
+		}
+		if err = rebuildReworkWorkspace(workspace, common, cache, metadata, w.ReworkHistory); err != nil {
+			return Status{Known: true, Result: &result}, err
+		}
 	case "fetch":
 		var access protocol.GitHubRepositoryAccessResult
 		raw, err := io.ReadAll(io.LimitReader(input, 16385))
@@ -569,8 +580,14 @@ func WorkspaceWorker(operation string, input io.Reader) (Status, error) {
 		if err = verifyRetainedWorkspace(workspace, common, record); err != nil {
 			return Status{Known: true, Result: &result}, err
 		}
+		if err = copyWorkspaceHistory(common, cache, w.ReworkHistory); err != nil {
+			return Status{Known: true, Result: &result}, err
+		}
 	case "refresh":
 		if err = verifyRetainedWorkspace(workspace, common, record); err != nil {
+			return Status{Known: true, Result: &result}, err
+		}
+		if err = copyWorkspaceHistory(common, cache, w.ReworkHistory); err != nil {
 			return Status{Known: true, Result: &result}, err
 		}
 		if _, err = workspaceGit(common, cache, common, nil, "fetch", "--no-tags", cache, "refs/monos/pins/"+operation+"/target:refs/monos/targets/"+operation); err != nil {
@@ -597,7 +614,7 @@ func WorkspaceWorker(operation string, input io.Reader) (Status, error) {
 	}
 	result.WorkspaceID = &w.WorkspaceID
 	result.WorkspaceMetadata = &metadata
-	if r.WorkspaceAction == "checkout" || r.WorkspaceAction == "refresh" || r.WorkspaceAction == "recover" {
+	if r.WorkspaceAction == "checkout" || r.WorkspaceAction == "refresh" || r.WorkspaceAction == "recover" || r.WorkspaceAction == "rework_rebuild" {
 		result.Path = &workspace
 		result.InstructionFiles, err = instructionFiles(workspace)
 	}

@@ -219,7 +219,7 @@ suite('remote preparation durable boundary',()=>{
    const historical=(await db.pool.query('SELECT * FROM schema_migrations ORDER BY version')).rows;
    await migrate(db);await migrate(db);
    expect((await db.pool.query('SELECT * FROM schema_migrations WHERE version<=22 ORDER BY version')).rows).toEqual(historical);
-   expect((await db.pool.query('SELECT max(version) version FROM schema_migrations')).rows[0]!.version).toBe(26);
+   expect((await db.pool.query('SELECT max(version) version FROM schema_migrations')).rows[0]!.version).toBe(27);
    const names23=['publication_permission_observations','remote_preparation_items','remote_preparation_operations','remote_preparation_observations','published_result_mappings','remote_published_exposures','remote_preparation_command_receipts','github_remote_cooldowns'];
    for(const name of names23)expect((await db.pool.query(`SELECT * FROM ${name}`)).rows).toEqual([]);
    expect((await db.pool.query("SELECT column_default FROM information_schema.columns WHERE table_schema=$1 AND table_name='runners' AND column_name='remote_preparation_supported'",[namespace])).rows[0]!.column_default).toBe('false');

@@ -1,5 +1,6 @@
 import type { Transaction } from '../../../packages/db/src/index.ts';
 import type { RuntimePredecessor } from './runtime-continuation-state.ts';
+import { currentNodeRework } from './node-rework-state.ts';
 
 /** The coordinator holds the Task/Todo control lock. A prepared replacement has
  * its own source/version before it has an Attempt; the predecessor's old source
@@ -12,6 +13,7 @@ export async function preparedRuntimeSourceCurrent(
   plannedAttemptID: string,
 ): Promise<boolean> {
   if (predecessor.launch.node_execution_source) {
+    if (!predecessor.task_id || !predecessor.node_id || await currentNodeRework(tx, predecessor.task_id, predecessor.node_id)) return false;
     return !!(await tx.query(`SELECT 1 FROM node_execution_outbox s
       JOIN tasks t ON t.id=s.task_id JOIN nodes n ON n.id=s.node_id AND n.task_id=t.id
       WHERE s.planned_attempt_id=$1 AND s.task_id=$2 AND s.node_id=$3

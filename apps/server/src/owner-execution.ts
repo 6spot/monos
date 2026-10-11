@@ -1,3 +1,4 @@
+import { NodeRework } from './node-rework.ts';
 import { transaction } from '../../../packages/db/src/index.ts';
 import type { Database, Transaction } from '../../../packages/db/src/index.ts';
 import { CommandError } from '../../../packages/domain/src/commands.ts';
@@ -56,6 +57,7 @@ async function existingTerminal(tx: Transaction, attempt: Attempt): Promise<Oper
 }
 
 export async function executeOwnerAction(db: Database, token: string, command: OwnerCommand): Promise<OwnerCommandResult> {
+  if (command.name === 'apply_rework' || command.name === 'continue_without_rework') return new NodeRework(db).command(token, command);
   if ('source_id' in command.payload || command.name === 'recover_completion' || (command.name === 'cancel_task' && 'plan_id' in command.payload)) return new NodeExecution(db).command(token,command);
   if (command.name === 'start_task' || command.name === 'cancel_task' || 'planning_intent_id' in command.payload
     || (['stop_initial_planning', 'retry_initial_planning'].includes(command.name) && 'attempt_id' in command.payload

@@ -14,6 +14,7 @@ import { admitWorkspaceEffect } from './workspaces.ts';
 import { reactivateSettledNodes } from './task-records.ts';
 import { nodeDependenciesReady, serialNodeReady } from './dispatch-queue.ts';
 import { planningEvent } from './task-planning-state.ts';
+import { currentNodeRework, reactivationNodeRework } from './node-rework-state.ts';
 
 export async function bindTaskGuidance(
   tx: Transaction,
@@ -323,6 +324,8 @@ export async function advanceGuidanceFollowup(
   node: ExecutionNode,
   configurationVersion: number,
 ): Promise<void> {
+  if (await currentNodeRework(tx, task.id, node.id) ||
+      (node.state === 'COMPLETED' && await reactivationNodeRework(tx, task.id, node.id))) return;
   if((await tx.query("SELECT 1 FROM task_review_feedback WHERE task_id=$1 AND status='active'",[task.id])).rowCount)return;
   if(await specificationFrozen(tx,task.id))return;
   const pending = (

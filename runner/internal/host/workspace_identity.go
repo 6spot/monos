@@ -54,11 +54,19 @@ func validateWorkspaceScope(d protocol.Dispatch, op protocol.Operation) error {
 		return fmt.Errorf("workspace ownership mismatch")
 	}
 	if t := w.Transfer; t != nil {
-		if t.Purpose != nil && (*t.Purpose != protocol.Serial || t.FromPlanID != t.ToPlanID || t.Kind != "completed" || t.PublicationID != nil || t.ProposalID != nil) {
-			return fmt.Errorf("workspace serial transfer scope mismatch")
+		if t.Purpose != nil && (*t.Purpose != protocol.Serial && *t.Purpose != protocol.PurposeRework || t.FromPlanID != t.ToPlanID || t.PublicationID != nil || t.ProposalID != nil || *t.Purpose == protocol.Serial && t.Kind != "completed" || *t.Purpose == protocol.PurposeRework && t.Kind != "checkpoint") {
+			return fmt.Errorf("workspace same-Plan transfer scope mismatch")
 		}
 		if w.Basis == nil || d.NodeExecutionSource == nil || t.ToPlanID != d.NodeExecutionSource.PlanID || t.ToNodeID != w.NodeID || t.ToNodeActivation != w.NodeActivation || t.TaskID != w.TaskID || t.WorkspaceID != w.WorkspaceID || t.ResourceID != w.ResourceID || t.RunnerID != w.RunnerID || t.Metadata.Generation != w.Generation {
 			return fmt.Errorf("workspace transfer target source mismatch")
+		}
+	}
+	if len(w.ReworkHistory) > 0 || w.Transfer != nil && w.Transfer.Purpose != nil && *w.Transfer.Purpose == protocol.PurposeRework {
+		if d.NodeExecutionSource == nil {
+			return fmt.Errorf("workspace history requires canonical Node source")
+		}
+		if err := validateWorkspaceHistory(w, d.NodeExecutionSource.PlanID); err != nil {
+			return err
 		}
 	}
 	for _, r := range d.WorkspaceReservations.Resources {

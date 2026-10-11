@@ -9781,5 +9781,600 @@
       "to_node_activation": 1
     },
     "valid": false
-  }
+  },
+{
+  "name": "Rework infer sole dependency target",
+  "schema": "CommandEnvelope",
+  "value": {
+    "schema_version": 1,
+    "scope_id": "task",
+    "request_id": "request",
+    "expected_control_version": 2,
+    "name": "request_rework",
+    "payload": {
+      "reason": "Upstream contract is incomplete"
+    }
+  },
+  "valid": true
+},
+{
+  "name": "Rework explicit ancestor target",
+  "schema": "CommandEnvelope",
+  "value": {
+    "schema_version": 1,
+    "scope_id": "task",
+    "request_id": "request",
+    "expected_control_version": 2,
+    "name": "request_rework",
+    "payload": {
+      "reason": "Upstream contract is incomplete",
+      "target_node_id": "upstream"
+    }
+  },
+  "valid": true
+},
+{
+  "name": "Rework rejects payload {}",
+  "schema": "CommandEnvelope",
+  "value": {
+    "schema_version": 1,
+    "scope_id": "task",
+    "request_id": "request",
+    "expected_control_version": 2,
+    "name": "request_rework",
+    "payload": {}
+  },
+  "valid": false
+},
+{
+  "name": "Rework rejects payload {\"reason\": \"x\", \"target_node_id\": null}",
+  "schema": "CommandEnvelope",
+  "value": {
+    "schema_version": 1,
+    "scope_id": "task",
+    "request_id": "request",
+    "expected_control_version": 2,
+    "name": "request_rework",
+    "payload": {
+      "reason": "x",
+      "target_node_id": null
+    }
+  },
+  "valid": false
+},
+{
+  "name": "Rework rejects payload {\"reason\": \"x\", \"node_ids\": [\"upstream\"]}",
+  "schema": "CommandEnvelope",
+  "value": {
+    "schema_version": 1,
+    "scope_id": "task",
+    "request_id": "request",
+    "expected_control_version": 2,
+    "name": "request_rework",
+    "payload": {
+      "reason": "x",
+      "node_ids": [
+        "upstream"
+      ]
+    }
+  },
+  "valid": false
+},
+{
+  "name": "Rework rejects payload {\"reason\": \"x\", \"confirmation_id\": \"invented\"}",
+  "schema": "CommandEnvelope",
+  "value": {
+    "schema_version": 1,
+    "scope_id": "task",
+    "request_id": "request",
+    "expected_control_version": 2,
+    "name": "request_rework",
+    "payload": {
+      "reason": "x",
+      "confirmation_id": "invented"
+    }
+  },
+  "valid": false
+},
+{
+  "name": "Owner applies exact preserved Rework",
+  "schema": "OwnerCommand",
+  "value": {
+    "schema_version": 1,
+    "scope_id": "task",
+    "request_id": "decision",
+    "expected_control_version": 9,
+    "name": "apply_rework",
+    "payload": {
+      "rework_request_id": "rework",
+      "expected_version": 1,
+      "answer": "Repeat upstream work"
+    }
+  },
+  "valid": true
+},
+{
+  "name": "Owner continues without Rework",
+  "schema": "OwnerCommand",
+  "value": {
+    "schema_version": 1,
+    "scope_id": "task",
+    "request_id": "decision",
+    "expected_control_version": 9,
+    "name": "continue_without_rework",
+    "payload": {
+      "rework_request_id": "rework",
+      "expected_version": 1,
+      "answer": "Repeat upstream work"
+    }
+  },
+  "valid": true
+},
+{
+  "name": "Rework Owner decision requires rework_request_id",
+  "schema": "OwnerCommand",
+  "value": {
+    "schema_version": 1,
+    "scope_id": "task",
+    "request_id": "decision",
+    "expected_control_version": 9,
+    "name": "continue_without_rework",
+    "payload": {
+      "expected_version": 1,
+      "answer": "Repeat upstream work"
+    }
+  },
+  "valid": false
+},
+{
+  "name": "Rework Owner decision requires expected_version",
+  "schema": "OwnerCommand",
+  "value": {
+    "schema_version": 1,
+    "scope_id": "task",
+    "request_id": "decision",
+    "expected_control_version": 9,
+    "name": "continue_without_rework",
+    "payload": {
+      "rework_request_id": "rework",
+      "answer": "Repeat upstream work"
+    }
+  },
+  "valid": false
+},
+{
+  "name": "Rework outcome limit wait",
+  "schema": "NodeReworkOutcome",
+  "value": {
+    "rework_request_id": "rework",
+    "status": "limit_blocked",
+    "version": 1,
+    "target_node_id": "upstream",
+    "affected_node_ids": [
+      "upstream",
+      "requester"
+    ],
+    "automatic_requests_used": 3,
+    "limit": 3
+  },
+  "valid": true
+},
+{
+  "name": "Rework budget exceeds limit",
+  "schema": "NodeReworkOutcome",
+  "value": {
+    "rework_request_id": "rework",
+    "status": "limit_blocked",
+    "version": 1,
+    "target_node_id": "upstream",
+    "affected_node_ids": [
+      "upstream",
+      "requester"
+    ],
+    "automatic_requests_used": 4,
+    "limit": 3
+  },
+  "valid": false
+},
+{
+  "name": "unknown Owner receipt cannot claim Rework",
+  "schema": "OwnerCommandResult",
+  "value": {
+    "schema_version": 1,
+    "request_id": "decision",
+    "status": "unknown",
+    "rework_outcome": {
+      "rework_request_id": "rework",
+      "status": "limit_blocked",
+      "version": 1,
+      "target_node_id": "upstream",
+      "affected_node_ids": [
+        "upstream",
+        "requester"
+      ],
+      "automatic_requests_used": 3,
+      "limit": 3
+    }
+  },
+  "valid": false
+},
+{
+  "name": "Rework checkpoint transfer retains exact request and activation map",
+  "schema": "WorkspaceTransfer",
+  "value": {
+    "workspace_id": "workspace",
+    "task_id": "task",
+    "resource_id": "resource",
+    "runner_id": "runner",
+    "from_plan_id": "plan",
+    "from_node_id": "upstream",
+    "from_attempt_id": "old-attempt",
+    "from_lease_id": "old-lease",
+    "settle_operation_id": "stop",
+    "from_node_activation": 1,
+    "kind": "checkpoint",
+    "metadata": {
+      "generation": 1,
+      "storage_id": "storage",
+      "lease_id": "old-lease",
+      "repository_identity": "https://example.com/repo.git",
+      "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "target_branch": "main",
+      "target_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "finalized_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "checkpoint": {
+        "operation_id": "stop",
+        "head_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "tree_id": "cccccccccccccccccccccccccccccccccccccccc",
+        "commit_id": "dddddddddddddddddddddddddddddddddddddddd"
+      }
+    },
+    "to_plan_id": "plan",
+    "to_node_id": "next",
+    "to_node_activation": 2,
+    "purpose": "rework",
+    "rework_request_id": "rework",
+    "rework_command_request_id": "request",
+    "rework_activations": [
+      {
+        "node_id": "upstream",
+        "from_activation": 1,
+        "to_activation": 2
+      },
+      {
+        "node_id": "next",
+        "from_activation": 1,
+        "to_activation": 2
+      }
+    ]
+  },
+  "valid": true
+},
+{
+  "name": "Rework transfer requires rework_request_id",
+  "schema": "WorkspaceTransfer",
+  "value": {
+    "workspace_id": "workspace",
+    "task_id": "task",
+    "resource_id": "resource",
+    "runner_id": "runner",
+    "from_plan_id": "plan",
+    "from_node_id": "upstream",
+    "from_attempt_id": "old-attempt",
+    "from_lease_id": "old-lease",
+    "settle_operation_id": "stop",
+    "from_node_activation": 1,
+    "kind": "checkpoint",
+    "metadata": {
+      "generation": 1,
+      "storage_id": "storage",
+      "lease_id": "old-lease",
+      "repository_identity": "https://example.com/repo.git",
+      "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "target_branch": "main",
+      "target_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "finalized_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "checkpoint": {
+        "operation_id": "stop",
+        "head_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "tree_id": "cccccccccccccccccccccccccccccccccccccccc",
+        "commit_id": "dddddddddddddddddddddddddddddddddddddddd"
+      }
+    },
+    "to_plan_id": "plan",
+    "to_node_id": "next",
+    "to_node_activation": 2,
+    "purpose": "rework",
+    "rework_command_request_id": "request",
+    "rework_activations": [
+      {
+        "node_id": "upstream",
+        "from_activation": 1,
+        "to_activation": 2
+      },
+      {
+        "node_id": "next",
+        "from_activation": 1,
+        "to_activation": 2
+      }
+    ]
+  },
+  "valid": false
+},
+{
+  "name": "Rework transfer requires rework_command_request_id",
+  "schema": "WorkspaceTransfer",
+  "value": {
+    "workspace_id": "workspace",
+    "task_id": "task",
+    "resource_id": "resource",
+    "runner_id": "runner",
+    "from_plan_id": "plan",
+    "from_node_id": "upstream",
+    "from_attempt_id": "old-attempt",
+    "from_lease_id": "old-lease",
+    "settle_operation_id": "stop",
+    "from_node_activation": 1,
+    "kind": "checkpoint",
+    "metadata": {
+      "generation": 1,
+      "storage_id": "storage",
+      "lease_id": "old-lease",
+      "repository_identity": "https://example.com/repo.git",
+      "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "target_branch": "main",
+      "target_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "finalized_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "checkpoint": {
+        "operation_id": "stop",
+        "head_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "tree_id": "cccccccccccccccccccccccccccccccccccccccc",
+        "commit_id": "dddddddddddddddddddddddddddddddddddddddd"
+      }
+    },
+    "to_plan_id": "plan",
+    "to_node_id": "next",
+    "to_node_activation": 2,
+    "purpose": "rework",
+    "rework_request_id": "rework",
+    "rework_activations": [
+      {
+        "node_id": "upstream",
+        "from_activation": 1,
+        "to_activation": 2
+      },
+      {
+        "node_id": "next",
+        "from_activation": 1,
+        "to_activation": 2
+      }
+    ]
+  },
+  "valid": false
+},
+{
+  "name": "Rework transfer requires rework_activations",
+  "schema": "WorkspaceTransfer",
+  "value": {
+    "workspace_id": "workspace",
+    "task_id": "task",
+    "resource_id": "resource",
+    "runner_id": "runner",
+    "from_plan_id": "plan",
+    "from_node_id": "upstream",
+    "from_attempt_id": "old-attempt",
+    "from_lease_id": "old-lease",
+    "settle_operation_id": "stop",
+    "from_node_activation": 1,
+    "kind": "checkpoint",
+    "metadata": {
+      "generation": 1,
+      "storage_id": "storage",
+      "lease_id": "old-lease",
+      "repository_identity": "https://example.com/repo.git",
+      "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "target_branch": "main",
+      "target_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "finalized_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "checkpoint": {
+        "operation_id": "stop",
+        "head_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "tree_id": "cccccccccccccccccccccccccccccccccccccccc",
+        "commit_id": "dddddddddddddddddddddddddddddddddddddddd"
+      }
+    },
+    "to_plan_id": "plan",
+    "to_node_id": "next",
+    "to_node_activation": 2,
+    "purpose": "rework",
+    "rework_request_id": "rework",
+    "rework_command_request_id": "request"
+  },
+  "valid": false
+},
+{
+  "name": "Rework rejects fabricated Replan publication",
+  "schema": "WorkspaceTransfer",
+  "value": {
+    "workspace_id": "workspace",
+    "task_id": "task",
+    "resource_id": "resource",
+    "runner_id": "runner",
+    "from_plan_id": "plan",
+    "from_node_id": "upstream",
+    "from_attempt_id": "old-attempt",
+    "from_lease_id": "old-lease",
+    "settle_operation_id": "stop",
+    "from_node_activation": 1,
+    "kind": "checkpoint",
+    "metadata": {
+      "generation": 1,
+      "storage_id": "storage",
+      "lease_id": "old-lease",
+      "repository_identity": "https://example.com/repo.git",
+      "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "target_branch": "main",
+      "target_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "finalized_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "checkpoint": {
+        "operation_id": "stop",
+        "head_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "tree_id": "cccccccccccccccccccccccccccccccccccccccc",
+        "commit_id": "dddddddddddddddddddddddddddddddddddddddd"
+      }
+    },
+    "to_plan_id": "plan",
+    "to_node_id": "next",
+    "to_node_activation": 2,
+    "purpose": "rework",
+    "rework_request_id": "rework",
+    "rework_command_request_id": "request",
+    "rework_activations": [
+      {
+        "node_id": "upstream",
+        "from_activation": 1,
+        "to_activation": 2
+      },
+      {
+        "node_id": "next",
+        "from_activation": 1,
+        "to_activation": 2
+      }
+    ],
+    "publication_id": "invented"
+  },
+  "valid": false
+},
+{
+  "name": "Serial handoff rejects Rework authority",
+  "schema": "WorkspaceTransfer",
+  "value": {
+    "workspace_id": "workspace",
+    "task_id": "task",
+    "resource_id": "resource",
+    "runner_id": "runner",
+    "from_plan_id": "plan",
+    "from_node_id": "upstream",
+    "from_attempt_id": "old-attempt",
+    "from_lease_id": "old-lease",
+    "settle_operation_id": "stop",
+    "from_node_activation": 1,
+    "kind": "checkpoint",
+    "metadata": {
+      "generation": 1,
+      "storage_id": "storage",
+      "lease_id": "old-lease",
+      "repository_identity": "https://example.com/repo.git",
+      "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "target_branch": "main",
+      "target_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "finalized_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "checkpoint": {
+        "operation_id": "stop",
+        "head_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "tree_id": "cccccccccccccccccccccccccccccccccccccccc",
+        "commit_id": "dddddddddddddddddddddddddddddddddddddddd"
+      }
+    },
+    "to_plan_id": "plan",
+    "to_node_id": "next",
+    "to_node_activation": 2,
+    "purpose": "serial",
+    "rework_request_id": "rework",
+    "rework_command_request_id": "request",
+    "rework_activations": [
+      {
+        "node_id": "upstream",
+        "from_activation": 1,
+        "to_activation": 2
+      },
+      {
+        "node_id": "next",
+        "from_activation": 1,
+        "to_activation": 2
+      }
+    ]
+  },
+  "valid": false
+},
+{
+  "name": "Rework historical checkpoint descriptor",
+  "schema": "WorkspaceReworkHistory",
+  "value": {
+    "rework_request_id": "rework",
+    "rework_command_request_id": "request",
+    "from_node_id": "upstream",
+    "from_node_activation": 1,
+    "from_attempt_id": "old-attempt",
+    "from_lease_id": "old-lease",
+    "settle_operation_id": "stop",
+    "metadata": {
+      "generation": 1,
+      "storage_id": "storage",
+      "lease_id": "old-lease",
+      "repository_identity": "https://example.com/repo.git",
+      "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "target_branch": "main",
+      "target_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "finalized_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "checkpoint": {
+        "operation_id": "stop",
+        "head_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "tree_id": "cccccccccccccccccccccccccccccccccccccccc",
+        "commit_id": "dddddddddddddddddddddddddddddddddddddddd"
+      }
+    },
+    "rework_activations": [
+      {
+        "node_id": "upstream",
+        "from_activation": 1,
+        "to_activation": 2
+      },
+      {
+        "node_id": "next",
+        "from_activation": 1,
+        "to_activation": 2
+      }
+    ],
+    "plan_id": "plan"
+  },
+  "valid": true
+},
+{
+  "name": "Rework history requires actual checkpoint",
+  "schema": "WorkspaceReworkHistory",
+  "value": {
+    "rework_request_id": "rework",
+    "rework_command_request_id": "request",
+    "from_node_id": "upstream",
+    "from_node_activation": 1,
+    "from_attempt_id": "old-attempt",
+    "from_lease_id": "old-lease",
+    "settle_operation_id": "stop",
+    "metadata": {
+      "generation": 1,
+      "storage_id": "storage",
+      "lease_id": "old-lease",
+      "repository_identity": "https://example.com/repo.git",
+      "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "target_branch": "main",
+      "target_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "finalized_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    "rework_activations": [
+      {
+        "node_id": "upstream",
+        "from_activation": 1,
+        "to_activation": 2
+      },
+      {
+        "node_id": "next",
+        "from_activation": 1,
+        "to_activation": 2
+      }
+    ],
+    "plan_id": "plan"
+  },
+  "valid": false
+}
 ]

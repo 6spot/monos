@@ -21,6 +21,8 @@ func TestPlannerCLIUsesNativeJournalChannel(t *testing.T) {
 		{"publish_artifact", `{"artifact_id":"artifact","title":"HTML result","content":{"text":"<h1>Hello</h1>","media_type":"text/html"}}`},
 		{"read_artifact", `{"artifact_id":"artifact"}`},
 		{"request_replan", `{"reason":"Current graph is insufficient"}`},
+		{"request_rework", `{"reason":"The sole upstream result needs correction"}`},
+		{"request_rework", `{"target_node_id":"upstream","reason":"Correct upstream contract"}`},
 		{"prepare_replan", `{"replan_request_id":"replan","source_id":"source","proposal_id":"proposal","plan_id":"new-plan","basis":{"control_version":9,"specification_id":"spec","plan_id":"old-plan"},"nodes":[{"node_id":"new-node","role_id":"role","goal":"修复完整目标","dependencies":[],"expected_outputs":[]}],"summary":"Replace insufficient work","impact":{"node":{"node_id":"old-node","node_activation":1,"source_id":null,"completion_operation_id":null,"completion_manifest_digest":null,"disposition":"replace","target_node_id":"new-node","target_node_activation":1},"guidance":[],"holds":[],"workspaces":[]}}`},
 		{"raise_planning_issue", `{"replan_request_id":"replan","source_id":"source","reason":"Need Owner direction"}`},
 		{"block_node", `{"reason":"Owner answer needed"}`},

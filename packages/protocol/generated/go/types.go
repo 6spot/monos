@@ -29,6 +29,8 @@ type ResultPath string
 
 type DeliveryRef string
 
+type ReworkActivationMap []NodeReworkActivation
+
 type CommandEnvelope struct {
 	ExpectedControlVersion int64               `json:"expected_control_version"`
 	Name                   CommandEnvelopeName `json:"name"`
@@ -75,6 +77,7 @@ type CommandPayload struct {
 	Specification           *string             `json:"specification,omitempty"`
 	Summary                 *string             `json:"summary,omitempty"`
 	Supersedes              *string             `json:"supersedes,omitempty"`
+	TargetNodeID            *string             `json:"target_node_id,omitempty"`
 	TaskPreview             *TaskPreview        `json:"task_preview,omitempty"`
 	Title                   *string             `json:"title,omitempty"`
 	WorkingRequirementState *string             `json:"working_requirement_state,omitempty"`
@@ -288,6 +291,7 @@ type EffectResult struct {
 	Reply                      *string                     `json:"reply,omitempty"`
 	RequirementOperationID     *string                     `json:"requirement_operation_id,omitempty"`
 	ResolvedWatermark          *int64                      `json:"resolved_watermark,omitempty"`
+	ReworkOutcome              *NodeReworkOutcome          `json:"rework_outcome,omitempty"`
 	SourceID                   *string                     `json:"source_id,omitempty"`
 	SourceWatermark            *int64                      `json:"source_watermark,omitempty"`
 	TaskContext                *TaskContext                `json:"task_context,omitempty"`
@@ -358,6 +362,16 @@ type ReplanOutcome struct {
 	RequirementContentDigest *string           `json:"requirement_content_digest,omitempty"`
 	RequirementProposalID    *string           `json:"requirement_proposal_id,omitempty"`
 	SourceID                 *string           `json:"source_id,omitempty"`
+}
+
+type NodeReworkOutcome struct {
+	AffectedNodeIDS       []string                `json:"affected_node_ids"`
+	AutomaticRequestsUsed int64                   `json:"automatic_requests_used"`
+	Limit                 int64                   `json:"limit"`
+	ReworkRequestID       string                  `json:"rework_request_id"`
+	Status                NodeReworkOutcomeStatus `json:"status"`
+	TargetNodeID          string                  `json:"target_node_id"`
+	Version               int64                   `json:"version"`
 }
 
 type TaskContext struct {
@@ -550,20 +564,21 @@ type Operation struct {
 }
 
 type WorkspaceDescriptor struct {
-	Basis           *WorkspaceBasis    `json:"basis,omitempty"`
-	Generation      int64              `json:"generation"`
-	LeaseID         string             `json:"lease_id"`
-	NodeActivation  int64              `json:"node_activation"`
-	NodeID          string             `json:"node_id"`
-	OpenOperationID string             `json:"open_operation_id"`
-	ProjectID       string             `json:"project_id"`
-	Resource        WorkspaceResource  `json:"resource"`
-	ResourceID      string             `json:"resource_id"`
-	RunnerID        string             `json:"runner_id"`
-	SchemaVersion   int64              `json:"schema_version"`
-	TaskID          string             `json:"task_id"`
-	Transfer        *WorkspaceTransfer `json:"transfer,omitempty"`
-	WorkspaceID     string             `json:"workspace_id"`
+	Basis           *WorkspaceBasis          `json:"basis,omitempty"`
+	Generation      int64                    `json:"generation"`
+	LeaseID         string                   `json:"lease_id"`
+	NodeActivation  int64                    `json:"node_activation"`
+	NodeID          string                   `json:"node_id"`
+	OpenOperationID string                   `json:"open_operation_id"`
+	ProjectID       string                   `json:"project_id"`
+	Resource        WorkspaceResource        `json:"resource"`
+	ResourceID      string                   `json:"resource_id"`
+	ReworkHistory   []WorkspaceReworkHistory `json:"rework_history,omitempty"`
+	RunnerID        string                   `json:"runner_id"`
+	SchemaVersion   int64                    `json:"schema_version"`
+	TaskID          string                   `json:"task_id"`
+	Transfer        *WorkspaceTransfer       `json:"transfer,omitempty"`
+	WorkspaceID     string                   `json:"workspace_id"`
 }
 
 type WorkspaceBasis struct {
@@ -584,6 +599,25 @@ type WorkspaceResource struct {
 	ResourceID         string                      `json:"resource_id"`
 }
 
+type WorkspaceReworkHistory struct {
+	FromAttemptID          string                 `json:"from_attempt_id"`
+	FromLeaseID            string                 `json:"from_lease_id"`
+	FromNodeActivation     int64                  `json:"from_node_activation"`
+	FromNodeID             string                 `json:"from_node_id"`
+	Metadata               WorkspaceMetadata      `json:"metadata"`
+	PlanID                 string                 `json:"plan_id"`
+	ReworkActivations      []NodeReworkActivation `json:"rework_activations"`
+	ReworkCommandRequestID string                 `json:"rework_command_request_id"`
+	ReworkRequestID        string                 `json:"rework_request_id"`
+	SettleOperationID      string                 `json:"settle_operation_id"`
+}
+
+type NodeReworkActivation struct {
+	FromActivation int64  `json:"from_activation"`
+	NodeID         string `json:"node_id"`
+	ToActivation   int64  `json:"to_activation"`
+}
+
 type WorkspaceTransfer struct {
 	CompletionManifestDigest *string                   `json:"completion_manifest_digest,omitempty"`
 	CompletionOperationID    *string                   `json:"completion_operation_id,omitempty"`
@@ -599,6 +633,9 @@ type WorkspaceTransfer struct {
 	PublicationID            *string                   `json:"publication_id,omitempty"`
 	Purpose                  *WorkspaceTransferPurpose `json:"purpose,omitempty"`
 	ResourceID               string                    `json:"resource_id"`
+	ReworkActivations        []NodeReworkActivation    `json:"rework_activations,omitempty"`
+	ReworkCommandRequestID   *string                   `json:"rework_command_request_id,omitempty"`
+	ReworkRequestID          *string                   `json:"rework_request_id,omitempty"`
 	RunnerID                 string                    `json:"runner_id"`
 	SettleOperationID        string                    `json:"settle_operation_id"`
 	TaskID                   string                    `json:"task_id"`
@@ -1047,6 +1084,8 @@ type OwnerCommandPayload struct {
 	CompletionIdentityDigest *string      `json:"completion_identity_digest,omitempty"`
 	Mode                     *PayloadMode `json:"mode,omitempty"`
 	OperationID              *string      `json:"operation_id,omitempty"`
+	ExpectedVersion          *int64       `json:"expected_version,omitempty"`
+	ReworkRequestID          *string      `json:"rework_request_id,omitempty"`
 }
 
 type OwnerCommandResult struct {
@@ -1060,6 +1099,7 @@ type OwnerCommandResult struct {
 	PlanningIntentID *string                  `json:"planning_intent_id,omitempty"`
 	ProposalID       *string                  `json:"proposal_id,omitempty"`
 	RequestID        string                   `json:"request_id"`
+	ReworkOutcome    *NodeReworkOutcome       `json:"rework_outcome,omitempty"`
 	SchemaVersion    int64                    `json:"schema_version"`
 	SourceID         *string                  `json:"source_id,omitempty"`
 	Status           OwnerCommandResultStatus `json:"status"`
@@ -3191,6 +3231,66 @@ type ReviewInputRouting struct {
 	Text            *string                `json:"text,omitempty"`
 }
 
+type NodeReworkStatus struct {
+	AutomaticRequestsUsed int64              `json:"automatic_requests_used"`
+	Current               *NodeReworkSummary `json:"current"`
+	Limit                 int64              `json:"limit"`
+	SchemaVersion         int64              `json:"schema_version"`
+	TaskID                string             `json:"task_id"`
+}
+
+type NodeReworkSummary struct {
+	AffectedNodeIDS         []string                `json:"affected_node_ids"`
+	AutomaticRequestsUsed   int64                   `json:"automatic_requests_used"`
+	CanApply                bool                    `json:"can_apply"`
+	CanContinue             bool                    `json:"can_continue"`
+	Limit                   int64                   `json:"limit"`
+	Reason                  string                  `json:"reason"`
+	RequesterNodeActivation int64                   `json:"requester_node_activation"`
+	RequesterNodeID         string                  `json:"requester_node_id"`
+	ReworkRequestID         string                  `json:"rework_request_id"`
+	Status                  NodeReworkOutcomeStatus `json:"status"`
+	StopOperationID         string                  `json:"stop_operation_id"`
+	TargetNodeID            string                  `json:"target_node_id"`
+	Version                 int64                   `json:"version"`
+	WaitingReason           *string                 `json:"waiting_reason"`
+}
+
+type RequestRework struct {
+	Reason       string  `json:"reason"`
+	TargetNodeID *string `json:"target_node_id,omitempty"`
+}
+
+type OwnerApplyReworkCommand struct {
+	ExpectedControlVersion int64                          `json:"expected_control_version"`
+	Name                   OwnerApplyReworkCommandName    `json:"name"`
+	Payload                OwnerApplyReworkCommandPayload `json:"payload"`
+	RequestID              string                         `json:"request_id"`
+	SchemaVersion          int64                          `json:"schema_version"`
+	ScopeID                string                         `json:"scope_id"`
+}
+
+type OwnerApplyReworkCommandPayload struct {
+	Answer          *string `json:"answer,omitempty"`
+	ExpectedVersion int64   `json:"expected_version"`
+	ReworkRequestID string  `json:"rework_request_id"`
+}
+
+type OwnerContinueWithoutReworkCommand struct {
+	ExpectedControlVersion int64                                    `json:"expected_control_version"`
+	Name                   OwnerContinueWithoutReworkCommandName    `json:"name"`
+	Payload                OwnerContinueWithoutReworkCommandPayload `json:"payload"`
+	RequestID              string                                   `json:"request_id"`
+	SchemaVersion          int64                                    `json:"schema_version"`
+	ScopeID                string                                   `json:"scope_id"`
+}
+
+type OwnerContinueWithoutReworkCommandPayload struct {
+	Answer          *string `json:"answer,omitempty"`
+	ExpectedVersion int64   `json:"expected_version"`
+	ReworkRequestID string  `json:"rework_request_id"`
+}
+
 type CommandEnvelopeName string
 
 const (
@@ -3204,6 +3304,7 @@ const (
 	NameOpenWorkspace                CommandEnvelopeName = "open_workspace"
 	NamePrepareReplan                CommandEnvelopeName = "prepare_replan"
 	NamePrepareSpecificationRevision CommandEnvelopeName = "prepare_specification_revision"
+	NameRequestRework                CommandEnvelopeName = "request_rework"
 	NameResolveReviewInput           CommandEnvelopeName = "resolve_review_input"
 	PublishArtifact                  CommandEnvelopeName = "publish_artifact"
 	PublishExecutionPlan             CommandEnvelopeName = "publish_execution_plan"
@@ -3328,6 +3429,16 @@ const (
 	TentacledIssue ReplanOutcomeKind = "issue"
 )
 
+type NodeReworkOutcomeStatus string
+
+const (
+	Applied         NodeReworkOutcomeStatus = "applied"
+	Continued       NodeReworkOutcomeStatus = "continued"
+	LimitBlocked    NodeReworkOutcomeStatus = "limit_blocked"
+	PurpleCancelled NodeReworkOutcomeStatus = "cancelled"
+	PurpleSettling  NodeReworkOutcomeStatus = "settling"
+)
+
 type WorkspaceUnavailableReason string
 
 const (
@@ -3418,7 +3529,7 @@ type OpenStateEnum string
 
 const (
 	FluffyAdmitted  OpenStateEnum = "admitted"
-	PurpleCancelled OpenStateEnum = "cancelled"
+	FluffyCancelled OpenStateEnum = "cancelled"
 	PurpleRecovery  OpenStateEnum = "recovery"
 	PurpleSucceeded OpenStateEnum = "succeeded"
 )
@@ -3426,7 +3537,8 @@ const (
 type WorkspaceTransferPurpose string
 
 const (
-	Serial WorkspaceTransferPurpose = "serial"
+	PurposeRework WorkspaceTransferPurpose = "rework"
+	Serial        WorkspaceTransferPurpose = "serial"
 )
 
 type FailureKind string
@@ -3751,8 +3863,8 @@ const (
 type TaskProposalAction string
 
 const (
-	ApplyRework                                   TaskProposalAction = "apply_rework"
 	TaskProposalActionAcceptDelivery              TaskProposalAction = "accept_delivery"
+	TaskProposalActionApplyRework                 TaskProposalAction = "apply_rework"
 	TaskProposalActionApplySpecificationRevision  TaskProposalAction = "apply_specification_revision"
 	TaskProposalActionOverridePublicationFindings TaskProposalAction = "override_publication_findings"
 	TaskProposalActionPublishReplan               TaskProposalAction = "publish_replan"
@@ -3761,15 +3873,17 @@ const (
 type OwnerCommandName string
 
 const (
-	PurpleCancelTask           OwnerCommandName = "cancel_task"
-	PurpleConfirmProposal      OwnerCommandName = "confirm_proposal"
-	PurpleContinueNode         OwnerCommandName = "continue_node"
-	PurpleRecoverCompletion    OwnerCommandName = "recover_completion"
-	PurpleRetryInitialPlanning OwnerCommandName = "retry_initial_planning"
-	PurpleRetryNode            OwnerCommandName = "retry_node"
-	PurpleStartTask            OwnerCommandName = "start_task"
-	PurpleStopInitialPlanning  OwnerCommandName = "stop_initial_planning"
-	PurpleStopNode             OwnerCommandName = "stop_node"
+	PurpleApplyRework           OwnerCommandName = "apply_rework"
+	PurpleCancelTask            OwnerCommandName = "cancel_task"
+	PurpleConfirmProposal       OwnerCommandName = "confirm_proposal"
+	PurpleContinueNode          OwnerCommandName = "continue_node"
+	PurpleContinueWithoutRework OwnerCommandName = "continue_without_rework"
+	PurpleRecoverCompletion     OwnerCommandName = "recover_completion"
+	PurpleRetryInitialPlanning  OwnerCommandName = "retry_initial_planning"
+	PurpleRetryNode             OwnerCommandName = "retry_node"
+	PurpleStartTask             OwnerCommandName = "start_task"
+	PurpleStopInitialPlanning   OwnerCommandName = "stop_initial_planning"
+	PurpleStopNode              OwnerCommandName = "stop_node"
 )
 
 type PayloadMode string
@@ -3835,11 +3949,11 @@ const (
 type AttemptStatusState string
 
 const (
-	Failed             AttemptStatusState = "FAILED"
-	FluffyRUNNING      AttemptStatusState = "RUNNING"
-	Queued             AttemptStatusState = "QUEUED"
-	Succeeded          AttemptStatusState = "SUCCEEDED"
-	TentacledCANCELLED AttemptStatusState = "CANCELLED"
+	Failed          AttemptStatusState = "FAILED"
+	FluffyRUNNING   AttemptStatusState = "RUNNING"
+	Queued          AttemptStatusState = "QUEUED"
+	StickyCANCELLED AttemptStatusState = "CANCELLED"
+	Succeeded       AttemptStatusState = "SUCCEEDED"
 )
 
 type OwnerConfirmProposalCommandName string
@@ -3916,10 +4030,10 @@ const (
 type DiscussionSourceStatus string
 
 const (
+	FluffySettling    DiscussionSourceStatus = "settling"
 	PurpleInterrupted DiscussionSourceStatus = "interrupted"
 	PurpleProcessing  DiscussionSourceStatus = "processing"
 	PurpleQueued      DiscussionSourceStatus = "queued"
-	PurpleSettling    DiscussionSourceStatus = "settling"
 )
 
 type DiscussionSubmitCommandName string
@@ -4008,23 +4122,23 @@ type TaskPreviewStatusState string
 
 const (
 	Eligible         TaskPreviewStatusState = "eligible"
+	IndigoCancelled  TaskPreviewStatusState = "cancelled"
 	ProjectRequired  TaskPreviewStatusState = "project_required"
 	StateCreated     TaskPreviewStatusState = "created"
 	StateStale       TaskPreviewStatusState = "stale"
 	StateUnavailable TaskPreviewStatusState = "unavailable"
-	StickyCancelled  TaskPreviewStatusState = "cancelled"
 )
 
 type TaskOverviewState string
 
 const (
-	FluffyCANCELLED TaskOverviewState = "CANCELLED"
-	Planning        TaskOverviewState = "PLANNING"
-	PurpleBLOCKED   TaskOverviewState = "BLOCKED"
-	PurpleCOMPLETED TaskOverviewState = "COMPLETED"
-	PurpleRUNNING   TaskOverviewState = "RUNNING"
-	ReplanRequired  TaskOverviewState = "REPLAN_REQUIRED"
-	Review          TaskOverviewState = "REVIEW"
+	Planning           TaskOverviewState = "PLANNING"
+	PurpleBLOCKED      TaskOverviewState = "BLOCKED"
+	PurpleCOMPLETED    TaskOverviewState = "COMPLETED"
+	PurpleRUNNING      TaskOverviewState = "RUNNING"
+	ReplanRequired     TaskOverviewState = "REPLAN_REQUIRED"
+	Review             TaskOverviewState = "REVIEW"
+	TentacledCANCELLED TaskOverviewState = "CANCELLED"
 )
 
 type RepositoryAuthenticationKind string
@@ -4062,13 +4176,13 @@ const (
 	FluffyProcessing  PlanningStatusEnum = "processing"
 	FluffyPublished   PlanningStatusEnum = "published"
 	FluffyQueued      PlanningStatusEnum = "queued"
-	FluffySettling    PlanningStatusEnum = "settling"
-	IndigoCancelled   PlanningStatusEnum = "cancelled"
+	IndecentCancelled PlanningStatusEnum = "cancelled"
 	NotStarted        PlanningStatusEnum = "not_started"
 	PurplePending     PlanningStatusEnum = "pending"
 	StickyIssue       PlanningStatusEnum = "issue"
 	StickyUnavailable PlanningStatusEnum = "unavailable"
 	Stopped           PlanningStatusEnum = "stopped"
+	TentacledSettling PlanningStatusEnum = "settling"
 )
 
 type OwnerRecoverCompletionCommandName string
@@ -4080,11 +4194,11 @@ const (
 type NodeExecutionStatusState string
 
 const (
-	FluffyBLOCKED     NodeExecutionStatusState = "BLOCKED"
-	FluffyCOMPLETED   NodeExecutionStatusState = "COMPLETED"
-	IndecentCANCELLED NodeExecutionStatusState = "CANCELLED"
-	Pending           NodeExecutionStatusState = "PENDING"
-	TentacledRUNNING  NodeExecutionStatusState = "RUNNING"
+	FluffyBLOCKED      NodeExecutionStatusState = "BLOCKED"
+	FluffyCOMPLETED    NodeExecutionStatusState = "COMPLETED"
+	HilariousCANCELLED NodeExecutionStatusState = "CANCELLED"
+	Pending            NodeExecutionStatusState = "PENDING"
+	TentacledRUNNING   NodeExecutionStatusState = "RUNNING"
 )
 
 type TaskConversationCommandName string
@@ -4134,18 +4248,18 @@ const (
 type RequirementChangeSummaryStatus string
 
 const (
-	AmbitiousCancelled RequirementChangeSummaryStatus = "cancelled"
-	FluffyWithdrawn    RequirementChangeSummaryStatus = "withdrawn"
-	StickyPublished    RequirementChangeSummaryStatus = "published"
-	TentacledSettling  RequirementChangeSummaryStatus = "settling"
-	Withdrawing        RequirementChangeSummaryStatus = "withdrawing"
+	CunningCancelled RequirementChangeSummaryStatus = "cancelled"
+	FluffyWithdrawn  RequirementChangeSummaryStatus = "withdrawn"
+	StickyPublished  RequirementChangeSummaryStatus = "published"
+	StickySettling   RequirementChangeSummaryStatus = "settling"
+	Withdrawing      RequirementChangeSummaryStatus = "withdrawing"
 )
 
 type RequirementProposalSummaryStatus string
 
 const (
+	AmbitiousCancelled RequirementProposalSummaryStatus = "cancelled"
 	FluffyPending      RequirementProposalSummaryStatus = "pending"
-	HilariousCancelled RequirementProposalSummaryStatus = "cancelled"
 	PurpleWithdrawn    RequirementProposalSummaryStatus = "withdrawn"
 	TentacledPublished RequirementProposalSummaryStatus = "published"
 )
@@ -4153,9 +4267,9 @@ const (
 type RequirementChangeEffectState string
 
 const (
-	CunningCancelled RequirementChangeEffectState = "cancelled"
 	FluffyRecovery   RequirementChangeEffectState = "recovery"
 	FluffySucceeded  RequirementChangeEffectState = "succeeded"
+	MagentaCancelled RequirementChangeEffectState = "cancelled"
 	StateRunning     RequirementChangeEffectState = "running"
 	StickyAdmitted   RequirementChangeEffectState = "admitted"
 )
@@ -4174,8 +4288,8 @@ type ReplanRequestSummaryStatus string
 
 const (
 	Dismissed        ReplanRequestSummaryStatus = "dismissed"
+	FriskyCancelled  ReplanRequestSummaryStatus = "cancelled"
 	IndigoPublished  ReplanRequestSummaryStatus = "published"
-	MagentaCancelled ReplanRequestSummaryStatus = "cancelled"
 	TentacledPending ReplanRequestSummaryStatus = "pending"
 )
 
@@ -4328,10 +4442,10 @@ const (
 type RemotePreparationRecordStatus string
 
 const (
+	BraggadociousCancelled       RemotePreparationRecordStatus = "cancelled"
 	CancelCleanup                RemotePreparationRecordStatus = "cancel_cleanup"
 	FluffyPreparing              RemotePreparationRecordStatus = "preparing"
 	LocalOnly                    RemotePreparationRecordStatus = "local_only"
-	MischievousCancelled         RemotePreparationRecordStatus = "cancelled"
 	PausedInput                  RemotePreparationRecordStatus = "paused_input"
 	PurpleFailed                 RemotePreparationRecordStatus = "failed"
 	PurpleReconciling            RemotePreparationRecordStatus = "reconciling"
@@ -4367,13 +4481,13 @@ const (
 type RemotePreparationCheckState string
 
 const (
-	FriskyCancelled RemotePreparationCheckState = "cancelled"
-	IndecentPending RemotePreparationCheckState = "pending"
-	IndigoUnknown   RemotePreparationCheckState = "unknown"
-	StateFailure    RemotePreparationCheckState = "failure"
-	StateNeutral    RemotePreparationCheckState = "neutral"
-	StateSkipped    RemotePreparationCheckState = "skipped"
-	StateSuccess    RemotePreparationCheckState = "success"
+	IndecentPending      RemotePreparationCheckState = "pending"
+	IndigoUnknown        RemotePreparationCheckState = "unknown"
+	MischievousCancelled RemotePreparationCheckState = "cancelled"
+	StateFailure         RemotePreparationCheckState = "failure"
+	StateNeutral         RemotePreparationCheckState = "neutral"
+	StateSkipped         RemotePreparationCheckState = "skipped"
+	StateSuccess         RemotePreparationCheckState = "success"
 )
 
 type RemotePreparationCommandName string
@@ -4417,14 +4531,14 @@ const (
 type DeliveryBatchSummaryStatus string
 
 const (
-	BraggadociousCancelled DeliveryBatchSummaryStatus = "cancelled"
-	FluffyFailed           DeliveryBatchSummaryStatus = "failed"
-	FluffyReconciling      DeliveryBatchSummaryStatus = "reconciling"
-	PurpleActive           DeliveryBatchSummaryStatus = "active"
-	PurpleAttention        DeliveryBatchSummaryStatus = "attention"
-	PurpleRevoked          DeliveryBatchSummaryStatus = "revoked"
-	StatusCompleted        DeliveryBatchSummaryStatus = "completed"
-	Waiting                DeliveryBatchSummaryStatus = "waiting"
+	Cancelled1        DeliveryBatchSummaryStatus = "cancelled"
+	FluffyFailed      DeliveryBatchSummaryStatus = "failed"
+	FluffyReconciling DeliveryBatchSummaryStatus = "reconciling"
+	PurpleActive      DeliveryBatchSummaryStatus = "active"
+	PurpleAttention   DeliveryBatchSummaryStatus = "attention"
+	PurpleRevoked     DeliveryBatchSummaryStatus = "revoked"
+	StatusCompleted   DeliveryBatchSummaryStatus = "completed"
+	Waiting           DeliveryBatchSummaryStatus = "waiting"
 )
 
 type Checks string
@@ -4473,7 +4587,7 @@ const (
 type DeliveryItemProgressStatus string
 
 const (
-	Cancelled1           DeliveryItemProgressStatus = "cancelled"
+	Cancelled2           DeliveryItemProgressStatus = "cancelled"
 	Finalized            DeliveryItemProgressStatus = "finalized"
 	FluffyAttention      DeliveryItemProgressStatus = "attention"
 	FluffyRevoked        DeliveryItemProgressStatus = "revoked"
@@ -4523,15 +4637,15 @@ const (
 type ReviewOperationSummaryStatus string
 
 const (
-	Cancelled2         ReviewOperationSummaryStatus = "cancelled"
+	Cancelled3         ReviewOperationSummaryStatus = "cancelled"
 	IndecentIssue      ReviewOperationSummaryStatus = "issue"
+	IndigoSettling     ReviewOperationSummaryStatus = "settling"
 	PurpleResolved     ReviewOperationSummaryStatus = "resolved"
 	Requirement        ReviewOperationSummaryStatus = "requirement"
-	Rework             ReviewOperationSummaryStatus = "rework"
 	StatusReplan       ReviewOperationSummaryStatus = "replan"
+	StatusRework       ReviewOperationSummaryStatus = "rework"
 	StatusRunning      ReviewOperationSummaryStatus = "running"
 	StickyFailed       ReviewOperationSummaryStatus = "failed"
-	StickySettling     ReviewOperationSummaryStatus = "settling"
 	TentacledQueued    ReviewOperationSummaryStatus = "queued"
 	TentacledWithdrawn ReviewOperationSummaryStatus = "withdrawn"
 )
@@ -4539,7 +4653,7 @@ const (
 type ReviewFeedbackSummaryStatus string
 
 const (
-	Cancelled3      ReviewFeedbackSummaryStatus = "cancelled"
+	Cancelled4      ReviewFeedbackSummaryStatus = "cancelled"
 	FluffyActive    ReviewFeedbackSummaryStatus = "active"
 	FluffyResolved  ReviewFeedbackSummaryStatus = "resolved"
 	StickyWithdrawn ReviewFeedbackSummaryStatus = "withdrawn"
@@ -4549,7 +4663,7 @@ type ReviewInputSummaryStatus string
 
 const (
 	AmbitiousPending  ReviewInputSummaryStatus = "pending"
-	Cancelled4        ReviewInputSummaryStatus = "cancelled"
+	Cancelled5        ReviewInputSummaryStatus = "cancelled"
 	IndigoWithdrawn   ReviewInputSummaryStatus = "withdrawn"
 	TentacledResolved ReviewInputSummaryStatus = "resolved"
 	Transferred       ReviewInputSummaryStatus = "transferred"
@@ -4578,4 +4692,16 @@ const (
 	FluffySpecificationProposal ReviewInputRoutingKind = "specification_proposal"
 	HilariousIssue              ReviewInputRoutingKind = "issue"
 	TentacledGuidance           ReviewInputRoutingKind = "guidance"
+)
+
+type OwnerApplyReworkCommandName string
+
+const (
+	FluffyApplyRework OwnerApplyReworkCommandName = "apply_rework"
+)
+
+type OwnerContinueWithoutReworkCommandName string
+
+const (
+	FluffyContinueWithoutRework OwnerContinueWithoutReworkCommandName = "continue_without_rework"
 )

@@ -36,7 +36,7 @@ export interface CommandEnvelope {
     scope_id:                 string;
 }
 
-export type CommandEnvelopeName = "open_workspace" | "inspect_repository" | "complete_node" | "commit_task_turn" | "commit_discussion_turn" | "read_discussion" | "update_working_requirement_state" | "publish_execution_plan" | "raise_planning_issue" | "publish_artifact" | "read_artifact" | "block_node" | "read_task_context" | "read_task_history" | "prepare_specification_revision" | "apply_specification_revision" | "request_replan" | "prepare_replan" | "apply_review_rework" | "commit_review_feedback" | "resolve_review_input";
+export type CommandEnvelopeName = "open_workspace" | "inspect_repository" | "complete_node" | "commit_task_turn" | "commit_discussion_turn" | "read_discussion" | "update_working_requirement_state" | "publish_execution_plan" | "raise_planning_issue" | "publish_artifact" | "read_artifact" | "block_node" | "read_task_context" | "read_task_history" | "prepare_specification_revision" | "apply_specification_revision" | "request_replan" | "prepare_replan" | "apply_review_rework" | "commit_review_feedback" | "resolve_review_input" | "request_rework";
 
 export interface CommandPayload {
     artifact_id?:               string;
@@ -75,6 +75,7 @@ export interface CommandPayload {
     specification?:             string;
     summary?:                   string;
     supersedes?:                string;
+    target_node_id?:            string;
     task_preview?:              TaskPreview;
     title?:                     string;
     working_requirement_state?: string;
@@ -304,6 +305,7 @@ export interface EffectResult {
     reply?:                        string;
     requirement_operation_id?:     string;
     resolved_watermark?:           number;
+    rework_outcome?:               NodeReworkOutcome;
     source_id?:                    string;
     source_watermark?:             number;
     task_context?:                 TaskContext;
@@ -385,6 +387,18 @@ export interface ReplanOutcome {
 }
 
 export type ReplanOutcomeKind = "request" | "proposal" | "issue";
+
+export interface NodeReworkOutcome {
+    affected_node_ids:       [string, ...string[]];
+    automatic_requests_used: number;
+    limit:                   number;
+    rework_request_id:       string;
+    status:                  NodeReworkOutcomeStatus;
+    target_node_id:          string;
+    version:                 number;
+}
+
+export type NodeReworkOutcomeStatus = "settling" | "limit_blocked" | "applied" | "continued" | "cancelled";
 
 export interface TaskContext {
     basis:       TaskActionBasis;
@@ -607,6 +621,7 @@ export interface WorkspaceDescriptor {
     project_id:        string;
     resource:          WorkspaceResource;
     resource_id:       string;
+    rework_history?:   [WorkspaceReworkHistory, ...WorkspaceReworkHistory[]];
     runner_id:         string;
     schema_version:    number;
     task_id:           string;
@@ -632,6 +647,25 @@ export interface WorkspaceResource {
     resource_id:         string;
 }
 
+export interface WorkspaceReworkHistory {
+    from_attempt_id:           string;
+    from_lease_id:             string;
+    from_node_activation:      number;
+    from_node_id:              string;
+    metadata:                  WorkspaceMetadata;
+    plan_id:                   string;
+    rework_activations:        [ReworkActivationMap, ...ReworkActivationMap[]];
+    rework_command_request_id: string;
+    rework_request_id:         string;
+    settle_operation_id:       string;
+}
+
+export interface ReworkActivationMap {
+    from_activation: number;
+    node_id:         string;
+    to_activation:   number;
+}
+
 export interface WorkspaceTransfer {
     completion_manifest_digest?: string;
     completion_operation_id?:    string;
@@ -647,6 +681,9 @@ export interface WorkspaceTransfer {
     publication_id?:             string;
     purpose?:                    WorkspaceTransferPurpose;
     resource_id:                 string;
+    rework_activations?:         [ReworkActivationMap, ...ReworkActivationMap[]];
+    rework_command_request_id?:  string;
+    rework_request_id?:          string;
     runner_id:                   string;
     settle_operation_id:         string;
     task_id:                     string;
@@ -656,7 +693,7 @@ export interface WorkspaceTransfer {
     workspace_id:                string;
 }
 
-export type WorkspaceTransferPurpose = "serial";
+export type WorkspaceTransferPurpose = "serial" | "rework";
 
 export interface OperationResult {
     attempt_id:                 string;
@@ -1149,7 +1186,7 @@ export interface OwnerCommand {
     scope_id:                 string;
 }
 
-export type OwnerCommandName = "confirm_proposal" | "stop_node" | "continue_node" | "retry_node" | "stop_initial_planning" | "retry_initial_planning" | "start_task" | "cancel_task" | "recover_completion";
+export type OwnerCommandName = "confirm_proposal" | "stop_node" | "continue_node" | "retry_node" | "stop_initial_planning" | "retry_initial_planning" | "start_task" | "cancel_task" | "recover_completion" | "apply_rework" | "continue_without_rework";
 
 export interface OwnerCommandPayload {
     content_digest?:             string;
@@ -1167,6 +1204,8 @@ export interface OwnerCommandPayload {
     completion_identity_digest?: string;
     mode?:                       PayloadMode;
     operation_id?:               string;
+    expected_version?:           number;
+    rework_request_id?:          string;
 }
 
 export type PayloadMode = "retry" | "correct";
@@ -1182,6 +1221,7 @@ export interface OwnerCommandResult {
     planning_intent_id?: string;
     proposal_id?:        string;
     request_id:          string;
+    rework_outcome?:     NodeReworkOutcome;
     schema_version:      number;
     source_id?:          string;
     status:              OwnerCommandResultStatus;
@@ -3490,3 +3530,67 @@ export interface ReviewInputRouting {
 }
 
 export type ReviewInputRoutingKind = "reply" | "guidance" | "issue" | "answer" | "resolve_guidance" | "specification_proposal" | "replan";
+
+export interface NodeReworkStatus {
+    automatic_requests_used: number;
+    current:                 NodeReworkSummary | null;
+    limit:                   number;
+    schema_version:          number;
+    task_id:                 string;
+}
+
+export interface NodeReworkSummary {
+    affected_node_ids:         [string, ...string[]];
+    automatic_requests_used:   number;
+    can_apply:                 boolean;
+    can_continue:              boolean;
+    limit:                     number;
+    reason:                    string;
+    requester_node_activation: number;
+    requester_node_id:         string;
+    rework_request_id:         string;
+    status:                    NodeReworkOutcomeStatus;
+    stop_operation_id:         string;
+    target_node_id:            string;
+    version:                   number;
+    waiting_reason:            null | string;
+}
+
+export interface RequestRework {
+    reason:          string;
+    target_node_id?: string;
+}
+
+export interface OwnerApplyReworkCommand {
+    expected_control_version: number;
+    name:                     OwnerApplyReworkCommandName;
+    payload:                  OwnerApplyReworkCommandPayload;
+    request_id:               string;
+    schema_version:           number;
+    scope_id:                 string;
+}
+
+export type OwnerApplyReworkCommandName = "apply_rework";
+
+export interface OwnerApplyReworkCommandPayload {
+    answer?:           string;
+    expected_version:  number;
+    rework_request_id: string;
+}
+
+export interface OwnerContinueWithoutReworkCommand {
+    expected_control_version: number;
+    name:                     OwnerContinueWithoutReworkCommandName;
+    payload:                  OwnerContinueWithoutReworkCommandPayload;
+    request_id:               string;
+    schema_version:           number;
+    scope_id:                 string;
+}
+
+export type OwnerContinueWithoutReworkCommandName = "continue_without_rework";
+
+export interface OwnerContinueWithoutReworkCommandPayload {
+    answer?:           string;
+    expected_version:  number;
+    rework_request_id: string;
+}

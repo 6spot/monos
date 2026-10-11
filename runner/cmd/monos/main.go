@@ -24,6 +24,7 @@ const help = `monos — formal monos Tool Protocol commands
   monos inspect_repository --input payload.json [--request-id ID] --output json
   monos publish_artifact --input payload.json [--request-id ID] --output json
   monos read_artifact --input payload.json [--request-id ID] --output json
+  monos request_rework --input payload.json [--request-id ID] --output json
   monos request_replan --input payload.json [--request-id ID] --output json
   monos apply_review_rework --input payload.json [--request-id ID] --output json
   monos commit_review_feedback --input payload.json [--request-id ID] --output json
@@ -49,6 +50,10 @@ Workspace payload: {"resource_id":"RESOURCE"}
 Node Artifact: {"artifact_id":"ARTIFACT","title":"Output","content":{"text":"...","media_type":"text/plain"}}
 Read Artifact: {"artifact_id":"ARTIFACT"}
 Node blocker: {"reason":"Owner direction needed"}
+Upstream Rework: {"target_node_id":"UPSTREAM","reason":"Correction needed"}
+Omit target_node_id only with one direct dependency. Rework stops this execution
+and reactivates the target and its descendants after settlement. After three
+automatic requests the Owner must apply the retained request or continue without it.
 Node completion: {"summary":"completed work","artifact_ids":[]}
 Omit artifact_ids to select this Attempt's outputs; [] selects none. Artifacts do
 not complete work. Completion or block ends the Attempt. Repository-free work needs
@@ -148,7 +153,7 @@ func run(args []string) (protocol.CommandResult, error) {
 		action = "retry"
 	case "command_status":
 		action = "status"
-	case "apply_review_rework", "commit_review_feedback", "resolve_review_input", "request_replan", "prepare_replan", "publish_artifact", "read_artifact", "block_node", "open_workspace", "inspect_repository", "complete_node", "publish_execution_plan", "raise_planning_issue", "commit_task_turn", "prepare_specification_revision", "apply_specification_revision", "read_task_context", "read_task_history", "read_discussion", "update_working_requirement_state", "commit_discussion_turn":
+	case "apply_review_rework", "commit_review_feedback", "resolve_review_input", "request_rework", "request_replan", "prepare_replan", "publish_artifact", "read_artifact", "block_node", "open_workspace", "inspect_repository", "complete_node", "publish_execution_plan", "raise_planning_issue", "commit_task_turn", "prepare_specification_revision", "apply_specification_revision", "read_task_context", "read_task_history", "read_discussion", "update_working_requirement_state", "commit_discussion_turn":
 	default:
 		return result, fmt.Errorf("unknown command")
 	}

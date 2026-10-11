@@ -1,3 +1,4 @@
+import { assertNoTaskRework } from './node-rework-state.ts';
 import { remoteItemQuiescent } from './remote-preparation-state.ts';
 import { randomUUID } from 'node:crypto';
 import type { Transaction } from '../../../packages/db/src/index.ts';
@@ -22,6 +23,8 @@ export async function assertNoReplan(tx:Transaction,taskId:string):Promise<void>
 export async function replanQuiescent(tx:Transaction,taskId:string):Promise<boolean>{return await remoteItemQuiescent(tx,taskId) && !(await tx.query(`SELECT 1 FROM attempts a WHERE a.task_id=$1 AND (a.state='QUEUED' OR NOT a.process_released OR EXISTS(SELECT 1 FROM operations o WHERE o.attempt_id=a.id AND o.state NOT IN ('succeeded','cancelled')) OR EXISTS(SELECT 1 FROM workspace_leases l WHERE l.attempt_id=a.id AND l.state<>'released')) LIMIT 1`,[taskId])).rowCount;}
 export async function liveReplanAuthority(tx:Transaction,taskId:string,attemptId:string):Promise<boolean>{return !!(await tx.query(`SELECT 1 FROM replan_live_attempts x JOIN replan_requests r ON r.id=x.request_id JOIN tasks t ON t.id=x.task_id JOIN attempts a ON a.id=x.attempt_id JOIN node_execution_outbox s ON s.id=x.source_id JOIN nodes n ON n.id=a.node_id WHERE x.task_id=$1 AND x.attempt_id=$2 AND r.status='pending' AND t.state='REPLAN_REQUIRED' AND t.control_version=x.freeze_control_version AND a.mutation_allowed AND NOT a.process_released AND n.state='RUNNING' AND n.execution_source_id=s.id AND n.activation=a.node_activation AND s.expected_version=x.prior_control_version AND t.plan_id=s.plan_id AND t.specification_id=s.specification_id`,[taskId,attemptId])).rowCount;}
 export async function requestReplan(tx:Transaction,task:SpecificationTask,attempt:PlanningAttempt,reason:string,requestId:string,origin:{node?:NodeSource;input_id?:string;source_id?:string;review_operation_id?:string;review_source_id?:string}):Promise<string>{
+
+ await assertNoTaskRework(tx,task.id);
  mutableSpecification(task);validate('PlanningText',reason);if(!task.plan_id)throw new CommandError('unmet_precondition','Replan requires an effective Plan');await assertNoReplan(tx,task.id);
  if(Number((await tx.query('SELECT count(*) n FROM plan_nodes WHERE plan_id=$1',[task.plan_id])).rows[0].n)>1)throw new CommandError('unmet_precondition','unsupported_multi_node_replan: replacement graphs are a subsequent slice');
  if((await tx.query('SELECT 1 FROM task_publication_slots WHERE task_id=$1',[task.id])).rowCount)throw new CommandError('unmet_precondition','Existing publication must reconcile before Replan');

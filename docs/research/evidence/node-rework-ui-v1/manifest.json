@@ -1,0 +1,24 @@
+{
+  "tested_at": "2026-10-11",
+  "base_commit": "47a79e2",
+  "route": "/#task?task_id=<isolated-fixture>&section=execution",
+  "fixture": "Actual browser/server Task with synthetic Rework read/decision responses; physical execution tested separately",
+  "build_assets": [
+    "index-TKEvhF-s.css",
+    "index-zSrhr7CF.js"
+  ],
+  "source_sha256": {
+    "apps/web/src/features/node-rework.tsx": "cc6ea26f403e018a721b07b8f8960e86ed9d337a8bce862f43a9873291283e30",
+    "apps/web/src/features/task-controls.tsx": "f3605782a42dc272ae0011950de2ecd0525ad426b9b0757097b5a89e9f562a7c",
+    "apps/web/src/features/task-detail.tsx": "be97d354a1e1ea965ba46f1f55cec54f70691a23952054be0c36b27fc4b73471",
+    "apps/web/src/lib/task-api.ts": "e0dd6666a2d45e996787ed9a85ce785ef3e9cca917a91a7126ef3c771a70eb39",
+    "apps/web/test/node-rework.e2e.ts": "dbaf76975ee56b2553d129866afcf7da914168ae5542c681f8bb2fcd9fd3703f"
+  },
+  "screenshots": {
+    "rework-settling-mobile.png": "4f9d92c322cac544169acb6712e8ddf11d06d49500c8a4e95ee03222e0c580ac",
+    "rework-limit-desktop.png": "c327e8e4978e45e7cbfd9c7347735ff1ad294d8ba15b7f1ca927f80068d85637",
+    "rework-settling-desktop.png": "83c3f853f997f0b7fdf9f9cbf9dc43e88dcb2d230b39bb3225bb63b198722331",
+    "rework-limit-mobile.png": "eb81a65ec85f0928893cf06e0ca082c60d8732f39fc21e27075baab0aca07a69"
+  },
+  "inspection": "All four images inspected at 1440x1000 and 390x844. Shared neutral shell, compact headers, legible wrapping, focus ring, reachable actions, no horizontal overflow. Existing spec visual reference observations used; no Multica checkout access."
+}

@@ -27,6 +27,7 @@ import type { ExecutionNode, NodeSource, NodeTask } from './node-execution-state
 import { activeRuntimeContinuation, runtimeContinuation, supersedeRuntimeContinuation } from './runtime-continuation-state.ts';
 import { admitWorkspaceEffect, lockAttemptWorkspace } from './workspaces.ts';
 import type { WorkspaceAttempt } from './workspaces.ts';
+import { cancelTaskRework, currentNodeRework, reactivationNodeRework } from './node-rework-state.ts';
 
 export interface Attempt extends WorkspaceAttempt {
   state: string;
@@ -168,6 +169,9 @@ export class NodeExecution {
     WHERE t.state='RUNNING' AND n.state='PENDING' AND n.execution_source_id IS NULL AND (EXISTS(
      SELECT 1 FROM task_events e JOIN attempts a ON a.id=e.attempt_id JOIN task_planning_outbox p ON p.id=a.planning_intent_id
      WHERE e.task_id=t.id AND a.task_id=t.id AND p.task_id=t.id AND e.kind='plan_published' AND e.body->>'plan_id'=t.plan_id AND e.body->>'planning_intent_id'=p.id) OR EXISTS(SELECT 1 FROM replan_publications rp WHERE rp.task_id=t.id AND rp.new_plan_id=t.plan_id))
+    AND NOT EXISTS(SELECT 1 FROM node_rework_requests r WHERE r.task_id=t.id AND (
+      (r.status='settling' AND EXISTS(SELECT 1 FROM node_rework_targets x WHERE x.request_id=r.id AND x.node_id=n.id))
+      OR (r.status='limit_blocked' AND r.requester_node_id=n.id)))
     AND NOT EXISTS(SELECT 1 FROM jsonb_array_elements_text(pn.definition->'dependencies') dep WHERE NOT EXISTS(
       SELECT 1 FROM nodes upstream JOIN node_completions c ON c.node_id=upstream.id AND c.activation=upstream.activation
       JOIN plan_nodes member ON member.plan_id=t.plan_id AND member.node_id=upstream.id
@@ -192,7 +196,7 @@ export class NodeExecution {
           const node = (
             await tx.query<ExecutionNode>('SELECT * FROM nodes WHERE id=$1 FOR UPDATE', [candidate.node_id])
           ).rows[0]!;
-          if (!(await specificationFrozen(tx,task.id)) && task.state === 'RUNNING' && node.state === 'PENDING' && !node.execution_source_id &&
+          if (!(await specificationFrozen(tx,task.id)) && !await currentNodeRework(tx, task.id, node.id) && task.state === 'RUNNING' && node.state === 'PENDING' && !node.execution_source_id &&
               await nodeDependenciesReady(tx, task.plan_id, node.id) && await serialNodeReady(tx, task.id, node.id))
             await prepareNodeSource(tx, task, node, version);
         });
@@ -248,6 +252,9 @@ export class NodeExecution {
       const ended = (
         await this.db.pool.query<{ id: string; runner_id: string; task_id: string }>(
           `SELECT a.id,a.runner_id,a.task_id FROM attempts a JOIN nodes n ON n.execution_source_id=a.node_execution_source_id WHERE n.state='RUNNING' AND a.state IN ('FAILED','CANCELLED') AND NOT a.mutation_allowed AND a.node_execution_source_id IS NOT NULL AND NOT EXISTS(SELECT 1 FROM task_guidance_followups f WHERE f.source_id=a.node_execution_source_id AND f.status='waiting')
+            AND NOT EXISTS(SELECT 1 FROM node_rework_requests r WHERE r.task_id=a.task_id AND (
+              (r.status='settling' AND EXISTS(SELECT 1 FROM node_rework_targets x WHERE x.request_id=r.id AND x.node_id=n.id))
+              OR (r.status='limit_blocked' AND r.requester_node_id=n.id)))
             AND NOT EXISTS(SELECT 1 FROM runtime_continuations c WHERE (c.predecessor_attempt_id=a.id OR c.successor_planned_attempt_id=a.id)
               AND (c.state IN('settling','prepared') OR (c.state='exhausted' AND c.resolved_at IS NULL))) ORDER BY a.id LIMIT $1`,
           [limit]
@@ -265,6 +272,7 @@ export class NodeExecution {
             ])
           ).rows[0]!;
           const node = (await tx.query<ExecutionNode>('SELECT * FROM nodes WHERE id=$1', [source.node_id])).rows[0]!;
+          if (await currentNodeRework(tx, task.id, node.id)) return;
           const guidanceOwned=(await tx.query("SELECT 1 FROM task_guidance_followups WHERE source_id=$1 AND status='waiting'",[source.id])).rowCount;
           if (!(await specificationFrozen(tx,task.id)) && attempt.end_reason!=='specification_change' && !guidanceOwned && task.state === 'RUNNING' && node.state === 'RUNNING' && node.execution_source_id === source.id)
             await blockNodeSource(tx, source, 'factual', attempt.end_reason ?? 'missing_formal_outcome', attempt.id);
@@ -340,6 +348,7 @@ export class NodeExecution {
             throw new CommandError('version_conflict', 'Cancel requires exact Specification and Plan');
           if((await tx.query('SELECT 1 FROM tasks WHERE id=$1 AND accepted_delivery_operation_id IS NOT NULL',[task.id])).rowCount)throw new CommandError('unmet_precondition','Accepted delivery requires delivery cancellation');
           await cancelReviewOperations(tx,task.id,command.request_id);
+          await cancelTaskRework(tx, task.id);
           await cancelTaskInputEffects(tx,task.id);
           await requestRemoteCancel(tx,task.id);
           await tx.query("UPDATE tasks SET state='CANCELLED',control_version=control_version+1 WHERE id=$1", [task.id]);
@@ -436,6 +445,8 @@ export class NodeExecution {
               operationId
             );
           } else if (command.name === 'stop_node') {
+            if (await currentNodeRework(tx, task.id, node.id))
+              throw new CommandError('unmet_precondition', 'Rework already owns process settlement; resolve the saved Rework request or Cancel the Task');
             await tx.query('UPDATE nodes SET guidance_paused=true WHERE id=$1',[node.id]);
             const pendingGuidance=(await tx.query("SELECT 1 FROM task_guidance_followups WHERE node_id=$1 AND status='waiting'",[node.id])).rowCount;
             if (!['PENDING', 'RUNNING'].includes(node.state) && !(node.state==='COMPLETED'&&pendingGuidance))
@@ -464,9 +475,13 @@ export class NodeExecution {
             blockerId = await blockNodeSource(tx, source, 'owner_stopped', 'owner_stopped', attempt?.id);
             await tx.query('UPDATE tasks SET control_version=control_version+1 WHERE id=$1', [task.id]);
           } else if (command.name === 'retry_node' || command.name === 'continue_node') {
+            if (await currentNodeRework(tx, task.id, node.id))
+              throw new CommandError('unmet_precondition', 'Resolve the exact upstream Rework request before Retry or Continue');
             if(!await remoteItemQuiescent(tx,task.id))throw new CommandError('unmet_precondition','Admitted remote effects must reconcile before correction');
             const paused=(await tx.query('SELECT guidance_paused FROM nodes WHERE id=$1',[node.id])).rows[0].guidance_paused;
             if(command.name==='continue_node'&&node.state==='COMPLETED'&&paused){
+              if (await reactivationNodeRework(tx, task.id, node.id))
+                throw new CommandError('unmet_precondition', 'Resolve the preserved Rework request before reactivating its ancestor');
               if(!(await tx.query("SELECT 1 FROM task_guidance_followups WHERE node_id=$1 AND status='waiting'",[node.id])).rowCount)throw new CommandError('unmet_precondition','No paused guidance followup needs continuation');
               await reactivateSettledNodes(tx,{task_id:task.id,expected:{control_version:Number(task.control_version),specification_id:task.specification_id,plan_id:task.plan_id},node_ids:[node.id]});
               await tx.query('UPDATE nodes SET guidance_paused=false WHERE id=$1',[node.id]);
@@ -633,7 +648,9 @@ export class NodeExecution {
       ).rows[0];
       if (manifest) manifest.node_activation = Number(manifest.node_activation);
       let waitingReason = source?.waiting_reason ?? null;
-      if (!source && node.state === 'PENDING' && task.plan_id) {
+      const rework = await currentNodeRework(tx, task.id, node.id);
+      if (rework) waitingReason = 'waiting_for_node_rework';
+      else if (!source && node.state === 'PENDING' && task.plan_id) {
         if (!await nodeDependenciesReady(tx, task.plan_id, node.id)) waitingReason = 'waiting_for_dependencies';
         else if (!await serialNodeReady(tx, task.id, node.id)) waitingReason = 'waiting_for_serial_execution';
       }

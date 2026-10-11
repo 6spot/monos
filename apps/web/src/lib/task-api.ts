@@ -162,6 +162,15 @@ function checkedReceipt(intent: TaskIntent, result: TaskReceipt, allowUnknown: b
       || (payload.attempt_id === undefined && fields.control_version === intent.command.expected_control_version)) throw new UncertainError();
     if (payload.attempt_id !== undefined) same('attempt_id', payload.attempt_id);
     else same('task_id', intent.command.scope_id);
+    if (['apply_rework', 'continue_without_rework'].includes(intent.command.name)) {
+      same('status', 'committed');
+      const outcome = 'rework_outcome' in result ? result.rework_outcome : undefined;
+      const apply = intent.command.name === 'apply_rework';
+      if (!outcome || outcome.rework_request_id !== payload.rework_request_id ||
+          outcome.status !== (apply ? 'applied' : 'continued') ||
+          outcome.version !== Number(payload.expected_version) + (apply ? 2 : 1) ||
+          outcome.automatic_requests_used !== (apply ? 0 : 3)) throw new UncertainError();
+    }
     if (['start_task', 'retry_initial_planning'].includes(intent.command.name)) requireFields('planning_intent_id');
     if (payload.node_id !== undefined) requireFields('source_id');
     if (intent.command.name === 'recover_completion') {

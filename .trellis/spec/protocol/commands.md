@@ -147,3 +147,18 @@ Owner execution commands retain live Task CAS. Initial Plan transport supports
 multi-Node requirement-publication authority. `WorkspaceTransfer.purpose: serial`
 permits completed same-Plan handoff and forbids Replan provenance fields; absent
 purpose still requires the genuine Replan proposal and publication pair.
+
+Upstream `request_rework` is canonical Node-only in both backend and the Runner
+local socket allowlist; CLI command recognition alone does not grant transport
+authority. Its payload is reason plus optional ancestor target, with bounded
+`NodeReworkOutcome`. Owner `apply_rework` / `continue_without_rework` use the existing
+Owner envelope with exact request/version and optional answer. Unknown receipts
+cannot carry `rework_outcome`; consumers validate the actual request, decision,
+version and budget instead of accepting a generic committed response.
+
+System-authored `WorkspaceTransfer.purpose: rework` requires checkpoint metadata,
+the original Rework/Agent request pair and complete activation map, and forbids
+Replan provenance. `WorkspaceDescriptor.rework_history` carries separately proven
+historical checkpoints, so later serial handoff retains the current integrated
+commit while restoring read-only historical Git references. Shared TS/Go fixtures
+must reject absent checkpoint/provenance and serial/Rework identity mixing.

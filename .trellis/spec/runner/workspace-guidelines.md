@@ -87,6 +87,32 @@ is physical lineage, not completion evidence for the new activation. Once adopte
 replay uses the immutable new lease without adopting its predecessor again. Replan
 transfers retain their cross-Plan publication/proposal and checkpoint contracts.
 
+Upstream Agent Rework uses `purpose: rework`, `kind: checkpoint`, the exact domain
+request ID, original command request ID matching the requester Stop, and the full
+applied old/new activation map. Verify the old manifest/Stop/lease and current
+target scope before replacing ownership. The Stop must already have exported its
+checkpoint into the service-private result repository. Mutable execution Git refs
+never replace that export as historical authority.
+
+Rework persists `rework_intent`, `rework_archiving` and `rework_archived` before
+rebuilding the same stable paths at the current finalized revision. Root moves the
+whole old `common` and `worktree` into a request-keyed private archive; retain every
+raw file and index byte, including ignored content that is absent from the Git
+checkpoint. Never reset/clean away the old allocation. Interrupted renames and
+rebuilds resume under the same immutable lease. Stop can finish that local rebuild
+and recover the prior target observation before producing its own checkpoint;
+an interrupted Rework is never an empty initial allocation.
+
+`WorkspaceDescriptor.rework_history` admits bounded history only for the exact
+applied target activation. Service verifies the protected export and seeds the
+resource cache; execution imports the exact checkpoint objects under
+`refs/monos/history/<rework_request_id>`. These objects are historical input for
+native Git inspection and deliberate adaptation. Import never checks out or
+replays the checkpoint over upstream's newer finalized code. Ref names in the
+execution repository are mutable conveniences; exact commit/tree and protected
+export remain authoritative. Raw archives are system recovery data, not an
+Agent-readable history browser.
+
 Stop writers, finalize, integrate, then grant completion evidence. Preserve operation-specific refs and local journal stages. Interrupted private work is not a completed integrated result. Rework corrects existing code rather than automatically reverting it.
 
 The probe persists finalization inputs before `commit-tree` and retains an operation-specific ref for replay. Typed `recoverable` failures retain the admitted operation; `capture_hard_limit` and `invalid_finalization` block completion. Retrying repairs the same operation, under current activation/basis guards, rather than granting the terminal Agent a fresh mutation.
@@ -136,6 +162,11 @@ Use real local Git to prove completed serial handoff preserves actual HEAD/tree
 and code for both a new Node and a new activation, with exact lease replay. Reject
 cross-Plan serial transfers, checkpoints, mismatched source/target or manifest/tree,
 and unreleased writers/effects. Keep the existing Replan transfer cases passing.
+
+Rework tests inject export, archive-intent, both rename, rebuild and final-save
+failures. Verify Stop resumption, raw ignored/untracked/index retention, exact
+finalized checkout, historical object restoration from protected export, and
+unchanged HEAD/files after later history import.
 
 Run traversal-root tests under umask `0027`, asserting final `0755`, and reject existing files, symlinks and wrong ownership without chmod/replacement. Probe-tool installation separately tests root umask `0077` so its shared driver remains readable.
 

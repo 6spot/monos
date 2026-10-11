@@ -1,3 +1,4 @@
+import { assertNoTaskRework } from './node-rework-state.ts';
 import {randomUUID} from 'node:crypto';
 import type {Transaction} from '../../../packages/db/src/index.ts';
 import {CommandError} from '../../../packages/domain/src/commands.ts';
@@ -107,6 +108,7 @@ export async function handleReviewCommand(tx:Transaction,task:SpecificationTask,
  if(command.name!=='request_replan')exactBasis(task,p.basis as ApplyReviewRework['basis']);
  let kind:string,body:Record<string,unknown>={request_id:command.request_id};
  if(command.name==='apply_review_rework'){
+  await assertNoTaskRework(tx,task.id);
   const input=validate<ApplyReviewRework>('ApplyReviewRework',p);if(op.purpose!=='route_feedback')throw new CommandError('denied_scope','Input reconsideration cannot resolve main feedback');
   const affected=await reactivateSettledNodes(tx,{task_id:task.id,node_ids:input.node_ids,expected:input.basis});await tx.query("UPDATE task_review_operations SET status='rework',settlement_pending=true WHERE id=$1",[op.id]);await tx.query("UPDATE task_review_feedback SET status='resolved' WHERE id=$1",[op.feedback_id]);kind='rework';body={...body,node_ids:input.node_ids,affected_node_ids:affected,reason:input.reason};
  }else if(command.name==='commit_review_feedback'){

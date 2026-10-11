@@ -18,6 +18,8 @@ func TestNodeToolsKeepOutputSelectionAndScope(t *testing.T) {
 	}{
 		{"publish_artifact", `{"artifact_id":"artifact","title":"Output","content":{"text":"","media_type":"text/plain"}}`},
 		{"read_artifact", `{"artifact_id":"artifact"}`}, {"block_node", `{"reason":"Need Owner direction"}`},
+		{"request_rework", `{"reason":"Correct sole upstream dependency"}`},
+		{"request_rework", `{"target_node_id":"upstream","reason":"Correct upstream contract"}`},
 		{"complete_node", `{"summary":"Done","handled_guidance_ids":["assigned-guidance"]}`},
 		{"complete_node", `{"summary":"Done","handled_guidance_ids":[]}`},
 		{"complete_node", `{"summary":"Done"}`}, {"complete_node", `{"summary":"Done","artifact_ids":[]}`}, {"complete_node", `{"summary":"Done","artifact_ids":["earlier-attempt-output"]}`},
@@ -48,5 +50,10 @@ func TestNodeToolsKeepOutputSelectionAndScope(t *testing.T) {
 	d.NodeExecutionSource = nil
 	if _, err := prepareEnvelope(d, Request{Name: "publish_artifact", RequestID: "request", Payload: json.RawMessage(`{}`)}); err == nil {
 		t.Fatal("legacy dispatch acquired Node source authority")
+	}
+	for _, dispatch := range []protocol.Dispatch{d, conversationDispatch(), reviewDispatch(), replanDispatch()} {
+		if _, err := prepareEnvelope(dispatch, Request{Name: "request_rework", RequestID: "request", Payload: json.RawMessage(`{"reason":"Correct upstream"}`)}); err == nil {
+			t.Fatal("non-Node source acquired upstream Rework authority")
+		}
 	}
 }

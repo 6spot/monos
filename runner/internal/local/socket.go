@@ -199,13 +199,13 @@ func prepareEnvelope(d protocol.Dispatch, r Request) ([]byte, error) {
 			return nil, fmt.Errorf("canonical Task routing requires a conversation source")
 		}
 	}
-	nodeCommand := r.Name == "publish_artifact" || r.Name == "read_artifact" || r.Name == "block_node" || r.Name == "request_replan"
+	nodeCommand := r.Name == "publish_artifact" || r.Name == "read_artifact" || r.Name == "block_node" || r.Name == "request_replan" || r.Name == "request_rework"
 	if nodeCommand && d.NodeExecutionSource == nil {
 		return nil, fmt.Errorf("command requires canonical Node execution source")
 	}
 	if d.NodeExecutionSource != nil {
 		switch r.Name {
-		case "publish_artifact", "read_artifact", "block_node", "request_replan", "complete_node", "open_workspace":
+		case "publish_artifact", "read_artifact", "block_node", "request_replan", "request_rework", "complete_node", "open_workspace":
 		default:
 			return nil, fmt.Errorf("command unavailable to Node execution")
 		}

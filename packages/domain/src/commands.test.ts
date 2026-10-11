@@ -16,6 +16,19 @@ it('rejects revoked, offline, wrong-resource and stale-basis mutations', () => {
   expect(() => guardNewCommand(command, { ...basis, controlVersion: 2 })).toThrow('stale');
 });
 
+it('allows upstream Rework only from a live Node command scope', () => {
+  const request: CommandEnvelope = { ...command, name: 'request_rework', payload: { reason: 'Correct upstream output' } };
+  expect(() => guardNewCommand(request, basis)).not.toThrow();
+  for (const foreign of [
+    { ...basis, kind: 'planner' as const },
+    { ...basis, kind: 'planner' as const, initialPlanning: true },
+    { ...basis, kind: 'planner' as const, taskConversation: true },
+    { ...basis, kind: 'planner' as const, taskReview: true },
+    { ...basis, kind: 'planner' as const, taskReplan: true },
+    { ...basis, mutationAllowed: false },
+  ]) expect(() => guardNewCommand(request, foreign)).toThrow();
+});
+
 it('grants initial phase outcomes only to a source-bound Task Planner', () => {
   const publish: CommandEnvelope = { ...command, name: 'publish_execution_plan', payload: { planning_intent_id: 'source', plan_id: 'plan', nodes: [{ node_id: 'node', role_id: 'role', goal: 'Deliver', dependencies: [] }] } };
   for (const scope of [{ ...basis }, { ...basis, kind: 'planner' as const }, { ...basis, kind: 'planner' as const, scopeKind: 'todo' as const, scopeId: 'task' }]) expect(() => guardNewCommand(publish, scope)).toThrow();

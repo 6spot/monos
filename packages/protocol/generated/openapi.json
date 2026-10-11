@@ -4890,7 +4890,8 @@
               "prepare_replan",
               "apply_review_rework",
               "commit_review_feedback",
-              "resolve_review_input"
+              "resolve_review_input",
+              "request_rework"
             ]
           },
           "scope_id": {
@@ -5557,6 +5558,24 @@
                 }
               }
             }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "const": "request_rework"
+                }
+              }
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "payload": {
+                  "$ref": "#/components/schemas/RequestRework"
+                }
+              }
+            }
           }
         ]
       },
@@ -5731,6 +5750,9 @@
             "minItems": 1,
             "maxItems": 256,
             "uniqueItems": true
+          },
+          "target_node_id": {
+            "$ref": "#/components/schemas/Id"
           }
         }
       },
@@ -5888,6 +5910,9 @@
           },
           "replan_outcome": {
             "$ref": "#/components/schemas/ReplanOutcome"
+          },
+          "rework_outcome": {
+            "$ref": "#/components/schemas/NodeReworkOutcome"
           }
         }
       },
@@ -7737,6 +7762,12 @@
           },
           {
             "$ref": "#/components/schemas/OwnerRecoverCompletionCommand"
+          },
+          {
+            "$ref": "#/components/schemas/OwnerApplyReworkCommand"
+          },
+          {
+            "$ref": "#/components/schemas/OwnerContinueWithoutReworkCommand"
           }
         ]
       },
@@ -7798,6 +7829,9 @@
           },
           "blocker_id": {
             "$ref": "#/components/schemas/Id"
+          },
+          "rework_outcome": {
+            "$ref": "#/components/schemas/NodeReworkOutcome"
           }
         },
         "allOf": [
@@ -7873,6 +7907,22 @@
                 "operation_id": {}
               },
               "type": "object"
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "const": "unknown"
+                }
+              }
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "rework_outcome": false
+              }
             }
           }
         ]
@@ -11379,6 +11429,15 @@
           },
           "transfer": {
             "$ref": "#/components/schemas/WorkspaceTransfer"
+          },
+          "rework_history": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkspaceReworkHistory"
+            },
+            "minItems": 1,
+            "maxItems": 64,
+            "uniqueItems": true
           }
         }
       },
@@ -15136,7 +15195,19 @@
           },
           "purpose": {
             "type": "string",
-            "const": "serial"
+            "enum": [
+              "serial",
+              "rework"
+            ]
+          },
+          "rework_request_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "rework_command_request_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "rework_activations": {
+            "$ref": "#/components/schemas/ReworkActivationMap"
           }
         },
         "required": [
@@ -15205,33 +15276,88 @@
           },
           {
             "if": {
-              "required": [
-                "purpose"
-              ],
               "type": "object",
               "properties": {
                 "purpose": {}
-              }
+              },
+              "required": [
+                "purpose"
+              ]
             },
             "then": {
               "type": "object",
               "properties": {
-                "kind": {
-                  "const": "completed"
-                },
                 "publication_id": false,
                 "proposal_id": false
               }
             },
             "else": {
               "type": "object",
-              "required": [
-                "publication_id",
-                "proposal_id"
-              ],
               "properties": {
                 "publication_id": {},
                 "proposal_id": {}
+              },
+              "required": [
+                "publication_id",
+                "proposal_id"
+              ]
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "purpose": {
+                  "const": "rework"
+                }
+              },
+              "required": [
+                "purpose"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "checkpoint"
+                },
+                "rework_request_id": {},
+                "rework_command_request_id": {},
+                "rework_activations": {}
+              },
+              "required": [
+                "rework_request_id",
+                "rework_command_request_id",
+                "rework_activations"
+              ]
+            },
+            "else": {
+              "type": "object",
+              "properties": {
+                "rework_request_id": false,
+                "rework_command_request_id": false,
+                "rework_activations": false
+              }
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "purpose": {
+                  "const": "serial"
+                }
+              },
+              "required": [
+                "purpose"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "completed"
+                }
               }
             }
           }
@@ -24408,6 +24534,404 @@
         "type": "string",
         "pattern": "^refs/heads/monos/task/[0-9a-f-]{36}/[A-Za-z0-9_-]{1,128}$",
         "maxLength": 187
+      },
+      "NodeReworkOutcome": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "rework_request_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "settling",
+              "limit_blocked",
+              "applied",
+              "continued",
+              "cancelled"
+            ]
+          },
+          "version": {
+            "$ref": "#/components/schemas/PositiveCounter"
+          },
+          "target_node_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "affected_node_ids": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Id"
+            },
+            "minItems": 1,
+            "maxItems": 256,
+            "uniqueItems": true
+          },
+          "automatic_requests_used": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 3
+          },
+          "limit": {
+            "type": "integer",
+            "const": 3
+          }
+        },
+        "required": [
+          "rework_request_id",
+          "status",
+          "version",
+          "target_node_id",
+          "affected_node_ids",
+          "automatic_requests_used",
+          "limit"
+        ]
+      },
+      "NodeReworkSummary": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "rework_request_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "settling",
+              "limit_blocked",
+              "applied",
+              "continued",
+              "cancelled"
+            ]
+          },
+          "version": {
+            "$ref": "#/components/schemas/PositiveCounter"
+          },
+          "target_node_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "affected_node_ids": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Id"
+            },
+            "minItems": 1,
+            "maxItems": 256,
+            "uniqueItems": true
+          },
+          "automatic_requests_used": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 3
+          },
+          "limit": {
+            "type": "integer",
+            "const": 3
+          },
+          "requester_node_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "requester_node_activation": {
+            "$ref": "#/components/schemas/PositiveCounter"
+          },
+          "reason": {
+            "$ref": "#/components/schemas/PlanningText"
+          },
+          "stop_operation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "waiting_reason": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 128
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "can_apply": {
+            "type": "boolean"
+          },
+          "can_continue": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "rework_request_id",
+          "status",
+          "version",
+          "target_node_id",
+          "affected_node_ids",
+          "automatic_requests_used",
+          "limit",
+          "requester_node_id",
+          "requester_node_activation",
+          "reason",
+          "stop_operation_id",
+          "waiting_reason",
+          "can_apply",
+          "can_continue"
+        ]
+      },
+      "NodeReworkStatus": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "task_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "automatic_requests_used": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 3
+          },
+          "limit": {
+            "type": "integer",
+            "const": 3
+          },
+          "current": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NodeReworkSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "schema_version",
+          "task_id",
+          "automatic_requests_used",
+          "limit",
+          "current"
+        ]
+      },
+      "RequestRework": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "target_node_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "reason": {
+            "$ref": "#/components/schemas/PlanningText"
+          }
+        },
+        "required": [
+          "reason"
+        ]
+      },
+      "OwnerApplyReworkCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "request_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "scope_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "expected_control_version": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "name": {
+            "type": "string",
+            "const": "apply_rework"
+          },
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "rework_request_id": {
+                "$ref": "#/components/schemas/Id"
+              },
+              "expected_version": {
+                "$ref": "#/components/schemas/PositiveCounter"
+              },
+              "answer": {
+                "$ref": "#/components/schemas/PlanningText"
+              }
+            },
+            "required": [
+              "rework_request_id",
+              "expected_version"
+            ]
+          }
+        },
+        "required": [
+          "schema_version",
+          "request_id",
+          "scope_id",
+          "expected_control_version",
+          "name",
+          "payload"
+        ]
+      },
+      "OwnerContinueWithoutReworkCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "request_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "scope_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "expected_control_version": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "name": {
+            "type": "string",
+            "const": "continue_without_rework"
+          },
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "rework_request_id": {
+                "$ref": "#/components/schemas/Id"
+              },
+              "expected_version": {
+                "$ref": "#/components/schemas/PositiveCounter"
+              },
+              "answer": {
+                "$ref": "#/components/schemas/PlanningText"
+              }
+            },
+            "required": [
+              "rework_request_id",
+              "expected_version"
+            ]
+          }
+        },
+        "required": [
+          "schema_version",
+          "request_id",
+          "scope_id",
+          "expected_control_version",
+          "name",
+          "payload"
+        ]
+      },
+      "NodeReworkActivation": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "node_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "from_activation": {
+            "$ref": "#/components/schemas/PositiveCounter"
+          },
+          "to_activation": {
+            "$ref": "#/components/schemas/PositiveCounter"
+          }
+        },
+        "required": [
+          "node_id",
+          "from_activation",
+          "to_activation"
+        ]
+      },
+      "ReworkActivationMap": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/NodeReworkActivation"
+        },
+        "minItems": 1,
+        "maxItems": 256,
+        "uniqueItems": true
+      },
+      "WorkspaceReworkHistory": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "rework_request_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "rework_command_request_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "plan_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "from_node_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "from_node_activation": {
+            "$ref": "#/components/schemas/PositiveCounter"
+          },
+          "from_attempt_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "from_lease_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "settle_operation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "metadata": {
+            "$ref": "#/components/schemas/WorkspaceMetadata"
+          },
+          "rework_activations": {
+            "$ref": "#/components/schemas/ReworkActivationMap"
+          }
+        },
+        "required": [
+          "rework_request_id",
+          "rework_command_request_id",
+          "plan_id",
+          "from_node_id",
+          "from_node_activation",
+          "from_attempt_id",
+          "from_lease_id",
+          "settle_operation_id",
+          "metadata",
+          "rework_activations"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "metadata": {}
+              },
+              "required": [
+                "metadata"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "metadata": {
+                  "type": "object",
+                  "properties": {
+                    "checkpoint": {}
+                  },
+                  "required": [
+                    "checkpoint"
+                  ]
+                }
+              }
+            }
+          }
+        ]
       }
     },
     "securitySchemes": {
