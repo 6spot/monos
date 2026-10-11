@@ -162,3 +162,25 @@ Replan provenance. `WorkspaceDescriptor.rework_history` carries separately prove
 historical checkpoints, so later serial handoff retains the current integrated
 commit while restoring read-only historical Git references. Shared TS/Go fixtures
 must reject absent checkpoint/provenance and serial/Rework identity mixing.
+
+## Planner repository inspection
+
+All five canonical Planner sources accept `inspect_repository {resource_id}`.
+Node execution remains outside this scope. The immutable operation carries paired
+`inspection` / `inspection_digest`; its descriptor binds the actual Planner source
+and one of `default_ref`, `task_completion` or `task_open`. Todo permits only its
+own discussion source and the default ref. The initial-open origin forbids basis,
+transfer, Rework history and checkpoint.
+
+`EffectResult.inspection` is exclusive with workspace/completion/writer fields.
+Available results require snapshot identity, absolute path, commit/tree and
+instruction files; unavailable results require a typed reason and forbid a
+snapshot. Known cancellation is a succeeded inspection with `reason: cancelled`,
+not a cancelled workspace or proof of Agent writer absence.
+
+Runner exchanges transient credentials at the separate inspection-access endpoint
+using the inspection digest, never a workspace digest. The backend checks exact
+source and connection before and after provider calls. Late settlement verifies
+saved descriptor identity; it does not revive source authority. See
+[backend contract](../backend/repository-inspection.md) and
+[Runner source/process proof](../runner/planner-inspection.md).

@@ -41,7 +41,7 @@ export async function lockAttemptWorkspace(tx: Transaction, attemptId: string): 
   await tx.query('SELECT id FROM workspace_leases WHERE attempt_id=$1 ORDER BY id FOR UPDATE', [attemptId]);
 }
 
-function resourceSnapshot(row: { id: string; repository_identity: string; remote_url: string; settings: Record<string, unknown> }): WorkspaceResource {
+export function resourceSnapshot(row: { id: string; repository_identity: string; remote_url: string; settings: Record<string, unknown> }): WorkspaceResource {
   const settings = row.settings;
   const resource: WorkspaceResource = { resource_id: row.id, repository_identity: row.repository_identity, remote_url: row.remote_url };
   if (repositoryIdentity(row.remote_url) !== row.repository_identity) throw new CommandError('denied_scope', 'Repository identity differs from its configured remote');

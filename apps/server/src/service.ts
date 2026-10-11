@@ -1,3 +1,5 @@
+import { admitRepositoryInspection, assertInspectionAccess, settleRepositoryInspection } from './repository-inspection.ts';
+import type { InspectionDescriptor, InspectionRepositoryAccessRequest, InspectionRepositoryAccessResult } from '../../../packages/protocol/src/index.ts';
 import { requestNodeRework } from './node-rework-state.ts';
 import { recordRuntimeContinuation, failRuntimeContinuationCapture } from './runtime-continuation.ts';
 import type { RuntimeSelectionContext } from './runtime-continuation-state.ts';
@@ -40,7 +42,7 @@ export interface AttemptRow {
   mutation_allowed: boolean; process_released: boolean; process_absent: boolean; started: boolean; exit_observed: boolean; launch: Dispatch;
   state: 'QUEUED' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'CANCELLED';
 }
-export interface OperationRow extends WorkspaceOperation { repository_free:boolean|null; completion_manifest_digest:string|null; completion_operation_id:string|null; completion_identity_digest:string|null; completion_settlement:OperationResult['completion_settlement']|null; settlement_purpose:'correct'|'cancel_task'|'specification_change'|null; schema_version: number; resource_id: string | null; failure_kind: OperationResult['failure_kind'] | null }
+export interface OperationRow extends WorkspaceOperation { inspection_descriptor: InspectionDescriptor | null; inspection_digest: string | null; repository_free:boolean|null; completion_manifest_digest:string|null; completion_operation_id:string|null; completion_identity_digest:string|null; completion_settlement:OperationResult['completion_settlement']|null; settlement_purpose:'correct'|'cancel_task'|'specification_change'|null; schema_version: number; resource_id: string | null; failure_kind: OperationResult['failure_kind'] | null }
 interface ReceiptRow { digest: string; command_name: string; response: CommandResult; operation_id: string | null }
 interface Locked { runner: RunnerRow; task: TaskRow | null; discussion: DiscussionControl | null; attempt: AttemptRow }
 
@@ -74,7 +76,7 @@ function toDispatch(row: AttemptRow): Dispatch {
   return { ...row.launch, mutation_allowed: row.mutation_allowed, process_released: row.process_released };
 }
 function toOperation(row: OperationRow, attempt: Pick<AttemptRow, 'dispatch_id'>): Operation {
-  return { schema_version: row.schema_version, operation_id: row.id, attempt_id: row.attempt_id, dispatch_id: attempt.dispatch_id, request_id: row.request_id, kind: row.kind, ...(row.resource_id ? { resource_id: row.resource_id } : {}), state: row.state, ...(row.repository_free ? {repository_free:true as const}:{}), ...(row.completion_manifest_digest?{completion_manifest_digest:row.completion_manifest_digest}:{}), ...(row.completion_operation_id?{completion_operation_id:row.completion_operation_id,completion_identity_digest:row.completion_identity_digest!}:{}), ...(row.result ? { result: row.result } : {}), ...(row.workspace_descriptor ? { workspace: row.workspace_descriptor, workspace_digest: row.workspace_digest! } : {}), ...(row.cancelled_by_operation_id ? { cancelled_by_operation_id: row.cancelled_by_operation_id } : {}) };
+  return { ...(row.inspection_descriptor ? { inspection: row.inspection_descriptor, inspection_digest: row.inspection_digest! } : {}), schema_version: row.schema_version, operation_id: row.id, attempt_id: row.attempt_id, dispatch_id: attempt.dispatch_id, request_id: row.request_id, kind: row.kind, ...(row.resource_id ? { resource_id: row.resource_id } : {}), state: row.state, ...(row.repository_free ? {repository_free:true as const}:{}), ...(row.completion_manifest_digest?{completion_manifest_digest:row.completion_manifest_digest}:{}), ...(row.completion_operation_id?{completion_operation_id:row.completion_operation_id,completion_identity_digest:row.completion_identity_digest!}:{}), ...(row.result ? { result: row.result } : {}), ...(row.workspace_descriptor ? { workspace: row.workspace_descriptor, workspace_digest: row.workspace_digest! } : {}), ...(row.cancelled_by_operation_id ? { cancelled_by_operation_id: row.cancelled_by_operation_id } : {}) };
 }
 
 async function taskEvent(tx: Transaction, attempt: AttemptRow, kind: string, body: unknown, operationId: string | null = null): Promise<void> {
@@ -182,6 +184,30 @@ export class BoundaryService {
     return validate('GitHubRepositoryAccessResult', { schema_version: 1, operation_id: operationId, workspace_digest: request.workspace_digest, ...access });
   }
 
+  async inspectionRepositoryAccess(runnerId: string, operationId: string, body: unknown): Promise<InspectionRepositoryAccessResult> {
+    validate('Id', operationId);
+    const request = validate<InspectionRepositoryAccessRequest>('InspectionRepositoryAccessRequest', body);
+    const authorized = () => transaction(this.db, async tx => {
+      await lockConfiguration(tx);
+      const identity = (await tx.query<{ attempt_id: string }>('SELECT attempt_id FROM operations WHERE id=$1', [operationId])).rows[0];
+      if (!identity) throw new CommandError('denied_scope', 'Unknown inspection operation');
+      const { runner, attempt } = await lockAttempt(tx, identity.attempt_id, runnerId);
+      checkChannel(runner, request.incarnation);
+      if (runner.connection_instance !== this.instanceId || attempt.process_released)
+        throw new CommandError('stale_execution', 'Inspection no longer owns this Runner connection');
+      const operation = (await tx.query<OperationRow>('SELECT * FROM operations WHERE id=$1 FOR UPDATE', [operationId])).rows[0]!;
+      await assertInspectionAccess(tx, attempt, operation, request.inspection_digest);
+      const config = (await tx.query<GitHubCredentials>('SELECT app_id,installation_id,encrypted_key,key_fingerprint FROM github_configuration')).rows[0];
+      return { descriptor: operation.inspection_descriptor!, config };
+    });
+    const before = await authorized();
+    const access = await (this.options.github ?? new GitHub(this.options.signingKey)).repositoryAccess(before.descriptor.resource, before.config);
+    const after = await authorized();
+    if (canonicalJSON(before.config ?? null) !== canonicalJSON(after.config ?? null))
+      throw new CommandError('stale_execution', 'Provider configuration changed during inspection access');
+    return validate('InspectionRepositoryAccessResult', { schema_version: 1, operation_id: operationId, inspection_digest: request.inspection_digest, ...access });
+  }
+
   async connect(runnerId: string, bootId: string): Promise<number> {
     return transaction(this.db, async (tx) => {
       await lockRunner(tx, runnerId);
@@ -243,6 +269,17 @@ export class BoundaryService {
         if (receipt.digest !== submission.sha256 || receipt.command_name !== command.name) throw new CommandError('payload_conflict', 'Request ID already records different content');
         return receiptResponse(tx, receipt);
       }
+      if (command.name === 'inspect_repository' && !await explicitLegacyAttempt(tx, attempt.id)) {
+        const operationId = await admitRepositoryInspection(tx, attempt, command, runner.available && runner.connection_instance === this.instanceId);
+        const response: CommandResult = { schema_version: 1, request_id: command.request_id, status: 'admitted', operation_id: operationId };
+        validate('CommandResult', response);
+        await tx.query('INSERT INTO command_receipts(attempt_id,scope_id,request_id,command_name,digest,schema_version,envelope_json,response,operation_id) VALUES($1,$2,$3,$4,$5,1,$6,$7,$8)',
+          [attempt.id, command.scope_id, command.request_id, command.name, submission.sha256, submission.envelope_json, response, operationId]);
+        this.options.beforeAdmissionCommit?.(); return response;
+      }
+      if (['commit_task_turn', 'prepare_replan', 'raise_planning_issue', 'apply_review_rework', 'commit_review_feedback', 'resolve_review_input', 'publish_execution_plan', 'commit_discussion_turn', 'request_replan'].includes(command.name) &&
+          (await tx.query("SELECT 1 FROM operations WHERE attempt_id=$1 AND inspection_descriptor IS NOT NULL AND state NOT IN('succeeded','cancelled')", [attempt.id])).rowCount)
+        throw new CommandError('unmet_precondition', 'Repository inspection must settle before this Planner outcome');
       if (discussion) {
         guardNewCommand(command, { kind: attempt.kind, scopeId: discussion.todo_id, scopeKind: 'todo', mutationAllowed: attempt.mutation_allowed, processReleased: attempt.process_released, controlVersion: Number(discussion.version), sourceWatermark: attempt.launch.source_watermark, connectionAvailable: runner.available && runner.connection_instance === this.instanceId });
         const outcome = await handleDiscussionCommand(tx, discussion, attempt, command);
@@ -532,6 +569,7 @@ export class BoundaryService {
       await lockAttemptWorkspace(tx, attempt.id);
       const operation = (await tx.query<OperationRow>('SELECT * FROM operations WHERE id=$1 AND attempt_id=$2 FOR UPDATE', [message.operation_id, attempt.id])).rows[0];
       if (!operation) throw new CommandError('denied_scope', 'Operation is outside Attempt scope');
+      if (operation.inspection_descriptor) { await settleRepositoryInspection(tx, attempt, operation, message); return; }
       if (attempt.todo_id && operation.kind !== 'stop') throw new CommandError('denied_scope', 'Todo cannot settle repository fixture effects');
       if(operation.kind==='settle_completion') {
         await finishCompletionSettlement(tx,attempt,operation,message,configurationVersion);return;

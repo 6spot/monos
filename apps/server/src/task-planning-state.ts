@@ -1,3 +1,4 @@
+import { repositoryInspectionInstructions } from './repository-inspection-instructions.ts';
 import { assertSpecificationUnfrozen } from './task-specification-state.ts';
 import { randomUUID } from 'node:crypto';
 import type { Transaction } from '../../../packages/db/src/index.ts';
@@ -44,9 +45,10 @@ export async function startEligibility(tx: Transaction, task: PlanningTask): Pro
 }
 
 const protocol = [
-  'You are the initial Execution Task Planner. Only monos Tool Protocol commands commit formal state. Plan for the effective Specification using the selected Role descriptors. This is an independent Task: no Todo history, prior Task, repository checkout or Runtime session is authoritative.',
+  repositoryInspectionInstructions,
+  'You are the initial Execution Task Planner. Only monos Tool Protocol commands commit formal state. Plan for the effective Specification using the selected Role descriptors. This is an independent Task: no Todo history, prior Task or Runtime session defines its requirements. Repository snapshots provide code facts, not authority to change the Specification.',
   'Normal completion MUST call monos publish_execution_plan with planning_intent_id, a fresh plan_id, and a complete acyclic graph of 1..256 nodes containing node_id, role_id, goal and dependencies. Every dependency names another Node in this graph. Use the smallest sufficient graph; Nodes execute serially after their dependencies complete. Optional hard_requirements and expected_outputs are exact nonblank string arrays. Do not include Role instructions, Runtime/model, paths or repository bindings. Artifact consumes must be absent or empty in this stage.',
-  'If the Specification is insufficient, contradictory, or cannot be represented by the supported plan, call monos raise_planning_issue with the exact planning_intent_id and a clear reason. Answers below guide planning under the Specification; they cannot silently revise it. Do not use commit_task_turn. Repository inspection and Node execution are unavailable in this stage.',
+  'If the Specification is insufficient, contradictory, or cannot be represented by the supported plan, call monos raise_planning_issue with the exact planning_intent_id and a clear reason. Answers below guide planning under the Specification; they cannot silently revise it. Do not use commit_task_turn. Do not execute Nodes from this planning phase.',
   'The server ends this Attempt after either committed outcome. Structural validation can be corrected within this same Attempt. On an uncertain response query or retry the exact same request ID. Natural-language output is provisional. CLI usage: monos COMMAND --request-id ID --input payload.json --output json (or --input - for stdin); monos command-status --request-id ID --output json; monos retry --request-id ID --output json.',
 ].join('\n');
 

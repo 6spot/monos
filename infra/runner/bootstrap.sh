@@ -67,7 +67,7 @@ else:
         directory(root/name,owner=service.pw_uid,group=group)
     for name in ['service','results']:
         if (root/name).stat().st_mode & 0o077: raise SystemExit('private directory became accessible')
-    for name,owner,mode in [('tasks',0,0o755),('launch/workspaces',0,0o755),('cache/resources',service.pw_uid,0o750),('service/workspace-locks',service.pw_uid,0o700),('service/workspace-operations',service.pw_uid,0o700)]:
+    for name,owner,mode in [('tasks',0,0o755),('launch/workspaces',0,0o755),('cache/resources',service.pw_uid,0o750),('service/workspace-locks',service.pw_uid,0o700),('service/workspace-operations',service.pw_uid,0o700),('service/inspection-operations',service.pw_uid,0o700)]:
         path=root/name
         if os.path.lexists(path):
             directory(path,owner=owner)
@@ -116,6 +116,7 @@ install -d -o monos-probe -g monos-probe-read -m 0750 /var/lib/monos-probe/cache
 install -d -o root -g root -m 0755 /var/lib/monos-probe/tasks /var/lib/monos-probe/launch/workspaces
 install -d -o monos-probe -g monos-probe-read -m 0750 /var/lib/monos-probe/cache/resources
 install -d -o monos-probe -g monos-probe-read -m 0700 /var/lib/monos-probe/service/workspace-locks /var/lib/monos-probe/service/workspace-operations
+install -d -o monos-probe -g monos-probe-read -m 0700 /var/lib/monos-probe/service/inspection-operations
 python3 - <<'PY'
 import os, pathlib, pwd, grp, uuid
 root=pathlib.Path('/var/lib/monos-probe')

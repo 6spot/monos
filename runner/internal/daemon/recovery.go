@@ -22,15 +22,15 @@ type recoveryBatch struct {
 // same immutable effect, using its retained local failure or terminal result.
 func (d *Daemon) retainedRecovery(op protocol.Operation, dispatch protocol.Dispatch) (bool, error) {
 	result, err := d.DB.Effect(op.OperationID)
-	if err != nil || result == nil {
+	if err != nil || result == nil && op.Inspection == nil {
 		return false, err
 	}
-	if result.OperationID != op.OperationID || result.AttemptID != op.AttemptID {
+	if result != nil && (result.OperationID != op.OperationID || result.AttemptID != op.AttemptID) {
 		return false, fmt.Errorf("retained recovery result scope mismatch")
 	}
 	// Older persisted failures may omit their classification. A missing result
 	// is different: it supplies no evidence and was excluded above.
-	if !result.Success && result.CancelledByOperationID == nil && result.FailureKind != nil && *result.FailureKind != protocol.Recoverable {
+	if result != nil && !result.Success && result.CancelledByOperationID == nil && result.FailureKind != nil && *result.FailureKind != protocol.Recoverable {
 		return false, nil
 	}
 	if err = d.DB.BeginEffect(op); err != nil {
@@ -42,6 +42,14 @@ func (d *Daemon) retainedRecovery(op protocol.Operation, dispatch protocol.Dispa
 	}
 	if err = host.ValidateEffectScope(start.Dispatch, op); err != nil {
 		return false, err
+	}
+	if op.Inspection != nil {
+		retained, remote := start.Dispatch, dispatch
+		remote.MutationAllowed, remote.ProcessReleased = retained.MutationAllowed, retained.ProcessReleased
+		if !reflect.DeepEqual(retained, remote) || dispatch.ProcessReleased && (result == nil || !result.Success) {
+			return false, fmt.Errorf("inspection recovery source changed")
+		}
+		return true, nil
 	}
 	if dispatch.NodeExecutionSource != nil || start.Dispatch.NodeExecutionSource != nil {
 		if dispatch.NodeExecutionSource == nil || dispatch.MutationAllowed || dispatch.ProcessReleased || !reflect.DeepEqual(start.Dispatch.TaskID, dispatch.TaskID) || !reflect.DeepEqual(start.Dispatch.NodeExecutionSource, dispatch.NodeExecutionSource) || !reflect.DeepEqual(start.Dispatch.WorkspaceReservations, dispatch.WorkspaceReservations) {
@@ -81,7 +89,7 @@ func (d *Daemon) prepareRecovery(ctx context.Context, inventory protocol.RunnerI
 		// Only exact source-bound terminal effects gain repository-free replay.
 		nodeFree := dispatch.NodeExecutionSource != nil && (op.Kind == protocol.Stop || op.Kind == protocol.KindCompleteNode && op.RepositoryFree != nil && *op.RepositoryFree)
 		conversationStop := dispatch.TaskConversationSource != nil && op.Kind == protocol.Stop
-		if op.Workspace == nil && !nodeFree && !conversationStop && (op.Kind != protocol.Stop || dispatch.TaskPlanningSource == nil && dispatch.TaskReplanSource == nil && dispatch.TaskReviewSource == nil) {
+		if op.Inspection == nil && op.Workspace == nil && !nodeFree && !conversationStop && (op.Kind != protocol.Stop || dispatch.TaskPlanningSource == nil && dispatch.TaskReplanSource == nil && dispatch.TaskReviewSource == nil) {
 			continue
 		}
 		if prior, exists := seen[op.OperationID]; exists {

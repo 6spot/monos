@@ -40,7 +40,8 @@ it('keeps review tools exclusive from Node, Conversation, Todo and Replan author
   const review:AdmissionBasis={...basis,kind:'planner',taskReview:true};
   const outcome:CommandEnvelope={...command,name:'apply_review_rework',payload:{feedback_id:'feedback',operation_id:'operation',operation_version:1,source_id:'source',basis:{control_version:1,specification_id:'spec',plan_id:'plan'},node_ids:['node'],reason:'Fix result'}};
   expect(()=>guardNewCommand(outcome,review)).not.toThrow();
+  expect(()=>guardNewCommand({...command,name:'inspect_repository'},review)).not.toThrow();
   for(const foreign of [basis,{...basis,kind:'planner' as const,taskConversation:true},{...basis,kind:'planner' as const,taskReplan:true},{...review,scopeKind:'todo' as const}])expect(()=>guardNewCommand(outcome,foreign)).toThrow();
-  for(const name of ['open_workspace','complete_node','commit_task_turn','prepare_replan','publish_execution_plan','apply_specification_revision','inspect_repository'] as const)expect(()=>guardNewCommand({...command,name},review)).toThrow();
+  for(const name of ['open_workspace','complete_node','commit_task_turn','prepare_replan','publish_execution_plan','apply_specification_revision'] as const)expect(()=>guardNewCommand({...command,name},review)).toThrow();
   expect(()=>guardNewCommand(outcome,{...review,mutationAllowed:false})).toThrow('ended');
 });

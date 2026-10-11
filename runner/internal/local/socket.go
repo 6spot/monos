@@ -138,6 +138,21 @@ func prepareEnvelope(d protocol.Dispatch, r Request) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	if r.Name == protocol.NameInspectRepository {
+		// Inspection shares only read authority across the five canonical Planner
+		// sources. ScopeID already checked each source and its frozen version.
+		if d.Kind != "planner" || (d.TodoID == nil && d.TaskPlanningSource == nil && d.TaskConversationSource == nil && d.TaskReplanSource == nil && d.TaskReviewSource == nil) {
+			return nil, fmt.Errorf("inspection requires a canonical Planner source")
+		}
+		raw, err := encodeEnvelope(d, r, scope)
+		if err != nil {
+			return nil, err
+		}
+		if _, err = wire.Envelope(raw); err != nil {
+			return nil, err
+		}
+		return raw, nil
+	}
 	if d.TaskReviewSource != nil {
 		return prepareReviewEnvelope(d, r, scope)
 	}
@@ -240,6 +255,10 @@ func prepareEnvelope(d protocol.Dispatch, r Request) ([]byte, error) {
 	} else if d.TaskPlanningSource != nil && r.Name != protocol.NameInspectRepository {
 		return nil, fmt.Errorf("initial Task planning ends only with publish_execution_plan or raise_planning_issue")
 	}
+	return encodeEnvelope(d, r, scope)
+}
+
+func encodeEnvelope(d protocol.Dispatch, r Request, scope string) ([]byte, error) {
 	env := map[string]any{"schema_version": 1, "request_id": r.RequestID, "scope_id": scope, "name": r.Name, "expected_control_version": d.ControlVersion, "payload": r.Payload}
 	raw, _, err := wire.Canonical(env)
 	return raw, err

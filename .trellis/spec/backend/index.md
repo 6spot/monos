@@ -32,6 +32,7 @@ and [technology](../../../docs/11-technology-and-deployment.md).
 - For exact GitHub push/PR preparation, uncertain effects, checks and Cancel cleanup, read [Remote preparation](remote-preparation.md).
 - For selected Attempt queue/promotion, read [dispatch queue](dispatch-queue.md).
 - For canonical repository admission, serial leases and ephemeral fetch access, read [workspaces](workspaces.md).
+- For all five Planner sources reading fixed repository revisions, read [repository inspection](repository-inspection.md).
 - For production Runtime target choice and shared capacity, read [Runtime scheduling](runtime-scheduling.md).
 - For verified native failure, settled same-Runner fallback and source recovery, read [Runtime continuation](runtime-continuation.md).
 - For revision/activation publication, read [Task records](task-records.md).

@@ -10376,5 +10376,832 @@
     "plan_id": "plan"
   },
   "valid": false
+},
+{
+  "name": "inspection default branch descriptor",
+  "schema": "InspectionDescriptor",
+  "valid": true,
+  "value": {
+    "schema_version": 1,
+    "inspection_id": "inspection-a",
+    "attempt_id": "attempt-a",
+    "dispatch_id": "dispatch-a",
+    "scope_kind": "task",
+    "scope_id": "task-a",
+    "project_id": "project-a",
+    "runner_id": "runner-a",
+    "resource": {
+      "resource_id": "resource-a",
+      "repository_identity": "github.com/owner/repo",
+      "remote_url": "https://github.com/owner/repo.git"
+    },
+    "planner_source": {
+      "kind": "task_initial_planning",
+      "source_id": "source-a",
+      "control_version": 1,
+      "source_watermark": 0,
+      "context_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "origin": {
+      "kind": "default_ref"
+    }
+  }
+},
+{
+  "name": "inspection task_conversation descriptor",
+  "schema": "InspectionDescriptor",
+  "valid": true,
+  "value": {
+    "schema_version": 1,
+    "inspection_id": "inspection-a",
+    "attempt_id": "attempt-a",
+    "dispatch_id": "dispatch-a",
+    "scope_kind": "task",
+    "scope_id": "task-a",
+    "project_id": "project-a",
+    "runner_id": "runner-a",
+    "resource": {
+      "resource_id": "resource-a",
+      "repository_identity": "github.com/owner/repo",
+      "remote_url": "https://github.com/owner/repo.git"
+    },
+    "planner_source": {
+      "kind": "task_conversation",
+      "source_id": "source-a",
+      "control_version": 1,
+      "source_watermark": 0,
+      "context_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "origin": {
+      "kind": "default_ref"
+    }
+  }
+},
+{
+  "name": "inspection task_replan descriptor",
+  "schema": "InspectionDescriptor",
+  "valid": true,
+  "value": {
+    "schema_version": 1,
+    "inspection_id": "inspection-a",
+    "attempt_id": "attempt-a",
+    "dispatch_id": "dispatch-a",
+    "scope_kind": "task",
+    "scope_id": "task-a",
+    "project_id": "project-a",
+    "runner_id": "runner-a",
+    "resource": {
+      "resource_id": "resource-a",
+      "repository_identity": "github.com/owner/repo",
+      "remote_url": "https://github.com/owner/repo.git"
+    },
+    "planner_source": {
+      "kind": "task_replan",
+      "source_id": "source-a",
+      "control_version": 1,
+      "source_watermark": 0,
+      "context_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "origin": {
+      "kind": "default_ref"
+    }
+  }
+},
+{
+  "name": "inspection task_review descriptor",
+  "schema": "InspectionDescriptor",
+  "valid": true,
+  "value": {
+    "schema_version": 1,
+    "inspection_id": "inspection-a",
+    "attempt_id": "attempt-a",
+    "dispatch_id": "dispatch-a",
+    "scope_kind": "task",
+    "scope_id": "task-a",
+    "project_id": "project-a",
+    "runner_id": "runner-a",
+    "resource": {
+      "resource_id": "resource-a",
+      "repository_identity": "github.com/owner/repo",
+      "remote_url": "https://github.com/owner/repo.git"
+    },
+    "planner_source": {
+      "kind": "task_review",
+      "source_id": "source-a",
+      "control_version": 1,
+      "source_watermark": 0,
+      "context_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "origin": {
+      "kind": "default_ref"
+    }
+  }
+},
+{
+  "name": "inspection Todo descriptor",
+  "schema": "InspectionDescriptor",
+  "valid": true,
+  "value": {
+    "schema_version": 1,
+    "inspection_id": "inspection-a",
+    "attempt_id": "attempt-a",
+    "dispatch_id": "dispatch-a",
+    "scope_kind": "todo",
+    "scope_id": "task-a",
+    "project_id": "project-a",
+    "runner_id": "runner-a",
+    "resource": {
+      "resource_id": "resource-a",
+      "repository_identity": "github.com/owner/repo",
+      "remote_url": "https://github.com/owner/repo.git"
+    },
+    "planner_source": {
+      "kind": "todo_discussion",
+      "source_id": "source-a",
+      "control_version": 1,
+      "source_watermark": 0,
+      "context_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "origin": {
+      "kind": "default_ref"
+    }
+  }
+},
+{
+  "name": "inspection Todo cannot use Task results",
+  "schema": "InspectionDescriptor",
+  "valid": false,
+  "value": {
+    "schema_version": 1,
+    "inspection_id": "inspection-a",
+    "attempt_id": "attempt-a",
+    "dispatch_id": "dispatch-a",
+    "scope_kind": "todo",
+    "scope_id": "task-a",
+    "project_id": "project-a",
+    "runner_id": "runner-a",
+    "resource": {
+      "resource_id": "resource-a",
+      "repository_identity": "github.com/owner/repo",
+      "remote_url": "https://github.com/owner/repo.git"
+    },
+    "planner_source": {
+      "kind": "todo_discussion",
+      "source_id": "source-a",
+      "control_version": 1,
+      "source_watermark": 0,
+      "context_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "origin": {
+      "kind": "task_completion",
+      "identity": {
+        "task_id": "task_id",
+        "operation_id": "operation_id",
+        "attempt_id": "attempt_id",
+        "dispatch_id": "dispatch_id",
+        "node_id": "node_id",
+        "specification_id": "specification_id",
+        "plan_id": "plan_id",
+        "workspace_id": "workspace_id",
+        "resource_id": "resource_id",
+        "runner_id": "runner_id",
+        "storage_id": "storage_id",
+        "lease_id": "lease_id",
+        "manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "operation_identity_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "generation": 1,
+        "node_activation": 1,
+        "repository_identity": "repo",
+        "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "git_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "git_tree": "cccccccccccccccccccccccccccccccccccccccc"
+      },
+      "identity_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    }
+  }
+},
+{
+  "name": "inspection Task cannot use Todo source",
+  "schema": "InspectionDescriptor",
+  "valid": false,
+  "value": {
+    "schema_version": 1,
+    "inspection_id": "inspection-a",
+    "attempt_id": "attempt-a",
+    "dispatch_id": "dispatch-a",
+    "scope_kind": "task",
+    "scope_id": "task-a",
+    "project_id": "project-a",
+    "runner_id": "runner-a",
+    "resource": {
+      "resource_id": "resource-a",
+      "repository_identity": "github.com/owner/repo",
+      "remote_url": "https://github.com/owner/repo.git"
+    },
+    "planner_source": {
+      "kind": "todo_discussion",
+      "source_id": "source-a",
+      "control_version": 1,
+      "source_watermark": 0,
+      "context_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "origin": {
+      "kind": "default_ref"
+    }
+  }
+},
+{
+  "name": "inspection Node source rejected",
+  "schema": "InspectionDescriptor",
+  "valid": false,
+  "value": {
+    "schema_version": 1,
+    "inspection_id": "inspection-a",
+    "attempt_id": "attempt-a",
+    "dispatch_id": "dispatch-a",
+    "scope_kind": "task",
+    "scope_id": "task-a",
+    "project_id": "project-a",
+    "runner_id": "runner-a",
+    "resource": {
+      "resource_id": "resource-a",
+      "repository_identity": "github.com/owner/repo",
+      "remote_url": "https://github.com/owner/repo.git"
+    },
+    "planner_source": {
+      "kind": "node",
+      "source_id": "source-a",
+      "control_version": 1,
+      "source_watermark": 0,
+      "context_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "origin": {
+      "kind": "default_ref"
+    }
+  }
+},
+{
+  "name": "inspection completed origin",
+  "schema": "InspectionOrigin",
+  "valid": true,
+  "value": {
+    "kind": "task_completion",
+    "identity": {
+      "task_id": "task_id",
+      "operation_id": "operation_id",
+      "attempt_id": "attempt_id",
+      "dispatch_id": "dispatch_id",
+      "node_id": "node_id",
+      "specification_id": "specification_id",
+      "plan_id": "plan_id",
+      "workspace_id": "workspace_id",
+      "resource_id": "resource_id",
+      "runner_id": "runner_id",
+      "storage_id": "storage_id",
+      "lease_id": "lease_id",
+      "manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "operation_identity_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "generation": 1,
+      "node_activation": 1,
+      "repository_identity": "repo",
+      "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "git_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "git_tree": "cccccccccccccccccccccccccccccccccccccccc"
+    },
+    "identity_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  }
+},
+{
+  "name": "inspection completion requires digest",
+  "schema": "InspectionOrigin",
+  "valid": false,
+  "value": {
+    "kind": "task_completion",
+    "identity": {
+      "task_id": "task_id",
+      "operation_id": "operation_id",
+      "attempt_id": "attempt_id",
+      "dispatch_id": "dispatch_id",
+      "node_id": "node_id",
+      "specification_id": "specification_id",
+      "plan_id": "plan_id",
+      "workspace_id": "workspace_id",
+      "resource_id": "resource_id",
+      "runner_id": "runner_id",
+      "storage_id": "storage_id",
+      "lease_id": "lease_id",
+      "manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "operation_identity_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "generation": 1,
+      "node_activation": 1,
+      "repository_identity": "repo",
+      "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "git_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "git_tree": "cccccccccccccccccccccccccccccccccccccccc"
+    }
+  }
+},
+{
+  "name": "inspection original open origin",
+  "schema": "InspectionOrigin",
+  "valid": true,
+  "value": {
+    "kind": "task_open",
+    "operation_id": "open-a",
+    "workspace": {
+      "schema_version": 1,
+      "workspace_id": "workspace-a",
+      "task_id": "task-a",
+      "project_id": "project-a",
+      "resource_id": "resource-a",
+      "runner_id": "runner-a",
+      "generation": 1,
+      "lease_id": "lease-a",
+      "node_id": "node-a",
+      "node_activation": 1,
+      "open_operation_id": "open-a",
+      "resource": {
+        "resource_id": "resource-a",
+        "repository_identity": "github.com/owner/repo",
+        "remote_url": "https://github.com/owner/repo.git"
+      }
+    },
+    "workspace_digest": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "metadata": {
+      "generation": 1,
+      "storage_id": "storage-a",
+      "lease_id": "lease-a",
+      "repository_identity": "github.com/owner/repo",
+      "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "target_branch": "main",
+      "target_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "finalized_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    }
+  }
+},
+{
+  "name": "inspection open cannot expose checkpoint",
+  "schema": "InspectionOrigin",
+  "valid": false,
+  "value": {
+    "kind": "task_open",
+    "operation_id": "open-a",
+    "workspace": {
+      "schema_version": 1,
+      "workspace_id": "workspace-a",
+      "task_id": "task-a",
+      "project_id": "project-a",
+      "resource_id": "resource-a",
+      "runner_id": "runner-a",
+      "generation": 1,
+      "lease_id": "lease-a",
+      "node_id": "node-a",
+      "node_activation": 1,
+      "open_operation_id": "open-a",
+      "resource": {
+        "resource_id": "resource-a",
+        "repository_identity": "github.com/owner/repo",
+        "remote_url": "https://github.com/owner/repo.git"
+      }
+    },
+    "workspace_digest": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "metadata": {
+      "generation": 1,
+      "storage_id": "storage-a",
+      "lease_id": "lease-a",
+      "repository_identity": "github.com/owner/repo",
+      "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "target_branch": "main",
+      "target_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "finalized_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "checkpoint": {
+        "stop_operation_id": "stop-a",
+        "head_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "index_tree": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "worktree_digest": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+      }
+    }
+  }
+},
+{
+  "name": "inspection open cannot adopt later basis",
+  "schema": "InspectionOrigin",
+  "valid": false,
+  "value": {
+    "kind": "task_open",
+    "operation_id": "open-a",
+    "workspace": {
+      "schema_version": 1,
+      "workspace_id": "workspace-a",
+      "task_id": "task-a",
+      "project_id": "project-a",
+      "resource_id": "resource-a",
+      "runner_id": "runner-a",
+      "generation": 1,
+      "lease_id": "lease-a",
+      "node_id": "node-a",
+      "node_activation": 1,
+      "open_operation_id": "open-a",
+      "resource": {
+        "resource_id": "resource-a",
+        "repository_identity": "github.com/owner/repo",
+        "remote_url": "https://github.com/owner/repo.git"
+      },
+      "basis": {
+        "storage_id": "storage-a",
+        "repository_identity": "github.com/owner/repo",
+        "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "target_branch": "main",
+        "target_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "finalized_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    },
+    "workspace_digest": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "metadata": {
+      "generation": 1,
+      "storage_id": "storage-a",
+      "lease_id": "lease-a",
+      "repository_identity": "github.com/owner/repo",
+      "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "target_branch": "main",
+      "target_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "finalized_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    }
+  }
+},
+{
+  "name": "inspection operation",
+  "schema": "Operation",
+  "valid": true,
+  "value": {
+    "schema_version": 1,
+    "operation_id": "inspection-a",
+    "attempt_id": "attempt-a",
+    "dispatch_id": "dispatch-a",
+    "request_id": "request-a",
+    "kind": "inspect_repository",
+    "resource_id": "resource-a",
+    "state": "admitted",
+    "inspection": {
+      "schema_version": 1,
+      "inspection_id": "inspection-a",
+      "attempt_id": "attempt-a",
+      "dispatch_id": "dispatch-a",
+      "scope_kind": "task",
+      "scope_id": "task-a",
+      "project_id": "project-a",
+      "runner_id": "runner-a",
+      "resource": {
+        "resource_id": "resource-a",
+        "repository_identity": "github.com/owner/repo",
+        "remote_url": "https://github.com/owner/repo.git"
+      },
+      "planner_source": {
+        "kind": "task_initial_planning",
+        "source_id": "source-a",
+        "control_version": 1,
+        "source_watermark": 0,
+        "context_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "origin": {
+        "kind": "default_ref"
+      }
+    },
+    "inspection_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  }
+},
+{
+  "name": "inspection operation paired inspection",
+  "schema": "Operation",
+  "valid": false,
+  "value": {
+    "schema_version": 1,
+    "operation_id": "inspection-a",
+    "attempt_id": "attempt-a",
+    "dispatch_id": "dispatch-a",
+    "request_id": "request-a",
+    "kind": "inspect_repository",
+    "resource_id": "resource-a",
+    "state": "admitted",
+    "inspection_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  }
+},
+{
+  "name": "inspection operation paired inspection_digest",
+  "schema": "Operation",
+  "valid": false,
+  "value": {
+    "schema_version": 1,
+    "operation_id": "inspection-a",
+    "attempt_id": "attempt-a",
+    "dispatch_id": "dispatch-a",
+    "request_id": "request-a",
+    "kind": "inspect_repository",
+    "resource_id": "resource-a",
+    "state": "admitted",
+    "inspection": {
+      "schema_version": 1,
+      "inspection_id": "inspection-a",
+      "attempt_id": "attempt-a",
+      "dispatch_id": "dispatch-a",
+      "scope_kind": "task",
+      "scope_id": "task-a",
+      "project_id": "project-a",
+      "runner_id": "runner-a",
+      "resource": {
+        "resource_id": "resource-a",
+        "repository_identity": "github.com/owner/repo",
+        "remote_url": "https://github.com/owner/repo.git"
+      },
+      "planner_source": {
+        "kind": "task_initial_planning",
+        "source_id": "source-a",
+        "control_version": 1,
+        "source_watermark": 0,
+        "context_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "origin": {
+        "kind": "default_ref"
+      }
+    }
+  }
+},
+{
+  "name": "inspection descriptor restricted to inspect",
+  "schema": "Operation",
+  "valid": false,
+  "value": {
+    "schema_version": 1,
+    "operation_id": "inspection-a",
+    "attempt_id": "attempt-a",
+    "dispatch_id": "dispatch-a",
+    "request_id": "request-a",
+    "kind": "stop",
+    "resource_id": "resource-a",
+    "state": "admitted",
+    "inspection": {
+      "schema_version": 1,
+      "inspection_id": "inspection-a",
+      "attempt_id": "attempt-a",
+      "dispatch_id": "dispatch-a",
+      "scope_kind": "task",
+      "scope_id": "task-a",
+      "project_id": "project-a",
+      "runner_id": "runner-a",
+      "resource": {
+        "resource_id": "resource-a",
+        "repository_identity": "github.com/owner/repo",
+        "remote_url": "https://github.com/owner/repo.git"
+      },
+      "planner_source": {
+        "kind": "task_initial_planning",
+        "source_id": "source-a",
+        "control_version": 1,
+        "source_watermark": 0,
+        "context_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "origin": {
+        "kind": "default_ref"
+      }
+    },
+    "inspection_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  }
+},
+{
+  "name": "inspection operation cannot grant workspace",
+  "schema": "Operation",
+  "valid": false,
+  "value": {
+    "schema_version": 1,
+    "operation_id": "inspection-a",
+    "attempt_id": "attempt-a",
+    "dispatch_id": "dispatch-a",
+    "request_id": "request-a",
+    "kind": "inspect_repository",
+    "resource_id": "resource-a",
+    "state": "admitted",
+    "inspection": {
+      "schema_version": 1,
+      "inspection_id": "inspection-a",
+      "attempt_id": "attempt-a",
+      "dispatch_id": "dispatch-a",
+      "scope_kind": "task",
+      "scope_id": "task-a",
+      "project_id": "project-a",
+      "runner_id": "runner-a",
+      "resource": {
+        "resource_id": "resource-a",
+        "repository_identity": "github.com/owner/repo",
+        "remote_url": "https://github.com/owner/repo.git"
+      },
+      "planner_source": {
+        "kind": "task_initial_planning",
+        "source_id": "source-a",
+        "control_version": 1,
+        "source_watermark": 0,
+        "context_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "origin": {
+        "kind": "default_ref"
+      }
+    },
+    "inspection_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "workspace": {
+      "schema_version": 1,
+      "workspace_id": "workspace-a",
+      "task_id": "task-a",
+      "project_id": "project-a",
+      "resource_id": "resource-a",
+      "runner_id": "runner-a",
+      "generation": 1,
+      "lease_id": "lease-a",
+      "node_id": "node-a",
+      "node_activation": 1,
+      "open_operation_id": "open-a",
+      "resource": {
+        "resource_id": "resource-a",
+        "repository_identity": "github.com/owner/repo",
+        "remote_url": "https://github.com/owner/repo.git"
+      }
+    },
+    "workspace_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  }
+},
+{
+  "name": "inspection available result",
+  "schema": "InspectionResult",
+  "valid": true,
+  "value": {
+    "inspection_id": "inspection-a",
+    "descriptor_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "status": "available",
+    "snapshot": {
+      "snapshot_id": "inspection-a",
+      "storage_id": "storage-a",
+      "path": "/var/lib/monos/inspections/inspection-a/snapshot",
+      "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "tree": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "repository_identity": "github.com/owner/repo",
+      "instruction_files": [
+        "AGENTS.md"
+      ]
+    }
+  }
+},
+{
+  "name": "inspection isolated effect result",
+  "schema": "EffectResult",
+  "valid": true,
+  "value": {
+    "inspection": {
+      "inspection_id": "inspection-a",
+      "descriptor_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "status": "available",
+      "snapshot": {
+        "snapshot_id": "inspection-a",
+        "storage_id": "storage-a",
+        "path": "/var/lib/monos/inspections/inspection-a/snapshot",
+        "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "tree": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "repository_identity": "github.com/owner/repo",
+        "instruction_files": [
+          "AGENTS.md"
+        ]
+      }
+    }
+  }
+},
+{
+  "name": "inspection settled cancellation",
+  "schema": "InspectionResult",
+  "valid": true,
+  "value": {
+    "inspection_id": "inspection-a",
+    "descriptor_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "status": "unavailable",
+    "reason": "cancelled"
+  }
+},
+{
+  "name": "inspection available cannot carry failure",
+  "schema": "InspectionResult",
+  "valid": false,
+  "value": {
+    "inspection_id": "inspection-a",
+    "descriptor_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "status": "available",
+    "snapshot": {
+      "snapshot_id": "inspection-a",
+      "storage_id": "storage-a",
+      "path": "/var/lib/monos/inspections/inspection-a/snapshot",
+      "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "tree": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "repository_identity": "github.com/owner/repo",
+      "instruction_files": [
+        "AGENTS.md"
+      ]
+    },
+    "reason": "access_denied"
+  }
+},
+{
+  "name": "inspection unavailable cannot grant path",
+  "schema": "InspectionResult",
+  "valid": false,
+  "value": {
+    "inspection_id": "inspection-a",
+    "descriptor_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "status": "unavailable",
+    "reason": "cancelled",
+    "snapshot": {
+      "snapshot_id": "inspection-a",
+      "storage_id": "storage-a",
+      "path": "/var/lib/monos/inspections/inspection-a/snapshot",
+      "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "tree": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "repository_identity": "github.com/owner/repo",
+      "instruction_files": [
+        "AGENTS.md"
+      ]
+    }
+  }
+},
+{
+  "name": "inspection unavailable requires reason",
+  "schema": "InspectionResult",
+  "valid": false,
+  "value": {
+    "inspection_id": "inspection-a",
+    "descriptor_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "status": "unavailable"
+  }
+},
+{
+  "name": "inspection available requires snapshot",
+  "schema": "InspectionResult",
+  "valid": false,
+  "value": {
+    "inspection_id": "inspection-a",
+    "descriptor_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "status": "available"
+  }
+},
+{
+  "name": "inspection effect cannot grant workspace",
+  "schema": "EffectResult",
+  "valid": false,
+  "value": {
+    "inspection": {
+      "inspection_id": "inspection-a",
+      "descriptor_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "status": "available",
+      "snapshot": {
+        "snapshot_id": "inspection-a",
+        "storage_id": "storage-a",
+        "path": "/var/lib/monos/inspections/inspection-a/snapshot",
+        "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "tree": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "repository_identity": "github.com/owner/repo",
+        "instruction_files": [
+          "AGENTS.md"
+        ]
+      }
+    },
+    "path": "/workspace"
+  }
+},
+{
+  "name": "inspection effect cannot claim writer absence",
+  "schema": "EffectResult",
+  "valid": false,
+  "value": {
+    "inspection": {
+      "inspection_id": "inspection-a",
+      "descriptor_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "status": "unavailable",
+      "reason": "cancelled"
+    },
+    "writer_absent": true
+  }
+},
+{
+  "name": "inspection access binds descriptor",
+  "schema": "InspectionRepositoryAccessRequest",
+  "valid": true,
+  "value": {
+    "schema_version": 1,
+    "incarnation": 1,
+    "inspection_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  }
+},
+{
+  "name": "inspection access rejects workspace identity",
+  "schema": "InspectionRepositoryAccessRequest",
+  "valid": false,
+  "value": {
+    "schema_version": 1,
+    "incarnation": 1,
+    "workspace_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  }
 }
 ]

@@ -1,3 +1,4 @@
+import { repositoryInspectionInstructions } from './repository-inspection-instructions.ts';
 import { randomUUID } from 'node:crypto';
 import type { Transaction } from '../../../packages/db/src/index.ts';
 import { CommandError } from '../../../packages/domain/src/commands.ts';
@@ -147,8 +148,9 @@ export async function prepareDiscussionContext(tx: Transaction, control: Discuss
   for (const message of recent) { const size = Buffer.byteLength(JSON.stringify(message)); if (bytes + size > 65536) break; history.unshift(message); bytes += size; }
   const context = { source_message_id: source.id, source_watermark: Number(source.sequence), discussion_version: Number(control.version), ...(control.project_id ? { project_id: control.project_id } : {}), project_context_version: binding.project_context_version, project_context_digest: binding.project_context_digest, configuration_version: configurationVersion };
   const prompt = [
+    repositoryInspectionInstructions,
     'You are the Todo Discussion Planner. Only monos Tool Protocol commands can commit formal output. Capture text is immutable. Do not create Tasks, execute code changes, or claim a Task exists. Runtime logs are provisional. Treat withdrawn input as historical, not an outstanding instruction.',
-    'Use monos read_discussion for older scoped history. Repository inspection is unavailable in this release. Normal completion MUST call monos commit_discussion_turn with reply, working_requirement_state, the exact source_message_id and source_watermark below, and optional structured task_preview. The server stops this process after commit. Do not use commit_task_turn. Query/retry the same request ID after an uncertain result; never invent another effect.',
+    'Use monos read_discussion for older scoped history. Normal completion MUST call monos commit_discussion_turn with reply, working_requirement_state, the exact source_message_id and source_watermark below, and optional structured task_preview. The server stops this process after commit. Do not use commit_task_turn. Query/retry the same request ID after an uncertain result; never invent another effect.',
     'Explicit cache rebuilding uses monos update_working_requirement_state with resolved_watermark and project_context_version/project_context_digest; it must cover resolved history only and is not a turn outcome. Normal turns update cache atomically with the reply.',
     canonicalJSON({ binding: { source_message_id: context.source_message_id, source_watermark: context.source_watermark, project_id: context.project_id, project_context_version: context.project_context_version, project_context_digest: context.project_context_digest, configuration_version: configurationVersion }, resolved_watermark: Number(control.resolved_watermark), owner_planner_guidance: guidance, project: binding.project, original_capture: control.original_capture, working_requirement_state: cache?.content ?? null, recent_history: history, current_owner_message: { message_id: source.id, content: source.content } }),
   ].join('\n\n');
@@ -181,7 +183,6 @@ export async function handleDiscussionCommand(tx: Transaction, control: Discussi
   const context = attempt.discussion_context;
   if (!context || control.source_message_id !== context.source_message_id || control.desired_attempt_id !== attempt.id) throw new CommandError('stale_execution', 'Discussion source was replaced');
   if (command.name === 'read_discussion') return { result: { discussion_page: await discussionHistory(tx, control.todo_id, command.payload.cursor, context.source_watermark) } };
-  if (command.name === 'inspect_repository') throw new CommandError('unmet_precondition', 'Todo repository inspection is not supported by the current Runner');
   const binding = await projectBinding(tx, control);
   const currentProject = binding.project_context_version === context.project_context_version && binding.project_context_digest === context.project_context_digest;
   const state = command.payload.working_requirement_state!; discussionText(state, true);

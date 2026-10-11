@@ -13,6 +13,7 @@ outcomes, Stop and service/host recovery. Startup after that reboot trial was ma
 ## Pre-Development Checklist
 
 - Read [execution](execution-guidelines.md), [workspace](workspace-guidelines.md) and [quality](quality-guidelines.md).
+- Read [Planner inspection](planner-inspection.md) for immutable repository snapshots, source proof and service-worker cancellation.
 - Read [protocol](../protocol/commands.md) for CLI identity/replay.
 - Read [Node execution](../backend/node-execution.md) for canonical source, repository-free completion and paired recovery contracts.
 - Read [Task Conversation](../backend/task-conversation.md) for source-specific reads/replies, Stop-only effects and explicit guidance declarations.

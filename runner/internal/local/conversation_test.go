@@ -78,7 +78,7 @@ func TestConversationRejectsForeignSourceCommandsAndTerminalActions(t *testing.T
 			}
 		})
 	}
-	for _, name := range []protocol.CommandEnvelopeName{"publish_artifact", "read_artifact", "block_node", "complete_node", "open_workspace", "inspect_repository", "publish_execution_plan", "raise_planning_issue", "read_discussion", "update_working_requirement_state", "commit_discussion_turn"} {
+	for _, name := range []protocol.CommandEnvelopeName{"publish_artifact", "read_artifact", "block_node", "complete_node", "open_workspace", "publish_execution_plan", "raise_planning_issue", "read_discussion", "update_working_requirement_state", "commit_discussion_turn"} {
 		if _, err := prepareEnvelope(conversationDispatch(), Request{Name: name, RequestID: "request", Payload: json.RawMessage(`{}`)}); err == nil {
 			t.Fatal("conversation acquired another phase's command", name)
 		}

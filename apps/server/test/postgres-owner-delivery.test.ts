@@ -143,7 +143,7 @@ suite('exact Owner delivery authority',()=>{
     for(const [i,file] of files.slice(0,23).entries()){const sql=await readFile(new URL('../../../packages/db/migrations/'+file,import.meta.url),'utf8');await db.pool.query(sql);await db.pool.query('INSERT INTO schema_migrations VALUES($1,$2)',[i+1,createHash('sha256').update(sql).digest('hex')]);}
     const old=(await db.pool.query('SELECT * FROM schema_migrations ORDER BY version')).rows;
     if(legacy){const task=randomUUID();await transaction(db,tx=>initializeTask(tx,{task_id:task,specification_id:randomUUID(),specification:'Legacy seam test'}));await db.pool.query('UPDATE tasks SET accepted_delivery_operation_id=$2,accepted_delivery_input_cutoff=0 WHERE id=$1',[task,randomUUID()]);await expect(migrate(db)).rejects.toMatchObject({code:'23514'});expect((await db.pool.query("SELECT to_regclass('owner_delivery_batches') present")).rows[0]!.present).toBeNull();expect((await db.pool.query('SELECT * FROM schema_migrations ORDER BY version')).rows).toEqual(old);expect((await db.pool.query('SELECT accepted_delivery_operation_id FROM tasks')).rows[0]!.accepted_delivery_operation_id).not.toBeNull();}
-    else {await migrate(db);expect((await db.pool.query('SELECT * FROM schema_migrations ORDER BY version')).rows.slice(0,23)).toEqual(old);expect((await db.pool.query('SELECT max(version) v FROM schema_migrations')).rows[0]!.v).toBe(27);}
+    else {await migrate(db);expect((await db.pool.query('SELECT * FROM schema_migrations ORDER BY version')).rows.slice(0,23)).toEqual(old);expect((await db.pool.query('SELECT max(version) v FROM schema_migrations')).rows[0]!.v).toBe(28);}
    }finally{await db.pool.end();await admin.pool.query(`DROP SCHEMA ${schema} CASCADE`);await admin.pool.end();}
   }
  },20000);

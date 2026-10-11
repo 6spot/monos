@@ -111,9 +111,8 @@ func TestInitialPlanningAuthorityCannotComeFromAnotherPhaseOrIntent(t *testing.T
 			t.Fatal("initial Planner acquired another phase's tool", command)
 		}
 	}
-	// Inspection stays a backend-owned explicit unavailable response, not a
-	// local synthetic successful snapshot or a legacy fixture fallback.
+	// The backend admits inspection against the canonical frozen source.
 	if _, err := prepareEnvelope(planningDispatch(), Request{RequestID: "inspect", Name: protocol.NameInspectRepository, Payload: json.RawMessage(`{"resource_id":"repo"}`)}); err != nil {
-		t.Fatal("inspection could not reach the canonical unavailable boundary", err)
+		t.Fatal("inspection could not reach canonical admission", err)
 	}
 }

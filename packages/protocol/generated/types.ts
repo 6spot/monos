@@ -294,6 +294,7 @@ export interface EffectResult {
     git_commit?:                   string;
     git_tree?:                     string;
     input_id?:                     string;
+    inspection?:                   InspectionResult;
     instruction_files?:            InstructionFile[];
     message?:                      string;
     message_id?:                   string;
@@ -363,6 +364,28 @@ export interface DiscussionMessage {
 export type Author = "owner" | "assistant";
 
 export type DiscussionMessageDisposition = "withdrawn";
+
+export interface InspectionResult {
+    descriptor_digest: string;
+    inspection_id:     string;
+    reason?:           InspectionUnavailableReason;
+    snapshot?:         InspectionSnapshot;
+    status:            InspectionResultStatus;
+}
+
+export type InspectionUnavailableReason = "cancelled" | "source_stale" | "resource_unavailable" | "access_denied" | "ref_unavailable" | "revision_unavailable" | "repository_mismatch" | "timeout" | "inspection_failed";
+
+export interface InspectionSnapshot {
+    commit:              string;
+    instruction_files:   string[];
+    path:                string;
+    repository_identity: string;
+    snapshot_id:         string;
+    storage_id:          string;
+    tree:                string;
+}
+
+export type InspectionResultStatus = "available" | "unavailable";
 
 export type InstructionFile = "AGENTS.md" | "CLAUDE.md";
 
@@ -595,6 +618,8 @@ export interface Operation {
     completion_manifest_digest?: string;
     completion_operation_id?:    string;
     dispatch_id:                 string;
+    inspection?:                 InspectionDescriptor;
+    inspection_digest?:          string;
     kind:                        OperationKind;
     operation_id:                string;
     repository_free?:            boolean;
@@ -607,9 +632,54 @@ export interface Operation {
     workspace_digest?:           string;
 }
 
-export type OperationKind = "open_workspace" | "inspect_repository" | "complete_node" | "stop" | "settle_completion";
+export interface InspectionDescriptor {
+    attempt_id:     string;
+    dispatch_id:    string;
+    inspection_id:  string;
+    origin:         InspectionOrigin;
+    planner_source: InspectionPlannerSource;
+    project_id:     string;
+    resource:       WorkspaceResource;
+    runner_id:      string;
+    schema_version: number;
+    scope_id:       string;
+    scope_kind:     ScopeKind;
+}
 
-export type OpenStateEnum = "admitted" | "succeeded" | "recovery" | "cancelled";
+export interface InspectionOrigin {
+    kind:              InspectionOriginKind;
+    identity?:         ResultReadIdentity;
+    identity_digest?:  string;
+    metadata?:         WorkspaceMetadata;
+    operation_id?:     string;
+    workspace?:        WorkspaceDescriptor;
+    workspace_digest?: string;
+}
+
+export interface ResultReadIdentity {
+    attempt_id:                string;
+    base_commit:               string;
+    dispatch_id:               string;
+    generation:                number;
+    git_commit:                string;
+    git_tree:                  string;
+    lease_id:                  string;
+    manifest_digest:           string;
+    node_activation:           number;
+    node_id:                   string;
+    operation_id:              string;
+    operation_identity_digest: string;
+    plan_id:                   string;
+    repository_identity:       string;
+    resource_id:               string;
+    runner_id:                 string;
+    specification_id:          string;
+    storage_id:                string;
+    task_id:                   string;
+    workspace_id:              string;
+}
+
+export type InspectionOriginKind = "default_ref" | "task_completion" | "task_open";
 
 export interface WorkspaceDescriptor {
     basis?:            WorkspaceBasis;
@@ -694,6 +764,22 @@ export interface WorkspaceTransfer {
 }
 
 export type WorkspaceTransferPurpose = "serial" | "rework";
+
+export interface InspectionPlannerSource {
+    context_digest:   string;
+    control_version:  number;
+    kind:             InspectionPlannerSourceKind;
+    source_id:        string;
+    source_watermark: number;
+}
+
+export type InspectionPlannerSourceKind = "todo_discussion" | "task_initial_planning" | "task_conversation" | "task_replan" | "task_review";
+
+export type ScopeKind = "task" | "todo";
+
+export type OperationKind = "open_workspace" | "inspect_repository" | "complete_node" | "stop" | "settle_completion";
+
+export type OpenStateEnum = "admitted" | "succeeded" | "recovery" | "cancelled";
 
 export interface OperationResult {
     attempt_id:                 string;
@@ -895,29 +981,6 @@ export interface PublicationPermissionGrants {
 export type Contents = "write";
 
 export type Metadata = "read";
-
-export interface ResultReadIdentity {
-    attempt_id:                string;
-    base_commit:               string;
-    dispatch_id:               string;
-    generation:                number;
-    git_commit:                string;
-    git_tree:                  string;
-    lease_id:                  string;
-    manifest_digest:           string;
-    node_activation:           number;
-    node_id:                   string;
-    operation_id:              string;
-    operation_identity_digest: string;
-    plan_id:                   string;
-    repository_identity:       string;
-    resource_id:               string;
-    runner_id:                 string;
-    specification_id:          string;
-    storage_id:                string;
-    task_id:                   string;
-    workspace_id:              string;
-}
 
 export interface PublicationPushRequest {
     delivery_ref:              string;
@@ -1996,7 +2059,7 @@ export interface GitHubRepositoryAccessResult {
     authentication:    RepositoryAuthentication;
     default_branch:    string;
     operation_id:      string;
-    provider_metadata: ProviderMetadata;
+    provider_metadata: GitHubRepositoryAccessResultProviderMetadata;
     remote_url:        string;
     schema_version:    number;
     workspace_digest:  string;
@@ -2010,7 +2073,7 @@ export interface RepositoryAuthentication {
 
 export type RepositoryAuthenticationKind = "anonymous" | "github_installation";
 
-export interface ProviderMetadata {
+export interface GitHubRepositoryAccessResultProviderMetadata {
     github: PurpleGithub;
 }
 
@@ -3593,4 +3656,57 @@ export interface OwnerContinueWithoutReworkCommandPayload {
     answer?:           string;
     expected_version:  number;
     rework_request_id: string;
+}
+
+export interface InspectionDefaultRef {
+    kind: InspectionDefaultRefKind;
+}
+
+export type InspectionDefaultRefKind = "default_ref";
+
+export interface InspectionTaskCompletion {
+    identity:        ResultReadIdentity;
+    identity_digest: string;
+    kind:            InspectionTaskCompletionKind;
+}
+
+export type InspectionTaskCompletionKind = "task_completion";
+
+export interface InspectionTaskOpen {
+    kind:             InspectionTaskOpenKind;
+    metadata:         WorkspaceMetadata;
+    operation_id:     string;
+    workspace:        WorkspaceDescriptor;
+    workspace_digest: string;
+}
+
+export type InspectionTaskOpenKind = "task_open";
+
+export interface InspectionRepositoryAccessRequest {
+    incarnation:       number;
+    inspection_digest: string;
+    schema_version:    number;
+}
+
+export interface InspectionRepositoryAccessResult {
+    authentication:    RepositoryAuthentication;
+    default_branch:    string;
+    inspection_digest: string;
+    operation_id:      string;
+    provider_metadata: InspectionRepositoryAccessResultProviderMetadata;
+    remote_url:        string;
+    schema_version:    number;
+}
+
+export interface InspectionRepositoryAccessResultProviderMetadata {
+    github: FluffyGithub;
+}
+
+export interface FluffyGithub {
+    repository_id: string;
+}
+
+export interface InspectionRepositoryAccessError {
+    reason:         InspectionUnavailableReason;
+    schema_version: number;
 }

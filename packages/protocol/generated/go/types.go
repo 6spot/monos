@@ -280,6 +280,7 @@ type EffectResult struct {
 	GitCommit                  *string                     `json:"git_commit,omitempty"`
 	GitTree                    *string                     `json:"git_tree,omitempty"`
 	InputID                    *string                     `json:"input_id,omitempty"`
+	Inspection                 *InspectionResult           `json:"inspection,omitempty"`
 	InstructionFiles           []InstructionFile           `json:"instruction_files,omitempty"`
 	Message                    *string                     `json:"message,omitempty"`
 	MessageID                  *string                     `json:"message_id,omitempty"`
@@ -344,6 +345,24 @@ type DiscussionMessage struct {
 	SourceMessageID       *string                       `json:"source_message_id,omitempty"`
 	SourceWatermark       *int64                        `json:"source_watermark,omitempty"`
 	TaskPreview           *TaskPreview                  `json:"task_preview,omitempty"`
+}
+
+type InspectionResult struct {
+	DescriptorDigest string                       `json:"descriptor_digest"`
+	InspectionID     string                       `json:"inspection_id"`
+	Reason           *InspectionUnavailableReason `json:"reason,omitempty"`
+	Snapshot         *InspectionSnapshot          `json:"snapshot,omitempty"`
+	Status           InspectionResultStatus       `json:"status"`
+}
+
+type InspectionSnapshot struct {
+	Commit             string   `json:"commit"`
+	InstructionFiles   []string `json:"instruction_files"`
+	Path               string   `json:"path"`
+	RepositoryIdentity string   `json:"repository_identity"`
+	SnapshotID         string   `json:"snapshot_id"`
+	StorageID          string   `json:"storage_id"`
+	Tree               string   `json:"tree"`
 }
 
 type PlanningOutcome struct {
@@ -545,22 +564,71 @@ type RuntimeEvent struct {
 }
 
 type Operation struct {
-	AttemptID                string               `json:"attempt_id"`
-	CancelledByOperationID   *string              `json:"cancelled_by_operation_id,omitempty"`
-	CompletionIdentityDigest *string              `json:"completion_identity_digest,omitempty"`
-	CompletionManifestDigest *string              `json:"completion_manifest_digest,omitempty"`
-	CompletionOperationID    *string              `json:"completion_operation_id,omitempty"`
-	DispatchID               string               `json:"dispatch_id"`
-	Kind                     OperationKind        `json:"kind"`
-	OperationID              string               `json:"operation_id"`
-	RepositoryFree           *bool                `json:"repository_free,omitempty"`
-	RequestID                string               `json:"request_id"`
-	ResourceID               *string              `json:"resource_id,omitempty"`
-	Result                   *EffectResult        `json:"result,omitempty"`
-	SchemaVersion            int64                `json:"schema_version"`
-	State                    OpenStateEnum        `json:"state"`
-	Workspace                *WorkspaceDescriptor `json:"workspace,omitempty"`
-	WorkspaceDigest          *string              `json:"workspace_digest,omitempty"`
+	AttemptID                string                `json:"attempt_id"`
+	CancelledByOperationID   *string               `json:"cancelled_by_operation_id,omitempty"`
+	CompletionIdentityDigest *string               `json:"completion_identity_digest,omitempty"`
+	CompletionManifestDigest *string               `json:"completion_manifest_digest,omitempty"`
+	CompletionOperationID    *string               `json:"completion_operation_id,omitempty"`
+	DispatchID               string                `json:"dispatch_id"`
+	Inspection               *InspectionDescriptor `json:"inspection,omitempty"`
+	InspectionDigest         *string               `json:"inspection_digest,omitempty"`
+	Kind                     OperationKind         `json:"kind"`
+	OperationID              string                `json:"operation_id"`
+	RepositoryFree           *bool                 `json:"repository_free,omitempty"`
+	RequestID                string                `json:"request_id"`
+	ResourceID               *string               `json:"resource_id,omitempty"`
+	Result                   *EffectResult         `json:"result,omitempty"`
+	SchemaVersion            int64                 `json:"schema_version"`
+	State                    OpenStateEnum         `json:"state"`
+	Workspace                *WorkspaceDescriptor  `json:"workspace,omitempty"`
+	WorkspaceDigest          *string               `json:"workspace_digest,omitempty"`
+}
+
+type InspectionDescriptor struct {
+	AttemptID     string                  `json:"attempt_id"`
+	DispatchID    string                  `json:"dispatch_id"`
+	InspectionID  string                  `json:"inspection_id"`
+	Origin        InspectionOrigin        `json:"origin"`
+	PlannerSource InspectionPlannerSource `json:"planner_source"`
+	ProjectID     string                  `json:"project_id"`
+	Resource      WorkspaceResource       `json:"resource"`
+	RunnerID      string                  `json:"runner_id"`
+	SchemaVersion int64                   `json:"schema_version"`
+	ScopeID       string                  `json:"scope_id"`
+	ScopeKind     ScopeKind               `json:"scope_kind"`
+}
+
+type InspectionOrigin struct {
+	Kind            InspectionOriginKind `json:"kind"`
+	Identity        *ResultReadIdentity  `json:"identity,omitempty"`
+	IdentityDigest  *string              `json:"identity_digest,omitempty"`
+	Metadata        *WorkspaceMetadata   `json:"metadata,omitempty"`
+	OperationID     *string              `json:"operation_id,omitempty"`
+	Workspace       *WorkspaceDescriptor `json:"workspace,omitempty"`
+	WorkspaceDigest *string              `json:"workspace_digest,omitempty"`
+}
+
+type ResultReadIdentity struct {
+	AttemptID               string `json:"attempt_id"`
+	BaseCommit              string `json:"base_commit"`
+	DispatchID              string `json:"dispatch_id"`
+	Generation              int64  `json:"generation"`
+	GitCommit               string `json:"git_commit"`
+	GitTree                 string `json:"git_tree"`
+	LeaseID                 string `json:"lease_id"`
+	ManifestDigest          string `json:"manifest_digest"`
+	NodeActivation          int64  `json:"node_activation"`
+	NodeID                  string `json:"node_id"`
+	OperationID             string `json:"operation_id"`
+	OperationIdentityDigest string `json:"operation_identity_digest"`
+	PlanID                  string `json:"plan_id"`
+	RepositoryIdentity      string `json:"repository_identity"`
+	ResourceID              string `json:"resource_id"`
+	RunnerID                string `json:"runner_id"`
+	SpecificationID         string `json:"specification_id"`
+	StorageID               string `json:"storage_id"`
+	TaskID                  string `json:"task_id"`
+	WorkspaceID             string `json:"workspace_id"`
 }
 
 type WorkspaceDescriptor struct {
@@ -643,6 +711,14 @@ type WorkspaceTransfer struct {
 	ToNodeID                 string                    `json:"to_node_id"`
 	ToPlanID                 string                    `json:"to_plan_id"`
 	WorkspaceID              string                    `json:"workspace_id"`
+}
+
+type InspectionPlannerSource struct {
+	ContextDigest   string                      `json:"context_digest"`
+	ControlVersion  int64                       `json:"control_version"`
+	Kind            InspectionPlannerSourceKind `json:"kind"`
+	SourceID        string                      `json:"source_id"`
+	SourceWatermark int64                       `json:"source_watermark"`
 }
 
 type OperationResult struct {
@@ -816,29 +892,6 @@ type PublicationPermissionGrants struct {
 	Contents  Contents  `json:"contents"`
 	Metadata  Metadata  `json:"metadata"`
 	Workflows *Contents `json:"workflows,omitempty"`
-}
-
-type ResultReadIdentity struct {
-	AttemptID               string `json:"attempt_id"`
-	BaseCommit              string `json:"base_commit"`
-	DispatchID              string `json:"dispatch_id"`
-	Generation              int64  `json:"generation"`
-	GitCommit               string `json:"git_commit"`
-	GitTree                 string `json:"git_tree"`
-	LeaseID                 string `json:"lease_id"`
-	ManifestDigest          string `json:"manifest_digest"`
-	NodeActivation          int64  `json:"node_activation"`
-	NodeID                  string `json:"node_id"`
-	OperationID             string `json:"operation_id"`
-	OperationIdentityDigest string `json:"operation_identity_digest"`
-	PlanID                  string `json:"plan_id"`
-	RepositoryIdentity      string `json:"repository_identity"`
-	ResourceID              string `json:"resource_id"`
-	RunnerID                string `json:"runner_id"`
-	SpecificationID         string `json:"specification_id"`
-	StorageID               string `json:"storage_id"`
-	TaskID                  string `json:"task_id"`
-	WorkspaceID             string `json:"workspace_id"`
 }
 
 type PublicationPushRequest struct {
@@ -1803,13 +1856,13 @@ type RepositoryAccessRequest struct {
 }
 
 type GitHubRepositoryAccessResult struct {
-	Authentication   RepositoryAuthentication `json:"authentication"`
-	DefaultBranch    string                   `json:"default_branch"`
-	OperationID      string                   `json:"operation_id"`
-	ProviderMetadata ProviderMetadata         `json:"provider_metadata"`
-	RemoteURL        string                   `json:"remote_url"`
-	SchemaVersion    int64                    `json:"schema_version"`
-	WorkspaceDigest  string                   `json:"workspace_digest"`
+	Authentication   RepositoryAuthentication                     `json:"authentication"`
+	DefaultBranch    string                                       `json:"default_branch"`
+	OperationID      string                                       `json:"operation_id"`
+	ProviderMetadata GitHubRepositoryAccessResultProviderMetadata `json:"provider_metadata"`
+	RemoteURL        string                                       `json:"remote_url"`
+	SchemaVersion    int64                                        `json:"schema_version"`
+	WorkspaceDigest  string                                       `json:"workspace_digest"`
 }
 
 type RepositoryAuthentication struct {
@@ -1818,7 +1871,7 @@ type RepositoryAuthentication struct {
 	Token     *string                      `json:"token,omitempty"`
 }
 
-type ProviderMetadata struct {
+type GitHubRepositoryAccessResultProviderMetadata struct {
 	Github PurpleGithub `json:"github"`
 }
 
@@ -3291,6 +3344,53 @@ type OwnerContinueWithoutReworkCommandPayload struct {
 	ReworkRequestID string  `json:"rework_request_id"`
 }
 
+type InspectionDefaultRef struct {
+	Kind InspectionDefaultRefKind `json:"kind"`
+}
+
+type InspectionTaskCompletion struct {
+	Identity       ResultReadIdentity           `json:"identity"`
+	IdentityDigest string                       `json:"identity_digest"`
+	Kind           InspectionTaskCompletionKind `json:"kind"`
+}
+
+type InspectionTaskOpen struct {
+	Kind            InspectionTaskOpenKind `json:"kind"`
+	Metadata        WorkspaceMetadata      `json:"metadata"`
+	OperationID     string                 `json:"operation_id"`
+	Workspace       WorkspaceDescriptor    `json:"workspace"`
+	WorkspaceDigest string                 `json:"workspace_digest"`
+}
+
+type InspectionRepositoryAccessRequest struct {
+	Incarnation      int64  `json:"incarnation"`
+	InspectionDigest string `json:"inspection_digest"`
+	SchemaVersion    int64  `json:"schema_version"`
+}
+
+type InspectionRepositoryAccessResult struct {
+	Authentication   RepositoryAuthentication                         `json:"authentication"`
+	DefaultBranch    string                                           `json:"default_branch"`
+	InspectionDigest string                                           `json:"inspection_digest"`
+	OperationID      string                                           `json:"operation_id"`
+	ProviderMetadata InspectionRepositoryAccessResultProviderMetadata `json:"provider_metadata"`
+	RemoteURL        string                                           `json:"remote_url"`
+	SchemaVersion    int64                                            `json:"schema_version"`
+}
+
+type InspectionRepositoryAccessResultProviderMetadata struct {
+	Github FluffyGithub `json:"github"`
+}
+
+type FluffyGithub struct {
+	RepositoryID string `json:"repository_id"`
+}
+
+type InspectionRepositoryAccessError struct {
+	Reason        InspectionUnavailableReason `json:"reason"`
+	SchemaVersion int64                       `json:"schema_version"`
+}
+
 type CommandEnvelopeName string
 
 const (
@@ -3407,6 +3507,27 @@ const (
 	DispositionWithdrawn DiscussionMessageDisposition = "withdrawn"
 )
 
+type InspectionUnavailableReason string
+
+const (
+	InspectionFailed                          InspectionUnavailableReason = "inspection_failed"
+	InspectionUnavailableReasonAccessDenied   InspectionUnavailableReason = "access_denied"
+	InspectionUnavailableReasonCancelled      InspectionUnavailableReason = "cancelled"
+	InspectionUnavailableReasonRefUnavailable InspectionUnavailableReason = "ref_unavailable"
+	InspectionUnavailableReasonTimeout        InspectionUnavailableReason = "timeout"
+	RepositoryMismatch                        InspectionUnavailableReason = "repository_mismatch"
+	ResourceUnavailable                       InspectionUnavailableReason = "resource_unavailable"
+	RevisionUnavailable                       InspectionUnavailableReason = "revision_unavailable"
+	SourceStale                               InspectionUnavailableReason = "source_stale"
+)
+
+type InspectionResultStatus string
+
+const (
+	PurpleAvailable   InspectionResultStatus = "available"
+	PurpleUnavailable InspectionResultStatus = "unavailable"
+)
+
 type InstructionFile string
 
 const (
@@ -3443,12 +3564,12 @@ type WorkspaceUnavailableReason string
 
 const (
 	OwnershipUnresolved                          WorkspaceUnavailableReason = "ownership_unresolved"
-	RefUnavailable                               WorkspaceUnavailableReason = "ref_unavailable"
 	RepositoryDenied                             WorkspaceUnavailableReason = "repository_denied"
 	StorageUnavailable                           WorkspaceUnavailableReason = "storage_unavailable"
 	UnsupportedMultipleWorkspaces                WorkspaceUnavailableReason = "unsupported_multiple_workspaces"
 	UnsupportedRemote                            WorkspaceUnavailableReason = "unsupported_remote"
 	WorkspaceUnavailableReasonCredentialsMissing WorkspaceUnavailableReason = "credentials_missing"
+	WorkspaceUnavailableReasonRefUnavailable     WorkspaceUnavailableReason = "ref_unavailable"
 )
 
 type CommandResultStatus string
@@ -3515,6 +3636,38 @@ const (
 	NativeTerminalError RuntimeFailure = "native_terminal_error"
 )
 
+type InspectionOriginKind string
+
+const (
+	PurpleDefaultRef     InspectionOriginKind = "default_ref"
+	PurpleTaskCompletion InspectionOriginKind = "task_completion"
+	PurpleTaskOpen       InspectionOriginKind = "task_open"
+)
+
+type WorkspaceTransferPurpose string
+
+const (
+	PurposeRework WorkspaceTransferPurpose = "rework"
+	Serial        WorkspaceTransferPurpose = "serial"
+)
+
+type InspectionPlannerSourceKind string
+
+const (
+	TaskConversation    InspectionPlannerSourceKind = "task_conversation"
+	TaskInitialPlanning InspectionPlannerSourceKind = "task_initial_planning"
+	TaskReplan          InspectionPlannerSourceKind = "task_replan"
+	TaskReview          InspectionPlannerSourceKind = "task_review"
+	TodoDiscussion      InspectionPlannerSourceKind = "todo_discussion"
+)
+
+type ScopeKind string
+
+const (
+	Task ScopeKind = "task"
+	Todo ScopeKind = "todo"
+)
+
 type OperationKind string
 
 const (
@@ -3532,13 +3685,6 @@ const (
 	FluffyCancelled OpenStateEnum = "cancelled"
 	PurpleRecovery  OpenStateEnum = "recovery"
 	PurpleSucceeded OpenStateEnum = "succeeded"
-)
-
-type WorkspaceTransferPurpose string
-
-const (
-	PurposeRework WorkspaceTransferPurpose = "rework"
-	Serial        WorkspaceTransferPurpose = "serial"
 )
 
 type FailureKind string
@@ -3644,9 +3790,9 @@ const (
 type PublicationRefObservationStatus string
 
 const (
+	FluffyUnavailable PublicationRefObservationStatus = "unavailable"
 	Present           PublicationRefObservationStatus = "present"
 	PurpleAbsent      PublicationRefObservationStatus = "absent"
-	PurpleUnavailable PublicationRefObservationStatus = "unavailable"
 )
 
 type Contents string
@@ -3758,9 +3904,9 @@ type PublicationResultStatus string
 const (
 	FluffyPrepared               PublicationResultStatus = "prepared"
 	FluffyReconciliationRequired PublicationResultStatus = "reconciliation_required"
-	FluffyUnavailable            PublicationResultStatus = "unavailable"
 	PurpleMapped                 PublicationResultStatus = "mapped"
 	PurpleNotApplicable          PublicationResultStatus = "not_applicable"
+	TentacledUnavailable         PublicationResultStatus = "unavailable"
 )
 
 type RemotePreparationMode string
@@ -3811,10 +3957,10 @@ const (
 type ResultReadResponseStatus string
 
 const (
-	Available              ResultReadResponseStatus = "available"
 	Binary                 ResultReadResponseStatus = "binary"
 	Busy                   ResultReadResponseStatus = "busy"
 	FluffyAbsent           ResultReadResponseStatus = "absent"
+	FluffyAvailable        ResultReadResponseStatus = "available"
 	NoGit                  ResultReadResponseStatus = "no_git"
 	Oversized              ResultReadResponseStatus = "oversized"
 	PurpleOffline          ResultReadResponseStatus = "offline"
@@ -3823,7 +3969,7 @@ const (
 	StatusIdentityMismatch ResultReadResponseStatus = "identity_mismatch"
 	StatusTimeout          ResultReadResponseStatus = "timeout"
 	StatusUnsupportedPath  ResultReadResponseStatus = "unsupported_path"
-	TentacledUnavailable   ResultReadResponseStatus = "unavailable"
+	StickyUnavailable      ResultReadResponseStatus = "unavailable"
 )
 
 type Availability string
@@ -4177,10 +4323,10 @@ const (
 	FluffyPublished   PlanningStatusEnum = "published"
 	FluffyQueued      PlanningStatusEnum = "queued"
 	IndecentCancelled PlanningStatusEnum = "cancelled"
+	IndigoUnavailable PlanningStatusEnum = "unavailable"
 	NotStarted        PlanningStatusEnum = "not_started"
 	PurplePending     PlanningStatusEnum = "pending"
 	StickyIssue       PlanningStatusEnum = "issue"
-	StickyUnavailable PlanningStatusEnum = "unavailable"
 	Stopped           PlanningStatusEnum = "stopped"
 	TentacledSettling PlanningStatusEnum = "settling"
 )
@@ -4348,7 +4494,7 @@ const (
 	FluffyNotApplicable             PublicationRecordStatus = "not_applicable"
 	FluffyOffline                   PublicationRecordStatus = "offline"
 	FluffyUnsupported               PublicationRecordStatus = "unsupported"
-	IndigoUnavailable               PublicationRecordStatus = "unavailable"
+	IndecentUnavailable             PublicationRecordStatus = "unavailable"
 	PurplePreparing                 PublicationRecordStatus = "preparing"
 	StickyPending                   PublicationRecordStatus = "pending"
 	TentacledPrepared               PublicationRecordStatus = "prepared"
@@ -4704,4 +4850,22 @@ type OwnerContinueWithoutReworkCommandName string
 
 const (
 	FluffyContinueWithoutRework OwnerContinueWithoutReworkCommandName = "continue_without_rework"
+)
+
+type InspectionDefaultRefKind string
+
+const (
+	FluffyDefaultRef InspectionDefaultRefKind = "default_ref"
+)
+
+type InspectionTaskCompletionKind string
+
+const (
+	FluffyTaskCompletion InspectionTaskCompletionKind = "task_completion"
+)
+
+type InspectionTaskOpenKind string
+
+const (
+	FluffyTaskOpen InspectionTaskOpenKind = "task_open"
 )

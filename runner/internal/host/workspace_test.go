@@ -79,7 +79,7 @@ func TestPinnedFetchRecoveryAndCredentialNonPersistence(t *testing.T) {
 	record := filepath.Join(dir, "pinned.json")
 	secret := "synthetic-installation-secret"
 	exp := time.Now().Add(time.Hour).UTC().Format(time.RFC3339)
-	access := protocol.GitHubRepositoryAccessResult{SchemaVersion: 1, OperationID: op.OperationID, WorkspaceDigest: *op.WorkspaceDigest, RemoteURL: op.Workspace.Resource.RemoteURL, DefaultBranch: branch, Authentication: protocol.RepositoryAuthentication{Kind: "github_installation", Token: &secret, ExpiresAt: &exp}, ProviderMetadata: protocol.ProviderMetadata{Github: protocol.PurpleGithub{RepositoryID: "123"}}}
+	access := protocol.GitHubRepositoryAccessResult{SchemaVersion: 1, OperationID: op.OperationID, WorkspaceDigest: *op.WorkspaceDigest, RemoteURL: op.Workspace.Resource.RemoteURL, DefaultBranch: branch, Authentication: protocol.RepositoryAuthentication{Kind: "github_installation", Token: &secret, ExpiresAt: &exp}, ProviderMetadata: protocol.GitHubRepositoryAccessResultProviderMetadata{Github: protocol.PurpleGithub{RepositoryID: "123"}}}
 	calls := 0
 	failTarget := true
 	sawAuth := false
@@ -161,7 +161,7 @@ func TestAmbiguousShortRefFailsWithoutCreatingPins(t *testing.T) {
 	_, op := canonicalWorkspace(t)
 	dir := t.TempDir()
 	cache, record := filepath.Join(dir, "cache.git"), filepath.Join(dir, "pins.json")
-	access := protocol.GitHubRepositoryAccessResult{OperationID: op.OperationID, WorkspaceDigest: *op.WorkspaceDigest, RemoteURL: op.Workspace.Resource.RemoteURL, DefaultBranch: branch, ProviderMetadata: protocol.ProviderMetadata{Github: protocol.PurpleGithub{RepositoryID: "123"}}, Authentication: protocol.RepositoryAuthentication{Kind: "anonymous"}}
+	access := protocol.GitHubRepositoryAccessResult{OperationID: op.OperationID, WorkspaceDigest: *op.WorkspaceDigest, RemoteURL: op.Workspace.Resource.RemoteURL, DefaultBranch: branch, ProviderMetadata: protocol.GitHubRepositoryAccessResultProviderMetadata{Github: protocol.PurpleGithub{RepositoryID: "123"}}, Authentication: protocol.RepositoryAuthentication{Kind: "anonymous"}}
 	run := func(dir, cache, common string, _ []string, args ...string) (string, error) {
 		translated := append([]string(nil), args...)
 		for i, a := range translated {
@@ -198,7 +198,7 @@ func TestPinnedBaseSurvivesDeletedConfiguredRef(t *testing.T) {
 	op.WorkspaceDigest = &digest
 	dir := t.TempDir()
 	cache, record := filepath.Join(dir, "cache.git"), filepath.Join(dir, "pins.json")
-	access := protocol.GitHubRepositoryAccessResult{OperationID: op.OperationID, WorkspaceDigest: digest, RemoteURL: op.Workspace.Resource.RemoteURL, DefaultBranch: branch, ProviderMetadata: protocol.ProviderMetadata{Github: protocol.PurpleGithub{RepositoryID: "123"}}, Authentication: protocol.RepositoryAuthentication{Kind: "anonymous"}}
+	access := protocol.GitHubRepositoryAccessResult{OperationID: op.OperationID, WorkspaceDigest: digest, RemoteURL: op.Workspace.Resource.RemoteURL, DefaultBranch: branch, ProviderMetadata: protocol.GitHubRepositoryAccessResultProviderMetadata{Github: protocol.PurpleGithub{RepositoryID: "123"}}, Authentication: protocol.RepositoryAuthentication{Kind: "anonymous"}}
 	failTarget := true
 	run := func(dir, cache, common string, _ []string, args ...string) (string, error) {
 		if failTarget && strings.Contains(strings.Join(args, " "), "/target") {

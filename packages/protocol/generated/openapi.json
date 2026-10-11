@@ -5913,8 +5913,58 @@
           },
           "rework_outcome": {
             "$ref": "#/components/schemas/NodeReworkOutcome"
+          },
+          "inspection": {
+            "$ref": "#/components/schemas/InspectionResult"
           }
-        }
+        },
+        "allOf": [
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "inspection": {}
+              },
+              "required": [
+                "inspection"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "workspace_id": false,
+                "path": false,
+                "git_commit": false,
+                "git_tree": false,
+                "writer_absent": false,
+                "reply": false,
+                "source_watermark": false,
+                "message": false,
+                "discussion_page": false,
+                "message_id": false,
+                "cache_updated": false,
+                "resolved_watermark": false,
+                "instruction_files": false,
+                "workspace_metadata": false,
+                "workspace_unavailable_reason": false,
+                "planning_outcome": false,
+                "artifact": false,
+                "artifact_id": false,
+                "blocker_id": false,
+                "task_context": false,
+                "task_history": false,
+                "input_id": false,
+                "source_id": false,
+                "obligation_id": false,
+                "proposal_id": false,
+                "content_digest": false,
+                "requirement_operation_id": false,
+                "replan_outcome": false,
+                "rework_outcome": false
+              }
+            }
+          }
+        ]
       },
       "CommandResult": {
         "type": "object",
@@ -6461,6 +6511,12 @@
           },
           "completion_identity_digest": {
             "$ref": "#/components/schemas/SHA256"
+          },
+          "inspection": {
+            "$ref": "#/components/schemas/InspectionDescriptor"
+          },
+          "inspection_digest": {
+            "$ref": "#/components/schemas/SHA256"
           }
         },
         "allOf": [
@@ -6674,6 +6730,31 @@
               },
               "type": "object"
             }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "inspection": {}
+              },
+              "required": [
+                "inspection"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "inspect_repository"
+                },
+                "workspace": false,
+                "workspace_digest": false,
+                "repository_free": false,
+                "completion_manifest_digest": false,
+                "completion_operation_id": false,
+                "completion_identity_digest": false
+              }
+            }
           }
         ],
         "dependencies": {
@@ -6682,6 +6763,12 @@
           ],
           "workspace_digest": [
             "workspace"
+          ],
+          "inspection": [
+            "inspection_digest"
+          ],
+          "inspection_digest": [
+            "inspection"
           ]
         }
       },
@@ -24932,6 +25019,470 @@
             }
           }
         ]
+      },
+      "InspectionPlannerSource": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "todo_discussion",
+              "task_initial_planning",
+              "task_conversation",
+              "task_replan",
+              "task_review"
+            ]
+          },
+          "source_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "control_version": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "source_watermark": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "context_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          }
+        },
+        "required": [
+          "kind",
+          "source_id",
+          "control_version",
+          "source_watermark",
+          "context_digest"
+        ]
+      },
+      "InspectionDefaultRef": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "default_ref"
+          }
+        },
+        "required": [
+          "kind"
+        ]
+      },
+      "InspectionTaskCompletion": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "task_completion"
+          },
+          "identity": {
+            "$ref": "#/components/schemas/ResultReadIdentity"
+          },
+          "identity_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          }
+        },
+        "required": [
+          "kind",
+          "identity",
+          "identity_digest"
+        ]
+      },
+      "InspectionTaskOpen": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "task_open"
+          },
+          "operation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "workspace": {
+            "$ref": "#/components/schemas/WorkspaceDescriptor"
+          },
+          "workspace_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "metadata": {
+            "$ref": "#/components/schemas/WorkspaceMetadata"
+          }
+        },
+        "required": [
+          "kind",
+          "operation_id",
+          "workspace",
+          "workspace_digest",
+          "metadata"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "metadata": {}
+              },
+              "required": [
+                "metadata"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "metadata": {
+                  "type": "object",
+                  "properties": {
+                    "checkpoint": false
+                  }
+                },
+                "workspace": {
+                  "type": "object",
+                  "properties": {
+                    "basis": false,
+                    "transfer": false,
+                    "rework_history": false
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "InspectionOrigin": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/InspectionDefaultRef"
+          },
+          {
+            "$ref": "#/components/schemas/InspectionTaskCompletion"
+          },
+          {
+            "$ref": "#/components/schemas/InspectionTaskOpen"
+          }
+        ]
+      },
+      "InspectionDescriptor": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "inspection_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "attempt_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "dispatch_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "scope_kind": {
+            "type": "string",
+            "enum": [
+              "task",
+              "todo"
+            ]
+          },
+          "scope_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "project_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "runner_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "resource": {
+            "$ref": "#/components/schemas/WorkspaceResource"
+          },
+          "planner_source": {
+            "$ref": "#/components/schemas/InspectionPlannerSource"
+          },
+          "origin": {
+            "$ref": "#/components/schemas/InspectionOrigin"
+          }
+        },
+        "required": [
+          "schema_version",
+          "inspection_id",
+          "attempt_id",
+          "dispatch_id",
+          "scope_kind",
+          "scope_id",
+          "project_id",
+          "runner_id",
+          "resource",
+          "planner_source",
+          "origin"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "scope_kind": {
+                  "const": "todo"
+                }
+              }
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "origin": {
+                  "$ref": "#/components/schemas/InspectionDefaultRef"
+                },
+                "planner_source": {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "const": "todo_discussion"
+                    }
+                  }
+                }
+              }
+            },
+            "else": {
+              "type": "object",
+              "properties": {
+                "planner_source": {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "not": {
+                        "const": "todo_discussion"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "InspectionSnapshot": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "snapshot_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "storage_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "pattern": "^/"
+          },
+          "commit": {
+            "$ref": "#/components/schemas/GitOID"
+          },
+          "tree": {
+            "$ref": "#/components/schemas/GitOID"
+          },
+          "repository_identity": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "instruction_files": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            "maxItems": 64
+          }
+        },
+        "required": [
+          "snapshot_id",
+          "storage_id",
+          "path",
+          "commit",
+          "tree",
+          "repository_identity",
+          "instruction_files"
+        ]
+      },
+      "InspectionResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "inspection_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "descriptor_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "available",
+              "unavailable"
+            ]
+          },
+          "snapshot": {
+            "$ref": "#/components/schemas/InspectionSnapshot"
+          },
+          "reason": {
+            "$ref": "#/components/schemas/InspectionUnavailableReason"
+          }
+        },
+        "required": [
+          "inspection_id",
+          "descriptor_digest",
+          "status"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "const": "available"
+                }
+              }
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "snapshot": {},
+                "reason": false
+              },
+              "required": [
+                "snapshot"
+              ]
+            },
+            "else": {
+              "type": "object",
+              "properties": {
+                "snapshot": false,
+                "reason": {}
+              },
+              "required": [
+                "reason"
+              ]
+            }
+          }
+        ]
+      },
+      "InspectionRepositoryAccessRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "schema_version",
+          "incarnation",
+          "inspection_digest"
+        ],
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "incarnation": {
+            "$ref": "#/components/schemas/Counter"
+          },
+          "inspection_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          }
+        }
+      },
+      "InspectionRepositoryAccessResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "schema_version",
+          "operation_id",
+          "inspection_digest",
+          "remote_url",
+          "provider_metadata",
+          "default_branch",
+          "authentication"
+        ],
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "operation_id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "remote_url": {
+            "type": "string",
+            "maxLength": 2048,
+            "pattern": "^https://github[.]com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+[.]git$"
+          },
+          "provider_metadata": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "github"
+            ],
+            "properties": {
+              "github": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "repository_id"
+                ],
+                "properties": {
+                  "repository_id": {
+                    "type": "string",
+                    "pattern": "^[1-9][0-9]{0,15}$"
+                  }
+                }
+              }
+            }
+          },
+          "default_branch": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1024
+          },
+          "authentication": {
+            "$ref": "#/components/schemas/RepositoryAuthentication"
+          },
+          "inspection_digest": {
+            "$ref": "#/components/schemas/SHA256"
+          }
+        }
+      },
+      "InspectionUnavailableReason": {
+        "type": "string",
+        "enum": [
+          "cancelled",
+          "source_stale",
+          "resource_unavailable",
+          "access_denied",
+          "ref_unavailable",
+          "revision_unavailable",
+          "repository_mismatch",
+          "timeout",
+          "inspection_failed"
+        ]
+      },
+      "InspectionRepositoryAccessError": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "schema_version",
+          "reason"
+        ],
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "reason": {
+            "$ref": "#/components/schemas/InspectionUnavailableReason"
+          }
+        }
       }
     },
     "securitySchemes": {

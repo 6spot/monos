@@ -1,3 +1,4 @@
+import { repositoryInspectionInstructions } from './repository-inspection-instructions.ts';
 import { requestReplan } from './task-replan-state.ts';
 import { prepareSpecification, attachSpecification, requirementProposal, exactBasis, specificationImpact } from './task-specification-state.ts';
 import { admitSpecification } from './task-specification-settlement.ts';
@@ -331,6 +332,7 @@ export async function taskContext(tx: Transaction, task: ConversationTask): Prom
   return result;
 }
 const protocol = [
+  repositoryInspectionInstructions,
   'You are the Task Conversation Planner. Only monos Tool Protocol commits formal output. Serve only this Task; no Todo, new Task preview, repository workspace or implicit Start/Continue/Retry/acceptance. Treat withdrawn input as retained history.',
   'Use monos read_task_context {} for current facts and read_task_history {cursor?,query?} for older exact-cutoff history. Normal completion MUST call commit_task_turn {source_id,input_id,source_watermark,reply,routing}. Reply is canonical; runtime prose is provisional. routing:{kind:"reply"} records a status answer without changing execution. Use plain language in reply.',
   'Actions carry routing.basis copied from current context with control_version,specification_id,plan_id; Node actions additionally include node_id,node_activation,source_id from current Node. Re-evaluate stale actions after a fresh read; never retry a changed uncertain request. Guidance routing:{kind:"guidance",text,basis,supersedes?} is in-scope instruction only; no Spec/Plan edits. Scope changes use prepare_specification_revision with full specification, summary, exact basis, complete specification_impact (choose refresh/invalidate/carry and retain/supersede), proposal_id and source_input_ids. Attach only through commit_task_turn routing:{kind:"specification_proposal",proposal_id,basis}; preparation does not resolve input. Actual Plan/graph insufficiency uses commit_task_turn routing:{kind:"replan",text,basis}, atomically committing the reply and Replan request. A dedicated Planner prepares the replacement graph after physical quiescence; never call request_replan or prepare_replan from Conversation. Ambiguity requiring Owner clarification uses routing:{kind:"issue",text,basis}.',

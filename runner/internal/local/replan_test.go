@@ -72,7 +72,7 @@ func TestReplanCommandsAndImmutableJournalRestart(t *testing.T) {
 	}
 }
 func TestReplanPhaseAndSourceBoundaries(t *testing.T) {
-	for _, name := range []protocol.CommandEnvelopeName{"request_replan", "publish_execution_plan", "commit_task_turn", "complete_node", "open_workspace", "inspect_repository", "prepare_specification_revision", "apply_specification_revision", "read_task_context"} {
+	for _, name := range []protocol.CommandEnvelopeName{"request_replan", "publish_execution_plan", "commit_task_turn", "complete_node", "open_workspace", "prepare_specification_revision", "apply_specification_revision", "read_task_context"} {
 		if _, err := prepareEnvelope(replanDispatch(), Request{RequestID: "request", Name: name, Payload: json.RawMessage(`{}`)}); err == nil {
 			t.Fatal("foreign command accepted", name)
 		}

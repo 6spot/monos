@@ -11,7 +11,8 @@ see the task's verification report for versions, retained failures and limits.
 Canonical Node dispatch, lazy `open_workspace`, same-Task serial lease reuse,
 completion and system Stop reconciliation. [Node execution](node-execution.md)
 adds Task-driven dispatch, Artifacts and hard-completion recovery. Multi-repository
-completion, Planner inspection and delivery are later slices.
+completion remains a later slice. Planner reads use independent
+[repository inspection](repository-inspection.md), never workspace leases.
 
 ## 2. Signatures
 

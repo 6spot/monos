@@ -38,6 +38,11 @@ type Daemon struct {
 	remoteQueued      map[string]bool
 	workers           sync.WaitGroup
 	recovery          *recoveryBatch // protected by queueMu; one complete connection inventory
+	inspectionMu      sync.Mutex
+	inspections       map[string]*activeInspection
+	inspectionStopped map[string]bool
+	inspectionRun     func(context.Context, protocol.Operation) (protocol.EffectResult, error)
+	inspectionCancel  func(context.Context, protocol.Operation) (protocol.EffectResult, error)
 }
 
 func (d *Daemon) InstalledRuntimes(ctx context.Context) []protocol.RuntimeInstallation {
@@ -77,6 +82,11 @@ func (d *Daemon) Reconcile(ctx context.Context, inventory protocol.RunnerInvento
 	}
 	for _, s := range starts {
 		remote, exists := known[s.Dispatch.AttemptID]
+		if exists && !remote.MutationAllowed {
+			if err := d.drainInspections(ctx, s.Dispatch.AttemptID, false); err != nil {
+				return err
+			}
+		}
 		if s.Phase == "cancel_intent" {
 			if exists && (remote.DispatchID != s.Dispatch.DispatchID || remote.MutationAllowed) {
 				return fmt.Errorf("revocation lineage changed")
@@ -156,6 +166,9 @@ func (d *Daemon) Reconcile(ctx context.Context, inventory protocol.RunnerInvento
 			s.Cgroup = status.Cgroup
 			s.Phase = "running"
 		} else {
+			if err := d.drainInspections(ctx, s.Dispatch.AttemptID, false); err != nil {
+				return err
+			}
 			if s.Phase != "absent" && s.Phase != "revoked" {
 				if _, err = d.retainAbsence(s, "reconciled verified whole-tree absence"); err != nil {
 					return err
@@ -197,7 +210,7 @@ func (d *Daemon) enqueueLocked(ctx context.Context, key string, work func() erro
 			d.drainRecoveryLocked()
 			d.queueMu.Unlock()
 		}()
-		if !strings.HasPrefix(key, "workspace:") {
+		if !strings.HasPrefix(key, "workspace:") && !strings.HasPrefix(key, "inspection:") {
 			d.mu.Lock()
 			defer d.mu.Unlock()
 		}
@@ -244,6 +257,9 @@ func (d *Daemon) Frame(ctx context.Context, frame protocol.Frame) {
 }
 
 func effectKey(op protocol.Operation) string {
+	if op.Inspection != nil {
+		return "inspection:" + op.OperationID
+	}
 	if op.Workspace != nil {
 		return "workspace:" + op.OperationID
 	}
@@ -366,6 +382,9 @@ func (d *Daemon) effect(ctx context.Context, op protocol.Operation) error {
 	if err := host.ValidateEffectScope(s.Dispatch, op); err != nil {
 		return err
 	}
+	if op.Inspection != nil {
+		defer d.finishInspection(op)
+	}
 	result := protocol.OperationResult{AttemptID: op.AttemptID, OperationID: op.OperationID}
 	var original *protocol.Operation
 	if op.Kind == protocol.SettleCompletion {
@@ -388,12 +407,19 @@ func (d *Daemon) effect(ctx context.Context, op protocol.Operation) error {
 		original = &value
 	}
 	var status host.Status
-	if op.Kind == protocol.KindInspectRepository {
+	if op.Inspection != nil {
+		status, err = d.inspect(ctx, op)
+	} else if op.Kind == protocol.KindInspectRepository {
 		var snapshot protocol.EffectResult
 		snapshot, err = host.Inspect(op.AttemptID)
 		status = host.Status{Known: true, Result: &snapshot}
 	} else {
-		status, err = d.Host.Call(ctx, host.Request{Action: "effect", AttemptID: op.AttemptID, Operation: &op, CompletionOperation: original})
+		if op.Kind == protocol.Stop {
+			err = d.drainInspections(ctx, op.AttemptID, true)
+		}
+		if err == nil {
+			status, err = d.Host.Call(ctx, host.Request{Action: "effect", AttemptID: op.AttemptID, Operation: &op, CompletionOperation: original})
+		}
 		if err == nil && status.NeedsRepositoryAccess {
 			var access protocol.GitHubRepositoryAccessResult
 			access, err = d.Control.RepositoryAccess(ctx, op)
@@ -477,7 +503,7 @@ func (d *Daemon) effect(ctx context.Context, op protocol.Operation) error {
 		result.FailureKind = &kind
 		if op.Workspace != nil {
 			reason := protocol.OwnershipUnresolved
-			for _, candidate := range []protocol.WorkspaceUnavailableReason{protocol.WorkspaceUnavailableReasonCredentialsMissing, protocol.RepositoryDenied, protocol.RefUnavailable, protocol.StorageUnavailable, protocol.UnsupportedRemote} {
+			for _, candidate := range []protocol.WorkspaceUnavailableReason{protocol.WorkspaceUnavailableReasonCredentialsMissing, protocol.RepositoryDenied, protocol.WorkspaceUnavailableReasonRefUnavailable, protocol.StorageUnavailable, protocol.UnsupportedRemote} {
 				if strings.Contains(err.Error(), string(candidate)) {
 					reason = candidate
 					break
@@ -703,6 +729,9 @@ func (d *Daemon) Tick(ctx context.Context) {
 				continue
 			}
 			if !status.Populated && status.Known {
+				if err = d.drainInspections(ctx, s.Dispatch.AttemptID, true); err != nil {
+					continue
+				}
 				if _, err = d.retainAbsence(s, "verified whole-tree absence"); err != nil {
 					continue
 				}
