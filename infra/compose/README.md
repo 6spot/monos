@@ -14,6 +14,10 @@ docker compose -f infra/compose/compose.yaml --profile test run --rm tests
 curl http://127.0.0.1:18443/health
 ```
 
+For current product configuration and Runner connection observations, use the
+[authenticated installation diagnosis](diagnostics.md). `/health` alone does not
+establish execution readiness.
+
 To prepare a fresh HTTPS deployment instead, generate the optional localhost certificate and use both Compose files for subsequent commands:
 
 ```sh

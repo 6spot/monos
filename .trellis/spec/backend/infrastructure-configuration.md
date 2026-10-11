@@ -137,3 +137,22 @@ capacity. Store no raw secrets in PostgreSQL. Exact replay returns only the old
 request/Runner IDs and never restores a later changed credential or releases
 execution ownership. See [enrollment design](../../../docs/research/runner-enrollment.md)
 and [installation recipe](../../../infra/runner/enrollment.md).
+
+## Installation configuration diagnosis
+
+`GET /v1/owner/setup-readiness` authenticates the Owner and reads one repeatable
+snapshot, with a shared observation time for all Runner heartbeat facts and
+policy decisions. [setup-readiness.ts](../../../apps/server/src/setup-readiness.ts)
+reuses the scheduling target/installation/fallback rules without admission locks,
+reservations, enqueues or Task mutations. Active Projects use their selected
+available Roles. Busy capacity and repository-free work remain valid; GitHub
+configuration is not a universal start prerequisite.
+
+`SetupReport` exposes migration/configuration versions, current connection and
+installation facts, and exact policy reasons with recovery actions. It always
+lists storage, CLI login, model execution and Git read/write as unverified. An
+available selection is only an observation. The bounded report cannot include
+credentials, Role instructions or partial/truncated collections. The local
+[`doctor` command](../../../infra/compose/diagnostics.md) consumes it through a
+temporary Owner session and attempts bounded logout after success or failure;
+only validated report JSON reaches stdout.

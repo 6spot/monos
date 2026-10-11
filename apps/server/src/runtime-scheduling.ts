@@ -55,6 +55,52 @@ function allowsFallback(reason: SelectionReason): boolean {
     reason === 'installation_unavailable' || reason === 'model_control_unavailable' || reason === 'thinking_control_unavailable' || reason === 'unsupported_runner_transfer' || reason === 'runtime_targets_exhausted';
 }
 
+function configuredPolicy(policies: PolicyConfiguration, kind: 'planner' | 'node', rolePolicy?: ExecutionPolicy | null): {
+  source: Exclude<Source, 'explicit'>; targets: ExecutionTarget[];
+} {
+  const source = kind === 'planner' && policies.planner ? 'planner' : kind === 'node' && rolePolicy ? 'role' : 'global';
+  const policy = source === 'planner' ? policies.planner : source === 'role' ? rolePolicy : policies.global;
+  return { source, targets: policy ? [policy.default_target, ...policy.fallback_targets] : [] };
+}
+
+async function selectRunner(tx: Transaction, backendInstance: string, target: ExecutionTarget, nodeExecution: boolean, observedAt?: string): Promise<{ runner: RunnerFact } | { reason: SelectionReason }> {
+  // Admission calls this after locking its candidate scope. Setup diagnosis uses
+  // the same predicates in a fixed read snapshot, without reserving a Runner.
+  const facts = (await tx.query<RunnerFact>(`SELECT r.id,r.incarnation,r.runtime_report_incarnation,
+    (r.connected AND r.ready AND r.connection_instance=$2 AND r.last_seen>COALESCE($4::timestamptz,clock_timestamp())-interval '15 seconds') AS online,
+    i.incarnation AS installation_incarnation,i.observation
+    FROM runners r LEFT JOIN runtime_installations i ON i.runner_id=r.id AND i.runtime_id=$1
+    WHERE ($3::text IS NULL OR r.id=$3) ORDER BY r.id`, [target.runtime_id, backendInstance, target.runner_id ?? null, observedAt ?? null])).rows;
+  if (!facts.length) return { reason: target.runner_id || nodeExecution ? 'runner_missing' : 'installation_unavailable' };
+  const eligible = facts.filter((fact) => issue(fact, target) === null);
+  if (!target.runner_id && eligible.length > 1) return { reason: 'ambiguous_auto_placement' };
+  if (eligible[0]) return { runner: eligible[0] };
+  // One unavailable installation cannot establish objective Auto failure
+  // while another Runner is offline or has not supplied current facts.
+  const reasons = facts.map((fact) => issue(fact, target));
+  return { reason: reasons.find((reason) => reason !== null && !allowsFallback(reason)) ?? reasons[0]! };
+}
+
+export type RuntimePolicyDiagnosis =
+  | { status: 'available'; source: Exclude<Source, 'explicit'>; target: ExecutionTarget; runner_id: string }
+  | { status: 'unavailable'; source: Exclude<Source, 'explicit'>; reason: SelectionReason; target?: ExecutionTarget };
+
+// Reports current target compatibility only: no Attempt, capacity reservation,
+// workspace placement or guarantee that a later admission will still succeed.
+export async function diagnoseRuntimePolicy(tx: Transaction, backendInstance: string,
+  input: { kind: 'planner' | 'node'; policies: PolicyConfiguration; role_policy?: ExecutionPolicy | null }, observedAt: string): Promise<RuntimePolicyDiagnosis> {
+  const { source, targets } = configuredPolicy(input.policies, input.kind, input.role_policy);
+  let unavailable: RuntimePolicyDiagnosis = { status: 'unavailable', source, reason: 'policy_missing' };
+  for (const target of targets) {
+    const reason = targetIssue(target);
+    const result = reason ? { reason } : await selectRunner(tx, backendInstance, target, input.kind === 'node', observedAt);
+    if ('runner' in result) return { status: 'available', source, target, runner_id: result.runner.id };
+    unavailable = { status: 'unavailable', source, target, reason: result.reason };
+    if (!allowsFallback(result.reason)) break;
+  }
+  return unavailable;
+}
+
 /**
  * Product-facing Runtime admission. The owning command supplies immutable
  * context and authorization, calls this inside its transaction before taking
@@ -100,11 +146,9 @@ export class RuntimeScheduling {
         if (!role) return { status: 'unavailable', reason: 'role_missing' };
         rolePolicy = role.execution_policy;
       }
-      source = request.explicit_target ? 'explicit' :
-        request.kind === 'planner' && policies.planner ? 'planner' :
-          request.kind === 'node' && rolePolicy ? 'role' : 'global';
-      const policy = source === 'planner' ? policies.planner : source === 'role' ? rolePolicy : policies.global;
-      targets = request.explicit_target ? [request.explicit_target] : policy ? [policy.default_target, ...policy.fallback_targets] : [];
+      const configured = configuredPolicy(policies, request.kind, rolePolicy);
+      source = request.explicit_target ? 'explicit' : configured.source;
+      targets = request.explicit_target ? [request.explicit_target] : configured.targets;
     }
     const candidates = targets.slice(firstIndex).map((target, offset) => ({
       target, index: firstIndex + offset,
@@ -129,7 +173,7 @@ export class RuntimeScheduling {
     let unavailable: Extract<SchedulingResult, { status: 'unavailable' }> = { status: 'unavailable', reason: predecessor ? 'runtime_targets_exhausted' : 'policy_missing', source };
     let selected: { target: ExecutionTarget; runner: RunnerFact; index: number } | undefined;
     for (const candidate of candidates) {
-      const result = candidate.reason ? { reason: candidate.reason } : await this.selectRunner(tx, candidate.placement, !!request.node_execution_source);
+      const result = candidate.reason ? { reason: candidate.reason } : await selectRunner(tx, this.backendInstance, candidate.placement, !!request.node_execution_source);
       if ('reason' in result) {
         unavailable = { status: 'unavailable', reason: result.reason, source, target: candidate.target };
         if (!allowsFallback(result.reason)) break;
@@ -177,21 +221,4 @@ export class RuntimeScheduling {
     return { status: 'queued', dispatch_id, runner_id: runner.id, source, target };
   }
 
-  private async selectRunner(tx: Transaction, target: ExecutionTarget, nodeExecution: boolean): Promise<{ runner: RunnerFact } | { reason: SelectionReason }> {
-    // The candidate scope is already locked, including every pinned row or
-    // the whole Auto set, before reading connection and installation facts.
-    const facts = (await tx.query<RunnerFact>(`SELECT r.id,r.incarnation,r.runtime_report_incarnation,
-      (r.connected AND r.ready AND r.connection_instance=$2 AND r.last_seen>clock_timestamp()-interval '15 seconds') AS online,
-      i.incarnation AS installation_incarnation,i.observation
-      FROM runners r LEFT JOIN runtime_installations i ON i.runner_id=r.id AND i.runtime_id=$1
-      WHERE ($3::text IS NULL OR r.id=$3) ORDER BY r.id`, [target.runtime_id, this.backendInstance, target.runner_id ?? null])).rows;
-    if (!facts.length) return { reason: target.runner_id || nodeExecution ? 'runner_missing' : 'installation_unavailable' };
-    const eligible = facts.filter((fact) => issue(fact, target) === null);
-    if (!target.runner_id && eligible.length > 1) return { reason: 'ambiguous_auto_placement' };
-    if (eligible[0]) return { runner: eligible[0] };
-    // One unavailable installation cannot establish objective Auto failure
-    // while another Runner is offline or has not supplied current facts.
-    const reasons = facts.map((fact) => issue(fact, target));
-    return { reason: reasons.find((reason) => reason !== null && !allowsFallback(reason)) ?? reasons[0]! };
-  }
 }

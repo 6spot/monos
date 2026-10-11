@@ -45,6 +45,7 @@ import { GitHub } from './github.ts';
 import fastifyStatic from '@fastify/static';
 import { join } from 'node:path';
 import { redeemRunnerEnrollment } from './runner-enrollment.ts';
+import { setupReadiness } from './setup-readiness.ts';
 
 function bearer(request: { headers: { authorization?: string } }): string {
   const match = /^Bearer ([^\s]+)$/.exec(request.headers.authorization ?? '');
@@ -118,6 +119,7 @@ export function createApp(service: BoundaryService, tls?: { key: Buffer; cert: B
     if (expected !== actual.session_id) throw new CommandError('unauthorized', 'Owner session changed; reload the authenticated workspace');
   });
   const configuration = new Configuration(service.db, new GitHub(service.options.signingKey), service.gitHTTPS);
+  app.get('/v1/owner/setup-readiness', async request => setupReadiness(service.db, ownerCredential(request), service.instanceId));
   const todos = new Todos(service.db);
   const discussion = new Discussion(service.db, service.instanceId);
   const todoAttempts = new TodoAttemptReads(service.db);

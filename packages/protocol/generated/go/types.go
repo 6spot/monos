@@ -33,6 +33,75 @@ type ReworkActivationMap []NodeReworkActivation
 
 type CompletionOutcome string
 
+type SetupReport struct {
+	ConfigurationVersion int64                 `json:"configuration_version"`
+	ObservedAt           string                `json:"observed_at"`
+	Planner              SetupPolicyStatus     `json:"planner"`
+	Projects             []SetupProjectStatus  `json:"projects"`
+	Runners              []RunnerConfiguration `json:"runners"`
+	Schema               Schema                `json:"schema"`
+	SchemaVersion        int64                 `json:"schema_version"`
+	Unverified           []Unverified          `json:"unverified"`
+}
+
+type SetupPolicyStatus struct {
+	Action   *SetupPolicyStatusAction `json:"action,omitempty"`
+	Reason   *SetupPolicyStatusReason `json:"reason,omitempty"`
+	RunnerID *string                  `json:"runner_id,omitempty"`
+	Source   Source                   `json:"source"`
+	Status   SetupPolicyStatusStatus  `json:"status"`
+	Target   *ExecutionTarget         `json:"target,omitempty"`
+}
+
+type ExecutionTarget struct {
+	ModelID       *string `json:"model_id,omitempty"`
+	RunnerID      *string `json:"runner_id,omitempty"`
+	RuntimeID     string  `json:"runtime_id"`
+	ThinkingLevel *string `json:"thinking_level,omitempty"`
+}
+
+type SetupProjectStatus struct {
+	Name      string                   `json:"name"`
+	ProjectID string                   `json:"project_id"`
+	Roles     []RoleElement            `json:"roles"`
+	Status    SetupProjectStatusStatus `json:"status"`
+}
+
+type RoleElement struct {
+	Name   string            `json:"name"`
+	Policy SetupPolicyStatus `json:"policy"`
+	RoleID string            `json:"role_id"`
+}
+
+type RunnerConfiguration struct {
+	Capacity int64     `json:"capacity"`
+	Online   bool      `json:"online"`
+	RunnerID string    `json:"runner_id"`
+	Runtimes []Runtime `json:"runtimes"`
+}
+
+type Runtime struct {
+	Current      bool                `json:"current"`
+	Installation RuntimeInstallation `json:"installation"`
+	ObservedAt   string              `json:"observed_at"`
+}
+
+type RuntimeInstallation struct {
+	Availability     Availability `json:"availability"`
+	Executable       string       `json:"executable"`
+	ModelIDS         []string     `json:"model_ids"`
+	RuntimeID        string       `json:"runtime_id"`
+	SupportsModel    bool         `json:"supports_model"`
+	SupportsThinking bool         `json:"supports_thinking"`
+	Version          *string      `json:"version,omitempty"`
+}
+
+type Schema struct {
+	CurrentVersion  int64        `json:"current_version"`
+	ExpectedVersion int64        `json:"expected_version"`
+	Status          SchemaStatus `json:"status"`
+}
+
 type RunnerEnrollmentIssue struct {
 	Capacity      int64 `json:"capacity"`
 	SchemaVersion int64 `json:"schema_version"`
@@ -411,7 +480,7 @@ type InspectionResult struct {
 	InspectionID     string                       `json:"inspection_id"`
 	Reason           *InspectionUnavailableReason `json:"reason,omitempty"`
 	Snapshot         *InspectionSnapshot          `json:"snapshot,omitempty"`
-	Status           InspectionResultStatus       `json:"status"`
+	Status           SetupPolicyStatusStatus      `json:"status"`
 }
 
 type InspectionSnapshot struct {
@@ -1228,16 +1297,6 @@ type ResultObject struct {
 	Size *int64           `json:"size,omitempty"`
 }
 
-type RuntimeInstallation struct {
-	Availability     Availability `json:"availability"`
-	Executable       string       `json:"executable"`
-	ModelIDS         []string     `json:"model_ids"`
-	RuntimeID        string       `json:"runtime_id"`
-	SupportsModel    bool         `json:"supports_model"`
-	SupportsThinking bool         `json:"supports_thinking"`
-	Version          *string      `json:"version,omitempty"`
-}
-
 type RunnerInventory struct {
 	Dispatches    []Dispatch  `json:"dispatches"`
 	NextCursor    *string     `json:"next_cursor,omitempty"`
@@ -1366,13 +1425,6 @@ type ExecutionPolicy struct {
 	FallbackTargets []ExecutionTarget `json:"fallback_targets"`
 }
 
-type ExecutionTarget struct {
-	ModelID       *string `json:"model_id,omitempty"`
-	RunnerID      *string `json:"runner_id,omitempty"`
-	RuntimeID     string  `json:"runtime_id"`
-	ThinkingLevel *string `json:"thinking_level,omitempty"`
-}
-
 type GitRepositoryResource struct {
 	DefaultBranch     *string           `json:"default_branch,omitempty"`
 	DefaultRef        *string           `json:"default_ref,omitempty"`
@@ -1394,11 +1446,11 @@ type ConfigurationResult struct {
 }
 
 type GitHTTPSCredentialChange struct {
-	Action      Action  `json:"action"`
-	Generation  *string `json:"generation,omitempty"`
-	ResourceID  string  `json:"resource_id"`
-	ScopeDigest *string `json:"scope_digest,omitempty"`
-	Username    *string `json:"username,omitempty"`
+	Action      GitHTTPSCredentialChangeAction `json:"action"`
+	Generation  *string                        `json:"generation,omitempty"`
+	ResourceID  string                         `json:"resource_id"`
+	ScopeDigest *string                        `json:"scope_digest,omitempty"`
+	Username    *string                        `json:"username,omitempty"`
 }
 
 type ConfigurationSnapshot struct {
@@ -1457,19 +1509,6 @@ type GitHubConfigurationInput struct {
 type InfrastructureSnapshot struct {
 	Runners       []RunnerConfiguration `json:"runners"`
 	SchemaVersion int64                 `json:"schema_version"`
-}
-
-type RunnerConfiguration struct {
-	Capacity int64     `json:"capacity"`
-	Online   bool      `json:"online"`
-	RunnerID string    `json:"runner_id"`
-	Runtimes []Runtime `json:"runtimes"`
-}
-
-type Runtime struct {
-	Current      bool                `json:"current"`
-	Installation RuntimeInstallation `json:"installation"`
-	ObservedAt   string              `json:"observed_at"`
 }
 
 type GitHubRepositoryPage struct {
@@ -3563,6 +3602,85 @@ type RepositoryAccessResult struct {
 	WorkspaceDigest  string                     `json:"workspace_digest"`
 }
 
+type SetupPolicyStatusAction string
+
+const (
+	ConfigurePolicy SetupPolicyStatusAction = "configure_policy"
+	ConfigureRole   SetupPolicyStatusAction = "configure_role"
+	EnrollRunner    SetupPolicyStatusAction = "enroll_runner"
+	RefreshRuntime  SetupPolicyStatusAction = "refresh_runtime"
+	ReviewTarget    SetupPolicyStatusAction = "review_target"
+	SelectRunner    SetupPolicyStatusAction = "select_runner"
+	StartRunner     SetupPolicyStatusAction = "start_runner"
+)
+
+type SetupPolicyStatusReason string
+
+const (
+	AmbiguousAutoPlacement     SetupPolicyStatusReason = "ambiguous_auto_placement"
+	InstallationStale          SetupPolicyStatusReason = "installation_stale"
+	InstallationUnavailable    SetupPolicyStatusReason = "installation_unavailable"
+	ModelControlUnavailable    SetupPolicyStatusReason = "model_control_unavailable"
+	PolicyMissing              SetupPolicyStatusReason = "policy_missing"
+	PurpleRunnerOffline        SetupPolicyStatusReason = "runner_offline"
+	RoleMissing                SetupPolicyStatusReason = "role_missing"
+	RunnerMissing              SetupPolicyStatusReason = "runner_missing"
+	RuntimeTargetsExhausted    SetupPolicyStatusReason = "runtime_targets_exhausted"
+	ThinkingControlUnavailable SetupPolicyStatusReason = "thinking_control_unavailable"
+	UnsupportedModel           SetupPolicyStatusReason = "unsupported_model"
+	UnsupportedRunnerTransfer  SetupPolicyStatusReason = "unsupported_runner_transfer"
+	UnsupportedRuntime         SetupPolicyStatusReason = "unsupported_runtime"
+	UnsupportedThinking        SetupPolicyStatusReason = "unsupported_thinking"
+)
+
+type Source string
+
+const (
+	Global        Source = "global"
+	Role          Source = "role"
+	SourcePlanner Source = "planner"
+)
+
+type SetupPolicyStatusStatus string
+
+const (
+	PurpleAvailable   SetupPolicyStatusStatus = "available"
+	PurpleUnavailable SetupPolicyStatusStatus = "unavailable"
+)
+
+type SetupProjectStatusStatus string
+
+const (
+	Configured         SetupProjectStatusStatus = "configured"
+	MissingRoles       SetupProjectStatusStatus = "missing_roles"
+	RuntimeUnavailable SetupProjectStatusStatus = "runtime_unavailable"
+)
+
+type Availability string
+
+const (
+	AvailabilityUnavailable Availability = "unavailable"
+	Detected                Availability = "detected"
+	NotFound                Availability = "not_found"
+)
+
+type SchemaStatus string
+
+const (
+	Current  SchemaStatus = "current"
+	Mismatch SchemaStatus = "mismatch"
+)
+
+type Unverified string
+
+const (
+	CLIAuthentication Unverified = "cli_authentication"
+	GitRead           Unverified = "git_read"
+	GitWrite          Unverified = "git_write"
+	ModelExecution    Unverified = "model_execution"
+	Storage           Unverified = "storage"
+)
+
 type CommandEnvelopeName string
 
 const (
@@ -3683,13 +3801,6 @@ const (
 	ResourceUnavailable                       InspectionUnavailableReason = "resource_unavailable"
 	RevisionUnavailable                       InspectionUnavailableReason = "revision_unavailable"
 	SourceStale                               InspectionUnavailableReason = "source_stale"
-)
-
-type InspectionResultStatus string
-
-const (
-	PurpleAvailable   InspectionResultStatus = "available"
-	PurpleUnavailable InspectionResultStatus = "unavailable"
 )
 
 type InstructionFile string
@@ -3932,6 +4043,7 @@ const (
 	AmbiguousPR                PublicationRefObservationReason = "ambiguous_pr"
 	CancelRequested            PublicationRefObservationReason = "cancel_requested"
 	ContentMismatch            PublicationRefObservationReason = "content_mismatch"
+	FluffyRunnerOffline        PublicationRefObservationReason = "runner_offline"
 	InvalidProviderResponse    PublicationRefObservationReason = "invalid_provider_response"
 	ModeDeferred               PublicationRefObservationReason = "mode_deferred"
 	PRClosed                   PublicationRefObservationReason = "pr_closed"
@@ -3954,7 +4066,6 @@ const (
 	ReasonAccessDenied         PublicationRefObservationReason = "access_denied"
 	ReasonCredentialsMissing   PublicationRefObservationReason = "credentials_missing"
 	ReasonRateLimited          PublicationRefObservationReason = "rate_limited"
-	RunnerOffline              PublicationRefObservationReason = "runner_offline"
 	RunnerUnsupported          PublicationRefObservationReason = "runner_unsupported"
 	UnexpectedHead             PublicationRefObservationReason = "unexpected_head"
 )
@@ -4150,14 +4261,6 @@ const (
 	StickyUnavailable      ResultReadResponseStatus = "unavailable"
 )
 
-type Availability string
-
-const (
-	AvailabilityUnavailable Availability = "unavailable"
-	Detected                Availability = "detected"
-	NotFound                Availability = "not_found"
-)
-
 type Type string
 
 const (
@@ -4260,11 +4363,11 @@ const (
 	Automatic       RemotePreparation = "automatic"
 )
 
-type Action string
+type GitHTTPSCredentialChangeAction string
 
 const (
-	Cleared Action = "cleared"
-	Saved   Action = "saved"
+	Cleared GitHTTPSCredentialChangeAction = "cleared"
+	Saved   GitHTTPSCredentialChangeAction = "saved"
 )
 
 type ConfigurationResultStatus string

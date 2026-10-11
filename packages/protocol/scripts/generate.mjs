@@ -93,6 +93,7 @@ const get = (name, auth, parameters = [], querySchema) => ({
 artifacts.set('generated/openapi.json', `${JSON.stringify({
   openapi: '3.1.0', info: { title: 'monos boundary probe', version: '1.0.0' },
   paths: {
+    '/v1/owner/setup-readiness': { get: { ...get('SetupReport', 'OwnerAuth'), description: 'Read-only installation configuration and current connection observations. Does not reserve capacity or establish storage, CLI login, model execution or Git permissions.' } },
     '/v1/runner/enroll': { post: { security: [], description: 'Redeem a one-use enrollment capability. The bounded JSON body carries the enrollment token and a freshly generated Runner credential; neither is returned or logged. Exact retries return the original Runner identity.', requestBody: { required: true, content: { 'application/json': { schema: reference('RunnerEnrollmentRequest') } } }, responses: responses('RunnerEnrollmentResponse') } },
     '/v1/owner/tasks/review/commands': { post: { security: security('OwnerAuth'), requestBody: { required: true, content: { 'application/json': { schema: reference('OwnerReviewCommand') } } }, responses: responses('OwnerReviewCommandResult') } },
     '/v1/owner/tasks/{task_id}/review': { get: get('OwnerReviewStatus', 'OwnerAuth', ['task_id'], 'OwnerReviewHistoryQuery') },

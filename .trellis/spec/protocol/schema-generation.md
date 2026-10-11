@@ -99,6 +99,13 @@ reject caller-selected Runner identity/capacity and secret fields in responses.
 Database consumers still enforce expiry, one-use authority and exact replay;
 Runner consumers enforce random generation, file permissions and durable install.
 
+`SetupReport` is an Owner-only configuration/connection observation bounded to
+2 MiB. Available policy results require an exact target and Runner ID; unavailable
+results require a recognized scheduling reason and recovery action. Both forbid
+conflicting result fields. The five explicit unverified capabilities cannot be
+omitted or replaced by an inferred success. It is not a scheduling authorization
+or reservation and is not sent to Runner or Agent execution scopes.
+
 | Condition | Result |
 | --- | --- |
 | Unsupported schema version | Reject before dispatch/admission |

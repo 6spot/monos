@@ -2,6 +2,235 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://monos.invalid/protocol/v1",
   "definitions": {
+    "SetupPolicyStatus": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "enum": [
+            "available",
+            "unavailable"
+          ]
+        },
+        "source": {
+          "enum": [
+            "planner",
+            "global",
+            "role"
+          ]
+        },
+        "target": {
+          "$ref": "#/definitions/ExecutionTarget"
+        },
+        "runner_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "reason": {
+          "enum": [
+            "policy_missing",
+            "role_missing",
+            "unsupported_runtime",
+            "unsupported_model",
+            "unsupported_thinking",
+            "runner_missing",
+            "runner_offline",
+            "installation_stale",
+            "installation_unavailable",
+            "model_control_unavailable",
+            "thinking_control_unavailable",
+            "ambiguous_auto_placement",
+            "unsupported_runner_transfer",
+            "runtime_targets_exhausted"
+          ]
+        },
+        "action": {
+          "enum": [
+            "configure_policy",
+            "configure_role",
+            "enroll_runner",
+            "start_runner",
+            "refresh_runtime",
+            "select_runner",
+            "review_target"
+          ]
+        }
+      },
+      "required": [
+        "status",
+        "source"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "available"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "target",
+              "runner_id"
+            ],
+            "properties": {
+              "target": {},
+              "runner_id": {},
+              "reason": false,
+              "action": false
+            }
+          },
+          "else": {
+            "required": [
+              "reason",
+              "action"
+            ],
+            "properties": {
+              "reason": {},
+              "action": {},
+              "runner_id": false
+            }
+          }
+        }
+      ]
+    },
+    "SetupProjectStatus": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "project_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "status": {
+          "enum": [
+            "configured",
+            "missing_roles",
+            "runtime_unavailable"
+          ]
+        },
+        "roles": {
+          "type": "array",
+          "maxItems": 1024,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "role_id": {
+                "$ref": "#/definitions/Id"
+              },
+              "name": {
+                "type": "string",
+                "maxLength": 256
+              },
+              "policy": {
+                "$ref": "#/definitions/SetupPolicyStatus"
+              }
+            },
+            "required": [
+              "role_id",
+              "name",
+              "policy"
+            ]
+          }
+        }
+      },
+      "required": [
+        "project_id",
+        "name",
+        "status",
+        "roles"
+      ]
+    },
+    "SetupReport": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "observed_at": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "configuration_version": {
+          "$ref": "#/definitions/Counter"
+        },
+        "schema": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "status": {
+              "enum": [
+                "current",
+                "mismatch"
+              ]
+            },
+            "current_version": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "expected_version": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "status",
+            "current_version",
+            "expected_version"
+          ]
+        },
+        "planner": {
+          "$ref": "#/definitions/SetupPolicyStatus"
+        },
+        "projects": {
+          "type": "array",
+          "maxItems": 1024,
+          "items": {
+            "$ref": "#/definitions/SetupProjectStatus"
+          }
+        },
+        "runners": {
+          "type": "array",
+          "maxItems": 1024,
+          "items": {
+            "$ref": "#/definitions/RunnerConfiguration"
+          }
+        },
+        "unverified": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "storage",
+              "cli_authentication",
+              "model_execution",
+              "git_read",
+              "git_write"
+            ]
+          }
+        }
+      },
+      "required": [
+        "schema_version",
+        "observed_at",
+        "configuration_version",
+        "schema",
+        "planner",
+        "projects",
+        "runners",
+        "unverified"
+      ]
+    },
     "RunnerEnrollmentIssue": {
       "type": "object",
       "additionalProperties": false,

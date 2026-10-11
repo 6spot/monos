@@ -18,6 +18,7 @@ export class ProtocolVersionError extends Error {}
 export class ProtocolValidationError extends Error {}
 
 export function validate<T>(name: string, value: unknown): T {
+  if (name === 'SetupReport' && new TextEncoder().encode(JSON.stringify(value)).length > MAX_BODY_BYTES) throw new ProtocolValidationError('Setup report exceeds the encoded wire byte limit');
   if ((name.startsWith('RunnerEnrollment') || name === 'RunnerCredential') && new TextEncoder().encode(JSON.stringify(value)).length > 4096) throw new ProtocolValidationError(`${name} exceeds the encoded wire byte limit`);
   if (['Frame', 'CommandEnvelope', 'OwnerCommand', 'OwnerDeliveryCommand', 'OwnerReviewCommand', 'OwnerLogin', 'ConfigurationCommand', 'TodoCommand', 'DiscussionCommand', 'TaskPreviewCommand'].includes(name) && value && typeof value === 'object' && 'schema_version' in value && value.schema_version !== 1) throw new ProtocolVersionError('Unsupported schema version');
   let validator = validators.get(name);

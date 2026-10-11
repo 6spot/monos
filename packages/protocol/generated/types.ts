@@ -29,6 +29,91 @@ type DeliveryRef = string;
 
 type CompletionOutcome = string;
 
+export interface SetupReport {
+    configuration_version: number;
+    observed_at:           string;
+    planner:               SetupPolicyStatus;
+    projects:              SetupProjectStatus[];
+    runners:               RunnerConfiguration[];
+    schema:                Schema;
+    schema_version:        number;
+    unverified:            [Unverified, Unverified, Unverified, Unverified, Unverified, ...Unverified[]];
+}
+
+export interface SetupPolicyStatus {
+    action?:    SetupPolicyStatusAction;
+    reason?:    SetupPolicyStatusReason;
+    runner_id?: string;
+    source:     Source;
+    status:     SetupPolicyStatusStatus;
+    target?:    ExecutionTarget;
+}
+
+export type SetupPolicyStatusAction = "configure_policy" | "configure_role" | "enroll_runner" | "start_runner" | "refresh_runtime" | "select_runner" | "review_target";
+
+export type SetupPolicyStatusReason = "policy_missing" | "role_missing" | "unsupported_runtime" | "unsupported_model" | "unsupported_thinking" | "runner_missing" | "runner_offline" | "installation_stale" | "installation_unavailable" | "model_control_unavailable" | "thinking_control_unavailable" | "ambiguous_auto_placement" | "unsupported_runner_transfer" | "runtime_targets_exhausted";
+
+export type Source = "planner" | "global" | "role";
+
+export type SetupPolicyStatusStatus = "available" | "unavailable";
+
+export interface ExecutionTarget {
+    model_id?:       string;
+    runner_id?:      string;
+    runtime_id:      string;
+    thinking_level?: string;
+}
+
+export interface SetupProjectStatus {
+    name:       string;
+    project_id: string;
+    roles:      Role[];
+    status:     SetupProjectStatusStatus;
+}
+
+export interface Role {
+    name:    string;
+    policy:  SetupPolicyStatus;
+    role_id: string;
+}
+
+export type SetupProjectStatusStatus = "configured" | "missing_roles" | "runtime_unavailable";
+
+export interface RunnerConfiguration {
+    capacity:  number;
+    online:    boolean;
+    runner_id: string;
+    runtimes:  Runtime[];
+}
+
+export interface Runtime {
+    current:      boolean;
+    installation: RuntimeInstallation;
+    observed_at:  string;
+}
+
+export interface RuntimeInstallation {
+    availability:      Availability;
+    executable:        string;
+    model_ids:         string[];
+    runtime_id:        string;
+    supports_model:    boolean;
+    supports_thinking: boolean;
+    version?:          string;
+}
+
+export type Availability = "detected" | "not_found" | "unavailable";
+
+export interface Schema {
+    current_version:  number;
+    expected_version: number;
+    status:           SchemaStatus;
+}
+
+export type SchemaStatus = "current" | "mismatch";
+
+export type Unverified = "storage" | "cli_authentication" | "model_execution" | "git_read" | "git_write";
+
 export interface RunnerEnrollmentIssue {
     capacity:       number;
     schema_version: number;
@@ -427,7 +512,7 @@ export interface InspectionResult {
     inspection_id:     string;
     reason?:           InspectionUnavailableReason;
     snapshot?:         InspectionSnapshot;
-    status:            InspectionResultStatus;
+    status:            SetupPolicyStatusStatus;
 }
 
 export type InspectionUnavailableReason = "cancelled" | "source_stale" | "resource_unavailable" | "access_denied" | "ref_unavailable" | "revision_unavailable" | "repository_mismatch" | "timeout" | "inspection_failed";
@@ -441,8 +526,6 @@ export interface InspectionSnapshot {
     storage_id:          string;
     tree:                string;
 }
-
-export type InspectionResultStatus = "available" | "unavailable";
 
 export type InstructionFile = "AGENTS.md" | "CLAUDE.md";
 
@@ -1352,18 +1435,6 @@ export type ResultChangeStatus = "A" | "D" | "M" | "T";
 
 export type ResultReadResponseStatus = "available" | "absent" | "binary" | "oversized" | "scan_limit" | "unsupported_path" | "unavailable" | "identity_mismatch" | "offline" | "unsupported" | "busy" | "timeout" | "no_git";
 
-export interface RuntimeInstallation {
-    availability:      Availability;
-    executable:        string;
-    model_ids:         string[];
-    runtime_id:        string;
-    supports_model:    boolean;
-    supports_thinking: boolean;
-    version?:          string;
-}
-
-export type Availability = "detected" | "not_found" | "unavailable";
-
 export type Type = "hello" | "welcome" | "ready" | "heartbeat" | "start" | "effect" | "authorize_dispatch" | "authorization" | "event" | "event_ack" | "operation_result" | "operation_ack" | "error" | "result_read" | "result_read_result" | "publication_prepare" | "publication_result" | "publication_ack" | "publication_push" | "publication_push_result" | "publication_push_ack" | "publication_ref_read" | "publication_ref_read_result";
 
 export interface RunnerInventory {
@@ -1504,13 +1575,6 @@ export interface ExecutionPolicy {
     fallback_targets: ExecutionTarget[];
 }
 
-export interface ExecutionTarget {
-    model_id?:       string;
-    runner_id?:      string;
-    runtime_id:      string;
-    thinking_level?: string;
-}
-
 export interface GitRepositoryResource {
     default_branch?:    string;
     default_ref?:       string;
@@ -1538,14 +1602,14 @@ export interface ConfigurationResult {
 }
 
 export interface GitHTTPSCredentialChange {
-    action:        Action;
+    action:        GitHTTPSCredentialChangeAction;
     generation?:   string;
     resource_id:   string;
     scope_digest?: string;
     username?:     string;
 }
 
-export type Action = "saved" | "cleared";
+export type GitHTTPSCredentialChangeAction = "saved" | "cleared";
 
 export type ConfigurationResultStatus = "committed" | "unknown";
 
@@ -1605,19 +1669,6 @@ export interface GitHubConfigurationInput {
 export interface InfrastructureSnapshot {
     runners:        RunnerConfiguration[];
     schema_version: number;
-}
-
-export interface RunnerConfiguration {
-    capacity:  number;
-    online:    boolean;
-    runner_id: string;
-    runtimes:  Runtime[];
-}
-
-export interface Runtime {
-    current:      boolean;
-    installation: RuntimeInstallation;
-    observed_at:  string;
 }
 
 export interface GitHubRepositoryPage {
