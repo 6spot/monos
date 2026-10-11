@@ -1,19 +1,20 @@
-# Exact one-Node replacement Plans
+# Exact multi-Node replacement Plans
 
-Implementation: `apps/server/src/task-replan*.ts`, additive migration21 and
+Implementation: `apps/server/src/task-replan*.ts`, migrations 21 and 29, and
 protocol `TaskReplanSource`, `PrepareReplan`, `WorkspaceTransfer`.
-Status: implementation and independent full-scope acceptance passed on2026-10-02
-in `09-30-a-single-node-replan`. Native evidence covers both private-work paths,
-standalone/joint publication, explicit exits and idle service restart. Issue-answer
-and COMMIT races remain real-PostgreSQL/process coverage.
+Status: multi-Node extension implemented on 2026-10-11, with PostgreSQL, protocol,
+Runner and browser verification in `docs/research/multi-node-replan.md`. Earlier
+single-Node native evidence in `09-30-a-single-node-replan` covers both private-work
+paths, standalone/joint publication, explicit exits and idle service restart. It
+does not establish native acceptance of the multi-Node extension; that is deferred.
 
 ## 1. Scope / Trigger
 
 Actual semantic insufficiency requests a replacement graph within the same Task.
-The current slice supports one complete Node. It preserves immutable Plans,
+The current slice supports complete acyclic graphs of 1..256 required Nodes, executed serially. It preserves immutable Plans,
 activations, Specification revisions, completion manifests and physical leases.
 Runtime failure/silence and ordinary Owner feedback do not imply insufficiency.
-Review-feedback routing and multi-Node graphs remain outside this slice.
+Review-feedback routing can request the same canonical Replan. Nonempty Artifact consumes and standalone multi-Node sufficient-graph Specification changes remain unsupported.
 
 ## 2. Signatures
 
@@ -72,7 +73,7 @@ Stop, activation/Spec/Plan change and later invalidation still revoke it. Never
 substitute current control version into an old command.
 
 Generation waits for old processes, effects, leases and shared Planner ownership.
-Replan preparation and issue are terminal, repository-free phases. Owner publication
+Replan preparation and issue are terminal scratch phases with on-demand read-only repository inspection. Owner publication
 also waits for the preparing Planner's actual process/claim release. Retry supports
 failed, issued and prepared-but-stale generations. Old graph authority is revoked;
 joint retries preserve the original requirement obligation and predecessor chain.
@@ -89,6 +90,41 @@ including omitted versus empty optional fields. Changed work receives a new Node
 Current evidence follows exact applicability edges, never historical relabeling or
 an invalidation gap. Replacement work cannot inherit old completion as its own.
 
+`impact.nodes` covers every old effective member once, sorted by Node ID.
+Retained identical definitions use `refresh`, `carry` or `invalidate`; invalidation
+increments activation. `remove` requires null target identity/activation and removes
+that member from the new graph. New graph-only IDs start at activation 1 and never
+claim an old completion. Invalidating upstream evidence also prevents carrying its
+completed descendants. Membership, exact definitions, Roles and evidence are
+rechecked at publication, not only preparation.
+
+Guidance explicitly uses `target_node_ids`; retain requires at least one target,
+supersede none. `holds` entries wrap immutable `origin` plus nonempty destination
+IDs, preserving each original Stop/blocker independently even across splits and
+merges. Only applicability from the current Plan determines active recipients;
+historical mappings cannot leak into current context or acceptance guards. Old
+inactive guidance obligations remain history until explicitly remapped or resolved.
+A held branch does not block an independent runnable branch. Held Node sources are
+created only once dependencies and all physical ownership permit it; Task state
+already accounts for pending holds before that source is created.
+
+`workspaces` entries pair exact `input` with approved `target_nodes`. A checkpoint
+requires one exact target activation, which cannot complete without reopening and
+finalizing the retained private work. Completed input can allow several destinations
+or an explicit empty list. The first opener claims one exact immutable transfer
+under the workspace lock; earlier repository-free work does not force a checkout.
+Completed code access may follow an approved unchanged Node to its later current
+activation in the same published Plan when original applicability and current Node
+authority remain valid. This never carries old completion evidence. Checkpoints
+retain exact activation restrictions. Former workspace ownership cannot bypass the
+new Plan's explicit destination, even for the same Node/activation.
+Rework and every shared activation-change path reject before mutation when their
+full descendant closure intersects an unadopted checkpoint target. Open that exact
+private input first, or publish an explicit new Replan disposition. Reassigning
+private work from old A to dependent B permits A to finish repository-free; A's old
+checkpoint cannot override the current assignment. A checkpoint target cannot be
+carried as already completed.
+
 Joint ordering is request → quiescence → graph plus full Spec proposal → separate
 exact graph/requirements approvals → one atomic publication. The requirement impact
 is strictly `graph_sufficient:false` with reserved graph/request identities; the
@@ -97,7 +133,7 @@ Spec apply/pump cannot publish this branch. An already-admitted sufficient chang
 must reconcile/withdraw before fresh joint preparation; never mutate its impact.
 
 Publication atomically consumes both exact approvals when joint, appends complete
-revisions/membership/applicability/transfers, switches pointers, resolves only owned
+revisions/membership/applicability and workspace adoption permissions, switches pointers, resolves only owned
 guards and records trusted scheduling origin. SQL independently verifies the exact
 Owner receipt/envelope/response chain, not merely a foreign key or consumed token.
 Polling/confirmation bookkeeping cannot self-invalidate semantic control versions.
@@ -109,14 +145,14 @@ does not dismiss the request. Reads expose each remaining exact Owner exit. Reta
 all independent blockers, Owner Stop and scoped guidance with immutable provenance;
 reason text is never blocker identity.
 
-`WorkspaceTransfer` is system-authored publication input. It binds actual old
+`WorkspaceTransfer` is system-authored from exact approved publication input at first open. It binds actual old
 source Plan/Node/activation/Attempt/lease, Stop/checkpoint or finalized completion,
 fixed Task/resource/storage lineage and target Plan/Node/activation. The old source
 Plan can precede the most recent applicable Plan. Future target Attempt/open/lease
 IDs are bound when the system admits the new descriptor. Backend and root Host
 independently check exact released predecessor. Never clear a checkpoint to bypass
 ownership. Once adopted, failed new open/Stop/retry uses the new lease; a third Node
-needs fresh publication. Completed inheritance checks finalized Git, not old dirty
+uses ordinary settled serial transfer after its predecessor completes. Completed inheritance checks finalized Git, not old dirty
 HEAD/index equality.
 
 ## 4. Validation & Error Matrix
@@ -138,7 +174,7 @@ HEAD/index equality.
 ## 5. Good / Base / Bad Cases
 
 Base: Node terminally requests a new formal goal; after Stop and Planner release,
-Owner confirms the whole one-Node graph and publishes it without a resident Agent.
+Owner confirms the complete replacement graph and publishes it without a resident Agent.
 Good: a joint requirement change publishes both pointers under two exact approvals,
 preserving independent Stop and old work only as explicit historical input.
 Bad: use a new Node ID to inherit old completion, clear a private checkpoint to
@@ -174,6 +210,6 @@ Wrong: `consumed_by != null` establishes approval. Correct: compare exact stored
 confirmation and publication envelopes/results, proposal digests and independently
 preserved Owner requests; jointly consumed approvals bind the same publication.
 
-Future real review-feedback dismissal must atomically preserve feedback and create
+Review-feedback dismissal must atomically preserve feedback and create
 a fresh routing successor linked to dismissal, with same-feedback/basis anti-repeat
 and old Planner settlement. No placeholder feedback API or forged origin is valid.

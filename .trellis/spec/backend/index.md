@@ -5,7 +5,7 @@ Current stage: [pre-use development](../../../docs/12-product-naming-and-upgrade
 Status: `apps/server` implements the Stage A foundation, Todo Discussion/Task creation,
 explicit initial planning and canonical serial multi-Node execution with Artifacts and
 completion recovery, ordered Task Conversation, explicit guidance handling and exact
-Specification revision settlement and independently accepted one-Node replacement
+Specification revision settlement and independently accepted multi-Node replacement
 Plans with standalone/joint publication and independent exits, exact local/remote
 preparation and Owner delivery for zero/one modified automatic GitHub repository.
 Explicit review correction is implemented; combined installed acceptance remains a later gate. See [root](../index.md), [quality evidence](quality-guidelines.md)

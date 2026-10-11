@@ -7001,7 +7001,7 @@
       "type": "string",
       "minLength": 1,
       "maxLength": 65536,
-      "pattern": "[^ \\t\\n\\r\\f\\v\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff]",
+      "pattern": "[^ \\t\\n\\r\\f\\v   -     　﻿]",
       "allOf": [
         {
           "pattern": "^[^\\x00]*$"
@@ -7041,7 +7041,7 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 4096,
-            "pattern": "[^ \\t\\n\\r\\f\\v\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff]",
+            "pattern": "[^ \\t\\n\\r\\f\\v   -     　﻿]",
             "allOf": [
               {
                 "pattern": "^[^\\x00]*$"
@@ -7056,7 +7056,7 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 4096,
-            "pattern": "[^ \\t\\n\\r\\f\\v\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff]",
+            "pattern": "[^ \\t\\n\\r\\f\\v   -     　﻿]",
             "allOf": [
               {
                 "pattern": "^[^\\x00]*$"
@@ -10663,14 +10663,28 @@
             "refresh",
             "carry",
             "invalidate",
-            "replace"
+            "remove"
           ]
         },
         "target_node_id": {
-          "$ref": "#/definitions/Id"
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "target_node_activation": {
-          "$ref": "#/definitions/PositiveCounter"
+          "anyOf": [
+            {
+              "$ref": "#/definitions/PositiveCounter"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [
@@ -10682,6 +10696,40 @@
         "disposition",
         "target_node_id",
         "target_node_activation"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "disposition": {
+                "const": "remove"
+              }
+            }
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "target_node_id": {
+                "type": "null"
+              },
+              "target_node_activation": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "type": "object",
+            "properties": {
+              "target_node_id": {
+                "$ref": "#/definitions/Id"
+              },
+              "target_node_activation": {
+                "$ref": "#/definitions/PositiveCounter"
+              }
+            }
+          }
+        }
       ]
     },
     "ReplanHold": {
@@ -10750,23 +10798,63 @@
             "supersede"
           ]
         },
-        "target_node_id": {
-          "$ref": "#/definitions/Id"
+        "target_node_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Id"
+          },
+          "maxItems": 256,
+          "uniqueItems": true
         }
       },
       "required": [
         "guidance_id",
         "version",
         "disposition",
-        "target_node_id"
+        "target_node_ids"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "disposition": {
+                "const": "retain"
+              }
+            }
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "target_node_ids": {
+                "type": "array",
+                "minItems": 1
+              }
+            }
+          },
+          "else": {
+            "type": "object",
+            "properties": {
+              "target_node_ids": {
+                "type": "array",
+                "maxItems": 0
+              }
+            }
+          }
+        }
       ]
     },
     "ReplanImpact": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "node": {
-          "$ref": "#/definitions/ReplanNodeImpact"
+        "nodes": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "items": {
+            "$ref": "#/definitions/ReplanNodeImpact"
+          }
         },
         "guidance": {
           "type": "array",
@@ -10778,20 +10866,20 @@
         "holds": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/ReplanHold"
+            "$ref": "#/definitions/ReplanHoldDisposition"
           },
-          "maxItems": 32
+          "maxItems": 256
         },
         "workspaces": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/ReplanWorkspaceInput"
+            "$ref": "#/definitions/ReplanWorkspaceDisposition"
           },
           "maxItems": 1
         }
       },
       "required": [
-        "node",
+        "nodes",
         "guidance",
         "holds",
         "workspaces"
@@ -12335,7 +12423,7 @@
         },
         {
           "if": {
-            "pattern": "[\r\n\u2028\u2029]$"
+            "pattern": "[\r\n  ]$"
           },
           "then": {},
           "else": {
@@ -20650,6 +20738,92 @@
           "$ref": "#/definitions/InspectionUnavailableReason"
         }
       }
+    },
+    "ReplanHoldDisposition": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "origin": {
+          "$ref": "#/definitions/ReplanHold"
+        },
+        "target_node_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Id"
+          },
+          "maxItems": 256,
+          "uniqueItems": true,
+          "minItems": 1
+        }
+      },
+      "required": [
+        "origin",
+        "target_node_ids"
+      ]
+    },
+    "ReplanWorkspaceTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "node_id": {
+          "$ref": "#/definitions/Id"
+        },
+        "node_activation": {
+          "$ref": "#/definitions/PositiveCounter"
+        }
+      },
+      "required": [
+        "node_id",
+        "node_activation"
+      ]
+    },
+    "ReplanWorkspaceDisposition": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "input": {
+          "$ref": "#/definitions/ReplanWorkspaceInput"
+        },
+        "target_nodes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ReplanWorkspaceTarget"
+          },
+          "maxItems": 256,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "input",
+        "target_nodes"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "input": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "const": "checkpoint"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "target_nodes": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 1
+              }
+            }
+          }
+        }
+      ]
     }
   }
 }

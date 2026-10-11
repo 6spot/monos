@@ -98,24 +98,28 @@ export interface ArtifactContent {
 export interface Impact {
     graph_sufficient?:   boolean;
     guidance?:           GuidanceElement[];
-    nodes?:              SpecificationImpactNode[];
+    nodes?:              NodeElement[];
     reason?:             string;
     replan_impact?:      ReplanImpact;
     replan_proposal_id?: string;
     replan_request_id?:  string;
-    holds?:              ReplanHold[];
-    node?:               ReplanNodeImpact;
-    workspaces?:         ReplanWorkspaceInput[];
+    holds?:              ReplanHoldDisposition[];
+    workspaces?:         ReplanWorkspaceDisposition[];
 }
 
 export interface GuidanceElement {
-    disposition:     GuidanceDisposition;
-    guidance_id:     string;
-    version:         number;
-    target_node_id?: string;
+    disposition:      GuidanceDisposition;
+    guidance_id:      string;
+    version:          number;
+    target_node_ids?: string[];
 }
 
 export type GuidanceDisposition = "retain" | "supersede";
+
+export interface ReplanHoldDisposition {
+    origin:          ReplanHold;
+    target_node_ids: [string, ...string[]];
+}
 
 export interface ReplanHold {
     blocker_id:             null | string;
@@ -128,6 +132,33 @@ export interface ReplanHold {
 
 export type ReplanHoldKind = "semantic" | "factual" | "owner_stopped";
 
+export interface NodeElement {
+    completion_manifest_digest: null | string;
+    completion_operation_id:    null | string;
+    disposition:                ReplanNodeImpactDisposition;
+    node_activation:            number;
+    node_id:                    string;
+    source_id:                  null | string;
+    target_node_activation?:    number | null;
+    target_node_id?:            null | string;
+}
+
+export type ReplanNodeImpactDisposition = "refresh" | "invalidate" | "carry" | "remove";
+
+export interface ReplanImpact {
+    guidance:   ReplanGuidance[];
+    holds:      ReplanHoldDisposition[];
+    nodes:      [ReplanNodeImpact, ...ReplanNodeImpact[]];
+    workspaces: ReplanWorkspaceDisposition[];
+}
+
+export interface ReplanGuidance {
+    disposition:     GuidanceDisposition;
+    guidance_id:     string;
+    target_node_ids: string[];
+    version:         number;
+}
+
 export interface ReplanNodeImpact {
     completion_manifest_digest: null | string;
     completion_operation_id:    null | string;
@@ -135,35 +166,13 @@ export interface ReplanNodeImpact {
     node_activation:            number;
     node_id:                    string;
     source_id:                  null | string;
-    target_node_activation:     number;
-    target_node_id:             string;
+    target_node_activation:     number | null;
+    target_node_id:             null | string;
 }
 
-export type ReplanNodeImpactDisposition = "refresh" | "carry" | "invalidate" | "replace";
-
-export interface SpecificationImpactNode {
-    completion_manifest_digest: null | string;
-    completion_operation_id:    null | string;
-    disposition:                SpecificationImpactNodeDisposition;
-    node_activation:            number;
-    node_id:                    string;
-    source_id:                  null | string;
-}
-
-export type SpecificationImpactNodeDisposition = "refresh" | "invalidate" | "carry";
-
-export interface ReplanImpact {
-    guidance:   ReplanGuidance[];
-    holds:      ReplanHold[];
-    node:       ReplanNodeImpact;
-    workspaces: ReplanWorkspaceInput[];
-}
-
-export interface ReplanGuidance {
-    disposition:    GuidanceDisposition;
-    guidance_id:    string;
-    target_node_id: string;
-    version:        number;
+export interface ReplanWorkspaceDisposition {
+    input:        ReplanWorkspaceInput;
+    target_nodes: ReplanWorkspaceTarget[];
 }
 
 export interface ReplanWorkspaceInput {
@@ -216,6 +225,11 @@ export interface RepositoryProviderMetadata {
 
 export interface RepositoryProviderMetadataGithub {
     repository_id: string;
+}
+
+export interface ReplanWorkspaceTarget {
+    node_activation: number;
+    node_id:         string;
 }
 
 export interface ExecutionPlanNode {
@@ -2363,6 +2377,17 @@ export interface Guidance {
     guidance_id: string;
     version:     number;
 }
+
+export interface SpecificationImpactNode {
+    completion_manifest_digest: null | string;
+    completion_operation_id:    null | string;
+    disposition:                SpecificationImpactNodeDisposition;
+    node_activation:            number;
+    node_id:                    string;
+    source_id:                  null | string;
+}
+
+export type SpecificationImpactNodeDisposition = "refresh" | "invalidate" | "carry";
 
 export interface PrepareSpecificationRevision {
     basis:            TaskActionBasis;

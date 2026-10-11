@@ -13,6 +13,7 @@ import { planningEvent } from './task-planning-state.ts';
 import { admitWorkspaceEffect } from './workspaces.ts';
 import { supersedeRuntimeContinuation } from './runtime-continuation-state.ts';
 import { derivedTaskState } from './owner-execution.ts';
+import { hasUnadoptedCheckpointTargets } from './task-replan-workspaces.ts';
 
 export interface NodeReworkRequest {
   id: string; task_id: string; specification_id: string; plan_id: string;
@@ -90,7 +91,7 @@ async function noCompetingChange(tx: Transaction, taskId: string): Promise<void>
 async function noOwnerHolds(tx: Transaction, taskId: string, ids: string[]): Promise<void> {
   if ((await tx.query(`SELECT 1 FROM nodes n LEFT JOIN node_blockers b ON b.id=n.blocker_id
     WHERE n.task_id=$1 AND n.id=ANY($2::text[]) AND (n.guidance_paused OR b.kind='owner_stopped'
-      OR EXISTS(SELECT 1 FROM replan_control_holds h WHERE h.node_id=n.id AND h.node_activation=n.activation AND h.resolved_by IS NULL))`, [taskId, ids])).rowCount)
+      OR EXISTS(SELECT 1 FROM replan_control_holds h JOIN replan_publications p ON p.id=h.publication_id JOIN tasks current_task ON current_task.id=h.task_id WHERE h.node_id=n.id AND h.node_activation=n.activation AND h.resolved_by IS NULL AND p.new_plan_id=current_task.plan_id))`, [taskId, ids])).rowCount)
     throw new CommandError('unmet_precondition', 'Affected Owner Stop or independent control holds must be resolved before Rework');
 }
 
@@ -119,6 +120,8 @@ export async function requestNodeRework(
     if (!ancestors.has(parent)) { ancestors.add(parent); visit.push(parent); }
   if (!ancestors.has(target)) throw new CommandError('denied_scope', 'Rework target must be upstream in the current Plan');
   const ids = closure(members, target);
+  if (await hasUnadoptedCheckpointTargets(tx, task.id, ids))
+    throw new CommandError('unmet_precondition', 'Open the approved inherited private workspace before reactivating its target');
   await noOwnerHolds(tx, task.id, ids);
   if ((await tx.query(`SELECT 1 FROM attempts a WHERE a.task_id=$1 AND a.kind='node' AND a.id<>$2 AND
     (a.state='QUEUED' OR NOT a.process_released OR EXISTS(SELECT 1 FROM operations o WHERE o.attempt_id=a.id AND o.state NOT IN('succeeded','cancelled')))

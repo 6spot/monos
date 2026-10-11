@@ -5,14 +5,15 @@ import { randomUUID } from 'node:crypto';
 import type { Transaction } from '../../../packages/db/src/index.ts';
 import { CommandError } from '../../../packages/domain/src/commands.ts';
 import { canonicalJSON, digest, MAX_ITEM_BYTES, validate } from '../../../packages/protocol/src/index.ts';
-import type { TaskReplanSource, ReplanImpact, ReplanWorkspaceInput, CommandEnvelope, EffectResult, PrepareReplan, WorkspaceTransfer } from '../../../packages/protocol/src/index.ts';
+import type { TaskReplanSource, ReplanImpact, CommandEnvelope, EffectResult, PrepareReplan } from '../../../packages/protocol/src/index.ts';
 import type { SpecificationTask } from './task-specification-state.ts';
 import { exactBasis, mutableSpecification } from './task-specification-state.ts';
 import { planningEvent, stopPlanningAttempt } from './task-planning-state.ts';
 import type { PlanningAttempt } from './task-planning-state.ts';
 import { blockNodeSource } from './node-execution-state.ts';
 import type { NodeSource } from './node-execution-state.ts';
-import { assertCurrentNode, validatePlan } from './task-records.ts';
+import { replanImpact, checkReplanImpact } from './task-replan-impact.ts';
+export { replanImpact, checkReplanImpact } from './task-replan-impact.ts';
 import { prepareTaskProposal } from './owner-commands.ts';
 import type { RuntimePredecessor, RuntimeFallbackInspection, RuntimeFallbackPreparation } from './runtime-continuation-state.ts';
 
@@ -27,7 +28,6 @@ export async function requestReplan(tx:Transaction,task:SpecificationTask,attemp
 
  await assertNoTaskRework(tx,task.id);
  mutableSpecification(task);validate('PlanningText',reason);if(!task.plan_id)throw new CommandError('unmet_precondition','Replan requires an effective Plan');await assertNoReplan(tx,task.id);
- if(Number((await tx.query('SELECT count(*) n FROM plan_nodes WHERE plan_id=$1',[task.plan_id])).rows[0].n)>1)throw new CommandError('unmet_precondition','unsupported_multi_node_replan: replacement graphs are a subsequent slice');
  if((await tx.query('SELECT 1 FROM task_publication_slots WHERE task_id=$1',[task.id])).rowCount)throw new CommandError('unmet_precondition','Existing publication must reconcile before Replan');
  const id=randomUUID();await tx.query('INSERT INTO replan_requests(id,task_id,reason,origin_attempt_id,origin_node_id,origin_activation,input_id,origin_source_id,base_plan_id,review_operation_id,review_source_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)',[id,task.id,reason,attempt.id,origin.node?.node_id,origin.node?.node_activation,origin.input_id,origin.source_id,task.plan_id,origin.review_operation_id,origin.review_source_id]);
  await tx.query(`INSERT INTO replan_live_attempts(task_id,request_id,attempt_id,source_id,prior_control_version,freeze_control_version) SELECT $1,$2,a.id,a.node_execution_source_id,s.expected_version,$3 FROM attempts a JOIN node_execution_outbox s ON s.id=a.node_execution_source_id WHERE a.task_id=$1 AND a.kind='node' AND a.state='RUNNING' AND a.mutation_allowed AND a.id<>$4`,[task.id,id,Number(task.control_version)+1,origin.node?attempt.id:'']);
@@ -73,42 +73,6 @@ export async function exhaustReplanRuntimeFallback(tx: Transaction, plannedAttem
     AND t.control_version=s.expected_version`, [plannedAttemptId, reason]);
   return !!changed.rowCount;
 }
-export async function replanImpact(tx:Transaction,task:SpecificationTask,targetNodeId?:string):Promise<ReplanImpact>{
- const n=(await tx.query(`SELECT n.*,c.operation_id,m.content_digest FROM nodes n JOIN plan_nodes p ON p.node_id=n.id LEFT JOIN node_completions c ON c.node_id=n.id AND c.activation=n.activation LEFT JOIN completion_manifests m ON m.operation_id=c.operation_id WHERE p.plan_id=$1`,[task.plan_id])).rows;
- if(n.length!==1)throw new CommandError('unmet_precondition','Replan supports exactly one existing Node');const node=n[0]!;const target=targetNodeId??node.id;
- const req=await pendingReplan(tx,task.id);const blocker=node.blocker_id?(await tx.query('SELECT * FROM node_blockers WHERE id=$1',[node.blocker_id])).rows[0]:null;
- const requestBlock=blocker&&req&&blocker.id===req.requester_blocker_id;
- const inherited=(await tx.query<{origin:ReplanImpact['holds'][number]}>('SELECT origin FROM replan_control_holds WHERE node_id=$1 AND node_activation=$2 AND resolved_by IS NULL ORDER BY id',[node.id,node.activation])).rows.map(h=>h.origin);
- const ownerStop=(await tx.query<{request_id:string}>("SELECT request_id FROM owner_command_receipts WHERE scope_id=$1 AND envelope_json::jsonb->>'name'='stop_node' AND envelope_json::jsonb->'payload'->>'node_id'=$2 ORDER BY (response->>'control_version')::bigint DESC LIMIT 1",[task.id,node.id])).rows[0]?.request_id??null;
- const provenance={origin_node_id:node.id,origin_node_activation:Number(node.activation),owner_request_id:ownerStop};
- const holds:ReplanImpact['holds']=[...inherited];
- const inheritedBlocker=blocker&&(await tx.query('SELECT 1 FROM replan_control_holds WHERE node_id=$1 AND current_blocker_id=$2 AND resolved_by IS NULL',[node.id,blocker.id])).rowCount;
- if(blocker&&!requestBlock&&!inheritedBlocker)holds.push({blocker_id:blocker.id,kind:blocker.kind,reason:blocker.reason,...provenance,owner_request_id:blocker.kind==='owner_stopped'?ownerStop:null});
- if(node.guidance_paused&&!holds.some(h=>h.kind==='owner_stopped'))holds.push({blocker_id:null,kind:'owner_stopped',reason:'owner_stopped',...provenance});
- const guidance=(await tx.query("SELECT id,version FROM task_guidance WHERE task_id=$1 AND status='active' ORDER BY id LIMIT 257",[task.id])).rows;if(guidance.length>256)throw new CommandError('unmet_precondition','Guidance exceeds complete impact budget');
- const workspaces:ReplanWorkspaceInput[]=[];
- for(const w of (await tx.query(`SELECT w.*,l.id lease_id,l.attempt_id,l.node_id,l.node_activation,l.settle_operation_id,l.checkpoint,a.plan_id FROM task_workspaces w JOIN LATERAL(SELECT * FROM workspace_leases WHERE workspace_id=w.id ORDER BY created_at DESC,id DESC LIMIT 1) l ON true JOIN attempts a ON a.id=l.attempt_id WHERE w.task_id=$1 AND w.ever_materialized`,[task.id])).rows){
-  const settlementId=w.checkpoint?.operation_id??w.settle_operation_id;
-  if(!settlementId)throw new CommandError('unmet_precondition','Workspace has no exact settlement');const op=(await tx.query("SELECT * FROM operations WHERE id=$1 AND workspace_lease_id=$2 AND state='succeeded'",[settlementId,w.lease_id])).rows[0];
-  if(!op)throw new CommandError('unmet_precondition','Workspace settlement is not successful');
-  const result=op.result as {workspace_metadata?:ReplanWorkspaceInput['metadata'];git_tree?:string}|null;
-  if(!result?.workspace_metadata)throw new CommandError('unmet_precondition','Workspace settlement metadata unavailable');
-  const item:ReplanWorkspaceInput={workspace_id:w.id,task_id:task.id,resource_id:w.resource_id,runner_id:w.runner_id,from_plan_id:w.plan_id,from_node_id:w.node_id,from_node_activation:Number(w.node_activation),from_attempt_id:w.attempt_id,from_lease_id:w.lease_id,settle_operation_id:settlementId,kind:w.checkpoint?'checkpoint':'completed',metadata:result.workspace_metadata};
-  if(!w.checkpoint){const c=(await tx.query('SELECT operation_id FROM node_completions WHERE attempt_id=$1',[w.attempt_id])).rows[0];if(!c||!result.git_tree)throw new CommandError('unmet_precondition','Completed workspace lacks exact completion');item.completion_operation_id=c.operation_id;item.completion_manifest_digest=op.completion_manifest_digest;item.finalized_tree=result.git_tree;}
-  workspaces.push(item);
- }
- return {node:{node_id:node.id,node_activation:Number(node.activation),source_id:node.execution_source_id,completion_operation_id:node.operation_id??null,completion_manifest_digest:node.content_digest??null,disposition:target!==node.id?'replace':node.operation_id?'carry':'refresh',target_node_id:target,target_node_activation:target!==node.id?1:Number(node.activation)},guidance:guidance.map(g=>({guidance_id:g.id,version:Number(g.version),disposition:'retain',target_node_id:target})),holds,workspaces};
-}
-export async function checkReplanImpact(tx:Transaction,task:SpecificationTask,impact:ReplanImpact):Promise<void>{
- validate('ReplanImpact',impact);const actual=await replanImpact(tx,task,impact.node.target_node_id);
- const omit=(x:ReplanImpact['node'])=>{const rest={...x} as Partial<ReplanImpact['node']>;delete rest.disposition;delete rest.target_node_activation;return rest;};
- if(canonicalJSON(omit(actual.node))!==canonicalJSON(omit(impact.node))||canonicalJSON(actual.holds)!==canonicalJSON(impact.holds)||canonicalJSON(actual.workspaces)!==canonicalJSON(impact.workspaces))throw new CommandError('version_conflict','Exact Node, independent holds or workspace facts changed');
- await assertCurrentNode(tx,{task_id:task.id,node_id:impact.node.node_id,node_activation:impact.node.node_activation});
- const n=impact.node;const changed=n.node_id!==n.target_node_id;
- if(changed?(n.disposition!=='replace'||n.target_node_activation!==1):(n.disposition==='replace'||n.target_node_activation!==n.node_activation+(n.disposition==='invalidate'?1:0)))throw new CommandError('invalid_input','Invalid target activation disposition');
- if(!changed&&((n.disposition==='refresh')!==!n.completion_operation_id))throw new CommandError('invalid_input','Completion requires exact carry or invalidation');
- if(impact.guidance.length!==actual.guidance.length||new Set(impact.guidance.map(g=>g.guidance_id)).size!==impact.guidance.length||impact.guidance.some(g=>g.target_node_id!==n.target_node_id||!actual.guidance.some(a=>a.guidance_id===g.guidance_id&&a.version===g.version)))throw new CommandError('version_conflict','Complete guidance disposition changed');
-}
 export async function createReplanSource(tx:Transaction,task:SpecificationTask,r:ReplanRequest,config:number):Promise<void>{
  if(!await replanQuiescent(tx,task.id))return;
  const predecessor=(await tx.query<{id:string}>('SELECT s.id FROM replan_sources s WHERE s.request_id=$1 AND NOT EXISTS(SELECT 1 FROM replan_sources next WHERE next.previous_source_id=s.id)',[r.id])).rows[0]?.id??null;
@@ -127,7 +91,7 @@ export async function createReplanSource(tx:Transaction,task:SpecificationTask,r
  let impact:ReplanImpact|undefined,preparationFailure:string|null=null;
  try{impact=await replanImpact(tx,task);}catch(e){if(!(e instanceof CommandError))throw e;preparationFailure=e.detail.code;}
  const reviewOrigin=r.review_operation_id?(await tx.query('SELECT f.id feedback_id,f.text,o.basis,o.id operation_id,s.context FROM task_review_operations o JOIN task_review_feedback f ON f.id=o.feedback_id JOIN task_review_sources s ON s.id=$2 WHERE o.id=$1',[r.review_operation_id,r.review_source_id])).rows[0]:null;
- let context:Record<string,unknown>|null={review_origin:reviewOrigin,historical_results:historicalResults,project,owner_planner_guidance:ownerGuidance,task_guidance:taskGuidance,pending_requirements:requirements,protocol:repositoryInspectionInstructions+' You are the canonical Replan Planner. Call prepare_replan with the exact source/request/basis, complete single Node graph and explicit impact, or raise_planning_issue with source/request/reason. Both are terminal. Requirements may change only through optional full requirement proposal and two exact Owner confirmations. No Node workspace or writable repository. Do not use commit_task_turn or publish_execution_plan. Uncertain requests must replay original IDs.',source_id:id,replan_request_id:r.id,reason:r.reason,basis:{control_version:Number(task.control_version),specification_id:task.specification_id,plan_id:task.plan_id},specification:spec,graph,impact,roles,decisions,messages:messages.slice(-32),messages_has_more:messages.length>32,input_cutoff:input,event_cutoff:event};
+ let context:Record<string,unknown>|null={review_origin:reviewOrigin,historical_results:historicalResults,project,owner_planner_guidance:ownerGuidance,task_guidance:taskGuidance,pending_requirements:requirements,protocol:repositoryInspectionInstructions+' You are the canonical Replan Planner. Call prepare_replan with the exact source/request/basis, complete acyclic graph of 1..256 Nodes and explicit per-Node impact, guidance recipients, independent hold recipients and private-work targets, or raise_planning_issue with source/request/reason. Both are terminal. Requirements may change only through optional full requirement proposal and two exact Owner confirmations. No Node workspace or writable repository. Do not use commit_task_turn or publish_execution_plan. Uncertain requests must replay original IDs.',source_id:id,replan_request_id:r.id,reason:r.reason,basis:{control_version:Number(task.control_version),specification_id:task.specification_id,plan_id:task.plan_id},specification:spec,graph,impact,roles,decisions,messages:messages.slice(-32),messages_has_more:messages.length>32,input_cutoff:input,event_cutoff:event};
  let prompt:string|null=canonicalJSON(context);if(preparationFailure||taskGuidance.length>256||requirements.length>64||decisions.length>256||Buffer.byteLength(JSON.stringify({prompt}))>MAX_ITEM_BYTES-16384){prompt=null;context=null;preparationFailure??='context_budget_exceeded';}
  const hash=digest(prompt??canonicalJSON({source_id:id,preparation_failure:preparationFailure}));
  await tx.query('INSERT INTO replan_sources(id,task_id,request_id,previous_source_id,planned_attempt_id,specification_id,plan_id,expected_version,input_cutoff,event_cutoff,configuration_version,context,prompt,context_digest,preparation_failure,waiting_reason) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$15)',[id,task.id,r.id,predecessor,attemptId,task.specification_id,task.plan_id,task.control_version,input,event,config,context,prompt,hash,preparationFailure]);
@@ -138,7 +102,7 @@ export async function laterReplanInputs(tx:Transaction,p:ReplanProposal):Promise
 export async function eligibleReplan(tx:Transaction,task:SpecificationTask,p:ReplanProposal):Promise<void>{
  mutableSpecification(task);exactBasis(task,p.content.basis);
  if(!(await tx.query("SELECT 1 FROM replan_requests r JOIN task_command_proposals g ON g.id=r.proposal_id WHERE r.id=$1 AND r.status='pending' AND r.proposal_id=$2 AND NOT g.revoked AND g.expires_at>clock_timestamp()",[p.request_id,p.id])).rowCount)throw new CommandError('unmet_precondition','Replan proposal no longer eligible');
- await checkReplanImpact(tx,task,p.content.impact);await laterReplanInputs(tx,p);
+ await checkReplanImpact(tx,task,p.content.impact,p.content.nodes);await laterReplanInputs(tx,p);
  if(p.requirement_proposal_id&&!(await tx.query("SELECT 1 FROM requirement_obligations o JOIN task_command_proposals g ON g.id=o.current_proposal_id WHERE g.id=$1 AND o.status='pending' AND NOT g.revoked AND g.expires_at>clock_timestamp()",[p.requirement_proposal_id])).rowCount)throw new CommandError('unmet_precondition','Joint requirements were withdrawn or replaced');
 }
 export async function handleReplanCommand(tx:Transaction,task:SpecificationTask,attempt:PlanningAttempt,command:CommandEnvelope):Promise<{result:EffectResult;operation_id:string}>{
@@ -147,12 +111,7 @@ export async function handleReplanCommand(tx:Transaction,task:SpecificationTask,
  if(command.payload.replan_request_id!==source.request_id||command.payload.source_id!==source.id)throw new CommandError('denied_scope','Exact Replan source required');
  let outcome:NonNullable<EffectResult['replan_outcome']>;
  if(command.name==='prepare_replan'){
-  const input=validate<PrepareReplan>('PrepareReplan',command.payload);exactBasis(task,input.basis);validatePlan(input.nodes);if(input.nodes.length!==1||input.nodes[0]!.dependencies.length||input.nodes[0]!.consumes?.length)throw new CommandError('unmet_precondition','Only one Node without dependencies/consumes is supported');
-  const node=input.nodes[0]!;if(node.node_id!==input.impact.node.target_node_id)throw new CommandError('invalid_input','Impact target differs from complete graph');await checkReplanImpact(tx,task,input.impact);
-  const old=(await tx.query('SELECT definition FROM plan_nodes WHERE plan_id=$1 AND node_id=$2',[task.plan_id,node.node_id])).rows[0];
-  if(old&&canonicalJSON(old.definition)!==canonicalJSON(node))throw new CommandError('invalid_input','Changed formal definition requires a new Node ID');
-  if(!old&&(await tx.query('SELECT 1 FROM nodes WHERE id=$1',[node.node_id])).rowCount)throw new CommandError('payload_conflict','Replacement Node ID already exists');
-  if(!(await tx.query('SELECT 1 FROM tasks t JOIN project_roles p ON p.project_id=t.project_id JOIN roles r ON r.id=p.role_id WHERE t.id=$1 AND r.id=$2 AND NOT r.archived',[task.id,node.role_id])).rowCount)throw new CommandError('unmet_precondition','Node Role must remain Project-selected');
+  const input=validate<PrepareReplan>('PrepareReplan',command.payload);exactBasis(task,input.basis);await checkReplanImpact(tx,task,input.impact,input.nodes);
   let requirementDigest:string|undefined;
   if(input.requirement){const {prepareJointRequirement}=await import('./task-replan-publication.ts');requirementDigest=await prepareJointRequirement(tx,task,source,input);}
   const content={...input,input_cutoff:Number(source.input_cutoff),...(requirementDigest?{requirement_content_digest:requirementDigest}:{})};
@@ -168,6 +127,4 @@ export async function handleReplanCommand(tx:Transaction,task:SpecificationTask,
  const operation=await stopPlanningAttempt(tx,attempt,command.request_id);if(!operation)throw new CommandError('stale_execution','Replan process claim missing');
  await planningEvent(tx,task.id,'replan_'+outcome.kind+'_prepared',outcome,attempt.id,operation);return {result:{replan_outcome:outcome},operation_id:operation};
 }
-export async function workspaceTransfer(tx:Transaction,taskId:string,nodeId:string,activation:number,workspaceId:string,leaseId:string):Promise<WorkspaceTransfer|undefined>{
- return (await tx.query<{descriptor:WorkspaceTransfer}>(`SELECT x.descriptor FROM replan_workspace_transfers x JOIN replan_publications p ON p.id=x.publication_id JOIN tasks t ON t.id=x.task_id WHERE x.task_id=$1 AND x.target_node_id=$2 AND x.target_node_activation=$3 AND x.workspace_id=$4 AND x.descriptor->>'from_lease_id'=$5 AND p.new_plan_id=t.plan_id AND activation_applies(t.id,x.target_node_id,x.target_node_activation,t.specification_id,t.plan_id)`,[taskId,nodeId,activation,workspaceId,leaseId])).rows[0]?.descriptor;
-}
+export { workspaceTransfer } from './task-replan-workspaces.ts';

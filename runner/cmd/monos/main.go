@@ -68,6 +68,13 @@ planning issue. Use its supplied planning_intent_id. Plans support 1..256 Nodes
 with acyclic dependencies, executed serially per Task. Preserve optional
 hard_requirements and expected_outputs. Omit consumes or use [] in this slice.
 Only these two commands end initial planning; commit_task_turn does not.
+Replan preparation supplies a complete acyclic graph of 1..256 Nodes, summary,
+exact basis and impact. impact.nodes covers every old member once with refresh,
+carry, invalidate or remove. Removed targets are null; changed work uses new IDs.
+Guidance names target_node_ids; holds retain each origin and target_node_ids.
+Workspace entries pair exact input with target_nodes. Checkpoints require one exact
+activation to open/finalize; finalized code is adopted lazily by approved work.
+Never carry downstream evidence across invalidated upstream evidence.
 Task context: {}; current formal facts include the separate action basis.
 Task history: {} or {"query":"search text"} or {"cursor":"CURSOR"}; source-cutoff bound.
 Task reply: {"source_id":"SOURCE","input_id":"INPUT","source_watermark":1,"reply":"...","routing":{"kind":"reply"}}

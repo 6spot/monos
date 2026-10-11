@@ -6,7 +6,7 @@ import { submission } from '../../../packages/protocol/src/index.ts';
 import type { CommandEnvelope } from '../../../packages/protocol/src/index.ts';
 import { replanImpact } from '../src/task-replan-state.ts';
 import { issueOwnerSession } from '../src/owner-commands.ts';
-import { replanFixture } from './fixtures/task-replan-fixture.ts';
+import { replanFixture, replacementImpact } from './fixtures/task-replan-fixture.ts';
 import { Worker } from './fixtures/process-worker.ts';
 
 describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Independent Replan COMMIT and contention', { timeout: 50000 }, () => {
@@ -65,7 +65,7 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Independent Replan COM
     const request = await x.request(); await x.replan.pump(); const turn = await x.promote();
     const task = (await x.db.pool.query('SELECT * FROM tasks')).rows[0];
     const definition = (await x.db.pool.query('SELECT definition FROM plan_nodes WHERE plan_id=$1',[x.f.plan])).rows[0].definition;
-    const target = randomUUID(); const impact = await transaction(x.db,tx=>replanImpact(tx,task,target));
+    const target = randomUUID(); const impact = replacementImpact(await transaction(x.db,tx=>replanImpact(tx,task)),target);
     const body: CommandEnvelope = {schema_version:1,request_id:randomUUID(),scope_id:x.f.task,expected_control_version:turn.dispatch.control_version,name:'prepare_replan',payload:{
       replan_request_id:request,source_id:turn.dispatch.task_replan_source!.source_id,proposal_id:randomUUID(),plan_id:randomUUID(),
       basis:await x.basis(),nodes:[{...definition,node_id:target,goal:'New formal work'}],summary:'Complete graph',impact }};

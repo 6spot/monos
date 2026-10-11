@@ -6,6 +6,7 @@ import { canonicalJSON, digest, MAX_BODY_BYTES, validate } from '../../../packag
 import type { ExecutionPlanNode } from '../../../packages/protocol/src/index.ts';
 import { consumeTaskConfirmation } from './owner-commands.ts';
 import { assertActiveProject, assertProjectRoles, lockConfiguration } from './configuration-guards.ts';
+import { hasUnadoptedCheckpointTargets } from './task-replan-workspaces.ts';
 
 export interface ControlBasis { control_version: number; specification_id: string; plan_id: string | null }
 interface ControlRow { id: string; control_version: string; specification_id: string; plan_id: string | null; state: string; project_id: string | null }
@@ -129,6 +130,8 @@ export async function reactivateSettledNodes(tx: Transaction, input: { task_id: 
     for (const node of members) if (!affected.has(node.node_id) && node.definition.dependencies.some((id) => affected.has(id))) { affected.add(node.node_id); changed = true; }
   }
   const ids = [...affected].sort();
+  if (await hasUnadoptedCheckpointTargets(tx, input.task_id, ids))
+    throw new CommandError('unmet_precondition', 'Open the approved inherited private workspace before reactivating its target');
   const owners = await tx.query(`SELECT a.id FROM attempts a WHERE a.task_id=$1 AND a.node_id=ANY($2::text[])
     AND (NOT a.process_released OR EXISTS (SELECT 1 FROM operations o WHERE o.attempt_id=a.id AND o.state NOT IN ('succeeded','cancelled')))`, [input.task_id, ids]);
   if (owners.rowCount) throw new CommandError('unmet_precondition', 'Old writers and admitted operations must settle before reactivation');

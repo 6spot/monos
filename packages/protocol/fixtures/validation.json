@@ -11203,5 +11203,525 @@
     "incarnation": 1,
     "workspace_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
   }
+},
+{
+  "name": "multi Node Replan complete impact",
+  "schema": "ReplanImpact",
+  "value": {
+    "nodes": [
+      {
+        "node_id": "node-a",
+        "node_activation": 1,
+        "source_id": "source-a",
+        "completion_operation_id": "completion-a",
+        "completion_manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "disposition": "carry",
+        "target_node_id": "node-a",
+        "target_node_activation": 1
+      },
+      {
+        "node_id": "old-b",
+        "node_activation": 1,
+        "source_id": null,
+        "completion_operation_id": null,
+        "completion_manifest_digest": null,
+        "disposition": "remove",
+        "target_node_id": null,
+        "target_node_activation": null
+      }
+    ],
+    "guidance": [
+      {
+        "guidance_id": "guidance-a",
+        "version": 1,
+        "disposition": "retain",
+        "target_node_ids": [
+          "node-a",
+          "new-b"
+        ]
+      }
+    ],
+    "holds": [
+      {
+        "origin": {
+          "blocker_id": "blocker-a",
+          "kind": "owner_stopped",
+          "reason": "Owner stop",
+          "origin_node_id": "old-b",
+          "origin_node_activation": 1,
+          "owner_request_id": "stop-a"
+        },
+        "target_node_ids": [
+          "new-b"
+        ]
+      }
+    ],
+    "workspaces": []
+  },
+  "valid": true
+},
+{
+  "name": "multi Node Replan reject singleton legacy shape",
+  "schema": "ReplanImpact",
+  "value": {
+    "guidance": [
+      {
+        "guidance_id": "guidance-a",
+        "version": 1,
+        "disposition": "retain",
+        "target_node_ids": [
+          "node-a",
+          "new-b"
+        ]
+      }
+    ],
+    "holds": [
+      {
+        "origin": {
+          "blocker_id": "blocker-a",
+          "kind": "owner_stopped",
+          "reason": "Owner stop",
+          "origin_node_id": "old-b",
+          "origin_node_activation": 1,
+          "owner_request_id": "stop-a"
+        },
+        "target_node_ids": [
+          "new-b"
+        ]
+      }
+    ],
+    "workspaces": [],
+    "node": {
+      "node_id": "node-a",
+      "node_activation": 1,
+      "source_id": "source-a",
+      "completion_operation_id": "completion-a",
+      "completion_manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "disposition": "carry",
+      "target_node_id": "node-a",
+      "target_node_activation": 1
+    }
+  },
+  "valid": false
+},
+{
+  "name": "multi Node Replan requires old members",
+  "schema": "ReplanImpact",
+  "value": {
+    "nodes": [],
+    "guidance": [
+      {
+        "guidance_id": "guidance-a",
+        "version": 1,
+        "disposition": "retain",
+        "target_node_ids": [
+          "node-a",
+          "new-b"
+        ]
+      }
+    ],
+    "holds": [
+      {
+        "origin": {
+          "blocker_id": "blocker-a",
+          "kind": "owner_stopped",
+          "reason": "Owner stop",
+          "origin_node_id": "old-b",
+          "origin_node_activation": 1,
+          "owner_request_id": "stop-a"
+        },
+        "target_node_ids": [
+          "new-b"
+        ]
+      }
+    ],
+    "workspaces": []
+  },
+  "valid": false
+},
+{
+  "name": "multi Node Replan remove forbids target_node_id",
+  "schema": "ReplanNodeImpact",
+  "value": {
+    "node_id": "old-b",
+    "node_activation": 1,
+    "source_id": null,
+    "completion_operation_id": null,
+    "completion_manifest_digest": null,
+    "disposition": "remove",
+    "target_node_id": "node-a",
+    "target_node_activation": null
+  },
+  "valid": false
+},
+{
+  "name": "multi Node Replan remove forbids target_node_activation",
+  "schema": "ReplanNodeImpact",
+  "value": {
+    "node_id": "old-b",
+    "node_activation": 1,
+    "source_id": null,
+    "completion_operation_id": null,
+    "completion_manifest_digest": null,
+    "disposition": "remove",
+    "target_node_id": null,
+    "target_node_activation": 1
+  },
+  "valid": false
+},
+{
+  "name": "multi Node Replan carry requires target",
+  "schema": "ReplanNodeImpact",
+  "value": {
+    "node_id": "node-a",
+    "node_activation": 1,
+    "source_id": "source-a",
+    "completion_operation_id": "completion-a",
+    "completion_manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "disposition": "carry",
+    "target_node_id": null,
+    "target_node_activation": 1
+  },
+  "valid": false
+},
+{
+  "name": "multi Node Replan replace uses remove and fresh graph member",
+  "schema": "ReplanNodeImpact",
+  "value": {
+    "node_id": "node-a",
+    "node_activation": 1,
+    "source_id": "source-a",
+    "completion_operation_id": "completion-a",
+    "completion_manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "disposition": "replace",
+    "target_node_id": "node-a",
+    "target_node_activation": 1
+  },
+  "valid": false
+},
+{
+  "name": "multi Node Replan retained multiple guidance targets",
+  "schema": "ReplanGuidance",
+  "value": {
+    "guidance_id": "guidance-a",
+    "version": 1,
+    "disposition": "retain",
+    "target_node_ids": [
+      "node-a",
+      "new-b"
+    ]
+  },
+  "valid": true
+},
+{
+  "name": "multi Node Replan retained guidance needs targets",
+  "schema": "ReplanGuidance",
+  "value": {
+    "guidance_id": "guidance-a",
+    "version": 1,
+    "disposition": "retain",
+    "target_node_ids": []
+  },
+  "valid": false
+},
+{
+  "name": "multi Node Replan duplicate guidance targets",
+  "schema": "ReplanGuidance",
+  "value": {
+    "guidance_id": "guidance-a",
+    "version": 1,
+    "disposition": "retain",
+    "target_node_ids": [
+      "node-a",
+      "node-a"
+    ]
+  },
+  "valid": false
+},
+{
+  "name": "multi Node Replan explicit supersede no destinations",
+  "schema": "ReplanGuidance",
+  "value": {
+    "guidance_id": "guidance-a",
+    "version": 1,
+    "disposition": "supersede",
+    "target_node_ids": []
+  },
+  "valid": true
+},
+{
+  "name": "multi Node Replan supersede cannot retain destination",
+  "schema": "ReplanGuidance",
+  "value": {
+    "guidance_id": "guidance-a",
+    "version": 1,
+    "disposition": "supersede",
+    "target_node_ids": [
+      "node-a"
+    ]
+  },
+  "valid": false
+},
+{
+  "name": "multi Node Replan hold exact origin and targets",
+  "schema": "ReplanHoldDisposition",
+  "value": {
+    "origin": {
+      "blocker_id": "blocker-a",
+      "kind": "owner_stopped",
+      "reason": "Owner stop",
+      "origin_node_id": "old-b",
+      "origin_node_activation": 1,
+      "owner_request_id": "stop-a"
+    },
+    "target_node_ids": [
+      "new-b"
+    ]
+  },
+  "valid": true
+},
+{
+  "name": "multi Node Replan hold cannot disappear",
+  "schema": "ReplanHoldDisposition",
+  "value": {
+    "origin": {
+      "blocker_id": "blocker-a",
+      "kind": "owner_stopped",
+      "reason": "Owner stop",
+      "origin_node_id": "old-b",
+      "origin_node_activation": 1,
+      "owner_request_id": "stop-a"
+    },
+    "target_node_ids": []
+  },
+  "valid": false
+},
+{
+  "name": "multi Node Replan duplicate hold targets",
+  "schema": "ReplanHoldDisposition",
+  "value": {
+    "origin": {
+      "blocker_id": "blocker-a",
+      "kind": "owner_stopped",
+      "reason": "Owner stop",
+      "origin_node_id": "old-b",
+      "origin_node_activation": 1,
+      "owner_request_id": "stop-a"
+    },
+    "target_node_ids": [
+      "new-b",
+      "new-b"
+    ]
+  },
+  "valid": false
+},
+{
+  "name": "multi Node Replan full graph proposal",
+  "schema": "PrepareReplan",
+  "value": {
+    "replan_request_id": "request-a",
+    "source_id": "source-a",
+    "proposal_id": "proposal-a",
+    "plan_id": "plan-b",
+    "basis": {
+      "control_version": 3,
+      "specification_id": "spec-a",
+      "plan_id": "plan-a"
+    },
+    "nodes": [
+      {
+        "node_id": "node-a",
+        "role_id": "role-a",
+        "goal": "Retained work",
+        "dependencies": []
+      },
+      {
+        "node_id": "new-b",
+        "role_id": "role-a",
+        "goal": "Changed dependent work",
+        "dependencies": [
+          "node-a"
+        ]
+      }
+    ],
+    "summary": "Keep completed work and replace the dependent goal",
+    "impact": {
+      "nodes": [
+        {
+          "node_id": "node-a",
+          "node_activation": 1,
+          "source_id": "source-a",
+          "completion_operation_id": "completion-a",
+          "completion_manifest_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "disposition": "carry",
+          "target_node_id": "node-a",
+          "target_node_activation": 1
+        },
+        {
+          "node_id": "old-b",
+          "node_activation": 1,
+          "source_id": null,
+          "completion_operation_id": null,
+          "completion_manifest_digest": null,
+          "disposition": "remove",
+          "target_node_id": null,
+          "target_node_activation": null
+        }
+      ],
+      "guidance": [
+        {
+          "guidance_id": "guidance-a",
+          "version": 1,
+          "disposition": "retain",
+          "target_node_ids": [
+            "node-a",
+            "new-b"
+          ]
+        }
+      ],
+      "holds": [
+        {
+          "origin": {
+            "blocker_id": "blocker-a",
+            "kind": "owner_stopped",
+            "reason": "Owner stop",
+            "origin_node_id": "old-b",
+            "origin_node_activation": 1,
+            "owner_request_id": "stop-a"
+          },
+          "target_node_ids": [
+            "new-b"
+          ]
+        }
+      ],
+      "workspaces": []
+    }
+  },
+  "valid": true
+},
+{
+  "name": "multi Node Replan checkpoint one destination",
+  "schema": "ReplanWorkspaceDisposition",
+  "value": {
+    "input": {
+      "workspace_id": "workspace",
+      "task_id": "task",
+      "resource_id": "resource",
+      "runner_id": "runner",
+      "from_plan_id": "plan",
+      "from_node_id": "upstream",
+      "from_attempt_id": "old-attempt",
+      "from_lease_id": "old-lease",
+      "settle_operation_id": "stop",
+      "from_node_activation": 1,
+      "kind": "checkpoint",
+      "metadata": {
+        "generation": 1,
+        "storage_id": "storage",
+        "lease_id": "old-lease",
+        "repository_identity": "https://example.com/repo.git",
+        "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "target_branch": "main",
+        "target_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "finalized_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "checkpoint": {
+          "operation_id": "stop",
+          "head_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "tree_id": "cccccccccccccccccccccccccccccccccccccccc",
+          "commit_id": "dddddddddddddddddddddddddddddddddddddddd"
+        }
+      }
+    },
+    "target_nodes": [
+      {
+        "node_id": "new-b",
+        "node_activation": 1
+      }
+    ]
+  },
+  "valid": true
+},
+{
+  "name": "multi Node Replan checkpoint cannot branch",
+  "schema": "ReplanWorkspaceDisposition",
+  "value": {
+    "input": {
+      "workspace_id": "workspace",
+      "task_id": "task",
+      "resource_id": "resource",
+      "runner_id": "runner",
+      "from_plan_id": "plan",
+      "from_node_id": "upstream",
+      "from_attempt_id": "old-attempt",
+      "from_lease_id": "old-lease",
+      "settle_operation_id": "stop",
+      "from_node_activation": 1,
+      "kind": "checkpoint",
+      "metadata": {
+        "generation": 1,
+        "storage_id": "storage",
+        "lease_id": "old-lease",
+        "repository_identity": "https://example.com/repo.git",
+        "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "target_branch": "main",
+        "target_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "finalized_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "checkpoint": {
+          "operation_id": "stop",
+          "head_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "tree_id": "cccccccccccccccccccccccccccccccccccccccc",
+          "commit_id": "dddddddddddddddddddddddddddddddddddddddd"
+        }
+      }
+    },
+    "target_nodes": [
+      {
+        "node_id": "new-b",
+        "node_activation": 1
+      },
+      {
+        "node_id": "node-a",
+        "node_activation": 1
+      }
+    ]
+  },
+  "valid": false
+},
+{
+  "name": "multi Node Replan checkpoint cannot be dropped",
+  "schema": "ReplanWorkspaceDisposition",
+  "value": {
+    "input": {
+      "workspace_id": "workspace",
+      "task_id": "task",
+      "resource_id": "resource",
+      "runner_id": "runner",
+      "from_plan_id": "plan",
+      "from_node_id": "upstream",
+      "from_attempt_id": "old-attempt",
+      "from_lease_id": "old-lease",
+      "settle_operation_id": "stop",
+      "from_node_activation": 1,
+      "kind": "checkpoint",
+      "metadata": {
+        "generation": 1,
+        "storage_id": "storage",
+        "lease_id": "old-lease",
+        "repository_identity": "https://example.com/repo.git",
+        "base_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "target_branch": "main",
+        "target_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "finalized_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "checkpoint": {
+          "operation_id": "stop",
+          "head_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "tree_id": "cccccccccccccccccccccccccccccccccccccccc",
+          "commit_id": "dddddddddddddddddddddddddddddddddddddddd"
+        }
+      }
+    },
+    "target_nodes": []
+  },
+  "valid": false
 }
 ]

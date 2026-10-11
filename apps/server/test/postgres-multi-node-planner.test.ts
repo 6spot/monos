@@ -105,7 +105,6 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Multi-Node planning an
       await expect(x.agent(turn, 'prepare_specification_revision', { ...proposal, impact })).rejects.toThrow('unsupported_multi_node_specification_change');
       await expect(new TaskSpecification(x.db).command(x.token, { schema_version: 1, task_id: x.f.task, request_id: randomUUID(), name: 'edit_specification', payload: { ...proposal, impact } })).rejects.toThrow('unsupported_multi_node_specification_change');
     }
-    await expect(x.reply(turn, { kind: 'replan', text: 'Replace the current graph', basis })).rejects.toThrow('unsupported_multi_node_replan');
     expect(await effects()).toEqual(before);
     const reply = await x.reply(turn);
     await x.finish(reply.operation_id!, turn.dispatch.attempt_id);
@@ -139,7 +138,6 @@ describe.skipIf(process.env.MONOS_TEST_DATABASE !== '1')('Multi-Node planning an
     const before = await effects();
     await expect(x.agent(a, 'apply_review_rework', { ...binding, basis, node_ids: ['outside-plan'], reason: 'Invalid selection' })).rejects.toMatchObject({ detail: { code: 'denied_scope' } });
     await expect(x.agent(a, 'prepare_specification_revision', { proposal_id: randomUUID(), specification: 'Changed full scope', summary: 'Change', basis, impact: JSON.parse(context.observation.snapshot).specification_impact, source_input_ids: [] })).rejects.toThrow('unsupported_multi_node_specification_change');
-    await expect(x.agent(a, 'request_replan', { reason: 'Replace this graph' })).rejects.toThrow('unsupported_multi_node_replan');
     expect(await effects()).toEqual(before);
     const requested: [string] = [nodes[selection === 'upstream' ? 0 : 1]!.node_id], affected = selection === 'upstream' ? nodes.slice(0, 2) : [nodes[1]!];
     const payload = { ...binding, basis, node_ids: requested, reason: 'Improve selected output within the existing graph' }, request = randomUUID();

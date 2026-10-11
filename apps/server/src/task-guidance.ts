@@ -16,6 +16,16 @@ import { nodeDependenciesReady, serialNodeReady } from './dispatch-queue.ts';
 import { planningEvent } from './task-planning-state.ts';
 import { currentNodeRework, reactivationNodeRework } from './node-rework-state.ts';
 
+export async function effectiveGuidanceTargets(tx: Transaction, taskId: string) {
+  return (await tx.query<{ guidance_id: string; version: string; target_node_ids: string[] }>(`SELECT g.id guidance_id,g.version,
+    COALESCE((SELECT jsonb_agg(a.node_id ORDER BY a.node_id) FROM replan_guidance_applicability a
+      JOIN replan_publications p ON p.id=a.publication_id
+      WHERE a.task_id=t.id AND a.guidance_id=g.id AND p.new_plan_id=t.plan_id),
+      (SELECT COALESCE(jsonb_agg(pn.node_id ORDER BY pn.node_id),'[]'::jsonb) FROM plan_nodes pn
+        WHERE pn.plan_id=t.plan_id AND (g.node_id IS NULL OR g.node_id=pn.node_id))) target_node_ids
+    FROM task_guidance g JOIN tasks t ON t.id=g.task_id WHERE g.task_id=$1 AND g.status='active' ORDER BY g.id LIMIT 257`, [taskId])).rows;
+}
+
 export async function bindTaskGuidance(
   tx: Transaction,
   taskId: string,
@@ -24,7 +34,9 @@ export async function bindTaskGuidance(
 ): Promise<void> {
   await tx.query(
     `INSERT INTO task_guidance_obligations(id,task_id,guidance_id,node_id,node_activation)
-    SELECT gen_random_uuid()::text,g.task_id,g.id,$2,$3 FROM task_guidance g WHERE g.task_id=$1 AND g.status='active' AND (g.node_id IS NULL OR g.node_id=$2 OR EXISTS(SELECT 1 FROM replan_guidance_applicability a WHERE a.task_id=$1 AND a.guidance_id=g.id AND a.node_id=$2)) ON CONFLICT(guidance_id,node_id,node_activation) DO NOTHING`,
+    SELECT gen_random_uuid()::text,g.task_id,g.id,$2,$3 FROM task_guidance g
+    WHERE g.task_id=$1 AND task_guidance_applies($1,g.id,$2)
+    ON CONFLICT(guidance_id,node_id,node_activation) DO NOTHING`,
     [taskId, nodeId, activation],
   );
 }
@@ -38,7 +50,7 @@ export async function guidanceContext(tx: Transaction, taskId: string, nodeId: s
       content_digest: string;
       input_id: string;
     }>(
-      `SELECT g.id guidance_id,o.id obligation_id,g.text,g.content_digest,g.input_id FROM task_guidance g JOIN task_guidance_obligations o ON o.guidance_id=g.id WHERE g.task_id=$1 AND o.node_id=$2 AND o.node_activation=$3 AND g.status='active' AND o.status IN ('pending','handled') ORDER BY g.id LIMIT 257`,
+      `SELECT g.id guidance_id,o.id obligation_id,g.text,g.content_digest,g.input_id FROM task_guidance g JOIN task_guidance_obligations o ON o.guidance_id=g.id WHERE g.task_id=$1 AND o.node_id=$2 AND o.node_activation=$3 AND task_guidance_applies(g.task_id,g.id,o.node_id) AND o.status IN ('pending','handled') ORDER BY g.id LIMIT 257`,
       [taskId, nodeId, activation],
     )
   ).rows;
@@ -361,7 +373,7 @@ export async function advanceGuidanceFollowup(
     pending.every((f) => f.source_id !== node.execution_source_id) &&
     !(
       await tx.query(
-        `SELECT 1 FROM task_guidance_obligations o WHERE o.node_id=$1 AND o.node_activation=$2 AND o.status='pending' AND NOT EXISTS(SELECT 1 FROM task_guidance_assignments a WHERE a.source_id=$3 AND a.obligation_id=o.id)`,
+        `SELECT 1 FROM task_guidance_obligations o WHERE o.node_id=$1 AND o.node_activation=$2 AND o.status='pending' AND task_guidance_applies(o.task_id,o.guidance_id,o.node_id) AND NOT EXISTS(SELECT 1 FROM task_guidance_assignments a WHERE a.source_id=$3 AND a.obligation_id=o.id)`,
         [node.id, node.activation, node.execution_source_id],
       )
     ).rowCount
@@ -417,7 +429,7 @@ export async function taskInputGuards(tx: Transaction, taskId: string): Promise<
     return [];
   return [...review,...(
     await tx.query<{ id: string }>(
-      `SELECT id FROM task_inputs WHERE task_id=$1 AND status IN ('pending','failed') AND accepted_delivery_operation_id IS NULL UNION SELECT id FROM requirement_obligations WHERE task_id=$1 AND status='pending' AND current_proposal_id IS NOT NULL UNION SELECT id FROM task_input_issues WHERE task_id=$1 AND status='open' UNION SELECT g.id FROM task_guidance g WHERE g.task_id=$1 AND g.status='active' AND (NOT EXISTS(SELECT 1 FROM task_guidance_obligations o WHERE o.guidance_id=g.id) OR EXISTS(SELECT 1 FROM task_guidance_obligations o WHERE o.guidance_id=g.id AND o.status='pending')) ORDER BY id LIMIT 257`,
+      `SELECT id FROM task_inputs WHERE task_id=$1 AND status IN ('pending','failed') AND accepted_delivery_operation_id IS NULL UNION SELECT id FROM requirement_obligations WHERE task_id=$1 AND status='pending' AND current_proposal_id IS NOT NULL UNION SELECT id FROM task_input_issues WHERE task_id=$1 AND status='open' UNION SELECT g.id FROM task_guidance g JOIN tasks t ON t.id=g.task_id WHERE g.task_id=$1 AND g.status='active' AND (t.plan_id IS NULL OR EXISTS(SELECT 1 FROM nodes n JOIN plan_nodes pn ON pn.node_id=n.id AND pn.plan_id=t.plan_id WHERE task_guidance_applies(t.id,g.id,n.id) AND NOT EXISTS(SELECT 1 FROM task_guidance_obligations o WHERE o.guidance_id=g.id AND o.node_id=n.id AND o.node_activation=n.activation AND o.status='handled'))) ORDER BY id LIMIT 257`,
       [taskId],
     )
   ).rows.map((r) => r.id)].slice(0,257);

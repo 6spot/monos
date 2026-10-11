@@ -224,6 +224,37 @@ test('joint approvals and publication recover their original receipts across res
   expect((await get<TaskOverview>(page, `/v1/owner/tasks/${f.task}`)).plan_id).toBe(publicationResult.plan_id);
 });
 
+test('multi-Node Replan shows retained and removed work and recovers exact publication', async ({ page }, info) => {
+  await signIn(page); const f = await scenario(page, 'multi_replan'); await openTask(page, f);
+  const before = await get<ReplanProposalDetail>(page, `/v1/owner/tasks/${f.task}/replan/proposals/${f.proposal_id}`);
+  expect(before.content.nodes).toHaveLength(3);
+  expect(before.content.impact.nodes.map(n => n.disposition).sort()).toEqual(['carry', 'remove']);
+  await expect(page.getByText('Keep the completed result', { exact: false })).toBeVisible();
+  await expect(page.getByText('Remove from future execution; preserve its history', { exact: false })).toBeVisible();
+  await expect(page.getByText('Starts after:', { exact: false })).toHaveCount(2);
+  await screenshots(page, info, 'task-multi-node-replan');
+  await page.getByRole('button', { name: 'Confirm plan', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Publish confirmed plan', exact: true })).toBeEnabled();
+  const writes: TaskReplanCommand[] = [];
+  await page.route('**/v1/owner/tasks/replan/commands', async route => {
+    writes.push(route.request().postDataJSON());
+    const response = await route.fetch(); expect(response.ok()).toBe(true);
+    await route.abort('failed');
+  });
+  await page.getByRole('button', { name: 'Publish confirmed plan', exact: true }).click();
+  await expect(page.getByText(/The result is not confirmed/)).toBeVisible();
+  await page.reload();
+  await page.getByRole('button', { name: 'Check request result', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Check request result', exact: true })).toHaveCount(0);
+  expect(writes).toHaveLength(1);
+  expect(writes[0]!.payload.proposal_id).toBe(f.proposal_id);
+  const after = await get<TaskOverview>(page, `/v1/owner/tasks/${f.task}`);
+  expect(after.plan_id).toBe(before.content.plan_id);
+  expect(after.specification_id).toBe(f.spec);
+  const results = await get<TaskResultPage>(page, `/v1/owner/tasks/${f.task}/results`);
+  expect(results.items.some(item => item.current && item.manifest.node_id === f.node)).toBe(true);
+});
+
 test('late response after logout cannot resurrect private Task recovery data', async ({ page }) => {
   await signIn(page); const f = await scenario(page, 'ready'); await openTask(page, f);
   let release: () => void = () => {}; const barrier = new Promise<void>((resolve) => { release = resolve; });

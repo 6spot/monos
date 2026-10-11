@@ -1,5 +1,5 @@
 import type { WorkspaceTransfer } from '../../../packages/protocol/src/index.ts';
-import { workspaceTransfer } from './task-replan-state.ts';
+import { workspaceTransfer, hasUnadoptedReplanCheckpoint } from './task-replan-workspaces.ts';
 import { serialWorkspaceTransfer } from './workspace-serial-transfer.ts';
 import { reworkWorkspaceTransfer, workspaceReworkHistory } from './workspace-rework-transfer.ts';
 import { randomUUID } from 'node:crypto';
@@ -92,9 +92,9 @@ export async function admitWorkspaceOpen(tx: Transaction, attempt: WorkspaceAtte
   const reworkHistory = workspace ? await workspaceReworkHistory(tx, attempt, workspace.id) : [];
   if (workspace) {
     const interrupted = (await tx.query<Lease>('SELECT * FROM workspace_leases WHERE workspace_id=$1 ORDER BY created_at DESC,id DESC LIMIT 1', [workspace.id])).rows[0];
-    if (interrupted && (interrupted.node_id !== attempt.node_id || interrupted.node_activation !== attempt.node_activation)) {
-      transfer = await workspaceTransfer(tx, attempt.task_id, attempt.node_id, Number(attempt.node_activation), workspace.id, interrupted.id)
-        ?? reworkWorkspaceTransfer(attempt, workspace, interrupted.id, reworkHistory)
+    if (interrupted) transfer = await workspaceTransfer(tx, attempt, workspace.id, interrupted.id);
+    if (interrupted && !transfer && (interrupted.node_id !== attempt.node_id || interrupted.node_activation !== attempt.node_activation)) {
+      transfer = reworkWorkspaceTransfer(attempt, workspace, interrupted.id, reworkHistory)
         ?? await serialWorkspaceTransfer(tx, attempt, workspace.id, interrupted.id);
       if (!transfer && workspace.ever_materialized) throw new CommandError('unmet_precondition', 'Interrupted workspace requires explicit activation disposition');
     }
@@ -124,8 +124,13 @@ export async function admitWorkspaceEffect(tx: Transaction, attempt: WorkspaceAt
   const lease = (await tx.query<Lease>("SELECT * FROM workspace_leases WHERE attempt_id=$1 AND state<>'released'", [attempt.id])).rows[0];
   if (!lease && kind === 'complete_node') {
     if (!attempt.launch.node_execution_source) throw new CommandError('unmet_precondition','Canonical Node source required for repository-free completion');
-    if((await tx.query(`SELECT 1 FROM replan_workspace_transfers x JOIN workspace_leases l ON l.id=x.descriptor->>'from_lease_id' WHERE x.task_id=$1 AND x.target_node_id=$2 AND x.target_node_activation=$3 AND x.descriptor->>'kind'='checkpoint' AND NOT EXISTS(SELECT 1 FROM workspace_leases later WHERE later.workspace_id=l.workspace_id AND (later.created_at,later.id)>(l.created_at,l.id))`,[attempt.task_id,attempt.node_id,attempt.node_activation])).rowCount)throw new CommandError('unmet_precondition','Open and finalize the approved inherited private workspace before completion');
-    if ((await tx.query("SELECT 1 FROM operations WHERE attempt_id=$1 AND kind='open_workspace' AND state NOT IN ('succeeded','cancelled')",[attempt.id])).rowCount || (await tx.query(`SELECT 1 FROM workspace_leases l WHERE l.task_id=$1 AND l.node_id=$2 AND l.node_activation=$3 AND l.checkpoint IS NOT NULL AND NOT EXISTS(SELECT 1 FROM workspace_leases later WHERE later.workspace_id=l.workspace_id AND (later.created_at,later.id)>(l.created_at,l.id))`,[attempt.task_id,attempt.node_id,attempt.node_activation])).rowCount) throw new CommandError('unmet_precondition','Reopen and finalize retained private workspace work before completion');
+    if(await hasUnadoptedReplanCheckpoint(tx,attempt))throw new CommandError('unmet_precondition','Open and finalize the approved inherited private workspace before completion');
+    if ((await tx.query("SELECT 1 FROM operations WHERE attempt_id=$1 AND kind='open_workspace' AND state NOT IN ('succeeded','cancelled')",[attempt.id])).rowCount || (await tx.query(`SELECT 1 FROM workspace_leases l WHERE l.task_id=$1 AND l.node_id=$2 AND l.node_activation=$3 AND l.checkpoint IS NOT NULL
+      AND NOT EXISTS(SELECT 1 FROM tasks t JOIN replan_publications p ON p.task_id=t.id AND p.new_plan_id=t.plan_id
+        JOIN replan_proposals proposal ON proposal.id=p.proposal_id
+        CROSS JOIN LATERAL jsonb_array_elements(proposal.content->'impact'->'workspaces') w
+        WHERE t.id=l.task_id AND w.value->'input'->>'from_lease_id'=l.id AND w.value->'input'->>'kind'='checkpoint')
+      AND NOT EXISTS(SELECT 1 FROM workspace_leases later WHERE later.workspace_id=l.workspace_id AND (later.created_at,later.id)>(l.created_at,l.id))`,[attempt.task_id,attempt.node_id,attempt.node_activation])).rowCount) throw new CommandError('unmet_precondition','Reopen and finalize retained private workspace work before completion');
   }
   const open = lease ? (await tx.query<WorkspaceOperation>('SELECT * FROM operations WHERE id=$1', [lease.open_operation_id])).rows[0]! : undefined;
   if (open && kind === 'complete_node' && open.state !== 'succeeded') throw new CommandError('unmet_precondition', 'Workspace open must succeed before completion');

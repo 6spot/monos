@@ -25,7 +25,7 @@ suite('Replan backend workspace authority',()=>{
    }else
    await x.service.finishOperation(x.f.runner,x.f.incarnation,{operation_id:end.operation_id!,attempt_id:old.dispatch.attempt_id,success:true,result:{writer_absent:true,workspace_id:w.workspace_id,workspace_metadata:settledMetadata,...(completed?{git_commit:'c'.repeat(40),git_tree:'b'.repeat(40)}:{})}});
    if(completed||corrected){await x.send('Replace the completed formal Node definition');const turn=await x.turn();const r=await x.reply(turn,{kind:'replan',basis:await x.basis(),text:'Different formal goal needs a new identity'});await x.finish(r.operation_id!,turn.dispatch.attempt_id);}
-   const p=await x.prepare();expect(p.payload.impact.workspaces[0]!.settle_operation_id).toBe(settlementId);await x.publish(p);
+   const p=await x.prepare();expect(p.payload.impact.workspaces[0]!.input.settle_operation_id).toBe(settlementId);await x.publish(p);
    if(corrected){const n=(await x.db.pool.query('SELECT * FROM nodes WHERE id=$1',[p.payload.nodes[0]!.node_id])).rows[0];if(n.state==='BLOCKED')await x.owner('retry_node',{node_id:n.id,node_activation:1,source_id:n.execution_source_id,blocker_id:n.blocker_id});}
    const fresh=await x.node();
    if(!completed)await expect(x.agent(fresh,'complete_node',{summary:'Skip inherited private work'})).rejects.toMatchObject({detail:{code:'unmet_precondition'}});

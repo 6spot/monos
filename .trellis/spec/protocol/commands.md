@@ -184,3 +184,14 @@ source and connection before and after provider calls. Late settlement verifies
 saved descriptor identity; it does not revive source authority. See
 [backend contract](../backend/repository-inspection.md) and
 [Runner source/process proof](../runner/planner-inspection.md).
+
+## Multi-Node Replan impact
+
+`ReplanImpact.nodes` is a nonempty complete old-member list. Disposition `remove`
+requires null target ID/activation; retained entries keep identity and use refresh,
+carry or invalidate. Changed definitions are removed old members plus fresh graph
+IDs. Guidance contains explicit `target_node_ids` (empty only for supersede). Hold
+entries are `{origin, target_node_ids}` with nonempty unique destinations. Workspace
+entries are `{input, target_nodes:[{node_id,node_activation}]}`; a private checkpoint
+has exactly one target. These wrappers keep factual source proof distinct from
+Owner-approved future destinations. All languages use the same strict schema.

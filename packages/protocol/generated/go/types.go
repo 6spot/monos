@@ -98,23 +98,27 @@ type ArtifactContent struct {
 }
 
 type Impact struct {
-	GraphSufficient  *bool                     `json:"graph_sufficient,omitempty"`
-	Guidance         []GuidanceElement         `json:"guidance,omitempty"`
-	Nodes            []SpecificationImpactNode `json:"nodes,omitempty"`
-	Reason           *string                   `json:"reason,omitempty"`
-	ReplanImpact     *ReplanImpact             `json:"replan_impact,omitempty"`
-	ReplanProposalID *string                   `json:"replan_proposal_id,omitempty"`
-	ReplanRequestID  *string                   `json:"replan_request_id,omitempty"`
-	Holds            []ReplanHold              `json:"holds,omitempty"`
-	Node             *ReplanNodeImpact         `json:"node,omitempty"`
-	Workspaces       []ReplanWorkspaceInput    `json:"workspaces,omitempty"`
+	GraphSufficient  *bool                        `json:"graph_sufficient,omitempty"`
+	Guidance         []GuidanceElement            `json:"guidance,omitempty"`
+	Nodes            []NodeElement                `json:"nodes,omitempty"`
+	Reason           *string                      `json:"reason,omitempty"`
+	ReplanImpact     *ReplanImpact                `json:"replan_impact,omitempty"`
+	ReplanProposalID *string                      `json:"replan_proposal_id,omitempty"`
+	ReplanRequestID  *string                      `json:"replan_request_id,omitempty"`
+	Holds            []ReplanHoldDisposition      `json:"holds,omitempty"`
+	Workspaces       []ReplanWorkspaceDisposition `json:"workspaces,omitempty"`
 }
 
 type GuidanceElement struct {
-	Disposition  GuidanceDisposition `json:"disposition"`
-	GuidanceID   string              `json:"guidance_id"`
-	Version      int64               `json:"version"`
-	TargetNodeID *string             `json:"target_node_id,omitempty"`
+	Disposition   GuidanceDisposition `json:"disposition"`
+	GuidanceID    string              `json:"guidance_id"`
+	Version       int64               `json:"version"`
+	TargetNodeIDS []string            `json:"target_node_ids,omitempty"`
+}
+
+type ReplanHoldDisposition struct {
+	Origin        ReplanHold `json:"origin"`
+	TargetNodeIDS []string   `json:"target_node_ids"`
 }
 
 type ReplanHold struct {
@@ -126,6 +130,31 @@ type ReplanHold struct {
 	Reason               string         `json:"reason"`
 }
 
+type NodeElement struct {
+	CompletionManifestDigest *string                     `json:"completion_manifest_digest"`
+	CompletionOperationID    *string                     `json:"completion_operation_id"`
+	Disposition              ReplanNodeImpactDisposition `json:"disposition"`
+	NodeActivation           int64                       `json:"node_activation"`
+	NodeID                   string                      `json:"node_id"`
+	SourceID                 *string                     `json:"source_id"`
+	TargetNodeActivation     *int64                      `json:"target_node_activation"`
+	TargetNodeID             *string                     `json:"target_node_id"`
+}
+
+type ReplanImpact struct {
+	Guidance   []ReplanGuidance             `json:"guidance"`
+	Holds      []ReplanHoldDisposition      `json:"holds"`
+	Nodes      []ReplanNodeImpact           `json:"nodes"`
+	Workspaces []ReplanWorkspaceDisposition `json:"workspaces"`
+}
+
+type ReplanGuidance struct {
+	Disposition   GuidanceDisposition `json:"disposition"`
+	GuidanceID    string              `json:"guidance_id"`
+	TargetNodeIDS []string            `json:"target_node_ids"`
+	Version       int64               `json:"version"`
+}
+
 type ReplanNodeImpact struct {
 	CompletionManifestDigest *string                     `json:"completion_manifest_digest"`
 	CompletionOperationID    *string                     `json:"completion_operation_id"`
@@ -133,31 +162,13 @@ type ReplanNodeImpact struct {
 	NodeActivation           int64                       `json:"node_activation"`
 	NodeID                   string                      `json:"node_id"`
 	SourceID                 *string                     `json:"source_id"`
-	TargetNodeActivation     int64                       `json:"target_node_activation"`
-	TargetNodeID             string                      `json:"target_node_id"`
+	TargetNodeActivation     *int64                      `json:"target_node_activation"`
+	TargetNodeID             *string                     `json:"target_node_id"`
 }
 
-type SpecificationImpactNode struct {
-	CompletionManifestDigest *string                            `json:"completion_manifest_digest"`
-	CompletionOperationID    *string                            `json:"completion_operation_id"`
-	Disposition              SpecificationImpactNodeDisposition `json:"disposition"`
-	NodeActivation           int64                              `json:"node_activation"`
-	NodeID                   string                             `json:"node_id"`
-	SourceID                 *string                            `json:"source_id"`
-}
-
-type ReplanImpact struct {
-	Guidance   []ReplanGuidance       `json:"guidance"`
-	Holds      []ReplanHold           `json:"holds"`
-	Node       ReplanNodeImpact       `json:"node"`
-	Workspaces []ReplanWorkspaceInput `json:"workspaces"`
-}
-
-type ReplanGuidance struct {
-	Disposition  GuidanceDisposition `json:"disposition"`
-	GuidanceID   string              `json:"guidance_id"`
-	TargetNodeID string              `json:"target_node_id"`
-	Version      int64               `json:"version"`
+type ReplanWorkspaceDisposition struct {
+	Input       ReplanWorkspaceInput    `json:"input"`
+	TargetNodes []ReplanWorkspaceTarget `json:"target_nodes"`
 }
 
 type ReplanWorkspaceInput struct {
@@ -208,6 +219,11 @@ type RepositoryProviderMetadata struct {
 
 type RepositoryProviderMetadataGithub struct {
 	RepositoryID string `json:"repository_id"`
+}
+
+type ReplanWorkspaceTarget struct {
+	NodeActivation int64  `json:"node_activation"`
+	NodeID         string `json:"node_id"`
 }
 
 type ExecutionPlanNode struct {
@@ -2142,6 +2158,15 @@ type Guidance struct {
 	Version     int64               `json:"version"`
 }
 
+type SpecificationImpactNode struct {
+	CompletionManifestDigest *string                            `json:"completion_manifest_digest"`
+	CompletionOperationID    *string                            `json:"completion_operation_id"`
+	Disposition              SpecificationImpactNodeDisposition `json:"disposition"`
+	NodeActivation           int64                              `json:"node_activation"`
+	NodeID                   string                             `json:"node_id"`
+	SourceID                 *string                            `json:"source_id"`
+}
+
 type PrepareSpecificationRevision struct {
 	Basis          TaskActionBasis   `json:"basis"`
 	Impact         RequirementImpact `json:"impact"`
@@ -3439,15 +3464,7 @@ const (
 	PurpleCarry      ReplanNodeImpactDisposition = "carry"
 	PurpleInvalidate ReplanNodeImpactDisposition = "invalidate"
 	PurpleRefresh    ReplanNodeImpactDisposition = "refresh"
-	Replace          ReplanNodeImpactDisposition = "replace"
-)
-
-type SpecificationImpactNodeDisposition string
-
-const (
-	FluffyCarry      SpecificationImpactNodeDisposition = "carry"
-	FluffyInvalidate SpecificationImpactNodeDisposition = "invalidate"
-	FluffyRefresh    SpecificationImpactNodeDisposition = "refresh"
+	Remove           ReplanNodeImpactDisposition = "remove"
 )
 
 type ReplanWorkspaceInputKind string
@@ -4378,6 +4395,14 @@ const (
 	IncludedInLaunch LaunchStatus = "included_in_launch"
 	IncludedInSource LaunchStatus = "included_in_source"
 	LaunchStarted    LaunchStatus = "launch_started"
+)
+
+type SpecificationImpactNodeDisposition string
+
+const (
+	FluffyCarry      SpecificationImpactNodeDisposition = "carry"
+	FluffyInvalidate SpecificationImpactNodeDisposition = "invalidate"
+	FluffyRefresh    SpecificationImpactNodeDisposition = "refresh"
 )
 
 type TaskSpecificationCommandName string

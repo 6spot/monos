@@ -1,3 +1,4 @@
+import { replacementImpact } from './task-replan-fixture.ts';
 import { createHash, generateKeyPairSync, randomUUID } from 'node:crypto';
 import WebSocket from 'ws';
 import { transaction } from '../../../../packages/db/src/index.ts';
@@ -26,7 +27,7 @@ import { GitHub } from '../../src/github.ts';
 import { remoteProfile, RemoteProviderError } from '../../src/github-remote.ts';
 import type { AcquireGitHubRemoteGrant } from '../../src/github-remote.ts';
 
-const scenarios = ['ready', 'board_pages', 'queued', 'planning_issue', 'node_queued', 'running', 'running_workspace', 'review_git', 'result_inspection', 'result_empty', 'log_pages', 'blocked', 'review', 'completion_recovery', 'replan', 'replan_issue', 'joint', 'specification', 'guidance', 'input_issue'] as const;
+const scenarios = ['ready', 'board_pages', 'queued', 'planning_issue', 'node_queued', 'running', 'running_workspace', 'review_git', 'result_inspection', 'result_empty', 'log_pages', 'blocked', 'review', 'completion_recovery', 'replan', 'multi_replan', 'replan_issue', 'joint', 'specification', 'guidance', 'input_issue'] as const;
 type Scenario = typeof scenarios[number];
 interface Context { task: string; spec: string; plan: string; node: string; project: string; role: string; runner: string; incarnation: number; resource_id?: string }
 interface Agent { dispatch: Dispatch; credential: string }
@@ -319,13 +320,19 @@ export class ExecutionUIFixture {
     await this.owner(token, f, 'start_task', { specification_id: f.spec });
     await planning.pump();
     if (input.kind === 'queued') return f;
+    const multiSuccessor = randomUUID();
     const planner = await this.promote(f);
-    const planned = await this.agent(f, planner, input.kind === 'planning_issue' ? 'raise_planning_issue' : 'publish_execution_plan', input.kind === 'planning_issue' ? { planning_intent_id: planner.dispatch.task_planning_source!.intent_id, reason: 'Which output should be authoritative? Please describe the expected behavior.' } : { planning_intent_id: planner.dispatch.task_planning_source!.intent_id, plan_id: f.plan, nodes: [{ node_id: f.node, role_id: f.role, goal: 'Implement and verify the exact requested behavior', dependencies: [], expected_outputs: ['A verified local result with a readable summary'] }] });
+    const planned = await this.agent(f, planner, input.kind === 'planning_issue' ? 'raise_planning_issue' : 'publish_execution_plan', input.kind === 'planning_issue' ? { planning_intent_id: planner.dispatch.task_planning_source!.intent_id, reason: 'Which output should be authoritative? Please describe the expected behavior.' } : { planning_intent_id: planner.dispatch.task_planning_source!.intent_id, plan_id: f.plan, nodes: [{ node_id: f.node, role_id: f.role, goal: 'Implement and verify the exact requested behavior', dependencies: [], expected_outputs: ['A verified local result with a readable summary'] }, ...(input.kind === 'multi_replan' ? [{ node_id: multiSuccessor, role_id: f.role, goal: 'Extend the original behavior', dependencies: [f.node] }] : [])] });
     await this.finish(f, planned.operation_id!, planner.dispatch.attempt_id);
     if (input.kind === 'planning_issue') return f;
     await execution.pump();
     if (input.kind === 'node_queued') return f;
-    const node = await this.promote(f);
+    let node = await this.promote(f);
+    if (input.kind === 'multi_replan') {
+      const done = await this.agent(f, node, 'complete_node', { summary: 'Verified existing behavior, retained by the replacement Plan.' });
+      await this.finish(f, done.operation_id!, node.dispatch.attempt_id);
+      await execution.pump(); node = await this.promote(f);
+    }
     if (input.kind === 'running') return f;
     if (input.kind === 'log_pages') {
       for (let sequence = 1; sequence <= 70; sequence++) {
@@ -381,8 +388,15 @@ export class ExecutionUIFixture {
     }
     const task = (await this.db.pool.query('SELECT * FROM tasks WHERE id=$1', [f.task])).rows[0];
     const replacement = randomUUID();
-    const impact = await transaction(this.db, (tx) => replanImpact(tx, task, replacement));
-    const payload: PrepareReplan = { replan_request_id: binding.request_id, source_id: binding.source_id, proposal_id: randomUUID(), plan_id: randomUUID(), basis: await this.basis(f), nodes: [{ node_id: replacement, role_id: f.role, goal: 'Replace the formal work with the complete revised outcome', dependencies: [] }], summary: 'Replace the work definition; retain private history without claiming previous completion.', impact, ...(input.kind === 'joint' ? { requirement: { proposal_id: randomUUID(), specification: '# Joint exact requirements\n\nReplace the previous outcome with independently verified accessible recovery.', summary: 'Update requirements together with the replacement Plan.' } } : {}) };
+    const sourceImpact = await transaction(this.db, (tx) => replanImpact(tx, task));
+    const impact = replacementImpact(sourceImpact, replacement);
+    if (input.kind === 'multi_replan') {
+      const retained = sourceImpact.nodes.find(n => n.node_id === f.node)!;
+      impact.nodes = validate<PrepareReplan['impact']>('ReplanImpact', { ...impact, nodes: [retained, ...impact.nodes.filter(n => n.node_id !== f.node)].sort((a, b) => a.node_id.localeCompare(b.node_id)) }).nodes;
+    }
+    const retainedDefinition = input.kind === 'multi_replan' ? (await this.db.pool.query('SELECT definition FROM plan_nodes WHERE plan_id=$1 AND node_id=$2', [task.plan_id, f.node])).rows[0].definition : undefined;
+
+    const payload = validate<PrepareReplan>('PrepareReplan', { replan_request_id: binding.request_id, source_id: binding.source_id, proposal_id: randomUUID(), plan_id: randomUUID(), basis: await this.basis(f), nodes: [...(retainedDefinition ? [retainedDefinition] : []), { node_id: replacement, role_id: f.role, goal: 'Replace the formal work with the complete revised outcome', dependencies: retainedDefinition ? [f.node] : [] }, ...(retainedDefinition ? [{ node_id: randomUUID(), role_id: f.role, goal: 'Verify the complete integrated result', dependencies: [replacement] }] : [])], summary: 'Replace the work definition; retain private history without claiming previous completion.', impact, ...(input.kind === 'joint' ? { requirement: { proposal_id: randomUUID(), specification: '# Joint exact requirements\n\nReplace the previous outcome with independently verified accessible recovery.', summary: 'Update requirements together with the replacement Plan.' } } : {}) });
     const prepared = await this.agent(f, agent, 'prepare_replan', payload as CommandEnvelope['payload']);
     await this.finish(f, prepared.operation_id!, agent.dispatch.attempt_id);
     return { ...f, request_id: binding.request_id, proposal_id: payload.proposal_id, requirement_proposal_id: payload.requirement?.proposal_id };

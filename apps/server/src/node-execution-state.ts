@@ -1,3 +1,4 @@
+import { activateInheritedHold } from './task-replan-holds.ts';
 import { liveReplanAuthority, assertNoReplan, pendingReplan } from './task-replan-state.ts';
 import { assertSpecificationUnfrozen, assertTaskUnaccepted, specificationFrozen } from './task-specification-state.ts';
 import { remoteItemQuiescent } from './remote-preparation-state.ts';
@@ -262,7 +263,14 @@ export async function prepareNodeSource(
           validity: 'Historical output candidates only; publication does not establish successful current completion.',
           items: artifacts,
         },
-        replan_history:(await tx.query("SELECT p.id publication_id,a.node_id origin_node_id,a.node_activation origin_activation,a.disposition,c.result historical_result,COALESCE((SELECT jsonb_agg(descriptor ORDER BY id) FROM replan_workspace_transfers w WHERE w.publication_id=p.id AND w.target_node_id=$2),'[]'::jsonb) workspace_dispositions FROM replan_publications p JOIN replan_node_applicability a ON a.publication_id=p.id LEFT JOIN node_completions c ON c.node_id=a.node_id AND c.activation=a.node_activation WHERE p.new_plan_id=$1 AND a.target_node_id=$2 AND a.target_node_activation=$3",[task.plan_id,node.id,node.activation])).rows.map(r=>({...r,origin_activation:Number(r.origin_activation),validity:'Historical input only; never completion of the new activation'})),
+        replan_history:(await tx.query(`SELECT p.id publication_id,
+          COALESCE((SELECT jsonb_agg(jsonb_build_object('origin_node_id',a.node_id,'origin_activation',a.node_activation,
+            'disposition',a.disposition,'historical_result',c.result) ORDER BY a.node_id)
+            FROM replan_node_applicability a LEFT JOIN node_completions c ON c.node_id=a.node_id AND c.activation=a.node_activation
+            WHERE a.publication_id=p.id AND (a.target_node_id=$2 OR a.disposition IN ('remove','invalidate'))),'[]'::jsonb) historical_results,
+          COALESCE((SELECT jsonb_agg(w ORDER BY w->'input'->>'workspace_id') FROM jsonb_array_elements(proposal.content->'impact'->'workspaces') w
+            WHERE EXISTS(SELECT 1 FROM jsonb_array_elements(w->'target_nodes') target WHERE target->>'node_id'=$2)),'[]'::jsonb) workspace_dispositions
+          FROM replan_publications p JOIN replan_proposals proposal ON proposal.id=p.proposal_id WHERE p.new_plan_id=$1`,[task.plan_id,node.id])).rows.map(r=>({...r,validity:'Historical input only; never completion of the current activation. Adopt assigned private work through open_workspace before completion; finalized work remains historical code under the exact approved Node scope.'})),
         recovery: options.recovery ?? {},
       };
       prompt = canonicalJSON(context);
@@ -320,6 +328,7 @@ export async function prepareNodeSource(
     done: !!failure,
   };
   if (failure) await blockNodeSource(tx, source, 'factual', failure);
+  else if (!options.request_id) await activateInheritedHold(tx, source);
   return source;
 }
 export async function blockNodeSource(

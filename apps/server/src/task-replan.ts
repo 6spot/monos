@@ -42,7 +42,7 @@ export class TaskReplan {
  async command(token:string,body:unknown):Promise<TaskReplanResult>{
   const cmd=validate<TaskReplanCommand>('TaskReplanCommand',body),json=canonicalJSON(cmd);if(Buffer.byteLength(json)>MAX_BODY_BYTES)throw new CommandError('invalid_input','Replan command exceeds budget');const hash=digest(json);let published=false;
   const result=await transaction(this.db,async tx=>{
-   await authenticateOwner(tx,token);const config=await lockConfiguration(tx),task=await lockSpecificationTask(tx,cmd.task_id);
+   await authenticateOwner(tx,token);await lockConfiguration(tx);const task=await lockSpecificationTask(tx,cmd.task_id);
    const old=(await tx.query<{digest:string;response:TaskReplanResult}>('SELECT digest,response FROM owner_command_receipts WHERE scope_id=$1 AND request_id=$2',[task.id,cmd.request_id])).rows[0];if(old){if(old.digest!==hash)throw new CommandError('payload_conflict','Request content changed');return old.response;}
    mutableSpecification(task);const payload=cmd.payload as Record<string,unknown>;let result:TaskReplanResult={schema_version:1,request_id:cmd.request_id,status:'committed'};
    if(cmd.name==='confirm_replan'||cmd.name==='publish_replan'||cmd.name==='defer_replan_inputs'){
@@ -54,7 +54,7 @@ export class TaskReplan {
      result={...result,confirmation_id:auth,content_digest:p.content_digest};
     }else if(cmd.name==='publish_replan'){
      if(canonicalJSON(payload.basis)!==canonicalJSON(p.content.basis))throw new CommandError('version_conflict','Publication must retain approved basis');
-     result={...result,...await publishReplan(tx,task,p,String(payload.confirmation_id),payload.requirement_confirmation_id as string|undefined,cmd.request_id,config)};published=true;
+     result={...result,...await publishReplan(tx,task,p,String(payload.confirmation_id),payload.requirement_confirmation_id as string|undefined,cmd.request_id)};published=true;
     }else {
      if(!(await tx.query("SELECT 1 FROM replan_requests WHERE id=$1 AND proposal_id=$2 AND status='pending'",[p.request_id,p.id])).rowCount)throw new CommandError('unmet_precondition','Exact current proposal required');
      for(const i of payload.inputs as {input_id:string;version:number}[]){if(!(await tx.query('SELECT 1 FROM task_inputs WHERE id=$1 AND task_id=$2 AND version=$3',[i.input_id,task.id,i.version])).rowCount)throw new CommandError('version_conflict','Exact input version required');await tx.query('INSERT INTO replan_input_deferrals(task_id,proposal_id,input_id,input_version,request_id) VALUES($1,$2,$3,$4,$5) ON CONFLICT DO NOTHING',[task.id,p.id,i.input_id,i.version,cmd.request_id]);}

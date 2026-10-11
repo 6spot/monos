@@ -744,6 +744,13 @@ function ReplanProposal({
                 {props.snapshot.roles.find((r) => r.id === n.role_id)?.name ??
                   "Selected role"}
               </p>
+              {n.dependencies.length > 0 && (
+                <p className="task-muted">
+                  Starts after: {n.dependencies.map((id) =>
+                    d.content.nodes.find((item) => item.node_id === id)?.goal ?? id,
+                  ).join("; ")}
+                </p>
+              )}
               {n.hard_requirements?.map((r, i) => (
                 <p key={i}>{r}</p>
               ))}
@@ -844,36 +851,46 @@ function ReplanImpactView({ impact }: { impact: ReplanImpact }) {
   return (
     <section className="task-impact">
       <h4>Result and work impact</h4>
-      <p>
-        {human(impact.node.disposition)} existing work
-        {impact.node.completion_operation_id
-          ? " and its exact completed evidence"
-          : ""}
-        .
-      </p>
-      {impact.node.disposition === "replace" && (
+      <ul>
+        {impact.nodes.map((node) => (
+          <li key={node.node_id}>
+            {node.disposition === "carry" ? "Keep the completed result"
+              : node.disposition === "invalidate" ? "Repeat the work and verify a new result"
+              : node.disposition === "remove" ? "Remove from future execution; preserve its history"
+              : "Continue unfinished work"}
+            <small className="task-muted">{node.node_id}</small>
+          </li>
+        ))}
+      </ul>
+      {impact.nodes.some((node) => node.disposition === "remove") && (
         <p>
-          A different formal work item gets a new identity. Earlier completion
-          remains historical input.
+          Removed work and its earlier results remain available as history.
         </p>
       )}
       {impact.holds.map((h, i) => (
         <p key={i}>
-          {human(h.kind)} remains: {h.reason}
+          {human(h.origin.kind)} remains: {h.origin.reason}
+          <small className="task-muted">Applies to: {h.target_node_ids.join(", ")}</small>
         </p>
       ))}
       {impact.guidance.map((g) => (
         <p key={g.guidance_id}>
           {human(g.disposition)} guidance · {g.guidance_id}
+          {g.disposition === "retain" && (
+            <small className="task-muted">Applies to: {g.target_node_ids.join(", ")}</small>
+          )}
         </p>
       ))}
       {impact.workspaces.map((w) => (
-        <p key={w.workspace_id}>
-          {w.kind === "completed"
+        <p key={w.input.workspace_id}>
+          {w.input.kind === "completed"
             ? "Inherit finalized local result"
             : "Inherit unfinished private work"}{" "}
-          · {w.metadata.repository_identity}
-          {w.finalized_tree && <code>{w.finalized_tree}</code>}
+          · {w.input.metadata.repository_identity}
+          <small className="task-muted">
+            {w.target_nodes.length ? `Available to: ${w.target_nodes.map((node) => node.node_id).join(", ")}` : "Preserve the result without assigning it to future work."}
+          </small>
+          {w.input.finalized_tree && <code>{w.input.finalized_tree}</code>}
         </p>
       ))}
     </section>

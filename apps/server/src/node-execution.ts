@@ -166,7 +166,7 @@ export class NodeExecution {
       const fresh = (
         await this.db.pool.query<{ task_id: string; node_id: string }>(
           `SELECT DISTINCT ON (t.id) t.id task_id,n.id node_id FROM tasks t JOIN plan_nodes pn ON pn.plan_id=t.plan_id JOIN nodes n ON n.id=pn.node_id
-    WHERE t.state='RUNNING' AND n.state='PENDING' AND n.execution_source_id IS NULL AND (EXISTS(
+    WHERE (t.state='RUNNING' OR (t.state='BLOCKED' AND EXISTS(SELECT 1 FROM replan_control_holds h JOIN replan_publications rp ON rp.id=h.publication_id WHERE h.task_id=t.id AND rp.new_plan_id=t.plan_id AND h.node_id=n.id AND h.node_activation=n.activation AND h.resolved_by IS NULL))) AND n.state='PENDING' AND n.execution_source_id IS NULL AND (EXISTS(
      SELECT 1 FROM task_events e JOIN attempts a ON a.id=e.attempt_id JOIN task_planning_outbox p ON p.id=a.planning_intent_id
      WHERE e.task_id=t.id AND a.task_id=t.id AND p.task_id=t.id AND e.kind='plan_published' AND e.body->>'plan_id'=t.plan_id AND e.body->>'planning_intent_id'=p.id) OR EXISTS(SELECT 1 FROM replan_publications rp WHERE rp.task_id=t.id AND rp.new_plan_id=t.plan_id))
     AND NOT EXISTS(SELECT 1 FROM node_rework_requests r WHERE r.task_id=t.id AND (
@@ -196,7 +196,7 @@ export class NodeExecution {
           const node = (
             await tx.query<ExecutionNode>('SELECT * FROM nodes WHERE id=$1 FOR UPDATE', [candidate.node_id])
           ).rows[0]!;
-          if (!(await specificationFrozen(tx,task.id)) && !await currentNodeRework(tx, task.id, node.id) && task.state === 'RUNNING' && node.state === 'PENDING' && !node.execution_source_id &&
+          if (!(await specificationFrozen(tx,task.id)) && !await currentNodeRework(tx, task.id, node.id) && (task.state === 'RUNNING' || (task.state === 'BLOCKED' && !!(await tx.query(`SELECT 1 FROM replan_control_holds h JOIN replan_publications p ON p.id=h.publication_id WHERE h.task_id=$1 AND p.new_plan_id=$2 AND h.node_id=$3 AND h.node_activation=$4 AND h.resolved_by IS NULL`,[task.id,task.plan_id,node.id,node.activation])).rowCount)) && node.state === 'PENDING' && !node.execution_source_id &&
               await nodeDependenciesReady(tx, task.plan_id, node.id) && await serialNodeReady(tx, task.id, node.id))
             await prepareNodeSource(tx, task, node, version);
         });
@@ -523,7 +523,7 @@ export class NodeExecution {
             )
               throw new CommandError('unmet_precondition', 'Recover original completion before a fresh Attempt');
             await supersedeRuntimeContinuation(tx, source.planned_attempt_id, command.name === 'retry_node' ? 'owner_retried' : 'owner_continued');
-            const carriedHold=blocker&&(await tx.query(`SELECT 1 FROM replan_control_holds h JOIN node_completions c ON c.node_id=h.node_id AND c.activation=h.node_activation WHERE h.node_id=$1 AND h.current_blocker_id=$2 AND h.resolved_by IS NULL`,[node.id,blocker.id])).rowCount;
+            const carriedHold=blocker&&(await tx.query(`SELECT 1 FROM replan_control_holds h JOIN replan_publications p ON p.id=h.publication_id JOIN tasks t ON t.id=h.task_id JOIN node_completions c ON c.node_id=h.node_id AND c.activation=h.node_activation WHERE p.new_plan_id=t.plan_id AND h.node_id=$1 AND h.current_blocker_id=$2 AND h.resolved_by IS NULL`,[node.id,blocker.id])).rowCount;
             if(carriedHold){
               await resolveInheritedHold(tx,node.id,blocker!.id,command.request_id);
               const nextBlocker=await activateInheritedHold(tx,source);

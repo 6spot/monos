@@ -1,0 +1,47 @@
+{
+  "base_commit": "1e3e72703b56c4637a83bf0beba9595a0858a35e",
+  "change": "multi-Node Replan uncommitted feature",
+  "route": "/#task?task_id=<synthetic Task>&section=conversation",
+  "scenario": "multi_replan: two old Nodes, carry one completed result, remove one, publish three Nodes with dependencies",
+  "viewports": {
+    "desktop": [
+      1440,
+      1000
+    ],
+    "mobile": [
+      390,
+      844
+    ]
+  },
+  "inspection": "Desktop and mobile full-page images inspected: responsive work cards, dependency text, explicit evidence dispositions and reachable approval/exit controls; no horizontal overflow. Existing neutral shell retained.",
+  "browser_tests": "3 passed: joint publication/exits, lost dual approvals/publication, multi-Node publication recovery",
+  "runtime": "Synthetic Runner acknowledgements against actual authenticated server/PostgreSQL; no native Agent CLI or Linux host claims.",
+  "assets": [
+    {
+      "path": "apps/web/dist/assets/index-XB8mQ_GW.js",
+      "sha256": "35aba33dabcba22ad4faa3d4dfaf4b57b60e2d9afac97cd2993dbafcceea4aa3"
+    },
+    {
+      "path": "apps/web/dist/assets/index-TKEvhF-s.css",
+      "sha256": "9a7ee1ea709417c88d0cee9a7bf954ccfec714c49e5050b4f2501645a810d85e"
+    }
+  ],
+  "images": [
+    {
+      "path": "task-multi-node-replan-desktop.png",
+      "sha256": "aef7b64a9829c88c58e498f3fef61b6d91eb6bfc59e759d0459fa09e569c33d8"
+    },
+    {
+      "path": "task-multi-node-replan-desktop-full.png",
+      "sha256": "407b24df48e21bec0d43385ddc1086a78e9b786311e056b40ef49df2975e30b8"
+    },
+    {
+      "path": "task-multi-node-replan-mobile.png",
+      "sha256": "086385335be2113623a196a6c27d58351aaa4ad6d9ad7a61f1959df3110ffbb8"
+    },
+    {
+      "path": "task-multi-node-replan-mobile-full.png",
+      "sha256": "d83cb70b31e975f5a6e24d7a5e3e935135b8ff62ec2fab3aa6bf1e2d55887e19"
+    }
+  ]
+}

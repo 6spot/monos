@@ -24,7 +24,10 @@ interface Operation { id: string; kind: string; state: string }
 
 export async function derivedTaskState(tx: Transaction, planId: string): Promise<'RUNNING' | 'BLOCKED' | 'REVIEW'> {
   const rows = (await tx.query<{ state: string; runnable: boolean }>(`SELECT n.state,
-    n.state='RUNNING' OR (n.state='PENDING' AND NOT EXISTS (
+    n.state='RUNNING' OR (n.state='PENDING' AND NOT n.guidance_paused AND NOT EXISTS (
+      SELECT 1 FROM replan_control_holds h JOIN replan_publications p ON p.id=h.publication_id
+      WHERE h.task_id=t.id AND p.new_plan_id=t.plan_id AND h.node_id=n.id AND h.node_activation=n.activation AND h.resolved_by IS NULL
+    ) AND NOT EXISTS (
       SELECT 1 FROM jsonb_array_elements_text(COALESCE(pn.definition->'dependencies','[]'::jsonb)) dep
       LEFT JOIN nodes upstream ON upstream.id=dep.value AND upstream.state='COMPLETED'
       LEFT JOIN node_completions c ON c.node_id=upstream.id AND c.activation=upstream.activation
